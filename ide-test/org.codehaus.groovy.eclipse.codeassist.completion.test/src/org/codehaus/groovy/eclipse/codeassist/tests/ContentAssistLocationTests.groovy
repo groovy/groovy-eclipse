@@ -300,6 +300,198 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
+    void testStatement31() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement31a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement32() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement32a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement33() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E#
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement33a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E#
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement34() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#
+              case E.THREE:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement34a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E#
+              case E.THREE:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement35() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E#
+              case E.THREE:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement35a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E#
+              case E.THREE:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
+    void testStatement36() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E#
+              default:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E'
+        }
+    }
+
+    @Test
     void testExpression1() {
         assertLocation('a.a#', ContentAssistLocation.EXPRESSION)
     }
@@ -382,6 +574,198 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
             '''.stripIndent()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof PropertyExpression
+        }
+    }
+
+    @Test
+    void testExpression13() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression13a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression14() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression14a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression15() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E.T#
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression15a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E.T#
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression16() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#
+              case E.THREE:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression16a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.T#
+              case E.THREE:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression17() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E.T#
+              case E.THREE:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression17a() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E.T#
+              case E.THREE:
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
+        }
+    }
+
+    @Test
+    void testExpression18() {
+        addGroovySource 'enum E { ONE, TWO, THREE }'
+        String contents = '''\
+            void meth(E e) {
+              switch (e) {
+              case E.ONE:
+              case E.T#
+              default:
+                println 'stmt'
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+            assert fullCompletionExpression == 'E.T'
         }
     }
 

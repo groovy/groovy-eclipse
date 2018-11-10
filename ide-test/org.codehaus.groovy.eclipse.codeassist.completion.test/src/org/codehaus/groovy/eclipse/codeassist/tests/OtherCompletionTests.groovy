@@ -316,6 +316,36 @@ final class OtherCompletionTests extends CompletionTestSuite {
         checkReplacementString(proposals, 'value', 1)
     }
 
+    @Test
+    void testSwitchCompletion1() {
+        addGroovySource('enum E { ONE, TWO, THREE }', 'E', 'p')
+        String contents = '''\
+            void meth(p.E e) {
+              switch (e) {
+              case E
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'E'))
+        proposalExists(proposals, 'E - p', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/762
+    void testSwitchCompletion2() {
+        String contents = '''\
+            enum E { ONE, TWO, THREE }
+            void meth(E e) {
+              switch (e) {
+              case E.T
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'T'))
+        proposalExists(proposals, 'THREE', 1)
+        proposalExists(proposals, 'TWO', 1)
+        proposalExists(proposals, 'ONE', 0)
+    }
+
     @Test // GRECLIPSE-1388
     void testBeforeScriptCompletion() {
         String contents = '\n\ndef x = 9'

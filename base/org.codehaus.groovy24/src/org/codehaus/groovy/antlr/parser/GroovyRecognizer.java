@@ -11008,35 +11008,52 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST aCase_AST = null;
         
-        {
-        switch ( LA(1)) {
-        case LITERAL_case:
-        {
-            AST tmp260_AST = null;
-            tmp260_AST = astFactory.create(LT(1));
-            astFactory.makeASTRoot(currentAST, tmp260_AST);
-            match(LITERAL_case);
-            expression(0);
-            astFactory.addASTChild(currentAST, returnAST);
-            break;
+        try {      // for error handling
+            {
+            switch ( LA(1)) {
+            case LITERAL_case:
+            {
+                AST tmp260_AST = null;
+                tmp260_AST = astFactory.create(LT(1));
+                astFactory.makeASTRoot(currentAST, tmp260_AST);
+                match(LITERAL_case);
+                expression(0);
+                astFactory.addASTChild(currentAST, returnAST);
+                break;
+            }
+            case LITERAL_default:
+            {
+                AST tmp261_AST = null;
+                tmp261_AST = astFactory.create(LT(1));
+                astFactory.addASTChild(currentAST, tmp261_AST);
+                match(LITERAL_default);
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            match(COLON);
+            nls();
+            aCase_AST = (AST)currentAST.root;
         }
-        case LITERAL_default:
-        {
-            AST tmp261_AST = null;
-            tmp261_AST = astFactory.create(LT(1));
-            astFactory.addASTChild(currentAST, tmp261_AST);
-            match(LITERAL_default);
-            break;
+        catch (MismatchedTokenException e) {
+            if (inputState.guessing==0) {
+                
+                if (e.expecting == COLON) {
+                aCase_AST = (AST) currentAST.root;
+                reportError(e);
+                nls();
+                } else {
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
         }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        match(COLON);
-        nls();
-        aCase_AST = (AST)currentAST.root;
         returnAST = aCase_AST;
     }
     
@@ -11047,113 +11064,126 @@ inputState.guessing--;
         AST caseSList_AST = null;
         Token first = LT(1);
         
-        statement(COLON);
-        astFactory.addASTChild(currentAST, returnAST);
-        {
-        _loop373:
-        do {
-            if ((LA(1)==SEMI||LA(1)==NLS)) {
-                sep();
-                {
-                switch ( LA(1)) {
-                case FINAL:
-                case ABSTRACT:
-                case UNUSED_DO:
-                case STRICTFP:
-                case LITERAL_import:
-                case LITERAL_static:
-                case LITERAL_def:
-                case LBRACK:
-                case IDENT:
-                case STRING_LITERAL:
-                case LPAREN:
-                case LITERAL_class:
-                case LITERAL_interface:
-                case LITERAL_enum:
-                case LITERAL_trait:
-                case AT:
-                case LITERAL_super:
-                case LITERAL_void:
-                case LITERAL_boolean:
-                case LITERAL_byte:
-                case LITERAL_char:
-                case LITERAL_short:
-                case LITERAL_int:
-                case LITERAL_float:
-                case LITERAL_long:
-                case LITERAL_double:
-                case LITERAL_private:
-                case LITERAL_public:
-                case LITERAL_protected:
-                case LITERAL_transient:
-                case LITERAL_native:
-                case LITERAL_threadsafe:
-                case LITERAL_synchronized:
-                case LITERAL_volatile:
-                case LCURLY:
-                case LITERAL_this:
-                case LITERAL_if:
-                case LITERAL_while:
-                case LITERAL_switch:
-                case LITERAL_for:
-                case LITERAL_return:
-                case LITERAL_break:
-                case LITERAL_continue:
-                case LITERAL_throw:
-                case LITERAL_assert:
-                case PLUS:
-                case MINUS:
-                case LITERAL_try:
-                case LITERAL_false:
-                case LITERAL_new:
-                case LITERAL_null:
-                case LITERAL_true:
-                case INC:
-                case DEC:
-                case BNOT:
-                case LNOT:
-                case STRING_CTOR_START:
-                case NUM_INT:
-                case NUM_FLOAT:
-                case NUM_LONG:
-                case NUM_DOUBLE:
-                case NUM_BIG_INT:
-                case NUM_BIG_DECIMAL:
-                {
-                    statement(sepToken);
-                    astFactory.addASTChild(currentAST, returnAST);
-                    break;
+        try {      // for error handling
+            statement(COLON);
+            astFactory.addASTChild(currentAST, returnAST);
+            {
+            _loop373:
+            do {
+                if ((LA(1)==SEMI||LA(1)==NLS)) {
+                    sep();
+                    {
+                    switch ( LA(1)) {
+                    case FINAL:
+                    case ABSTRACT:
+                    case UNUSED_DO:
+                    case STRICTFP:
+                    case LITERAL_import:
+                    case LITERAL_static:
+                    case LITERAL_def:
+                    case LBRACK:
+                    case IDENT:
+                    case STRING_LITERAL:
+                    case LPAREN:
+                    case LITERAL_class:
+                    case LITERAL_interface:
+                    case LITERAL_enum:
+                    case LITERAL_trait:
+                    case AT:
+                    case LITERAL_super:
+                    case LITERAL_void:
+                    case LITERAL_boolean:
+                    case LITERAL_byte:
+                    case LITERAL_char:
+                    case LITERAL_short:
+                    case LITERAL_int:
+                    case LITERAL_float:
+                    case LITERAL_long:
+                    case LITERAL_double:
+                    case LITERAL_private:
+                    case LITERAL_public:
+                    case LITERAL_protected:
+                    case LITERAL_transient:
+                    case LITERAL_native:
+                    case LITERAL_threadsafe:
+                    case LITERAL_synchronized:
+                    case LITERAL_volatile:
+                    case LCURLY:
+                    case LITERAL_this:
+                    case LITERAL_if:
+                    case LITERAL_while:
+                    case LITERAL_switch:
+                    case LITERAL_for:
+                    case LITERAL_return:
+                    case LITERAL_break:
+                    case LITERAL_continue:
+                    case LITERAL_throw:
+                    case LITERAL_assert:
+                    case PLUS:
+                    case MINUS:
+                    case LITERAL_try:
+                    case LITERAL_false:
+                    case LITERAL_new:
+                    case LITERAL_null:
+                    case LITERAL_true:
+                    case INC:
+                    case DEC:
+                    case BNOT:
+                    case LNOT:
+                    case STRING_CTOR_START:
+                    case NUM_INT:
+                    case NUM_FLOAT:
+                    case NUM_LONG:
+                    case NUM_DOUBLE:
+                    case NUM_BIG_INT:
+                    case NUM_BIG_DECIMAL:
+                    {
+                        statement(sepToken);
+                        astFactory.addASTChild(currentAST, returnAST);
+                        break;
+                    }
+                    case RCURLY:
+                    case SEMI:
+                    case LITERAL_default:
+                    case LITERAL_case:
+                    case NLS:
+                    {
+                        break;
+                    }
+                    default:
+                    {
+                        throw new NoViableAltException(LT(1), getFilename());
+                    }
+                    }
+                    }
                 }
-                case RCURLY:
-                case SEMI:
-                case LITERAL_default:
-                case LITERAL_case:
-                case NLS:
-                {
-                    break;
+                else {
+                    break _loop373;
                 }
-                default:
-                {
-                    throw new NoViableAltException(LT(1), getFilename());
-                }
-                }
-                }
+                
+            } while (true);
             }
-            else {
-                break _loop373;
+            if ( inputState.guessing==0 ) {
+                caseSList_AST = (AST)currentAST.root;
+                caseSList_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"SLIST",first,LT(1))).add(caseSList_AST));
+                currentAST.root = caseSList_AST;
+                currentAST.child = caseSList_AST!=null &&caseSList_AST.getFirstChild()!=null ?
+                    caseSList_AST.getFirstChild() : caseSList_AST;
+                currentAST.advanceChildToEnd();
             }
-            
-        } while (true);
-        }
-        if ( inputState.guessing==0 ) {
             caseSList_AST = (AST)currentAST.root;
-            caseSList_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"SLIST",first,LT(1))).add(caseSList_AST));
-            currentAST.root = caseSList_AST;
-            currentAST.child = caseSList_AST!=null &&caseSList_AST.getFirstChild()!=null ?
-                caseSList_AST.getFirstChild() : caseSList_AST;
-            currentAST.advanceChildToEnd();
         }
-        caseSList_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                reportError(e);
+                astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT,"EMPTY_STAT"));
+                currentAST.root = caseSList_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"SLIST",first,LT(1))).add(currentAST.root));
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = caseSList_AST;
     }
     

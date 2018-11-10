@@ -659,15 +659,15 @@ compilationUnit
         // Semicolons and/or significant newlines serve as separators.
         ( sep! (statement[sepToken])? )*
         EOF!
-        // GRECLIPSE add
-        exception
-        catch [RecognitionException e] {
-            // report the error but don't throw away what we've successfully parsed
-            reportError(e);
-            #compilationUnit = (AST) currentAST.root;
-        }
-        // GRECLIPSE end
     ;
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        // report the error but don't throw away what we've successfully parsed
+        reportError(e);
+        #compilationUnit = (AST) currentAST.root;
+    }
+// GRECLIPSE end
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit
@@ -2295,14 +2295,14 @@ compatibleBodyStatement {Token first = LT(1);}
         {#compatibleBodyStatement = #(create(SLIST,"CBSLIST",first,LT(1)),de);}
     |
         statement[EOF]
-    // GRECLIPSE add
+    ;
+// GRECLIPSE add
     exception
     catch [RecognitionException e] {
         // GRECLIPSE-1046
         reportError(e);
     }
-    // GRECLIPSE end
-    ;
+// GRECLIPSE end
 
 /** In Groovy, return, break, continue, throw, and assert can be used in a parenthesized expression context.
  *  Example:  println (x || (return));  println assert x, "won't print a false value!"
@@ -2463,17 +2463,37 @@ casesGroup  {Token first = LT(1);}
             aCase
         )+
         caseSList
-        {#casesGroup = #(create(CASE_GROUP, "CASE_GROUP",first,LT(1)), #casesGroup);}
+        {#casesGroup = #(create(CASE_GROUP,"CASE_GROUP",first,LT(1)),#casesGroup);}
     ;
 
 aCase
     :   ("case"^ expression[0] | "default") COLON! nls!
     ;
+// GRECLIPSE add
+    exception
+    catch [MismatchedTokenException e] {
+        if (e.expecting == COLON) {
+            #aCase = (AST) currentAST.root;
+            reportError(e);
+            nls();
+        } else {
+            throw e;
+        }
+    }
+// GRECLIPSE end
 
 caseSList  {Token first = LT(1);}
     :   statement[COLON] (sep! (statement[sepToken])?)*
         {#caseSList = #(create(SLIST,"SLIST",first,LT(1)),#caseSList);}
     ;
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        reportError(e);
+        astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT,"EMPTY_STAT"));
+        currentAST.root = #caseSList = #(create(SLIST,"SLIST",first,LT(1)),currentAST.root);
+    }
+// GRECLIPSE end
 
 // The initializer for a for loop
 forInit  {Token first = LT(1);}
