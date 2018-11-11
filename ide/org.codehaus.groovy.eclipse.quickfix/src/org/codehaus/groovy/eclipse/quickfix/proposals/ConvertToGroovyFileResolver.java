@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.ui.utils.GroovyResourceUtil;
@@ -30,8 +30,6 @@ import org.eclipse.jface.text.IDocument;
  */
 public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
-    public static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
-
     public ConvertToGroovyFileResolver(QuickFixProblemContext problem) {
         super(problem);
     }
@@ -43,14 +41,17 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
     @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
-        List<IJavaCompletionProposal> fixes = new ArrayList<>();
-        fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
-        return fixes;
+        return Collections.singletonList(new ConvertToGroovyQuickFix(getQuickFixProblem()));
     }
 
     public static class ConvertToGroovyQuickFix extends AbstractGroovyQuickFixProposal {
         public ConvertToGroovyQuickFix(QuickFixProblemContext problem) {
             super(problem);
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Convert to Groovy file and open in Groovy editor";
         }
 
         @Override
@@ -61,14 +62,7 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
         @Override
         public void apply(IDocument document) {
             IResource resource = getQuickFixProblemContext().getResource();
-            List<IResource> resources = new ArrayList<>();
-            resources.add(resource);
-            GroovyResourceUtil.renameFile(GroovyResourceUtil.GROOVY, resources);
-        }
-
-        @Override
-        public String getDisplayString() {
-            return DESCRIPTION;
+            GroovyResourceUtil.renameFile(GroovyResourceUtil.GROOVY, Collections.singletonList(resource));
         }
     }
 }

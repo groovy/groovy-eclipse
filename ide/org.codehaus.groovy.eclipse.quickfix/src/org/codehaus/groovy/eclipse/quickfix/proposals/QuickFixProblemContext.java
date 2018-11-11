@@ -16,15 +16,13 @@
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
-/**
- * Base implementation of a quick fix problem.
- */
 public class QuickFixProblemContext {
 
     private final ProblemDescriptor problemDescriptor;
@@ -37,78 +35,47 @@ public class QuickFixProblemContext {
         this.location = location;
     }
 
-    /**
-     *
-     * @return compilation unit containing the problem. Never null.
-     */
-    public ICompilationUnit getCompilationUnit() {
-        return context.getCompilationUnit();
-    }
-
-    /**
-     *
-     * @return non-null problem descriptor for the problem that requires a quick
-     *         fix
-     */
-    public ProblemDescriptor getProblemDescriptor() {
-        return problemDescriptor;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-     * #isError()
-     */
-    public boolean isError() {
-        return location != null ? location.isError() : true;
-    }
-
-    /**
-     * Returns the start offset of the problem.
-     *
-     * @return the start offset of the problem
-     */
-    public int getOffset() {
-        return location != null ? location.getOffset() : context.getSelectionOffset();
-    }
-
-    /**
-     * Returns the length of the problem.
-     *
-     * @return the length of the problem
-     */
-    public int getLength() {
-        return location != null ? location.getLength() : context.getSelectionLength();
-    }
-
-    public ASTNode getCoveringNode(CompilationUnit astRoot) {
-        return context.getCoveringNode();
-    }
-
-    public ASTNode getCoveredNode(CompilationUnit astRoot) {
-        return context.getCoveredNode();
-    }
-
     public CompilationUnit getASTRoot() {
         return context.getASTRoot();
     }
 
-    /**
-     *
-     * @return the resource containing the problem.
-     */
-    public IResource getResource() {
-        return getCompilationUnit() != null ? getCompilationUnit()
-                .getResource() : null;
+    public ICompilationUnit getCompilationUnit() {
+        return context.getCompilationUnit();
     }
 
     public IInvocationContext getContext() {
         return context;
     }
 
+    public ASTNode getCoveredNode(CompilationUnit astRoot) {
+        return context.getCoveredNode();
+    }
+
+    public ASTNode getCoveringNode(CompilationUnit astRoot) {
+        return context.getCoveringNode();
+    }
+
     public IProblemLocation getLocation() {
         return location;
+    }
+
+    public boolean isError() {
+        return (location != null ? location.isError() : true);
+    }
+
+    public int getLength() {
+        return (location != null ? location.getLength() : context.getSelectionLength());
+    }
+
+    public int getOffset() {
+        return (location != null ? location.getOffset() : context.getSelectionOffset());
+    }
+
+    public ProblemDescriptor getProblemDescriptor() {
+        return problemDescriptor;
+    }
+
+    public IResource getResource() {
+        return Adapters.adapt(getCompilationUnit(), IResource.class);
     }
 }
