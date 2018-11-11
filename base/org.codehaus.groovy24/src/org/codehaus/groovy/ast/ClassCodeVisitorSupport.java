@@ -198,10 +198,6 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         } else if (!(node instanceof DeclarationExpression)) {
             start = node.getStart();
             end = node.getEnd() - 1;
-            if (node instanceof ClassNode && ((ClassNode) node).isArray()) {
-                // avoid extra whitespace after closing ]
-                end -= 1;
-            }
         } else {
             addError(msg, ((DeclarationExpression) node).getLeftExpression());
             return;

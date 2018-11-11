@@ -1569,12 +1569,33 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected AnnotationNode annotation(AST annotationNode) {
+        /* GRECLIPSE edit
         AST node = annotationNode.getFirstChild();
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
-        // GRECLIPSE edit
-        //configureAST(annotatedNode, annotationNode);
-        configureAnnotationAST(annotatedNode, annotationNode);
+        configureAST(annotatedNode, annotationNode);
+        */
+        AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
+        configureAST(annotatedNode, annotationNode.getFirstChild());
+        // Eclipse wants this for error reporting on name range:
+        annotatedNode.setEnd(annotatedNode.getEnd() - 1);
+
+        // save the full source range of the annotation for future use
+        int start = locations.findOffset(annotationNode.getLine(), annotationNode.getColumn());
+        int until = locations.findOffset(((GroovySourceAST) annotationNode).getLineLast(), ((GroovySourceAST) annotationNode).getColumnLast());
+        // check for trailing whitespace
+        if (getController() != null) {
+            char[] sourceChars = getController().readSourceRange(start, until - start);
+            if (sourceChars != null) {
+                int i = (sourceChars.length - 1);
+                while (i >= 0 && Character.isWhitespace(sourceChars[i])) {
+                    i -= 1; until -= 1;
+                }
+            }
+        }
+        annotatedNode.setNodeMetaData("source.offsets", Long.valueOf(((long) start << 32) | until)); // pack the offsets into one long integer value
+
+        AST node = annotationNode.getFirstChild();
         // GRECLIPSE end
         while (true) {
             node = node.getNextSibling();
@@ -1598,8 +1619,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     //-------------------------------------------------------------------------
 
     protected Statement statement(AST node) {
-        // GRECLIPSE add
-        // GRECLIPSE-1038 avoid NPE on bad code
+        // GRECLIPSE add -- avoid NPEs on bad code
         if (node == null) return new EmptyStatement();
         // GRECLIPSE end
         Statement statement = null;
@@ -2597,16 +2617,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return methodPointerExpression;
     }
 
-/*  commented out due to groovy.g non-determinisms
-  protected Expression defaultMethodPointerExpression(AST node) {
-        AST exprNode = node.getFirstChild();
-        String methodName = exprNode.toString();
-        MethodPointerExpression methodPointerExpression = new MethodPointerExpression(null, methodName);
-        configureAST(methodPointerExpression, node);
-        return methodPointerExpression;
-    }
-*/
-
     protected Expression listExpression(AST listNode) {
         List<Expression> expressions = new ArrayList<Expression>();
         AST elist = listNode.getFirstChild();
@@ -2694,7 +2704,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-
     protected Expression instanceofExpression(AST node) {
         AST leftNode = node.getFirstChild();
         Expression leftExpression = expression(leftNode);
@@ -2775,7 +2784,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE end
         return castExpression;
     }
-
 
     protected Expression indexExpression(AST indexNode) {
         AST bracket = indexNode.getFirstChild();
@@ -3533,7 +3541,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = typeNode.getFirstChild();
         if (node != null) {
             if (isType(INDEX_OP, node) || isType(ARRAY_DECLARATOR, node)) {
-                // GRECLIPSE edit
+                // GRECLIPSE edit -- retain generics
                 //answer = makeType(node).makeArray();
                 answer = makeTypeWithArguments(node).makeArray();
                 // GRECLIPSE end
@@ -3545,21 +3553,29 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     answer = newAnswer;
                 }
             }
+            // GRECLIPSE add
+            if (getController() != null) {
+                // check for trailing whitespace
+                GroovySourceAST root = (GroovySourceAST) node;
+                int start = locations.findOffset(root.getLine(), root.getColumn());
+                int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
+                char[] sourceChars = getController().readSourceRange(start, until - start);
+                if (sourceChars != null) {
+                    int idx = (sourceChars.length - 1), off = until;
+                    while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
+                        idx -= 1; off -= 1;
+                    }
+                    if (off < until) {
+                        int[] row_col = locations.getRowCol(off);
+                        root.setLineLast(row_col[0]); root.setColumnLast(row_col[1]);
+                    }
+                }
+            }
+            // GRECLIPSE end
             configureAST(answer, node);
         }
         return answer;
     }
-
-    /**
-     * Performs a name resolution to see if the given name is a type from imports,
-     * aliases or newly created classes
-     */
-    /*protected String resolveTypeName(String name, boolean safe) {
-        if (name == null) {
-            return null;
-        }
-        return resolveNewClassOrName(name, safe);
-    }*/
 
     /**
      * Extracts an identifier from the Antlr AST and then performs a name resolution
@@ -3631,7 +3647,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     // Helper methods
     //-------------------------------------------------------------------------
-
 
     /**
      * Returns true if the modifiers flags contain a visibility modifier
@@ -3743,7 +3758,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST child = node.getFirstChild();
         return child != null ? child.getText() : null;
     }
-
 
     public static boolean isType(int typeCode, AST node) {
         return node != null && node.getType() == typeCode;
@@ -3905,26 +3919,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             synthetic.setLastColumnNumber(row_col[1]);
         }
         return synthetic;
-    }
-
-    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
-        if (ast == null) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
-        }
-        if (!(ast instanceof GroovySourceAST)) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
-        }
-        // Structure of incoming parameter 'ast':
-        // ANNOTATION
-        // - down='annotationName' (IDENT:84)
-        configureAST(node, ast.getFirstChild());
-        configureAST(node.getClassNode(), ast.getFirstChild());
-        // save the full source range of the annotation for future use
-        long start = locations.findOffset(ast.getLine(), ast.getColumn());
-        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
-        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
-
-        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
     // GRECLIPSE end
 }

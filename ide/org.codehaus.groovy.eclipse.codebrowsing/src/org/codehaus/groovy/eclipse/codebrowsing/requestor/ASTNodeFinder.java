@@ -487,7 +487,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     private String readClassDeclaration(ClassNode node) {
         String code = node.getNodeMetaData("groovy.source");
         if (code == null) {
-            code = String.valueOf(GroovyUtils.readSourceRange(module.getContext(), node.getStart(), node.getLength()));
+            code = String.valueOf(module.getContext().readSourceRange(node.getStart(), node.getLength()));
             node.putNodeMetaData("groovy.source", code);
         }
         return code.substring(0, code.indexOf('{'));

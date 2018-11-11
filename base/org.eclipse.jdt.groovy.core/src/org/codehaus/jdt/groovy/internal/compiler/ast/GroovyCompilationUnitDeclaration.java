@@ -1504,13 +1504,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (AnnotationNode annotationNode : groovyAnnotations) {
                     ClassNode annoType = annotationNode.getClassNode();
                     TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
-                    annotationReference.sourceStart = annotationNode.getStart();
-                    annotationReference.sourceEnd = annotationNode.getEnd();
+                    annotationReference.sourceStart = GroovyUtils.startOffset(annotationNode);
+                    annotationReference.sourceEnd = GroovyUtils.endOffset(annotationNode) - 1;
 
                     Map<String, Expression> memberValuePairs = annotationNode.getMembers();
                     if (memberValuePairs == null || memberValuePairs.isEmpty()) {
-                        MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationNode.getStart());
-                        annotation.declarationSourceEnd = annotation.sourceEnd;
+                        MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationReference.sourceStart);
                         annotations.add(annotation);
                     } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
                         Map.Entry<String, Expression> memberValuePair = memberValuePairs.entrySet().iterator().next();
@@ -1518,21 +1517,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         //if (value instanceof AnnotationConstantExpression) {
                         //	Annotation[] containees = createAnnotations(Collections.singletonList(
                         //		(AnnotationNode) ((AnnotationConstantExpression) value).getValue()));
-                        //	ContainerAnnotation annotation = new ContainerAnnotation(containees[0], null, null);
-                        //	annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length() - 1; // TODO: What if name is qualified?
+                        //	ContainerAnnotation annotation = new ContainerAnnotation(containees[0], type, scope);
                         //	annotations.add(annotation);
                         //} else {
-                            SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationNode.getStart());
-                            annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length() - 1; // TODO: What if name is qualified?
+                            SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
                             annotation.memberValue = createAnnotationMemberExpression(value);
                             annotations.add(annotation);
                         //}
                     } else {
-                        NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationNode.getStart());
-                        annotation.declarationSourceEnd = annotation.sourceStart + annoType.getNameWithoutPackage().length() - 1; // TODO: What if name is qualified?
+                        NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
                         annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);
                         annotations.add(annotation);
                     }
+                    // TODO: declarationSourceEnd should be rparen position; antlr2 includes any trailing comment
+                    annotations.get(annotations.size() - 1).declarationSourceEnd = annotationReference.sourceEnd;
                 }
 
                 return annotations.toArray(new Annotation[annotations.size()]);
@@ -1576,7 +1574,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     return new ClassLiteralAccess(propertyEnd, createTypeReferenceForClassLiteral(prop));
                 }
                 // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                char[] text = GroovyUtils.readSourceRange(sourceUnit, prop.getStart(), propertyEnd - prop.getStart());
+                char[] text = sourceUnit.readSourceRange(prop.getStart(), propertyEnd - prop.getStart());
                 if (text == null || text.length == 0) text = prop.getText().toCharArray();
                 char[][] toks = CharOperation.splitOn('.',  text);
 
@@ -1584,7 +1582,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return new QualifiedNameReference(toks, positionsFor(toks, prop.getStart(), propertyEnd), prop.getStart(), propertyEnd);
 
             } else if (expr instanceof ClassExpression) {
-                char[] text = GroovyUtils.readSourceRange(sourceUnit, expr.getStart(), expr.getLength());
+                char[] text = sourceUnit.readSourceRange(expr.getStart(), expr.getLength());
                 if (text == null || text.length == 0) text = expr.getText().toCharArray();
                 char[][] toks = CharOperation.splitOn('.', text);
 
@@ -1985,8 +1983,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 ClassNode[] upperBounds = generics[i].getUpperBounds();
                 if (upperBounds != null && upperBounds.length > 0) {
-                    String source = String.valueOf(GroovyUtils.readSourceRange(
-                        sourceUnit, generics[i].getStart(), generics[i].getLength()));
+                    String source = String.valueOf(sourceUnit.readSourceRange(generics[i].getStart(), generics[i].getLength()));
                     // recheck offset with each bound because many will have sloc
                     int _start = startOffset(upperBounds[0]),
                         _until = endOffset(upperBounds[0]);
@@ -2427,7 +2424,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             constructorDecl.javadoc = doc;
 
             constructorDecl.declarationSourceStart = (doc != null ? doc.sourceStart : constructorNode.getStart());
-            constructorDecl.modifiersSourceStart = constructorNode.getStart(); // TODO: includes annotations?
+            constructorDecl.modifiersSourceStart = constructorNode.getStart();
             constructorDecl.declarationSourceEnd = constructorNode.getEnd()-1;
             constructorDecl.sourceStart = constructorNode.getNameStart();
             constructorDecl.sourceEnd = constructorNode.getNameEnd();
@@ -2448,7 +2445,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             methodDecl.javadoc = doc;
 
             methodDecl.declarationSourceStart = (doc != null ? doc.sourceStart : methodNode.getStart());
-            methodDecl.modifiersSourceStart = methodNode.getStart(); // TODO: includes annotations?
+            methodDecl.modifiersSourceStart = methodNode.getStart();
             methodDecl.declarationSourceEnd = methodNode.getEnd()-1;
 
             // script run() methods have no name, so use the start of the method instead
@@ -2473,7 +2470,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             fieldDecl.javadoc = doc;
 
             fieldDecl.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
-            fieldDecl.modifiersSourceStart = fieldNode.getStart(); // TODO: includes annotations?
+            fieldDecl.modifiersSourceStart = fieldNode.getStart();
             fieldDecl.declarationSourceEnd = fieldNode.getEnd()-1;
 
             fieldDecl.sourceStart = fieldNode.getNameStart();

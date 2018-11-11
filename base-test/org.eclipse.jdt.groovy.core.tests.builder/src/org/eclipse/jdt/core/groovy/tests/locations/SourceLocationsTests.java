@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
@@ -35,8 +36,10 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -153,6 +156,33 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         assertEquals(body + "\nhas incorrect source start value", start, body.getStartPosition());
         assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
 
+        String modsStartTag = "/*" + astKind + memberNumber + "sm*/";
+        int modsStart = source.indexOf(modsStartTag);
+        if (modsStart == -1) {
+            modsStart = start;
+        } else {
+            modsStart += modsStartTag.length();
+        }
+
+        String modsEndTag = "/*" + astKind + memberNumber + "em*/";
+        int modsEnd = source.indexOf(modsEndTag);
+        if (modsEnd == -1) {
+            modsEnd = modsStart;
+        }
+
+        List<ASTNode> mods = body.modifiers();
+        if (mods != null && !mods.isEmpty()) {
+            if (!isParrotParser() && last(mods) instanceof Annotation) {
+                modsEnd += modsEndTag.length(); // antlr2 includes comment
+            }
+            int one = mods.get(0).getStartPosition(), two = last(mods).getStartPosition() + last(mods).getLength();
+            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, one);
+            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, two);
+        } else {
+            assertEquals(decl + "\nhas incorrect modifiers start value", modsStart, start);
+            assertEquals(decl + "\nhas incorrect modifiers end value", modsEnd, start);
+        }
+
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
         int nameStart = source.indexOf(nameStartTag);
         if (nameStart == -1) {
@@ -173,8 +203,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         }
 
         ISourceRange nameDeclRange = decl.getNameRange();
-        assertEquals(decl + "\nhas incorrect source start value", nameStart, nameDeclRange.getOffset());
-        assertEquals(decl + "\nhas incorrect source end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
+        assertEquals(decl + "\nhas incorrect name start value", nameStart, nameDeclRange.getOffset());
+        assertEquals(decl + "\nhas incorrect name end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
 
         if (body instanceof FieldDeclaration) {
             SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) body).fragments().get(0)).getName();
@@ -252,8 +282,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     public void testSourceLocations() throws Exception {
         String source =
             "package p1\n" +
-            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
+            "/*t0s*/public/*t0em*/ class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public static/*m0em*/ void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\");\n" +
             "  }/*m0e*/\n" +
             "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/;\n" +
@@ -265,8 +295,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     public void testSourceLocationsNoSemiColons() throws Exception {
         String source =
             "package p1\n" +
-            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
+            "/*t0s*/public/*t0em*/ class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public static/*m0em*/ void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\");\n" +
             "  }/*m0e*/\n" +
             "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/\n" +
@@ -283,6 +313,32 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "  /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/758
+    public void testSourceLocationsAnnotationModifiers1() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/@Deprecated/*m0em*/\n" +
+            "  def /*m0sn*/main/*m0en*/(args) /*m0sb*/{\n" +
+            "    println 'Hello world'\n" +
+            "  }/*m0e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsAnnotationModifiers2() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/@Deprecated(/*lalala*/)/*m0em*/\n" +
+            "  def /*m0sn*/main/*m0en*/(args) /*m0sb*/{\n" +
+            "    println 'Hello world'\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -347,7 +403,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
@@ -359,7 +415,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
@@ -371,7 +427,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
@@ -383,7 +439,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
@@ -443,7 +499,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
@@ -455,7 +511,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public String /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
+            "  /*m0s*/public/*m0em*/ String /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -474,8 +530,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     public void testSourceLocationsAbstractClass1() throws Exception {
         String source =
             "package p1\n" +
-            "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public abstract /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
+            "/*t0s*/abstract/*t0em*/ class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public abstract/*m0em*/ /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -484,8 +540,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     public void testSourceLocationsAbstractClass2() throws Exception {
         String source =
             "package p1\n" +
-            "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/abstract /*m0sn*/hello/*m0en*/(args, String blargs) throws Exception/*m0e*/\n" +
+            "/*t0s*/abstract/*t0em*/ class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/abstract/*m0em*/ /*m0sn*/hello/*m0en*/(args, String blargs) throws Exception/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -545,7 +601,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(int one, int two) /*m0sb*/{\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(int one, int two) /*m0sb*/{\n" +
             "  }/*m0e*/    \t    \n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -556,7 +612,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/protected String /*m0sn*/bar/*m0en*/(int one, int two) /*m0sb*/{\n" +
+            "  /*m0s*/protected/*m0em*/ String /*m0sn*/bar/*m0en*/(int one, int two) /*m0sb*/{\n" +
             "  }/*m0e*/    \t    \n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));

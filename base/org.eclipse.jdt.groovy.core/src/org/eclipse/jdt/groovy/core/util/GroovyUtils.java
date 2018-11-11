@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,13 +46,11 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.Version;
 
 /**
@@ -68,22 +65,6 @@ public class GroovyUtils {
         // convert "2.5.0-beta-2" -> "2.5.0.beta-2"
         version = version.replaceFirst("-", ".");
         return new Version(version);
-    }
-
-    // TODO: Replace with SourceUnit.readSourceRange when Groovy 2.5 is the minimum supported runtime.
-    public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
-        try (Reader reader = unit.getSource().getReader()) {
-            reader.skip(offset);
-            int n = length;
-            final char[] code = new char[n];
-            while (n > 0) {
-                n -= reader.read(code, length - n, n);
-            }
-            return code;
-        } catch (Exception e) {
-            Util.log(e);
-        }
-        return null;
     }
 
     // FIXASC don't use this any more?

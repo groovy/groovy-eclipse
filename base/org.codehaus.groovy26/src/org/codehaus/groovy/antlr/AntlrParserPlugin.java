@@ -1672,12 +1672,33 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected AnnotationNode annotation(AST annotationNode) {
         annotationBeingDef = true;
+        /* GRECLIPSE edit
         AST node = annotationNode.getFirstChild();
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
-        // GRECLIPSE edit
-        //configureAST(annotatedNode, annotationNode);
-        configureAnnotationAST(annotatedNode, annotationNode);
+        configureAST(annotatedNode, annotationNode);
+        */
+        AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
+        configureAST(annotatedNode, annotationNode.getFirstChild());
+        // Eclipse wants this for error reporting on name range:
+        annotatedNode.setEnd(annotatedNode.getEnd() - 1);
+
+        // save the full source range of the annotation for future use
+        int start = locations.findOffset(annotationNode.getLine(), annotationNode.getColumn());
+        int until = locations.findOffset(((GroovySourceAST) annotationNode).getLineLast(), ((GroovySourceAST) annotationNode).getColumnLast());
+        // check for trailing whitespace
+        if (getController() != null) {
+            char[] sourceChars = getController().readSourceRange(start, until - start);
+            if (sourceChars != null) {
+                int i = (sourceChars.length - 1);
+                while (i >= 0 && Character.isWhitespace(sourceChars[i])) {
+                    i -= 1; until -= 1;
+                }
+            }
+        }
+        annotatedNode.setNodeMetaData("source.offsets", Long.valueOf(((long) start << 32) | until)); // pack the offsets into one long integer value
+
+        AST node = annotationNode.getFirstChild();
         // GRECLIPSE end
         while (true) {
             node = node.getNextSibling();
@@ -1696,28 +1717,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         annotationBeingDef = false;
         return annotatedNode;
     }
-
-    // GRECLIPSE add
-    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
-        if (ast == null) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
-        }
-        if (!(ast instanceof GroovySourceAST)) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
-        }
-        // Structure of incoming parameter 'ast':
-        // ANNOTATION
-        // - down='annotationName' (IDENT:84)
-        configureAST(node, ast.getFirstChild());
-        configureAST(node.getClassNode(), ast.getFirstChild());
-        // save the full source range of the annotation for future use
-        long start = locations.findOffset(ast.getLine(), ast.getColumn());
-        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
-        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
-
-        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
-    }
-    // GRECLIPSE end
 
     // Statements
     //-------------------------------------------------------------------------
