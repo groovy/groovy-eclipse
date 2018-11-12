@@ -139,21 +139,21 @@
 
 
     <target name="-init24" if="do-24-build">
-        <echo message="Building groovy 2.4.x"/>
+        <echo message="Building Groovy 2.4.x"/>
         <property name="version" value="${version2.4}"/>
         <property name="groovy.folder" value="org.codehaus.groovy24"/>
     </target>
 
 
     <target name="-init25" if="do-25-build">
-        <echo message="Building groovy 2.5.x"/>
+        <echo message="Building Groovy 2.5.x"/>
         <property name="version" value="${version2.5}"/>
         <property name="groovy.folder" value="org.codehaus.groovy25"/>
     </target>
 
 
     <target name="-init26" if="do-26-build">
-        <echo message="Building groovy 2.6.x"/>
+        <echo message="Building Groovy 2.6.x"/>
         <property name="version" value="${version2.6}"/>
         <property name="groovy.folder" value="org.codehaus.groovy26"/>
     </target>
