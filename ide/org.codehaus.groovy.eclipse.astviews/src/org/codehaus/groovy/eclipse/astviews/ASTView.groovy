@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.Adapters
 import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.ElementChangedEvent
@@ -32,8 +31,6 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IElementChangedListener
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.IStructuredSelection
@@ -88,12 +85,12 @@ class ASTView extends ViewPart {
 
         listener = { ElementChangedEvent event ->
             if (editor != null) {
-                IFile file = Adapters.adapt(editor.editorInput, IFile)
-                ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file)
+                def unit = Adapters.adapt(editor.editorInput, GroovyCompilationUnit)
                 if (isUnitInDelta(event.delta, unit)) {
-                    Display.getDefault().asyncExec { ->
-                        Object[] treePaths = viewer.expandedElements
-                        viewer.input = ((GroovyCompilationUnit) unit).moduleNode
+                    Display.default.asyncExec { ->
+                        def treePaths =
+                            viewer.expandedElements
+                        viewer.input = unit.moduleNode
                         viewer.expandedElements = treePaths
                     }
                 }
@@ -111,34 +108,33 @@ class ASTView extends ViewPart {
             void partBroughtToTop(IWorkbenchPart part) {
                 try {
                     if (part instanceof IEditorPart) {
-                        IFile file = Adapters.adapt(((IEditorPart) part).editorInput, IFile)
-                        if (file != null && ContentTypeUtils.isGroovyLikeFileName(file.name)) {
-                            ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file)
-                            if (unit instanceof GroovyCompilationUnit) {
-                                if (editor != part) {
-                                    editor = (IEditorPart) part
-                                    Object[] treePaths = viewer.expandedElements
-                                    viewer.input = ((GroovyCompilationUnit) unit).moduleNode
-                                    viewer.expandedElements = treePaths
-                                }
-                                return
+                        def unit = Adapters.adapt(part.editorInput, GroovyCompilationUnit)
+                        if (unit != null) {
+                            if (editor != part) {
+                                editor = part
+                                def treePaths =
+                                    viewer.expandedElements
+                                viewer.input = unit.moduleNode
+                                viewer.expandedElements = treePaths
                             }
+                            return
                         }
                     }
                 } catch (err) {
                     Activator.default.log.log(new Status(Status.WARNING, Activator.PLUGIN_ID, 'Error updating AST Viewer', err))
                 }
-                editor = null
+                partClosed(part)
+            }
+
+            @Override
+            void partClosed(IWorkbenchPart part) {
                 // This is a guard - the content provider should not be null, but sometimes this happens when the
                 // part is disposed of for various reasons (unhandled exceptions AFAIK). Without this guard,
                 // error message popups continue until Eclipse if forcefully killed.
                 if (viewer.contentProvider != null) {
                     viewer.input = null
                 }
-            }
-
-            @Override
-            void partClosed(IWorkbenchPart part) {
+                editor = null
             }
 
             @Override
@@ -153,7 +149,7 @@ class ASTView extends ViewPart {
         site.page.with {
             addPartListener(partListener)
             if (activeEditor instanceof GroovyEditor) {
-                Display.getDefault().asyncExec { ->
+                Display.default.asyncExec { ->
                     partListener.partBroughtToTop(activeEditor)
                 }
             }
@@ -206,31 +202,37 @@ class ASTView extends ViewPart {
         }
 
         @Override
-        void inputChanged(Viewer v, Object oldInput, Object newInput) {
+        Object getParent(Object child) {
+            if (child instanceof ITreeNode) {
+                child.parent
+            }
         }
 
         @Override
         Object[] getElements(Object inputElement) {
-            if (!(inputElement instanceof ModuleNode)) {
-                return new Object[0]
+            if (inputElement instanceof ModuleNode) {
+                root = TreeNodeFactory.createTreeNode(null, inputElement, 'Module Nodes')
+                return root.children
             }
-            root = TreeNodeFactory.createTreeNode(null, inputElement, 'Module Nodes')
-            return root.children
-        }
-
-        @Override
-        Object getParent(Object child) {
-            ((ITreeNode) child).parent
+            return new Object[0]
         }
 
         @Override
         Object[] getChildren(Object parent) {
-            ((ITreeNode) parent).children
+            if (parent instanceof ITreeNode) {
+                parent.children
+            }
         }
 
         @Override
         boolean hasChildren(Object parent) {
-            !((ITreeNode) parent).isLeaf()
+            if (parent instanceof ITreeNode) {
+                !parent.isLeaf()
+            }
+        }
+
+        @Override
+        void inputChanged(Viewer v, Object oldInput, Object newInput) {
         }
     }
 
@@ -241,7 +243,9 @@ class ASTView extends ViewPart {
 
         @Override
         String getText(Object obj) {
-            ((ITreeNode) obj).displayName
+            if (obj instanceof ITreeNode) {
+                obj.displayName
+            }
         }
     }
 }

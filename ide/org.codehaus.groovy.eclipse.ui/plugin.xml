@@ -975,6 +975,8 @@
                type="org.codehaus.groovy.ast.ClassNode"/>
          <adapter
                type="org.codehaus.groovy.ast.ModuleNode"/>
+         <adapter
+               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
       </factory>
       <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
@@ -983,6 +985,8 @@
                type="org.codehaus.groovy.ast.ClassNode"/>
          <adapter
                type="org.codehaus.groovy.ast.ModuleNode"/>
+         <adapter
+               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
       </factory>
       <factory
             adaptableType="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor"
