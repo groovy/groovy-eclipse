@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
@@ -1439,6 +1439,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
             new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
+    }
+
+    @Test
+    void testAnnoElems5() {
+        addGroovySource '''\
+            class Bar {
+              public static final String RAW = 'raw'
+              public static final String TYPES = 'types'
+            }
+            '''.stripIndent(), 'Bar', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.*
+            class C {
+              @SuppressWarnings(RAW + TYPES)
+              def method() {
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('RAW'), 'RAW'.length(), STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('TYPES'), 'TYPES'.length(), STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
     }
 

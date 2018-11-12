@@ -30,7 +30,7 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_JAR = "lib/groovy-2.5.3-indy.jar";
+    public static final String GROOVY_JAR = "lib/groovy-2.5.4-indy.jar";
 
     public static URL GROOVY_JAR_URL;
 

@@ -100,7 +100,7 @@ public class AnnotationCollectorTransform {
          */
         public void transformClass(ClassNode cn) {
             AnnotationNode collector = null;
-            for (ListIterator<AnnotationNode> it = cn.getAnnotations().listIterator(); it.hasNext();) {
+            for (ListIterator<AnnotationNode> it = cn.getAnnotations().listIterator(); it.hasNext(); ) {
                 AnnotationNode an = it.next();
                 if (an.getClassNode().getName().equals(AnnotationCollector.class.getName())) {
                     collector = an;
@@ -148,7 +148,7 @@ public class AnnotationCollectorTransform {
                     Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, code);
 
             // remove annotations
-            for (ListIterator<AnnotationNode> it = cn.getAnnotations().listIterator(); it.hasNext();) {
+            for (ListIterator<AnnotationNode> it = cn.getAnnotations().listIterator(); it.hasNext(); ) {
                 AnnotationNode an = it.next();
                 if (an == collector || "java.lang.annotation".equals(an.getClassNode().getPackageName())) {
                     continue;

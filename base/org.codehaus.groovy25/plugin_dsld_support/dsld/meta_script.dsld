@@ -25,11 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
  * @author Andrew Eisenberg
  */
 
-// first thing to do is to check that versions are correct
-// for this script to be evaluated any further, all conditions must be met
-// also supports grailsTooling and sts, which are synonyms and correspond to the STS version eg- 2.6.0
-// we can add more version checking on request
-assertVersion(groovy: '2.5.3', groovyEclipse: '3.0.0')
+assertVersion(groovyEclipse: '3.2.0')
 
 interface IPointcut {
     /**

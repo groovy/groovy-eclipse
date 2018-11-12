@@ -19,12 +19,12 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.Tuple2;
+import org.apache.groovy.ast.tools.ExpressionUtils;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
@@ -242,7 +242,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         VariableScope oldScope = currentScope;
         currentScope = node.getVariableScope();
         Map<GenericsTypeName, GenericsType> oldPNames = genericParameterNames;
-        genericParameterNames = node.isStatic()
+        genericParameterNames = node.isStatic() && !Traits.isTrait(node.getDeclaringClass())
                 ? new HashMap<GenericsTypeName, GenericsType>()
                 : new HashMap<GenericsTypeName, GenericsType>(genericParameterNames);
 
@@ -279,7 +279,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitProperty(PropertyNode node) {
         Map<GenericsTypeName, GenericsType> oldPNames = genericParameterNames;
-        if (node.isStatic()) {
+        if (node.isStatic() && !Traits.isTrait(node.getDeclaringClass())) {
             genericParameterNames = new HashMap<GenericsTypeName, GenericsType>();
         }
 
@@ -580,6 +580,48 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
+    // GRECLIPSE private->protected
+    protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
+        // test default imports
+        testDefaultImports &= !type.hasPackageName();
+        // we do not resolve a vanilla name starting with a lower case letter
+        // try to resolve against a default import, because we know that the
+        // default packages do not contain classes like these
+        testDefaultImports &= !(type instanceof LowerCaseClass);
+
+        if (testDefaultImports) {
+            if (resolveFromDefaultImports(type)) return true;
+
+            final String typeName = type.getName();
+            if (BIGINTEGER_STR.equals(typeName)) {
+                type.setRedirect(ClassHelper.BigInteger_TYPE);
+                return true;
+            } else if (BIGDECIMAL_STR.equals(typeName)) {
+                type.setRedirect(ClassHelper.BigDecimal_TYPE);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean resolveFromDefaultImports(ClassNode type) {
+        final String typeName = type.getName();
+
+        Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.get(typeName);
+        if (null != packagePrefixSet) {
+            // if the type name was resolved before, we can try the successfully resolved packages first, which are much less and very likely successful to resolve.
+            // As a result, we can avoid trying other default import packages and further resolving, which can improve the resolving performance to some extent.
+            if (resolveFromDefaultImports(type, packagePrefixSet.toArray(EMPTY_STRING_ARRAY))) {
+                return true;
+            }
+        }
+
+        if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
+            return true;
+        }
+        return false;
+    }
+
     private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
 
     private boolean resolveFromDefaultImports(final ClassNode type, final String[] packagePrefixes) {
@@ -616,41 +658,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
         }
 
-        return false;
-    }
-
-    // GRECLIPSE private->protected
-    protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
-        // test default imports
-        testDefaultImports &= !type.hasPackageName();
-        // we do not resolve a vanilla name starting with a lower case letter
-        // try to resolve against a default import, because we know that the
-        // default packages do not contain classes like these
-        testDefaultImports &= !(type instanceof LowerCaseClass);
-        final String typeName = type.getName();
-
-        if (testDefaultImports) {
-            Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.get(typeName);
-            if (null != packagePrefixSet) {
-                // if the type name was resolved before, we can try the successfully resolved packages first, which are much less and very likely successful to resolve.
-                // As a result, we can avoid trying other default import packages and further resolving, which can improve the resolving performance to some extent.
-                if (resolveFromDefaultImports(type, packagePrefixSet.toArray(EMPTY_STRING_ARRAY))) {
-                    return true;
-                }
-            }
-
-            if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
-                return true;
-            }
-
-            if (BIGINTEGER_STR.equals(typeName)) {
-                type.setRedirect(ClassHelper.BigInteger_TYPE);
-                return true;
-            } else if (BIGDECIMAL_STR.equals(typeName)) {
-                type.setRedirect(ClassHelper.BigDecimal_TYPE);
-                return true;
-            }
-        }
         return false;
     }
 
@@ -1372,9 +1379,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
             for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
                 Expression newValue = transform(member.getValue());
-                newValue = transformInlineConstants(newValue);
-                member.setValue(newValue);
-                checkAnnotationMemberValue(newValue);
+                Expression adjusted = transformInlineConstants(newValue);
+                member.setValue(adjusted);
+                checkAnnotationMemberValue(adjusted);
             }
             /* GRECLIPSE edit -- can't do this
             if (annType.isResolved()) {
@@ -1403,47 +1410,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    // resolve constant-looking expressions statically (do here as gets transformed away later)
-    private Expression transformInlineConstants(Expression exp) {
-        if (exp instanceof PropertyExpression) {
-            PropertyExpression pe = (PropertyExpression) exp;
-            if (pe.getObjectExpression() instanceof ClassExpression) {
-                ClassExpression ce = (ClassExpression) pe.getObjectExpression();
-                ClassNode type = ce.getType();
-                if (type.isEnum())
-                    return exp;
-
-                FieldNode fn = type.getField(pe.getPropertyAsString());
-                if (fn != null && !fn.isEnum() && fn.isStatic() && fn.isFinal()) {
-                    if (fn.getInitialValueExpression() instanceof ConstantExpression) {
-                        // GRECLIPSE edit
-                        return cloneConstantExpression(fn.getInitialValueExpression(), exp);
-                        // GRECLIPS end
-                    }
-                }
-            }
-        // GRECLIPSE add
-        } else if (exp instanceof VariableExpression) {
-            VariableExpression ve = (VariableExpression) exp;
-            if (ve.getAccessedVariable() instanceof FieldNode) {
-                FieldNode fn = (FieldNode) ve.getAccessedVariable();
-                if (!fn.isEnum() && fn.isStatic() && fn.isFinal() &&
-                        fn.getInitialValueExpression() instanceof ConstantExpression) {
-                    return cloneConstantExpression(fn.getInitialValueExpression(), exp);
-                }
-            }
-        // GRECLIPSE end
-        } else if (exp instanceof ListExpression) {
-            ListExpression le = (ListExpression) exp;
-            ListExpression result = new ListExpression();
-            for (Expression e : le.getExpressions()) {
-                result.addExpression(transformInlineConstants(e));
-            }
-            // GRECLIPSE add
-            result.setSourcePosition(exp);
-            // GRECLIPSE end
-            return result;
-        } else if (exp instanceof AnnotationConstantExpression) {
+    // resolve constant-looking expressions statically (do here as they get transformed away later)
+    private static Expression transformInlineConstants(final Expression exp) {
+        if (exp instanceof AnnotationConstantExpression) {
             ConstantExpression ce = (ConstantExpression) exp;
             if (ce.getValue() instanceof AnnotationNode) {
                 // replicate a little bit of AnnotationVisitor here
@@ -1453,19 +1422,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     member.setValue(transformInlineConstants(member.getValue()));
                 }
             }
+        } else {
+            return ExpressionUtils.transformInlineConstants(exp);
         }
         return exp;
     }
-
-    // GRECLIPSE add
-    protected static ConstantExpression cloneConstantExpression(Expression val, Expression src) {
-        ConstantExpression ret = new ConstantExpression(((ConstantExpression) val).getValue());
-        ret.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, src);
-        // TODO: Copy any other fields or metadata?
-        // Source position is dropped by design.
-        return ret;
-    }
-    // GRECLIPSE end
 
     private void checkAnnotationMemberValue(Expression newValue) {
         if (newValue instanceof PropertyExpression) {

@@ -120,7 +120,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     public void visitConstantExpression(ConstantExpression expression) {
-        // check for inlined constant (see ResolveVisitor.transformInlineConstants)
+        // check for inlined constant (see ExpressionUtils.transformInlineConstants)
         Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
         if (original != null) {
             original.visit(this);
