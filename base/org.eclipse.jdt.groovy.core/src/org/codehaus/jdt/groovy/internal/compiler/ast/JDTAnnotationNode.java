@@ -29,7 +29,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.impl.IntConstant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -122,13 +121,12 @@ public class JDTAnnotationNode extends AnnotationNode {
         if (b.isArrayType()) {
             ListExpression listExpression = new ListExpression();
             if (value.getClass().isArray()) {
-                Object[] values = (Object[]) value;
-                for (Object v : values) {
+                for (Object v : (Object[]) value) {
                     if (v != null) // TODO: Why did null values start appearing in Java 9?
-                        listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, v));
+                        listExpression.addExpression(createExpressionFor(b.leafComponentType(), v));
                 }
             } else {
-                listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, value));
+                listExpression.addExpression(createExpressionFor(b.leafComponentType(), value));
             }
             return listExpression;
         }

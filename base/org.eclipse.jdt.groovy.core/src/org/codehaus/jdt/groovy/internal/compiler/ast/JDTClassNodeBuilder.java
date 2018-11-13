@@ -30,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -63,7 +64,7 @@ class JDTClassNodeBuilder {
             LookupEnvironment environment = resolver.getScope().environment;
             char[][] compoundName = ((UnresolvedReferenceBinding) type).compoundName;
             type = environment.getType(compoundName); // TODO: Use getType(char[][],ModuleBinding)?
-            if (type == null) {
+            if (type == null || type instanceof ProblemReferenceBinding) {
                 throw new IllegalStateException("Unable to resolve type: " + CharOperation.toString(compoundName));
             }
         }
@@ -136,36 +137,6 @@ class JDTClassNodeBuilder {
         return gts;
     }
 
-    // TODO still not 100% confident that the callers of this are doing the right thing or have the right expectations
-    protected TypeBinding toRawType(TypeBinding tb) {
-        if (tb instanceof RawTypeBinding) {
-            return tb;
-        } else if (tb instanceof ParameterizedTypeBinding) {
-            ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
-            // resolver.getScope() can return null (if the resolver hasn't yet been used to resolve something) - using
-            // the environment on the ptb seems safe. Other occurrences of getScope in this file could feasibly
-            // be changed in the same way if NPEs become problems there too
-            return ptb.environment().convertToRawType(ptb.genericType(), false);
-        } else if (tb instanceof TypeVariableBinding) {
-            TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
-            return (fb != null ? fb : tb.erasure());
-        } else if (tb instanceof BinaryTypeBinding) {
-            if (tb.isGenericType()) {
-                LookupEnvironment le = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "environment", tb);
-                return le.convertToRawType(tb, false);
-            } else {
-                return tb;
-            }
-        } else if (tb instanceof ArrayBinding) {
-            return tb;
-        } else if (tb instanceof BaseTypeBinding) {
-            return tb;
-        } else if (tb instanceof SourceTypeBinding) {
-            return tb;
-        }
-        throw new IllegalStateException("nyi " + tb.getClass());
-    }
-
     /**
      * Loosely based on Java5.configureGenericArray()
      */
@@ -231,31 +202,15 @@ class JDTClassNodeBuilder {
         return gt;
     }
 
-    private TypeBinding[] getBounds(TypeVariableBinding tv) {
-        if (tv.firstBound == null) {
-            TypeBinding erasure = tv.erasure();
-            if (erasure == null) {
-                erasure = resolver.getScope().getJavaLangObject();
-            }
-            return new TypeBinding[] {erasure};
-        } else {
-            TypeBinding[] others = tv.otherUpperBounds();
-            TypeBinding[] bounds = new TypeBinding[1 + others.length];
-            System.arraycopy(others, 0, bounds, 1, others.length);
-            bounds[0] = tv.firstBound;
-            return bounds;
-        }
-    }
-
     /**
      * Based on Java5.configureWildcardType()
      */
-    private ClassNode configureWildcardType(WildcardBinding wildcardType) {
+    private ClassNode configureWildcardType(WildcardBinding wildcard) {
         ClassNode base = ClassHelper.makeWithoutCaching("?");
         base.setRedirect(ClassHelper.OBJECT_TYPE);
 
-        ClassNode[] uppers = configureTypes(getUpperBounds(wildcardType));
-        ClassNode[] lowers = configureTypes(getLowerBounds(wildcardType));
+        ClassNode[] uppers = configureTypes(getUpperBounds(wildcard));
+        ClassNode[] lowers = configureTypes(getLowerBounds(wildcard));
         GenericsType t = new GenericsType(base, uppers,
             lowers != null && lowers.length > 0 ? lowers[0] : null);
         t.setWildcard(true);
@@ -265,54 +220,31 @@ class JDTClassNodeBuilder {
         return ref;
     }
 
-    private TypeBinding[] getLowerBounds(WildcardBinding wildcardType) {
-        if (wildcardType.boundKind == Wildcard.SUPER) {
-            return new TypeBinding[] {wildcardType.bound};
+    private ClassNode configureParameterizedType(ParameterizedTypeBinding tb) {
+        if (tb instanceof RawTypeBinding) {
+            return new JDTClassNode(tb, resolver); // doesn't need generics initializing
         }
-        return Binding.NO_TYPES;
-    }
-
-    private TypeBinding[] getUpperBounds(WildcardBinding wildcardType) {
-        if (wildcardType.boundKind == Wildcard.EXTENDS) {
-            int nBounds = (wildcardType.otherBounds == null ? 1 : 1 + wildcardType.otherBounds.length);
-            TypeBinding[] bounds = new TypeBinding[nBounds];
-            bounds[0] = wildcardType.bound;
-            nBounds -= 1;
-            if (nBounds > 0) {
-                System.arraycopy(wildcardType.otherBounds, 0, bounds, 1, nBounds);
-            }
-            return bounds;
-        }
-        return Binding.NO_TYPES;
-    }
-
-    private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
-        if (parameterizedType instanceof RawTypeBinding) {
-            TypeBinding rt = toRawType(parameterizedType);
-            assert rt instanceof RawTypeBinding : "yikes";
-            return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
-        }
-        TypeBinding rt = toRawType(parameterizedType);
+        TypeBinding rt = toRawType(tb);
         if (rt instanceof ParameterizedTypeBinding && !(rt instanceof RawTypeBinding)) {
             // the type was the inner type of a parameterized type
             return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
         }
         ClassNode cn = configureType(rt);
         if (cn instanceof JDTClassNode) {
-            ((JDTClassNode) cn).setJdtBinding(parameterizedType);
+            ((JDTClassNode) cn).setJdtBinding(tb);
             // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
-            if (!(parameterizedType instanceof RawTypeBinding)) {
-                setRedirect(cn, configureType(parameterizedType.genericType()));
+            if (!(tb instanceof RawTypeBinding)) {
+                setRedirect(cn, configureType(tb.genericType()));
             }
         }
-        cn.setGenericsTypes(configureTypeArguments(parameterizedType.arguments));
+        cn.setGenericsTypes(configureTypeArguments(tb.arguments));
         return cn;
     }
 
-    private ClassNode configureBaseType(BaseTypeBinding type) {
-        switch (type.id) {
+    private ClassNode configureBaseType(BaseTypeBinding tb) {
+        switch (tb.id) {
         case TypeIds.T_boolean:
             return ClassHelper.boolean_TYPE;
         case TypeIds.T_byte:
@@ -330,12 +262,12 @@ class JDTClassNodeBuilder {
         case TypeIds.T_short:
             return ClassHelper.short_TYPE;
         default:
-            throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + type + "(type.id=" + type.id + ")");
+            throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + tb + "(type.id=" + tb.id + ")");
         }
     }
 
-    private ClassNode configureBinaryType(BinaryTypeBinding type) {
-        switch (type.id) {
+    private ClassNode configureBinaryType(BinaryTypeBinding tb) {
+        switch (tb.id) {
         case TypeIds.T_JavaLangBoolean:
             return ClassHelper.Boolean_TYPE;
         case TypeIds.T_JavaLangByte:
@@ -364,12 +296,73 @@ class JDTClassNodeBuilder {
             return ClassHelper.STRING_TYPE;
 
         default:
-            return new JDTClassNode(type, resolver);
+            return new JDTClassNode(tb, resolver);
         }
     }
 
-    private ClassNode configureSourceType(SourceTypeBinding type) {
-        return new JDTClassNode(type, resolver);
+    private ClassNode configureSourceType(SourceTypeBinding tb) {
+        return new JDTClassNode(tb, resolver);
+    }
+
+    //
+
+    private static TypeBinding[] getLowerBounds(WildcardBinding wildcard) {
+        if (wildcard.boundKind == Wildcard.SUPER) {
+            return new TypeBinding[] {wildcard.bound};
+        }
+        return Binding.NO_TYPES;
+    }
+
+    private static TypeBinding[] getUpperBounds(WildcardBinding wildcard) {
+        if (wildcard.boundKind == Wildcard.EXTENDS) {
+            int nBounds = (wildcard.otherBounds == null ? 1 : 1 + wildcard.otherBounds.length);
+            TypeBinding[] bounds = new TypeBinding[nBounds];
+            bounds[0] = wildcard.bound;
+            nBounds -= 1;
+            if (nBounds > 0) {
+                System.arraycopy(wildcard.otherBounds, 0, bounds, 1, nBounds);
+            }
+            return bounds;
+        }
+        return Binding.NO_TYPES;
+    }
+
+    private static TypeBinding[] getBounds(TypeVariableBinding tv) {
+        if (tv.firstBound == null) {
+            return new TypeBinding[] {tv.erasure()};
+        } else {
+            TypeBinding[] others = tv.otherUpperBounds();
+            TypeBinding[] bounds = new TypeBinding[1 + others.length];
+            System.arraycopy(others, 0, bounds, 1, others.length);
+            bounds[0] = tv.firstBound;
+            return bounds;
+        }
+    }
+
+    private static TypeBinding toRawType(TypeBinding tb) {
+        if (tb instanceof RawTypeBinding ||
+            tb instanceof BaseTypeBinding ||
+          //tb instanceof WildcardBinding ||
+          //tb instanceof TypeVariableBinding ||
+            tb instanceof ProblemReferenceBinding) {
+            return tb;
+        } else if (tb instanceof ParameterizedTypeBinding) {
+            LookupEnvironment environment = ((ParameterizedTypeBinding) tb).environment();
+            return environment.convertToRawType(((ParameterizedTypeBinding) tb).genericType(), false);
+        } else if (tb instanceof ArrayBinding) {
+            LookupEnvironment environment = ((ArrayBinding) tb).environment();
+            return environment.convertToRawType(tb, false); // handles generics and dimensions
+        } else if (tb instanceof BinaryTypeBinding ||
+                   tb instanceof SourceTypeBinding) {
+            if (tb.isGenericType()) {
+                Class<?> cl = tb instanceof BinaryTypeBinding ? BinaryTypeBinding.class : SourceTypeBinding.class;
+                LookupEnvironment environment = ReflectionUtils.getPrivateField(cl, "environment", tb);
+                return environment.convertToRawType(tb, false);
+            } else {
+                return tb;
+            }
+        }
+        throw new IllegalStateException("nyi " + tb.getClass());
     }
 
     //--------------------------------------------------------------------------

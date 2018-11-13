@@ -76,6 +76,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
@@ -370,18 +371,22 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         TypeBinding erasureType;
         if (parameterType instanceof ParameterizedTypeBinding) {
             erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
+        } else if (parameterType instanceof ArrayBinding ||
+            parameterType instanceof TypeVariableBinding) {
+            erasureType = parameterType.erasure();
         } else {
-            erasureType = new JDTClassNodeBuilder(resolver).toRawType(parameterType);
+            assert !parameterType.isGenericType();
+            erasureType = parameterType;
         }
         return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
     }
 
     /**
      * @param t type
-     * @param c erasure of type
+     * @param e erasure of type
      */
-    private ClassNode makeClassNode(TypeBinding t, TypeBinding c) {
-        ClassNode back = resolver.convertToClassNode(c);
+    private ClassNode makeClassNode(TypeBinding t, TypeBinding e) {
+        ClassNode back = resolver.convertToClassNode(e);
         if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
             ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
             JDTClassNodeBuilder.setRedirect(front, back);
