@@ -36,7 +36,7 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
     @Override
     protected ProblemType[] getTypes() {
-        return new ProblemType[] {ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT};
+        return new ProblemType[] {ProblemType.GROOVY_KEYWORD_TYPE1, ProblemType.GROOVY_KEYWORD_TYPE2, ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT};
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.ConvertToGroovyFileResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
@@ -27,64 +29,131 @@ import org.junit.Test
 /**
  * Tests Groovy quick fixes in a Java file contained in a Groovy project.
  */
+@CompileStatic
 final class GroovyProjectJavaQuickFixTests extends QuickFixHarness {
 
     @Test
     void testNoGroovyAddImportQuickFix() {
         def unit = addJavaSource('''\
-            class TestJavaC {
-              public void doSomething() {
+            class C {
+              void doSomething() {
                 ImageBuilder imageBuilder = null;
               }
-            }'''.stripIndent(), 'TestJavaC', 'test1')
+            }'''.stripIndent())
 
         AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver('ImageBuilder', unit)
         assert resolver == null : "Expected no Groovy add import quick fix resolver for unresolved type: ImageBuilder in $unit.resource.name, as it is a Java file"
     }
 
     @Test
-    void testConvertToGroovyQuickFixMissingSemiColon1() {
+    void testConvertToGroovyQuickFixGroovyKeyword1() {
         def unit = addJavaSource('''\
-            class TestJavaC {
-              public void doSomething() {
-                ImageBuilder imageBuilder = null
+            class C {
+              def getSomething() {
               }
-            }'''.stripIndent(), 'TestJavaC', 'test2')
+            }'''.stripIndent())
 
-        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit)
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.GROOVY_KEYWORD_TYPE1)
         assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
 
-        List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals()
-        assert proposals?.size() > 0 : 'Expected a convert to Groovy file quick fix proposal; none found'
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
+        assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
+    }
+
+    @Test
+    void testConvertToGroovyQuickFixGroovyKeyword2() {
+        def unit = addJavaSource('''\
+            class C {
+              void doSomething(Object x) {
+                List l = x as List;
+              }
+            }'''.stripIndent())
+
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.GROOVY_KEYWORD_TYPE1)
+        assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
+
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
+        assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
+    }
+
+    @Test
+    void testConvertToGroovyQuickFixGroovyKeyword3() {
+        def unit = addJavaSource('''\
+            class C {
+              void doSomething(Object x) {
+                for (Object i in x) {
+                }
+              }
+            }'''.stripIndent())
+
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.GROOVY_KEYWORD_TYPE2)
+        assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
+
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
+        assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
+    }
+
+    @Test
+    void testConvertToGroovyQuickFixGroovyKeyword4() {
+        def unit = addJavaSource('''\
+            trait T {
+              void doSomething() {
+              }
+            }'''.stripIndent())
+
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.GROOVY_KEYWORD_TYPE2)
+        assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
+
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
+        assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
+    }
+
+    @Test
+    void testConvertToGroovyQuickFixMissingSemiColon1() {
+        def unit = addJavaSource('''\
+            class C {
+              void doSomething() {
+                ImageBuilder imageBuilder = null
+              }
+            }'''.stripIndent())
+
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.MISSING_SEMI_COLON_TYPE)
+        assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
+
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
         assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
     }
 
     @Test
     void testConvertToGroovyQuickFixMissingSemiColon2() {
         def unit = addJavaSource('''\
-            abstract class TestJavaC {
-              public abstract void doSomething()
-            }'''.stripIndent(), 'TestJavaC', 'test3')
+            abstract class C {
+              abstract void doSomething()
+            }'''.stripIndent())
 
-        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit)
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit, ProblemType.MISSING_SEMI_COLON_TYPE)
         assert resolver != null : 'Expected a quick fix resolver for converting to Groovy; none found'
 
-        List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals()
-        assert proposals?.size() > 0 : 'Expected a convert to Groovy file quick fix proposal; none found'
+        List<IJavaCompletionProposal> proposals = resolver.quickFixProposals
+        assert !proposals.isEmpty() : 'Expected a convert to Groovy file quick fix proposal; none found'
         assert proposals[0].displayString == 'Convert to Groovy file and open in Groovy editor' : 'Display string mismatch for convert to Groovy quick fix'
     }
 
-    //
+    //--------------------------------------------------------------------------
 
-    protected ConvertToGroovyFileResolver getConvertToGroovyQuickFixResolver(ICompilationUnit unit) {
+    protected ConvertToGroovyFileResolver getConvertToGroovyQuickFixResolver(ICompilationUnit unit, ProblemType type) {
         IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
-        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_SEMI_COLON_TYPE, unit)
-        assert resolvers?.size() > 0
+        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, type, unit)
+        assert !resolvers.isEmpty()
         for (resolver in resolvers) {
             if (resolver instanceof ConvertToGroovyFileResolver) {
-                return (ConvertToGroovyFileResolver) resolver
+                return resolver
             }
         }
-        return null
     }
 }

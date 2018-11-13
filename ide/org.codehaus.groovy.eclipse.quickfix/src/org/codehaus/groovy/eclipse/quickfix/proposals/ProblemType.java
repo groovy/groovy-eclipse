@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.compiler.IProblem;
 
@@ -23,9 +25,10 @@ import org.eclipse.jdt.core.compiler.IProblem;
  * problem, etc..) which the Groovy quick fix framework can understand.
  */
 public enum ProblemType {
-    // missing semi-colons will have different IProblem values in different places
-    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String[]) null),
-    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String[]) null),
+    GROOVY_KEYWORD_TYPE1(IProblem.UndefinedType, "as cannot be resolved to a type", "def cannot be resolved to a type"),
+    GROOVY_KEYWORD_TYPE2(IProblem.ParsingError, "Syntax error on token \"in\", : expected", "Syntax error on token \"trait\", interface expected"),
+    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, "Syntax error, insert \";\" to complete", "Syntax error, insert \"}\" to complete"),
+    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter), // TODO: Add test case(s) for this
     MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", " is not an annotation in @", "Groovy:[Static type checking] - The variable "),
     UNIMPLEMENTED_METHODS_TYPE("Can't have an abstract method in a non-abstract class", "Can't have an abstract method in enum constant"),
@@ -60,21 +63,21 @@ public enum ProblemType {
         this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID, groovyProblemSnippets);
     }
 
-    ProblemType(String markerType, int problemID, String... groovyProblemSnippets) {
+    ProblemType(String markerType, int problemId, String... groovyProblemSnippets) {
         this.markerType = markerType;
-        this.problemId = problemID;
+        this.problemId = problemId;
         this.groovyProblemSnippets = groovyProblemSnippets;
     }
 
-    private boolean matches(int problemID, String markerType, String[] messages) {
-        if (this.problemId == problemID && this.markerType.equals(markerType)) {
-            if (groovyProblemSnippets == null) {
-                // we don't care about the snippet. let all problems match
+    private boolean matches(int problemId, String markerType, String[] messages) {
+        if (this.problemId == problemId && this.markerType.equals(markerType)) {
+            if (!asBoolean(groovyProblemSnippets)) {
+                // don't care about the snippet; let all problems match
                 return true;
             }
             for (String message : messages) {
                 for (String groovyProblemSnippet : groovyProblemSnippets) {
-                    if (message != null && message.contains(groovyProblemSnippet)) {
+                    if (message.contains(groovyProblemSnippet)) {
                         return true;
                     }
                 }
@@ -83,9 +86,9 @@ public enum ProblemType {
         return false;
     }
 
-    public static ProblemType getProblemType(int problemID, String markerType, String[] messages) {
+    public static ProblemType getProblemType(int problemId, String markerType, String[] messages) {
         for (ProblemType problemType : values()) {
-            if (problemType.matches(problemID, markerType, messages)) {
+            if (problemType.matches(problemId, markerType, messages)) {
                 return problemType;
             }
         }
