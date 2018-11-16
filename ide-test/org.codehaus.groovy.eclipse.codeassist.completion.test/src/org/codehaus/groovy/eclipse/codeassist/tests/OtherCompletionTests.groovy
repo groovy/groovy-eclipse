@@ -316,6 +316,20 @@ final class OtherCompletionTests extends CompletionTestSuite {
         checkReplacementString(proposals, 'value', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/763
+    void testSpreadCompletion13() {
+        String contents = '[[[1,2,3]]]*.val'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        checkReplacementString(proposals, 'value', 1)
+    }
+
+    @Test
+    void testSpreadCompletion14() {
+        String contents = '[[[x:1,y:2,z:3]]]*.val'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        checkReplacementString(proposals, 'values()', 1)
+    }
+
     @Test
     void testSwitchCompletion1() {
         addGroovySource('enum E { ONE, TWO, THREE }', 'E', 'p')

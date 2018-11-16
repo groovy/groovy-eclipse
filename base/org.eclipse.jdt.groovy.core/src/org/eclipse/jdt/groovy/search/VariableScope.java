@@ -31,6 +31,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -70,6 +71,7 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -93,8 +95,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
     public static final ClassNode GROOVY_SUPPORT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_SUPPORT_TYPE;
     public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
-    public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
-    public static final ClassNode ITERATOR_CLASS = ClassHelper.Iterator_TYPE;
+    public static final ClassNode ENUMERATION_CLASS_NODE = ClassHelper.make(Enumeration.class);
+    public static final ClassNode COLLECTION_CLASS_NODE = ClassHelper.make(Collection.class);
+    public static final ClassNode ITERABLE_CLASS_NODE = ClassHelper.make(Iterable.class);
+    public static final ClassNode ITERATOR_CLASS_NODE = ClassHelper.Iterator_TYPE;
     public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
     public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
@@ -1219,58 +1223,64 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /**
-     * Extracts an element type from a collection
-     *
-     * @param collectionType a collection object, or an object that is iterable
+     * Returns element type if {@code type} is an array or iterable/iterator.
      */
-    public static ClassNode extractElementType(ClassNode collectionType) {
-        // if array, then use the component type
-        if (collectionType.isArray()) {
-            return collectionType.getComponentType();
+    public static ClassNode extractElementType(ClassNode type) {
+        if (type.isArray()) {
+            return type.getComponentType();
         }
 
-        // check to see if this type has an iterator method
-        // if so, then resolve the type parameters
-        MethodNode iterator = collectionType.getMethod("iterator", Parameter.EMPTY_ARRAY);
-        ClassNode typeToResolve = null;
-        if (iterator == null && collectionType.isInterface()) {
-            // could be a type that implements List
-            if (collectionType.implementsInterface(LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null && collectionType.getGenericsTypes().length == 1) {
-                typeToResolve = collectionType;
-            } else if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS) ||
-                    collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
-                // if the type is an iterator or an enumeration, then resolve the type parameter
-                typeToResolve = collectionType;
-            } else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
-                // if the type is a map, then resolve the entrySet
-                MethodNode entrySetMethod = collectionType.getMethod("entrySet", Parameter.EMPTY_ARRAY);
-                if (entrySetMethod != null) {
-                    typeToResolve = entrySetMethod.getReturnType();
-                }
+        MethodNode method = GroovyUtils.getMethod(type, "iterator", Parameter.EMPTY_ARRAY);
+        if (method == null) {
+            if (GeneralUtils.isOrImplements(type, MAP_CLASS_NODE)) {
+                method = GroovyUtils.getMethod(type, "entrySet", Parameter.EMPTY_ARRAY);
+            } else if (GeneralUtils.isOrImplements(type, ITERATOR_CLASS_NODE)) {
+                method = GroovyUtils.getMethod(type, "next", Parameter.EMPTY_ARRAY);
+            } else if (GeneralUtils.isOrImplements(type, ENUMERATION_CLASS_NODE)) {
+                method = GroovyUtils.getMethod(type, "nextElement", Parameter.EMPTY_ARRAY);
             }
-        } else if (iterator != null) {
-            typeToResolve = iterator.getReturnType();
         }
-
-        if (typeToResolve != null) {
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, collectionType.redirect());
-            ClassNode resolved = resolveTypeParameterization(mapper, clone(typeToResolve));
-
-            // the first type parameter of resolvedReturn should be what we want
-            GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();
-            if (resolvedReturnGenerics != null && resolvedReturnGenerics.length > 0) {
-                return resolvedReturnGenerics[0].getType();
+        if (method != null) {
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, method.getDeclaringClass());
+            ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
+            GenericsType[] generics = GroovyUtils.getGenericsTypes(returnType);
+            switch (method.getName()) {
+            case "iterator":
+                if (GeneralUtils.isOrImplements(type, ITERABLE_CLASS_NODE)) {
+                    if (generics.length == 1) return generics[0].getType();
+                    return OBJECT_CLASS_NODE;
+                }
+                // TODO: Is this right for general iterator()?
+                return extractElementType(returnType);
+            case "entrySet":
+                if (generics.length == 1) return generics[0].getType();
+                return ClassHelper.make(Map.Entry.class);
+            default:
+                return returnType;
             }
         }
 
         // this is hardcoded from DGM
-        if (collectionType.declaresInterface(INPUT_STREAM_CLASS) || collectionType.declaresInterface(DATA_INPUT_STREAM_CLASS) ||
-                collectionType.equals(INPUT_STREAM_CLASS) || collectionType.equals(DATA_INPUT_STREAM_CLASS)) {
+        if (GeneralUtils.isOrImplements(type, INPUT_STREAM_CLASS) ||
+                GeneralUtils.isOrImplements(type, DATA_INPUT_STREAM_CLASS)) {
             return BYTE_CLASS_NODE;
         }
 
-        // else assume collection of size 1 (itself)
-        return collectionType;
+        // String->String, otherwise assume non-aggregate type
+        return type;
+    }
+
+    public static ClassNode extractSpreadType(ClassNode type) {
+        ClassNode collectionType, elementType = extractElementType(type);
+        if (!GeneralUtils.isOrImplements(type, MAP_CLASS_NODE)) { // end at entry set
+            while (GeneralUtils.isOrImplements(elementType, COLLECTION_CLASS_NODE)) {
+                elementType = extractElementType(collectionType = elementType);
+                if (elementType == collectionType) { // no infinite loop
+                    break;
+                }
+            }
+        }
+        return elementType;
     }
 
     public static boolean isPlainClosure(ClassNode type) {

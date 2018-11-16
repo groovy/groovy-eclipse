@@ -487,10 +487,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 if (((PropertyExpression) enclosing).getObjectExpression() instanceof MethodPointerExpression) {
                     resultingType = result.declaringType;
                 } else if (((PropertyExpression) enclosing).isSpreadSafe()) {
-                    resultingType = VariableScope.extractElementType(resultingType);
+                    resultingType = VariableScope.extractSpreadType(resultingType);
                 }
-            } else if (enclosing instanceof MethodCallExpression && ((MethodCallExpression) enclosing).isSpreadSafe()) {
-                resultingType = VariableScope.extractElementType(resultingType);
+            } else if (enclosing instanceof MethodCallExpression) {
+                if (((MethodCallExpression) enclosing).isSpreadSafe()) {
+                    resultingType = VariableScope.extractSpreadType(resultingType);
+                }
             }
             resultingType = GroovyUtils.getWrapperTypeIfPrimitive(resultingType);
         }

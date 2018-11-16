@@ -585,6 +585,13 @@ public final class InferencingTests extends InferencingTestSuite {
         assertExprType(contents, "additionalBeanInfo", "java.beans.BeanInfo[]");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/763
+    public void testSpread14() {
+        String contents = "def strings = [[['1','2','3']]]\n" +
+            "def result = strings*.length()\n";
+        assertExprType(contents, "result", "java.util.List<java.util.List<E extends java.lang.Object>>");
+    }
+
     @Test
     public void testMapLiteral() {
         assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
@@ -2433,30 +2440,6 @@ public final class InferencingTests extends InferencingTestSuite {
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.io.Serializable");
-    }
-
-    @Test // GRECLIPSE-554
-    public void testMapEntries() {
-        String contents =
-            "def map = [:]\n" +
-            "map.foo = 1\n" +
-            "print map.foo\n" +
-            "map.foo = 'text'\n" +
-            "print map.foo\n";
-
-        int start = contents.lastIndexOf("map");
-        int end = start + "map".length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Object,java.lang.Object>");
-
-        start = contents.indexOf("foo");
-        start = contents.indexOf("foo", start + 1);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.Integer");
-
-        start = contents.indexOf("foo", start + 1);
-        start = contents.indexOf("foo", start + 1);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
     }
 
     @Test

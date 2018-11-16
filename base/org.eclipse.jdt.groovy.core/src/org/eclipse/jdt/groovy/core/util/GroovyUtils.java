@@ -16,10 +16,14 @@
 package org.eclipse.jdt.groovy.core.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,9 +49,11 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.Signature;
@@ -293,6 +299,42 @@ public class GroovyUtils {
         return importNodes;
     }
 
+    public static MethodNode getMethod(ClassNode declaringType, String methodName, Parameter... parameters) {
+        MethodNode meth = declaringType.getMethod(methodName, parameters);
+        if (meth != null) {
+            return meth;
+        }
+        // concrete types (without mixins/traits) return all methods from getMethod(String, Parameter[])
+        if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
+            Set<ClassNode> done = new HashSet<>(Collections.singleton(declaringType));
+            Queue<ClassNode> todo = new LinkedList<>();
+            ClassNode type = declaringType;
+            do {
+                ClassNode supa = type.getSuperClass();
+                if (supa != null) {
+                    if (!done.contains(supa)) {
+                        todo.add(supa);
+                    }
+                }
+                for (ClassNode face : type.getInterfaces()) {
+                    if (!done.contains(face)) {
+                        todo.add(face);
+                    }
+                }
+                type = todo.peek();
+                if (type != null) {
+                    meth = type.getMethod(methodName, parameters);
+                    if (meth != null) {
+                        return meth;
+                    }
+                    done.add(todo.remove());
+                }
+            } while (type != null);
+        }
+
+        return null;
+    }
+
     public static Expression getTraitFieldExpression(MethodCallExpression call) {
         Expression objExpr = call.getObjectExpression();
         if (objExpr instanceof TernaryExpression) {
@@ -351,7 +393,7 @@ public class GroovyUtils {
             // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
             result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
         } else*/ if (target.isInterface()) {
-            result = source.equals(target) || source.implementsInterface(target);
+            result = GeneralUtils.isOrImplements(source, target);
         } else if (array) {
             // Object or Object[] is universal receiver for an array
             result = ClassHelper.OBJECT_TYPE.equals(target) || source.isDerivedFrom(target);
@@ -405,6 +447,19 @@ public class GroovyUtils {
 
     public static boolean isSynthetic(MethodNode node) {
         return (node.getModifiers() & MethodNode.ACC_SYNTHETIC) != 0;
+    }
+
+    public static boolean implementsTrait(ClassNode concreteType) {
+        return concreteType.getNodeMetaData(Traits.class, x -> {
+            ClassNode type = concreteType.redirect();
+            do {
+                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
+                    return Boolean.TRUE;
+                }
+                type = type.getSuperClass();
+            } while (type != null);
+            return Boolean.FALSE;
+        }).booleanValue();
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {

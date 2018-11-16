@@ -110,6 +110,18 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "Map", "java.util.Map<java.lang.String,java.util.regex.Pattern>");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/763
+    public void testArrayGenerics3() {
+        String contents = "Collection<List<String>>[] array = []; array*.trim()";
+        assertExprType(contents, "trim", "java.lang.String");
+    }
+
+    @Test
+    public void testArrayGenerics4() {
+        String contents = "Map<String, ?>[] array = [[val:1]]; array*.val";
+        assertExprType(contents, "val", "java.lang.Object");
+    }
+
     @Test
     public void testArrayProperty1() {
         createUnit("XX", "class XX { XX[] xx; XX yy; }");

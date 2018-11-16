@@ -45,7 +45,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -164,6 +163,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private final ITypeLookup[] lookups;
 
     private ITypeRequestor requestor;
+    private final JDTResolver resolver;
     private IJavaElement enclosingElement;
     private ASTNode enclosingDeclarationNode;
     private final ModuleNode enclosingModule;
@@ -203,14 +203,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private Map<IJavaElement, AtomicInteger> occurrenceCounts = new HashMap<>();
 
     private final AssignmentStorer assignmentStorer = new AssignmentStorer();
-
-    private final JDTResolver resolver;
-
-    /**
-     * Keeps track of local map variables contexts.
-     */
-    private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<>();
-    private Variable currentMapVariable;
 
     /**
      * Use factory to instantiate
@@ -1363,11 +1355,13 @@ assert primaryExprType != null && dependentExprType != null;
         completeExpressionStack.add(node);
         node.getObjectExpression().visit(this);
 
+        ClassNode preSpreadType = null;
         if (node.isSpreadSafe()) {
+            preSpreadType = primaryTypeStack.removeLast();
             // method call targets the element type of the object expression
-            primaryTypeStack.add(VariableScope.extractElementType(primaryTypeStack.removeLast()));
+            primaryTypeStack.add(VariableScope.extractSpreadType(preSpreadType));
         }
-        ClassNode primaryType = primaryTypeStack.getLast();
+        ClassNode objExprType = primaryTypeStack.getLast();
 
         if (node.isUsingGenerics()) {
             visitGenericTypes(node.getGenericsTypes(), null);
@@ -1409,16 +1403,15 @@ assert primaryExprType != null && dependentExprType != null;
             scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
             try {
                 boolean isStatic = (node.getObjectExpression() instanceof ClassExpression);
-                returnType = lookupExpressionType(node.getMethod(), primaryType, isStatic, scope).type;
+                returnType = lookupExpressionType(node.getMethod(), objExprType, isStatic, scope).type;
             } finally {
                 scope.setMethodCallArgumentTypes(null);
                 scope.setMethodCallGenericsTypes(null);
             }
         }
 
-        // if this method call is the primary of a larger expression, then pass the inferred type onwards
         if (node.isSpreadSafe()) {
-            returnType = createParameterizedList(returnType);
+            returnType = createSpreadResult(returnType, preSpreadType);
         }
 
         // check for trait field re-written as call to helper method
@@ -1475,55 +1468,28 @@ assert primaryExprType != null && dependentExprType != null;
     @Override
     public void visitPropertyExpression(PropertyExpression node) {
         scopes.getLast().setCurrentNode(node);
+
         completeExpressionStack.add(node);
         node.getObjectExpression().visit(this);
-        ClassNode objType;
-        if (isDependentExpression(node)) {
-            primaryTypeStack.removeLast();
-        }
+
+        ClassNode preSpreadType = null;
         if (node.isSpreadSafe()) {
-            objType = primaryTypeStack.removeLast();
-            // must find the component type of the object expression type
-            primaryTypeStack.add(objType = VariableScope.extractElementType(objType));
-        } else {
-            objType = primaryTypeStack.getLast();
+            preSpreadType = primaryTypeStack.removeLast();
+            // property access targets the element type of the object expression
+            primaryTypeStack.add(VariableScope.extractSpreadType(preSpreadType));
         }
-
-        if (VariableScope.MAP_CLASS_NODE.equals(objType) && node.getObjectExpression() instanceof VariableExpression && node.getProperty() instanceof ConstantExpression) {
-            currentMapVariable = ((VariableExpression) node.getObjectExpression()).getAccessedVariable();
-            Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
-            if (map == null) {
-                map = new HashMap<>();
-                localMapProperties.put(currentMapVariable, map);
-            }
-            if (enclosingAssignment != null) {
-                String key = (String) ((ConstantExpression) node.getProperty()).getValue();
-                ClassNode val = enclosingAssignment.getRightExpression().getType();
-                map.put(key, val);
-            }
-        }
-
         node.getProperty().visit(this);
-        currentMapVariable = null;
-
-        // this is the type of this property expression
-        ClassNode exprType = dependentTypeStack.removeLast();
 
         // don't care about either of these
-        dependentDeclarationStack.removeLast();
         completeExpressionStack.removeLast();
-
-        // if this property expression is the primary of a larger expression,
-        // then remember the inferred type
+        dependentDeclarationStack.removeLast();
+        // this is the type of the property expression
+        ClassNode exprType = dependentTypeStack.removeLast();
         if (node.isSpreadSafe()) {
-            // if we are dealing with a map, then a spread dot will return a list of values,
-            // so use the type of the value.
-            if (objType.equals(VariableScope.MAP_CLASS_NODE) && objType.getGenericsTypes() != null && objType.getGenericsTypes().length == 2) {
-                exprType = objType.getGenericsTypes()[1].getType();
-            }
-            exprType = createParameterizedList(exprType);
+            exprType = createSpreadResult(exprType, preSpreadType);
         }
         handleCompleteExpression(node, exprType, null);
+
         scopes.getLast().forgetCurrentNode();
     }
 
@@ -2383,16 +2349,13 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
         }
-        if (TypeConfidence.UNKNOWN == result.confidence && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
+        if (result.confidence == TypeConfidence.UNKNOWN && result.declaringType != null &&
+                GeneralUtils.isOrImplements(result.declaringType, VariableScope.MAP_CLASS_NODE)) {
             ClassNode inferredType = VariableScope.OBJECT_CLASS_NODE;
-            if (currentMapVariable != null && node instanceof ConstantExpression) {
-                // recover inferred type from property map (see visitPropertyExpression)
-                Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
-                //String key = ((ConstantExpression) node).getConstantName();
-                String key = (String) ((ConstantExpression) node).getValue();
-                ClassNode val = map.get(key);
-                if (val != null)
-                    inferredType = val;
+            if (node instanceof ConstantExpression && node.getType().equals(VariableScope.STRING_CLASS_NODE)) {
+                List<MethodNode> putMethods = result.declaringType.getMethods("put"); // returns the value type
+                GenericsMapper mapper = GenericsMapper.gatherGenerics(result.declaringType, result.declaringType.redirect());
+                inferredType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(putMethods.get(0).getReturnType()));
             }
             TypeLookupResult tlr = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope, result.extraDoc);
             tlr.enclosingAnnotation = result.enclosingAnnotation;
@@ -2473,17 +2436,17 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
-     * @return a list parameterized by propType
+     * @return a list type parameterized by {@code t}
      */
-    private static ClassNode createParameterizedList(ClassNode propType) {
+    private static ClassNode createParameterizedList(ClassNode t) {
         ClassNode list = VariableScope.clonedList();
-        list.getGenericsTypes()[0].setType(propType);
-        list.getGenericsTypes()[0].setName(propType.getName());
+        list.getGenericsTypes()[0].setType(t);
+        list.getGenericsTypes()[0].setName(t.getName());
         return list;
     }
 
     /**
-     * @return a list parameterized by propType
+     * @return a map type parameterized by {@code k} and {@code v}
      */
     private static ClassNode createParameterizedMap(ClassNode k, ClassNode v) {
         ClassNode map = VariableScope.clonedMap();
@@ -2495,13 +2458,25 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
-     * @return a list parameterized by propType
+     * @return a range type parameterized by {@code t}
      */
-    private static ClassNode createParameterizedRange(ClassNode propType) {
+    private static ClassNode createParameterizedRange(ClassNode t) {
         ClassNode range = VariableScope.clonedRange();
-        range.getGenericsTypes()[0].setType(propType);
-        range.getGenericsTypes()[0].setName(propType.getName());
+        range.getGenericsTypes()[0].setType(t);
+        range.getGenericsTypes()[0].setName(t.getName());
         return range;
+    }
+
+    /**
+     * @see org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#adjustTypeForSpreading
+     */
+    private static ClassNode createSpreadResult(ClassNode t, ClassNode objExprType) {
+        ClassNode elementType = VariableScope.extractElementType(objExprType);
+        if (GeneralUtils.isOrImplements(elementType, VariableScope.COLLECTION_CLASS_NODE)) {
+            // TODO: clone elementType and replace deepest Collection's generic type with t
+            t = GenericsUtils.nonGeneric(elementType);
+        }
+        return createParameterizedList(ClassHelper.getWrapper(t));
     }
 
     /**
@@ -2704,19 +2679,15 @@ assert primaryExprType != null && dependentExprType != null;
         switch (text.charAt(0)) {
         case '+':
         case '-':
-            // lists, numbers or string
-            return VariableScope.STRING_CLASS_NODE.equals(lhs) ||
-                lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) ||
-                VariableScope.NUMBER_CLASS_NODE.equals(lhs) ||
-                VariableScope.LIST_CLASS_NODE.equals(lhs) ||
-                lhs.implementsInterface(VariableScope.LIST_CLASS_NODE);
+            if (GeneralUtils.isOrImplements(lhs, VariableScope.LIST_CLASS_NODE)) {
+                return true;
+            }
+            // falls through
         case '*':
         case '/':
         case '%':
-            // numbers or string
             return VariableScope.STRING_CLASS_NODE.equals(lhs) ||
-                lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) ||
-                VariableScope.NUMBER_CLASS_NODE.equals(lhs);
+                   VariableScope.NUMBER_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
         default:
             return false;
         }

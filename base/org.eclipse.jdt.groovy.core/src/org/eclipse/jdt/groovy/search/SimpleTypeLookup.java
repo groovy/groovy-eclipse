@@ -16,9 +16,9 @@
 package org.eclipse.jdt.groovy.search;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -58,7 +58,6 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
-import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -857,19 +856,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         return Optional.empty();
-    }
-
-    protected static boolean implementsTrait(ClassNode concreteType) {
-        return concreteType.getNodeMetaData(Traits.class, x -> {
-            ClassNode type = concreteType.redirect();
-            do {
-                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
-                    return Boolean.TRUE;
-                }
-                type = type.getSuperClass();
-            } while (type != null);
-            return Boolean.FALSE;
-        }).booleanValue();
     }
 
     protected static boolean isThisObjectExpression(VariableScope scope) {
