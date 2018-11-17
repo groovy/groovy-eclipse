@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -38,7 +39,7 @@ public class IsConfigScript extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext context, Object toMatch) {
         String configScript = context.getCurrentOptions().get(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
-        if (context.fullPathName.equals(configScript)) {
+        if (Objects.equals(context.fullPathName, configScript)) {
             return (toMatch instanceof Collection ? (Collection<?>) toMatch
                 : (toMatch != null ? Collections.singleton(toMatch) : Collections.emptySet()));
         }
