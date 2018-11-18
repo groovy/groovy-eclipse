@@ -20,16 +20,12 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromStr
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 
 import java.beans.Introspector;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -72,6 +68,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -101,6 +98,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode ITERATOR_CLASS_NODE = ClassHelper.Iterator_TYPE;
     public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
     public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
+    public static final ClassNode ENTRY_CLASS_NODE = ClassHelper.make(Map.Entry.class);
     public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
     public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
     public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
@@ -112,15 +110,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
 
     public static final ClassNode FILE_CLASS_NODE = ClassHelper.make(File.class);
-    public static final ClassNode INPUT_STREAM_CLASS = ClassHelper.make(InputStream.class);
-    public static final ClassNode OUTPUT_STREAM_CLASS = ClassHelper.make(OutputStream.class);
-    public static final ClassNode DATA_INPUT_STREAM_CLASS = ClassHelper.make(DataInputStream.class);
-    public static final ClassNode DATA_OUTPUT_STREAM_CLASS = ClassHelper.make(DataOutputStream.class);
-    public static final ClassNode OBJECT_OUTPUT_STREAM = ClassHelper.make(ObjectOutputStream.class);
-    public static final ClassNode OBJECT_INPUT_STREAM = ClassHelper.make(ObjectInputStream.class);
-    public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
-    public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
-    public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
+    public static final ClassNode READER_CLASS_NODE = ClassHelper.make(Reader.class);
+    public static final ClassNode INPUT_STREAM_CLASS_NODE = ClassHelper.make(InputStream.class);
+    public static final ClassNode OUTPUT_STREAM_CLASS_NODE = ClassHelper.make(OutputStream.class);
+    public static final ClassNode DATA_INPUT_STREAM_CLASS_NODE = ClassHelper.make(DataInputStream.class);
+    public static final ClassNode DATA_OUTPUT_STREAM_CLASS_NODE = ClassHelper.make(DataOutputStream.class);
 
     // present in Groovy 2.1+
     public static final ClassNode DELEGATES_TO = ClassHelper.make(DelegatesTo.class);
@@ -1241,30 +1235,45 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
         }
         if (method != null) {
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, method.getDeclaringClass());
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(Collections.EMPTY_LIST, type, method);
             ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
-            GenericsType[] generics = GroovyUtils.getGenericsTypes(returnType);
             switch (method.getName()) {
             case "iterator":
                 if (GeneralUtils.isOrImplements(type, ITERABLE_CLASS_NODE)) {
+                    GenericsType[] generics = GroovyUtils.getGenericsTypes(returnType);
                     if (generics.length == 1) return generics[0].getType();
                     return OBJECT_CLASS_NODE;
                 }
                 // TODO: Is this right for general iterator()?
                 return extractElementType(returnType);
             case "entrySet":
-                if (generics.length == 1) return generics[0].getType();
-                return ClassHelper.make(Map.Entry.class);
+                {
+                    GenericsType[] generics = GroovyUtils.getGenericsTypes(returnType);
+                    if (generics.length == 1) return generics[0].getType();
+                    return GenericsUtils.nonGeneric(ENTRY_CLASS_NODE);
+                }
             default:
+                if (GroovyUtils.getBaseType(returnType).isGenericsPlaceHolder()) {
+                    return GenericsUtils.nonGeneric(returnType);
+                }
                 return returnType;
             }
         }
 
-        // this is hardcoded from DGM
-        if (GeneralUtils.isOrImplements(type, INPUT_STREAM_CLASS) ||
-                GeneralUtils.isOrImplements(type, DATA_INPUT_STREAM_CLASS)) {
+    // TODO: Can DGM iterator() method lookup be generalized?
+
+        // IOGroovyMethods.iterator(T) overloads
+        if (GeneralUtils.isOrImplements(type, INPUT_STREAM_CLASS_NODE) ||
+                GeneralUtils.isOrImplements(type, DATA_INPUT_STREAM_CLASS_NODE)) {
             return BYTE_CLASS_NODE;
+        } else if (GeneralUtils.isOrImplements(type, READER_CLASS_NODE)) {
+            return STRING_CLASS_NODE;
         }
+        // StringGroovyMethods.iterator(Matcher) returns String or List<String>
+        if (MATCHER_CLASS_NODE.equals(type)) {
+            return OBJECT_CLASS_NODE;
+        }
+        //XmlGroovyMethods.iterator(NodeList): Iterator<Node>
 
         // String->String, otherwise assume non-aggregate type
         return type;

@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assume.assumeFalse;
+
 import java.util.Comparator;
 import java.util.List;
 
@@ -64,9 +67,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNumber6() {
-        String contents = "(x <=> y).intValue()";
-        int offset = contents.indexOf("intValue");
-        assertType(contents, offset, offset + "intValue".length(), "java.lang.Integer");
+        assertExprType("(x <=> y).intValue()", "intValue", "java.lang.Integer");
     }
 
     @Test
@@ -81,8 +82,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testString3() {
-        String contents = "def x = '10'";
-        assertExprType(contents, "'10'", "java.lang.String");
+        assertExprType("def x = '10'", "'10'", "java.lang.String");
     }
 
     @Test
@@ -590,6 +590,32 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "def strings = [[['1','2','3']]]\n" +
             "def result = strings*.length()\n";
         assertExprType(contents, "result", "java.util.List<java.util.List<E extends java.lang.Object>>");
+    }
+
+    @Test // CommandRegistry.iterator() lacks generics
+    public void testSpread15() {
+        String contents =
+            "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
+            "def registry = new CommandRegistry()\n" +
+            "def result = registry*.with {it}\n";
+        assertExprType(contents, "result", "java.util.List<java.lang.Object>");
+    }
+
+    @Test
+    public void testSpread16() {
+        String contents =
+            "import java.util.regex.Matcher\n" +
+            "Matcher matcher = ('abc' =~ /./)\n" +
+            "def result = matcher*.with {it}\n";
+        assertExprType(contents, "result", "java.util.List<java.lang.Object>");
+    }
+
+    @Test
+    public void testSpread17() {
+        String contents =
+            "Reader reader = null\n" +
+            "def result = reader*.with {it}\n";
+        assertExprType(contents, "result", "java.util.List<java.lang.String>");
     }
 
     @Test
@@ -1593,6 +1619,26 @@ public final class InferencingTests extends InferencingTestSuite {
         int end = start + "getAt".length();
         assertType(contents, start, end, "A");
         assertDeclaringType(contents, start, end, "A");
+    }
+
+    @Test // CommandRegistry.commands() returns List<Command>
+    public void testGetAt8() {
+        assumeFalse(isAtLeastGroovy(25));
+        String contents =
+            "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
+            "def registry = new CommandRegistry()\n" +
+            "def result = registry.commands()[0]\n";
+        assertExprType(contents, "result", "org.codehaus.groovy.tools.shell.Command");
+    }
+
+    @Test // CommandRegistry.iterator() returns Iterator
+    public void testGetAt9() {
+        assumeFalse(isAtLeastGroovy(25));
+        String contents =
+            "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
+            "def registry = new CommandRegistry()\n" +
+            "def result = registry.iterator()[0]\n";
+        assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test
