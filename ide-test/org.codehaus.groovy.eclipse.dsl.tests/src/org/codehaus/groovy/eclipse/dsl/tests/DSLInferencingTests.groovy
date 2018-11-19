@@ -686,6 +686,43 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, offset, offset + 'bar'.length(), 'java.math.BigDecimal')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/767
+    void testHasArgument4() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.PARAMETER)
+            public @interface A {
+            }
+            ''', 'A', 'p'
+
+        createDsls '''\
+            import org.codehaus.groovy.ast.expr.*
+            contribute(enclosingMethod(args: hasArgument(annotatedBy('p.A')))) {
+              if ((enclosingNode instanceof MethodCallExpression || enclosingNode instanceof PropertyExpression) &&
+                  enclosingNode.objectExpression instanceof VariableExpression &&
+                  enclosingNode.objectExpression.accessedVariable in args) {
+                method name:'someMeth', type:void, params:[:]
+                property name:'someProp', type:Double
+              }
+            }
+            '''
+
+        String contents = '''\
+            import p.A
+            class C {
+              def m(@A String param) {
+                param.someMeth()
+                param.someProp
+              }
+            }
+            '''.stripIndent()
+        int offset = contents.indexOf('someMeth')
+        assertType(contents, offset, offset + 8, 'java.lang.Void')
+            offset = contents.indexOf('someProp')
+        assertType(contents, offset, offset + 8, 'java.lang.Double')
+    }
+
     @Test // GRECLIPSE-1261
     void testStaticContext1() {
         createDsls('contribute(currentType("Flart")) { method name: "testme", type: boolean }')
