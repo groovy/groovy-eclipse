@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
@@ -554,7 +555,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                                 if (parameters == null || parameters.length == 0) {
                                     // instead of proposing no-arg constructor, propose type's properties as named arguments
                                     proposals.remove(constructorProposal);
-                                    for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
+                                    for (PropertyNode prop : GeneralUtils.getAllProperties(resolved)) { String name = prop.getName();
                                         if (!"metaClass".equals(name) && !usedParams.contains(name) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
                                             GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(ctor.simpleTypeName));
                                             proposals.add(namedArgument.createJavaProposal(context, javaContext));
@@ -562,7 +563,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                                     }
                                     for (MethodNode meth : resolved.getMethods()) {
                                         if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
-                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && GeneralUtils.getAllProperties(resolved).stream().noneMatch(p -> p.getName().equals(name)) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
                                                 GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(ctor.simpleTypeName));
                                                 proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }

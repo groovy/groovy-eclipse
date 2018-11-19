@@ -692,7 +692,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs15() {
+    void testNamedArgs14() {
         addGroovySource '''\
             class Outer {
               static class Inner {
@@ -712,7 +712,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/404
-    void testNamedArgs16() {
+    void testNamedArgs15() {
         addGroovySource '''\
             class Outer {
               static class Inner {
@@ -731,8 +731,31 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'string : __', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/766
+    void testNamedArgs16() {
+        addGroovySource '''\
+            class One {
+              String foo
+            }
+            class Two extends One {
+              String bar
+            }
+            class Three extends Two {
+              String baz
+            }
+            '''.stripIndent(), 'Types', 'pack'
+
+        String contents = '''\
+            new pack.Three()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'foo : __', 1)
+        proposalExists(proposals, 'bar : __', 1)
+        proposalExists(proposals, 'baz : __', 1)
+    }
+
     @Test
-    void testNamedArgs14() {
+    void testNamedArgs17() {
         String contents = '''\
             class Foo {
               String aaa
