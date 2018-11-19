@@ -74,7 +74,8 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     List<ICompletionProposal> proposals = new ArrayList<>();
                     String memberName = getPerceivedCompletionMember();
 
-                    if (memberName == null || isImplicitValueExpression()) {
+                    if (memberName == null || isImplicitValueExpression() ||
+                            getAnnotation().getClassNode().getMethods(memberName).isEmpty()) {
                         generateAnnotationMemberProposals(proposals);
                     }
                     monitor.worked(1);
@@ -201,7 +202,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     if (value.getStart() > context.completionLocation) {
                         break;
                     }
-                    if (value.getLineNumber() == -1 && !member.getKey().equals("?")) {
+                    if (value.getLineNumber() == -1) {
                         maybe = member.getKey();
                     }
                 }
