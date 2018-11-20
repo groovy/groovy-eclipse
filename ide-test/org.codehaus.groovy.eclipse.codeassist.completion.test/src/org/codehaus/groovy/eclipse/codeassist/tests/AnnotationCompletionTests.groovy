@@ -321,6 +321,31 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         assertThat(proposals).excludes('one').includes('two', 'three')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/761
+    void testAnnoAttr10() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            public @interface A {
+              boolean one();
+              String two();
+              int three();
+            }
+            ''', 'A', 'p'
+
+        String contents = '''\
+            import p.A
+            class Something {
+              @A(one=false, w)
+              void meth() {}
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ', w')
+
+        assertThat(proposals).excludes('one', 'three').includes('two')
+    }
+
     @Test
     void testAnnoAttrPacks() {
         String contents = '''\
@@ -534,13 +559,13 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             ''', 'W', 'p'
 
         String contents = '''\
-            @p.W(SE)
+            @p.W(MI)
             class C {
             }
             '''.stripIndent()
-        def proposals = getProposals(contents, '(SE')
+        def proposals = getProposals(contents, '(MI')
 
-        assertThat(proposals).includes('SECONDS').excludes('MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'TimeUnit')
+        assertThat(proposals).includes('MILLISECONDS', 'MICROSECONDS').excludes('SECONDS', 'NANOSECONDS', 'TimeUnit')
     }
 
     @Test @NotYetImplemented
