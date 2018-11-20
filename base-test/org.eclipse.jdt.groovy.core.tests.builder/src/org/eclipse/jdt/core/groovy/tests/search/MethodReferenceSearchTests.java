@@ -67,20 +67,20 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInScript6() throws Exception {
-        doTestForTwoMethodReferencesInScript("class SubClass extends First { } \n SubClass f = new SubClass()\n f.xxx\ndef xxx = 0\nxxx++\nf.xxx");
+        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx\ndef xxx = 0\nxxx++\nf.xxx");
     }
 
     @Test
     public void testMethodReferencesInScript7() throws Exception {
-        createUnit("Other.groovy", "class Other { def xxx }");
-        doTestForTwoMethodReferencesInScript("class SubClass extends First { } \n SubClass f = new SubClass()\n f.xxx\nnew Other().xxx = 0\nf.xxx");
+        createUnit("Other.groovy", "class Other {\ndef xxx\n}");
+        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx\nnew Other().xxx = 0\nf.xxx");
     }
 
     @Test
     public void testMethodReferencesInScript8() throws Exception {
         doTestForTwoMethodReferencesInScript(
-            "class SubClass extends First { } \n " +
-            "def f = new SubClass()\n " +
+            "class SubClass extends First {}\n" +
+            "def f = new SubClass()\n" +
             "f.xxx\n" + // here
             "f = 9\n" +
             "f.xxx\n" +  // invalid reference
@@ -90,12 +90,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInClass1() throws Exception {
-        doTestForTwoMethodReferencesInClass("class Second extends First { \ndef method() { this.xxx }\ndef xxx() { }\n def method2() { super.xxx }}");
+        doTestForTwoMethodReferencesInClass("class Second extends First {\n def method() {\n this.xxx}\ndef xxx() {}\n def method2() {\n super.xxx}}");
     }
 
     @Test
     public void testMethodReferencesInClass2() throws Exception {
-        doTestForTwoMethodReferencesInClass("class Second extends First { \ndef method() { xxx }\ndef xxx() { }\n def method2(xxx) { xxx = super.xxx }}");
+        doTestForTwoMethodReferencesInClass("class Second extends First {\n def method() {\n xxx}\ndef xxx() {}\n def method2(xxx) {\n xxx = super.xxx}}");
     }
 
     @Test
@@ -105,7 +105,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def method() {\n" +
             "    this.xxx = 'nothing'\n" + // yes
             "  }\n" +
-            "  def xxx() { }\n" +  // no
+            "  def xxx() {}\n" +  // no
             "  def method2() {\n" +  // no
             "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
             "  }\n" +
@@ -116,14 +116,14 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testMethodReferencesInClass4() throws Exception {
         createUnit("Third",
             "class Third {\n" +
-            "  def xxx() { }\n" + // no
+            "  def xxx() {}\n" + // no
             "}\n");
         doTestForTwoMethodReferencesInClass(
             "class Second extends First {\n" +
             "  def method() {\n" +
             "    this.xxx = 'nothing'\n" + // yes
             "  }\n" +
-            "  def xxx() { }\n" +  // no
+            "  def xxx() {}\n" +  // no
             "  def method3(xxx) {\n" +  // no
             "    new Third().xxx()\n" + // no
             "    xxx()\n" + // no...this will try to execute the xxx parameter, not the method
@@ -181,7 +181,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testOverloadedMethodReferences3() throws Exception {
         // should match on the method reference with precise # of args as well as method reference with unmatched number of args
         createUnit("Sub",
-            "interface Sub extends First { void xxx(a) }");
+            "interface Sub extends First {\n" +
+            "    void xxx(a)\n" +
+            "}");
         doTestForTwoMethodReferences(
             "interface First {\n" +
             "    void xxx(a)\n" +
@@ -238,8 +240,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testOverloadedMethodReferences5() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
-            "  URL doSomething(String s, URL u) { }\n" + // search for references
-            "  URL doSomething(Integer i, URL u) { }\n" +
+            "  URL doSomething(String s, URL u) {}\n" + // search for references
+            "  URL doSomething(Integer i, URL u) {}\n" +
             "}",
             "class Second {\n" +
             "  First first\n" +
@@ -258,8 +260,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testOverloadedMethodReferences6() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
-            "  URL doSomething(Integer i, URL u) { }\n" + // search for references
-            "  URL doSomething(String s, URL u) { }\n" +
+            "  URL doSomething(Integer i, URL u) {}\n" + // search for references
+            "  URL doSomething(String s, URL u) {}\n" +
             "}",
             "class Second {\n" +
             "  First first\n" +
@@ -271,15 +273,15 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    first.&doSomething\n" + //yes
             "  }\n" +
             "}",
-            true, 2, "doSomething");// "true, 2" says both matches are in xxx() (aka Second.children[2])
+            true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
     }
 
     @Test
     public void testMethodWithDefaultParameters1() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
-            "    void xxx(a, b = 9) { }\n" +
-            "    void xxx(a, b, c) { }\n" +
+            "    void xxx(a, b = 9) {}\n" +
+            "    void xxx(a, b, c) {}\n" +
             "}",
             "class Second {\n" +
             "    void other0() {\n" +
@@ -302,8 +304,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testMethodWithDefaultParameters2() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
-            "    void xxx(a, b = 9) { }\n" +
-            "    void xxx(a, b, c) { }\n" +
+            "    void xxx(a, b = 9) {}\n" +
+            "    void xxx(a, b, c) {}\n" +
             "}",
             "class Second {\n" +
             "    void other0() {\n" +
@@ -323,9 +325,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorReferenceSearch() throws Exception {
-        String groovyContents =
-            "package p\n" +
+    public void testConstructorReferenceSearch1() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo() {\n" +
             "    new Foo()\n" +
@@ -333,40 +334,78 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  Foo(a) {\n" +
             "    new Foo(a)\n" +
             "  }\n" +
-            "}";
-        String otherContents =
-            "import p.Foo\n" +
+            "}");
+        createUnit("", "Other", "import p.Foo\n" +
             "new Foo()\n" +
             "new Foo(a)\n" +
             "new p.Foo()\n" +
-            "new p.Foo(a)\n";
+            "new p.Foo(a)\n");
 
-        GroovyCompilationUnit first = createUnit("p", "Foo", groovyContents);
-        createUnit("", "Other", otherContents);
-
-        IMethod constructor = first.getType("Foo").getMethods()[0];
+        IMethod constructor = foo.getType("Foo").getMethods()[0];
         new SearchEngine().search(
             SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
             new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {first.getPackageFragmentRoot()}, false),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {foo.getPackageFragmentRoot()}, false),
             searchRequestor, new NullProgressMonitor());
 
         List<SearchMatch> matches = searchRequestor.getMatches();
-        assertEquals("Incorrect number of matches:\n" + matches, 6, matches.size());
+        assertEquals("Incorrect number of matches;", 6, matches.size());
 
-        // two from Foo and two from other
-        int fooCnt = 0, otherCnt = 0;
+        int fooCount = 0, otherCount = 0;
         for (SearchMatch match : matches) {
             if (match.getElement() instanceof IMethod) {
                 if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
-                    fooCnt += 1;
+                    fooCount += 1;
                 } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
-                    otherCnt += 1;
+                    otherCount += 1;
                 }
             }
         }
-        assertEquals("Should have found 2 matches in Foo.groovy", 2, fooCnt);
-        assertEquals("Should have found 4 matches in Other.groovy", 4, otherCnt);
+        assertEquals("Should have found 2 matches in Foo.groovy", 2, fooCount);
+        assertEquals("Should have found 4 matches in Other.groovy", 4, otherCount);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/765
+    public void testConstructorReferenceSearch2() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  static class Bar {\n" +
+            "    static class Baz {\n" +
+            "      Baz() {\n" +
+            "        this(null)\n" +
+            "      }\n" +
+            "      Baz(def arg) {\n" +
+            "        super()\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}");
+        createUnit("", "Other", "import p.Foo.Bar.Baz\n" +
+            "new Baz()\n" +
+            "new Baz(a)\n");
+
+        IMethod constructor = foo.getType("Foo").getType("Bar").getType("Baz").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {foo.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+        assertEquals("Incorrect number of matches;", 2, matches.size());
+
+        int fooCount = 0, otherCount = 0;
+        for (SearchMatch match : matches) {
+            if (match.getElement() instanceof IMethod) {
+                if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
+                    fooCount += 1;
+                } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
+                    otherCount += 1;
+                }
+            }
+        }
+        assertEquals("Should have found 0 matches in Foo.groovy", 0, fooCount);
+        assertEquals("Should have found 2 matches in Other.groovy", 2, otherCount);
     }
 
     @Test
@@ -378,10 +417,10 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    bar()\n" +
             "  }\n" +
             "}\n";
-        GroovyCompilationUnit unit = createUnit("Foo", contents);
+        GroovyCompilationUnit foo = createUnit("Foo", contents);
 
-        IMethod method = unit.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(unit);
+        IMethod method = foo.getType("Foo").getMethods()[0];
+        MockPossibleMatch match = new MockPossibleMatch(foo);
         SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
         factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
 
