@@ -24,7 +24,9 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -66,7 +68,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
 
         proposal.setCompletion(completion);
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
-        proposal.setFlags(field.getModifiers());
+        proposal.setFlags(field.getModifiers() | (GroovyUtils.isDeprecated(field) ? Flags.AccDeprecated : 0));
         proposal.setRelevance(computeRelevance(context));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));

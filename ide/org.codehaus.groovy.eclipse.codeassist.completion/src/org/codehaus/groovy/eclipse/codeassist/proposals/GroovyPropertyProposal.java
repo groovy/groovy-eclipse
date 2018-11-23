@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaFieldComplet
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -64,7 +66,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
 
     private CompletionProposal createProposal(ContentAssistContext context) {
         InternalCompletionProposal proposal = (InternalCompletionProposal) CompletionProposal.create(CompletionProposal.FIELD_REF, context.completionLocation);
-        proposal.setFlags(property.getModifiers());
+        proposal.setFlags(property.getModifiers() | (GroovyUtils.isDeprecated(property) ? Flags.AccDeprecated : 0));
         proposal.setName(property.getName().toCharArray());
         proposal.setCompletion(proposal.getName());
         proposal.setSignature(ProposalUtils.createTypeSignature(property.getType()));

@@ -384,7 +384,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     new BytecodeSequence(new BytecodeInstruction() {
                         public void visit(MethodVisitor mv) {
                             Label nullLabel = new Label();
-                            /**
+                            /*
                              *  the code is:
                              *  if (this.metaClass==null) {
                              *      this.metaClass = this.$getStaticMetaClass()
@@ -428,7 +428,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 List list = new ArrayList();
                 list.add(new BytecodeInstruction() {
                     public void visit(MethodVisitor mv) {
-                        /**
+                        /*
                          * the code is (meta class is stored in 1):
                          * this.metaClass = <1>
                          */
@@ -677,6 +677,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (getterBlock != null) {
             MethodNode getter =
                     new MethodNode(getterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+            // GRECLIPSE add
+            node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
+            // GRECLIPSE end
             getter.setSynthetic(true);
             addPropertyMethod(getter);
             visitMethod(getter);
@@ -685,6 +688,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 String secondGetterName = "is" + capitalize(name);
                 MethodNode secondGetter =
                         new MethodNode(secondGetterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                // GRECLIPSE add
+                node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(secondGetter::addAnnotation);
+                // GRECLIPSE end
                 secondGetter.setSynthetic(true);
                 addPropertyMethod(secondGetter);
                 visitMethod(secondGetter);
@@ -694,6 +700,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
             MethodNode setter =
                     new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
+            // GRECLIPSE add
+            node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(setter::addAnnotation);
+            // GRECLIPSE end
             setter.setSynthetic(true);
             addPropertyMethod(setter);
             visitMethod(setter);

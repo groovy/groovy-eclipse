@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -3229,6 +3230,80 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testGroovyPropertyAccessors1() {
+        runConformTest(new String[] {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    G o = new G();\n"+
+            "    System.out.print(o.isB());\n"+
+            "    System.out.print(o.getB());\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/G.groovy",
+            "package p;\n"+
+            "public class G {\n" +
+            "  boolean b\n"+
+            "}\n",
+        },
+        "falsefalse");
+    }
+
+    @Test
+    public void testGroovyPropertyAccessors2() {
+        runConformTest(new String[] {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n"+
+            "  public static void main(String[] argv) {\n"+
+            "    G o = new G();\n"+
+            "    System.out.print(o.getB());\n"+
+            "    o.setB(true);\n"+
+            "    System.out.print(o.getB());\n"+
+            "  }\n"+
+            "}\n",
+
+            "p/G.groovy",
+            "package p;\n"+
+            "public class G {\n" +
+            "  boolean b\n"+
+            "}\n",
+        },
+        "falsetrue");
+    }
+
+    @Test // @Deprecated should be propagated to accessors
+    public void testGroovyPropertyAccessors3() {
+        runNegativeTest(new String[] {
+            "p/G.groovy",
+            "package p;\n"+
+            "class G {\n" +
+            "  @Deprecated\n"+
+            "  boolean flag\n"+
+            "}\n",
+        },
+        "");
+
+        checkDisassemblyFor("p/G.class",
+            "  @java.lang.Deprecated\n" +
+            "  private boolean flag;\n");
+
+        checkDisassemblyFor("p/G.class",
+            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  public boolean isFlag();\n");
+
+        checkDisassemblyFor("p/G.class",
+            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  public boolean getFlag();\n");
+
+        checkDisassemblyFor("p/G.class",
+            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  public void setFlag(boolean arg0);\n");
+    }
+
+    @Test
     public void testGroovyPropertyAccessors_ErrorCases1() {
         // check no duplicate created for 'String getProp'
         runConformTest(new String[] {
@@ -3388,51 +3463,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGroovyPropertyAccessors() {
-        runConformTest(new String[] {
-            "p/C.java",
-            "package p;\n" +
-            "public class C {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    G o = new G();\n"+
-            "    System.out.print(o.isB());\n"+
-            "    System.out.print(o.getB());\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/G.groovy",
-            "package p;\n"+
-            "public class G {\n" +
-            "  boolean b\n"+
-            "}\n",
-        },
-        "falsefalse");
-    }
-
-    @Test
-    public void testGroovyPropertyAccessors_Set() {
-        runConformTest(new String[] {
-            "p/C.java",
-            "package p;\n" +
-            "public class C {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    G o = new G();\n"+
-            "    System.out.print(o.getB());\n"+
-            "    o.setB(true);\n"+
-            "    System.out.print(o.getB());\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/G.groovy",
-            "package p;\n"+
-            "public class G {\n" +
-            "  boolean b\n"+
-            "}\n",
-        },
-        "falsetrue");
-    }
-
-    @Test
     public void testDefaultValueMethods() {
         runConformTest(new String[] {
             "p/C.java",
@@ -3453,7 +3483,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "abcabc");
 
-        String expectedOutput =
+        checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
             "  public G() {\n" +
@@ -3462,18 +3492,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public void m(String s) {\n" +
             "  }\n" +
-            "}\n";
-        checkGCUDeclaration("G.groovy",expectedOutput);
-        expectedOutput =
+            "}\n");
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s, Integer i);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-        expectedOutput =
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
     }
 
     @Test
@@ -3500,7 +3531,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "xyz4.0xyz3.0xyz3.0xyz3.0");
 
-        String expectedOutput =
+        checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
             "  public G() {\n" +
@@ -3513,29 +3544,31 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public void m(String s, String k, String l) {\n" +
             "  }\n" +
-            "}\n";
-        checkGCUDeclaration("G.groovy", expectedOutput);
+            "}\n");
 
-        expectedOutput =
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s, Integer i, String j, String k, float f, String l);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-        expectedOutput =
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s, Integer i, String j, String k, String l);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-        expectedOutput =
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s, Integer i, String k, String l);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-        expectedOutput =
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public void m(String s, String k, String l);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
     }
 
     @Test
@@ -3562,7 +3595,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "abcabc");
 
-        String expectedOutput=
+        checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
             "  private java.lang.Object msg;\n" +
@@ -3574,18 +3607,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public void print() {\n" +
             "  }\n" +
-            "}\n";
-        checkGCUDeclaration("G.groovy", expectedOutput);
-        expectedOutput =
+            "}\n");
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public G(Integer i, String m);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
-        expectedOutput =
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
+
+        checkDisassemblyFor("p/G.class",
             "  \n" +
             "  public G(Integer i);\n" +
-            "  \n";
-        checkDisassemblyFor("p/G.class", expectedOutput, ClassFileBytesDisassembler.COMPACT);
+            "  \n",
+            ClassFileBytesDisassembler.COMPACT);
     }
 
     @Test
@@ -3655,7 +3689,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         },
         "successname");
-        //checkDisassembledClassFile(OUTPUT_DIR + File.separator + "p/Code.class", "Code", "");
     }
 
     @Test

@@ -755,6 +755,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             Parameter[] setterParameterTypes = {new Parameter(node.getType(), "value")};
             MethodNode setter =
                     new MethodNode(setterName, accessorModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
+            // GRECLIPSE add
+            node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(setter::addAnnotation);
+            // GRECLIPSE end
             setter.setSynthetic(true);
             addPropertyMethod(setter);
             visitMethod(setter);
@@ -762,11 +765,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     private void visitGetter(PropertyNode node, Statement getterBlock, int getterModifiers, String secondGetterName) {
-        MethodNode secondGetter =
+        MethodNode getter =
                 new MethodNode(secondGetterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
-        secondGetter.setSynthetic(true);
-        addPropertyMethod(secondGetter);
-        visitMethod(secondGetter);
+        // GRECLIPSE add
+        node.getField().getAnnotations().stream().filter(a -> a.getClassNode().getName().equals("java.lang.Deprecated")).forEach(getter::addAnnotation);
+        // GRECLIPSE end
+        getter.setSynthetic(true);
+        addPropertyMethod(getter);
+        visitMethod(getter);
     }
 
     protected void addPropertyMethod(MethodNode method) {

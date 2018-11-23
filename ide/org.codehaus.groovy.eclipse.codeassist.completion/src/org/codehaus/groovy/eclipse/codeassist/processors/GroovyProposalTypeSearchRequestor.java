@@ -203,22 +203,19 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return;
         }
 
-        if (context.location == ContentAssistLocation.EXTENDS && (modifiers & Flags.AccFinal) != 0) {
+        if (context.location == ContentAssistLocation.EXTENDS && Flags.isFinal(modifiers)) {
             return;
         }
-        if (options.checkDeprecation && (modifiers & Flags.AccDeprecated) != 0) {
+        if (options.checkDeprecation && Flags.isDeprecated(modifiers)) {
             return;
         }
-        if (options.checkVisibility) {
-            if ((modifiers & Flags.AccPublic) == 0) {
-                if ((modifiers & Flags.AccPrivate) != 0)
-                    return;
+        if (options.checkVisibility && !Flags.isPublic(modifiers)) {
+            if (Flags.isPrivate(modifiers))
+                return;
 
-                if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
-                    return;
-            }
+            if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                return;
         }
-
         if (TypeFilter.isFiltered(packageName, CharOperation.concatWith(enclosingTypeNames, simpleTypeName, '.'))) {
             return;
         }
@@ -259,21 +256,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             if (Flags.isEnum(typeModifiers) || Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers)) {
                 return;
             }
-            if (this.options.checkDeprecation && (typeModifiers & Flags.AccDeprecated) != 0) {
+            if (options.checkDeprecation && (Flags.isDeprecated(modifiers) || Flags.isDeprecated(typeModifiers))) {
                 return;
+            }
+            if (options.checkVisibility && !Flags.isPublic(typeModifiers)) {
+                if (Flags.isPrivate(typeModifiers))
+                    return;
+
+                if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                    return;
             }
             if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
                 return;
-            }
-
-            if (this.options.checkVisibility) {
-                if ((typeModifiers & Flags.AccPublic) == 0) {
-                    if ((typeModifiers & Flags.AccPrivate) != 0)
-                        return;
-
-                    if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
-                        return;
-                }
             }
 
             int accessibility = IAccessRule.K_ACCESSIBLE;

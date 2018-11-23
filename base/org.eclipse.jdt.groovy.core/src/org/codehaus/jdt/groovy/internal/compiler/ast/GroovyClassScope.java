@@ -17,7 +17,6 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.ENUM_CONSTANT;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -129,17 +128,18 @@ public class GroovyClassScope extends ClassScope {
         if (referenceContext instanceof GroovyTypeDeclaration) {
             for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
                 String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
+                int modifiers = getModifiers(property);
 
-                createGetterMethod(name, "get" + capitalizedName, property.isStatic(), methodBindings)
+                createGetterMethod(name, "get" + capitalizedName, modifiers, methodBindings)
                     .ifPresent(groovyMethods::add);
 
                 if (ClassHelper.boolean_TYPE.equals(property.getType())) {
-                    createGetterMethod(name, "is" + capitalizedName, property.isStatic(), methodBindings)
+                    createGetterMethod(name, "is" + capitalizedName, modifiers, methodBindings)
                         .ifPresent(groovyMethods::add);
                 }
 
-                if (!Modifier.isFinal(property.getModifiers())) {
-                    createSetterMethod(name, "set" + capitalizedName, property.isStatic(), property.getType().getName(), methodBindings)
+                if (!Flags.isFinal(property.getModifiers())) {
+                    createSetterMethod(name, "set" + capitalizedName, modifiers, property.getType().getName(), methodBindings)
                         .ifPresent(groovyMethods::add);
                 }
             }
@@ -176,19 +176,29 @@ public class GroovyClassScope extends ClassScope {
                 MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
                     method = new MethodBinding(method, typeBinding);
-                    method.modifiers &= ~Modifier.ABSTRACT;
+                    method.modifiers &= ~Flags.AccAbstract;
                     groovyMethods.add(method);
                 }
             }
 
             for (MethodBinding method : traitMethods.values()) {
-                method.modifiers &= ~Modifier.ABSTRACT;
+                method.modifiers &= ~Flags.AccAbstract;
             }
         }
 
         MethodBinding[] newMethodBindings = groovyMethods.toArray(new MethodBinding[methodBindings.length + groovyMethods.size()]);
         System.arraycopy(methodBindings, 0, newMethodBindings, groovyMethods.size(), methodBindings.length);
         return newMethodBindings;
+    }
+
+    private int getModifiers(PropertyNode property) {
+        int modifiers = (property.getModifiers() & 0xF);
+        if (property.getField().getAnnotations().stream()
+                .map(anno -> anno.getClassNode().getName())
+                .anyMatch(name -> name.equals("Deprecated") || name.equals("java.lang.Deprecated"))) {
+            modifiers |= Flags.AccDeprecated;
+        }
+        return modifiers;
     }
 
     private String getMethodAsString(MethodBinding method) {
@@ -279,7 +289,7 @@ public class GroovyClassScope extends ClassScope {
         return Optional.empty();
     }
 
-    private Optional<MethodBinding> createGetterMethod(String propertyName, String name, boolean isStatic,
+    private Optional<MethodBinding> createGetterMethod(String propertyName, String name, int modifiers,
             MethodBinding[] existingMethods) {
         boolean found = false;
         char[] nameAsCharArray = name.toCharArray();
@@ -302,20 +312,15 @@ public class GroovyClassScope extends ClassScope {
         }
 
         if (!found) {
-            int modifiers = Flags.AccPublic;
-            if (isStatic) {
-                modifiers |= Flags.AccStatic;
-            }
             if (referenceContext.binding.isInterface()) {
                 modifiers |= Flags.AccAbstract;
             }
-
             return Optional.of(new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
         }
         return Optional.empty();
     }
 
-    private Optional<MethodBinding> createSetterMethod(String propertyName, String name, boolean isStatic, String propertyType,
+    private Optional<MethodBinding> createSetterMethod(String propertyName, String name, int modifiers, String propertyType,
             MethodBinding[] existingMethods) {
         boolean found = false;
         char[] nameAsCharArray = name.toCharArray();
@@ -340,14 +345,9 @@ public class GroovyClassScope extends ClassScope {
         }
 
         if (!found) {
-            int modifiers = Flags.AccPublic;
-            if (isStatic) {
-                modifiers |= Flags.AccStatic;
-            }
             if (referenceContext.binding.isInterface()) {
                 modifiers |= Flags.AccAbstract;
             }
-
             return Optional.of(new LazilyResolvedMethodBinding(false, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
         }
         return Optional.empty();

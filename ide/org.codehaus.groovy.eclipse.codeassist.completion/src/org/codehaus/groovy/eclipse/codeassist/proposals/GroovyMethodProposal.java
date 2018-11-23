@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
@@ -221,7 +222,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     }
 
     protected int getModifiers() {
-        return method.getModifiers();
+        return (method.getModifiers() | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0));
     }
 
     protected char[] createMethodSignature() {

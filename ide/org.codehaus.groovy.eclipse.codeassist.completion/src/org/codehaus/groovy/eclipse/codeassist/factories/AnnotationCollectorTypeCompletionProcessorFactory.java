@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProces
 import org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,7 +47,7 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
 
     @Override
     public IGroovyCompletionProcessor createProcessor(ContentAssistContext context,
-            final JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
 
         return new TypeCompletionProcessor(context, javaContext, nameEnvironment) {
             @Override
@@ -64,7 +65,7 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
                     } else {
                         // change the displayed icon from 'C' to '@'
                         GroovyCompletionProposal gcp = ReflectionUtils.getPrivateField(LazyJavaCompletionProposal.class, "fProposal", proposal);
-                        gcp.setFlags(gcp.getFlags() | 0x00002000 /*aka Modifier.ANNOTATION*/);
+                        gcp.setFlags(gcp.getFlags() | Flags.AccAnnotation);
                     }
                 }
 
