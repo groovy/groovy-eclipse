@@ -864,17 +864,51 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"	requires jdk.xml.bind;\n" +
 				"}\n"
 			};
-			runner.expectedCompilerLog =
-				"----------\n" + 
-				"1. WARNING in module-info.java (at line 2)\n" + 
-				"	requires jdk.xml.bind;\n" + 
-				"	         ^^^^^^^^^^^^\n" + 
-				"The module jdk.xml.bind has been deprecated since version 9 and marked for removal\n" + 
-				"----------\n";
-			runner.runWarningTest();
+			if (isJRE11Plus) {
+				runner.expectedCompilerLog =
+					"----------\n" + 
+					"1. ERROR in module-info.java (at line 2)\n" + 
+					"	requires jdk.xml.bind;\n" + 
+					"	         ^^^^^^^^^^^^\n" + 
+					"jdk.xml.bind cannot be resolved to a module\n" + 
+					"----------\n";
+				runner.runNegativeTest();
+			} else {
+				runner.expectedCompilerLog =
+					"----------\n" + 
+					"1. WARNING in module-info.java (at line 2)\n" + 
+					"	requires jdk.xml.bind;\n" + 
+					"	         ^^^^^^^^^^^^\n" + 
+					"The module jdk.xml.bind has been deprecated since version 9 and marked for removal\n" + 
+					"----------\n";
+				runner.runWarningTest();
+			}
 		} finally {
 			this.javaClassLib = save;
 		}
+	}
+	public void testBug533063_2() throws Exception {
+		runConformTest(new String[] {
+			"dont.use/module-info.java",
+			"@Deprecated(forRemoval=true,since=\"9\") module dont.use {}\n"
+		});
+		this.moduleMap.clear(); // don't use the source module beyond this point
+		Runner runner = new Runner();
+		runner.shouldFlushOutputDirectory = false;
+		runner.testFiles = new String[] {
+			"my.mod/module-info.java",
+			"module my.mod {\n" +
+			"	requires dont.use;\n" +
+			"}\n"
+		};
+		runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. WARNING in my.mod\\module-info.java (at line 2)\n" + 
+			"	requires dont.use;\n" + 
+			"	         ^^^^^^^^\n" + 
+			"The module dont.use has been deprecated since version 9 and marked for removal\n" + 
+			"----------\n";
+		runner.runWarningTest();
 	}
 	public void testBug534304() throws Exception {
 		runNegativeTest(

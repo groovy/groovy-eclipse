@@ -13,7 +13,8 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann  - Contribution for bug 295551
  *     Jesper S Moller   - Contributions for
- *							  Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335             
+ *							  Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
+ *     Frits Jalvingh    - contributions for bug 533830.             
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -242,11 +243,6 @@ public void finalizeProblems() {
 	int problemCount = this.compilationResult.problemCount;
 	CategorizedProblem[] problems = this.compilationResult.problems;
 	if (this.suppressWarningsCount == 0) {
-		 for (int iProblem = 0, length = problemCount; iProblem < length; iProblem++) {
-			 if (problems[iProblem] instanceof DefaultProblem) {
-				 ((DefaultProblem)problems[iProblem]).reportError();
-			 }
-		 }
 		return;
 	}
 	int removed = 0;

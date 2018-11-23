@@ -451,9 +451,9 @@ public interface IPackageFragmentRoot
 	void move(IPath destination, int updateResourceFlags, int updateModelFlags, IClasspathEntry sibling, IProgressMonitor monitor) throws JavaModelException;
 
 	/**
-	 * Returns the <code>IModuleDescription</code> that this package fragment root contains 
-	 * or <code>null</code> if the root doesn't contain any named module. If present the module
-	 * descriptor is found as a child of the package fragment representing the default package. 
+	 * Returns the <code>IModuleDescription</code> that this package fragment root contains.
+	 * Returns <code>null</code> if the root doesn't contain any named module or if the project compiler compliance is 1.8 or lower.
+	 * If present the module descriptor is found as a child of the package fragment representing the default package.
 	 * 
 	 * Note that only one of the source package fragment roots in a Java Project can legally
 	 * contain a module descriptor.

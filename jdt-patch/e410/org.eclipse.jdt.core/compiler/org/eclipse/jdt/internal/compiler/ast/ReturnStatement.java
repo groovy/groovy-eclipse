@@ -358,6 +358,11 @@ public void resolve(BlockScope scope) {
 	if (methodType == null)
 		return;
 
+	if (methodType.isProperType(true) && lambda != null) {
+		// ensure that type conversions don't leak a preliminary local type:
+		if (lambda.updateLocalTypesInMethod(lambda.descriptor))
+			methodType = lambda.expectedResultType();
+	}
 	if (TypeBinding.notEquals(methodType, expressionType)) // must call before computeConversion() and typeMismatchError()
 		scope.compilationUnitScope().recordTypeConversion(methodType, expressionType);
 	if (this.expression.isConstantValueOfTypeAssignableToType(expressionType, methodType)

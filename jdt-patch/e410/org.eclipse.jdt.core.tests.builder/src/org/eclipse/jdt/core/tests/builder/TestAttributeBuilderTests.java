@@ -841,6 +841,7 @@ public class TestAttributeBuilderTests extends BuilderTests {
 
 		// project X just reexports Project1 without test code
 		IPath projectXPath = env.addProject("ProjectX"); 
+		env.removePackageFragmentRoot(projectXPath, "");
 		env.addRequiredProjectWithoutTestCode(projectXPath, project1Path, /* isExported */ true);
 		
 

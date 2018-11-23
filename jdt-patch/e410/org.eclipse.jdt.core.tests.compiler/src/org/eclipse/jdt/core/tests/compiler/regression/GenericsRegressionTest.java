@@ -6375,5 +6375,106 @@ public void testBug532137() {
 		false
 	);
 }
+
+public void testBug540313() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"X/C120644mr.java",
+			"package X;\n" + 
+			"\n" + 
+			"public class C120644mr<V, X extends java.lang.Exception> extends X.C16280iv<V> {\n" + 
+			"}\n"
+		};
+	runner.expectedCompilerLog =	
+			"----------\n" + 
+			"1. ERROR in X\\C120644mr.java (at line 3)\n" + 
+			"	public class C120644mr<V, X extends java.lang.Exception> extends X.C16280iv<V> {\n" + 
+			"	                                                                 ^^^^^^^^^^\n" + 
+			"X.C16280iv cannot be resolved to a type\n" + 
+			"----------\n";
+	runner.runNegativeTest();
+}
+
+public void testBug540313a() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"X/C120644mr.java",
+			"package X;\n" + 
+			"\n" + 
+			"class Outer {\n" +
+			"	class Inner<Z> {}\n" +
+			"}\n" + 
+			"public class C120644mr<V, X extends Outer> extends X.Inner<V> {\n" + 
+			"}\n"
+		};
+	runner.expectedCompilerLog =	
+			"----------\n" + 
+			"1. ERROR in X\\C120644mr.java (at line 6)\n" + 
+			"	public class C120644mr<V, X extends Outer> extends X.Inner<V> {\n" + 
+			"	                                                   ^^^^^^^\n" + 
+			"X.Inner cannot be resolved to a type\n" + 
+			"----------\n";
+	runner.runNegativeTest();
+}
+
+public void testBug540313b() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"X/C120644mr.java",
+			"package X;\n" + 
+			"\n" + 
+			"class Outer {\n" +
+			"	class Inner<Z> {}\n" +
+			"}\n" + 
+			"public class C120644mr<X extends Outer, V> {\n" +
+			"	X.Inner<V> inner;\n" + // is this backed by JLS?
+			"}\n"
+		};
+	runner.runConformTest();
+}
+public void testBug478708() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"bug/IInterface.java",
+			"package bug;\n" + 
+			"\n" + 
+			"public class IInterface {\n" + 
+			"\n" + 
+			"}\n",
+			"bug/AbstractA.java",
+			"package bug;\n" + 
+			"\n" + 
+			"public abstract class AbstractA<T extends IInterface> {\n" + 
+			"\n" + 
+			"	public abstract class AbstractD<U> {\n" + 
+			"\n" + 
+			"	}\n" + 
+			"}\n",
+			"bug/AbstractC.java",
+			"package bug;\n" + 
+			"\n" + 
+			"\n" + 
+			"public abstract class AbstractC<T extends IInterface> extends T.AbstractD<E>  {\n" + 
+			"\n" + 
+			"	public AbstractC(AbstractA<T> a) {\n" + 
+			"		a.super();\n" + 
+			"	}\n" + 
+			"}\n",
+			"bug/E.java",
+			"package bug;\n" + 
+			"\n" + 
+			"public class E {\n" + 
+			"\n" + 
+			"}\n"
+		};
+	runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in bug\\AbstractC.java (at line 4)\n" + 
+			"	public abstract class AbstractC<T extends IInterface> extends T.AbstractD<E>  {\n" + 
+			"	                                                              ^^^^^^^^^^^\n" + 
+			"T.AbstractD cannot be resolved to a type\n" + 
+			"----------\n";
+	runner.runNegativeTest();
+}
 }
 

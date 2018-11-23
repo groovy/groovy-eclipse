@@ -917,6 +917,7 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.1
 	 * @deprecated Use {@link #FORMATTER_COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT} and {@link #FORMATTER_COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT}
 	 */
+	@Deprecated
 	public final static String FORMATTER_COMMENT_CLEAR_BLANK_LINES = "org.eclipse.jdt.core.formatter.comment.clear_blank_lines"; //$NON-NLS-1$
 
 	/**
@@ -958,6 +959,7 @@ public class DefaultCodeFormatterConstants {
 	 * @deprecated Use multiple settings for each kind of comments. See {@link #FORMATTER_COMMENT_FORMAT_BLOCK_COMMENT},
 	 * {@link #FORMATTER_COMMENT_FORMAT_JAVADOC_COMMENT} and {@link #FORMATTER_COMMENT_FORMAT_LINE_COMMENT}.
 	 */
+	@Deprecated
 	public final static String FORMATTER_COMMENT_FORMAT = "org.eclipse.jdt.core.formatter.comment.format_comments"; //$NON-NLS-1$
 
 	/**
@@ -1670,6 +1672,7 @@ public class DefaultCodeFormatterConstants {
 	 * {@link #FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE}
 	 * {@link #FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER}
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_after_annotation";//$NON-NLS-1$
 
 	/**
@@ -1689,6 +1692,7 @@ public class DefaultCodeFormatterConstants {
 	 * {@link #FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE}
 	 * {@link #FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_TYPE}
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_after_annotation_on_member";//$NON-NLS-1$
 
 	/**
@@ -1902,7 +1906,9 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.2
+	 * @deprecated Use {@link #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_annotation_declaration";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1914,7 +1920,9 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.0
+	 * @deprecated Use {@link #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_anonymous_type_declaration";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1926,7 +1934,12 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.0
+	 * @deprecated Use {@link #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE},
+	 *             {@link #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE},
+	 *             {@link #FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE}, and
+	 *             {@link #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_block";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1938,7 +1951,9 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.1
+	 * @deprecated Use {@link #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_enum_constant";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1950,7 +1965,9 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.1
+	 * @deprecated Use {@link #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_enum_declaration";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1962,7 +1979,9 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.0
+	 * @deprecated Use {@link #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_method_body";	//$NON-NLS-1$
 	/**
 	 * <pre>
@@ -1974,8 +1993,11 @@ public class DefaultCodeFormatterConstants {
 	 * @see JavaCore#INSERT
 	 * @see JavaCore#DO_NOT_INSERT
 	 * @since 3.0
+	 * @deprecated Use {@link #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE} instead.
 	 */
+	@Deprecated
 	public static final String FORMATTER_INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION = JavaCore.PLUGIN_ID + ".formatter.insert_new_line_in_empty_type_declaration";	//$NON-NLS-1$
+
 	/**
 	 * <pre>
 	 * FORMATTER / Option to insert a space after and in wilcard
@@ -3939,13 +3961,15 @@ public class DefaultCodeFormatterConstants {
 	public static final String FORMATTER_KEEP_EMPTY_ARRAY_INITIALIZER_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_empty_array_initializer_on_one_line"; //$NON-NLS-1$
 	/**
 	 * <pre>
-	 * FORMATTER / Option to keep guardian clause on one line
+	 * FORMATTER / Option to keep guardian clause on one line, in addition to the
+	 *             #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE option
 	 *     - option id:         "org.eclipse.jdt.core.formatter.format_guardian_clause_on_one_line"
 	 *     - possible values:   { TRUE, FALSE }
 	 *     - default:           FALSE
 	 * </pre>
 	 * @see #TRUE
 	 * @see #FALSE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
 	 * @since 3.0
 	 */
 	public static final String FORMATTER_KEEP_GUARDIAN_CLAUSE_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.format_guardian_clause_on_one_line";	//$NON-NLS-1$
@@ -4010,6 +4034,180 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.15
 	 */
 	public static final String FORMATTER_KEEP_SIMPLE_DO_WHILE_BODY_ON_SAME_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_simple_do_while_body_on_same_line";//$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when a loop body block should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_loop_body_block_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_loop_body_block_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when an if-then statement body block should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_if_then_body_block_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @see #FORMATTER_KEEP_GUARDIAN_CLAUSE_ON_ONE_LINE for a special case
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_if_then_body_block_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when a code block other than if-then and loop body should
+	 *             be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_code_block_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_code_block_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when a method body should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_method_body_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_method_body_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when a lambda body should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_lambda_body_block_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_lambda_body_block_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to always keep simple getters and setters on one line, in addition to the
+	 *             #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE option
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_simple_getter_setter_on_one_line"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           FALSE
+	 * </pre>
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_SIMPLE_GETTER_SETTER_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_simple_getter_setter_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when a type declaration should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_type_declaration_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 * @since 3.0
+	 */
+	public static final String FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_type_declaration_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when an anonymous type declaration should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_anonymous_type_declaration_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_anonymous_type_declaration_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when an enum constant declaration body should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_enum_constant_declaration_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_enum_constant_declaration_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when an enum declaration should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_enum_declaration_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_enum_declaration_on_one_line"; //$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control when an annotation declaration should be kept on one line
+	 *     - option id:         "org.eclipse.jdt.core.formatter.keep_annotation_declaration_on_one_line"
+	 *     - possible values:   { ONE_LINE_NEVER, ONE_LINE_IF_EMPTY, ONE_LINE_IF_SINGLE_ITEM,
+	 *                            ONE_LINE_ALWAYS, ONE_LINE_PRESERVE }
+	 *     - default:           ONE_LINE_NEVER
+	 * </pre>
+	 * @see #ONE_LINE_NEVER
+	 * @see #ONE_LINE_IF_EMPTY
+	 * @see #ONE_LINE_IF_SINGLE_ITEM
+	 * @see #ONE_LINE_ALWAYS
+	 * @see #ONE_LINE_PRESERVE
+	 * @since 3.16
+	 */
+	public static final String FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE = JavaCore.PLUGIN_ID + ".formatter.keep_annotation_declaration_on_one_line"; //$NON-NLS-1$
 
 	/**
 	 * <pre>
@@ -4436,6 +4634,92 @@ public class DefaultCodeFormatterConstants {
 	 * @since 3.12
 	 */
 	public static final String PRESERVE_POSITIONS = "preserve_positions";	//$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Value to never keep braced code on one line.
+	 * </pre>
+	 * @see #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String ONE_LINE_NEVER = "one_line_never";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Value to keep braced code on one line only if it's empty.
+	 * </pre>
+	 * @see #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String ONE_LINE_IF_EMPTY = "one_line_if_empty";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Value to keep braced code on one line if it contains at most a single
+	 *             item.
+	 * </pre>
+	 * @see #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String ONE_LINE_IF_SINGLE_ITEM = "one_line_if_single_item";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Value to always keep braced code on one line, as long as it doesn't
+	 *             exceed the line width limit.
+	 * </pre>
+	 * @see #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String ONE_LINE_ALWAYS = "one_line_always";	//$NON-NLS-1$
+	/**
+	 * <pre>
+	 * FORMATTER / Value to keep braced code on one line as long as it doesn't exceed the
+	 *             line width limit and it was already in one line in the original source.
+	 * </pre>
+	 * @see #FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE
+	 * @see #FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE
+	 * @since 3.16
+	 */
+	public static final String ONE_LINE_PRESERVE = "one_line_preserve";	//$NON-NLS-1$
 
 	/**
 	 * <pre>

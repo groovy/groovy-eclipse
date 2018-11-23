@@ -39,7 +39,7 @@ import junit.framework.Test;
 public class LambdaExpressionsTest extends AbstractRegressionTest {
 
 static {
-	TESTS_NAMES = new String[] { "test449063"};
+//	TESTS_NAMES = new String[] { "testBug540520"};
 //	TESTS_NUMBERS = new int[] { 50 };
 //	TESTS_RANGE = new int[] { 11, -1 };
 }
@@ -1027,11 +1027,9 @@ public void test038() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=406641, [1.8][compiler][codegen] Code generation for intersection cast.
 public void test039() {
-// FIXME: was differentiating error messages ever implemented?
-//	String errMsg = (this.complianceLevel >= ClassFileConstants.JDK9) ?
-//			"X (in module: Unnamed Module) cannot be cast to I (in module: Unnamed Module)" :
-//				"X cannot be cast to I";
-	String errMsg = "X cannot be cast to I";
+	String errMsg = isJRE11Plus
+		? "class X cannot be cast to class I (X and I are in unnamed module of loader"
+		: "X cannot be cast to I";
 	this.runConformTest(
 			new String[] {
 					"X.java",
@@ -1277,8 +1275,8 @@ public void test045() {
 				"----------\n" + 
 				"5. ERROR in X.java (at line 15)\n" + 
 				"	i = X.Y::new;\n" + 
-				"	      ^\n" + 
-				"Y cannot be resolved or is not a field\n" + 
+				"	    ^^^\n" + 
+				"X.Y cannot be resolved to a type\n" + 
 				"----------\n" + 
 				"6. ERROR in X.java (at line 27)\n" + 
 				"	new X().new Y().f();\n" + 
@@ -6996,6 +6994,104 @@ public void testBug531093() {
 		}, 
 		""
 	);
+}
+public void testBug540520() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"Run.java",
+			"import java.util.ArrayList;\n" + 
+			"import java.util.HashMap;\n" + 
+			"import java.util.List;\n" + 
+			"import java.util.Map;\n" + 
+			"import java.util.stream.Collectors;\n" + 
+			"\n" + 
+			"public class Run {\n" + 
+			"\n" + 
+			"	public static void main(String[] args) {\n" + 
+			"		\n" + 
+			"		List<TypeDeptCount> list = new ArrayList<>();\n" + 
+			"		for(int i=0;i<10;i++) {\n" + 
+			"			TypeDeptCount ty = new TypeDeptCount();\n" + 
+			"			ty.setCykbbm(\"10\"+i);\n" + 
+			"			ty.setCount(i);\n" + 
+			"		}\n" + 
+			"        List<Map<String, Object>> datas = list.stream().collect(Collectors.groupingBy(TypeDeptCount::getType))\n" + 
+			"                .entrySet().stream().map(item -> item.getValue().stream().reduce(new HashMap<String, Object>() {\n" + 
+			"                    private static final long serialVersionUID = 1L;\n" + 
+			"                    {\n" + 
+			"                        put(\"count\", 0);\n" + 
+			"                        put(\"type\", item.getKey());\n" + 
+			"                    }\n" + 
+			"                }, (data1, val) -> {\n" + 
+			"                    data1.put(val.getCykbbm(), val.getCount());\n" + 
+			"                    data1.put(\"count\", (Integer) data1.get(\"count\") + val.getCount());\n" + 
+			"                    return data1;\n" + 
+			"                }, (data1, data2) -> {\n" + 
+			"                    data2.put(\"count\", (Integer) data1.get(\"count\") + (Integer) data2.get(\"count\"));\n" + 
+			"                    data1.putAll(data2);\n" + 
+			"                    return data1;\n" + 
+			"                })).sorted((item1, item2) -> (Integer) item2.get(\"count\") - (Integer) item1.get(\"count\"))\n" + 
+			"                .collect(Collectors.toList());\n" + 
+			"        System.out.println(datas);\n" + 
+			"	}\n" + 
+			"}\n",
+			"TypeDeptCount.java",
+			"public class TypeDeptCount {\n" + 
+			"\n" + 
+			"    private String type;\n" + 
+			"    private String cykbbm;\n" + 
+			"    private Integer count;\n" + 
+			"    \n" + 
+			"	public String getType() {\n" + 
+			"		return type;\n" + 
+			"	}\n" + 
+			"	public void setType(String type) {\n" + 
+			"		this.type = type;\n" + 
+			"	}\n" + 
+			"	public String getCykbbm() {\n" + 
+			"		return cykbbm;\n" + 
+			"	}\n" + 
+			"	public void setCykbbm(String cykbbm) {\n" + 
+			"		this.cykbbm = cykbbm;\n" + 
+			"	}\n" + 
+			"	public Integer getCount() {\n" + 
+			"		return count;\n" + 
+			"	}\n" + 
+			"	public void setCount(Integer count) {\n" + 
+			"		this.count = count;\n" + 
+			"	}\n" + 
+			"}\n"
+		};
+	runner.runConformTest();
+}
+public void testBug540631() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"EclipseCompileBug.java",
+			"public enum EclipseCompileBug {\n" + 
+			"	/*\n" + 
+			"	 * Next line fails with these errors in Eclipse, works with javac:\n" + 
+			"	 * <li>Test cannot be resolved to a type\n" + 
+			"	 * <li>Cannot reference a field before it is defined\n" + 
+			"	 */\n" + 
+			"	Test(Test::new);\n" + 
+			"\n" + 
+			"	@FunctionalInterface\n" + 
+			"    public interface IConstructor<T extends Object> {\n" + 
+			"        T apply();\n" + 
+			"    }\n" + 
+			"\n" + 
+			"    private final IConstructor<?> constructor;\n" + 
+			"	private EclipseCompileBug (IConstructor<?> newObj) {\n" + 
+			"		constructor = newObj;\n" + 
+			"	}\n" + 
+			"	\n" + 
+			"	public static class Test {\n" + 
+			"		\n" + 
+			"	}\n" + 
+			"}\n"
+		};
+	runner.runConformTest();
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

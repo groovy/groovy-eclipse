@@ -5536,7 +5536,7 @@ public void testBug470542() {
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	process(missing::new);\n" + 
 		"	        ^^^^^^^\n" + 
-		"missing cannot be resolved\n" + 
+		"missing cannot be resolved to a type\n" + 
 		"----------\n");
 }
 public void testBug471280_comment0() {
@@ -9423,5 +9423,36 @@ public void testBug508834_comment0() {
 				"    }\n" + 
 				"}\n"
 			});
+	}
+	public void testBug539329() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"Bug539329.java",
+				"  import java.util.*;\n" + 
+				"  \n" + 
+				"  public class Bug539329 {\n" + 
+				"\n" + 
+				"    public static Collection<Class<? extends Interface>> getClasses() {\n" + 
+				"      // This yields a compile error in 2018-09, but works in Photon.\n" + 
+				"      return Arrays.asList(One.class, Two.class, Three.class);\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public static Collection<Class<? extends Interface>> getClassesThatWorks() {\n" + 
+				"      // This works surprisinly in both versions\n" + 
+				"      return Arrays.asList(One.class, Two.class);\n" + 
+				"    }\n" + 
+				"  }\n" + 
+				"\n" + 
+				"   class One extends Parent<String> implements Interface { }\n" + 
+				"\n" + 
+				"  class Two extends Parent<Integer> implements Interface { }\n" + 
+				"\n" + 
+				"  class Three extends Parent<Object> implements Interface { }\n" + 
+				"\n" + 
+				"  class Parent<T> { }\n" + 
+				"\n" + 
+				"  interface Interface { }\n"
+			};
+		runner.runConformTest();
 	}
 }

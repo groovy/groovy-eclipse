@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -374,5 +374,15 @@ public interface IJavaModelStatusConstants {
 	 * @since 3.14
 	 */
 	public static final int TEST_OUTPUT_FOLDER_MUST_BE_SEPARATE_FROM_MAIN_OUTPUT_FOLDERS = 1016;
+
+	/**
+	 * <p>
+	 * Status constant indicating that the project has only main source folders but depends on a project that has only
+	 * test source folders.
+	 * </p>
+	 * 
+	 * @since 3.16
+	 */
+	public static final int MAIN_ONLY_PROJECT_DEPENDS_ON_TEST_ONLY_PROJECT = 1017;
 
 }

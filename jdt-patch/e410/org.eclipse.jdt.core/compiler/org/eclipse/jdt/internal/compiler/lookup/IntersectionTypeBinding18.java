@@ -238,7 +238,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 			}
 		}
 		if (classIdx > -1 && classIdx < Integer.MAX_VALUE)
-			return this.intersectingTypes[classIdx];
+			return this.intersectingTypes[classIdx].erasure();
 		return this;
 	}
 

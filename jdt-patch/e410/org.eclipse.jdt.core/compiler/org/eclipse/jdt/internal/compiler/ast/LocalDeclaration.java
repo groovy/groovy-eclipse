@@ -351,11 +351,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		if (variableTypeInferenceError) {
 			return;
 		}
-
 		boolean resolveAnnotationsEarly = false;
 		if (scope.environment().usesNullTypeAnnotations() 
 				&& !isTypeNameVar // 'var' does not provide a target type
-				&& variableType.isValidBinding()) { 
+				&& variableType != null && variableType.isValidBinding()) { 
 			resolveAnnotationsEarly = this.initialization instanceof Invocation
 					|| this.initialization instanceof ConditionalExpression
 					|| this.initialization instanceof ArrayInitializer;

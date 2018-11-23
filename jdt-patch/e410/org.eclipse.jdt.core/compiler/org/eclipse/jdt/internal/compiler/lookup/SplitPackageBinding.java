@@ -112,7 +112,7 @@ public class SplitPackageBinding extends PackageBinding {
 				ModuleBinding moduleBinding = incarnation.enclosingModule;
 				if (moduleBinding == module)
 					continue;
-				PackageBinding next = moduleBinding.getVisiblePackage(incarnation, name); // TODO(SHMOD): reduce split-package work during this invocation?
+				PackageBinding next = moduleBinding.getVisiblePackage(incarnation, name, false);
 				childPackage = combine(next, childPackage, primaryModule);
 			}
 			return childPackage;

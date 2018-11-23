@@ -17716,4 +17716,37 @@ public void testBug536555() {
 	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
 	runner.runWarningTest();
 }
+public void testBug540264() {
+	runNegativeTestWithLibs(
+		new String[] {
+			"example/Example.java",
+			"package example;\n" +
+			"\n" +
+			"public abstract class Example {\n" +
+			"    void f() {\n" +
+			"        for (X.Y<Z> entry : x) {\n" +
+			"        }\n" +
+			"    }\n" +
+			"}\n" +
+			"",
+		}, 
+		getCompilerOptions(),
+		"----------\n" + 
+		"1. ERROR in example\\Example.java (at line 5)\n" + 
+		"	for (X.Y<Z> entry : x) {\n" + 
+		"	     ^\n" + 
+		"X cannot be resolved to a type\n" + 
+		"----------\n" + 
+		"2. ERROR in example\\Example.java (at line 5)\n" + 
+		"	for (X.Y<Z> entry : x) {\n" + 
+		"	         ^\n" + 
+		"Z cannot be resolved to a type\n" + 
+		"----------\n" + 
+		"3. ERROR in example\\Example.java (at line 5)\n" + 
+		"	for (X.Y<Z> entry : x) {\n" + 
+		"	                    ^\n" + 
+		"x cannot be resolved to a variable\n" + 
+		"----------\n"
+	);
+}
 }

@@ -1475,7 +1475,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					if (((LambdaExpression) lambdaScope2.referenceContext).sourceStart == LambdaExpression.this.sourceStart) {
 						// local type within this lambda needs replacement: 
 						TypeBinding substType = this.localTypes2.get(orgLocal.sourceStart);
-						if (substType != null) {
+						if (substType != null && substType != orgLocal) { //$IDENTITY-COMPARISON$
 							orgLocal.transferConstantPoolNameTo(substType);
 							return substType;
 						}
@@ -1501,10 +1501,11 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	/**
 	 * Perform substitution with a {@link LocalTypeSubstitutor} on all types mentioned in the given method binding.
 	 */
-	void updateLocalTypesInMethod(MethodBinding method) {
+	boolean updateLocalTypesInMethod(MethodBinding method) {
 		if (this.localTypes == null)
-			return;
+			return false;
 		updateLocalTypesInMethod(method, new LocalTypeSubstitutor(this.localTypes), new NullSubstitution(this.scope.environment()));
+		return true;
 	}
 
 	private void updateLocalTypesInMethod(MethodBinding method, Substitutor substor, Substitution subst) {

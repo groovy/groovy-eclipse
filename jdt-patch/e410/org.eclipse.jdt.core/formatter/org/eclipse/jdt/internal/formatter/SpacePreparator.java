@@ -571,11 +571,6 @@ public class SpacePreparator extends ASTVisitor {
 		Statement thenStatement = node.getThenStatement();
 		handleTokenBefore(thenStatement, TokenNameRPAREN, this.options.insert_space_before_closing_paren_in_if, false);
 
-		if (thenStatement instanceof Block && this.tm.isGuardClause((Block) thenStatement)) {
-			handleToken(thenStatement, TokenNameLBRACE, false, true);
-			this.tm.lastTokenIn(node, TokenNameRBRACE).spaceBefore();
-		}
-
 		handleLoopBody(thenStatement);
 		handleSemicolon(thenStatement);
 		return true;

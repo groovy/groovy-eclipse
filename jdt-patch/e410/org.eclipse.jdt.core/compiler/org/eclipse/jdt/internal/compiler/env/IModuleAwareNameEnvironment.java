@@ -16,6 +16,7 @@ package org.eclipse.jdt.internal.compiler.env;
 import java.util.function.Predicate;
 
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 
 /**
  * A module aware name environment
@@ -107,6 +108,18 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 	/** Answer a type identified by the given names. moduleName may be one of the special names from ModuleBinding (ANY, ANY_NAMED, UNNAMED). */
 	NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, char[] moduleName);
 	char[][] getModulesDeclaringPackage(char[][] parentPackageName, char[] name, char[] moduleName);
+	default char[][] getUniqueModulesDeclaringPackage(char[][] parentPackageName, char[] name, char[] moduleName) {
+		char[][] allNames = getModulesDeclaringPackage(parentPackageName, name, moduleName);
+		if (allNames != null && allNames.length > 1) {
+			SimpleSetOfCharArray set = new SimpleSetOfCharArray(allNames.length);
+			for (char[] oneName : allNames)
+				set.add(oneName);
+			allNames = new char[set.elementSize][];
+			set.asArray(allNames);
+		}
+		return allNames;
+	}
+
 	
 	/**
 	 * Answer whether the given package (within the given module) contains any compilation unit.

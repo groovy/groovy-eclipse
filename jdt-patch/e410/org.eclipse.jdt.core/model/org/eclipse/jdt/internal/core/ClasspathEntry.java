@@ -1870,11 +1870,10 @@ public class ClasspathEntry implements IClasspathEntry {
 		} catch(JavaModelException e){
 			return e.getJavaModelStatus();
 		}
-		int length = classpath.length;
 
 		int outputCount = 1;
-		IPath[] outputLocations	= new IPath[length+1];
-		boolean[] allowNestingInOutputLocations = new boolean[length+1];
+		IPath[] outputLocations	= new IPath[classpath.length+1];
+		boolean[] allowNestingInOutputLocations = new boolean[classpath.length+1];
 		outputLocations[0] = projectOutputLocation;
 
 		// retrieve and check output locations
@@ -1964,8 +1963,7 @@ public class ClasspathEntry implements IClasspathEntry {
 			}
 		}
 
-		for (int i = 0 ; i < length; i++) {
-			IClasspathEntry resolvedEntry = classpath[i];
+		for (IClasspathEntry resolvedEntry : classpath) {
 			IPath path = resolvedEntry.getPath();
 			int index;
 			switch(resolvedEntry.getEntryKind()){
@@ -1991,8 +1989,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		}
 
 		// check all entries
-		for (int i = 0 ; i < length; i++) {
-			IClasspathEntry entry = classpath[i];
+		for (IClasspathEntry entry : classpath) {
 			if (entry == null) continue;
 			IPath entryPath = entry.getPath();
 			int kind = entry.getEntryKind();
@@ -2010,8 +2007,7 @@ public class ClasspathEntry implements IClasspathEntry {
 			// allow nesting source entries in each other as long as the outer entry excludes the inner one
 			if (kind == IClasspathEntry.CPE_SOURCE
 					|| (kind == IClasspathEntry.CPE_LIBRARY && (JavaModel.getTarget(entryPath, false/*don't check existence*/) instanceof IContainer))) {
-				for (int j = 0; j < classpath.length; j++){
-					IClasspathEntry otherEntry = classpath[j];
+				for (IClasspathEntry otherEntry : classpath) {
 					if (otherEntry == null) continue;
 					int otherKind = otherEntry.getEntryKind();
 					IPath otherPath = otherEntry.getPath();
@@ -2071,8 +2067,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		// diagnose nesting source folder issue before this one, for example, [src]"Project/", [src]"Project/source/" and output="Project/" should
 		// first complain about missing exclusion pattern
 		IJavaModelStatus cachedStatus = null;
-		for (int i = 0 ; i < length; i++) {
-			IClasspathEntry entry = classpath[i];
+		for (IClasspathEntry entry : classpath) {
 			if (entry == null) continue;
 			IPath entryPath = entry.getPath();
 			int kind = entry.getEntryKind();
@@ -2084,8 +2079,7 @@ public class ClasspathEntry implements IClasspathEntry {
 			if (kind == IClasspathEntry.CPE_SOURCE) {
 				IPath output = entry.getOutputLocation();
 				if (output == null) output = projectOutputLocation; // if no specific output, still need to check using default output (this line would check default output)
-				for (int j = 0; j < length; j++) {
-					IClasspathEntry otherEntry = classpath[j];
+				for (IClasspathEntry otherEntry : classpath) {
 					if (otherEntry == entry) continue;
 
 					switch (otherEntry.getEntryKind()) {
@@ -2126,6 +2120,42 @@ public class ClasspathEntry implements IClasspathEntry {
 			}
 		}
 
+		if (hasSource && testSourcesFolders.size() == 0 && !JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.CORE_MAIN_ONLY_PROJECT_HAS_TEST_ONLY_DEPENDENCY, true))) {
+			for (IClasspathEntry entry : classpath) {
+				if (entry == null)
+					continue;
+				IPath entryPath = entry.getPath();
+				if (entry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+					if (entryPath.isAbsolute() && entryPath.segmentCount() == 1) {
+						IProject prereqProjectRsc = workspaceRoot.getProject(entryPath.segment(0));
+						IJavaProject prereqProject = JavaCore.create(prereqProjectRsc);
+						boolean hasMain = false;
+						boolean hasTest = false;
+						try {
+							for (IClasspathEntry nested : prereqProject.getRawClasspath()) {
+								if (nested.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+									if (nested.isTest()) {
+										hasTest = true;
+									} else {
+										hasMain = true;
+									}
+									if (hasTest && hasMain)
+										break;
+								}
+							}
+						} catch (JavaModelException e) {
+							// is reported elsewhere
+						}
+						if (hasTest && !hasMain) {
+							return new JavaModelStatus(IJavaModelStatusConstants.MAIN_ONLY_PROJECT_DEPENDS_ON_TEST_ONLY_PROJECT,
+									Messages.bind(Messages.classpath_main_only_project_depends_on_test_only_project,
+											new String[] { prereqProject.getElementName() }));
+						}
+					}
+				}
+			}
+		}
+		
 		// NOTE: The above code that checks for IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, can be configured to return
 		// a WARNING status and hence should be at the end of this validation method. Any other code that might return a more severe ERROR should be 
 		// inserted before the mentioned code.

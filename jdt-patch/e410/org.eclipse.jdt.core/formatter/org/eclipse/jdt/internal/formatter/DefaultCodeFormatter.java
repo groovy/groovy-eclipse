@@ -414,6 +414,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		LineBreaksPreparator breaksPreparator = new LineBreaksPreparator(this.tokenManager, this.workingOptions);
 		this.astRoot.accept(breaksPreparator);
 		breaksPreparator.finishUp();
+		this.astRoot.accept(new OneLineEnforcer(this.tokenManager, this.workingOptions));
 	}
 
 	private void prepareComments() {

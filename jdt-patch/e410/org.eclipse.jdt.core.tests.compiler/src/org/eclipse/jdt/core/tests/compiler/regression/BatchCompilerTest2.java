@@ -196,4 +196,169 @@ public void test006() throws Exception {
 	String expectedOutput = "// Compiled from X.java (version 11 : 55.0, super bit)";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 }
+public void testBug540123a() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"SecurePrefs.java",
+					"public class SecurePrefs {\n" + 
+					"  public SecurePrefs node (String s) {\n" + 
+					"	  System.out.println(s);\n" + 
+					"	  return null;\n" + 
+					"  }\n" + 
+					"}",
+					"SecurePrefsRoot.java",
+					"public class SecurePrefsRoot extends SecurePrefs {\n" + 
+					"\n" + 
+					"	public void foo() {\n" + 
+					"		SecurePrefs node = node(\"Hello\");\n" + 
+					"		if (node != null)\n" + 
+					"			System.out.println(node.toString());\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		new SecurePrefsRoot().foo();\n" + 
+					"	}\n" + 
+					"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
+			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
+					+ " -source 1.3 -target 1.2",
+					"",
+					"",
+					true);
+	String expectedOutput = "invokevirtual SecurePrefsRoot.node(java.lang.String) : SecurePrefs [14]";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
+}
+public void testBug540123b() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"SecurePrefs.java",
+					"public class SecurePrefs {\n" + 
+					"  public SecurePrefs node (String s) {\n" + 
+					"	  System.out.println(s);\n" + 
+					"	  return null;\n" + 
+					"  }\n" + 
+					"}",
+					"SecurePrefsRoot.java",
+					"public class SecurePrefsRoot extends SecurePrefs {\n" + 
+					"\n" + 
+					"	public void foo() {\n" + 
+					"		SecurePrefs node = node(\"Hello\");\n" + 
+					"		if (node != null)\n" + 
+					"			System.out.println(node.toString());\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		new SecurePrefsRoot().foo();\n" + 
+					"	}\n" + 
+					"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
+			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
+					+ " -source 1.3",
+					"",
+					"",
+					true);
+	String expectedOutput = "invokevirtual SecurePrefsRoot.node(java.lang.String) : SecurePrefs [14]";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
+}
+public void testBug540123c() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"SecurePrefs.java",
+					"public class SecurePrefs {\n" + 
+					"  public SecurePrefs node (String s) {\n" + 
+					"	  System.out.println(s);\n" + 
+					"	  return null;\n" + 
+					"  }\n" + 
+					"}",
+					"SecurePrefsRoot.java",
+					"public class SecurePrefsRoot extends SecurePrefs {\n" + 
+					"\n" + 
+					"	public void foo() {\n" + 
+					"		SecurePrefs node = node(\"Hello\");\n" + 
+					"		if (node != null)\n" + 
+					"			System.out.println(node.toString());\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		new SecurePrefsRoot().foo();\n" + 
+					"	}\n" + 
+					"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
+			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
+					+ " -target 1.3",
+					"",
+					"",
+					true);
+	String expectedOutput = "invokevirtual SecurePrefsRoot.node(java.lang.String) : SecurePrefs [14]";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
+}
+public void testBug540123d() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"SecurePrefs.java",
+					"public class SecurePrefs {\n" + 
+					"  public SecurePrefs node (String s) {\n" + 
+					"	  System.out.println(s);\n" + 
+					"	  return null;\n" + 
+					"  }\n" + 
+					"}",
+					"SecurePrefsRoot.java",
+					"public class SecurePrefsRoot extends SecurePrefs {\n" + 
+					"\n" + 
+					"	public void foo() {\n" + 
+					"		SecurePrefs node = node(\"Hello\");\n" + 
+					"		if (node != null)\n" + 
+					"			System.out.println(node.toString());\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		new SecurePrefsRoot().foo();\n" + 
+					"	}\n" + 
+					"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
+			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
+					+ " -1.4",
+					"",
+					"",
+					true);
+	String expectedOutput = "invokevirtual SecurePrefsRoot.node(java.lang.String) : SecurePrefs [14]";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
+}
+public void testBug540123e() throws Exception {
+	this.runConformTest(
+			new String[] {
+					"SecurePrefs.java",
+					"public class SecurePrefs {\n" + 
+					"  public SecurePrefs node (String s) {\n" + 
+					"	  System.out.println(s);\n" + 
+					"	  return null;\n" + 
+					"  }\n" + 
+					"}",
+					"SecurePrefsRoot.java",
+					"public class SecurePrefsRoot extends SecurePrefs {\n" + 
+					"\n" + 
+					"	public void foo() {\n" + 
+					"		SecurePrefs node = node(\"Hello\");\n" + 
+					"		if (node != null)\n" + 
+					"			System.out.println(node.toString());\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		new SecurePrefsRoot().foo();\n" + 
+					"	}\n" + 
+					"}"
+			},
+			"\"" + OUTPUT_DIR +  File.separator + "SecurePrefsRoot.java\""
+			+" \"" + OUTPUT_DIR +  File.separator + "SecurePrefs.java\""
+					+ " -1.3",
+					"",
+					"",
+					true);
+	String expectedOutput = "invokevirtual SecurePrefs.node(java.lang.String) : SecurePrefs [14]";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "SecurePrefsRoot.class", "SecurePrefsRoot", expectedOutput);
+}
 }

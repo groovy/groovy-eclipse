@@ -186,10 +186,10 @@ public class WrapPreparator extends ASTVisitor {
 	 * temporary values used when calling {@link #handleWrap(int)} to avoid ArrayList initialization and long lists of
 	 * parameters
 	 */
-	private List<Integer> wrapIndexes = new ArrayList<Integer>();
+	private List<Integer> wrapIndexes = new ArrayList<>();
 	/** Indexes for wraps that shouldn't happen but should be indented if cannot be removed */
-	private List<Integer> secondaryWrapIndexes = new ArrayList<Integer>();
-	private List<Float> wrapPenalties = new ArrayList<Float>();
+	private List<Integer> secondaryWrapIndexes = new ArrayList<>();
+	private List<Float> wrapPenalties = new ArrayList<>();
 	private int wrapParentIndex = -1;
 	private int wrapGroupEnd = -1;
 
@@ -773,6 +773,23 @@ public class WrapPreparator extends ASTVisitor {
 	public boolean visit(LambdaExpression node) {
 		if (node.getBody() instanceof Block) {
 			forceContinuousWrapping(node.getBody(), this.tm.firstIndexIn(node, -1));
+
+			List<Statement> statements = ((Block) node.getBody()).statements();
+			if (!statements.isEmpty()) {
+				int openBraceIndex = this.tm.firstIndexBefore(statements.get(0), TokenNameLBRACE);
+				int closeBraceIndex = this.tm.firstIndexAfter(statements.get(statements.size() - 1), TokenNameRBRACE);
+				boolean areKeptOnOneLine = statements.stream()
+						.allMatch(n -> this.tm.firstTokenIn(n, -1).getLineBreaksBefore() == 0);
+				if (areKeptOnOneLine) {
+					for (Statement statement : statements)
+						this.wrapIndexes.add(this.tm.firstIndexIn(statement, -1));
+					this.wrapParentIndex = openBraceIndex;
+					this.wrapGroupEnd = closeBraceIndex;
+					handleWrap(Alignment.M_ONE_PER_LINE_SPLIT, node);
+					this.tm.get(closeBraceIndex).setWrapPolicy(new WrapPolicy(WrapMode.TOP_PRIORITY, openBraceIndex,
+							closeBraceIndex, 0, this.currentDepth, 1, false, false));
+				}
+			}
 		}
 		if (node.hasParentheses()) {
 			List<VariableDeclaration> parameters = node.parameters();
@@ -1036,6 +1053,8 @@ public class WrapPreparator extends ASTVisitor {
 		} else if (parentNode instanceof DoStatement) {
 			extraIndent = 0;
 			this.wrapParentIndex = this.tm.firstIndexIn(parentNode, -1); // only if !indoentOnColumn
+		} else if (parentNode instanceof LambdaExpression) {
+			extraIndent = 1;
 		} else if ((wrappingOption & Alignment.M_INDENT_BY_ONE) != 0) {
 			extraIndent = 1;
 		} else if (parentNode instanceof ArrayInitializer) {

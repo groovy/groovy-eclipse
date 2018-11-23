@@ -14434,6 +14434,9 @@ public void testBug536978_comment2() {
 			"----------\n");
 }
 public void testBug536978_comment5() {
+	String errMsg = isJRE11Plus 
+			? "class Result1 cannot be cast to class OtherResult (Result1 and OtherResult are in unnamed module of loader"
+			: "Result1 cannot be cast to OtherResult";
 	runConformTest(
 		new String[] {
 			"SimpleDemo.java",
@@ -14475,6 +14478,6 @@ public void testBug536978_comment5() {
 			"	}\n" + 
 			"}\n"
 		},
-		"Result1 cannot be cast to OtherResult");
+		errMsg);
 }
 }

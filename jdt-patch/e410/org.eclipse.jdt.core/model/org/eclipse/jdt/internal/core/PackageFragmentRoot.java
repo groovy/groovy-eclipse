@@ -22,7 +22,9 @@ import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
 import org.eclipse.jdt.internal.core.util.Messages;
@@ -884,6 +886,13 @@ public String getClassFilePath(String classname) {
 }
 @Override
 public IModuleDescription getModuleDescription() {
+	if (isComplianceJava9OrHigher()) {
+		return getSourceModuleDescription();
+	}
+	return null;
+}
+
+private IModuleDescription getSourceModuleDescription() {
 	try {
 		IJavaElement[] pkgs = getChildren();
 		for (int j = 0, length = pkgs.length; j < length; j++) {
@@ -958,5 +967,17 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 /** Convenience lookup, though currently only JarPackageFragmentRoot is searched for a manifest. */
 public Manifest getManifest() {
 	return null;
+}
+
+protected boolean isComplianceJava9OrHigher() {
+	IJavaProject javaProject = getJavaProject();
+	return isComplianceJava9OrHigher(javaProject);
+}
+
+private static boolean isComplianceJava9OrHigher(IJavaProject javaProject) {
+	if (javaProject == null) {
+		return false;
+	}
+	return CompilerOptions.versionToJdkLevel(javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9;
 }
 }

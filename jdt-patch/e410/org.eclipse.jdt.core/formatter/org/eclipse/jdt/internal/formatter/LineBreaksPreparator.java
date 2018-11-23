@@ -150,8 +150,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 		breakLineBefore(node);
 
 		handleBracedCode(node, node.getName(), this.options.brace_position_for_type_declaration,
-				this.options.indent_body_declarations_compare_to_type_header,
-				this.options.insert_new_line_in_empty_type_declaration);
+				this.options.indent_body_declarations_compare_to_type_header);
 
 		this.declarationModifierVisited = false;
 		return true;
@@ -203,8 +202,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(EnumDeclaration node) {
 		handleBracedCode(node, node.getName(), this.options.brace_position_for_enum_declaration,
-				this.options.indent_body_declarations_compare_to_enum_declaration_header,
-				this.options.insert_new_line_in_empty_enum_declaration);
+				this.options.indent_body_declarations_compare_to_enum_declaration_header);
 		handleBodyDeclarations(node.bodyDeclarations());
 
 		List<EnumConstantDeclaration> enumConstants = node.enumConstants();
@@ -236,8 +234,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(AnnotationTypeDeclaration node) {
 		handleBracedCode(node, node.getName(), this.options.brace_position_for_annotation_type_declaration,
-				this.options.indent_body_declarations_compare_to_annotation_declaration_header,
-				this.options.insert_new_line_in_empty_annotation_declaration);
+				this.options.indent_body_declarations_compare_to_annotation_declaration_header);
 
 		handleBodyDeclarations(node.bodyDeclarations());
 		if (node.getModifiers() == 0)
@@ -251,12 +248,10 @@ public class LineBreaksPreparator extends ASTVisitor {
 	public boolean visit(AnonymousClassDeclaration node) {
 		if (node.getParent() instanceof EnumConstantDeclaration) {
 			handleBracedCode(node, null, this.options.brace_position_for_enum_constant,
-					this.options.indent_body_declarations_compare_to_enum_constant_header,
-					this.options.insert_new_line_in_empty_enum_constant);
+					this.options.indent_body_declarations_compare_to_enum_constant_header);
 		} else {
 			handleBracedCode(node, null, this.options.brace_position_for_anonymous_type_declaration,
-					this.options.indent_body_declarations_compare_to_type_header,
-					this.options.insert_new_line_in_empty_anonymous_type_declaration);
+					this.options.indent_body_declarations_compare_to_type_header);
 		}
 		handleBodyDeclarations(node.bodyDeclarations());
 		return true;
@@ -276,9 +271,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 
 		String bracePosition = node.isConstructor() ? this.options.brace_position_for_constructor_declaration
 				: this.options.brace_position_for_method_declaration;
-		handleBracedCode(node.getBody(), null, bracePosition,
-				this.options.indent_statements_compare_to_body,
-				this.options.insert_new_line_in_empty_method_body);
+		handleBracedCode(node.getBody(), null, bracePosition, this.options.indent_statements_compare_to_body);
 		Token openBrace = this.tm.firstTokenIn(node.getBody(), TokenNameLBRACE);
 		if (openBrace.getLineBreaksAfter() > 0) // if not, these are empty braces
 			openBrace.putLineBreaksAfter(this.options.blank_lines_at_beginning_of_method_body + 1);
@@ -287,18 +280,14 @@ public class LineBreaksPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(Block node) {
-		if (this.options.keep_guardian_clause_on_one_line && this.tm.isGuardClause(node))
-			return true;
-
 		List<Statement> statements = node.statements();
 		for (Statement statement : statements) {
 			if (this.options.put_empty_statement_on_new_line || !(statement instanceof EmptyStatement))
 				breakLineBefore(statement);
 		}
-		if (node.getParent().getLength() == 0)
-			return true; // this is a fake block created by parsing in statements mode
-
 		ASTNode parent = node.getParent();
+		if (parent.getLength() == 0)
+			return true; // this is a fake block created by parsing in statements mode
 		if (parent instanceof MethodDeclaration)
 			return true; // braces have been handled in #visit(MethodDeclaration)
 
@@ -312,8 +301,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 		} else if (parent instanceof LambdaExpression) {
 			bracePosition = this.options.brace_position_for_lambda_body;
 		}
-		handleBracedCode(node, null, bracePosition, this.options.indent_statements_compare_to_block,
-				this.options.insert_new_line_in_empty_block);
+		handleBracedCode(node, null, bracePosition, this.options.indent_statements_compare_to_block);
 
 		return true;
 	}
@@ -321,7 +309,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 	@Override
 	public boolean visit(SwitchStatement node) {
 		handleBracedCode(node, node.getExpression(), this.options.brace_position_for_switch,
-				this.options.indent_switchstatements_compare_to_switch, true);
+				this.options.indent_switchstatements_compare_to_switch);
 
 		List<Statement> statements = node.statements();
 		if (this.options.indent_switchstatements_compare_to_cases) {
@@ -690,8 +678,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 		// using settings for type declaration and fields for now, add new settings if necessary
 		breakLineBefore(node);
 		handleBracedCode(node, node.getName(), this.options.brace_position_for_type_declaration,
-				this.options.indent_body_declarations_compare_to_type_header,
-				this.options.insert_new_line_in_empty_type_declaration);
+				this.options.indent_body_declarations_compare_to_type_header);
 
 		List<ModuleDirective> statements = node.moduleStatements();
 		ModuleDirective previous = null;
@@ -711,8 +698,7 @@ public class LineBreaksPreparator extends ASTVisitor {
 		this.tm.firstTokenIn(node, -1).breakBefore();
 	}
 
-	private void handleBracedCode(ASTNode node, ASTNode nodeBeforeOpenBrace, String bracePosition, boolean indentBody,
-			boolean newLineInEmpty) {
+	private void handleBracedCode(ASTNode node, ASTNode nodeBeforeOpenBrace, String bracePosition, boolean indentBody) {
 		int openBraceIndex = nodeBeforeOpenBrace == null
 				? this.tm.firstIndexIn(node, TokenNameLBRACE)
 				: this.tm.firstIndexAfter(nodeBeforeOpenBrace, TokenNameLBRACE);
@@ -721,18 +707,9 @@ public class LineBreaksPreparator extends ASTVisitor {
 		Token closeBraceToken = this.tm.get(closeBraceIndex);
 		handleBracePosition(openBraceToken, closeBraceIndex, bracePosition);
 
-		boolean isEmpty = true;
-		for (int i = openBraceIndex + 1; i < closeBraceIndex; i++) {
-			if (!this.tm.get(i).isComment()) {
-				isEmpty = false;
-				break;
-			}
-		}
+		openBraceToken.breakAfter();
+		closeBraceToken.breakBefore();
 
-		if (!isEmpty || newLineInEmpty) {
-			openBraceToken.breakAfter();
-			closeBraceToken.breakBefore();
-		}
 		if (indentBody) {
 			adjustEmptyLineAfter(openBraceIndex, 1);
 			this.tm.get(openBraceIndex + 1).indent();

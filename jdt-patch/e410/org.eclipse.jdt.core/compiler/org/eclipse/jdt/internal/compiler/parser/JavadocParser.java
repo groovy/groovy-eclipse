@@ -25,6 +25,10 @@ import org.eclipse.jdt.internal.compiler.util.Util;
  * Parser specialized for decoding javadoc comments
  */
 public class JavadocParser extends AbstractCommentParser {
+	private static final JavadocSingleNameReference[] NO_SINGLE_NAME_REFERENCE = new JavadocSingleNameReference[0];
+	private static final JavadocSingleTypeReference[] NO_SINGLE_TYPE_REFERENCE = new JavadocSingleTypeReference[0];
+	private static final TypeReference[] NO_TYPE_REFERENCE = new TypeReference[0];
+	private static final Expression[] NO_EXPRESSION = new Expression[0];
 
 	// Public fields
 	public Javadoc docComment;
@@ -923,12 +927,12 @@ public class JavadocParser extends AbstractCommentParser {
 		for (int i=0; i<=this.astLengthPtr; i++) {
 			sizes[i%ORDERED_TAGS_NUMBER] += this.astLengthStack[i];
 		}
-		this.docComment.seeReferences = new Expression[sizes[SEE_TAG_EXPECTED_ORDER]];
-		this.docComment.exceptionReferences = new TypeReference[sizes[THROWS_TAG_EXPECTED_ORDER]];
+		this.docComment.seeReferences = sizes[SEE_TAG_EXPECTED_ORDER] > 0 ? new Expression[sizes[SEE_TAG_EXPECTED_ORDER]] : NO_EXPRESSION;
+		this.docComment.exceptionReferences = sizes[THROWS_TAG_EXPECTED_ORDER] > 0 ? new TypeReference[sizes[THROWS_TAG_EXPECTED_ORDER]] : NO_TYPE_REFERENCE;
 		int paramRefPtr = sizes[PARAM_TAG_EXPECTED_ORDER];
-		this.docComment.paramReferences = new JavadocSingleNameReference[paramRefPtr];
+		this.docComment.paramReferences = paramRefPtr > 0 ? new JavadocSingleNameReference[paramRefPtr] : NO_SINGLE_NAME_REFERENCE;
 		int paramTypeParamPtr = sizes[PARAM_TAG_EXPECTED_ORDER];
-		this.docComment.paramTypeParameters = new JavadocSingleTypeReference[paramTypeParamPtr];
+		this.docComment.paramTypeParameters = paramTypeParamPtr > 0 ? new JavadocSingleTypeReference[paramTypeParamPtr] : NO_SINGLE_TYPE_REFERENCE;
 
 		// Store nodes in arrays
 		while (this.astLengthPtr >= 0) {

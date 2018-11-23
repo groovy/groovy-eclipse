@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2016 Mateusz Matela and others.
+ * Copyright (c) 2014, 2018 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,7 +15,6 @@ package org.eclipse.jdt.internal.formatter;
 
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_BLOCK;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_JAVADOC;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameLBRACE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameNotAToken;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameStringLiteral;
 
@@ -27,10 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.internal.formatter.Token.WrapMode;
 import org.eclipse.jdt.internal.formatter.linewrap.CommentWrapExecutor;
 
@@ -175,21 +170,6 @@ public class TokenManager implements Iterable<Token> {
 	@Override
 	public Iterator<Token> iterator() {
 		return this.tokens.iterator();
-	}
-
-	public boolean isGuardClause(Block node) {
-		if (node.statements().size() != 1)
-			return false;
-		ASTNode parent = node.getParent();
-		if (!(parent instanceof IfStatement) || ((IfStatement) parent).getElseStatement() != null)
-			return false;
-		Object statement = node.statements().get(0);
-		if (!(statement instanceof ReturnStatement) && !(statement instanceof ThrowStatement))
-			return false;
-		// guard clause cannot start with a comment
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=58565
-		int openBraceIndex = firstIndexIn(node, TokenNameLBRACE);
-		return !get(openBraceIndex + 1).isComment();
 	}
 
 	public int firstIndexIn(ASTNode node, int tokenType) {

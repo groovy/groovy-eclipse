@@ -92,12 +92,7 @@ public class SearchableEnvironment
 		this.workingCopies = workingCopies;
 		this.nameLookup = project.newNameLookup(workingCopies, excludeTestCode);
 		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
-			for (IPackageFragmentRoot root : project.getPackageFragmentRoots()) {
-				if (root.getModuleDescription() != null) {
-					this.knownModuleLocations = new HashMap<>();
-					break;
-				}
-			}
+			this.knownModuleLocations = new HashMap<>();
 		}
 		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
 			this.moduleUpdater = new ModuleUpdater(project);

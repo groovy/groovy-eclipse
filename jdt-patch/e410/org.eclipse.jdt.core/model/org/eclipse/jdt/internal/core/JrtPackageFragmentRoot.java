@@ -151,6 +151,11 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 		}
 		return null;
 	}
+	
+	@Override
+	protected boolean isComplianceJava9OrHigher() {
+		return true;
+	}
 
 	@Override
 	public char[][] getModulesDeclaringPackage(String qualifiedPackageName, String requestedModuleName) {

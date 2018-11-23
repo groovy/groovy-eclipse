@@ -256,7 +256,14 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 	// TODO(sxenos): setup the external annotation provider if the IBinaryType came from the index
 	if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
 		JavaProject javaProject = (JavaProject) getAncestor(IJavaElement.JAVA_PROJECT);
-		IClasspathEntry entry = javaProject.getClasspathEntryFor(getPath());
+		IClasspathEntry entry;
+		try {
+			entry = javaProject.getClasspathEntryFor(getPath());
+		} catch (JavaModelException jme) {
+			// Access via cached ClassFile/PF/PFR of a closed project?
+			// Ignore and continue with result undecorated
+			return result;
+		}
 		if (entry != null) {
 			PackageFragment pkg = (PackageFragment) getParent();
 			String entryName = Util.concatWith(pkg.names, getElementName(), '/');

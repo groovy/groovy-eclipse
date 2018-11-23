@@ -1566,9 +1566,11 @@ public abstract class Scope {
 				ReferenceBinding sourceType = currentType.isParameterizedType()
 					? ((ParameterizedTypeBinding) currentType).genericType()
 					: currentType;
-				if (sourceType.isHierarchyBeingConnected())
-					return null; // looking for an undefined member type in its own superclass ref
-				((SourceTypeBinding) sourceType).scope.connectTypeHierarchy();
+				if (sourceType instanceof SourceTypeBinding) { // could be TypeVariableBinding
+					if (sourceType.isHierarchyBeingConnected())
+						return null; // looking for an undefined member type in its own superclass ref
+					((SourceTypeBinding) sourceType).scope.connectTypeHierarchy();
+				}
 				itsInterfaces = currentType.superInterfaces();
 			}
 			if (itsInterfaces != null && itsInterfaces != Binding.NO_SUPERINTERFACES) {

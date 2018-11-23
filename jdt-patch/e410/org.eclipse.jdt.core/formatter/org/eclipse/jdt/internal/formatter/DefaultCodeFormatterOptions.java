@@ -19,11 +19,14 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
@@ -246,13 +249,19 @@ public class DefaultCodeFormatterOptions {
 	public boolean insert_new_line_before_else_in_if_statement;
 	public boolean insert_new_line_before_finally_in_try_statement;
 	public boolean insert_new_line_before_while_in_do_statement;
-	public boolean insert_new_line_in_empty_anonymous_type_declaration;
-	public boolean insert_new_line_in_empty_block;
-	public boolean insert_new_line_in_empty_annotation_declaration;
-	public boolean insert_new_line_in_empty_enum_constant;
-	public boolean insert_new_line_in_empty_enum_declaration;
-	public boolean insert_new_line_in_empty_method_body;
-	public boolean insert_new_line_in_empty_type_declaration;
+
+	public String keep_loop_body_block_on_one_line;
+	public String keep_if_then_body_block_on_one_line;
+	public String keep_code_block_on_one_line;
+	public String keep_lambda_body_block_on_one_line;
+	public String keep_method_body_on_one_line;
+	public String keep_type_declaration_on_one_line;
+	public String keep_anonymous_type_declaration_on_one_line;
+	public String keep_enum_declaration_on_one_line;
+	public String keep_enum_constant_declaration_on_one_line;
+	public String keep_annotation_declaration_on_one_line;
+	public boolean keep_simple_getter_setter_on_one_line;
+
 	public boolean insert_space_after_and_in_type_parameter;
 	public boolean insert_space_after_assignment_operator;
 	public boolean insert_space_after_at_in_annotation;
@@ -443,6 +452,13 @@ public class DefaultCodeFormatterOptions {
 	public int initial_indentation_level;
 	public String line_separator;
 
+	private final static List<String> KEEP_ON_ONE_LINE_VALUES = Arrays.asList(
+			DefaultCodeFormatterConstants.ONE_LINE_NEVER,
+			DefaultCodeFormatterConstants.ONE_LINE_IF_EMPTY,
+			DefaultCodeFormatterConstants.ONE_LINE_IF_SINGLE_ITEM,
+			DefaultCodeFormatterConstants.ONE_LINE_ALWAYS,
+			DefaultCodeFormatterConstants.ONE_LINE_PRESERVE);
+
 	private DefaultCodeFormatterOptions() {
 		// cannot be instantiated
 	}
@@ -576,13 +592,17 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT, this.insert_new_line_before_else_in_if_statement? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT, this.insert_new_line_before_finally_in_try_statement? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT, this.insert_new_line_before_while_in_do_statement? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION, this.insert_new_line_in_empty_anonymous_type_declaration? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, this.insert_new_line_in_empty_block? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION, this.insert_new_line_in_empty_annotation_declaration ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT, this.insert_new_line_in_empty_enum_constant? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION, this.insert_new_line_in_empty_enum_declaration? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY, this.insert_new_line_in_empty_method_body? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION, this.insert_new_line_in_empty_type_declaration? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE, this.keep_annotation_declaration_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE, this.keep_anonymous_type_declaration_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE, this.keep_if_then_body_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE, this.keep_lambda_body_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE, this.keep_loop_body_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE, this.keep_code_block_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE, this.keep_enum_constant_declaration_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE, this.keep_enum_declaration_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE, this.keep_method_body_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE, this.keep_type_declaration_on_one_line);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_KEEP_SIMPLE_GETTER_SETTER_ON_ONE_LINE, this.keep_simple_getter_setter_on_one_line? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_LABEL, this.insert_new_line_after_label? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_AND_IN_TYPE_PARAMETER, this.insert_space_after_and_in_type_parameter? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR, this.insert_space_after_assignment_operator? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
@@ -1521,34 +1541,31 @@ public class DefaultCodeFormatterOptions {
 		if (insertNewLineBeforeWhileInDoStatementOption != null) {
 			this.insert_new_line_before_while_in_do_statement = JavaCore.INSERT.equals(insertNewLineBeforeWhileInDoStatementOption);
 		}
-		final Object insertNewLineInEmptyAnonymousTypeDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION);
-		if (insertNewLineInEmptyAnonymousTypeDeclarationOption != null) {
-			this.insert_new_line_in_empty_anonymous_type_declaration = JavaCore.INSERT.equals(insertNewLineInEmptyAnonymousTypeDeclarationOption);
-		}
-		final Object insertNewLineInEmptyBlockOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK);
-		if (insertNewLineInEmptyBlockOption != null) {
-			this.insert_new_line_in_empty_block = JavaCore.INSERT.equals(insertNewLineInEmptyBlockOption);
-		}
-		final Object insertNewLineInEmptyAnnotationDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION);
-		if (insertNewLineInEmptyAnnotationDeclarationOption != null) {
-			this.insert_new_line_in_empty_annotation_declaration = JavaCore.INSERT.equals(insertNewLineInEmptyAnnotationDeclarationOption);
-		}
-		final Object insertNewLineInEmptyEnumConstantOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT);
-		if (insertNewLineInEmptyEnumConstantOption != null) {
-			this.insert_new_line_in_empty_enum_constant = JavaCore.INSERT.equals(insertNewLineInEmptyEnumConstantOption);
-		}
-		final Object insertNewLineInEmptyEnumDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION);
-		if (insertNewLineInEmptyEnumDeclarationOption != null) {
-			this.insert_new_line_in_empty_enum_declaration = JavaCore.INSERT.equals(insertNewLineInEmptyEnumDeclarationOption);
-		}
-		final Object insertNewLineInEmptyMethodBodyOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY);
-		if (insertNewLineInEmptyMethodBodyOption != null) {
-			this.insert_new_line_in_empty_method_body = JavaCore.INSERT.equals(insertNewLineInEmptyMethodBodyOption);
-		}
-		final Object insertNewLineInEmptyTypeDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION);
-		if (insertNewLineInEmptyTypeDeclarationOption != null) {
-			this.insert_new_line_in_empty_type_declaration = JavaCore.INSERT.equals(insertNewLineInEmptyTypeDeclarationOption);
-		}
+		
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_annotation_declaration_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_anonymous_type_declaration_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_if_then_body_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_loop_body_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_lambda_body_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE,
+				Arrays.asList(DefaultCodeFormatterConstants.ONE_LINE_NEVER, DefaultCodeFormatterConstants.ONE_LINE_IF_EMPTY),
+				v -> this.keep_code_block_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_enum_constant_declaration_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_enum_declaration_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_method_body_on_one_line = v);
+		setString(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE, KEEP_ON_ONE_LINE_VALUES,
+				v -> this.keep_type_declaration_on_one_line = v);
+		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_KEEP_SIMPLE_GETTER_SETTER_ON_ONE_LINE, DefaultCodeFormatterConstants.TRUE,
+				v -> this.keep_simple_getter_setter_on_one_line = v);
+
 		final Object insertNewLineAfterLabelOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_LABEL);
 		if (insertNewLineAfterLabelOption != null) {
 			this.insert_new_line_after_label = JavaCore.INSERT.equals(insertNewLineAfterLabelOption);
@@ -2380,6 +2397,21 @@ public class DefaultCodeFormatterOptions {
 		return defaultValue;
 	}
 
+	private void setString(Map<String, String> settings, String key, List<String> allowedValues, Consumer<String> setter) {
+		Object value = settings.get(key);
+		if (value != null) {
+			if (!allowedValues.contains(value))
+				throw new IllegalArgumentException("Unrecognized value for setting " + key + ": " + value); //$NON-NLS-1$ //$NON-NLS-2$
+			setter.accept((String) value);
+		}
+	}
+
+	private void setBoolean(Map<String, String> settings, String key, String trueValue, Consumer<Boolean> setter) {
+		Object value = settings.get(key);
+		if (value != null)
+			setter.accept(trueValue.equals(value));
+	}
+
 	/**
 	 * This method is used to handle deprecated preferences which might be replaced by
 	 * one or more preferences.
@@ -2475,6 +2507,51 @@ public class DefaultCodeFormatterOptions {
 			if (insertNewLineAfterAnnotationOnLocalVariableOption != null) {
 				this.insert_new_line_after_annotation_on_local_variable = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnLocalVariableOption);
 			}
+		}
+
+		// insert new line between empty braces -> keep braced code on one line
+		HashMap<Boolean, String> insertToOneLine = new HashMap<>();
+		insertToOneLine.put(true, DefaultCodeFormatterConstants.ONE_LINE_NEVER);
+		insertToOneLine.put(false, DefaultCodeFormatterConstants.ONE_LINE_IF_EMPTY);
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION, JavaCore.INSERT,
+					v -> this.keep_annotation_declaration_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION, JavaCore.INSERT,
+					v -> this.keep_anonymous_type_declaration_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_IF_THEN_BODY_BLOCK_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
+					v -> this.keep_if_then_body_block_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_LOOP_BODY_BLOCK_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
+					v -> this.keep_loop_body_block_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_LAMBDA_BODY_BLOCK_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
+					v -> this.keep_lambda_body_block_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_CODE_BLOCK_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_BLOCK, JavaCore.INSERT,
+					v -> this.keep_code_block_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT, JavaCore.INSERT,
+					v -> this.keep_enum_constant_declaration_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_ENUM_DECLARATION_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION, JavaCore.INSERT,
+					v -> this.keep_enum_declaration_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_METHOD_BODY_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY, JavaCore.INSERT,
+					v -> this.keep_method_body_on_one_line = insertToOneLine.get(v));
+		}
+		if (settings.get(DefaultCodeFormatterConstants.FORMATTER_KEEP_TYPE_DECLARATION_ON_ONE_LINE) == null) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION, JavaCore.INSERT,
+					v -> this.keep_type_declaration_on_one_line = insertToOneLine.get(v));
 		}
 	}
 
@@ -2596,13 +2673,17 @@ public class DefaultCodeFormatterOptions {
 		this.insert_new_line_before_else_in_if_statement = false;
 		this.insert_new_line_before_finally_in_try_statement = false;
 		this.insert_new_line_before_while_in_do_statement = false;
-		this.insert_new_line_in_empty_anonymous_type_declaration = true;
-		this.insert_new_line_in_empty_block = true;
-		this.insert_new_line_in_empty_annotation_declaration = true;
-		this.insert_new_line_in_empty_enum_constant = true;
-		this.insert_new_line_in_empty_enum_declaration = true;
-		this.insert_new_line_in_empty_method_body = true;
-		this.insert_new_line_in_empty_type_declaration = true;
+		this.keep_annotation_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_anonymous_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_if_then_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_lambda_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_loop_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_code_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_enum_constant_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_enum_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_method_body_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_simple_getter_setter_on_one_line = false;
 		this.insert_space_after_and_in_type_parameter = true;
 		this.insert_space_after_assignment_operator = true;
 		this.insert_space_after_at_in_annotation = false;
@@ -2916,13 +2997,16 @@ public class DefaultCodeFormatterOptions {
 		this.insert_new_line_before_else_in_if_statement = false;
 		this.insert_new_line_before_finally_in_try_statement = false;
 		this.insert_new_line_before_while_in_do_statement = false;
-		this.insert_new_line_in_empty_anonymous_type_declaration = true;
-		this.insert_new_line_in_empty_block = true;
-		this.insert_new_line_in_empty_annotation_declaration = true;
-		this.insert_new_line_in_empty_enum_constant = true;
-		this.insert_new_line_in_empty_enum_declaration = true;
-		this.insert_new_line_in_empty_method_body = true;
-		this.insert_new_line_in_empty_type_declaration = true;
+		this.keep_annotation_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_anonymous_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_if_then_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_lambda_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_loop_body_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_code_block_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_enum_constant_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_enum_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_method_body_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
+		this.keep_type_declaration_on_one_line = DefaultCodeFormatterConstants.ONE_LINE_NEVER;
 		this.insert_space_after_and_in_type_parameter = true;
 		this.insert_space_after_assignment_operator = true;
 		this.insert_space_after_at_in_annotation = false;

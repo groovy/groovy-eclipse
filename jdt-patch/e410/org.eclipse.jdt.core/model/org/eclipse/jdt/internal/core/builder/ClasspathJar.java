@@ -166,6 +166,7 @@ ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotati
 		}
 	} catch (CoreException e) {
 		// ignore
+		this.zipFilename = ""; //$NON-NLS-1$
 	}
 	this.zipFile = null;
 	this.knownPackageNames = null;

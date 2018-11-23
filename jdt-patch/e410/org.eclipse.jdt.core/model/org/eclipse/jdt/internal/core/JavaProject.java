@@ -1188,6 +1188,14 @@ public class JavaProject
 					return; // setting == IGNORE
 				}
 				break;
+			case IJavaModelStatusConstants.MAIN_ONLY_PROJECT_DEPENDS_ON_TEST_ONLY_PROJECT:
+				setting = getOption(JavaCore.CORE_MAIN_ONLY_PROJECT_HAS_TEST_ONLY_DEPENDENCY, true);
+				if (JavaCore.ERROR.equals(setting)) {
+					severity = IMarker.SEVERITY_ERROR;
+				} else {
+					return; // setting == IGNORE
+				}
+				break;
 			default:
 				IPath path = status.getPath();
 				if (path != null) arguments = new String[] { path.toString() };
@@ -1913,6 +1921,7 @@ public class JavaProject
 						propertyName.equals(JavaCore.CORE_CIRCULAR_CLASSPATH) ||
 						propertyName.equals(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE) ||
 						propertyName.equals(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL) ||
+						propertyName.equals(JavaCore.CORE_MAIN_ONLY_PROJECT_HAS_TEST_ONLY_DEPENDENCY) ||
 						propertyName.equals(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM))
 					{
 						manager.deltaState.addClasspathValidation(JavaProject.this);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -71,7 +71,6 @@ public class AbstractComparableTest extends AbstractRegressionTest {
 	public static Test buildComparableTestSuite(Class evaluationTestClass) {
 		Test suite = buildMinimalComplianceTestSuite(evaluationTestClass, F_1_5);
 		TESTS_COUNTERS.put(evaluationTestClass.getName(), Integer.valueOf(suite.countTestCases()));
-		 isJRE11Plus = isJRELevel(F_11);
 		return suite;
 	}
 

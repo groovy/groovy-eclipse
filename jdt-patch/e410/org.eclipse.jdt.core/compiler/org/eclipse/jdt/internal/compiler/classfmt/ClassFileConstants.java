@@ -169,10 +169,9 @@ public interface ClassFileConstants {
 			case ClassFileConstants.MAJOR_VERSION_1_1:
 				return ((long)ClassFileConstants.MAJOR_VERSION_1_1 << 16) + ClassFileConstants.MINOR_VERSION_3;
 			default:
-				if (major <= MAJOR_LATEST_VERSION)
-					return ((long)major << 16) + ClassFileConstants.MINOR_VERSION_0;
+				major = Math.min(major, MAJOR_LATEST_VERSION);
+				return ((long)major << 16) + ClassFileConstants.MINOR_VERSION_0;
 		}
-		return 0;
 	}
 	/*
 	 * cldc1.1 is 45.3, but we modify it to be different from JDK1_1.
