@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.factories;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,12 +51,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.TypeProposalInfo;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -66,12 +69,13 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
 
         return new AbstractGroovyCompletionProcessor(context, javaContext, nameEnvironment) {
+
             @Override
             public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
                 if (monitor == null) {
                     monitor = new NullProgressMonitor();
                 }
-                monitor.beginTask("Content assist in annotation", 2);
+                monitor.beginTask("Content assist in annotation", 3);
                 try {
                     List<ICompletionProposal> proposals = new ArrayList<>();
                     String memberName = getPerceivedCompletionMember();
@@ -87,13 +91,23 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     }
                     monitor.worked(1);
 
+                    if (AssistOptions.ENABLED.equals(javaContext.getProject().getOption(AssistOptions.OPTION_PerformDeprecationCheck, true))) {
+                        for (Iterator<ICompletionProposal> it = proposals.iterator(); it.hasNext();) {
+                            CompletionProposal proposal = extractProposal(it.next()); // for flags
+                            if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
+                                it.remove();
+                            }
+                        }
+                    }
+                    monitor.worked(1);
+
                     return proposals;
                 } finally {
                     monitor.done();
                 }
             }
 
-            protected void generateAnnotationMemberProposals(List<ICompletionProposal> proposals) {
+            private void generateAnnotationMemberProposals(List<ICompletionProposal> proposals) {
                 Set<String> currentMembers = getAnnotation().getMembers().keySet();
                 if (isImplicitValueExpression()) {
                     currentMembers = new HashSet<>(currentMembers);
@@ -124,7 +138,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 }
             }
 
-            protected void generateAnnotationMemberValueProposals(List<ICompletionProposal> proposals, String memberName, IProgressMonitor monitor) {
+            private void generateAnnotationMemberValueProposals(List<ICompletionProposal> proposals, String memberName, IProgressMonitor monitor) {
                 ModuleNodeInfo moduleInfo = context.unit.getModuleInfo(true);
                 MethodNode member = getAnnotation().getClassNode().getMethod(memberName, Parameter.EMPTY_ARRAY);
 
@@ -182,11 +196,11 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 monitor.done();
             }
 
-            protected AnnotationNode getAnnotation() {
+            private AnnotationNode getAnnotation() {
                 return (AnnotationNode) context.containingCodeBlock;
             }
 
-            protected String getPerceivedCompletionMember() {
+            private String getPerceivedCompletionMember() {
                 String maybe = null;
 
                 for (Map.Entry<String, Expression> member : getAnnotation().getMembers().entrySet()) {
@@ -205,7 +219,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 return maybe;
             }
 
-            protected <T extends AbstractProposalCreator> T initProposalCreator(T proposalCreator) {
+            private <T extends AbstractProposalCreator> T initProposalCreator(T proposalCreator) {
                 AssistOptions options = new AssistOptions(javaContext.getProject().getOptions(true));
 
                 proposalCreator.setCurrentScope(context.getPerceivedCompletionScope());
@@ -219,7 +233,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             /**
              * If only one expression exists for annotation, "value" member can be implicit.
              */
-            protected boolean isImplicitValueExpression() {
+            private boolean isImplicitValueExpression() {
                 final boolean[] result = new boolean[1];
 
                 AnnotationNode annotation = getAnnotation();
@@ -246,12 +260,12 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 return result[0];
             }
 
-            protected boolean isImplicitValueSupported() {
+            private boolean isImplicitValueSupported() {
                 MethodNode valueMember = getAnnotation().getClassNode().getMethod("value", Parameter.EMPTY_ARRAY);
                 return (valueMember != null);
             }
 
-            protected boolean isNotStaticImported(String memberName, String declaringTypeName) {
+            private boolean isNotStaticImported(String memberName, String declaringTypeName) {
                 ModuleNode moduleNode = context.unit.getModuleNode();
                 if (moduleNode.getStaticImports().containsKey(memberName)) {
                     ImportNode importNode = moduleNode.getStaticImports().get(memberName);
@@ -263,21 +277,21 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 return true;
             }
 
-            protected boolean isTypeAnnotation() {
+            private boolean isTypeAnnotation() {
                 if (context.containingDeclaration instanceof ClassNode) {
                     return (getAnnotation().getEnd() < ((ClassNode) context.containingDeclaration).getNameStart());
                 }
                 return false;
             }
 
-            protected ICompletionProposal newEnumTypeProposal(ClassNode enumType) {
+            private ICompletionProposal newEnumTypeProposal(ClassNode enumType) {
                 String signature = GroovyUtils.getTypeSignatureWithoutGenerics(enumType, true, true);
 
                 CompletionProposal proposal = CompletionProposal.create(CompletionProposal.TYPE_REF, 0);
                 proposal.setSignature(signature.toCharArray());
                 proposal.setFlags(enumType.getModifiers());
 
-                return new JavaTypeCompletionProposal(
+                JavaTypeCompletionProposal javaProposal = new JavaTypeCompletionProposal(
                     enumType.getName(),
                     context.unit,
                     context.completionLocation, 0,
@@ -287,6 +301,10 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     enumType.getName(),
                     javaContext
                 );
+
+                javaProposal.setProposalInfo(new TypeProposalInfo(javaContext.getProject(), proposal));
+
+                return javaProposal;
             }
         };
     }

@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -43,6 +44,23 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testConstructorCompletion1() {
+        String contents = '''\
+            class C {
+              @Deprecated
+              C() {}
+              C(int val) {}
+            }
+            def c = new C
+            '''.stripIndent()
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'C'))
+
+        proposalExists(proposals, 'C()', 0)
+        proposalExists(proposals, 'C(int val)', 1)
+    }
+
+    @Test
+    void testConstructorCompletion2() {
         String contents = 'class YYY { YYY() {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
@@ -50,7 +68,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test @NotYetImplemented // do this with Ctrl triggering of constructor proposal
-    void testConstructorCompletion2() {
+    void testConstructorCompletion3() {
         String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk' // trailing parens
         String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
@@ -58,7 +76,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorCompletion3() {
+    void testConstructorCompletion4() {
         String contents = 'class YYY { YYY(x) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x) {} }\nnew YYY(x)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
@@ -66,7 +84,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorCompletion4() {
+    void testConstructorCompletion5() {
         String contents = 'class YYY { YYY(x, y) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x, y) {} }\nnew YYY(x, y)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')

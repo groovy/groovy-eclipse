@@ -57,6 +57,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
@@ -109,6 +110,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         TypeInferencingVisitorWithRequestor visitor =
             new TypeInferencingVisitorFactory().createVisitor(context.unit);
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
+        AssistOptions options = new AssistOptions(getJavaContext().getProject().getOptions(true));
 
         // if completion node is null, then it is likely because of a syntax error
         if (completionNode != null) {
@@ -139,19 +141,19 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             List<IProposalCreator> creators = chooseProposalCreators();
             boolean isStatic1 = (isStatic && closureCompletionType == null);
             // if completionType refers to the closure delegate, use instance (non-static) semantics
-            proposalCreatorLoop(groovyProposals, creators, requestor, context, completionType, isStatic1, isPrimary, false);
+            proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary, false);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
                 boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
-                proposalCreatorLoop(groovyProposals, creators, requestor, context, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary, false);
+                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary, false);
             }
 
             if (closureCompletionType != null) {
                 // inside of a closure; must also add content assist for this (previously did the delegate)
-                proposalCreatorLoop(groovyProposals, creators, requestor, context, closureCompletionType, isStatic, isPrimary, true);
+                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, closureCompletionType, isStatic, isPrimary, true);
             }
 
             if (isPrimary) {
@@ -260,6 +262,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             try {
                 IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
                 if (javaProposal != null) {
+                    if (options.checkDeprecation) {
+                        CompletionProposal proposal = extractProposal(javaProposal);
+                        if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
+                            continue;
+                        }
+                    }
+
                     String[] displayTokens = javaProposal.getDisplayString().split(" : ");
                     IJavaCompletionProposal p = javaProposals.put(displayTokens[0], javaProposal);
                     if (p != null && displayTokens.length > 1 && displayTokens[1].contains("DefaultGroovyMethods")) {
@@ -275,8 +284,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     }
 
     private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators, ExpressionCompletionRequestor requestor,
-            ContentAssistContext context, ClassNode completionType, boolean isStatic, boolean isPrimary, boolean isClosureThis) {
-        AssistOptions options = new AssistOptions(getJavaContext().getProject().getOptions(true));
+            ContentAssistContext context, AssistOptions options, ClassNode completionType, boolean isStatic, boolean isPrimary, boolean isClosureThis) {
 
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {

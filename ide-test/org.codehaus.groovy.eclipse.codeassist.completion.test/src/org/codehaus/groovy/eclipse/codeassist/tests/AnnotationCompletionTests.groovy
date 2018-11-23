@@ -15,12 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.ui.PreferenceConstants.CODEASSIST_ADDIMPORT
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
 import groovy.transform.NotYetImplemented
 
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
-import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -346,6 +347,33 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         assertThat(proposals).excludes('one', 'three').includes('two')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/671
+    void testAnnoAttr11() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface A {
+              boolean one();
+              String two();
+              @Deprecated
+              int three();
+            }
+            ''', 'A', 'p'
+
+        String contents = '''\
+            import p.A
+            @A(one=false, t)
+            class Something {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ', t')
+
+        assertThat(proposals).excludes('one', 'three').includes('two')
+    }
+
     @Test
     void testAnnoAttrPacks() {
         String contents = '''\
@@ -492,13 +520,40 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             import p.L
             class C {
               @L(one=null, two = )
-              String somethingSpecial
+              String somethingSpecial() {}
               public static final int TWO = 2
             }
             '''.stripIndent()
         def proposals = getProposals(contents, ' = ')
 
         assertThat(proposals).includes('TWO')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/671
+    void testAnnoAttrConst9() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface M {
+              int one();
+              int two();
+            }
+            ''', 'M', 'p'
+
+        String contents = '''\
+            import p.M
+            @M(two=T)
+            class C {
+              @Deprecated
+              public static final int TWO = 2
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, '=T')
+
+        assertThat(proposals).excludes('TWO')
     }
 
     @Test
@@ -722,6 +777,71 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         checkProposalApplication(contents, expected, contents.indexOf('(') + 1, 'SECONDS', false)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/671
+    void testAnnoAttrEnumConst8() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface A {
+              E value();
+            }
+            ''', 'A', 'p'
+
+        addJavaSource '''\
+            package p;
+            @Deprecated
+            public enum E {
+              ABC, DEF;
+            }
+            ''', 'E', 'p'
+
+        String contents = '''\
+            import p.A
+            import p.E
+            @A()
+            class C {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, '(')
+
+        assertThat(proposals).excludes('E', 'ABC', 'DEF').includes('value')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/671
+    void testAnnoAttrEnumConst9() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface A {
+              E value();
+            }
+            ''', 'A', 'p'
+
+        addJavaSource '''\
+            package p;
+            public enum E {
+              @Deprecated ABC, DEF;
+            }
+            ''', 'E', 'p'
+
+        String contents = '''\
+            import p.A
+            import p.E
+            @A(value=E.)
+            class C {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, 'E.')
+
+        assertThat(proposals).excludes('ABC').includes('DEF')
+    }
+
     @Test
     void testConfigScriptCompletion() {
         addPlainText('''\
@@ -789,7 +909,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
               static class Nested {}
             }
             '''.stripIndent()
-        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(CODEASSIST_ADDIMPORT, 'false')
         checkProposalApplication(contents, expected, getIndexOf(contents, '(Nes'), 'Nested - C', true)
     }
 

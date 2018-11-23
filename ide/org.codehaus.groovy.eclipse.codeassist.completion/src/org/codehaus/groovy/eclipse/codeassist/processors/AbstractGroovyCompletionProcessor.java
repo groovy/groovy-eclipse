@@ -22,8 +22,14 @@ import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.MemberProposalInfo;
+import org.eclipse.jdt.internal.ui.text.java.ProposalInfo;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public abstract class AbstractGroovyCompletionProcessor implements IGroovyCompletionProcessor {
 
@@ -80,5 +86,18 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
         proposal.setNameLookup(nameEnvironment.nameLookup);
         return proposal;
+    }
+
+    protected static CompletionProposal extractProposal(ICompletionProposal javaProposal) {
+        if (javaProposal instanceof AbstractJavaCompletionProposal) {
+            //ProposalInfo proposalInfo = ((AbstractJavaCompletionProposal) javaProposal).getProposalInfo();
+            ProposalInfo proposalInfo = ReflectionUtils.executePrivateMethod(AbstractJavaCompletionProposal.class, "getProposalInfo", javaProposal);
+            if (proposalInfo instanceof MemberProposalInfo) {
+                //CompletionProposal completionProposal = ((MemberProposalInfo) proposalInfo).getProposal();
+                CompletionProposal completionProposal = ReflectionUtils.getPrivateField(MemberProposalInfo.class, "fProposal", proposalInfo);
+                return completionProposal;
+            }
+        }
+        return null;
     }
 }
