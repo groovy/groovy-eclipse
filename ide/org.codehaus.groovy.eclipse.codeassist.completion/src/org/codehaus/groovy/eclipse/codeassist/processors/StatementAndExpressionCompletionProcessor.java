@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -348,7 +349,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         String fullCompletionExpression = context.fullCompletionExpression;
         if (fullCompletionExpression == null) fullCompletionExpression = "";
 
-        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches()) {
+        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
             return Collections.singletonList(new FieldProposalCreator());
         }
         if (METHOD_POINTER_COMPLETION.matcher(fullCompletionExpression).matches()) {
@@ -448,6 +449,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 setResultingType(result, derefList);
                 categories = result.scope.getCategoryNames();
                 isStatic = (node instanceof StaticMethodCallExpression ||
+                    getContext().containingCodeBlock instanceof AnnotationNode ||
                     // if we are completing on '.class' then never static context
                     (node instanceof ClassExpression && !VariableScope.CLASS_CLASS_NODE.equals(resultingType)));
                 return VisitStatus.STOP_VISIT;
@@ -537,6 +539,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                             lhsType = lhsType.getComponentType();
                         }
                     }
+                }
+
+                ASTNode enclosingBlock = getContext().containingCodeBlock;
+                if (enclosingBlock instanceof AnnotationNode && lhsNode instanceof Variable) {
+                    ClassNode annotation = ((AnnotationNode) enclosingBlock).getClassNode();
+                    MethodNode attribute = annotation.getMethod(((Variable) lhsNode).getName(), Parameter.EMPTY_ARRAY);
+                    lhsType = attribute.getReturnType();
                 }
             }
             if (VariableScope.OBJECT_CLASS_NODE.equals(lhsType)) {

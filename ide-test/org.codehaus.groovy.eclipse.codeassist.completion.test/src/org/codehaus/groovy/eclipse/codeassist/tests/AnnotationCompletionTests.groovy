@@ -379,7 +379,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         addJavaSource '''\
             package p;
             import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
+            @Target(ElementType.TYPE)
             public @interface A {
               boolean one();
               String two();
@@ -401,6 +401,32 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         def proposals = getProposals(contents, ', t')
 
         assertThat(proposals).excludes('one', 'Three').includes('two')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/769
+    void testAnnoAttr13() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            public @interface A {
+              boolean one();
+            }
+            ''', 'A', 'p'
+
+        String contents = '''\
+            import p.A
+            class Something {
+              @A(one=false)
+              def meth() {}
+              boolean someFalseCheck() {}
+              private boolean someFalseFlag
+              public static final boolean SOME_FALSE_CONST = false
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, 'false')
+
+        assertThat(proposals).excludes('someFalseCheck', 'someFalseFlag').includes('SOME_FALSE_CONST')
     }
 
     @Test
