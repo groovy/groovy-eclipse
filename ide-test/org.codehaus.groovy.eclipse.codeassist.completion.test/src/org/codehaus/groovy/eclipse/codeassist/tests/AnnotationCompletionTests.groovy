@@ -374,6 +374,35 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         assertThat(proposals).excludes('one', 'three').includes('two')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/769
+    void testAnnoAttr12() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            public @interface A {
+              boolean one();
+              String two();
+            }
+            ''', 'A', 'p'
+
+        addJavaSource '''\
+            package p;
+            public class Three {
+            }
+            ''', 'Three', 'p'
+
+        String contents = '''\
+            import p.*
+            @A(one=false, t)
+            class Something {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ', t')
+
+        assertThat(proposals).excludes('one', 'Three').includes('two')
+    }
+
     @Test
     void testAnnoAttrPacks() {
         String contents = '''\
