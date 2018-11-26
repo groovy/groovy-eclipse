@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
@@ -304,9 +305,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    /**
-     * Convert a JDT MethodBinding to a Groovy MethodNode
-     */
     private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
         try {
             int modifiers = methodBinding.modifiers;
@@ -314,24 +312,14 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 modifiers |= Flags.AccAbstract;
             }
 
-            ClassNode returnType = methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE;
+            ClassNode returnType = (methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE);
 
-            Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames);
+            Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
-            // initialize parameter annotations
-            AnnotationBinding[][] parameterAnnotations = methodBinding.getParameterAnnotations();
-            if (parameterAnnotations != null) {
-                for (int i = 0, n = parameters.length; i < n; i += 1) {
-                    for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
-                        parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
-                    }
-                }
-            }
-
-            int nExceptions; ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
-            if (methodBinding.thrownExceptions != null && (nExceptions = methodBinding.thrownExceptions.length) > 0) {
-                exceptions = new ClassNode[nExceptions];
-                for (int i = 0; i < nExceptions; i += 1) {
+            ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
+            if (DefaultGroovyMethods.asBoolean(methodBinding.thrownExceptions)) {
+                exceptions = new ClassNode[methodBinding.thrownExceptions.length];
+                for (int i = 0; i < methodBinding.thrownExceptions.length; i += 1) {
                     exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
                 }
             }
@@ -348,70 +336,23 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames) {
-        int nParameters; Parameter[] parameters = Parameter.EMPTY_ARRAY;
-        if (parameterTypes != null && (nParameters = parameterTypes.length) > 0) {
-            parameters = new Parameter[nParameters];
-            for (int i = 0; i < nParameters; i += 1) {
-                String parameterName;
-                if (i < parameterNames.length) {
-                    parameterName = String.valueOf(parameterNames[i]);
-                } else if (i < Java5.ARGS.length) {
-                    parameterName = Java5.ARGS[i];
-                } else {
-                    parameterName = "arg" + i;
-                }
-                parameters[i] = makeParameter(parameterTypes[i], parameterName);
-            }
-        }
-        return parameters;
-    }
-
-    private Parameter makeParameter(TypeBinding parameterType, String parameterName) {
-        TypeBinding erasureType;
-        if (parameterType instanceof ParameterizedTypeBinding) {
-            erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
-        } else if (parameterType instanceof ArrayBinding ||
-            parameterType instanceof TypeVariableBinding) {
-            erasureType = parameterType.erasure();
-        } else {
-            assert !parameterType.isGenericType();
-            erasureType = parameterType;
-        }
-        return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
-    }
-
-    /**
-     * @param t type
-     * @param e erasure of type
-     */
-    private ClassNode makeClassNode(TypeBinding t, TypeBinding e) {
-        ClassNode back = resolver.convertToClassNode(e);
-        if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
-            ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
-            JDTClassNodeBuilder.setRedirect(front, back);
-            return front;
-        }
-        return back;
-    }
-
     private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
-        int modifiers = methodBinding.modifiers;
-        Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames);
-        ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
-        if (methodBinding.thrownExceptions != null) {
-            thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
-            for (int i = 0, n = methodBinding.thrownExceptions.length; i < n; i += 1) {
-                thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
+        Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
+
+        ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
+        if (DefaultGroovyMethods.asBoolean(methodBinding.thrownExceptions)) {
+            exceptions = new ClassNode[methodBinding.thrownExceptions.length];
+            for (int i = 0; i < methodBinding.thrownExceptions.length; i += 1) {
+                exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
             }
         }
-        ConstructorNode ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
-        ctorNode.setGenericsTypes(
-            new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
+
+        ConstructorNode ctorNode = new ConstructorNode(methodBinding.modifiers, parameters, exceptions, null);
+        ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         return ctorNode;
     }
 
-    private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration groovyTypeDecl) {
+    private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration typeDeclaration) {
         String name = String.valueOf(fieldBinding.name);
         int modifiers = fieldBinding.modifiers;
         ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
@@ -423,8 +364,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             /**
              * If the field binding is for a real source field, we should be able to see any initializer in it.
              */
-            if (groovyTypeDecl != null) {
-                FieldDeclaration fieldDecl = groovyTypeDecl.declarationOf(fieldBinding);
+            if (typeDeclaration != null) {
+                FieldDeclaration fieldDecl = typeDeclaration.declarationOf(fieldBinding);
                 if (fieldDecl instanceof FieldDeclarationWithInitializer) {
                     initializerExpression = ((FieldDeclarationWithInitializer) fieldDecl).getGroovyInitializer();
                 }
@@ -452,6 +393,59 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
         FieldNode fNode = new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
         return fNode;
+    }
+
+    /**
+     * @param t type
+     * @param e erasure of type
+     */
+    private ClassNode makeClassNode(TypeBinding t, TypeBinding e) {
+        ClassNode back = resolver.convertToClassNode(e);
+        if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
+            ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
+            JDTClassNodeBuilder.setRedirect(front, back);
+            return front;
+        }
+        return back;
+    }
+
+    private Parameter makeParameter(TypeBinding parameterType, String parameterName) {
+        TypeBinding erasureType;
+        if (parameterType instanceof ParameterizedTypeBinding) {
+            erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
+        } else if (parameterType instanceof ArrayBinding ||
+            parameterType instanceof TypeVariableBinding) {
+            erasureType = parameterType.erasure();
+        } else {
+            assert !parameterType.isGenericType();
+            erasureType = parameterType;
+        }
+        return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
+    }
+
+    private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames, AnnotationBinding[][] parameterAnnotations) {
+        Parameter[] parameters = Parameter.EMPTY_ARRAY;
+        if (DefaultGroovyMethods.asBoolean(parameterTypes)) {
+            parameters = new Parameter[parameterTypes.length];
+            for (int i = 0; i < parameterTypes.length; i += 1) {
+                String parameterName;
+                if (i < parameterNames.length) {
+                    parameterName = String.valueOf(parameterNames[i]);
+                } else if (i < Java5.ARGS.length) {
+                    parameterName = Java5.ARGS[i];
+                } else {
+                    parameterName = "arg" + i;
+                }
+                parameters[i] = makeParameter(parameterTypes[i], parameterName);
+
+                if (DefaultGroovyMethods.asBoolean(parameterAnnotations)) {
+                    for (AnnotationBinding annotation : parameterAnnotations[i]) {
+                        parameters[i].addAnnotation(new JDTAnnotationNode(annotation, resolver));
+                    }
+                }
+            }
+        }
+        return parameters;
     }
 
     //--------------------------------------------------------------------------
