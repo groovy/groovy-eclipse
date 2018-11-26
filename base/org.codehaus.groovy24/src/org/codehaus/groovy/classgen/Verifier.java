@@ -60,6 +60,7 @@ import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.ClassNodeSkip;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.reflection.ClassInfo;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
@@ -817,12 +818,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 addPropertyMethod(newMethod);
                 // GRECLIPSE add
                 newMethod.setOriginal(method);
-                newMethod.setSourcePosition(method);
                 newMethod.setNameEnd(method.getNameEnd());
                 newMethod.setNameStart(method.getNameStart());
                 // GRECLIPSE end
                 newMethod.setGenericsTypes(method.getGenericsTypes());
-                newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, true);
+                newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
             }
         });
     }
@@ -835,6 +835,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 ConstructorCallExpression expression = new ConstructorCallExpression(ClassNode.THIS, arguments);
                 Statement code = new ExpressionStatement(expression);
                 addConstructor(newParams, ctor, code, node);
+                // GRECLIPSE add
+                ctor = DefaultGroovyMethods.last(node.getDeclaredConstructors());
+                ctor.setOriginal(method);
+                ctor.setNameEnd(method.getNameEnd());
+                ctor.setNameStart(method.getNameStart());
+                ctor.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
+                // GRECLIPSE end
             }
         });
     }

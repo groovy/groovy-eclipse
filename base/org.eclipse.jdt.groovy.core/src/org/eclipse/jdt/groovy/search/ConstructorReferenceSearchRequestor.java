@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -88,7 +89,7 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
 
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-        if (node.getEnd() > 0 && result.declaration instanceof ConstructorNode) {
+        if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0 && result.declaration instanceof ConstructorNode) {
 
             if (findDeclarations && node instanceof ConstructorNode) {
                 ConstructorNode decl = (ConstructorNode) node;
@@ -102,7 +103,7 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
             if (findReferences && node instanceof ConstructorCallExpression) {
                 ConstructorCallExpression call = (ConstructorCallExpression) node;
                 String typeName = result.declaringType.getName().replace('$', '.');
-                Parameter[] parameters = ((ConstructorNode) result.declaration).getParameters();
+                Parameter[] parameters = ((ConstructorNode) result.declaration).getOriginal().getParameters();
                 if (typeName.equals(declaringQualifiedName) && hasMatchingParameters(parameters)) {
                     reportSearchMatch(enclosingElement, element -> {
                         boolean isConstructor = true, isSynthetic = false, isSuperInvocation = call.isSuperCall(), isWithinComment = false;
