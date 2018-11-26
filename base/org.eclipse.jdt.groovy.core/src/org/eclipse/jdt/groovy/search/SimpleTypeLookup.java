@@ -258,18 +258,27 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
-            MethodNode constructorDecl = scope.getEnclosingMethodDeclaration(); // watch for initializers but no constructor
             if (constructorCall.isThisCall()) {
-                declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass() : scope.getEnclosingTypeDeclaration();
+                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
             } else if (constructorCall.isSuperCall()) {
-                declaringType = constructorDecl != null ? constructorDecl.getDeclaringClass().getUnresolvedSuperClass() : scope.getEnclosingTypeDeclaration();
+                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
+            } else if (constructorCall.isUsingAnonymousInnerClass()) {
+              //declaringType = declaringType.getUnresolvedSuperClass() || declaringType.getUnresolvedInterfaces()[0]?
             }
 
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
-            if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
-                List<ConstructorNode> looseMatches = new ArrayList<>();
+            if (declaredConstructors.size() > 1 && constructorCall.getArguments() instanceof ArgumentListExpression) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
+                if (callTypes.size() > 1) {
+                    // non-static inner types may have extra argument for enclosing type
+                    if (callTypes.get(0).equals(declaringType.getOuterClass()) &&
+                            (declaringType.getModifiers() & ClassNode.ACC_STATIC) == 0) {
+                        callTypes.remove(0);
+                    }
+                }
+
+                List<ConstructorNode> looseMatches = new ArrayList<>();
                 for (ConstructorNode ctor : declaredConstructors) {
                     if (callTypes.size() == ctor.getParameters().length) {
                         if (Boolean.TRUE.equals(isTypeCompatible(callTypes, ctor.getParameters()))) {
@@ -284,7 +293,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
 
-            ASTNode declaration = !declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType;
+            ASTNode declaration = (!declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType);
             return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
 
         } else if (node instanceof StaticMethodCallExpression) {

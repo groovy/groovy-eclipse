@@ -41,7 +41,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     public void testConstructorReferences1() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
-            "  Foo() {\n" +
+            "  Foo() {\n" + // search for this
             "    new Foo()\n" + // yes
             "  }\n" +
             "  Foo(a) {\n" +
@@ -78,7 +78,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "class Foo {\n" +
             "  static class Bar {\n" +
             "    static class Baz {\n" +
-            "      Baz() {\n" +
+            "      Baz() {\n" + // search for this
             "        this(null)\n" + // no
             "      }\n" +
             "      Baz(def arg) {\n" +
@@ -236,6 +236,26 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
         assertEquals(0, ctorRefs);
+    }
+
+    @Test // non-static inner class constructors may have implicit parameter
+    public void testConstructorReferences10() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  class FooFoo {\n" +
+            "    FooFoo(int i) {}\n" + // search for this
+            "    FooFoo(String s) {}\n" +
+            "  }\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "def foo = new Foo()\n" +
+            "new Foo.FooFoo(foo, 0)\n" + // yes
+            "new Foo.FooFoo(foo, '')\n"); // no
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getType("FooFoo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(1, ctorRefs);
     }
 
     //--------------------------------------------------------------------------

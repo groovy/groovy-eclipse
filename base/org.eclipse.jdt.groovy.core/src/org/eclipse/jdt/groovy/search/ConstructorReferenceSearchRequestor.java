@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -93,17 +94,8 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
                 ConstructorNode decl = (ConstructorNode) node;
                 String typeName = result.declaringType.getName().replace('$', '.');
                 if (typeName.equals(declaringQualifiedName) && hasMatchingParameters(decl.getParameters())) {
-
-                    if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
-                        enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
-                    }
-                    try {
-                        requestor.acceptSearchMatch(new MethodDeclarationMatch(
-                            enclosingElement, SearchMatch.A_ACCURATE, decl.getNameStart(), decl.getNameEnd() + 1 - decl.getNameStart(),
-                            participant, enclosingElement.getResource()));
-                    } catch (CoreException e) {
-                        Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource " + enclosingElement.getResource());
-                    }
+                    reportSearchMatch(enclosingElement, element -> new MethodDeclarationMatch(element, SearchMatch.A_ACCURATE,
+                        decl.getNameStart(), decl.getNameEnd() + 1 - decl.getNameStart(), participant, element.getResource()));
                 }
             }
 
@@ -112,22 +104,28 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
                 String typeName = result.declaringType.getName().replace('$', '.');
                 Parameter[] parameters = ((ConstructorNode) result.declaration).getParameters();
                 if (typeName.equals(declaringQualifiedName) && hasMatchingParameters(parameters)) {
-                    boolean isConstructor = true, isSynthetic = false, isSuperInvocation = call.isSuperCall(), isWithinComment = false;
-
-                    if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
-                        enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
-                    }
-                    try {
-                        requestor.acceptSearchMatch(new MethodReferenceMatch(
-                            enclosingElement, SearchMatch.A_ACCURATE, call.getNameStart(), call.getNameEnd() + 1 - call.getNameStart(),
-                            isConstructor, isSynthetic, isSuperInvocation, isWithinComment, participant, enclosingElement.getResource()));
-                    } catch (CoreException e) {
-                        Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource " + enclosingElement.getResource());
-                    }
+                    reportSearchMatch(enclosingElement, element -> {
+                        boolean isConstructor = true, isSynthetic = false, isSuperInvocation = call.isSuperCall(), isWithinComment = false;
+                        return new MethodReferenceMatch(
+                            element, SearchMatch.A_ACCURATE, call.getNameStart(), call.getNameEnd() + 1 - call.getNameStart(),
+                            isConstructor, isSynthetic, isSuperInvocation, isWithinComment, participant, element.getResource());
+                    });
                 }
             }
         }
         return VisitStatus.CONTINUE;
+    }
+
+    protected void reportSearchMatch(IJavaElement element, Function<IJavaElement, SearchMatch> producer) {
+        if (element.getOpenable() instanceof GroovyClassFileWorkingCopy) {
+            element = ((GroovyClassFileWorkingCopy) element.getOpenable()).convertToBinary(element);
+        }
+        SearchMatch match = producer.apply(element);
+        try {
+            requestor.acceptSearchMatch(match);
+        } catch (CoreException e) {
+            Util.log(e, "Error reporting search match inside of " + element + " in resource " + element.getResource());
+        }
     }
 
     protected boolean hasMatchingParameters(Parameter[] declarationParameters) {
