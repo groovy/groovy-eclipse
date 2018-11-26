@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -239,6 +238,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             if (!acceptedPositions.contains(position)) {
                 if (nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), isDeclaration
                         ? GroovyUtils.getParameterTypes(((MethodNode) node).getParameters()) : result.scope.getMethodCallArgumentTypes())) {
+
                     if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
                         enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
                     }
@@ -291,7 +291,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             if (argumentTypes.size() == parameterTypeNames.length) {
                 for (int i = 0; i < parameterTypeNames.length; i += 1) {
                     if (parameterTypeNames[i] == null) continue; // skip check
-                    ClassNode source = argumentTypes.get(i), target = ClassHelper.makeWithoutCaching(parameterTypeNames[i]);
+                    ClassNode source = argumentTypes.get(i), target = ConstructorReferenceSearchRequestor.makeType(parameterTypeNames[i]);
                     if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
                         return false;
                     }

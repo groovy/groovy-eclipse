@@ -969,7 +969,7 @@ assert primaryExprType != null && dependentExprType != null;
                     Stream.of(type.getUnresolvedSuperClass()),
                     Stream.of(type.getUnresolvedInterfaces()));
                 superTypes.filter(t -> t.getEnd() > 0).forEach(this::visitClassReference);
-            } else {
+            } else if (!node.isSpecialCall()) {
                 visitClassReference(type);
             }
             if (node.getArguments() instanceof TupleExpression) {

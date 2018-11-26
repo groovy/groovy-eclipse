@@ -33,6 +33,9 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Test;
 
+/**
+ * Tests for {@link org.eclipse.jdt.groovy.search.MethodReferenceSearchRequestor}
+ */
 public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
@@ -322,90 +325,6 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    }\n" +
             "}",
             false, 0, "xxx");
-    }
-
-    @Test
-    public void testConstructorReferenceSearch1() throws Exception {
-        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
-            "class Foo {\n" +
-            "  Foo() {\n" +
-            "    new Foo()\n" +
-            "  }\n" +
-            "  Foo(a) {\n" +
-            "    new Foo(a)\n" +
-            "  }\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo\n" +
-            "new Foo()\n" +
-            "new Foo(a)\n" +
-            "new p.Foo()\n" +
-            "new p.Foo(a)\n");
-
-        IMethod constructor = foo.getType("Foo").getMethods()[0];
-        new SearchEngine().search(
-            SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {foo.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
-        assertEquals("Incorrect number of matches;", 6, matches.size());
-
-        int fooCount = 0, otherCount = 0;
-        for (SearchMatch match : matches) {
-            if (match.getElement() instanceof IMethod) {
-                if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
-                    fooCount += 1;
-                } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
-                    otherCount += 1;
-                }
-            }
-        }
-        assertEquals("Should have found 2 matches in Foo.groovy", 2, fooCount);
-        assertEquals("Should have found 4 matches in Other.groovy", 4, otherCount);
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/765
-    public void testConstructorReferenceSearch2() throws Exception {
-        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
-            "class Foo {\n" +
-            "  static class Bar {\n" +
-            "    static class Baz {\n" +
-            "      Baz() {\n" +
-            "        this(null)\n" +
-            "      }\n" +
-            "      Baz(def arg) {\n" +
-            "        super()\n" +
-            "      }\n" +
-            "    }\n" +
-            "  }\n" +
-            "}");
-        createUnit("", "Other", "import p.Foo.Bar.Baz\n" +
-            "new Baz()\n" +
-            "new Baz(a)\n");
-
-        IMethod constructor = foo.getType("Foo").getType("Bar").getType("Baz").getMethods()[0];
-        new SearchEngine().search(
-            SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {foo.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
-        assertEquals("Incorrect number of matches;", 2, matches.size());
-
-        int fooCount = 0, otherCount = 0;
-        for (SearchMatch match : matches) {
-            if (match.getElement() instanceof IMethod) {
-                if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
-                    fooCount += 1;
-                } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
-                    otherCount += 1;
-                }
-            }
-        }
-        assertEquals("Should have found 0 matches in Foo.groovy", 0, fooCount);
-        assertEquals("Should have found 2 matches in Other.groovy", 2, otherCount);
     }
 
     @Test

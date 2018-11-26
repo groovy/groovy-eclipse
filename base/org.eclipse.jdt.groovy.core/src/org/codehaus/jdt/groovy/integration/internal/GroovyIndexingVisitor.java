@@ -15,6 +15,10 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.stream.Stream;
+
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -48,6 +52,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
  */
 public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
+    private final Deque<MethodNode> enclosingMethods = new ArrayDeque<>();
     private final ISourceElementRequestor requestor;
 
     public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
@@ -102,7 +107,9 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 }
             }
         }
+        enclosingMethods.push(node);
         super.visitMethod(node);
+        enclosingMethods.pop();
     }
 
     @Override
@@ -164,7 +171,20 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitConstructorCallExpression(ConstructorCallExpression expression) {
-        char[] typeName = expression.getType().getName().toCharArray();
+        ClassNode type = expression.getType();
+        if (expression.isSpecialCall()) {
+            type = enclosingMethods.peek().getDeclaringClass();
+            if (expression.isSuperCall()) {
+                type = type.getUnresolvedSuperClass();
+            }
+        } else if (expression.isUsingAnonymousInnerClass()) {
+            type = Stream.concat(
+                Stream.of(type.getUnresolvedSuperClass()),
+                Stream.of(type.getUnresolvedInterfaces())
+            ).filter(t -> t.getEnd() > 0).findFirst().get();
+        }
+
+        char[] typeName = type.getName().toCharArray();
         // we don't know how many arguments the ctor has, so go up to 9
         for (int i = 0; i <= 9; i += 1) {
             requestor.acceptConstructorReference(typeName, i, expression.getStart());
