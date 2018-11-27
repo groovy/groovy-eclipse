@@ -38,6 +38,8 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.ui.PreferenceConstants;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 
 public class ContentAssistContext {
 
@@ -218,5 +220,19 @@ public class ContentAssistContext {
             });
         }
         return currentScope;
+    }
+
+    /**
+     * Determines if right paren comes after completion range.
+     */
+    public boolean isParenAfter(IDocument document) {
+        if (document != null && document.getLength() > completionEnd) {
+            try {
+                return ('(' == document.getChar(completionEnd));
+            } catch (BadLocationException e) {
+                GroovyContentAssist.logError("Exception during content assist", e);
+            }
+        }
+        return false;
     }
 }

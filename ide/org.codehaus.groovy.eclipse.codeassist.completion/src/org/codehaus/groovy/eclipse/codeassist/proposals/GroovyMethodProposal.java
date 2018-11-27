@@ -22,7 +22,6 @@ import java.util.Optional;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
@@ -37,11 +36,11 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
+import org.eclipse.jdt.internal.core.nd.util.CharArrayUtils;
 import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
-import org.eclipse.jface.text.BadLocationException;
 
 public class GroovyMethodProposal extends AbstractGroovyProposal {
 
@@ -113,13 +112,21 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             proposal.setCompletion(CharOperation.NO_CHAR);
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
-        } else { // this is a normal method proposal
-            boolean parens = (kind == CompletionProposal.ANNOTATION_ATTRIBUTE_REF ? false : !isParens(context, javaContext));
+        } else {
+            boolean parens;
+            switch (kind) {
+            case CompletionProposal.ANNOTATION_ATTRIBUTE_REF:
+            case CompletionProposal.METHOD_NAME_REFERENCE:
+                parens = false;
+                break;
+            default:
+                parens = !context.isParenAfter(javaContext.getDocument());
+            }
             proposal.setCompletion(completionName(parens));
             proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         }
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
-        proposal.setName(method.getName().toCharArray());
+        proposal.setName(completionName(false));
         if (method instanceof NamedArgsMethodNode) {
             fillInExtraParameters((NamedArgsMethodNode) method, proposal);
         } else {
@@ -198,27 +205,16 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setOptionalParameterTypeNames(getParameterTypeNames(namedArgsMethod.getOptionalParams()));
     }
 
-    private boolean isParens(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        if (javaContext.getDocument().getLength() > context.completionEnd) {
-            try {
-                return javaContext.getDocument().getChar(context.completionEnd) == '(';
-            } catch (BadLocationException e) {
-                GroovyContentAssist.logError("Exception during content assist", e);
-            }
-        }
-        return false;
-    }
-
     protected char[] completionName(boolean includeParens) {
-        String name = method.getName();
-        char[] nameArr = name.toCharArray();
-        if (ProposalUtils.hasWhitespace(nameArr)) {
-            name = '"' + name + '"';
+        StringBuilder name = new StringBuilder(method.getName());
+        if (name.chars().anyMatch(Character::isWhitespace)) {
+            name.insert(0, '"');
+            name.append('"');
         }
         if (includeParens) {
-            name += "()";
+            name.append("()");
         }
-        return name.toCharArray();
+        return CharArrayUtils.extractChars(name);
     }
 
     protected int getModifiers() {

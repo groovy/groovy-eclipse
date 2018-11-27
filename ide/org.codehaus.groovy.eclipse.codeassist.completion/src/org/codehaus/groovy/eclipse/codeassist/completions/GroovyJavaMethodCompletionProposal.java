@@ -190,29 +190,16 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return "";
         }
 
-        char[] proposalName = fProposal.getName();
-        boolean hasWhitespace = ProposalUtils.hasWhitespace(proposalName);
-
-        if (fProposal.getKind() == CompletionProposal.METHOD_NAME_REFERENCE) {
-            // complete the name only for a method pointer or static import expression
-            return String.valueOf(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
-        }
-
-        // if no whitespace in the method name and no arguments, there is nothing groovy to do
-        if (!hasWhitespace && (!hasParameters() || !hasArgumentList())) {
+        if (!hasArgumentList() || !hasParameters()) {
             String replacementString = super.computeReplacementString();
-            if (replacementString.endsWith(RPAREN + SEMICOLON)) {
+            while (replacementString.endsWith(SEMICOLON)) {
                 replacementString = replacementString.substring(0, replacementString.length() - 1);
             }
             return replacementString;
         }
 
-        //
         StringBuffer buffer = new StringBuffer();
-
-        fProposal.setName(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
         appendMethodNameReplacement(buffer);
-        fProposal.setName(proposalName);
 
         if (!hasParameters()) {
             while (Character.isWhitespace(buffer.charAt(buffer.length() - 1))) {
@@ -461,6 +448,12 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     public int getContextInformationPosition() {
         return fContextInformationPosition;
+    }
+
+    @Override // called by isPrefix
+    protected int getPatternMatchRule(String pattern, String string) {
+        if (string.charAt(0) == '"') string = string.substring(1);
+        return super.getPatternMatchRule(pattern, string);
     }
 
     @Override

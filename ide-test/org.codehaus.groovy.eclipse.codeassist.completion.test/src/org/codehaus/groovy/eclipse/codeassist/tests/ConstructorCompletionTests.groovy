@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.MODIFIER_TOGGLE_COMPLETION_MODE
+
 import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
@@ -67,16 +69,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
-    @Test @NotYetImplemented // do this with Ctrl triggering of constructor proposal
-    void testConstructorCompletion3() {
-        String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk' // trailing parens
-        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
-    }
-
     @Test
-    void testConstructorCompletion4() {
+    void testConstructorCompletion3() {
         String contents = 'class YYY { YYY(x) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x) {} }\nnew YYY(x)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
@@ -84,11 +78,39 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorCompletion5() {
+    void testConstructorCompletion4() {
         String contents = 'class YYY { YYY(x, y) {} }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x, y) {} }\nnew YYY(x, y)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
+    }
+
+    @Test
+    void testConstructorCompletion5() {
+        String contents = 'class YYY { YYY() {} }\nnew YY\nkkk'
+        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
+    }
+
+    @Test
+    void testConstructorCompletion6() {
+        String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk'
+        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'new YY'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'YYY', false), expected) // completion overwrites
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/471
+    void testConstructorCompletion7() {
+        String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk'
+        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'new YY'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'YYY', false), expected, 0 as char, MODIFIER_TOGGLE_COMPLETION_MODE)
     }
 
     @Test

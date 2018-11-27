@@ -98,6 +98,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private static final char[] NO_TYPE_NAME = {'.'};
+    private static final char[] EMPTY_PARENS = {'(', ')'};
     private static final char[] _AS_ = {' ', 'a', 's', ' '};
 
     private static final int CHECK_CANCEL_FREQUENCY = 50;
@@ -603,7 +604,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             proposal.setCompletion(CharOperation.NO_CHAR);
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
         } else {
-            proposal.setCompletion(new char[] {'(', ')'});
+            if (context.isParenAfter(javaContext.getDocument())) {
+                proposal.setCompletion(CharOperation.NO_CHAR);
+            } else {
+                proposal.setCompletion(EMPTY_PARENS);
+            }
             proposal.setTokenRange(offset, context.completionEnd);
             proposal.setReplaceRange(context.completionEnd, context.completionEnd);
 
@@ -652,7 +657,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         populateParameterInfo(proposal, ctor.parameterCount, ctor.parameterNames, ctor.parameterTypes, ctor.signature);
 
         // TODO: Leverage IRelevanceRule for this?
-        float relevanceMultiplier = (ctor.accessibility == IAccessRule.K_ACCESSIBLE) ? 3 : 0;
+        float relevanceMultiplier = (ctor.accessibility == IAccessRule.K_ACCESSIBLE ? 3 : 0);
         relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, ctor.simpleTypeName);
         proposal.setRelevance(Relevance.MEDIUM_HIGH.getRelevance(relevanceMultiplier));
 
