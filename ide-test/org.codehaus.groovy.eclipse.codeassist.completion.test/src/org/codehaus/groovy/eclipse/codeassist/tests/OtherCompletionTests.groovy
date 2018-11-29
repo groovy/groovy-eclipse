@@ -83,20 +83,6 @@ final class OtherCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testVisibility() {
-        String contents = '''\
-            class B { }
-            class C {
-              B theB
-            }
-            new C().th
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '().th'))
-        proposalExists(proposals, 'theB', 1)
-        assert proposals[0].displayString == 'theB : B - C'
-    }
-
-    @Test
     void testGString1() {
         String contents = '"${new String().c}"'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.c'))

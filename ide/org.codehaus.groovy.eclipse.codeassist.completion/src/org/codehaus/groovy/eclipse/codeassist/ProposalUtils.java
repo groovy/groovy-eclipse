@@ -156,7 +156,8 @@ public class ProposalUtils {
 
     public static char[] createSimpleTypeName(ClassNode node) {
         if (GroovyUtils.getBaseType(node).isGenericsPlaceHolder()) node = node.redirect();
-        return Signature.toCharArray(GroovyUtils.getTypeSignatureWithoutGenerics(node, false, true).toCharArray());
+        // see org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider#createTypeDisplayName(char[])
+        return Signature.getSimpleName(Signature.toCharArray(GroovyUtils.getTypeSignatureWithoutGenerics(node, false, true).toCharArray()));
     }
 
     public static Optional<ContentAssistContext> getContentAssistContext(JavaContentAssistInvocationContext javaContext) {

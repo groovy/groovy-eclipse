@@ -59,6 +59,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
         return 0;
     }
 
+    /** TODO */
     private float relevanceMultiplier = 1;
 
     public final float getRelevanceMultiplier() {
@@ -70,6 +71,18 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
         this.relevanceMultiplier = relevanceMultiplier;
     }
 
+    /** TODO */
+    private String requiredQualifier;
+
+    public final String getRequiredQualifier() {
+        return requiredQualifier;
+    }
+
+    public final void setRequiredQualifier(String requiredQualifier) {
+        this.requiredQualifier = requiredQualifier;
+    }
+
+    /** TODO */
     private String requiredStaticImport;
 
     public final String getRequiredStaticImport() {

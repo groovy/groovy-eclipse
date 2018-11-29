@@ -18,21 +18,28 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import groovy.lang.Closure;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -126,35 +133,38 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         if (requestor.visitSuccessful) {
             isStatic = requestor.isStatic;
             context.lhsType = requestor.lhsType;
-            completionType = getCompletionType(requestor);
+            completionType = getCompletionType(completionNode, context, requestor);
 
-            // TODO: if (isPrimary && requestor.currentScope.getEnclosingClosure() != null)
-            //       check closure's resolve strategy; delegate and/or owner may be excluded and Closure may be included
-
-            ClassNode closureCompletionType = null;
-            if (isPrimary) {
-                ClassNode thisType = requestor.currentScope.getThis();
-                if (thisType != null && !thisType.equals(completionType)) {
-                    closureCompletionType = thisType; // aka the "owner" type
-                }
+            int closureStrategy = -1;
+            if (isPrimary && requestor.currentScope.getEnclosingClosure() != null) {
+                closureStrategy = requestor.currentScope.getEnclosingClosureResolveStrategy();
             }
 
-            List<IProposalCreator> creators = chooseProposalCreators();
-            boolean isStatic1 = (isStatic && closureCompletionType == null);
-            // if completionType refers to the closure delegate, use instance (non-static) semantics
-            proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary, false);
+            List<IProposalCreator> creators = chooseProposalCreators(context);
+            // if completionType is delegate, use instance (non-static) semantics
+            boolean isStatic1 = (isStatic && closureStrategy < Closure.OWNER_FIRST);
+            proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
                 boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
-                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary, false);
+                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary);
             }
 
-            if (closureCompletionType != null) {
-                // inside of a closure; must also add content assist for this (previously did the delegate)
-                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, closureCompletionType, isStatic, isPrimary, true);
+            // within a closure, include content assist for the enclosing type (aka "owner")
+            if (closureStrategy >= Closure.OWNER_FIRST) {
+                ClassNode enclosingType = requestor.currentScope.getOwner();
+                if (enclosingType != null && !enclosingType.equals(completionType)) {
+                    List<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
+                    proposalCreatorLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
+
+                    // if "delegate" and/or "owner" qualifiers are required, add them now
+                    setClosureQualifiers(groovyProposals, ownerProposals, closureStrategy);
+
+                    groovyProposals.addAll(ownerProposals);
+                }
             }
 
             if (isPrimary) {
@@ -251,47 +261,30 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
-        //@formatter:off
-        JavaContentAssistInvocationContext javaContext = getJavaContext();
-        SearchableEnvironment searchableEnvironment = getNameEnvironment();
-        CompletionRequestor completionRequestor = new CompletionRequestor() { @Override public void accept(org.eclipse.jdt.core.CompletionProposal proposal) {} };
-        CompletionEngine engine = new CompletionEngine(searchableEnvironment, completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
-        //@formatter:on
-
-        Map<String, IJavaCompletionProposal> javaProposals = new LinkedHashMap<>(groovyProposals.size());
-        for (IGroovyProposal groovyProposal : groovyProposals) {
-            try {
-                IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
-                if (javaProposal != null) {
-                    if (options.checkDeprecation) {
-                        CompletionProposal proposal = extractProposal(javaProposal);
-                        if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
-                            continue;
-                        }
-                    }
-
-                    String[] displayTokens = javaProposal.getDisplayString().split(" : ");
-                    IJavaCompletionProposal p = javaProposals.put(displayTokens[0], javaProposal);
-                    if (p != null && displayTokens.length > 1 && displayTokens[1].contains("DefaultGroovyMethods")) {
-                        javaProposals.put(displayTokens[0], p);
-                    }
-                }
-            } catch (Exception e) {
-                GroovyContentAssist.logError("Exception when creating groovy completion proposal", e);
-            }
-        }
-
-        return new ArrayList<>(javaProposals.values());
+        return createJavaProposals(groovyProposals, options.checkDeprecation, monitor);
     }
 
-    private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators, ExpressionCompletionRequestor requestor,
-            ContentAssistContext context, AssistOptions options, ClassNode completionType, boolean isStatic, boolean isPrimary, boolean isClosureThis) {
+    private List<IProposalCreator> chooseProposalCreators(ContentAssistContext context) {
+        String fullCompletionExpression = context.fullCompletionExpression;
+        if (fullCompletionExpression == null) fullCompletionExpression = "";
+
+        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
+            return Collections.singletonList(new FieldProposalCreator());
+        }
+        if (METHOD_POINTER_COMPLETION.matcher(fullCompletionExpression).matches()) {
+            return Collections.singletonList(new MethodProposalCreator());
+        }
+
+        List<IProposalCreator> creators = new ArrayList<>(4);
+        Collections.addAll(creators, getProposalCreators());
+        return creators;
+    }
+
+    private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators,
+            ExpressionCompletionRequestor requestor, ContentAssistContext context, AssistOptions options,
+            ClassNode completionType, boolean isStatic, boolean isPrimary) {
 
         for (IProposalCreator creator : creators) {
-            if (isClosureThis && !creator.redoForLoopClosure()) {
-                // avoid duplicate DGMs by not proposing category proposals twice
-                continue;
-            }
             if (creator instanceof AbstractProposalCreator) {
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
                 ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
@@ -299,20 +292,106 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.substringMatch);
                 });
             }
-            Set<ClassNode> categories = requestor.categories;
-            String expression = context.getPerceivedCompletionExpression();
+            String completionExpression = context.getPerceivedCompletionExpression();
             proposals.addAll(
-                creator.findAllProposals(completionType, categories, expression, isStatic, isPrimary));
+                creator.findAllProposals(completionType, requestor.categories, completionExpression, isStatic, isPrimary));
         }
     }
 
-    protected VariableScope createTopLevelScope(ClassNode completionType) {
-        return new VariableScope(null, completionType, false);
+    private List<ICompletionProposal> createJavaProposals(Collection<IGroovyProposal> groovyProposals, boolean checkDeprecation, IProgressMonitor monitor) {
+        ContentAssistContext context = getContext();
+        JavaContentAssistInvocationContext javaContext = getJavaContext();
+        //@formatter:off
+        CompletionRequestor completionRequestor = new CompletionRequestor() { @Override public void accept(org.eclipse.jdt.core.CompletionProposal proposal) {} };
+        CompletionEngine engine = new CompletionEngine(getNameEnvironment(), completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
+        //@formatter:on
+
+        Map<String, List<IJavaCompletionProposal>> javaProposals = new HashMap<>(groovyProposals.size());
+        for (IGroovyProposal groovyProposal : groovyProposals) {
+            try {
+                IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
+                if (javaProposal != null) {
+                    if (checkDeprecation) {
+                        CompletionProposal proposal = extractProposal(javaProposal);
+                        if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
+                            continue;
+                        }
+                    }
+
+                    String signature = javaProposal.getDisplayString().split(" : ")[0]; // TODO: remove parameter generics and names
+                  //javaProposals.computeIfAbsent(signature, k -> new ArrayList<>()).add(javaProposal);
+                    javaProposals.merge(signature, Collections.singletonList(javaProposal), (list, one) -> {
+                        if (list.size() == 1) list = new ArrayList<>(list);
+                        list.add(one.get(0));
+                        return list;
+                    });
+                }
+            } catch (Exception e) {
+                GroovyContentAssist.logError("Exception when creating groovy completion proposal", e);
+            }
+        }
+
+        List<ICompletionProposal> completionProposals = new ArrayList<>(javaProposals.size());
+        for (List<IJavaCompletionProposal> group : javaProposals.values()) {
+            int n = group.size();
+            if (n == 1) {
+                completionProposals.add(group.get(0));
+            } else { // de-duplicate the proposal group
+                Map<String, IJavaCompletionProposal> map = new HashMap<>(n);
+                for (IJavaCompletionProposal jcp : group) {
+                    map.merge(jcp.getDisplayString().split(" - (\\w+\\.)*")[1], jcp, (one, two) -> {
+                        // TODO: break ties between unqualified and fully-qualified declaring types
+                        return (one.getRelevance() > two.getRelevance() ? one : two);
+                    });
+                }
+                // if (map.size() > 1) map.remove("DefaultGroovyMethods");
+                completionProposals.addAll(map.values());
+            }
+        }
+        return completionProposals;
     }
 
-    private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
+    private static void setClosureQualifiers(Collection<IGroovyProposal> delegateProposals, Collection<IGroovyProposal> ownerProposals, int resolveStrategy) {
+
+        Function<IGroovyProposal, String> toName = (IGroovyProposal proposal) -> {
+            AnnotatedNode node = ((AbstractGroovyProposal) proposal).getAssociatedNode();
+            if (node instanceof FieldNode) {
+                return ((FieldNode) node).getName();
+            }
+            if (node instanceof MethodNode) {
+                return ((MethodNode) node).getName();
+            }
+            if (node instanceof PropertyNode) {
+                return ((PropertyNode) node).getName();
+            }
+            throw new IllegalStateException("unexpected node type: " + node.getClass());
+        };
+
+        if (!delegateProposals.isEmpty()) {
+            Consumer<IGroovyProposal> addDelegateQualifier = p -> ((AbstractGroovyProposal) p).setRequiredQualifier("delegate");
+
+            if (resolveStrategy == Closure.OWNER_FIRST && !ownerProposals.isEmpty()) {
+                Set<String> names = ownerProposals.stream().map(toName).collect(Collectors.toSet());
+                delegateProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addDelegateQualifier);
+            } else if (resolveStrategy == Closure.TO_SELF) {
+                delegateProposals.forEach(addDelegateQualifier);
+            }
+        }
+
+        if (!ownerProposals.isEmpty()) {
+            Consumer<IGroovyProposal> addOwnerQualifier = p -> ((AbstractGroovyProposal) p).setRequiredQualifier("owner");
+
+            if (resolveStrategy == Closure.DELEGATE_FIRST && !delegateProposals.isEmpty()) {
+                Set<String> names = delegateProposals.stream().map(toName).collect(Collectors.toSet());
+                ownerProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addOwnerQualifier);
+            } else if (resolveStrategy == Closure.TO_SELF) {
+                ownerProposals.forEach(addOwnerQualifier);
+            }
+        }
+    }
+
+    private static ClassNode getCompletionType(ASTNode completionNode, ContentAssistContext context, ExpressionCompletionRequestor requestor) {
         ClassNode completionType;
-        ContentAssistContext context = getContext();
 
         switch (context.location) {
         case EXPRESSION:
@@ -344,21 +423,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return completionType;
     }
 
-    private List<IProposalCreator> chooseProposalCreators() {
-        ContentAssistContext context = getContext();
-        String fullCompletionExpression = context.fullCompletionExpression;
-        if (fullCompletionExpression == null) fullCompletionExpression = "";
-
-        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
-            return Collections.singletonList(new FieldProposalCreator());
-        }
-        if (METHOD_POINTER_COMPLETION.matcher(fullCompletionExpression).matches()) {
-            return Collections.singletonList(new MethodProposalCreator());
-        }
-
-        List<IProposalCreator> creators = new ArrayList<>(4);
-        Collections.addAll(creators, getProposalCreators());
-        return creators;
+    private static VariableScope createTopLevelScope(ClassNode completionType) {
+        return new VariableScope(null, completionType, false);
     }
 
     //--------------------------------------------------------------------------

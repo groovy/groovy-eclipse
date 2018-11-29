@@ -408,7 +408,151 @@ final class FieldCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         proposalExists(proposals, 'xxx', 1) // from the delegate
-        proposalExists(proposals, 'xyz', 0) // *not* from owner
+        proposalExists(proposals, 'xyz', 0) // *not* from the owner
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/364
+    void testClosure10() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.DELEGATE_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
+    }
+
+    @Test
+    void testClosure10a() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.DELEGATE_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
+    }
+
+    @Test
+    void testClosure11() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.OWNER_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - B' ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
+    }
+
+    @Test
+    void testClosure11a() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.OWNER_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - B' ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
+    }
+
+    @Test
+    void testClosure12() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.TO_SELF) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
+    }
+
+    @Test
+    void testClosure12a() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.TO_SELF) Closure c) {}
+              void test() {
+                foo {
+                  zz // delegate is B, owner is A
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 2)
+        def one = indexOfProposal(proposals, 'zzz')
+        def two = indexOfProposal(proposals, 'zzz', one + 1)
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
     }
 
     @Test

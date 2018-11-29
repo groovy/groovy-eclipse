@@ -156,6 +156,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
+    protected void appendMethodNameReplacement(StringBuffer buffer) {
+        if (fProposal.getKind() != CompletionProposal.CONSTRUCTOR_INVOCATION &&
+                !CharOperation.prefixEquals(fProposal.getName(), fProposal.getCompletion())) {
+            buffer.append(fProposal.getCompletion(), 0, CharOperation.indexOf(fProposal.getName(), fProposal.getCompletion(), true));
+        }
+        super.appendMethodNameReplacement(buffer);
+    }
+
+    @Override
     protected IContextInformation computeContextInformation() {
         if (hasParameters() && (fProposal.getKind() == CompletionProposal.METHOD_REF ||
                                 fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION)) {

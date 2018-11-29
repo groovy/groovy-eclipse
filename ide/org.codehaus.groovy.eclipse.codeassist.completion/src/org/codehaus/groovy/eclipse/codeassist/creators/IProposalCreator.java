@@ -28,11 +28,4 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 public interface IProposalCreator {
 
     List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary);
-
-    /**
-     * If {@code true}, then execute this creator twice when in closures. Once for {@code delegate} and once for {@code this}.
-     */
-    default boolean redoForLoopClosure() {
-        return true;
-    }
 }

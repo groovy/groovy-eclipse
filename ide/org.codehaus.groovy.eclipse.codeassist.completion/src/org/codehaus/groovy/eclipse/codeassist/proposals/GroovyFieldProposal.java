@@ -64,6 +64,8 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
             field.getDeclaringClass().equals(VariableScope.CLASS_CLASS_NODE)) {
             // qualifier is required for references to members of java.lang.Class
             completion = CharOperation.concat("this.".toCharArray(), completion);
+        } else if (getRequiredQualifier() != null) {
+            completion = CharOperation.concat(getRequiredQualifier().toCharArray(), completion, '.');
         }
 
         proposal.setCompletion(completion);

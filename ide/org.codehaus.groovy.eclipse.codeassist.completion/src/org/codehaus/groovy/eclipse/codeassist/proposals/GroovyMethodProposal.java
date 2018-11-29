@@ -122,7 +122,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             default:
                 parens = !context.isParenAfter(javaContext.getDocument());
             }
-            proposal.setCompletion(completionName(parens));
+            proposal.setCompletion(Optional.ofNullable(getRequiredQualifier()).map(q ->
+                CharOperation.concat(q.toCharArray(), completionName(parens), '.')
+            ).orElseGet(() -> completionName(parens)));
             proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         }
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
