@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -339,12 +341,16 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else { // de-duplicate the proposal group
                 Map<String, IJavaCompletionProposal> map = new HashMap<>(n);
                 for (IJavaCompletionProposal jcp : group) {
-                    map.merge(jcp.getDisplayString().split(" - (\\w+\\.)*")[1], jcp, (one, two) -> {
+                    String key = jcp.getDisplayString().split(" - ")[1];
+                    key = find((CharSequence) key, "\\w+(?=\\s|$)");
+                    map.merge(key, jcp, (one, two) -> {
                         // TODO: break ties between unqualified and fully-qualified declaring types
                         return (one.getRelevance() > two.getRelevance() ? one : two);
                     });
                 }
-                // if (map.size() > 1) map.remove("DefaultGroovyMethods");
+                if (map.size() > 1) {
+                    map.remove("DefaultGroovyMethods");
+                }
                 completionProposals.addAll(map.values());
             }
         }
