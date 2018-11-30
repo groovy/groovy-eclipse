@@ -847,7 +847,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-//			"  public static void main(String[] args) {\n"+
             "  static main(args) {\n"+
             "    print \"success\"\n" +
             "  }\n"+
@@ -3463,7 +3462,33 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testDefaultValueMethods() {
+    public void testConstructorAnnotations() {
+        runNegativeTest(new String[] {
+            "p/C.groovy",
+            "package p;\n" +
+            "class C {\n" +
+            "  @Deprecated\n" +
+            "  C() {\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @Deprecated C() {\n" +
+            "  }\n" +
+            "}\n"
+        );
+
+        checkDisassemblyFor("p/C.class",
+            "  @java.lang.Deprecated\n" +
+            "  public C();\n");
+    }
+
+    @Test
+    public void testDefaultValueMethods1() {
         runConformTest(new String[] {
             "p/C.java",
             "package p;\n" +
@@ -3508,7 +3533,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testDefaultValueMethods02() {
+    public void testDefaultValueMethods2() {
         runConformTest(new String[] {
             "p/C.java",
             "package p;\n" +
@@ -3572,7 +3597,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testDefaultValueConstructors() {
+    public void testDefaultValueConstructors1() {
         runConformTest(new String[] {
             "p/C.java",
             "package p;\n" +
@@ -3623,7 +3648,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testDefaultValueConstructors02() {
+    public void testDefaultValueConstructors2() {
         runConformTest(new String[] {
             "p/C.java",
             "package p;\n" +

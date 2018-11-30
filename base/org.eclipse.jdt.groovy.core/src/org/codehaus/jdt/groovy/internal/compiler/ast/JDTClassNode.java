@@ -348,6 +348,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
 
         ConstructorNode ctorNode = new ConstructorNode(methodBinding.modifiers, parameters, exceptions, null);
+        for (AnnotationBinding annotationBinding : methodBinding.getAnnotations()) {
+            ctorNode.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+        }
         ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         return ctorNode;
     }
@@ -361,9 +364,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         Expression initializerExpression = null;
         // FIXASC for performance reasons could fetch the initializer lazily if a JDTFieldNode were created
         if (c == Constant.NotAConstant) {
-            /**
-             * If the field binding is for a real source field, we should be able to see any initializer in it.
-             */
+            // if the field binding is for a real source field, we should be able to see any initializer in it
             if (typeDeclaration != null) {
                 FieldDeclaration fieldDecl = typeDeclaration.declarationOf(fieldBinding);
                 if (fieldDecl instanceof FieldDeclarationWithInitializer) {
@@ -439,8 +440,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 parameters[i] = makeParameter(parameterTypes[i], parameterName);
 
                 if (DefaultGroovyMethods.asBoolean(parameterAnnotations)) {
-                    for (AnnotationBinding annotation : parameterAnnotations[i]) {
-                        parameters[i].addAnnotation(new JDTAnnotationNode(annotation, resolver));
+                    for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
+                        parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
                     }
                 }
             }
