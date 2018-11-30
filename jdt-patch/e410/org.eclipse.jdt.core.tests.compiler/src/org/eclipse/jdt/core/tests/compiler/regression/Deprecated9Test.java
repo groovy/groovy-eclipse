@@ -688,7 +688,8 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 		runner.runNegativeTest();
 	}
 	public void testDeprecatedProvidedServices() {
-		associateToModule("mod0", "p1/IServiceDep.java", "p1/IServiceDepSince.java", "p1/IServiceTermDep.java", "p1/IServiceTermDepSince.java");
+		javacUsePathOption(" --module-source-path ");
+		associateToModule("mod0", "module-info.java", "p1/IServiceDep.java", "p1/IServiceDepSince.java", "p1/IServiceTermDep.java", "p1/IServiceTermDepSince.java");
 		associateToModule("mod1", "p1impl/ServiceDep.java", "p1impl/ServiceDepSince.java", "p1impl/ServiceTermDep.java", "p1impl/ServiceTermDepSince.java");
 		Runner runner = new Runner();
 		runner.customOptions = new HashMap<>();
@@ -732,7 +733,7 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"package p1impl;\n" +
 				"@Deprecated(since=\"3\",forRemoval=true)\n" +
 				"public class ServiceTermDepSince implements p1.IServiceTermDepSince {}\n",
-				"folder2/module-info.java",
+				"mod1/module-info.java",
 				"module mod1 {\n" +
 				"	requires mod0;\n" +
 				"	provides p1.IServiceDep with p1impl.ServiceDep;\n" +
@@ -743,42 +744,42 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			};
 		runner.expectedCompilerLog =
 			"----------\n" + 
-			"1. INFO in folder2\\module-info.java (at line 3)\n" + 
+			"1. INFO in mod1\\module-info.java (at line 3)\n" + 
 			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
 			"	            ^^^^^^^^^^^\n" + 
 			"The type IServiceDep is deprecated\n" + 
 			"----------\n" + 
-			"2. INFO in folder2\\module-info.java (at line 3)\n" + 
+			"2. INFO in mod1\\module-info.java (at line 3)\n" + 
 			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
 			"	                                    ^^^^^^^^^^\n" + 
 			"The type ServiceDep is deprecated\n" + 
 			"----------\n" + 
-			"3. INFO in folder2\\module-info.java (at line 4)\n" + 
+			"3. INFO in mod1\\module-info.java (at line 4)\n" + 
 			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
 			"	            ^^^^^^^^^^^^^^^^\n" + 
 			"The type IServiceDepSince is deprecated since version 2\n" + 
 			"----------\n" + 
-			"4. INFO in folder2\\module-info.java (at line 4)\n" + 
+			"4. INFO in mod1\\module-info.java (at line 4)\n" + 
 			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
 			"	                                         ^^^^^^^^^^^^^^^\n" + 
 			"The type ServiceDepSince is deprecated since version 2\n" + 
 			"----------\n" + 
-			"5. WARNING in folder2\\module-info.java (at line 5)\n" + 
+			"5. WARNING in mod1\\module-info.java (at line 5)\n" + 
 			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
 			"	            ^^^^^^^^^^^^^^^\n" + 
 			"The type IServiceTermDep has been deprecated and marked for removal\n" + 
 			"----------\n" + 
-			"6. WARNING in folder2\\module-info.java (at line 5)\n" + 
+			"6. WARNING in mod1\\module-info.java (at line 5)\n" + 
 			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
 			"	                                        ^^^^^^^^^^^^^^\n" + 
 			"The type ServiceTermDep has been deprecated and marked for removal\n" + 
 			"----------\n" + 
-			"7. WARNING in folder2\\module-info.java (at line 6)\n" + 
+			"7. WARNING in mod1\\module-info.java (at line 6)\n" + 
 			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
 			"	            ^^^^^^^^^^^^^^^^^^^^\n" + 
 			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
 			"----------\n" + 
-			"8. WARNING in folder2\\module-info.java (at line 6)\n" + 
+			"8. WARNING in mod1\\module-info.java (at line 6)\n" + 
 			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
 			"	                                             ^^^^^^^^^^^^^^^^^^^\n" + 
 			"The type ServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
@@ -786,6 +787,8 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 		runner.runWarningTest();
 	}
 	public void testDeprecatedUsedServices() {
+		javacUsePathOption(" --module-path ");
+
 		associateToModule("mod0", "p1/IServiceDep.java", "p1/IServiceDepSince.java", "p1/IServiceTermDep.java", "p1/IServiceTermDepSince.java");
 		Runner runner = new Runner();
 		runner.customOptions = new HashMap<>();
@@ -888,6 +891,8 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 		}
 	}
 	public void testBug533063_2() throws Exception {
+		javacUsePathOption(" --module-path ");
+
 		runConformTest(new String[] {
 			"dont.use/module-info.java",
 			"@Deprecated(forRemoval=true,since=\"9\") module dont.use {}\n"

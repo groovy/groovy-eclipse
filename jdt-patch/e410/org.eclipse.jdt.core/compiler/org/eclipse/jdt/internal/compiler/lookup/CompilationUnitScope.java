@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -144,8 +144,8 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 				moduleDecl.createScope(this);
 				moduleDecl.checkAndSetModifiers();
 			}
-		} else if (this.environment.module != this.environment.UnNamedModule) {
-			problemReporter().unnamedPackageInNamedModule(this.environment.module);
+		} else if (module() != this.environment.UnNamedModule) {
+			problemReporter().unnamedPackageInNamedModule(module());
 		}
 	} else {
 		if ((this.fPackage = this.environment.createPackage(this.currentPackageName)) == null) {
@@ -760,6 +760,18 @@ public final Binding getImport(char[][] compoundName, boolean onDemand, boolean 
 
 public int nextCaptureID() {
 	return this.captureID++;
+}
+
+@Override
+public ModuleBinding module() {
+	if (!this.referenceContext.isModuleInfo() &&
+			this.referenceContext.types == null &&
+			this.referenceContext.currentPackage == null &&
+			this.referenceContext.imports == null) {
+		this.environment = this.environment.UnNamedModule.environment;
+		return this.environment.UnNamedModule;
+	}
+	return super.module();
 }
 
 /* Answer the problem reporter to use for raising new problems.

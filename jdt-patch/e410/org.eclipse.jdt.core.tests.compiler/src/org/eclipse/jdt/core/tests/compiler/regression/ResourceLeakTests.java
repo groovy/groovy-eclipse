@@ -5355,4 +5355,86 @@ public void testBug396575() {
 		"----------\n",
 		options);
 }
+public void testBug473317() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_7) return; // using diamond
+	Map<String, String> compilerOptions = getCompilerOptions();
+	compilerOptions.put(JavaCore.COMPILER_PB_SYNTHETIC_ACCESS_EMULATION, JavaCore.IGNORE);
+	runLeakTest(
+		new String[] {
+			"AutoCloseableEnhancedForTest.java",
+			"import java.util.Iterator;\n" + 
+			"\n" + 
+			"public class AutoCloseableEnhancedForTest\n" + 
+			"{\n" + 
+			"   private static class MyIterator<T> implements Iterator<T>\n" + 
+			"   {\n" + 
+			"      private T value;\n" + 
+			"      \n" + 
+			"      public MyIterator(T value)\n" + 
+			"      {\n" + 
+			"         this.value = value;\n" + 
+			"      }\n" + 
+			"      \n" + 
+			"      @Override\n" + 
+			"      public boolean hasNext()\n" + 
+			"      {\n" + 
+			"         return false;\n" + 
+			"      }\n" + 
+			"\n" + 
+			"      @Override\n" + 
+			"      public T next()\n" + 
+			"      {\n" + 
+			"         return value;\n" + 
+			"      }\n" + 
+			"   }\n" + 
+			"   \n" + 
+			"   private static class MyIterable<T> implements Iterable<T>, AutoCloseable\n" + 
+			"   {\n" + 
+			"      @Override\n" + 
+			"      public Iterator<T> iterator()\n" + 
+			"      {\n" + 
+			"         return new MyIterator<>(null);\n" + 
+			"      }\n" + 
+			"      \n" + 
+			"      @Override\n" + 
+			"      public void close() throws Exception\n" + 
+			"      {\n" + 
+			"      }\n" + 
+			"   }\n" + 
+			"   \n" + 
+			"   public static void main(String[] args)\n" + 
+			"   {\n" + 
+			"      // Not flagged as \"never closed.\"\n" + 
+			"      for (Object value : new MyIterable<>())\n" + 
+			"      {\n" + 
+			"         System.out.println(String.valueOf(value));\n" + 
+			"         \n" + 
+			"         break;\n" + 
+			"      }\n" + 
+			"      \n" + 
+			"      // Flagged as \"never closed.\"\n" + 
+			"      MyIterable<Object> iterable = new MyIterable<>();\n" + 
+			"      \n" + 
+			"      for (Object value : iterable)\n" + 
+			"      {\n" + 
+			"         System.out.println(String.valueOf(value));\n" + 
+			"         \n" + 
+			"         break;\n" + 
+			"      }\n" + 
+			"   }\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. WARNING in AutoCloseableEnhancedForTest.java (at line 44)\n" + 
+		"	for (Object value : new MyIterable<>())\n" + 
+		"	                    ^^^^^^^^^^^^^^^^^^\n" + 
+		"Resource leak: \'<unassigned Closeable value>\' is never closed\n" + 
+		"----------\n" + 
+		"2. WARNING in AutoCloseableEnhancedForTest.java (at line 52)\n" + 
+		"	MyIterable<Object> iterable = new MyIterable<>();\n" + 
+		"	                   ^^^^^^^^\n" + 
+		"Resource leak: \'iterable\' is never closed\n" + 
+		"----------\n",
+		compilerOptions);
+}
 }

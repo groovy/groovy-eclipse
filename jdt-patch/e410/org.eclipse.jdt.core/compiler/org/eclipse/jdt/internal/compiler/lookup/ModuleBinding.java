@@ -684,8 +684,8 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 			for (ModuleBinding moduleBinding : otherRelevantModules(declaringModuleNames)) {
 				if (!moduleBinding.isPackageLookupActive) {
 					PackageBinding nextBinding = parent != null 
-							? moduleBinding.getVisiblePackage(parent, singleName, true)
-							: moduleBinding.getVisiblePackage(compoundName, true);
+							? moduleBinding.getVisiblePackage(parent, singleName, false)
+							: moduleBinding.getVisiblePackage(compoundName, false);
 					currentBinding = SplitPackageBinding.combine(nextBinding, currentBinding, this);
 				}
 			}

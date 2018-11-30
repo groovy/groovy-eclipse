@@ -383,6 +383,10 @@ public class AbstractCompilerTest extends TestCase {
 			if (version.startsWith("1.8.0_")) {
 				int build = Integer.parseInt(version.substring("1.8.0_".length()));
 				reflectNestedClassUseDollar = build >= 171; 
+			} else if (version.startsWith("1.8.0-")) {
+				// Some versions start with 1.8.0- but don't have build qualifier.
+				// Just assume they are > 171 build. Nothing much can be done.
+				reflectNestedClassUseDollar = true;
 			} else {
 				throw new IllegalStateException("Unrecognized Java version: "+version);
 			}

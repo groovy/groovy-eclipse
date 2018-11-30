@@ -1,5 +1,5 @@
 # Turn on debug tracing for org.eclipse.jdt.core plugin
-org.eclipse.jdt.core/debug=true
+org.eclipse.jdt.core/debug=false
 
 # Reports buffer manager activity
 org.eclipse.jdt.core/debug/buffermanager=false

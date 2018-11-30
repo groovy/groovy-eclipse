@@ -752,7 +752,7 @@ public abstract class Scope {
 		} while (scope != null);
 		return (CompilationUnitScope) lastScope;
 	}
-	public final ModuleBinding module() {
+	public ModuleBinding module() {
 		return environment().module;
 	}
 	public boolean isLambdaScope() {

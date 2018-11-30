@@ -40,7 +40,7 @@ import junit.framework.Test;
 public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 
 	static {
-//		 TESTS_NAMES = new String[] { "test_npe_bug535107" };
+//		 TESTS_NAMES = new String[] { "testBug540067e" };
 		// TESTS_NUMBERS = new int[] { 1 };
 		// TESTS_RANGE = new int[] { 298, -1 };
 	}
@@ -162,8 +162,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			if (javacCommandLine == null) {
 				javacCommandLine = adjustForJavac(commandLine, null);
 			}
-			for (Object comp : javacCompilers) {
-				JavacCompiler javacCompiler = (JavacCompiler) comp;
+			for (JavacCompiler javacCompiler : javacCompilers) {
 				if (javacCompiler.compliance < ClassFileConstants.JDK9)
 					continue;
 				if (options.skip(javacCompiler)) {
@@ -240,8 +239,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			File outputDir = new File(OUTPUT_DIR);
 			final Set<String> outFiles = new HashSet<>();
 			walkOutFiles(output, outFiles, true);
-			for (Object comp : javacCompilers) {
-				JavacCompiler javacCompiler = (JavacCompiler) comp;
+			for (JavacCompiler javacCompiler : javacCompilers) {
 				if (javacCompiler.compliance < ClassFileConstants.JDK9)
 					continue;
 				JavacTestOptions.Excuse excuse = options.excuseFor(javacCompiler);
@@ -3632,11 +3630,7 @@ public void testBug521362_emptyFile() {
 			"	        ^^\n" + 
 			"The package p1 does not exist or is empty\n" + 
 			"----------\n" +
-			"----------\n" + 
-			"2. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/p1/X.java\n" + 
-			"Must declare a named package because this compilation unit is associated to the named module \'mod.one\'\n" + 
-			"----------\n" + 
-			"2 problems (2 errors)\n",
+			"1 problem (1 error)\n",
 			false,
 			"empty",
 			OUTPUT_DIR + File.separator + out);
@@ -5005,5 +4999,201 @@ public void testBug521362_emptyFile() {
 		        "",
 		        "",
 		        true);
+	}
+	public void testBug540067a() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "X.java", 
+				"package p;\n" +
+				"public class X {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p" + File.separator + "q", "Test.java", 
+				"/*nothing in it */");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "module-info.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "X.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "q" + File.separator + "Test.java");
+
+		runConformModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"",
+				false);
+	}
+	public void testBug540067b() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "X.java", 
+				"package p;\n" +
+				"public class X {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p" + File.separator + "q", "Test.java", 
+				"package p.q;");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "module-info.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "X.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "q" + File.separator + "Test.java");
+
+		runConformModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"",
+				false);
+	}
+	public void testBug540067c() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "X.java", 
+				"package p;\n" +
+				"public class X {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p" + File.separator + "q", "Test.java", 
+				"package p.q;\n"
+				+ "class Test {}");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "module-info.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "X.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "q" + File.separator + "Test.java");
+
+		runConformModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"",
+				false);
+	}
+	public void testBug540067d() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "X.java", 
+				"package p;\n" +
+				"public class X {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p" + File.separator + "q", "Test.java", 
+				"class Test {}");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "module-info.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "X.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "q" + File.separator + "Test.java");
+
+		runNegativeModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"----------\n" + 
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/p/q/Test.java (at line 1)\n" + 
+				"	class Test {}\n" + 
+				"	^\n" + 
+				"Must declare a named package because this compilation unit is associated to the named module \'mod.one\'\n" + 
+				"----------\n" + 
+				"1 problem (1 error)\n",
+				false,
+				"unnamed package is not allowed in named modules");
+	}
+	public void testBug540067e() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						" exports p;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "X.java", 
+				"package p;\n" +
+				"public class X {\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p" + File.separator + "q", "Test.java", 
+				"import java.lang.*;");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" -warn:-unused")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "module-info.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "X.java ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "q" + File.separator + "Test.java");
+
+		runNegativeModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"----------\n" + 
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/p/q/Test.java (at line 1)\n" + 
+				"	import java.lang.*;\n" + 
+				"	^\n" + 
+				"Must declare a named package because this compilation unit is associated to the named module \'mod.one\'\n" + 
+				"----------\n" + 
+				"1 problem (1 error)\n",
+				false,
+				"unnamed package is not allowed in named modules");
 	}
 }
