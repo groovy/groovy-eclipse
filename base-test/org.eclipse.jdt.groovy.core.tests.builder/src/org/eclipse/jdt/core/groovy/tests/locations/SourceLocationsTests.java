@@ -89,8 +89,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
                 assertEquals(0, range.getLength());
 
                 range = variant.getNameRange(); // should match original
-                assertEquals(((IMethod) children[i]).getNameRange().getOffset(), range.getOffset());
-                assertEquals(((IMethod) children[i]).getNameRange().getLength(), range.getLength());
+                assertEquals(((IMethod) children[i - 1]).getNameRange().getOffset(), range.getOffset());
+                assertEquals(((IMethod) children[i - 1]).getNameRange().getLength(), range.getLength());
 
                 // TODO: variant.getJavadocRange() should match original
 
@@ -404,7 +404,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
             "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n" +
-            "    System.out.println(\"Hello world\")\n" +
+            "    println 'hello world'\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -415,8 +415,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n" +
-            "    System.out.println(\"Hello world\")\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(String world) /*m0sb*/{\n" +
+            "    println \"hello $world\"\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -427,8 +427,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n" +
-            "    System.out.println(\"Hello world\")\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(world) /*m0sb*/{\n" +
+            "    println \"hello $world\"\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -439,8 +439,20 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n" +
-            "    System.out.println(\"Hello world\")\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(String world = 'world') /*m0sb*/{\n" +
+            "    println \"hello $world\"\n" +
+            "  }/*m0e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(one = \"1\", String two = \"2\") /*m0sb*/{\n" +
+            "    println 'hello world'\n" +
             "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
@@ -492,18 +504,6 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "package p1\n" +
             "x()\n def x() {}\n\ndef y() {}\ny()";
         assertScript(source, createCompUnit("p1", "Hello", source), "x()", "\ny()");
-    }
-
-    @Test
-    public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
-        String source =
-            "package p1\n" +
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
-            "  /*m0s*/public/*m0em*/ /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n" +
-            "    System.out.println(\"Hello world\")\n" +
-            "  }/*m0e*/\n" +
-            "}/*t0e*/\n";
-        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test

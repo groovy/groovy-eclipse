@@ -1351,13 +1351,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         variantDecl.javadoc = constructorDecl.javadoc;
                         variantDecl.modifiers = constructorDecl.modifiers;
                         variantDecl.selector = constructorDecl.selector;
+                        variantDecl.sourceEnd = constructorDecl.sourceEnd;
+                        variantDecl.sourceStart = constructorDecl.sourceStart;
                         variantDecl.thrownExceptions = constructorDecl.thrownExceptions;
 
                         variantDecl.declarationSourceStart = 0;
                         variantDecl.declarationSourceEnd = -1;
                         variantDecl.modifiersSourceStart = 0;
-                        variantDecl.sourceStart = 0;
-                        variantDecl.sourceEnd = -1;
                         variantDecl.bodyStart = 0;
                         variantDecl.bodyEnd = -1;
 
