@@ -223,8 +223,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         if (call.getEnd() > 0) {
             if (call.getNameStart() > 0) {
                 if (call.isUsingAnonymousInnerClass()) {
-                    check(call.getType().getUnresolvedSuperClass());
-                    checkTypes(call.getType().getUnresolvedInterfaces());
+                    check(call.getType().getUnresolvedSuperClass(false));
+                    checkTypes(call.getType().getUnresolvedInterfaces(false));
                 } else {
                     checkNameRange(call);
                 }

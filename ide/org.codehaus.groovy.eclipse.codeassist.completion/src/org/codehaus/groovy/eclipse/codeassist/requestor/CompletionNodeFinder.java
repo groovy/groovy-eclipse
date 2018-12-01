@@ -516,12 +516,17 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
         // TODO: Does name range include type parameters?
 
-        if (expression.isUsingAnonymousInnerClass()) {
-            visitClass(constructorType); // see https://github.com/groovy/groovy-eclipse/issues/395
-
+        if (expression.isSpecialCall()) {
+            AnnotatedNode enclosing = declarationStack.getLast();
+            constructorType = enclosing.getDeclaringClass(); // "this" type
+            if (expression.isSuperCall())
+                constructorType = constructorType.getUnresolvedSuperClass(false);
+        } else if (expression.isUsingAnonymousInnerClass()) {
             constructorType = expression.getType().getUnresolvedSuperClass(false);
             if (constructorType == ClassHelper.OBJECT_TYPE)
                 constructorType = expression.getType().getUnresolvedInterfaces(false)[0];
+
+            visitClass(expression.getType()); // see https://github.com/groovy/groovy-eclipse/issues/395
         }
 
         Expression arguments = expression.getArguments();

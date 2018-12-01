@@ -257,18 +257,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(classType, null, node.getType(), TypeConfidence.EXACT, scope);
 
         } else if (node instanceof ConstructorCallExpression) {
-            ConstructorCallExpression constructorCall = (ConstructorCallExpression) node;
-            if (constructorCall.isThisCall()) {
+            ConstructorCallExpression call = (ConstructorCallExpression) node;
+            if (call.isSpecialCall()) {
+                nodeType = VariableScope.VOID_CLASS_NODE;
                 declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
-            } else if (constructorCall.isSuperCall()) {
-                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass().getUnresolvedSuperClass();
-            } else if (constructorCall.isUsingAnonymousInnerClass()) {
-              //declaringType = declaringType.getUnresolvedSuperClass() || declaringType.getUnresolvedInterfaces()[0]?
+                if (call.isSuperCall()) declaringType = declaringType.getUnresolvedSuperClass(false);
             }
 
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
-            if (declaredConstructors.size() > 1 && constructorCall.getArguments() instanceof ArgumentListExpression) {
+            if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 if (callTypes.size() > 1) {
                     // non-static inner types may have extra argument for enclosing type

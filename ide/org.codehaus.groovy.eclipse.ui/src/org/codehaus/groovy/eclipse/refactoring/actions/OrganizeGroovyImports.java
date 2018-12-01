@@ -509,7 +509,7 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitConstructorCallExpression(ConstructorCallExpression expression) {
-            if (expression.getEnd() > 0 && !expression.isUsingAnonymousInnerClass()) {
+            if (expression.getEnd() > 0 && !expression.isSpecialCall() && !expression.isUsingAnonymousInnerClass()) {
                 handleTypeReference(expression.getType(), false);
             }
             super.visitConstructorCallExpression(expression);

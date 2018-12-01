@@ -965,10 +965,11 @@ assert primaryExprType != null && dependentExprType != null;
             final ClassNode type = node.getType();
             if (node.isUsingAnonymousInnerClass()) {
                 // in "new Type() { ... }", Type is super class or interface
-                Stream<ClassNode> superTypes = Stream.concat(
-                    Stream.of(type.getUnresolvedSuperClass()),
-                    Stream.of(type.getUnresolvedInterfaces()));
-                superTypes.filter(t -> t.getEnd() > 0).forEach(this::visitClassReference);
+                if (type.getSuperClass() != VariableScope.OBJECT_CLASS_NODE) {
+                    visitClassReference(type.getUnresolvedSuperClass(false));
+                } else {
+                    visitClassReference(type.getInterfaces()[0]);
+                }
             } else if (!node.isSpecialCall()) {
                 visitClassReference(type);
             }

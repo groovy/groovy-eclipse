@@ -15,11 +15,8 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.stream.Stream;
-
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -52,7 +49,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
  */
 public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
-    private final Deque<MethodNode> enclosingMethods = new ArrayDeque<>();
+    private MethodNode enclosingMethod; // for CCEs
     private final ISourceElementRequestor requestor;
 
     public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
@@ -95,6 +92,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitMethod(MethodNode node) {
+        MethodNode meth = enclosingMethod; enclosingMethod = node;
         if (node != runMethod && node.getEnd() > 0) {
             if (isNotEmpty(node.getGenericsTypes())) {
                 visitTypeParameters(node.getGenericsTypes(), null);
@@ -107,9 +105,8 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 }
             }
         }
-        enclosingMethods.push(node);
         super.visitMethod(node);
-        enclosingMethods.pop();
+        enclosingMethod = meth;
     }
 
     @Override
@@ -173,21 +170,21 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     public void visitConstructorCallExpression(ConstructorCallExpression expression) {
         ClassNode type = expression.getType();
         if (expression.isSpecialCall()) {
-            type = enclosingMethods.peek().getDeclaringClass();
+            type = enclosingMethod.getDeclaringClass();
             if (expression.isSuperCall()) {
-                type = type.getUnresolvedSuperClass();
+                type = type.getUnresolvedSuperClass(false);
             }
         } else if (expression.isUsingAnonymousInnerClass()) {
-            type = Stream.concat(
-                Stream.of(type.getUnresolvedSuperClass()),
-                Stream.of(type.getUnresolvedInterfaces())
-            ).filter(t -> t.getEnd() > 0).findFirst().get();
+            type = expression.getType().getUnresolvedSuperClass(false);
+            if (type == ClassHelper.OBJECT_TYPE) {
+                type = expression.getType().getUnresolvedInterfaces(false)[0];
+            }
         }
 
         char[] typeName = type.getName().toCharArray();
         // we don't know how many arguments the ctor has, so go up to 9
         for (int i = 0; i <= 9; i += 1) {
-            requestor.acceptConstructorReference(typeName, i, expression.getStart());
+            requestor.acceptConstructorReference(typeName, i, expression.getNameStart());
         }
 
         // handle idiomatic constructor call like "new Foo(bar:..., 'baz':...)" -- index references to "setBar", etc.
@@ -241,7 +238,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 expression.getProperty() instanceof ConstantExpression) {
             int offset = expression.getProperty().getStart();
             String name = expression.getProperty().getText();
-            visitNameReference(AccessorSupport.ISSER , name, offset);
+            visitNameReference(AccessorSupport.ISSER,  name, offset);
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.SETTER, name, offset);
         }

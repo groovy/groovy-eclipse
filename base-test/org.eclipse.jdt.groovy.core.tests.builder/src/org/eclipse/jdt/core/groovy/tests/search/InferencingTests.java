@@ -876,7 +876,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("this()");
         int end = start + "this()".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertType(contents, start, end, "java.lang.Void");
         assertDeclaringType(contents, start, end, "C");
     }
 
@@ -891,7 +891,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("super()");
         int end = start + "super()".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertType(contents, start, end, "java.lang.Void");
         assertDeclaringType(contents, start, end, "java.util.HashMap");
     }
 
