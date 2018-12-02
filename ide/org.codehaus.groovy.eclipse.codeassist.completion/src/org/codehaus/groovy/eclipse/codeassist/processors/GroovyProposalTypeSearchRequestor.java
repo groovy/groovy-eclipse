@@ -17,12 +17,12 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.beans.Introspector;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -80,6 +81,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
+import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
 import org.eclipse.jdt.internal.corext.util.TypeFilter;
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
@@ -108,7 +110,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private int foundConstructorsCount;
 
     private ObjectVector acceptedTypes;
-    private Set<String> acceptedPackages;
+    private CharArrayMap<?> acceptedPackages;
     private boolean shouldAcceptConstructors;
     private ObjectVector acceptedConstructors;
 
@@ -187,8 +189,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
 
         if (acceptedPackages == null)
-            acceptedPackages = new HashSet<>();
-        acceptedPackages.add(String.valueOf(packageName));
+            acceptedPackages = new CharArrayMap<>();
+        acceptedPackages.put(packageName, null);
     }
 
     @Override
@@ -314,6 +316,29 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
             }
 
+            // if call is "this(...)" then skip proposals for enclosing constructor
+            if (context.completionNode instanceof ConstructorCallExpression &&
+                ((ConstructorCallExpression) context.completionNode).isThisCall() &&
+                context.containingDeclaration.getDeclaringClass().getDeclaredConstructors().stream()
+                    .filter(ctor -> ctor.getOriginal() == context.containingDeclaration).anyMatch(ctor -> {
+                        if (ctor.getParameters().length == parameterCount) {
+                            if (parameterCount == 0) {
+                                return true;
+                            }
+                            if (parameterTypes != null) {
+                                char[][] enclosingParamTypes = new char[parameterCount][];
+                                for (int i = 0; i < parameterCount; i += 1) { // TODO: Exclude generics and qualifiers?
+                                    enclosingParamTypes[i] = ctor.getParameters()[i].getType().toString(false).toCharArray();
+                                }
+                                return CharOperation.equals(enclosingParamTypes, parameterTypes);
+                            }
+                        }
+                        return false;
+                    })
+            ) {
+                return;
+            }
+
             if (acceptedConstructors == null)
                 acceptedConstructors = new ObjectVector();
             acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
@@ -330,10 +355,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     List<ICompletionProposal> processAcceptedPackages() {
         checkCancel();
-        List<ICompletionProposal> proposals = new LinkedList<>();
-        if (acceptedPackages != null && !acceptedPackages.isEmpty()) {
-            for (String packageNameStr : acceptedPackages) {
-                char[] packageName = packageNameStr.toCharArray();
+
+        if (acceptedPackages == null) {
+            return Collections.emptyList();
+        }
+
+        return acceptedPackages.keys().stream()
+            .map(packageName -> {
                 GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
                 proposal.setDeclarationSignature(packageName);
                 proposal.setPackageName(packageName);
@@ -341,14 +369,15 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 proposal.setReplaceRange(offset, context.completionLocation);
                 proposal.setTokenRange(offset, context.completionLocation);
                 proposal.setRelevance(Relevance.LOWEST.getRelevance());
-
+                return proposal;
+            })
+            .map(proposal -> {
                 LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
                 javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
                 javaProposal.setRelevance(proposal.getRelevance());
-                proposals.add(javaProposal);
-            }
-        }
-        return proposals;
+                return javaProposal;
+            })
+            .collect(Collectors.toCollection(() -> new LinkedList<>()));
     }
 
     /**
@@ -514,12 +543,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     List<ICompletionProposal> processAcceptedConstructors(Set<String> usedParams, JDTResolver resolver) {
+        checkCancel();
+
         int n;
         if (acceptedConstructors == null || (n = acceptedConstructors.size()) == 0) {
             return Collections.emptyList();
         }
-
-        checkCancel();
 
         List<ICompletionProposal> proposals = new LinkedList<>();
         try {
@@ -539,7 +568,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 if (constructorProposal != null) {
                     proposals.add(constructorProposal);
 
-                    if (contextOnly) {
+                    if (contextOnly && !((ConstructorCallExpression) context.completionNode).isSpecialCall()) {
                         // also add all of the constructor arguments for constructors with no args and when it is the only constructor in the class
                         ClassNode resolved = resolver.resolve(String.valueOf(ctor.fullyQualifiedName));
                         if (resolved != null) {
@@ -707,7 +736,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             parameterTypeSigs = CharOperation.NO_CHAR_CHAR;
         } else {
             parameterTypeSigs = new char[parameterTypes.length][];
-            for (int i = 0; i < parameterTypes.length; i++) {
+            for (int i = 0; i < parameterTypes.length; i += 1) {
                 char[] copy = new char[parameterTypes[i].length];
                 System.arraycopy(parameterTypes[i], 0, copy, 0, copy.length);
                 CharOperation.replace(copy, '/', '.');

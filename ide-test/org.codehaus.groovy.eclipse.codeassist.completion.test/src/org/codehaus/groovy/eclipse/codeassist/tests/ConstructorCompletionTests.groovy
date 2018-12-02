@@ -514,6 +514,182 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'One', 'One(Number n)', '(null)')
     }
 
+    @Test @NotYetImplemented
+    void testConstructorCompletionSelfConstructorCall0() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(bar) {
+                th
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'th'))
+        proposalExists(proposals, 'this(Object bar)', 0)
+        proposalExists(proposals, 'this()', 1)
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall1() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall2() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(arg) {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(Object arg)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall3() {
+        String contents = '''\
+            class Foo {
+              Foo(arg) {
+              }
+              Foo() {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(Object arg)', 1)
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall4() {
+        String contents = '''\
+            class Foo {
+              Foo(... args) {
+              }
+              Foo() {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(Object... args)', 1)
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall5() {
+        String contents = '''\
+            class Foo {
+              Foo(String param, other = 'value') {
+              }
+              Foo() {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(String param, Object other)', 1)
+        proposalExists(proposals, 'Foo(String param)', 1)
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall6() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(java.lang.String param, other = 'value') {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(String param, Object other)', 0)
+        proposalExists(proposals, 'Foo(String param)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test @NotYetImplemented
+    void testConstructorCompletionSuperConstructorCall0() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+                su
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'su'))
+        proposalExists(proposals, 'Object()', 0)
+        proposalExists(proposals, 'super()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSuperConstructorCall1() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+                super()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Object()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSuperConstructorCall2() {
+        String contents = '''\
+            class Bar {
+              Bar() {}
+              Bar(arg) {}
+              Bar(... args) {}
+            }
+            class Foo extends Bar {
+              Foo() {
+                super()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Bar()', 1)
+        proposalExists(proposals, 'Bar(Object arg)', 1)
+        proposalExists(proposals, 'Bar(Object... args)', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSuperConstructorCall3() {
+        String contents = '''\
+            class Bar {
+              def baz
+            }
+            class Foo extends Bar {
+              Foo() {
+                super()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'baz : __', 0)
+        proposalExists(proposals, 'Bar()', 1)
+    }
+
     //--------------------------------------------------------------------------
 
     @Test
