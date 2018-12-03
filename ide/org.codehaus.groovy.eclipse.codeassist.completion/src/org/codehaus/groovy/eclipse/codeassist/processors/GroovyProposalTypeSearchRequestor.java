@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -111,7 +112,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private ObjectVector acceptedTypes;
     private CharArrayMap<?> acceptedPackages;
-    private boolean shouldAcceptConstructors;
     private ObjectVector acceptedConstructors;
 
     /** Array of simple name, fully-qualified name pairs. Default imports should be included (aka BigDecimal, etc.). */
@@ -162,7 +162,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         this.isImport = (context.location == ContentAssistLocation.IMPORT);
         // if contextOnly then do not insert any text, only show context information
         this.contextOnly = (context.location == ContentAssistLocation.METHOD_CONTEXT);
-        this.shouldAcceptConstructors = (context.location == ContentAssistLocation.METHOD_CONTEXT || context.location == ContentAssistLocation.CONSTRUCTOR);
         this.completionExpression = (contextOnly ? context.getPerceivedCompletionExpression().replace('$', '.') : context.getQualifiedCompletionExpression());
 
         this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
@@ -250,99 +249,98 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     public void acceptConstructor(int modifiers, char[] simpleTypeName, int parameterCount, char[] signature, char[][] parameterTypes,
         char[][] parameterNames, int typeModifiers, char[] packageName, int extraFlags, String path, AccessRestriction accessRestriction) {
 
-        if (shouldAcceptConstructors) {
-            // do not check cancellation for every ctor to avoid performance loss
-            if ((foundConstructorsCount % (CHECK_CANCEL_FREQUENCY)) == 0)
-                checkCancel();
-            foundConstructorsCount += 1;
+        // do not check cancellation for every ctor to avoid performance loss
+        if ((foundConstructorsCount % (CHECK_CANCEL_FREQUENCY)) == 0)
+            checkCancel();
+        foundConstructorsCount += 1;
 
-            if (Flags.isEnum(typeModifiers) || Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers)) {
-                return;
-            }
-            if (options.checkDeprecation && (Flags.isDeprecated(modifiers) || Flags.isDeprecated(typeModifiers))) {
-                return;
-            }
-            if (options.checkVisibility && !Flags.isPublic(typeModifiers)) {
-                if (Flags.isPrivate(typeModifiers))
-                    return;
-
-                if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
-                    return;
-            }
-            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
-                return;
-            }
-
-            int accessibility = IAccessRule.K_ACCESSIBLE;
-            if (accessRestriction != null) {
-                switch (accessRestriction.getProblemId()) {
-                case IProblem.DiscouragedReference:
-                    if (options.checkDiscouragedReference) {
-                        return;
-                    }
-                    accessibility = IAccessRule.K_DISCOURAGED;
-                    break;
-                case IProblem.ForbiddenReference:
-                    if (options.checkForbiddenReference) {
-                        return;
-                    }
-                    accessibility = IAccessRule.K_NON_ACCESSIBLE;
-                    break;
-                }
-            }
-
-            String typeName; // TODO: Figure out why inner types are found from Groovy but not Java
-            if (!CharOperation.contains('$', simpleTypeName) &&
-                    (path.lastIndexOf(typeName = String.valueOf(simpleTypeName)) < 0 ||
-                    !path.matches(".+\\b" + Pattern.quote(typeName) + "(?:\\.\\w+)?"))) {
-                try {
-                    IResource r = ResourcesPlugin.getWorkspace().getRoot().findMember(new Path(path));
-                    if (r != null) {
-                        IJavaElement el = r.getAdapter(IJavaElement.class);
-                        if (el != null && el.getElementType() == IJavaElement.COMPILATION_UNIT) {
-                            ICompilationUnit cu = (ICompilationUnit) el;
-                            for (IType type : cu.getAllTypes()) {
-                                if (type.getElementName().equals(typeName)) {
-                                    if (type.isMember()) {
-                                        simpleTypeName = type.getTypeQualifiedName().toCharArray();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    GroovyContentAssist.logError(e);
-                }
-            }
-
-            // if call is "this(...)" then skip proposals for enclosing constructor
-            if (context.completionNode instanceof ConstructorCallExpression &&
-                ((ConstructorCallExpression) context.completionNode).isThisCall() &&
-                context.containingDeclaration.getDeclaringClass().getDeclaredConstructors().stream()
-                    .filter(ctor -> ctor.getOriginal() == context.containingDeclaration).anyMatch(ctor -> {
-                        if (ctor.getParameters().length == parameterCount) {
-                            if (parameterCount == 0) {
-                                return true;
-                            }
-                            if (parameterTypes != null) {
-                                char[][] enclosingParamTypes = new char[parameterCount][];
-                                for (int i = 0; i < parameterCount; i += 1) { // TODO: Exclude generics and qualifiers?
-                                    enclosingParamTypes[i] = ctor.getParameters()[i].getType().toString(false).toCharArray();
-                                }
-                                return CharOperation.equals(enclosingParamTypes, parameterTypes);
-                            }
-                        }
-                        return false;
-                    })
-            ) {
-                return;
-            }
-
-            if (acceptedConstructors == null)
-                acceptedConstructors = new ObjectVector();
-            acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
+        if (Flags.isEnum(typeModifiers) || Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers)) {
+            return;
         }
+        if (options.checkDeprecation && (Flags.isDeprecated(modifiers) || Flags.isDeprecated(typeModifiers))) {
+            return;
+        }
+        if (options.checkVisibility && !Flags.isPublic(typeModifiers)) {
+            if (Flags.isPrivate(typeModifiers))
+                return;
+
+            if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                return;
+        }
+        if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+            return;
+        }
+
+        int accessibility = IAccessRule.K_ACCESSIBLE;
+        if (accessRestriction != null) {
+            switch (accessRestriction.getProblemId()) {
+            case IProblem.DiscouragedReference:
+                if (options.checkDiscouragedReference) {
+                    return;
+                }
+                accessibility = IAccessRule.K_DISCOURAGED;
+                break;
+            case IProblem.ForbiddenReference:
+                if (options.checkForbiddenReference) {
+                    return;
+                }
+                accessibility = IAccessRule.K_NON_ACCESSIBLE;
+                break;
+            }
+        }
+
+        String typeName; // TODO: Figure out why inner types are found from Groovy but not Java
+        if (!CharOperation.contains('$', simpleTypeName) &&
+                (path.lastIndexOf(typeName = String.valueOf(simpleTypeName)) < 0 ||
+                !path.matches(".+\\b" + Pattern.quote(typeName) + "(?:\\.\\w+)?"))) {
+            try {
+                IResource r = ResourcesPlugin.getWorkspace().getRoot().findMember(new Path(path));
+                if (r != null) {
+                    IJavaElement el = r.getAdapter(IJavaElement.class);
+                    if (el != null && el.getElementType() == IJavaElement.COMPILATION_UNIT) {
+                        ICompilationUnit cu = (ICompilationUnit) el;
+                        for (IType type : cu.getAllTypes()) {
+                            if (type.getElementName().equals(typeName)) {
+                                if (type.isMember()) {
+                                    simpleTypeName = type.getTypeQualifiedName().toCharArray();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                GroovyContentAssist.logError(e);
+            }
+        }
+
+        boolean isThisCall = (context.completionNode instanceof ConstructorCallExpression && ((ConstructorCallExpression) context.completionNode).isThisCall()) ||
+            (context.location == ContentAssistLocation.STATEMENT && context.completionNode instanceof VariableExpression && "this".startsWith(context.completionExpression));
+
+        // if call is "this(...)" then skip proposals for enclosing constructor
+        if (isThisCall && context.containingDeclaration.getDeclaringClass().getDeclaredConstructors().stream()
+            .filter(ctor -> ctor.getOriginal() == context.containingDeclaration).anyMatch(ctor -> {
+                if (ctor.getParameters().length == parameterCount) {
+                    if (parameterCount == 0) {
+                        return true;
+                    }
+                    if (parameterTypes != null) {
+                        char[][] enclosingParamTypes = new char[parameterCount][];
+                        for (int i = 0; i < parameterCount; i += 1) { // TODO: Exclude generics and qualifiers?
+                            enclosingParamTypes[i] = ctor.getParameters()[i].getType().toString(false).toCharArray();
+                        }
+                        return CharOperation.equals(enclosingParamTypes, parameterTypes);
+                    }
+                }
+                return false;
+            })
+        ) {
+            return;
+        }
+
+        if (acceptedConstructors == null)
+            acceptedConstructors = new ObjectVector();
+        acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
     }
 
     private void checkCancel() {
@@ -607,6 +605,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private ICompletionProposal proposeConstructor(AcceptedCtor ctor) {
+        char[] proposalName = ctor.simpleTypeName;
         char[] completionExpressionChars = completionExpression.toCharArray();
         int completionOffset = offset, kind = CompletionProposal.CONSTRUCTOR_INVOCATION;
         if (contextOnly) {
@@ -616,11 +615,17 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
             kind = CompletionProposal.METHOD_REF;
             completionOffset = ((MethodInfoContentAssistContext) context).methodNameEnd;
+        } else if (context.location == ContentAssistLocation.STATEMENT) {
+            if ("this".startsWith(completionExpression)) {
+                proposalName = "this".toCharArray();
+            } else if ("super".startsWith(completionExpression)) {
+                proposalName = "super".toCharArray();
+            }
         }
 
         GroovyCompletionProposal proposal = createProposal(kind, completionOffset);
         proposal.setIsContructor(true);
-        proposal.setName(ctor.simpleTypeName);
+        proposal.setName(proposalName);
         proposal.setPackageName(ctor.packageName);
         proposal.setTypeName(ctor.qualifiedTypeName);
         proposal.setDeclarationPackageName(ctor.packageName);
@@ -643,7 +648,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
             // create nested completion for type name (and possible qualifier or import statement)
             GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, -1);
-            typeProposal.setName(ctor.simpleTypeName);
+            typeProposal.setName(proposal.getName());
             typeProposal.setPackageName(ctor.packageName);
             typeProposal.setTypeName(ctor.qualifiedTypeName);
             typeProposal.setSignature(proposal.getDeclarationSignature());
@@ -679,7 +684,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                         outerTypeProposal.setCompletion(Signature.toCharArray(outerTypeProposal.getSignature()));
                     }
                 }
-            } else if (lastDotIndex < 0 && !isImported(qualifierAndSimpleTypeName(ctor.packageName, ctor.qualifiedTypeName)[0], ctor.simpleTypeName)) {
+            } else if (lastDotIndex < 0 && context.location != ContentAssistLocation.STATEMENT &&
+                !isImported(qualifierAndSimpleTypeName(ctor.packageName, ctor.qualifiedTypeName)[0], ctor.simpleTypeName)) {
+
                 typeProposal.setCompletion(Signature.toCharArray(typeProposal.getSignature()));
             }
         }

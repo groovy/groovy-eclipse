@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Variable;
@@ -37,6 +38,9 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -81,8 +85,18 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             break;
         case STATEMENT:
             context = findCtorCallContext(context);
-            if (context == null)
+            if (context == null) {
                 return Collections.emptyList();
+            } else if (context == getContext()) {
+                String typeName;
+                if ("this".startsWith(context.completionExpression)) {
+                    typeName = context.getEnclosingGroovyType().getName();
+                } else /*if ("super".startsWith(context.completionExpression))*/ {
+                    typeName = context.getEnclosingGroovyType().getSuperClass().getName();
+                }
+                completionChars = typeName.replace('$', '.').toCharArray();
+                break;
+            }
             // falls through
         case METHOD_CONTEXT:
             completionChars = context.getPerceivedCompletionNode().getText().replace('$', '.').toCharArray();
@@ -157,6 +171,23 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
     }
 
     protected static ContentAssistContext findCtorCallContext(ContentAssistContext context) {
+        // check for constructor declaration with prefix of "this" or "super" as first statement/expression
+        if (context.containingDeclaration instanceof ConstructorNode && context.completionNode instanceof VariableExpression &&
+                !context.completionExpression.isEmpty() && ("this".startsWith(context.completionExpression) ||
+                                                            "super".startsWith(context.completionExpression))) {
+            Statement code = ((ConstructorNode) context.containingDeclaration).getCode();
+            if (code instanceof BlockStatement) {
+                for (Statement stmt : ((BlockStatement) code).getStatements()) {
+                    if (stmt.getStart() > 0) {
+                        if (stmt instanceof ExpressionStatement && ((ExpressionStatement) stmt).getExpression() == context.completionNode) {
+                            return context;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         if (context.completionNode instanceof VariableExpression || context.completionNode instanceof ConstantExpression) {
             ASTNode containingCode = context.containingCodeBlock;
             if (containingCode instanceof MethodNode) {

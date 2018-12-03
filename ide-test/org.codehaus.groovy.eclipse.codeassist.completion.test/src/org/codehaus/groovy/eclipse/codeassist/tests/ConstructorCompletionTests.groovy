@@ -514,7 +514,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'One', 'One(Number n)', '(null)')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionSelfConstructorCall0() {
         String contents = '''\
             class Foo {
@@ -626,7 +626,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Foo()', 1)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionSuperConstructorCall0() {
         String contents = '''\
             class Foo {
