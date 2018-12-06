@@ -2163,12 +2163,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int type = node.getType();
         switch (type) {
             case EXPR:
-                // GRECLIPSE edit
+                // GRECLIPSE edit -- enclosing parentheses
                 //return expression(node.getFirstChild());
-                // binary expression may not have correct sloc, so try to set the correct one here
                 Expression expression = expression(node.getFirstChild());
-                if (expression instanceof BinaryExpression) {
-                    // binary expression with parens
+                int row = node.getLine(), col = node.getColumn();
+                int offset = locations.findOffset(row, col);
+                if (offset < expression.getStart()) {
                     configureAST(expression, node);
                 }
                 return expression;
@@ -2839,17 +2839,34 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }*/
         Expression rightExpression = expression(rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, token, rightExpression);
-        // GRECLIPSE edit
+        // GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
         //configureAST(binaryExpression, node);
-        // sloc for binary expressions was only the operator
-        // must include the left and right expressions
-        // unfortunately, this does not include any surrounding parens
-        binaryExpression.setStart(leftExpression.getStart());
-        binaryExpression.setLineNumber(leftExpression.getLineNumber());
-        binaryExpression.setColumnNumber(leftExpression.getColumnNumber());
-        binaryExpression.setEnd(rightExpression.getEnd());
-        binaryExpression.setLastLineNumber(rightExpression.getLastLineNumber());
-        binaryExpression.setLastColumnNumber(rightExpression.getLastColumnNumber());
+        Long offsets = leftExpression.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            int offset = (int) (offsets >> 32);
+            int[] row_col = locations.getRowCol(offset);
+
+            binaryExpression.setStart(offset);
+            binaryExpression.setLineNumber(row_col[0]);
+            binaryExpression.setColumnNumber(row_col[1]);
+        } else {
+            binaryExpression.setStart(leftExpression.getStart());
+            binaryExpression.setLineNumber(leftExpression.getLineNumber());
+            binaryExpression.setColumnNumber(leftExpression.getColumnNumber());
+        }
+        offsets = rightExpression.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            int offset = (int) (offsets & 0xFFFFFFFF);
+            int[] row_col = locations.getRowCol(offset);
+
+            binaryExpression.setEnd(offset);
+            binaryExpression.setLastLineNumber(row_col[0]);
+            binaryExpression.setLastColumnNumber(row_col[1]);
+        } else {
+            binaryExpression.setEnd(rightExpression.getEnd());
+            binaryExpression.setLastLineNumber(rightExpression.getLastLineNumber());
+            binaryExpression.setLastColumnNumber(rightExpression.getLastColumnNumber());
+        }
         // GRECLIPSE end
         return binaryExpression;
     }
@@ -3657,7 +3674,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected void configureAST(ASTNode node, AST ast) {
         if (ast == null)
-            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null Node");
+            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
         /* GRECLIPSE edit
         node.setColumnNumber(ast.getColumn());
         node.setLineNumber(ast.getLine());
@@ -3666,36 +3683,28 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             node.setLastLineNumber(((GroovySourceAST) ast).getLineLast());
         }
         */
-        int startcol = ast.getColumn();
-        int startline = ast.getLine();
-        int startoffset = locations.findOffset(startline, startcol);
-        int lastcol;
-        int lastline;
-        int endoffset;
+        final int offset = locations.findOffset(ast.getLine(), ast.getColumn());
 
         if (ast instanceof GroovySourceAST) {
-            GroovySourceAST groovySourceAST = (GroovySourceAST) ast;
-            lastcol = groovySourceAST.getColumnLast();
-            lastline = groovySourceAST.getLineLast();
+            int last_row = ((GroovySourceAST) ast).getLineLast();
+            int last_col = ((GroovySourceAST) ast).getColumnLast();
             if ((ast.getType() == UNARY_MINUS || ast.getType() == UNARY_PLUS) &&
                     node instanceof ConstantExpression) { // extend for literal
-                lastline = ((GroovySourceAST) ast.getFirstChild()).getLineLast();
-                lastcol = ((GroovySourceAST) ast.getFirstChild()).getColumnLast();
+                last_row = ((GroovySourceAST) ast.getFirstChild()).getLineLast();
+                last_col = ((GroovySourceAST) ast.getFirstChild()).getColumnLast();
             }
-            endoffset = locations.findOffset(lastline, lastcol);
+            final int end_offset = locations.findOffset(last_row, last_col);
 
-            // GRECLIPSE-768: Only re-set the sloc for these kinds of expressions
-            // if the new sloc is larger than the old.  When nested inside of a
-            // BinaryExpression, their slocs would be wrong instead, they are set
-            // according to their childrens' slocs.
+            // GRECLIPSE-768: Only reset the sloc for these kinds of expressions
+            // if the new sloc is wider than the old.
             if ((node instanceof BinaryExpression ||
                     node instanceof TernaryExpression ||
                     node instanceof MapEntryExpression ||
                     node instanceof MapExpression ||
                     node instanceof CastExpression ||
                     node instanceof MethodCall) &&
-                    node.getStart() <= startoffset && node.getEnd() >= endoffset) {
-                // sloc has already been set and it is larger than this one
+                    node.getStart() <= offset && node.getEnd() >= end_offset) {
+                // sloc has already been set and is same as or wider than ast's
                 return;
             }
 
@@ -3704,22 +3713,20 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // one being set, then ignore it and don't reset.  Also numbers can
             // result in an expression node that includes trailing whitespaces.
             if ((node instanceof VariableExpression || (node instanceof ConstantExpression && ast.getType() == EXPR)) &&
-                    node.getEnd() > 0 && startoffset <= node.getStart() && endoffset >= node.getEnd()) {
+                    node.getEnd() > 0 && offset <= node.getStart() && end_offset >= node.getEnd()) {
+                node.putNodeMetaData("source.offsets", Long.valueOf(((long) offset << 32) | end_offset));
                 return;
             }
 
-            node.setLastColumnNumber(lastcol);
-            node.setLastLineNumber(lastline);
-            node.setEnd(endoffset);
+            node.setLastColumnNumber(last_col);
+            node.setLastLineNumber(last_row);
+            node.setEnd(end_offset);
         }
 
-        node.setColumnNumber(startcol);
-        node.setLineNumber(startline);
-        node.setStart(startoffset);
+        node.setColumnNumber(ast.getColumn());
+        node.setLineNumber(ast.getLine());
+        node.setStart(offset);
         // GRECLIPSE end
-
-        // TODO we could one day store the Antlr AST on the Groovy AST
-        // node.setCSTNode(ast);
     }
 
     // GRECLIPSE add

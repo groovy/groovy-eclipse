@@ -29,6 +29,7 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertToSingleLineStri
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertVariableToFieldProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToConstantProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToLocalProposal;
+import org.codehaus.groovy.eclipse.quickassist.proposals.InlineLocalVariableProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.RemoveSpuriousSemicolonsProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTypeProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal;
@@ -91,6 +92,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             new ExtractToConstantProposal(false),
             new ExtractToLocalProposal(true),
             new ExtractToLocalProposal(false),
+            new InlineLocalVariableProposal(),
             new RemoveSpuriousSemicolonsProposal(),
             new ReplaceDefWithStaticTypeProposal(),
             new SplitVariableDeclAndInitProposal(),

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 package org.codehaus.groovy.eclipse.quickfix.test
 
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+
+import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistContext
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal
@@ -31,6 +34,7 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertToSingleLineStri
 import org.codehaus.groovy.eclipse.quickassist.proposals.ConvertVariableToFieldProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToConstantProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.ExtractToLocalProposal
+import org.codehaus.groovy.eclipse.quickassist.proposals.InlineLocalVariableProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.RemoveSpuriousSemicolonsProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTypeProposal
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal
@@ -629,7 +633,387 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring1() {
+    void testInlineLocalVariable1() {
+        String original = '''\
+            def x = 1
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            1.intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable2() {
+        String original = '''\
+            def x = 1;;
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            1.intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable3() {
+        String original = '''\
+            def x = 1\t\t
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            1.intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable4() {
+        String original = '''\
+            def x = 1 // comment
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            // comment
+            1.intValue()
+            '''.stripIndent()
+
+        if (!isParrotParser()) {
+            expected = '''\
+            1.intValue()
+            '''.stripIndent()
+        }
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable5() {
+        String original = '''\
+            def x = 1 + 1
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (1 + 1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable6() {
+        String original = '''\
+            def x = (1 + 1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (1 + 1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable7() {
+        String original = '''\
+            def x = (1) + (1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((1) + (1)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable8() {
+        String original = '''\
+            def x = a.b.c()
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            a.b.c().intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable9() {
+        String original = '''\
+            def x = (a.b).c()
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (a.b).c().intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable10() {
+        String original = '''\
+            def x = (a.b) + c()
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((a.b) + c()).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable11() {
+        String original = '''\
+            def x = { -> }
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            { -> }.intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable12() {
+        String original = '''\
+            def x = 1
+            x.intValue()
+            def y = x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            1.intValue()
+            def y = 1.intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable13() {
+        String original = '''\
+            def x = 1
+            x.intValue()
+            if (x == 42) {
+              def y = x.intValue()
+              println y
+            } else {
+              x.multiply(x)
+            }
+            '''.stripIndent()
+
+        String expected = '''\
+            1.intValue()
+            if (1 == 42) {
+              def y = 1.intValue()
+              println y
+            } else {
+              1.multiply(1)
+            }
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable14() {
+        String original = '''\
+            def x = 1
+            def y = x = 2
+            def sum = x + y
+            '''.stripIndent()
+
+        String expected = '''\
+            def x = 1
+            def sum = x + (x = 2)
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'y', new InlineLocalVariableProposal())
+    }
+
+    @Test @NotYetImplemented
+    void testInlineLocalVariable15() {
+        String original = '''\
+            def x = 1, y = 2
+            def sum = x + y
+            '''.stripIndent()
+
+        String expected = '''\
+            def y = 2
+            def sum = 1 + y
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test @NotYetImplemented
+    void testInlineLocalVariable16() {
+        String original = '''\
+            def x = 1, y = 2
+            def sum = x + y
+            '''.stripIndent()
+
+        String expected = '''\
+            def x = 1
+            def sum = x + 2
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'y', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable1() {
+        String contents = '''\
+            def x
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable2() {
+        String contents = '''\
+            def x = 1
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable3() {
+        String contents = '''\
+            def x = 1
+            x += 1
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable4() {
+        String contents = '''\
+            def x = 1
+            def y = x++
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable4a() {
+        String contents = '''\
+            def x = 1
+            def y = x--
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable5() {
+        String contents = '''\
+            def x = 1
+            def y = ++x
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable5a() {
+        String contents = '''\
+            def x = 1
+            def y = --x
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable6() {
+        String contents = '''\
+            def x = 1
+            print x
+            x = 2
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable7() {
+        String contents = '''\
+            for (int x = 0; x < n; x += 1) {
+            }
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable8() {
+        String contents = '''\
+            for (Iterator it = [].iterator(); it.hasNext();) {
+              def item = it.next()
+            }
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('it'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable9() {
+        String contents = '''\
+            try (def x = getClass().getResourceAsStream('')) {
+            }
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable10() {
+        String contents = '''\
+            def meth(int x = 0) {
+              x + 1
+            }
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable11() {
+        String contents = '''\
+            class X {
+            int x = 0
+              def meth() {
+                x + 1
+              }
+            }
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testNoInlineLocalVariable12() {
+        String contents = '''\
+            def (x, y) = [1, 2]
+            def sum = x + y
+            '''.stripIndent()
+        assertProposalNotOffered(contents, contents.indexOf('x'), 1, new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testAssignStatementToNewLocalVariable1() {
         assertConversion(
             'import java.awt.Point\n' + 'class Foo {\n' + '\tvoid bar(){\n' + 'new Point(1,2)\n' + '}}',
             'import java.awt.Point\n' + 'class Foo {\n' + '\tvoid bar(){\n' + 'def temp = new Point(1,2)\n' + '}}',
@@ -637,7 +1021,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring2() {
+    void testAssignStatementToNewLocalVariable2() {
         assertConversion(
             'import java.awt.Point\n' + 'class Foo {\n' + '\tvoid bar(int a){\n' + 'bar(5)\n' + '}}',
             'import java.awt.Point\n' + 'class Foo {\n' + '\tvoid bar(int a){\n' + 'def bar = bar(5)\n' + '}}',
@@ -645,7 +1029,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring3() {
+    void testAssignStatementToNewLocalVariable3() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(int a){\n' + '2 + 2\n' + '}}',
             'class Foo {\n' + '\tvoid bar(int a){\n' + 'def temp = 2 + 2\n' + '}}',
@@ -653,7 +1037,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring4() {
+    void testAssignStatementToNewLocalVariable4() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(){\n' + 'false\n' + '}}',
             'class Foo {\n' + '\tvoid bar(){\n' + 'def false1 = false\n' + '}}',
@@ -661,7 +1045,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring5() {
+    void testAssignStatementToNewLocalVariable5() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(){\n' + 'def false1 = true\n' + 'false\n' + '}}',
             'class Foo {\n' + '\tvoid bar(){\n' + 'def false1 = true\n' + 'def false2 = false\n' + '}}',
@@ -669,7 +1053,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring6() {
+    void testAssignStatementToNewLocalVariable6() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(int a){\n' + '2\n' + '}}',
             'class Foo {\n' + '\tvoid bar(int a){\n' + 'def name = 2\n' + '}}',
@@ -677,7 +1061,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring7() {
+    void testAssignStatementToNewLocalVariable7() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(int a){\n' + 'a == 2\n' + '}}',
             'class Foo {\n' + '\tvoid bar(int a){\n' + 'def temp = a == 2\n' + '}}',
@@ -685,7 +1069,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring8() {
+    void testAssignStatementToNewLocalVariable8() {
         assertConversion(
             'class Foo {\n' + '\tvoid bar(int a){\n' + '[1, 2]\n' + '}}',
             'class Foo {\n' + '\tvoid bar(int a){\n' + 'def list = [1, 2]\n' + '}}',
@@ -693,7 +1077,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementToLocalRefactoring9() {
+    void testAssignStatementToNewLocalVariable9() {
         assertConversion(
             'class Foo {\n' + 'int bar(int a, int b){\n' + 'def aB\n' + 'a + b\n' + '}}',
             'class Foo {\n' + 'int bar(int a, int b){\n' + 'def aB\n' + 'def temp = a + b\n' + '}}',
@@ -701,7 +1085,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testAssignStatementLocalRefactoring10() {
+    void testAssignStatementToNewLocalVariable10() {
         assertConversion(
             'class Foo { def myClosure = { "foo".indexOf("qwerty") } }',
             'class Foo { def myClosure = { def indexOf = "foo".indexOf("qwerty") } }',
@@ -709,14 +1093,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/393
-    void testAssignStatementLocalRefactoring11() {
+    void testAssignStatementToNewLocalVariable11() {
         String contents = 'class Foo { def bar() { return System.out } }'
         int offset = contents.indexOf('System.out')
         assertProposalNotOffered(contents, offset, offset + 'System.out'.length(), new AssignStatementToNewLocalProposal())
     }
 
     @Test
-    void testExtractToLocalRefactoring_1() {
+    void testExtractToLocalVariable1() {
         assertConversion(
             ExtractLocalTestsData.getTest1In(),
             ExtractLocalTestsData.getTest1Out(),
@@ -725,7 +1109,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_2() {
+    void testExtractToLocalVariable2() {
         assertConversion(
             ExtractLocalTestsData.getTest2In(),
             ExtractLocalTestsData.getTest2Out(),
@@ -734,7 +1118,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_3() {
+    void testExtractToLocalVariable3() {
         assertConversion(
             ExtractLocalTestsData.getTest3In(),
             ExtractLocalTestsData.getTest3Out(),
@@ -743,7 +1127,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_4() {
+    void testExtractToLocalVariable4() {
         assertConversion(
             ExtractLocalTestsData.getTest4In(),
             ExtractLocalTestsData.getTest4Out(),
@@ -752,7 +1136,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_5() {
+    void testExtractToLocalVariable5() {
         assertConversion(
             ExtractLocalTestsData.getTest5In(),
             ExtractLocalTestsData.getTest5Out(),
@@ -761,7 +1145,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_6() {
+    void testExtractToLocalVariable6() {
         assertConversion(
             ExtractLocalTestsData.getTest6In(),
             ExtractLocalTestsData.getTest6Out(),
@@ -770,7 +1154,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_7() {
+    void testExtractToLocalVariable7() {
         assertConversion(
             ExtractLocalTestsData.getTest7In(),
             ExtractLocalTestsData.getTest7Out(),
@@ -779,7 +1163,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_8() {
+    void testExtractToLocalVariable8() {
         assertConversion(
             ExtractLocalTestsData.getTest8In(),
             ExtractLocalTestsData.getTest8Out(),
@@ -788,7 +1172,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_9() {
+    void testExtractToLocalVariable9() {
         assertConversion(
             ExtractLocalTestsData.getTest9In(),
             ExtractLocalTestsData.getTest9Out(),
@@ -797,7 +1181,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_10() {
+    void testExtractToLocalVariable10() {
         assertConversion(
             ExtractLocalTestsData.getTest10In(),
             ExtractLocalTestsData.getTest10Out(),
@@ -806,7 +1190,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_10a() {
+    void testExtractToLocalVariable10a() {
         assertConversion(
             ExtractLocalTestsData.getTest10In(),
             ExtractLocalTestsData.getTest10Out(),
@@ -815,7 +1199,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_10b() {
+    void testExtractToLocalVariable10b() {
         assertConversion(
             ExtractLocalTestsData.getTest10In(),
             ExtractLocalTestsData.getTest10Out(),
@@ -824,7 +1208,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_11() {
+    void testExtractToLocalVariable11() {
         assertConversion(
             ExtractLocalTestsData.getTest11In(),
             ExtractLocalTestsData.getTest11Out(),
@@ -833,7 +1217,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_12() {
+    void testExtractToLocalVariable12() {
         assertConversion(
             ExtractLocalTestsData.getTest12In(),
             ExtractLocalTestsData.getTest12Out(),
@@ -842,7 +1226,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testExtractToLocalRefactoring_13() {
+    void testExtractToLocalVariable13() {
         assertConversion(
             ExtractLocalTestsData.getTest13In(),
             ExtractLocalTestsData.getTest13Out(),
