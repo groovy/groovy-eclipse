@@ -79,7 +79,9 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	private static final int REPORTED_POTENTIAL_LEAK = 32;
 	// a location independent definitive problem has been reported against this resource:
 	private static final int REPORTED_DEFINITIVE_LEAK = 64;
-	
+	// a local declarations that acts as the element variable of a foreach loop (should never suggest to use t-w-r):
+	private static final int FOREACH_ELEMENT_VAR = 128;
+
 	public static boolean TEST_372319 = false; // see https://bugs.eclipse.org/372319
 
 	/**
@@ -449,9 +451,9 @@ public class FakedTrackingVariable extends LocalDeclaration {
 					if (rhsTrackVar.originalBinding != null)
 						local.closeTracker = rhsTrackVar;			//		a.: let fresh LHS share it
 					if (rhsTrackVar.currentAssignment == location) {
-						// pre-set tracker from lhs - passed from outside?
+						// pre-set tracker from lhs - passed from outside (or foreach)?
 						// now it's a fresh resource
-						rhsTrackVar.globalClosingState &= ~(SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE);
+						rhsTrackVar.globalClosingState &= ~(SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE|FOREACH_ELEMENT_VAR);
 					}
 				} else {
 					if (rhs instanceof AllocationExpression || rhs instanceof ConditionalExpression) {
@@ -484,7 +486,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 						}
 					}
 					// re-assigning from a fresh value, mark as not-closed again:
-					if ((previousTracker.globalClosingState & (SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE)) == 0
+					if ((previousTracker.globalClosingState & (SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE|FOREACH_ELEMENT_VAR)) == 0
 							&& flowInfo.hasNullInfoFor(previousTracker.binding)) // avoid spilling info into a branch that doesn't see the corresponding resource
 						flowInfo.markAsDefinitelyNull(previousTracker.binding);
 					local.closeTracker = analyseCloseableExpression(flowInfo, flowContext, local, location, rhs, previousTracker);
@@ -494,7 +496,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 				if (rhsTrackVar != null) {
 					local.closeTracker = rhsTrackVar;
 					// a fresh resource, mark as not-closed:
-					if ((rhsTrackVar.globalClosingState & (SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE)) == 0)
+					if ((rhsTrackVar.globalClosingState & (SHARED_WITH_OUTSIDE|OWNED_BY_OUTSIDE|FOREACH_ELEMENT_VAR)) == 0)
 						flowInfo.markAsDefinitelyNull(rhsTrackVar.binding);
 // TODO(stephan): this might be useful, but I could not find a test case for it: 
 //					if (flowContext.initsOnFinally != null)
@@ -753,6 +755,12 @@ public class FakedTrackingVariable extends LocalDeclaration {
 		return flowInfo;
 	}
 
+	public static void markForeachElementVar(LocalDeclaration local) {
+		if (local.binding != null && local.binding.closeTracker != null) {
+			local.binding.closeTracker.globalClosingState |= FOREACH_ELEMENT_VAR;
+		}
+	}
+
 	/**
 	 * Iterator for a set of FakedTrackingVariable, which dispenses the elements 
 	 * according to the priorities defined by enum {@link Stage}.
@@ -987,7 +995,7 @@ public class FakedTrackingVariable extends LocalDeclaration {
 	}
 
 	public void reportExplicitClosing(ProblemReporter problemReporter) {
-		if ((this.globalClosingState & (OWNED_BY_OUTSIDE|REPORTED_EXPLICIT_CLOSE)) == 0) { // can't use t-w-r for OWNED_BY_OUTSIDE
+		if ((this.globalClosingState & (OWNED_BY_OUTSIDE|REPORTED_EXPLICIT_CLOSE|FOREACH_ELEMENT_VAR)) == 0) { // can't use t-w-r for OWNED_BY_OUTSIDE
 			this.globalClosingState |= REPORTED_EXPLICIT_CLOSE;
 			problemReporter.explicitlyClosedAutoCloseable(this);
 		}

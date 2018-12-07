@@ -5437,4 +5437,63 @@ public void testBug473317() {
 		"----------\n",
 		compilerOptions);
 }
+public void testBug541705() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_7) return; // uses diamond
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runner.testFiles = new String[] {
+		"Test.java",
+		"import java.util.*;\n" +
+		"import java.util.zip.*;\n" +
+		"import java.io.*;\n" +
+		"public class Test {\n" +
+		"	private static HashMap<String, ZipFile> fgZipFileCache = new HashMap<>(5);\n" + 
+		"	public static void closeArchives() {\n" + 
+		"		synchronized (fgZipFileCache) {\n" + 
+		"			for (ZipFile file : fgZipFileCache.values()) {\n" +
+		"				synchronized (file) {\n" + 
+		"					try {\n" + 
+		"						file.close();\n" + 
+		"					} catch (IOException e) {\n" + 
+		"						System.out.println(e);\n" + 
+		"					}\n" + 
+		"				}\n" + 
+		"			}\n" + 
+		"			fgZipFileCache.clear();\n" + 
+		"		}\n" + 
+		"	}\n" +
+		"}\n"
+	};
+	runner.runConformTest();
+}
+public void testBug541705b() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) return; // variable used in t-w-r
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportExplicitlyClosedAutoCloseable, CompilerOptions.ERROR);
+	runner.testFiles = new String[] {
+		"Test.java",
+		"import java.util.*;\n" +
+		"import java.util.zip.*;\n" +
+		"import java.io.*;\n" +
+		"public class Test {\n" +
+		"	private static HashMap<String, ZipFile> fgZipFileCache = new HashMap<>(5);\n" + 
+		"	public static void closeArchives() {\n" + 
+		"		synchronized (fgZipFileCache) {\n" + 
+		"			for (ZipFile file : fgZipFileCache.values()) {\n" + 
+		"				synchronized (file) {\n" + 
+		"					try (file) {\n" + 
+		"					} catch (IOException e) {\n" + 
+		"						System.out.println(e);\n" + 
+		"					}\n" + 
+		"				}\n" + 
+		"			}\n" + 
+		"			fgZipFileCache.clear();\n" + 
+		"		}\n" + 
+		"	}\n" +
+		"}\n"
+	};
+	runner.runConformTest();
+}
 }
