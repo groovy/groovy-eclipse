@@ -382,6 +382,94 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
+    @Test
+    public void testCompileStatic1() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "", "Outer",
+            "import groovy.transform.CompileStatic;\n" +
+            "@CompileStatic \n" +
+            "int fact(int n) {\n" +
+            "  if (n==1) {return 1;\n" +
+            "  } else {return n+fact(n-1);}\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("Outer");
+        expectingNoProblems();
+    }
+
+    @Test // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+    public void testCompileStatic2() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "", "A",
+            "class A {\n" +
+            "  public void profile(String name, groovy.lang.Closure<?> callable) {}\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("A");
+
+        env.addGroovyClass(paths[1], "", "B",
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "\n" +
+            "	def foo() {\n" +
+            "		profile(\"creating plugin manager with classes\") {\n" +
+            "			System.out.println('abc');\n" +
+            "		}\n" +
+            "	}\n" +
+            "\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("B", "B$_foo_closure1");
+    }
+
+    @Test
+    public void testCompileStatic3() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "", "Foo",
+            "class Foo {\n" +
+            "	@groovy.transform.CompileStatic\n" +
+            "	public static void main(String[] args) {\n" +
+            "		((GroovyObject)new Foo());\n" +
+            "	}\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/771
+    public void testCompileStatic771() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addClass(env.addPackageFragmentRoot(paths[0], "src2", null, "bin2"), "foobar", "DefaultRunnable",
+            "package foobar;\n" +
+            "public class DefaultRunnable implements Runnable {\n" +
+            "  @Override public void run() {\n" +
+            "  }\n" +
+            "}");
+
+        env.addGroovyClass(paths[1], "foobar", "UtilityClass",
+            "package foobar\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "public final class UtilityClass {\n" +
+            "  public static void doIt(Runnable runner = null) {\n" +
+            "    runner = runner ?: new DefaultRunnable()\n" + // DefaultRunnable is a Java type, so it's not in the CompileUnit
+            "  }\n" +
+            "}");
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+    }
+
     @Test @Ignore
     public void testCompileStatic_1505() throws Exception {
         JDTResolver.recordInstances = true;
@@ -417,21 +505,21 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         assertNotNull(jcn);
         System.out.println("JDT ClassNode=" +jcn);
-//			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
-//			System.out.println(jcn2);
+//          JDTClassNode jcn2 = jdtr.getCachedNode("List2");
+//          System.out.println(jcn2);
 
         ClassNode listcn = new ClassNode(java.util.Collection.class);
         VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
         listcn.lazyClassInit();
         System.out.println("Groovy ClassNode=" +listcn);
 
-//			IJavaProject ijp = env.getJavaProject("Project");
-//			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
-//					.getCompilationUnit();
+//          IJavaProject ijp = env.getJavaProject("Project");
+//          GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
+//                  .getCompilationUnit();
 
         // now find the class reference
-//			ClassNode cn = unit.getModuleNode().getClasses().get(1);
-//			System.out.println(cn);
+//          ClassNode cn = unit.getModuleNode().getClasses().get(1);
+//          System.out.println(cn);
 
         // Compare java.util.List from JDTClassNode and List2 from groovy
         compareClassNodes(jcn.redirect(),listcn.redirect(),0);
@@ -461,20 +549,20 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "@CompileStatic\n" +
             "void method(String message) {\n" +
             "   Collection<Integer> cs;\n" +
-//					"   List<Integer> ls = new ArrayList<Integer>();\n" +
-//					"   ls.add(123);\n" +
-//					"   ls.add('abc');\n" +
+//                  "   List<Integer> ls = new ArrayList<Integer>();\n" +
+//                  "   ls.add(123);\n" +
+//                  "   ls.add('abc');\n" +
             // GRECLIPSE-1511 code
-            "	List<String> second = []\n" +
-            "	List<String> artefactResources2\n" +
-            "	second.addAll(artefactResources2)\n" +
+            "   List<String> second = []\n" +
+            "   List<String> artefactResources2\n" +
+            "   second.addAll(artefactResources2)\n" +
             "}\n" +
             "interface ListOfFile extends ArrayList<File> {\n" +
             "}"
         );
 
         incrementalBuild(paths[0]);
-//			expectingCompiledClasses("Foo","List2");
+//          expectingCompiledClasses("Foo","List2");
         expectingNoProblems();
 
         // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
@@ -485,22 +573,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         assertNotNull(jcn);
         System.out.println("JDT ClassNode=" +jcn);
-//			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
-//			System.out.println(jcn2);
+//          JDTClassNode jcn2 = jdtr.getCachedNode("List2");
+//          System.out.println(jcn2);
 
-//			List<File> C = new ArrayList<File>();
+//          List<File> C = new ArrayList<File>();
         ClassNode listcn = new ClassNode(java.util.Collection.class);
         VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
         listcn.lazyClassInit();
         System.out.println("Groovy ClassNode=" +listcn);
 
-//			IJavaProject ijp = env.getJavaProject("Project");
-//			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
-//					.getCompilationUnit();
+//          IJavaProject ijp = env.getJavaProject("Project");
+//          GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
+//                  .getCompilationUnit();
 
         // now find the class reference
-//			ClassNode cn = unit.getModuleNode().getClasses().get(1);
-//			System.out.println(cn);
+//          ClassNode cn = unit.getModuleNode().getClasses().get(1);
+//          System.out.println(cn);
 
         // Compare java.util.List from JDTClassNode and List2 from groovy
         compareClassNodes(jcn.redirect(),listcn.redirect(),0);
@@ -572,27 +660,25 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
-        JDTResolver.recordInstances = true;
+    public void testCompileStatic_MapEachClosure() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
-        env.addGroovyClass(paths[1], "", "Foo",
-            "import groovy.transform.CompileStatic\n" +
-            "class Foo {\n" +
-            "@CompileStatic\n" +
-            "private populateSourceDirectories() {\n" +
-            "  List<File> pluginDependencies\n" +
-            "  for (zip in pluginDependencies) {\n" +
-            "    registerPluginZipWithScope(zip);\n" +
+        env.addGroovyClass(paths[1], "", "Demo",
+            "@groovy.transform.CompileStatic\n" +
+            "class Demo {\n" +
+            "  void doit() {\n" +
+            "    def c = {\n" +
+            "      Map<String, String> data = [:]\n" +
+            "      Map<String, Set<String>> otherData = [:]\n" +
+            "      data.each { String k, String v ->\n" +
+            "        def foo = otherData.get(k)\n" +
+            "      }\n" +
+            "    }\n" +
             "  }\n" +
-            "}\n" +
-            "private void registerPluginZipWithScope(File pluginzip) {}\n" +
-            "}\n");
+            "}");
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
-        expectingCompiledClasses("Foo");
-        // TODO: compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
     }
 
     @Test
@@ -609,6 +695,30 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    foo(pluginDependencies);\n" +
             "  }\n" +
             "  private void foo(Iterable<File> iterable) {}\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingNoProblems();
+        expectingCompiledClasses("Foo");
+        // TODO: compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+    }
+
+    @Test
+    public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
+        JDTResolver.recordInstances = true;
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "", "Foo",
+            "import groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "@CompileStatic\n" +
+            "private populateSourceDirectories() {\n" +
+            "  List<File> pluginDependencies\n" +
+            "  for (zip in pluginDependencies) {\n" +
+            "    registerPluginZipWithScope(zip);\n" +
+            "  }\n" +
+            "}\n" +
+            "private void registerPluginZipWithScope(File pluginzip) {}\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -641,92 +751,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
         expectingCompiledClasses("BuildSettings");
         // TODO: compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-    }
-
-    @Test
-    public void testCompileStatic() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "Outer",
-            "import groovy.transform.CompileStatic;\n" +
-            "@CompileStatic \n" +
-            "int fact(int n) {\n" +
-            "  if (n==1) {return 1;\n" +
-            "  } else {return n+fact(n-1);}\n" +
-            "}\n");
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("Outer");
-        expectingNoProblems();
-    }
-
-    @Test // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
-    public void testCompileStatic2() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "A",
-            "class A {\n" +
-            "  public void profile(String name, groovy.lang.Closure<?> callable) {}\n" +
-            "}\n");
-
-        incrementalBuild(paths[0]);
-        expectingNoProblems();
-        expectingCompiledClasses("A");
-
-        env.addGroovyClass(paths[1], "", "B",
-            "@groovy.transform.CompileStatic\n" +
-            "class B extends A {\n" +
-            "\n" +
-            "	def foo() {\n" +
-            "		profile(\"creating plugin manager with classes\") {\n" +
-            "			System.out.println('abc');\n" +
-            "		}\n" +
-            "	}\n" +
-            "\n" +
-            "}\n");
-
-        incrementalBuild(paths[0]);
-        expectingNoProblems();
-        expectingCompiledClasses("B", "B$_foo_closure1");
-    }
-
-    @Test
-    public void testCompileStatic3() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "Foo",
-            "class Foo {\n" +
-            "	@groovy.transform.CompileStatic\n" +
-            "	public static void main(String[] args) {\n" +
-            "		((GroovyObject)new Foo());\n" +
-            "	}\n" +
-            "}\n");
-
-        incrementalBuild(paths[0]);
-        expectingNoProblems();
-        expectingCompiledClasses("Foo");
-    }
-
-    @Test
-    public void testCompileStatic_MapEachClosure() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "Demo",
-            "@groovy.transform.CompileStatic\n" +
-            "class Demo {\n" +
-            "  void doit() {\n" +
-            "    def c = {\n" +
-            "      Map<String, String> data = [:]\n" +
-            "      Map<String, Set<String>> otherData = [:]\n" +
-            "      data.each { String k, String v ->\n" +
-            "        def foo = otherData.get(k)\n" +
-            "      }\n" +
-            "    }\n" +
-            "  }\n" +
-            "}");
-
-        incrementalBuild(paths[0]);
-        expectingNoProblems();
     }
 
     @Test

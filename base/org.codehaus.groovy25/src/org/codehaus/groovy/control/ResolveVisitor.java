@@ -378,6 +378,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         resolveOrFail(type, "", node);
     }
 
+    // GRECLIPSE add
+    public ClassNode resolve(String name) {
+        return null;
+    }
+    // GRECLIPSE end
+
     // GRECLIPSE private->protected
     protected boolean resolve(ClassNode type) {
         return resolve(type, true, true, true);

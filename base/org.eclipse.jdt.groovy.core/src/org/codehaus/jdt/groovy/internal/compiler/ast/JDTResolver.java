@@ -253,6 +253,7 @@ public class JDTResolver extends ResolveVisitor {
         // TODO: Reset things like currentMethod, currImportNode, etc.?
     }
 
+    @Override
     public ClassNode resolve(String name) {
         if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
             ClassNode commonType = COMMON_TYPES.get(name);

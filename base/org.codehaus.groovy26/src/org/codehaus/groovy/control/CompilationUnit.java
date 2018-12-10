@@ -899,13 +899,17 @@ public class CompilationUnit extends ProcessingUnit {
                 // try inner classes
                 cn = cu.getGeneratedInnerClass(name);
                 if (cn!=null) return cn;
+                // GRECLIPSE add -- try JDT model
+                cn = getResolveVisitor().resolve(name);
+                if (cn!=null) return cn;
+                // GRECLIPSE end
                 // try class loader classes
                 try {
                     cn = ClassHelper.make(
                             cu.getClassLoader().loadClass(name,false,true),
                             false);
                 } catch (Exception e) {
-                    throw new GroovyBugError(e);
+                    throw new GroovyBugError(/*GRECLIPSE add*/e.toString(),/*GRECLIPSE end*/e);
                 }
                 return cn;
             }
@@ -926,7 +930,6 @@ public class CompilationUnit extends ProcessingUnit {
                 ClassNode b = getClassNode(arg2.replace('/', '.'));
                 return getCommonSuperClassNode(a,b).getName().replace('.','/');
             }
-
         };
     }
 
