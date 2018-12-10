@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
-
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,7 +46,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "2. ERROR in Foo.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
-            "\t                                         " + (isParrotParser() ? " ^^^^^^^^^^^^^^^^^^^^^" : "^^^^^^^^^^^^^^^^^^^^^^^") + "\n" +
+            "\t                                          ^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase(). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }

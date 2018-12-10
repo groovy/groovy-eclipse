@@ -20,10 +20,18 @@ import java.util.function.Consumer;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
+import org.codehaus.groovy.ast.expr.BooleanExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
+import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssistProposal2;
 import org.codehaus.groovy.syntax.Types;
@@ -80,15 +88,50 @@ public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
     }
 
     private String getValueExpression() {
-        String value = context.getNodeText(variableDeclaration.getRightExpression());
-        if (variableDeclaration.getRightExpression() instanceof BinaryExpression) {
-            BinaryExpression valExp = (BinaryExpression) variableDeclaration.getRightExpression();
-            if (valExp.getStart() == startOffset(valExp.getLeftExpression()) ||
-                    valExp.getEnd() == endOffset(valExp.getRightExpression())) {
-                value = "(" + value + ")";
+        Expression valueExpression = variableDeclaration.getRightExpression();
+
+        boolean needsParens = false;
+        if (valueExpression instanceof BinaryExpression) {
+            BinaryExpression expr = (BinaryExpression) valueExpression;
+        if (expr.getOperation().getType() != Types.LEFT_SQUARE_BRACKET)
+            if (expr.getStart() == startOffset(expr.getLeftExpression()) ||
+                    expr.getEnd() == endOffset(expr.getRightExpression())) {
+                needsParens = true;
             }
+        } else if (valueExpression instanceof TernaryExpression) {
+            TernaryExpression expr = (TernaryExpression) valueExpression;
+            if (expr.getStart() == startOffset(expr.getBooleanExpression()) ||
+                    expr.getEnd() == endOffset(expr.getFalseExpression())) {
+                needsParens = true;
+            }
+        } else if (valueExpression instanceof CastExpression) {
+            CastExpression expr = (CastExpression) valueExpression;
+            if ((expr.isCoerce() && expr.getStart() == startOffset(expr.getExpression())) ||
+                    (!expr.isCoerce() && expr.getEnd() == endOffset(expr.getExpression()))) {
+                needsParens = true;
+            }
+        } else if (valueExpression instanceof RangeExpression) {
+            RangeExpression expr = (RangeExpression) valueExpression;
+            if (expr.getStart() == startOffset(expr.getFrom()) || expr.getEnd() == endOffset(expr.getTo())) {
+                needsParens = true;
+            }
+        } else if (valueExpression instanceof PostfixExpression) {
+            needsParens = (valueExpression.getStart() == startOffset(((PostfixExpression) valueExpression).getExpression()));
+        } else if (valueExpression instanceof PrefixExpression) {
+            needsParens = (valueExpression.getEnd() == endOffset(((PrefixExpression) valueExpression).getExpression()));
+        } else if (valueExpression instanceof BooleanExpression) {
+            needsParens = (valueExpression.getEnd() == endOffset(((BooleanExpression) valueExpression).getExpression()));
+        } else if (valueExpression instanceof BitwiseNegationExpression) {
+            needsParens = (valueExpression.getEnd() == endOffset(((BitwiseNegationExpression) valueExpression).getExpression()));
+        } else if (valueExpression instanceof UnaryMinusExpression) {
+            needsParens = (valueExpression.getEnd() == endOffset(((UnaryMinusExpression) valueExpression).getExpression()));
+        } else if (valueExpression instanceof UnaryPlusExpression) {
+            needsParens = (valueExpression.getEnd() == endOffset(((UnaryPlusExpression) valueExpression).getExpression()));
         }
-        return value;
+
+        String valueString = context.getNodeText(valueExpression);
+        if (needsParens) valueString = "(" + valueString + ")";
+        return valueString;
     }
 
     @Override

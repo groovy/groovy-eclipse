@@ -796,6 +796,538 @@ final class QuickAssistTests extends QuickFixTestSuite {
     @Test
     void testInlineLocalVariable12() {
         String original = '''\
+            def x = y[0]
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            y[0].intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable13() {
+        String original = '''\
+            def x = (Object) y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((Object) y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable14() {
+        String original = '''\
+            def x = ((Object) y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((Object) y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable15() {
+        String original = '''\
+            def x = y as Object
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y as Object).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable16() {
+        String original = '''\
+            def x = (y as Object)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y as Object).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable17() {
+        String original = '''\
+            def x = y ?: 0
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y ?: 0).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable18() {
+        String original = '''\
+            def x = (y ?: 0)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y ?: 0).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable19() {
+        String original = '''\
+            def x = y ? 1 : 0
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y ? 1 : 0).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable20() {
+        String original = '''\
+            def x = (y ? 1 : 0)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y ? 1 : 0).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable21() {
+        String original = '''\
+            def x = (y) ? 1 : 0
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((y) ? 1 : 0).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable22() {
+        String original = '''\
+            def x = y ? 1 : (0)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y ? 1 : (0)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable23() {
+        String original = '''\
+            def x = (y) ? (1) : (0)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((y) ? (1) : (0)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable24() {
+        String original = '''\
+            def x = y++
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y++).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable25() {
+        String original = '''\
+            def x = (y++)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y++).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable26() {
+        String original = '''\
+            def x = y--
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y--).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable27() {
+        String original = '''\
+            def x = (y--)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (y--).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable28() {
+        String original = '''\
+            def x = ++y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (++y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable29() {
+        String original = '''\
+            def x = (++y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (++y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable30() {
+        String original = '''\
+            def x = --y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (--y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable31() {
+        String original = '''\
+            def x = (--y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (--y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable32() {
+        String original = '''\
+            def x = !y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (!y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable33() {
+        String original = '''\
+            def x = (!y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (!y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable34() {
+        String original = '''\
+            def x = -y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (-y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable35() {
+        String original = '''\
+            def x = (-y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (-y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable36() {
+        String original = '''\
+            def x = +y
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (+y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable37() {
+        String original = '''\
+            def x = (+y)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (+y).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable38() {
+        String original = '''\
+            def x = ~/y/
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (~/y/).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable39() {
+        String original = '''\
+            def x = (~/y/)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (~/y/).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable40() {
+        String original = '''\
+            def x = 0..1
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (0..1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable41() {
+        String original = '''\
+            def x = (0)..1
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((0)..1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable42() {
+        String original = '''\
+            def x = 0..(1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (0..(1)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable43() {
+        String original = '''\
+            def x = (0)..(1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((0)..(1)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable44() {
+        String original = '''\
+            def x = (0..1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (0..1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable45() {
+        String original = '''\
+            def x = ((0)..1)
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((0)..1).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable46() {
+        String original = '''\
+            def x = (0..(1))
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (0..(1)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable47() {
+        String original = '''\
+            def x = ((0)..(1))
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            ((0)..(1)).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable48() {
+        String original = '''\
+            def x = a[1]
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            a[1].intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable49() {
+        String original = '''\
+            def x = (a[1])
+            x.intValue()
+            '''.stripIndent()
+
+        String expected = '''\
+            (a[1]).intValue()
+            '''.stripIndent()
+
+        assertConversion(original, expected, 'x', new InlineLocalVariableProposal())
+    }
+
+    @Test
+    void testInlineLocalVariable50() {
+        String original = '''\
             def x = 1
             x.intValue()
             def y = x.intValue()
@@ -810,7 +1342,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testInlineLocalVariable13() {
+    void testInlineLocalVariable51() {
         String original = '''\
             def x = 1
             x.intValue()
@@ -836,7 +1368,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testInlineLocalVariable14() {
+    void testInlineLocalVariable52() {
         String original = '''\
             def x = 1
             def y = x = 2
@@ -852,7 +1384,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test @NotYetImplemented
-    void testInlineLocalVariable15() {
+    void testInlineLocalVariable53() {
         String original = '''\
             def x = 1, y = 2
             def sum = x + y
@@ -867,7 +1399,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test @NotYetImplemented
-    void testInlineLocalVariable16() {
+    void testInlineLocalVariable54() {
         String original = '''\
             def x = 1, y = 2
             def sum = x + y

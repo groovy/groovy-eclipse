@@ -1813,9 +1813,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             forParameter.setNameEnd(forParameter.getEnd());
             if (type.getStart() > 0) {
                 // set start of parameter node to start of parameter type
-                forParameter.setStart(type.getStart());
-                forParameter.setLineNumber(type.getLineNumber());
-                forParameter.setColumnNumber(type.getColumnNumber());
+                setSourceStart(forParameter, type);
             }
             // GRECLIPSE end
         }
@@ -2147,10 +2145,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Expression expression(AST node, boolean convertToConstant) {
-        // GRECLIPSE add
-        // error recovery for missing brackets
-        // determine if this error handling strategy is the right one to use
-        if (node == null) {
+        // GRECLIPSE add -- error recovery for missing brackets, missing statements and do
+        if (node == null || node.getType() == EMPTY_STAT || node.getType() == UNUSED_DO) {
             return new ConstantExpression("ERROR");
         }
         // GRECLIPSE end
@@ -2163,12 +2159,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             VariableExpression ve = (VariableExpression) expression;
             if (!ve.isThisExpression() && !ve.isSuperExpression()) {
                 expression = new ConstantExpression(ve.getName());
+                // GRECLIPSE add
+                configureAST(expression, node);
+                // GRECLIPSE end
             }
         }
-        // GRECLIPSE add -- expressionSwitch > blockExpression can return NULL for an empty GString expression
-        if (expression != ConstantExpression.NULL)
-        // GRECLIPSE end
+        /* GRECLIPSE edit -- each case of expressionSwitch does this already
         configureAST(expression, node);
+        */
         return expression;
     }
 
@@ -2293,6 +2291,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case LNOT:
                 NotExpression notExpression = new NotExpression(expression(node.getFirstChild()));
                 configureAST(notExpression, node);
+                // GRECLIPSE add -- sloc for node only covers the operator
+                setSourceEnd(notExpression, notExpression.getExpression());
+                // GRECLIPSE end
                 return notExpression;
 
             case UNARY_MINUS:
@@ -2301,6 +2302,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case BNOT:
                 BitwiseNegationExpression bitwiseNegationExpression = new BitwiseNegationExpression(expression(node.getFirstChild()));
                 configureAST(bitwiseNegationExpression, node);
+                // GRECLIPSE add -- sloc for node only covers the operator
+                setSourceEnd(bitwiseNegationExpression, bitwiseNegationExpression.getExpression());
+                // GRECLIPSE end
                 return bitwiseNegationExpression;
 
             case UNARY_PLUS:
@@ -2474,7 +2478,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 return binaryExpression(Types.KEYWORD_IN, node);
 
             case ANNOTATION:
-                return new AnnotationConstantExpression(annotation(node));
+                // GRECLIPSE edit
+                //return new AnnotationConstantExpression(annotation(node));
+                expression = new AnnotationConstantExpression(annotation(node));
+                configureAST(expression, node);
+                return expression;
+                // GRECLIPSE end
 
             case CLOSURE_LIST:
                 return closureListExpression(node);
@@ -2487,12 +2496,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 return anonymousInnerClassDef(node);
 
             default:
-                // GRECLIPSE add
-                return
-                // GRECLIPSE end
                 unknownAST(node);
         }
-        //return null;
+        return null;
     }
 
     private TupleExpression tupleExpression(AST node) {
@@ -2558,15 +2564,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             booleanExpression.setSourcePosition(base);
             ret = new TernaryExpression(booleanExpression, left, right);
         }
-        // GRECLIPSE edit -- sloc was for operator only; TODO include surrounding parentheses
+        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
         //configureAST(ret, ternaryNode);
-        ret.setStart(base.getStart());
-        ret.setLineNumber(base.getLineNumber());
-        ret.setColumnNumber(base.getColumnNumber());
-        Expression rhs = ((TernaryExpression) ret).getFalseExpression();
-        ret.setEnd(rhs.getEnd());
-        ret.setLastLineNumber(rhs.getLastLineNumber());
-        ret.setLastColumnNumber(rhs.getLastColumnNumber());
+        setSourceStart(ret, base);
+        setSourceEnd(ret, ((TernaryExpression) ret).getFalseExpression());
         // GRECLIPSE end
         return ret;
     }
@@ -2593,7 +2594,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression left = expression(node);
         Expression right = expression(node.getNextSibling());
         RangeExpression rangeExpression = new RangeExpression(left, right, inclusive);
-        configureAST(rangeExpression, rangeNode);
+        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        //configureAST(rangeExpression, rangeNode);
+        setSourceStart(rangeExpression, left);
+        setSourceEnd(rangeExpression, right);
+        // GRECLIPSE end
         return rangeExpression;
     }
 
@@ -2652,9 +2657,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return listExpression;
     }
 
-    /**
-     * Typically only used for map constructors I think?
-     */
     protected Expression mapExpression(AST mapNode) {
         List expressions = new ArrayList();
         AST elist = mapNode.getFirstChild();
@@ -2677,12 +2679,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         MapExpression mapExpression = new MapExpression(expressions);
         configureAST(mapExpression, mapNode);
-        // GRECLIPSE add
-        // GRECLIPSE-768 check to see if the sloc is definitely wrong for empty map expressions
-        // if so, make an educated guess that the text looks like '[:]'
+        // GRECLIPSE-768 -- fix for empty map expressions
         if (expressions.isEmpty() && mapExpression.getLength() <= 1) {
-            mapExpression.setEnd(mapExpression.getStart() + 3);
-            mapExpression.setLastColumnNumber(mapExpression.getColumnNumber() + 3);
+            if (getController() != null) {
+                try (Reader r = getController().getSource().getReader()) {
+                    r.skip(mapExpression.getStart());
+                    while (r.read() != ']') {
+                        mapExpression.setEnd(mapExpression.getEnd() + 1);
+                    }
+                    int[] row_col = locations.getRowCol(mapExpression.getEnd());
+                    mapExpression.setLastColumnNumber(row_col[1]);
+                    mapExpression.setLastLineNumber(row_col[0]);
+                } catch (Exception e) {
+                    // make an educated guess that map looks like '[:]'
+                    mapExpression.setEnd(mapExpression.getStart() + 3);
+                    mapExpression.setLastColumnNumber(mapExpression.getColumnNumber() + 3);
+                }
+            }
         }
         // GRECLIPSE end
         return mapExpression;
@@ -2702,17 +2715,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST valueNode = keyNode.getNextSibling();
             Expression valueExpression = expression(valueNode);
             MapEntryExpression mapEntryExpression = new MapEntryExpression(keyExpression, valueExpression);
-            // GRECLIPSE add
-            // GRECLIPSE-768 MapEntryExpression have the slocs of the ':' only; fix that here.
-            mapEntryExpression.setStart(keyExpression.getStart());
-            mapEntryExpression.setLineNumber(keyExpression.getLineNumber());
-            mapEntryExpression.setColumnNumber(keyExpression.getColumnNumber());
-            mapEntryExpression.setEnd(valueExpression.getEnd());
-            mapEntryExpression.setLastLineNumber(valueExpression.getLastLineNumber());
-            mapEntryExpression.setLastColumnNumber(valueExpression.getLastColumnNumber());
-            // potentially re-set the sloc if the 'real' one is more correct
+            // GRECLIPSE edit -- sloc for node only covers the ':'; must include the expressions
+            //configureAST(mapEntryExpression, node);
+            setSourceStart(mapEntryExpression, keyExpression);
+            setSourceEnd(mapEntryExpression, valueExpression);
             // GRECLIPSE end
-            configureAST(mapEntryExpression, node);
             return mapEntryExpression;
         }
     }
@@ -2728,7 +2735,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression rightExpression = new ClassExpression(type);
         configureAST(rightExpression, rightNode);
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.KEYWORD_INSTANCEOF, node), rightExpression);
-        configureAST(binaryExpression, node);
+        // GRECLIPSE edit -- sloc for node only covers the operator; must include the expressions
+        //configureAST(binaryExpression, node);
+        setSourceStart(binaryExpression, leftExpression);
+        setSourceEnd(binaryExpression, rightExpression);
+        // GRECLIPSE end
         return binaryExpression;
     }
 
@@ -2860,32 +2871,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, token, rightExpression);
         // GRECLIPSE edit -- sloc for node only covers the operator; must include the left and right expressions
         //configureAST(binaryExpression, node);
-        Long offsets = leftExpression.getNodeMetaData("source.offsets");
-        if (offsets != null) {
-            int offset = (int) (offsets >> 32);
-            int[] row_col = locations.getRowCol(offset);
-
-            binaryExpression.setStart(offset);
-            binaryExpression.setLineNumber(row_col[0]);
-            binaryExpression.setColumnNumber(row_col[1]);
-        } else {
-            binaryExpression.setStart(leftExpression.getStart());
-            binaryExpression.setLineNumber(leftExpression.getLineNumber());
-            binaryExpression.setColumnNumber(leftExpression.getColumnNumber());
-        }
-        offsets = rightExpression.getNodeMetaData("source.offsets");
-        if (offsets != null) {
-            int offset = (int) (offsets & 0xFFFFFFFF);
-            int[] row_col = locations.getRowCol(offset);
-
-            binaryExpression.setEnd(offset);
-            binaryExpression.setLastLineNumber(row_col[0]);
-            binaryExpression.setLastColumnNumber(row_col[1]);
-        } else {
-            binaryExpression.setEnd(rightExpression.getEnd());
-            binaryExpression.setLastLineNumber(rightExpression.getLastLineNumber());
-            binaryExpression.setLastColumnNumber(rightExpression.getLastColumnNumber());
-        }
+        setSourceStart(binaryExpression, leftExpression);
+        setSourceEnd(binaryExpression, rightExpression);
         // GRECLIPSE end
         return binaryExpression;
     }
@@ -2894,6 +2881,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression expression = expression(node.getFirstChild());
         PrefixExpression prefixExpression = new PrefixExpression(makeToken(token, node), expression);
         configureAST(prefixExpression, node);
+        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
+        setSourceEnd(prefixExpression, expression);
+        // GRECLIPSE end
         return prefixExpression;
     }
 
@@ -2901,6 +2891,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression expression = expression(node.getFirstChild());
         PostfixExpression postfixExpression = new PostfixExpression(expression, makeToken(token, node));
         configureAST(postfixExpression, node);
+        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
+        setSourceStart(postfixExpression, expression);
+        // GRECLIPSE end
         return postfixExpression;
     }
 
@@ -3064,13 +3057,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ret.setNameEnd(name.getEnd() - 1);
         // in the case of command expressions, the slocs are incorrect for the start of the method
         if (!implicitThis && methodCallNode.getText().equals("<command>")) {
-            ret.setStart(objectExpression.getStart());
-            ret.setLineNumber(objectExpression.getLineNumber());
-            ret.setColumnNumber(objectExpression.getColumnNumber());
-            ret.setEnd(arguments.getEnd());
-            ret.setLastLineNumber(arguments.getLastLineNumber());
-            ret.setLastColumnNumber(arguments.getLastColumnNumber());
-        }
+            setSourceStart(ret, objectExpression);
+            setSourceEnd(ret, arguments);
+        } else
         // GRECLIPSE end
         configureAST(ret, methodCallNode);
         return ret;
@@ -3344,6 +3333,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case NUM_BIG_DECIMAL:
                 ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal("-" + text));
                 configureAST(constantExpression, unaryMinusExpr);
+                // GRECLIPSE add
+                setSourceEnd(constantExpression, expression(node));
+                // GRECLIPSE end
                 return constantExpression;
 
             case NUM_BIG_INT:
@@ -3351,17 +3343,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case NUM_LONG:
                 ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger(unaryMinusExpr,"-" + text));
                 configureAST(constantLongExpression, unaryMinusExpr);
+                // GRECLIPSE add
+                setSourceEnd(constantLongExpression, expression(node));
+                // GRECLIPSE end
                 return constantLongExpression;
 
             default:
                 UnaryMinusExpression unaryMinusExpression = new UnaryMinusExpression(expression(node));
                 configureAST(unaryMinusExpression, unaryMinusExpr);
+                // GRECLIPSE add
+                setSourceEnd(unaryMinusExpression, unaryMinusExpression.getExpression());
+                // GRECLIPSE end
                 return unaryMinusExpression;
         }
     }
 
     protected Expression unaryPlusExpression(AST unaryPlusExpr) {
         AST node = unaryPlusExpr.getFirstChild();
+        /* GRECLIPSE edit
         switch (node.getType()) {
             case NUM_DOUBLE:
             case NUM_FLOAT:
@@ -3376,6 +3375,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 configureAST(unaryPlusExpression, unaryPlusExpr);
                 return unaryPlusExpression;
         }
+        */
+        UnaryPlusExpression unaryPlusExpression = new UnaryPlusExpression(expression(node));
+        configureAST(unaryPlusExpression, unaryPlusExpr);
+        switch (node.getType()) {
+            case NUM_DOUBLE:
+            case NUM_FLOAT:
+            case NUM_BIG_DECIMAL:
+            case NUM_BIG_INT:
+            case NUM_INT:
+            case NUM_LONG:
+                setSourceStart(unaryPlusExpression.getExpression(), unaryPlusExpression);
+                return unaryPlusExpression.getExpression();
+
+            default:
+                setSourceEnd(unaryPlusExpression, unaryPlusExpression.getExpression());
+                return unaryPlusExpression;
+        }
+        // GRECLIPSE end
     }
 
     protected ConstantExpression decimalExpression(AST node) {
@@ -3723,34 +3740,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         final int offset = locations.findOffset(ast.getLine(), ast.getColumn());
 
         if (ast instanceof GroovySourceAST) {
-            int last_row = ((GroovySourceAST) ast).getLineLast();
-            int last_col = ((GroovySourceAST) ast).getColumnLast();
-            if ((ast.getType() == UNARY_MINUS || ast.getType() == UNARY_PLUS) &&
-                    node instanceof ConstantExpression) { // extend for literal
-                last_row = ((GroovySourceAST) ast.getFirstChild()).getLineLast();
-                last_col = ((GroovySourceAST) ast.getFirstChild()).getColumnLast();
-            }
+            final int last_row = ((GroovySourceAST) ast).getLineLast();
+            final int last_col = ((GroovySourceAST) ast).getColumnLast();
             final int end_offset = locations.findOffset(last_row, last_col);
-
-            // GRECLIPSE-768: Only reset the sloc for these kinds of expressions
-            // if the new sloc is wider than the old.
-            if ((node instanceof BinaryExpression ||
-                    node instanceof TernaryExpression ||
-                    node instanceof MapEntryExpression ||
-                    node instanceof MapExpression ||
-                    node instanceof CastExpression ||
-                    node instanceof MethodCall) &&
-                    node.getStart() <= offset && node.getEnd() >= end_offset) {
-                // sloc has already been set and is same as or wider than ast's
-                return;
-            }
 
             // GRECLIPSE-829: VariableExpression inside of GStrings contain the
             // openning '{', but shouldn't.  If the new sloc is larger than the
-            // one being set, then ignore it and don't reset.  Also numbers can
+            // one being set, then save it as node meta-data.  Also numbers can
             // result in an expression node that includes trailing whitespaces.
             if ((node instanceof VariableExpression || (node instanceof ConstantExpression && ast.getType() == EXPR)) &&
-                    node.getEnd() > 0 && offset <= node.getStart() && end_offset >= node.getEnd()) {
+                    node.getEnd() > 0 && offset <= node.getStart() && node.getEnd() <= end_offset) {
                 node.putNodeMetaData("source.offsets", Long.valueOf(((long) offset << 32) | end_offset));
                 return;
             }
@@ -3772,6 +3771,38 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setNameStart(locations.findOffset(name0.getLine(), name0.getColumn()));
         GroovySourceAST nameStop = (GroovySourceAST) (name1 == null ? name0 : name1);
         node.setNameEnd(locations.findOffset(nameStop.getLineLast(), nameStop.getColumnLast()) - 1);
+    }
+
+    protected void setSourceStart(ASTNode node, ASTNode first) {
+        Long offsets = first.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            int offset = (int) (offsets >> 32);
+            int[] row_col = locations.getRowCol(offset);
+
+            node.setStart(offset);
+            node.setLineNumber(row_col[0]);
+            node.setColumnNumber(row_col[1]);
+        } else {
+            node.setStart(first.getStart());
+            node.setLineNumber(first.getLineNumber());
+            node.setColumnNumber(first.getColumnNumber());
+        }
+    }
+
+    protected void setSourceEnd(ASTNode node, ASTNode last) {
+        Long offsets = last.getNodeMetaData("source.offsets");
+        if (offsets != null) {
+            int offset = (int) (offsets & 0xFFFFFFFF);
+            int[] row_col = locations.getRowCol(offset);
+
+            node.setEnd(offset);
+            node.setLastLineNumber(row_col[0]);
+            node.setLastColumnNumber(row_col[1]);
+        } else {
+            node.setEnd(last.getEnd());
+            node.setLastLineNumber(last.getLastLineNumber());
+            node.setLastColumnNumber(last.getLastColumnNumber());
+        }
     }
 
     protected static AnnotationNode makeAnnotationNode(String name) {
@@ -3830,8 +3861,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         throw new ASTRuntimeException(node, "AST node not implemented yet for type: " + getTokenName(node));
     }
 
-    // GRECLIPSE edit
-    protected /*void*/Expression unknownAST(AST node) {
+    protected void unknownAST(AST node) {
         if (node.getType() == CLASS_DEF) {
             throw new ASTRuntimeException(node,
                     "Class definition not expected here. Please define the class at an appropriate place or perhaps try using a block/Closure instead.");
@@ -3840,10 +3870,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             throw new ASTRuntimeException(node,
                     "Method definition not expected here. Please define the method at an appropriate place or perhaps try using a block/Closure instead.");
         }
-        // GRECLIPSE edit
-        //throw new ASTRuntimeException(node, "Unknown type: " + getTokenName(node));
-        return new ConstantExpression("ERROR");
-        // GRECLIPSE end
+        throw new ASTRuntimeException(node, "Unknown type: " + getTokenName(node));
     }
 
     protected void dumpTree(AST ast) {
