@@ -1655,12 +1655,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in Moo.groovy (at line 4)\n" +
         "\tfinal moo = processMoo(moo)\n" +
         "\t      ^^^\n" +
+        "Duplicate local variable moo\n" +
+        "----------\n" +
+        "2. ERROR in Moo.groovy (at line 4)\n" +
+        "\tfinal moo = processMoo(moo)\n" +
+        "\t      ^^^\n" +
         "Groovy:The current scope already contains a variable of the name moo\n" +
         "----------\n");
     }
 
-    // 'this' by itself isn't an error
-    @Test
+    @Test // 'this' by itself isn't an error
     public void testCrashingOnBadCode_GRE290_3() {
         runNegativeTest(new String[] {
             "Moo.groovy",
@@ -4669,6 +4673,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
+            "    java.lang.Object foo;\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +
@@ -4914,6 +4919,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  public A() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +
+            "    java.lang.Object foo;\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +

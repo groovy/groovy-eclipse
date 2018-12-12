@@ -58,6 +58,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
@@ -121,6 +122,7 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.IntLiteral;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.Literal;
+import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.LongLiteral;
 import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
@@ -1343,6 +1345,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 methodDeclarations.add(constructorDecl);
 
+                if (constructorNode.getCode() != null) {
+                    List<VariableExpression> variables = new ArrayList<>();
+                    constructorNode.getCode().visit(new LocalVariableFinder(variables));
+                    if (!variables.isEmpty()) constructorDecl.statements = createStatements(variables);
+                }
                 if (constructorNode.hasDefaultValue()) {
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
                         ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
@@ -1391,6 +1398,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                     if (methodNode.isAbstract()) {
                         typeDeclaration.bits |= ASTNode.HasAbstractMethods;
+                    } else if (methodNode.getCode() != null) {
+                        List<VariableExpression> variables = new ArrayList<>();
+                        methodNode.getCode().visit(new LocalVariableFinder(variables));
+                        if (!variables.isEmpty()) methodDecl.statements = createStatements(variables);
                     }
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
@@ -1694,6 +1705,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 arguments[ps.length - 1].type.bits |= ASTNode.IsVarArgs;
             }
             return arguments;
+        }
+
+        private org.eclipse.jdt.internal.compiler.ast.Statement[] createStatements(List<VariableExpression> expressions) {
+            final int n = expressions.size();
+            org.eclipse.jdt.internal.compiler.ast.Statement[] statements = new org.eclipse.jdt.internal.compiler.ast.Statement[n];
+
+            for (int i = 0; i < n; i += 1) {
+                VariableExpression variableExpression = expressions.get(i);
+
+                LocalDeclaration variableDeclaration = new LocalDeclaration(variableExpression.getName().toCharArray(), variableExpression.getStart(), variableExpression.getEnd() - 1);
+                variableDeclaration.type = createTypeReferenceForClassNode(variableExpression.getOriginType());
+                variableDeclaration.bits |= (variableDeclaration.type.bits & ASTNode.HasTypeAnnotations);
+
+                statements[i] = variableDeclaration;
+            }
+
+            return statements;
         }
 
         /**
@@ -2614,6 +2642,29 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     anonymousLocations.put(call.getType(), enclosingDecl);
                 }
                 super.visitConstructorCallExpression(call);
+            }
+        }
+
+        private static class LocalVariableFinder extends CodeVisitorSupport {
+            private LocalVariableFinder(List<VariableExpression> variables) {
+                this.variables = variables;
+            }
+            private final List<VariableExpression> variables;
+
+            @Override
+            public void visitConstructorCallExpression(ConstructorCallExpression expression) {
+                // don't visit anon. inner types
+            }
+
+            @Override
+            @SuppressWarnings({"cast", "rawtypes", "unchecked"})
+            public void visitDeclarationExpression(DeclarationExpression expression) {
+                if (!expression.isMultipleAssignmentDeclaration()) {
+                    variables.add(expression.getVariableExpression());
+                } else {
+                    variables.addAll((List<VariableExpression>) (List) expression.getTupleExpression().getExpressions());
+                }
+                super.visitDeclarationExpression(expression);
             }
         }
     }
