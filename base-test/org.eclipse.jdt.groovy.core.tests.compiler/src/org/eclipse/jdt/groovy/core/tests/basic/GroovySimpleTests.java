@@ -3792,6 +3792,62 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "success");
     }
 
+    @Test
+    public void testDuplicateLocalVariables1() {
+        runNegativeTest(new String[] {
+            "p/Foo.groovy",
+            "package p\n"+
+            "class Foo {\n"+
+            "  def bar() {\n"+
+            "    if (condition()) {\n"+
+            "      def baz = 1\n"+
+            "    } else {\n"+
+            "      def baz = 2\n"+
+            "    }\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testDuplicateLocalVariables2() {
+        runNegativeTest(new String[] {
+            "p/Foo.groovy",
+            "package p\n"+
+            "class Foo {\n"+
+            "  def bar() {\n"+
+            "    if (condition()) {\n"+
+            "      def baz = 1\n"+
+            "    }\n"+
+            "    def block = { ->\n"+
+            "      def baz = 2\n"+
+            "    }\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testDuplicateLocalVariables3() {
+        runNegativeTest(new String[] {
+            "p/Foo.groovy",
+            "package p\n"+
+            "class Foo {\n"+
+            "  def bar() {\n"+
+            "    switch (something()) {\n"+
+            "    case 'A':\n"+
+            "      def baz = 1\n"+
+            "    case 'B':\n"+
+            "      def baz = 2\n"+
+            "    }\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "");
+    }
+
     // Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
     @Test
     public void testDuplicateGroovyObjectMethods() {

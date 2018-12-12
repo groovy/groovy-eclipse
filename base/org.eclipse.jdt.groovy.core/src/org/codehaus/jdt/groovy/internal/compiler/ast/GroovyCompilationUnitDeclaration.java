@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1346,9 +1347,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 methodDeclarations.add(constructorDecl);
 
                 if (constructorNode.getCode() != null) {
-                    List<VariableExpression> variables = new ArrayList<>();
+                    Map<String, VariableExpression> variables = new HashMap<>();
                     constructorNode.getCode().visit(new LocalVariableFinder(variables));
-                    if (!variables.isEmpty()) constructorDecl.statements = createStatements(variables);
+                    if (!variables.isEmpty()) constructorDecl.statements = createStatements(variables.values());
                 }
                 if (constructorNode.hasDefaultValue()) {
                     for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
@@ -1399,9 +1400,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (methodNode.isAbstract()) {
                         typeDeclaration.bits |= ASTNode.HasAbstractMethods;
                     } else if (methodNode.getCode() != null) {
-                        List<VariableExpression> variables = new ArrayList<>();
+                        Map<String, VariableExpression> variables = new HashMap<>();
                         methodNode.getCode().visit(new LocalVariableFinder(variables));
-                        if (!variables.isEmpty()) methodDecl.statements = createStatements(variables);
+                        if (!variables.isEmpty()) methodDecl.statements = createStatements(variables.values());
                     }
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
@@ -1707,12 +1708,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return arguments;
         }
 
-        private org.eclipse.jdt.internal.compiler.ast.Statement[] createStatements(List<VariableExpression> expressions) {
+        private org.eclipse.jdt.internal.compiler.ast.Statement[] createStatements(Collection<VariableExpression> expressions) {
             final int n = expressions.size();
+            Iterator<VariableExpression> it = expressions.iterator();
             org.eclipse.jdt.internal.compiler.ast.Statement[] statements = new org.eclipse.jdt.internal.compiler.ast.Statement[n];
 
             for (int i = 0; i < n; i += 1) {
-                VariableExpression variableExpression = expressions.get(i);
+                VariableExpression variableExpression = it.next();
 
                 LocalDeclaration variableDeclaration = new LocalDeclaration(variableExpression.getName().toCharArray(), variableExpression.getStart(), variableExpression.getEnd() - 1);
                 variableDeclaration.type = createTypeReferenceForClassNode(variableExpression.getOriginType());
@@ -2646,10 +2648,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private static class LocalVariableFinder extends CodeVisitorSupport {
-            private LocalVariableFinder(List<VariableExpression> variables) {
+            private LocalVariableFinder(Map<String, VariableExpression> variables) {
                 this.variables = variables;
             }
-            private final List<VariableExpression> variables;
+            private final Map<String, VariableExpression> variables;
 
             @Override
             public void visitConstructorCallExpression(ConstructorCallExpression expression) {
@@ -2657,12 +2659,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             @Override
-            @SuppressWarnings({"cast", "rawtypes", "unchecked"})
             public void visitDeclarationExpression(DeclarationExpression expression) {
                 if (!expression.isMultipleAssignmentDeclaration()) {
-                    variables.add(expression.getVariableExpression());
+                    variables.putIfAbsent(expression.getVariableExpression().getName(), expression.getVariableExpression());
                 } else {
-                    variables.addAll((List<VariableExpression>) (List) expression.getTupleExpression().getExpressions());
+                    for (Expression expr : expression.getTupleExpression().getExpressions()) {
+                        variables.putIfAbsent(((VariableExpression) expr).getName(), (VariableExpression) expr);
+                    }
                 }
                 super.visitDeclarationExpression(expression);
             }
