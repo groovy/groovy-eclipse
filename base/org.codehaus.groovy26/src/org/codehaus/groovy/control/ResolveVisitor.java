@@ -305,13 +305,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    // GRECLIPSE add -- support backwards compatibility with org.eclipse.jdt.groovy.core
-    protected boolean resolveToInnerEnum(ClassNode type) {
-        return resolveToNestedOfCurrentClassAndSuperClasses(type);
-    }
-    // GRECLIPSE end
-
-    private boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
+    // GRECLIPSE private->protected
+    protected boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
         // GROOVY-8531: Fail to resolve type defined in super class written in Java
         for (ClassNode enclosingClassNode = currentClass; ClassHelper.OBJECT_TYPE != enclosingClassNode && null != enclosingClassNode; enclosingClassNode = enclosingClassNode.getSuperClass()) {
             if(resolveToNested(enclosingClassNode, type)) return true;

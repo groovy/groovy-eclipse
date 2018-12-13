@@ -432,9 +432,9 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     @Override
-    protected boolean resolveToInnerEnum(ClassNode type) {
+    protected boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
         // inner types are resolved by JDT, so if we get here then "type" does not exist
-        //return super.resolveToInnerEnum(type);
+        //return super.resolveToNestedOfCurrentClassAndSuperClasses(type);
         return false;
     }
 

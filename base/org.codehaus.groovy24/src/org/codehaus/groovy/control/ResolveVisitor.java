@@ -285,30 +285,51 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             type.setName(name);
             if (resolve(type)) return true;
         }
-        if(resolveToNestedOfCurrent(type)) return true;
-        
+
+        if (resolveToNestedOfCurrentClassAndSuperClasses(type)) return true;
+
         type.setName(saved);
         return false;
     }
 
-    // GRECLIPSE add -- support backwards compatibility with org.eclipse.jdt.groovy.core
-    protected boolean resolveToInnerEnum(ClassNode type) {
-        return resolveToNestedOfCurrent(type);
-    }
-    // GRECLIPSE end
+    // GRECLIPSE private->protected
+    protected boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
+        // GROOVY-8531: Fail to resolve type defined in super class written in Java
+        for (ClassNode enclosingClassNode = currentClass; ClassHelper.OBJECT_TYPE != enclosingClassNode && null != enclosingClassNode; enclosingClassNode = enclosingClassNode.getSuperClass()) {
+            if(resolveToNested(enclosingClassNode, type)) return true;
+        }
 
-    private boolean resolveToNestedOfCurrent(ClassNode type) {
+        return false;
+    }
+
+    private boolean resolveToNested(ClassNode enclosingType, ClassNode type) {
         if (type instanceof ConstructedNestedClass) return false;
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
         // explicitly qualified by the currentClass name
         String name = type.getName();
-        if (currentClass != type && !name.contains(".") && type.getClass().equals(ClassNode.class)) {
-            ClassNode tmp = new ConstructedNestedClass(currentClass,name);
+        if (enclosingType != type && !name.contains(".") && type.getClass().equals(ClassNode.class)) {
+            ClassNode tmp = new ConstructedNestedClass(enclosingType,name);
             if (resolve(tmp)) {
+                if (!checkInnerTypeVisibility(enclosingType, tmp)) return false;
+
                 type.setRedirect(tmp);
                 return true;
             }
         }
+        return false;
+
+    }
+
+    private boolean checkInnerTypeVisibility(ClassNode enclosingType, ClassNode innerClassNode) {
+        if (currentClass == enclosingType) {
+            return true;
+        }
+
+        int modifiers = innerClassNode.getModifiers();
+        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -1093,7 +1114,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                   t = new LowerCaseClass(name);
                 }
                 isClass = resolve(t);
-                if(!isClass) isClass = resolveToNestedOfCurrent(t);
+                if(!isClass) {
+                    isClass = resolveToNestedOfCurrentClassAndSuperClasses(t);
+                }
             }
             if (isClass) {
                 // the name is a type so remove it from the scoping

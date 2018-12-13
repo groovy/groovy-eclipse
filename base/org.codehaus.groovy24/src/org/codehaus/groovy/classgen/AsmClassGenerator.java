@@ -19,7 +19,6 @@
 package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyRuntimeException;
-import org.apache.groovy.io.StringBuilderWriter;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -1410,7 +1409,7 @@ public class AsmClassGenerator extends ClassGenerator {
         ClassNode icl =  controller.getInterfaceClassLoadingClass();
 
         if (referencedClasses.isEmpty()) {
-            Iterator<InnerClassNode> it = controller.getClassNode().getInnerClasses();
+            Iterator<InnerClassNode> it = icl.getOuterClass().getInnerClasses();
             while(it.hasNext()) {
                 InnerClassNode inner = it.next();
                 if (inner==icl) {

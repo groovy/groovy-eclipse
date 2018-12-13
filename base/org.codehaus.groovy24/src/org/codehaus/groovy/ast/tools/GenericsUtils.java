@@ -52,9 +52,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
 
 /**
  * Utility methods to deal with generic types.
- *
- * @author Cédric Champeau
- * @author Paul King
  */
 public class GenericsUtils {
     public static final GenericsType[] EMPTY_GENERICS_ARRAY = GenericsType.EMPTY_ARRAY;
@@ -159,6 +156,7 @@ public class GenericsUtils {
         if (parameterized == null || parameterized.length == 0) return;
         GenericsType[] redirectGenericsTypes = node.redirect().getGenericsTypes();
         if (redirectGenericsTypes==null) redirectGenericsTypes = parameterized;
+        if (parameterized.length != redirectGenericsTypes.length) return;
         for (int i = 0; i < redirectGenericsTypes.length; i++) {
             GenericsType redirectType = redirectGenericsTypes[i];
             if (redirectType.isPlaceholder()) {
@@ -421,7 +419,26 @@ public class GenericsUtils {
         GenericsType[] sgts = current.getGenericsTypes();
         if (sgts != null) {
             for (GenericsType sgt : sgts) {
-                ret.put(sgt.getName(), sgt.getType());
+                String name = sgt.getName();
+                /* GRECLIPSE edit
+                if (sgt.isPlaceholder()) {
+                    ClassNode redirect;
+                    if (sgt.getUpperBounds() != null) {
+                        redirect = sgt.getUpperBounds()[0];
+                    } else if (sgt.getLowerBound() != null) {
+                        redirect = sgt.getLowerBound();
+                    } else {
+                        redirect = ClassHelper.OBJECT_TYPE;
+                    }
+                    ClassNode type = ClassHelper.makeWithoutCaching(name);
+                    type.setGenericsPlaceHolder(true);
+                    type.setRedirect(redirect);
+                    ret.put(name, type);
+                } else {
+                */
+                    ret.put(name, sgt.getType());
+                //}
+                // GRECLIPSE end
             }
         }
         return ret;

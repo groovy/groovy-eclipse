@@ -12,7 +12,7 @@ Export-Package: org.codehaus.jdt.groovy.integration.internal,
  org.eclipse.jdt.groovy.core.util,
  org.eclipse.jdt.groovy.search
 Import-Package: org.eclipse.jdt.launching
-Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.15,3)";visibility:=reexport,
+Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.16,3)";visibility:=reexport,
  org.eclipse.core.expressions;visibility:=reexport,
  org.eclipse.core.resources;visibility:=reexport,
  org.eclipse.core.runtime;visibility:=reexport,
