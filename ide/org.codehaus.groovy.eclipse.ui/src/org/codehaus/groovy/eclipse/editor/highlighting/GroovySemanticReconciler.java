@@ -295,7 +295,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             GroovyCore.logException("Semantic highlighting failed", e);
         } finally {
             lock.release();
-            monitor.done();
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,17 +129,15 @@ public class ScriptFolderSelectorPreferences {
         @Override
         protected IStatus run(IProgressMonitor monitor) {
             try {
-                IProgressMonitor sub = SubMonitor.convert(monitor, projects.length);
+                IProgressMonitor submon = SubMonitor.convert(monitor, projects.length);
                 for (IProject project : projects) {
-                    project.build(IncrementalProjectBuilder.FULL_BUILD, sub);
-                    sub.worked(1);
+                    project.build(IncrementalProjectBuilder.FULL_BUILD, submon);
+                    submon.worked(1);
                 }
                 return Status.OK_STATUS;
             } catch (CoreException e) {
                 GroovyCore.logException("Error building groovy project", e);
                 return e.getStatus();
-            } finally {
-                monitor.done();
             }
         }
     }

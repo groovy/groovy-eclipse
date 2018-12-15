@@ -26,9 +26,7 @@ import org.eclipse.jface.text.templates.TemplateException;
 
 public class GroovyContext extends JavaContext {
 
-    public GroovyContext(TemplateContextType type, IDocument document,
-            int completionOffset, int completionLength,
-            ICompilationUnit compilationUnit) {
+    public GroovyContext(TemplateContextType type, IDocument document, int completionOffset, int completionLength, ICompilationUnit compilationUnit) {
         super(type, document, completionOffset, completionLength, compilationUnit);
     }
 
