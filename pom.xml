@@ -121,7 +121,7 @@
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.10milestones</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.10</url>
 				</repository>
 			</repositories>
 			<modules>
