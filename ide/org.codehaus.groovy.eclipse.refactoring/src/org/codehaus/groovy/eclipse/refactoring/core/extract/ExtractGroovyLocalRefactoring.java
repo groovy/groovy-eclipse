@@ -159,79 +159,65 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
-        try {
-            monitor = SubMonitor.convert(monitor, "", 6);
+        monitor = SubMonitor.convert(monitor, "", 6);
 
-            IASTFragment expr = getSelectedFragment();
-            if (expr == null) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
-            }
-
-            int trimmedLength = expr.getTrimmedLength(unit);
-            int exprLength = expr.getLength();
-            // problem is that some expressions include whitespace in the end of their sloc.
-            // need to handle this case.
-            // the selected length must be somewhere >= the trimmed (no whitespace) length and <= the non-trimeed (w/ whitespace) length
-            if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
-            }
-
-            RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
-            if (result.hasFatalError()) {
-                return result;
-            }
-
-            if (module == null) {
-                result.addFatalError("Cannot build module node for file.  Possible syntax error.");
-                return result;
-            }
-
-            if (getSelectedFragment() == null) {
-                result.addFatalError("Illegal expression selected");
-            }
-
-            result.merge(checkSelection(((SubMonitor) monitor).split(3)));
-            /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
-                replaceAllOccurrences = false;
-            }*/
-            return result;
-
-        } finally {
-            monitor.done();
+        IASTFragment expr = getSelectedFragment();
+        if (expr == null) {
+            return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
         }
+
+        int trimmedLength = expr.getTrimmedLength(unit);
+        int exprLength = expr.getLength();
+        // problem is that some expressions include whitespace in the end of their sloc.
+        // need to handle this case.
+        // the selected length must be somewhere >= the trimmed (no whitespace) length and <= the non-trimeed (w/ whitespace) length
+        if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
+            return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
+        }
+
+        RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
+        if (result.hasFatalError()) {
+            return result;
+        }
+
+        if (module == null) {
+            result.addFatalError("Cannot build module node for file.  Possible syntax error.");
+            return result;
+        }
+
+        if (getSelectedFragment() == null) {
+            result.addFatalError("Illegal expression selected");
+        }
+
+        result.merge(checkSelection(((SubMonitor) monitor).split(3)));
+        /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
+            replaceAllOccurrences = false;
+        }*/
+        return result;
     }
 
     @Override
     public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
-        try {
-            monitor = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
+        monitor = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
 
-            RefactoringStatus result = new RefactoringStatus();
-            change = doCreateChange(result, ((SubMonitor) monitor).split(2));
+        RefactoringStatus result = new RefactoringStatus();
+        change = doCreateChange(result, ((SubMonitor) monitor).split(2));
 
-            if (getExcludedVariableNames().contains(getLocalName())) {
-                result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));
-            }
-
-            result.merge(checkMatchingFragments());
-            change.setKeepPreviewEdits(true);
-            return result;
-
-        } finally {
-            monitor.done();
+        if (getExcludedVariableNames().contains(getLocalName())) {
+            result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));
         }
+
+        result.merge(checkMatchingFragments());
+        change.setKeepPreviewEdits(true);
+        return result;
     }
 
     @Override
     public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
-        try {
-            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
-            ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
-            change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
-            return change;
-        } finally {
-            monitor.done();
-        }
+        monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
+        ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
+        change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
+        return change;
     }
 
     public RefactoringStatus checkLocalNameOnChange(String newName) {
@@ -341,15 +327,11 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private CompilationUnitChange doCreateChange(RefactoringStatus status, IProgressMonitor monitor) throws CoreException {
         CompilationUnitChange newChange = new CompilationUnitChange("Extract Local Variable", unit);
-        try {
-            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
-            newChange.setEdit(new MultiTextEdit());
-            createTempDeclaration(newChange, status);
-            if (!status.hasFatalError()) {
-                addReplaceExpressionWithTemp(newChange);
-            }
-        } finally {
-            monitor.done();
+        monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
+        newChange.setEdit(new MultiTextEdit());
+        createTempDeclaration(newChange, status);
+        if (!status.hasFatalError()) {
+            addReplaceExpressionWithTemp(newChange);
         }
         return newChange;
     }
@@ -586,34 +568,30 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private RefactoringStatus checkSelection(IProgressMonitor monitor) throws JavaModelException {
-        try {
-            monitor.beginTask("", 2);
+        monitor.beginTask("", 2);
 
-            IASTFragment selectedExpression = getSelectedFragment();
+        IASTFragment selectedExpression = getSelectedFragment();
 
-            if (selectedExpression == null) {
-                String message = RefactoringCoreMessages.ExtractTempRefactoring_select_expression;
-                return RefactoringStatus.createFatalErrorStatus(message, createContext());
-            }
-            monitor.worked(1);
-
-            RefactoringStatus result= new RefactoringStatus();
-            result.merge(checkExpression());
-            if (result.hasFatalError())
-                return result;
-            monitor.worked(1);
-
-            return result;
-        } finally {
-            monitor.done();
+        if (selectedExpression == null) {
+            String message = RefactoringCoreMessages.ExtractTempRefactoring_select_expression;
+            return RefactoringStatus.createFatalErrorStatus(message, createContext());
         }
+        monitor.worked(1);
+
+        RefactoringStatus result= new RefactoringStatus();
+        result.merge(checkExpression());
+        if (result.hasFatalError())
+            return result;
+        monitor.worked(1);
+
+        return result;
     }
 
     private RefactoringStatus checkExpression() throws JavaModelException {
-        RefactoringStatus result= new RefactoringStatus();
+        RefactoringStatus result = new RefactoringStatus();
         IASTFragment selectedExpression = getSelectedFragment();
         result.merge(checkExpressionFragmentIsRValue(selectedExpression));
-        if(result.hasFatalError())
+        if (result.hasFatalError())
             return result;
 
         if ((selectedExpression instanceof ConstantExpression) && ((ConstantExpression) selectedExpression).isNullExpression()) {

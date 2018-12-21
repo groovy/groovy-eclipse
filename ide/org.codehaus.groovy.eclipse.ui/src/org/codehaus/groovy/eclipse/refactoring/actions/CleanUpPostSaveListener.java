@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -317,129 +317,123 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
     @Override
     public void saved(ICompilationUnit unit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
-        if (monitor == null)
-            monitor = new NullProgressMonitor();
         monitor = SubMonitor.convert(monitor, getName(), IProgressMonitor.UNKNOWN);
 
-        try {
-            if (!ActionUtil.isOnBuildPath(unit))
-                return;
+        if (!ActionUtil.isOnBuildPath(unit))
+            return;
 
-            // GROOVY add
-            // do not perform any cleanups if not a Groovy project
-            IProject proj = unit.getJavaProject().getProject();
-            if (proj == null || !org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(proj)) {
-                return;
-            }
-            // GROOVY end
-
-            ICleanUp[] cleanUps = getCleanUps(unit.getJavaProject().getProject());
-
-            long oldFileValue = unit.getResource().getModificationStamp();
-            long oldDocValue = getDocumentStamp((IFile) unit.getResource(), ((SubMonitor) monitor).split(2));
-
-            CompositeChange result = new CompositeChange(FixMessages.CleanUpPostSaveListener_SaveAction_ChangeName);
-            LinkedList<UndoEdit> undoEdits = new LinkedList<>();
-
-            if (FIRST_CALL && !FIRST_CALL_DONE) {
-                FIRST_CALL = false;
-                FIRST_CALL_DONE = true;
-            } else {
-                FIRST_CALL = true;
-            }
-            HashSet<ICleanUp> slowCleanUps;
-            if (FIRST_CALL_DONE) {
-                slowCleanUps = new HashSet<>();
-            } else {
-                slowCleanUps = null;
-            }
-            IUndoManager manager = RefactoringCore.getUndoManager();
-
-            boolean success = false;
-            try {
-                manager.aboutToPerformChange(result);
-
-                do {
-                    RefactoringStatus preCondition = new RefactoringStatus();
-                    for (int i = 0; i < cleanUps.length; i++) {
-                        RefactoringStatus conditions = cleanUps[i].checkPreConditions(unit.getJavaProject(),
-                            new ICompilationUnit[] { unit }, ((SubMonitor) monitor).split(5));
-                        preCondition.merge(conditions);
-                    }
-                    if (showStatus(preCondition) != Window.OK)
-                        return;
-
-                    Map<String, String> options = new HashMap<>();
-                    for (int i = 0; i < cleanUps.length; i++) {
-                        Map<String, String> map = cleanUps[i].getRequirements().getCompilerOptions();
-                        if (map != null) {
-                            options.putAll(map);
-                        }
-                    }
-
-                    CompilationUnit ast = null;
-                    if (requiresAST(cleanUps)) {
-                        ast = createAst(unit, options, ((SubMonitor) monitor).split(10));
-                    }
-
-                    CleanUpContext context;
-                    if (changedRegions == null) {
-                        context = new CleanUpContext(unit, ast);
-                    } else {
-                        context = new MultiLineCleanUpContext(unit, ast, changedRegions);
-                    }
-
-                    ArrayList<ICleanUp> undoneCleanUps = new ArrayList<>();
-                    CleanUpChange change =
-                        CleanUpRefactoring.calculateChange(context, cleanUps, undoneCleanUps, slowCleanUps);
-
-                    RefactoringStatus postCondition = new RefactoringStatus();
-                    for (int i = 0; i < cleanUps.length; i++) {
-                        RefactoringStatus conditions = cleanUps[i].checkPostConditions(((SubMonitor) monitor).split(1));
-                        postCondition.merge(conditions);
-                    }
-                    if (showStatus(postCondition) != Window.OK)
-                        return;
-
-                    cleanUps = undoneCleanUps.toArray(new ICleanUp[undoneCleanUps.size()]);
-                    if (change != null) {
-                        result.add(change);
-
-                        change.setSaveMode(TextFileChange.LEAVE_DIRTY);
-                        change.initializeValidationData(new NullProgressMonitor());
-
-                        PerformChangeOperation performChangeOperation = new PerformChangeOperation(change);
-                        performChangeOperation.setSchedulingRule(unit.getSchedulingRule());
-
-                        if (changedRegions != null && changedRegions.length > 0 && requiresChangedRegions(cleanUps)) {
-                            changedRegions = performWithChangedRegionUpdate(performChangeOperation, changedRegions,
-                                unit, ((SubMonitor) monitor).split(5));
-                        } else {
-                            performChangeOperation.run(((SubMonitor) monitor).split(5));
-                        }
-
-                        performChangeOperation.getUndoChange();
-                        undoEdits.addFirst(change.getUndoEdit());
-                    }
-                } while (cleanUps.length > 0);
-                success = true;
-            } finally {
-                manager.changePerformed(result, success);
-            }
-
-            if (undoEdits.size() > 0) {
-                UndoEdit[] undoEditArray = undoEdits.toArray(new UndoEdit[undoEdits.size()]);
-                CleanUpSaveUndo undo = new CleanUpSaveUndo(result.getName(), (IFile) unit.getResource(), undoEditArray,
-                    oldDocValue, oldFileValue);
-                undo.initializeValidationData(new NullProgressMonitor());
-                manager.addUndo(result.getName(), undo);
-            }
-
-            if (slowCleanUps != null && slowCleanUps.size() > 0)
-                showSlowCleanUpsWarning(slowCleanUps);
-        } finally {
-            monitor.done();
+        // GROOVY add
+        // do not perform any cleanups if not a Groovy project
+        IProject proj = unit.getJavaProject().getProject();
+        if (proj == null || !org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature(proj)) {
+            return;
         }
+        // GROOVY end
+
+        ICleanUp[] cleanUps = getCleanUps(unit.getJavaProject().getProject());
+
+        long oldFileValue = unit.getResource().getModificationStamp();
+        long oldDocValue = getDocumentStamp((IFile) unit.getResource(), ((SubMonitor) monitor).split(2));
+
+        CompositeChange result = new CompositeChange(FixMessages.CleanUpPostSaveListener_SaveAction_ChangeName);
+        LinkedList<UndoEdit> undoEdits = new LinkedList<>();
+
+        if (FIRST_CALL && !FIRST_CALL_DONE) {
+            FIRST_CALL = false;
+            FIRST_CALL_DONE = true;
+        } else {
+            FIRST_CALL = true;
+        }
+        HashSet<ICleanUp> slowCleanUps;
+        if (FIRST_CALL_DONE) {
+            slowCleanUps = new HashSet<>();
+        } else {
+            slowCleanUps = null;
+        }
+        IUndoManager manager = RefactoringCore.getUndoManager();
+
+        boolean success = false;
+        try {
+            manager.aboutToPerformChange(result);
+
+            do {
+                RefactoringStatus preCondition = new RefactoringStatus();
+                for (int i = 0; i < cleanUps.length; i++) {
+                    RefactoringStatus conditions = cleanUps[i].checkPreConditions(unit.getJavaProject(),
+                        new ICompilationUnit[] { unit }, ((SubMonitor) monitor).split(5));
+                    preCondition.merge(conditions);
+                }
+                if (showStatus(preCondition) != Window.OK)
+                    return;
+
+                Map<String, String> options = new HashMap<>();
+                for (int i = 0; i < cleanUps.length; i++) {
+                    Map<String, String> map = cleanUps[i].getRequirements().getCompilerOptions();
+                    if (map != null) {
+                        options.putAll(map);
+                    }
+                }
+
+                CompilationUnit ast = null;
+                if (requiresAST(cleanUps)) {
+                    ast = createAst(unit, options, ((SubMonitor) monitor).split(10));
+                }
+
+                CleanUpContext context;
+                if (changedRegions == null) {
+                    context = new CleanUpContext(unit, ast);
+                } else {
+                    context = new MultiLineCleanUpContext(unit, ast, changedRegions);
+                }
+
+                ArrayList<ICleanUp> undoneCleanUps = new ArrayList<>();
+                CleanUpChange change =
+                    CleanUpRefactoring.calculateChange(context, cleanUps, undoneCleanUps, slowCleanUps);
+
+                RefactoringStatus postCondition = new RefactoringStatus();
+                for (int i = 0; i < cleanUps.length; i++) {
+                    RefactoringStatus conditions = cleanUps[i].checkPostConditions(((SubMonitor) monitor).split(1));
+                    postCondition.merge(conditions);
+                }
+                if (showStatus(postCondition) != Window.OK)
+                    return;
+
+                cleanUps = undoneCleanUps.toArray(new ICleanUp[undoneCleanUps.size()]);
+                if (change != null) {
+                    result.add(change);
+
+                    change.setSaveMode(TextFileChange.LEAVE_DIRTY);
+                    change.initializeValidationData(new NullProgressMonitor());
+
+                    PerformChangeOperation performChangeOperation = new PerformChangeOperation(change);
+                    performChangeOperation.setSchedulingRule(unit.getSchedulingRule());
+
+                    if (changedRegions != null && changedRegions.length > 0 && requiresChangedRegions(cleanUps)) {
+                        changedRegions = performWithChangedRegionUpdate(performChangeOperation, changedRegions,
+                            unit, ((SubMonitor) monitor).split(5));
+                    } else {
+                        performChangeOperation.run(((SubMonitor) monitor).split(5));
+                    }
+
+                    performChangeOperation.getUndoChange();
+                    undoEdits.addFirst(change.getUndoEdit());
+                }
+            } while (cleanUps.length > 0);
+            success = true;
+        } finally {
+            manager.changePerformed(result, success);
+        }
+
+        if (undoEdits.size() > 0) {
+            UndoEdit[] undoEditArray = undoEdits.toArray(new UndoEdit[undoEdits.size()]);
+            CleanUpSaveUndo undo = new CleanUpSaveUndo(result.getName(), (IFile) unit.getResource(), undoEditArray,
+                oldDocValue, oldFileValue);
+            undo.initializeValidationData(new NullProgressMonitor());
+            manager.addUndo(result.getName(), undo);
+        }
+
+        if (slowCleanUps != null && slowCleanUps.size() > 0)
+            showSlowCleanUpsWarning(slowCleanUps);
     }
 
     // GROOVY edit
@@ -519,7 +513,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             // GROOVY add
             assertDocumentGreclipse1452(buffer);
             // GROOVY end
-            monitor.done();
         }
     }
 
@@ -579,7 +572,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             // GROOVY add
             assertDocumentGreclipse1452(buffer);
             // GROOVY end
-            monitor.done();
         }
     }
 

@@ -183,17 +183,15 @@ public class AssignStatementToNewLocalRefactoring {
         int i = 0;
         for (Variable v : vars) {
             variableNames[i] = v.getName();
-            i++;
+            i += 1;
         }
 
-        String[] names = NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME,
-            candidate, null, 0, variableNames, true);
+        String[] names = NamingConventions.suggestVariableNames(
+            NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, candidate, null, 0, variableNames, true);
 
         edit.addChild(new InsertEdit(expression.getStart(), "def " + names[0] + " = "));
-        // add 4 for "def ".
-        newOffset = expression.getStart() + 4;
+        newOffset = expression.getStart() + "def ".length();
         newLength = names[0].length();
-
         return edit;
     }
 

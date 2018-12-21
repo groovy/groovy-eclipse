@@ -241,7 +241,6 @@ public class OrganizeGroovyImports {
             } finally {
                 importsSlatedForRemoval = null;
                 missingTypes = null;
-                monitor.done();
             }
             return null;
         } finally {

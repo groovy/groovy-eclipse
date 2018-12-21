@@ -220,7 +220,6 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                     if (environment != null) {
                         environment.cleanup();
                     }
-                    submon.done();
                 }
             }
 

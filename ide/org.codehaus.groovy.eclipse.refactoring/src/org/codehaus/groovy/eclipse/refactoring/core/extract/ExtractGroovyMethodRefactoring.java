@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,33 +174,32 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException, OperationCanceledException {
+    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
         RefactoringStatus status = new RefactoringStatus();
-        pm.beginTask("Checking initial conditions for extract method", 100);
+        monitor.beginTask("Checking initial conditions for extract method", 100);
 
         updateMethod();
 
-        if (pm.isCanceled()) {
+        if (monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
-        status.merge(checkNrOfReturnValues(pm));
+        status.merge(checkNrOfReturnValues(monitor));
 
-        if (pm.isCanceled()) {
-            throw new OperationCanceledException();
-        }
-
-        status.merge(checkStatementSelection(pm));
-
-        if (pm.isCanceled()) {
+        if (monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
 
-        status.merge(checkExtractFromConstructor(pm));
-        if (pm.isCanceled()) {
+        status.merge(checkStatementSelection(monitor));
+
+        if (monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
 
-        pm.done();
+        status.merge(checkExtractFromConstructor(monitor));
+        if (monitor.isCanceled()) {
+            throw new OperationCanceledException();
+        }
+
         return status;
     }
 

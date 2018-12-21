@@ -52,16 +52,15 @@ public class ConvertToClosureRefactoring {
 
             ISourceRange nameRange = ((IMethod) maybeMethod).getNameRange();
             if (nameRange.getLength() == maybeMethod.getElementName().length()) {
-                return ((IMethod) maybeMethod);
+                return (IMethod) maybeMethod;
             }
 
             // For quoted method names, the name range will include the quotes,
-            // but
-            // the name itself will not include them
-            // check the text to see if the name start is at a quote
+            // but the name itself will not include them check the text to see
+            // if the name start is at a quote
             char[] contents = unit.getContents();
-            if (contents.length > nameRange.getOffset() && contents[nameRange.getOffset()] == '"') {
-                return ((IMethod) maybeMethod);
+            if (contents.length > nameRange.getOffset() && (contents[nameRange.getOffset()] == '"' || contents[nameRange.getOffset()] == '\'')) {
+                return (IMethod) maybeMethod;
             }
         } catch (JavaModelException e) {
             GroovyCore.logException("Error finding enclosing method for refactoring", e);
@@ -119,7 +118,7 @@ public class ConvertToClosureRefactoring {
     private int findOpenParen(IDocument doc, IMethod targetMethod, ISourceRange nameRange) throws BadLocationException {
         int offset = nameRange.getOffset() + targetMethod.getElementName().length();
         while (offset < doc.getLength() && doc.getChar(offset) != '(') {
-            offset++;
+            offset += 1;
         }
         return offset;
     }
@@ -127,7 +126,7 @@ public class ConvertToClosureRefactoring {
     private int findOpenBracket(IDocument doc, int closingParen) throws BadLocationException {
         int offset = closingParen;
         while (offset < doc.getLength() && doc.getChar(offset) != '{') {
-            offset++;
+            offset += 1;
         }
         return offset;
     }
@@ -135,7 +134,7 @@ public class ConvertToClosureRefactoring {
     private int findCloseParen(IDocument doc, int open) throws BadLocationException {
         int offset = open;
         while (offset < doc.getLength() && doc.getChar(offset) != ')') {
-            offset++;
+            offset += 1;
         }
         return offset;
     }

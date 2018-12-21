@@ -76,35 +76,32 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     monitor = new NullProgressMonitor();
                 }
                 monitor.beginTask("Content assist in annotation", 3);
-                try {
-                    List<ICompletionProposal> proposals = new ArrayList<>();
-                    String memberName = getPerceivedCompletionMember();
-                    boolean memberFound = !getAnnotation().getClassNode().getMethods(memberName).isEmpty();
 
-                    if (!memberFound || isImplicitValueExpression()) {
-                        generateAnnotationMemberProposals(proposals);
-                    }
-                    monitor.worked(1);
+                List<ICompletionProposal> proposals = new ArrayList<>();
+                String memberName = getPerceivedCompletionMember();
+                boolean memberFound = !getAnnotation().getClassNode().getMethods(memberName).isEmpty();
 
-                    if (memberFound || (isImplicitValueSupported() && getAnnotation().getMembers().isEmpty())) {
-                        generateAnnotationMemberValueProposals(proposals, memberName != null ? memberName : "value", monitor);
-                    }
-                    monitor.worked(1);
+                if (!memberFound || isImplicitValueExpression()) {
+                    generateAnnotationMemberProposals(proposals);
+                }
+                monitor.worked(1);
 
-                    if (AssistOptions.ENABLED.equals(javaContext.getProject().getOption(AssistOptions.OPTION_PerformDeprecationCheck, true))) {
-                        for (Iterator<ICompletionProposal> it = proposals.iterator(); it.hasNext();) {
-                            CompletionProposal proposal = extractProposal(it.next()); // for flags
-                            if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
-                                it.remove();
-                            }
+                if (memberFound || (isImplicitValueSupported() && getAnnotation().getMembers().isEmpty())) {
+                    generateAnnotationMemberValueProposals(proposals, memberName != null ? memberName : "value", monitor);
+                }
+                monitor.worked(1);
+
+                if (AssistOptions.ENABLED.equals(javaContext.getProject().getOption(AssistOptions.OPTION_PerformDeprecationCheck, true))) {
+                    for (Iterator<ICompletionProposal> it = proposals.iterator(); it.hasNext();) {
+                        CompletionProposal proposal = extractProposal(it.next()); // for flags
+                        if (proposal != null && Flags.isDeprecated(proposal.getFlags())) {
+                            it.remove();
                         }
                     }
-                    monitor.worked(1);
-
-                    return proposals;
-                } finally {
-                    monitor.done();
                 }
+                monitor.worked(1);
+
+                return proposals;
             }
 
             private void generateAnnotationMemberProposals(List<ICompletionProposal> proposals) {
@@ -192,8 +189,6 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                         }
                     }
                 }
-
-                monitor.done();
             }
 
             private AnnotationNode getAnnotation() {

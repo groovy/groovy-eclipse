@@ -122,42 +122,38 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
-        try {
-            monitor = SubMonitor.convert(monitor, "", 7);
+        monitor = SubMonitor.convert(monitor, "", 7);
 
-            RefactoringStatus result = Checks.validateEdit(getCu(), getValidationContext());
-            if (result.hasFatalError()) {
-                return result;
-            }
-            monitor.worked(4);
-
-            result.merge(checkSelection(((SubMonitor) monitor).split(3)));
-
-            if (result.hasFatalError()) {
-                return result;
-            }
-
-            ClassNode targetType = getContainingClassNode();
-            if (targetType == null) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing Class declaration."));
-            }
-            if (targetType.isScript()) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot extract a constant to a Script."));
-            }
-
-            if (targetType.isAnnotationDefinition() || targetType.isInterface()) {
-                setTargetIsInterface(true);
-                setVisibility(JdtFlags.VISIBILITY_STRING_PUBLIC);
-            }
-
-            if (getSelectedFragment() == null) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Illegal expression selected"));
-            }
-
+        RefactoringStatus result = Checks.validateEdit(getCu(), getValidationContext());
+        if (result.hasFatalError()) {
             return result;
-        } finally {
-            monitor.done();
         }
+        monitor.worked(4);
+
+        result.merge(checkSelection(((SubMonitor) monitor).split(3)));
+
+        if (result.hasFatalError()) {
+            return result;
+        }
+
+        ClassNode targetType = getContainingClassNode();
+        if (targetType == null) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing Class declaration."));
+        }
+        if (targetType.isScript()) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot extract a constant to a Script."));
+        }
+
+        if (targetType.isAnnotationDefinition() || targetType.isInterface()) {
+            setTargetIsInterface(true);
+            setVisibility(JdtFlags.VISIBILITY_STRING_PUBLIC);
+        }
+
+        if (getSelectedFragment() == null) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Illegal expression selected"));
+        }
+
+        return result;
     }
 
     private int expandSelection(int s, int l) {
@@ -199,12 +195,11 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
             setChange(change);
 
             return result;
+
         } catch (MalformedTreeException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (BadLocationException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-        } finally {
-            pm.done();
         }
     }
 
@@ -406,28 +401,24 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fTargetIsInterface", this, true);
     }
 
-    private RefactoringStatus checkSelection(IProgressMonitor pm) throws JavaModelException {
-        try {
-            pm.beginTask("", 2);
+    private RefactoringStatus checkSelection(IProgressMonitor monitor) throws JavaModelException {
+        monitor.beginTask("", 2);
 
-            IASTFragment selectedFragment = getSelectedFragment();
+        IASTFragment selectedFragment = getSelectedFragment();
 
-            if (selectedFragment == null) {
-                String message = RefactoringCoreMessages.ExtractConstantRefactoring_select_expression;
-                return RefactoringStatus.createFatalErrorStatus(message, createContext());
-            }
-            pm.worked(1);
-
-            RefactoringStatus result = new RefactoringStatus();
-            result.merge(checkFragment());
-            if (result.hasFatalError())
-                return result;
-            pm.worked(1);
-
-            return result;
-        } finally {
-            pm.done();
+        if (selectedFragment == null) {
+            String message = RefactoringCoreMessages.ExtractConstantRefactoring_select_expression;
+            return RefactoringStatus.createFatalErrorStatus(message, createContext());
         }
+        monitor.worked(1);
+
+        RefactoringStatus result = new RefactoringStatus();
+        result.merge(checkFragment());
+        if (result.hasFatalError())
+            return result;
+        monitor.worked(1);
+
+        return result;
     }
 
     private RefactoringStatus checkFragment() throws JavaModelException {

@@ -186,11 +186,7 @@ public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2
         // insert closing quotations
         edit.addChild(new InsertEdit(expressions.get(expressions.size() - 1).getEnd(), String.valueOf(new char[] {quote, quote, quote})));
 
-        try {
-            return toTextChange(edit);
-        } finally {
-            monitor.done();
-        }
+        return toTextChange(edit);
     }
 
     //--------------------------------------------------------------------------

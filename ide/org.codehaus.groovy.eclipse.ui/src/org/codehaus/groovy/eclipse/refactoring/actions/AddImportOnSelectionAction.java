@@ -111,8 +111,6 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
-                } finally {
-                    submon.done();
                 }
             }
 

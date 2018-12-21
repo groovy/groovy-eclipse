@@ -191,77 +191,73 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
-        try {
-            monitor.beginTask("", 5);
+        monitor.beginTask("", 5);
 
-            RefactoringStatus result = Checks.validateEdit(unit, getValidationContext());
-            if (result.hasFatalError()) {
-                return result;
-            }
-            monitor.worked(1);
-
-            IASTFragment selectionFragment = getSelectionFragment();
-            if (selectionFragment == null) {
-                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
-                return result;
-            }
-            Expression selectedExpression = selectionFragment.getAssociatedExpression();
-            if (!(selectedExpression instanceof VariableExpression)) {
-                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
-                return result;
-            }
-            monitor.worked(1);
-
-            VariableExpression selectedVariableExpression = (VariableExpression) selectedExpression;
-            Variable declaredVariable = selectedVariableExpression.getAccessedVariable();
-            if (declaredVariable instanceof DynamicVariable) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert dynamic variable."));
-                return result;
-            }
-
-            if (declaredVariable instanceof Parameter || isTailRecursiveMethodParameter(selectedVariableExpression)) {
-                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_method_parameters));
-                return result;
-            }
-            if (!(declaredVariable instanceof VariableExpression)) {
-                result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
-                return result;
-            }
-            monitor.worked(1);
-
-            VariableExpression variableExpressionInDeclaration = (VariableExpression) declaredVariable;
-            DeclarationExpression declarationExpression = getDeclarationExpression(variableExpressionInDeclaration);
-
-            if (declarationExpression == null) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find variable declaration."));
-                return result;
-            }
-
-            if (declarationExpression.isMultipleAssignmentDeclaration()) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert a variable declared using multiple assignment."));
-                return result;
-            }
-            monitor.worked(1);
-
-            // We should check declaration for local type usage here
-
-            this.variableExpressionInDeclaration = variableExpressionInDeclaration;
-
-            ClassNode containingClass = getContainingClassNode();
-            if (containingClass == null) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing class declaration."));
-                return result;
-            }
-            if (containingClass.isInterface() || containingClass.isAnnotationDefinition()) {
-                result.merge(RefactoringStatus.createFatalErrorStatus("Cannot add field to an interface or annotation definition."));
-                return result;
-            }
-            monitor.worked(1);
-
+        RefactoringStatus result = Checks.validateEdit(unit, getValidationContext());
+        if (result.hasFatalError()) {
             return result;
-        } finally {
-            monitor.done();
         }
+        monitor.worked(1);
+
+        IASTFragment selectionFragment = getSelectionFragment();
+        if (selectionFragment == null) {
+            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+            return result;
+        }
+        Expression selectedExpression = selectionFragment.getAssociatedExpression();
+        if (!(selectedExpression instanceof VariableExpression)) {
+            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+            return result;
+        }
+        monitor.worked(1);
+
+        VariableExpression selectedVariableExpression = (VariableExpression) selectedExpression;
+        Variable declaredVariable = selectedVariableExpression.getAccessedVariable();
+        if (declaredVariable instanceof DynamicVariable) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert dynamic variable."));
+            return result;
+        }
+
+        if (declaredVariable instanceof Parameter || isTailRecursiveMethodParameter(selectedVariableExpression)) {
+            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_method_parameters));
+            return result;
+        }
+        if (!(declaredVariable instanceof VariableExpression)) {
+            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.PromoteTempToFieldRefactoring_select_declaration));
+            return result;
+        }
+        monitor.worked(1);
+
+        VariableExpression variableExpressionInDeclaration = (VariableExpression) declaredVariable;
+        DeclarationExpression declarationExpression = getDeclarationExpression(variableExpressionInDeclaration);
+
+        if (declarationExpression == null) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find variable declaration."));
+            return result;
+        }
+
+        if (declarationExpression.isMultipleAssignmentDeclaration()) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot convert a variable declared using multiple assignment."));
+            return result;
+        }
+        monitor.worked(1);
+
+        // We should check declaration for local type usage here
+
+        this.variableExpressionInDeclaration = variableExpressionInDeclaration;
+
+        ClassNode containingClass = getContainingClassNode();
+        if (containingClass == null) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing class declaration."));
+            return result;
+        }
+        if (containingClass.isInterface() || containingClass.isAnnotationDefinition()) {
+            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot add field to an interface or annotation definition."));
+            return result;
+        }
+        monitor.worked(1);
+
+        return result;
     }
 
     @Override
@@ -313,8 +309,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             return status;
         } catch (BadLocationException e) {
             throw new OperationCanceledException(e.getMessage());
-        } finally {
-            monitor.done();
         }
     }
 
