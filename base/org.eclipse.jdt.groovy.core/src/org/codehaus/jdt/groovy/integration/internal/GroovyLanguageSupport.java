@@ -225,6 +225,13 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public static CompilerConfiguration newCompilerConfiguration(CompilerOptions compilerOptions, ProblemReporter problemReporter) {
         CompilerConfiguration config = new CompilerConfiguration();
 
+        // if target JDK is greater than Groovy's minimum target, set it to given or max supported value
+        if (compilerOptions.targetJDK > CompilerOptions.versionToJdkLevel(config.getTargetBytecode())) {
+            long target = Math.min(compilerOptions.targetJDK, CompilerOptions.versionToJdkLevel(
+                CompilerConfiguration.ALLOWED_JDKS[CompilerConfiguration.ALLOWED_JDKS.length - 1]));
+            config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(target));
+        }
+
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
             binding.setVariable("configuration", config);

@@ -289,7 +289,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/550
     public void testProjectBasedirAsOutputLocation() throws Exception {
-        IPath path = env.addProject("Project");
+        IPath path = env.addProject("Project", "1.8");
         env.setOutputFolder(path, "");
         env.addGroovyJars(path);
 
