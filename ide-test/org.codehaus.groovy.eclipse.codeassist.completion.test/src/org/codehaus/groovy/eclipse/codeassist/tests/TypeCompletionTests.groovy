@@ -210,30 +210,30 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testCompleteClass2() {
-        String contents = 'class Foo { }\nFoo.can'
+        String contents = 'class Foo { }\nFoo.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'canonicalName', 1, true)
+        proposalExists(proposals, 'componentType', 1, true)
     }
 
     @Test
     void testCompleteClass3() {
-        String contents = 'class Foo { }\nFoo.getCan'
+        String contents = 'class Foo { }\nFoo.getCom'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'getCanonicalName', 1, true)
+        proposalExists(proposals, 'getComponentType', 1, true)
     }
 
     @Test
     void testCompleteClass4() {
-        String contents = 'class Foo { }\nFoo.class.can'
+        String contents = 'class Foo { }\nFoo.class.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'canonicalName', 1)
+        proposalExists(proposals, 'componentType', 1)
     }
 
     @Test
     void testCompleteClass5() {
-        String contents = 'class Foo { }\nFoo.class.getCan'
+        String contents = 'class Foo { }\nFoo.class.getCom'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'getCanonicalName', 1)
+        proposalExists(proposals, 'getComponentType', 1)
     }
 
     @Test

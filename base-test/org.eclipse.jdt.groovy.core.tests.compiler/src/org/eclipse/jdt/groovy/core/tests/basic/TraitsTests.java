@@ -21,18 +21,10 @@ import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public final class TraitsTests extends GroovyCompilerTestSuite {
-
-    @Before
-    public void setUp() {
-        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
-            vmArguments = new String[] {"--add-modules=java.xml.bind"};
-        }
-    }
 
     @Test
     public void testTraits() {

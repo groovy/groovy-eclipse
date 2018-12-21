@@ -135,11 +135,11 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	}
 
 	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName) throws JavaModelException {
-		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null); //$NON-NLS-1$
+		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null);
 	}
 
 	public IPath addTestPackageFragmentRoot(IPath projectPath, String sourceFolderName) throws JavaModelException {
-		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null, "bin-"+sourceFolderName, true);
+		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null, "bin-" + sourceFolderName, true); //$NON-NLS-1$
 	}
 
 	/** Adds a package fragment root to the workspace.  If
