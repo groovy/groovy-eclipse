@@ -22,6 +22,8 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.IntRange;
 import groovy.lang.Range;
+import groovy.transform.NamedParam;
+import groovy.transform.NamedParams;
 import groovy.transform.TypeChecked;
 import groovy.transform.TypeCheckingMode;
 import groovy.transform.stc.ClosureParams;
@@ -43,6 +45,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -282,6 +285,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected static final ClassNode DELEGATES_TO_TARGET = ClassHelper.make(DelegatesTo.Target.class);
     protected static final ClassNode LINKEDHASHMAP_CLASSNODE = make(LinkedHashMap.class);
     protected static final ClassNode CLOSUREPARAMS_CLASSNODE = make(ClosureParams.class);
+    protected static final ClassNode NAMED_PARAMS_CLASSNODE = make(NamedParams.class);
     protected static final ClassNode MAP_ENTRY_TYPE = make(Map.Entry.class);
     protected static final ClassNode ENUMERATION_TYPE = make(Enumeration.class);
 
@@ -1828,8 +1832,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else {
             collectionExpression.visit(this);
             final ClassNode collectionType = getType(collectionExpression);
-            ClassNode componentType = inferLoopElementType(collectionType);
             ClassNode forLoopVariableType = forLoop.getVariableType();
+            ClassNode componentType;
+            if (Character_TYPE.equals(ClassHelper.getWrapper(forLoopVariableType)) && STRING_TYPE.equals(collectionType)) {
+                // we allow auto-coercion here
+                componentType = forLoopVariableType;
+            } else {
+                componentType = inferLoopElementType(collectionType);
+            }
             if (ClassHelper.getUnwrapper(componentType) == forLoopVariableType) {
                 // prefer primitive type over boxed type
                 componentType = forLoopVariableType;
@@ -1873,7 +1883,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 componentType = MAP_ENTRY_TYPE.getPlainNodeReference();
                 componentType.setGenericsTypes(genericsTypes);
             } else if (STRING_TYPE.equals(collectionType)) {
-                componentType = ClassHelper.Character_TYPE;
+                componentType = ClassHelper.STRING_TYPE;
             } else if (ENUMERATION_TYPE.equals(collectionType)) {
                 // GROOVY-6123
                 ClassNode intf = GenericsUtils.parameterizeType(collectionType, ENUMERATION_TYPE);
@@ -2597,6 +2607,86 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         }
+        if (expressions.size() > 0 && expressions.get(0) instanceof MapExpression && params.length > 0) {
+            checkNamedParamsAnnotation(params[0], (MapExpression) expressions.get(0));
+        }
+    }
+
+    private void checkNamedParamsAnnotation(Parameter param, MapExpression args) {
+        if (!param.getType().isDerivedFrom(ClassHelper.MAP_TYPE)) return;
+        List<MapEntryExpression> entryExpressions = args.getMapEntryExpressions();
+        Map<Object, Expression> entries = new LinkedHashMap<Object, Expression>();
+        for (MapEntryExpression entry : entryExpressions) {
+            Object key = entry.getKeyExpression();
+            if (key instanceof ConstantExpression) {
+                key = ((ConstantExpression) key).getValue();
+            }
+            entries.put(key, entry.getValueExpression());
+        }
+        List<AnnotationNode> annotations = param.getAnnotations(NAMED_PARAMS_CLASSNODE);
+        if (annotations != null && !annotations.isEmpty()) {
+            AnnotationNode an = null;
+            for (AnnotationNode next : annotations) {
+                if (next.getClassNode().getName().equals(NamedParams.class.getName())) {
+                    an = next;
+                }
+            }
+            List<String> collectedNames = new ArrayList<String>();
+            if (an != null) {
+                Expression value = an.getMember("value");
+                if (value instanceof AnnotationConstantExpression) {
+                    processNamedParam((AnnotationConstantExpression) value, entries, args, collectedNames);
+                } else if (value instanceof ListExpression) {
+                    ListExpression le = (ListExpression) value;
+                    for (Expression next : le.getExpressions()) {
+                        if (next instanceof AnnotationConstantExpression) {
+                            processNamedParam((AnnotationConstantExpression) next, entries, args, collectedNames);
+                        }
+                    }
+                }
+                for (Map.Entry<Object, Expression> entry : entries.entrySet()) {
+                    if (!collectedNames.contains(entry.getKey())) {
+                        addStaticTypeError("unexpected named arg: " + entry.getKey(), args);
+                    }
+                }
+            }
+        }
+    }
+
+    private void processNamedParam(AnnotationConstantExpression value, Map<Object, Expression> entries, Expression expression, List<String> collectedNames) {
+        AnnotationNode namedParam = (AnnotationNode) value.getValue();
+        if (!namedParam.getClassNode().getName().equals(NamedParam.class.getName())) return;
+        String name = null;
+        boolean required = false;
+        ClassNode expectedType = null;
+        ConstantExpression constX = (ConstantExpression) namedParam.getMember("value");
+        if (constX != null) {
+            name = (String) constX.getValue();
+            collectedNames.add(name);
+        }
+        constX = (ConstantExpression) namedParam.getMember("required");
+        if (constX != null) {
+            required = (Boolean) constX.getValue();
+        }
+        ClassExpression typeX = (ClassExpression) namedParam.getMember("type");
+        if (typeX != null) {
+            expectedType = typeX.getType();
+        }
+        if (!entries.keySet().contains(name)) {
+            if (required) {
+                addStaticTypeError("required named arg '" + name + "' not found.", expression);
+            }
+        } else {
+            Expression supplied = entries.get(name);
+            if (isCompatibleType(expectedType, expectedType != null, supplied.getType())) {
+                addStaticTypeError("parameter for named arg '" + name + "' has type '" + prettyPrintType(supplied.getType()) +
+                        "' but expected '" + prettyPrintType(expectedType) + "'.", expression);
+            }
+        }
+    }
+
+    private boolean isCompatibleType(ClassNode expectedType, boolean b, ClassNode type) {
+        return b && !isAssignableTo(type, expectedType);
     }
 
     /**
@@ -3923,7 +4013,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (exp instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) exp;
             final Variable accessedVariable = var.getAccessedVariable();
-            if (accessedVariable != null && accessedVariable != exp && accessedVariable instanceof VariableExpression) {
+            if (accessedVariable != exp && accessedVariable instanceof VariableExpression) {
                 storeType((Expression) accessedVariable, cn);
             }
             if (accessedVariable instanceof Parameter) {
@@ -4562,7 +4652,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 checkOrMarkPrivateAccess(vexp, fieldNode, isLHSOfEnclosingAssignment(vexp));
                 return getType(fieldNode);
             }
-            if (variable != null && variable != vexp && variable instanceof VariableExpression) {
+            if (variable != vexp && variable instanceof VariableExpression) {
                 return getType((Expression) variable);
             }
             if (variable instanceof Parameter) {
@@ -5410,6 +5500,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             this.name = name;
         }
     }
+
 
     /**
      * Wrapper for a Parameter so it can be treated like a VariableExpression

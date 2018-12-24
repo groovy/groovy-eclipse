@@ -92,13 +92,12 @@ public class StatementWriter {
         }
         compileStack.pop();
 
-        // GRECLIPSE add
+        // GROOVY-7647
         if (block.getLastLineNumber() > 0) {
             MethodVisitor mv = controller.getMethodVisitor();
             Label blockEnd = new Label(); mv.visitLabel(blockEnd);
             mv.visitLineNumber(block.getLastLineNumber(), blockEnd);
         }
-        // GRECLIPSE end
 
         controller.getOperandStack().popDownTo(mark);
     }
