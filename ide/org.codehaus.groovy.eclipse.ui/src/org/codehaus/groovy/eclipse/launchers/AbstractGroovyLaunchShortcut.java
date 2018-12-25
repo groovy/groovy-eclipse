@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -211,16 +212,16 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
             javaProject.getElementName());
         launchConfigProperties.put(
             IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
-            "-Dgroovy.home=\"${groovy_home}\"");
-        launchConfigProperties.put(
-            GROOVY_TYPE_TO_RUN,
-            runType == null ? "" : runType.getFullyQualifiedName());
+            "-Dgroovy.home=\"${groovy_home}\" -Djava.system.class.loader=groovy.lang.GroovyClassLoader");
         launchConfigProperties.put(
             IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
             "--classpath " + generateClasspath(javaProject) + " --main " + classToRun() + pathToClass);
         launchConfigProperties.put(
             IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY,
             getWorkingDirectory(runType, javaProject));
+        launchConfigProperties.put(
+            GROOVY_TYPE_TO_RUN,
+            Optional.ofNullable(runType).map(IType::getFullyQualifiedName).orElse(""));
 
         return launchConfigProperties;
     }
