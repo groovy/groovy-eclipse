@@ -37,6 +37,7 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
@@ -240,7 +241,7 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
         }
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/779
+    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
     void testScriptLaunch11() {
         def unit = addGroovySource('''\
             @Grapes([
