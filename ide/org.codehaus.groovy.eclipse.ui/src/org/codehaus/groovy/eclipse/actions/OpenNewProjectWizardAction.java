@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.wizards;
+package org.codehaus.groovy.eclipse.actions;
 
+import org.codehaus.groovy.eclipse.wizards.NewProjWizard;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.ui.actions.AbstractOpenWizardAction;
 import org.eclipse.jface.action.IAction;
@@ -26,14 +27,14 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-public class OpenGroovyProjectWizardAction extends AbstractOpenWizardAction implements IWorkbenchWindowActionDelegate {
+public class OpenNewProjectWizardAction extends AbstractOpenWizardAction implements IWorkbenchWindowActionDelegate {
 
-    public OpenGroovyProjectWizardAction() {
+    public OpenNewProjectWizardAction() {
     }
 
     @Override
     protected final INewWizard createWizard() throws CoreException {
-        return new GroovyProjectWizard();
+        return new NewProjWizard();
     }
 
     @Override

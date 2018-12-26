@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.wizards;
+package org.codehaus.groovy.eclipse.actions;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.preferences.CompilerSwitchUIHelper;
@@ -38,38 +38,18 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class ListMessageDialog extends MessageDialog {
 
-    static class TableContentProvider implements IStructuredContentProvider {
-        @Override
-        public Object[] getElements(Object inputElement) {
-            if (inputElement instanceof IProject[]) {
-                return (IProject[]) inputElement;
-            }
-            return null;
-        }
-        @Override
-        public void dispose() {
-        }
-        @Override
-        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-        }
-    }
-
-    private static final String TITLE = "Fix compiler level mismatches"; //$NON-NLS-1$
-
     private final IProject[] mismatchedProjects;
     private IProject[] checkedMismatchedProjects;
 
     private CheckboxTableViewer viewer;
 
     /**
-     * Opens the mismatched compiler dialog focusing on the selected projects
-     * @param mismatchProjects
-     * @return
+     * Opens the mismatched compiler dialog focusing on the selected projects.
      */
     public static IProject[] openViewer(Shell shell, IProject[] mismatchProjects) {
         ListMessageDialog dialog = new ListMessageDialog(shell, mismatchProjects);
         int res = dialog.open();
-        if (res == 0D) {
+        if (res == 0) {
             return dialog.getAllChecked();
         } else {
             return null;
@@ -92,8 +72,8 @@ public class ListMessageDialog extends MessageDialog {
     }
 
     public ListMessageDialog(Shell shell, IProject[] mismatchedProjects) {
-        super(shell, TITLE, null, createMessage(mismatchedProjects), QUESTION, new String[] { IDialogConstants.YES_LABEL,
-            IDialogConstants.NO_LABEL }, 0);
+        super(shell, "Fix compiler level mismatches", null, createMessage(mismatchedProjects),
+            QUESTION, new String[] {IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL}, 0);
         this.mismatchedProjects = mismatchedProjects;
     }
 
@@ -147,18 +127,16 @@ public class ListMessageDialog extends MessageDialog {
     }
 
     protected Button createButton(Composite parent, String label, int style, SelectionListener listener) {
-        Button button= new Button(parent, SWT.PUSH);
+        Button button = new Button(parent, SWT.PUSH);
         button.setFont(parent.getFont());
         button.setText(label);
         button.addSelectionListener(listener);
-        GridData gd= new GridData();
-        gd.horizontalAlignment= GridData.FILL;
-        gd.grabExcessHorizontalSpace= false;
-        gd.verticalAlignment= GridData.BEGINNING;
+        GridData gd = new GridData();
+        gd.horizontalAlignment = GridData.FILL;
+        gd.grabExcessHorizontalSpace = false;
+        gd.verticalAlignment = GridData.BEGINNING;
         gd.widthHint = 100;
-
         button.setLayoutData(gd);
-
         return button;
     }
 
@@ -180,5 +158,23 @@ public class ListMessageDialog extends MessageDialog {
         }
         sb.append("Do you want to change the project compiler levels to match the workspace level?"); //$NON-NLS-1$
         return sb.toString();
+    }
+
+    private static class TableContentProvider implements IStructuredContentProvider {
+        @Override
+        public Object[] getElements(Object inputElement) {
+            if (inputElement instanceof IProject[]) {
+                return (IProject[]) inputElement;
+            }
+            return null;
+        }
+
+        @Override
+        public void dispose() {
+        }
+
+        @Override
+        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+        }
     }
 }

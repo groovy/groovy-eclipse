@@ -151,7 +151,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.OutlineExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.SemanticHighlightingTests,
-    org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestCaseWizardTests,
+    org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestWizardTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests
 ])
 final class AllGroovyTests {

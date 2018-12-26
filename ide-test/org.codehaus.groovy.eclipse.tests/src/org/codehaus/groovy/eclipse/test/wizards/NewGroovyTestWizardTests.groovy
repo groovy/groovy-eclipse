@@ -19,7 +19,7 @@ import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
 import static org.junit.Assert.assertEquals
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.wizards.NewGroovyTestTypeWizardPage
+import org.codehaus.groovy.eclipse.wizards.NewTestWizard
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
@@ -29,7 +29,7 @@ import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo
 import org.junit.Before
 import org.junit.Test
 
-final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
+final class NewGroovyTestWizardTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
@@ -41,7 +41,7 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
     void testCreateGroovyTestCase_NotGroovyProject() {
         removeNature(GROOVY_NATURE)
         try {
-            def wizardPage = newGroovyTestTypeWizardPage()
+            def wizardPage = newTestWizardPage1()
             wizardPage.setTypeName('NonGroovyProjectTestCase', true)
             wizardPage.createType(new NullProgressMonitor())
 
@@ -53,7 +53,7 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     @Test
     void testCreateGroovyTestCase_YesGroovyProject() {
-        def wizardPage = newGroovyTestTypeWizardPage()
+        def wizardPage = newTestWizardPage1()
         wizardPage.setTypeName('GroovyProjectTestCase', true)
         wizardPage.createType(new NullProgressMonitor())
 
@@ -71,7 +71,7 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     @Test
     void testCreateGroovyTestCase_SetUpAndTearDown() {
-        def wizardPage = newGroovyTestTypeWizardPage()
+        def wizardPage = newTestWizardPage1()
         wizardPage.setTypeName('GroovyProjectTestCase', true)
         wizardPage.setStubSelection('setUp', true)
         wizardPage.setStubSelection('tearDown', true)
@@ -101,8 +101,8 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private NewGroovyTestTypeWizardPage newGroovyTestTypeWizardPage() {
-        def wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
+    private NewTestWizard.PageOne newTestWizardPage1() {
+        def wizardPage = new NewTestWizard.PageOne(new NewTestCaseWizardPageTwo())
         wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
         wizardPage.setPackageFragment(getPackageFragment('test'), true)
         wizardPage.setEnclosingTypeSelection(false, true)

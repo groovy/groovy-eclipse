@@ -175,10 +175,11 @@
       </category>
       <wizard
             category="org.codehaus.groovy.eclipse"
+            class="org.codehaus.groovy.eclipse.wizards.NewTypeWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             icon="$nl$/icons/wiz/newgroovyclass.png"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
-            name="Groovy Class"
+            name="Groovy Type"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewClassWizard">
             <parameter
@@ -187,12 +188,12 @@
             </parameter>
          </class>
          <description>
-            Create a new Groovy class
+            Create a new Groovy type
          </description>
       </wizard>
       <wizard
             category="org.codehaus.groovy.eclipse"
-            class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
+            class="org.codehaus.groovy.eclipse.wizards.NewProjWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             icon="$nl$/icons/wiz/newgroovyproject.png"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
@@ -208,16 +209,16 @@
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             icon="$nl$/icons/wiz/newgroovytestcase.png"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
-            name="Groovy Test Case"
+            name="Groovy Test"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
-         <class class="org.codehaus.groovy.eclipse.wizards.NewGroovyTestCaseWizard">
+         <class class="org.codehaus.groovy.eclipse.wizards.NewTestWizard">
             <parameter
                   name="javatype"
                   value="true">
             </parameter>
          </class>
          <description>
-            Create a new Groovy JUnit test suite
+            Create a new Groovy test class
          </description>
       </wizard>
    </extension>
@@ -552,7 +553,7 @@
             label="Groovy Element Creation"
             visible="false">
          <action
-               class="org.codehaus.groovy.eclipse.wizards.OpenGroovyProjectWizardAction"
+               class="org.codehaus.groovy.eclipse.actions.OpenNewProjectWizardAction"
                icon="$nl$/icons/wiz/newgroovyproject.png"
                id="opengroovyprojectwizard"
                label="Groovy Project..."

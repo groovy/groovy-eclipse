@@ -15,23 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.test.wizards
 
-import static org.codehaus.jdt.groovy.model.GroovyNature.GROOVY_NATURE
-import static org.junit.Assert.assertEquals
-
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.wizards.NewClassWizardPage
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IPackageFragment
-import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.codehaus.groovy.eclipse.wizards.NewTypeWizard
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils
-import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.ui.wizards.NewElementWizardPage
-import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
 import org.junit.Before
 import org.junit.Test
 
@@ -41,8 +29,7 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
     void setUp() {
         setJavaPreference(PreferenceConstants.CODEGEN_ADD_COMMENTS, 'false')
         setJavaPreference(PreferenceConstants.CODEGEN_USE_OVERRIDE_ANNOTATION, 'true')
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
 
         Class stubUtility, codeTemplateContextType
         try {
@@ -53,189 +40,196 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             codeTemplateContextType = Class.forName('org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType')
         }
         stubUtility.setCodeTemplate(codeTemplateContextType.NEWTYPE_ID, '${filecomment}\n${package_declaration}\n\n${typecomment}\n${type_declaration}', null)
-        stubUtility.setCodeTemplate(codeTemplateContextType.TYPECOMMENT_ID, '/**\n * Type\n */', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.FILECOMMENT_ID, '/**\n * File\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.TYPECOMMENT_ID, '/**\n * Type\n */', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.CONSTRUCTORCOMMENT_ID, '/**\n * Constructor\n */', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.METHODCOMMENT_ID, '/**\n * Method\n */', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.OVERRIDECOMMENT_ID, '/**\n * Overridden\n */', null)
-        stubUtility.setCodeTemplate(codeTemplateContextType.METHODSTUB_ID, '${body_statement}', null)
-        stubUtility.setCodeTemplate(codeTemplateContextType.CONSTRUCTORSTUB_ID, '${body_statement}', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.CLASSBODY_ID, '/* class body */\n', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.INTERFACEBODY_ID, '/* interface body */\n', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.ENUMBODY_ID, '/* enum body */\n', null)
         stubUtility.setCodeTemplate(codeTemplateContextType.ANNOTATIONBODY_ID, '/* annotation body */\n', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.CONSTRUCTORSTUB_ID, '${body_statement}', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.METHODSTUB_ID, '${body_statement}', null)
     }
 
-    private NewClassWizardPage clearModifiers(NewClassWizardPage wizardPage) {
-        SelectionButtonDialogFieldGroup group = ReflectionUtils.getPrivateField(NewTypeWizardPage, 'fAccMdfButtons', wizardPage)
-        for (i in 0..5) {
-            group.setSelection(i, false)
+    @Test
+    void testSomething() {
+        new NewTypeWizard().with {
+            // TODO
         }
-        wizardPage
     }
 
-    private void assertStatus(int severity, String msgFragment, NewClassWizardPage wizardPage) {
-        IStatus status = ReflectionUtils.getPrivateField(NewElementWizardPage, 'fCurrStatus', wizardPage)
-        assert status.severity == severity
-        assert status.message.contains(msgFragment) : 'Unexpected message: ' + status.message
-    }
-
-    @Test
-    void testNotGroovyProject() {
-        removeNature(GROOVY_NATURE)
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage)
-    }
-
-    @Test
-    void testExclusionFilters() {
-        IPackageFragmentRoot root = addSourceFolder('other', new Path('**/*.groovy'))
-        IPackageFragment frag = root.createPackageFragment('p', true, null)
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(root, true)
-        wizardPage.setPackageFragment(frag, true)
-        wizardPage.setTypeName('Nuthin', true)
-        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage)
-    }
-
-    @Test
-    void testDiscouraedDefaultPackage() {
-        removeNature(GROOVY_NATURE)
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage)
-    }
-
-    @Test
-    void testCreateGroovyClass1() {
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setTypeName('E', true)
-        wizardPage.setSuperClass('', true)
-        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
-        wizardPage.setMethodStubSelection(false, false, false, true)
-        wizardPage.setAddComments(true, true)
-        wizardPage.enableCommentControl(true)
-
-        wizardPage.createType(new NullProgressMonitor())
-
-        String expected = '''\
-            |/**
-            | * File
-            | */
-            |package test1
-            |
-            |/**
-            | * Type
-            | */
-            |class E {
-            |    /* class body */
-            |}
-            |'''.stripMargin()
-
-        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
-    }
-
-    @Test
-    void testCreateGroovyClass2() {
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setTypeName('E', true)
-        wizardPage.setSuperClass('ArrayList', true)
-        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
-        wizardPage.setMethodStubSelection(false, false, false, true)
-        wizardPage.setAddComments(true, true)
-        wizardPage.enableCommentControl(true)
-
-        wizardPage.createType(new NullProgressMonitor())
-
-        String expected = '''\
-            |/**
-            | * File
-            | */
-            |package test1
-            |
-            |/**
-            | * Type
-            | */
-            |class E extends ArrayList {
-            |    /* class body */
-            |}
-            |'''.stripMargin()
-
-        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
-    }
-
-    @Test
-    void testCreateGroovyClass3() {
-        NewClassWizardPage wizardPage = new NewClassWizardPage()
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setTypeName('E', true)
-        wizardPage.setSuperClass('java.util.ArrayList<String>', true)
-        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
-        wizardPage.setMethodStubSelection(false, false, false, true)
-        wizardPage.setAddComments(true, true)
-        wizardPage.enableCommentControl(true)
-
-        wizardPage.createType(new NullProgressMonitor())
-
-        String expected = '''\
-            |/**
-            | * File
-            | */
-            |package test1
-            |
-            |/**
-            | * Type
-            | */
-            |class E extends ArrayList<String> {
-            |    /* class body */
-            |}
-            |'''.stripMargin()
-
-        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
-    }
-
-    @Test
-    void testCreateGroovyClass4() {
-        NewClassWizardPage wizardPage = clearModifiers(new NewClassWizardPage())
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setTypeName('Foo', true)
-        wizardPage.setSuperClass('', true)
-        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
-        wizardPage.setMethodStubSelection(false, false, false, true)
-        wizardPage.setModifiers(wizardPage.F_FINAL, true)
-        wizardPage.setAddComments(true, true)
-        wizardPage.enableCommentControl(true)
-
-        wizardPage.createType(new NullProgressMonitor())
-
-        String expected = '''\
-            |/**
-            | * File
-            | */
-            |package test1
-            |
-            |import groovy.transform.PackageScope
-            |
-            |/**
-            | * Type
-            | */
-            |@PackageScope final class Foo {
-            |    /* class body */
-            |}
-            |'''.stripMargin()
-
-        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
-    }
+//    private NewTypeWizard clearModifiers(NewTypeWizard wizard) {
+//        SelectionButtonDialogFieldGroup group = ReflectionUtils.getPrivateField(NewTypeWizard, 'fAccMdfButtons', wizard)
+//        for (i in 0..5) {
+//            group.setSelection(i, false)
+//        }
+//        wizard
+//    }
+//
+//    private void assertStatus(int severity, String msgFragment, NewTypeWizard wizard) {
+//        IStatus status = ReflectionUtils.getPrivateField(NewTypeWizard, 'fCurrStatus', wizard)
+//        assert status.severity == severity
+//        assert status.message.contains(msgFragment) : 'Unexpected message: ' + status.message
+//    }
+//
+//    @Test
+//    void testNotGroovyProject() {
+//        removeNature(GROOVY_NATURE)
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+//        assertStatus(IStatus.WARNING, 'is not a groovy project.  Groovy Nature will be added to project upon completion.', wizardPage)
+//    }
+//
+//    @Test
+//    void testExclusionFilters() {
+//        IPackageFragmentRoot root = addSourceFolder('other', new Path('**/*.groovy'))
+//        IPackageFragment frag = root.createPackageFragment('p', true, null)
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(root, true)
+//        wizardPage.setPackageFragment(frag, true)
+//        wizardPage.setTypeName('Nuthin', true)
+//        assertStatus(IStatus.ERROR, 'Cannot create Groovy type because of exclusion patterns on the source folder.', wizardPage)
+//    }
+//
+//    @Test
+//    void testDiscouraedDefaultPackage() {
+//        removeNature(GROOVY_NATURE)
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        assertStatus(IStatus.WARNING, 'The use of the default package is discouraged.', wizardPage)
+//    }
+//
+//    @Test
+//    void testCreateGroovyClass1() {
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+//        wizardPage.setEnclosingTypeSelection(false, true)
+//        wizardPage.setTypeName('E', true)
+//        wizardPage.setSuperClass('', true)
+//        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+//        wizardPage.setMethodStubSelection(false, false, false, true)
+//        wizardPage.setAddComments(true, true)
+//        wizardPage.enableCommentControl(true)
+//
+//        wizardPage.createType(new NullProgressMonitor())
+//
+//        String expected = '''\
+//            |/**
+//            | * File
+//            | */
+//            |package test1
+//            |
+//            |/**
+//            | * Type
+//            | */
+//            |class E {
+//            |    /* class body */
+//            |}
+//            |'''.stripMargin()
+//
+//        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+//    }
+//
+//    @Test
+//    void testCreateGroovyClass2() {
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+//        wizardPage.setEnclosingTypeSelection(false, true)
+//        wizardPage.setTypeName('E', true)
+//        wizardPage.setSuperClass('ArrayList', true)
+//        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+//        wizardPage.setMethodStubSelection(false, false, false, true)
+//        wizardPage.setAddComments(true, true)
+//        wizardPage.enableCommentControl(true)
+//
+//        wizardPage.createType(new NullProgressMonitor())
+//
+//        String expected = '''\
+//            |/**
+//            | * File
+//            | */
+//            |package test1
+//            |
+//            |/**
+//            | * Type
+//            | */
+//            |class E extends ArrayList {
+//            |    /* class body */
+//            |}
+//            |'''.stripMargin()
+//
+//        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+//    }
+//
+//    @Test
+//    void testCreateGroovyClass3() {
+//        NewClassWizardPage wizardPage = new NewClassWizardPage()
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+//        wizardPage.setEnclosingTypeSelection(false, true)
+//        wizardPage.setTypeName('E', true)
+//        wizardPage.setSuperClass('java.util.ArrayList<String>', true)
+//        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+//        wizardPage.setMethodStubSelection(false, false, false, true)
+//        wizardPage.setAddComments(true, true)
+//        wizardPage.enableCommentControl(true)
+//
+//        wizardPage.createType(new NullProgressMonitor())
+//
+//        String expected = '''\
+//            |/**
+//            | * File
+//            | */
+//            |package test1
+//            |
+//            |/**
+//            | * Type
+//            | */
+//            |class E extends ArrayList<String> {
+//            |    /* class body */
+//            |}
+//            |'''.stripMargin()
+//
+//        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+//    }
+//
+//    @Test
+//    void testCreateGroovyClass4() {
+//        NewClassWizardPage wizardPage = clearModifiers(new NewClassWizardPage())
+//        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+//        wizardPage.setPackageFragment(getPackageFragment('test1'), true)
+//        wizardPage.setEnclosingTypeSelection(false, true)
+//        wizardPage.setTypeName('Foo', true)
+//        wizardPage.setSuperClass('', true)
+//        wizardPage.setSuperInterfaces(Collections.EMPTY_LIST, true)
+//        wizardPage.setMethodStubSelection(false, false, false, true)
+//        wizardPage.setModifiers(wizardPage.F_FINAL, true)
+//        wizardPage.setAddComments(true, true)
+//        wizardPage.enableCommentControl(true)
+//
+//        wizardPage.createType(new NullProgressMonitor())
+//
+//        String expected = '''\
+//            |/**
+//            | * File
+//            | */
+//            |package test1
+//            |
+//            |import groovy.transform.PackageScope
+//            |
+//            |/**
+//            | * Type
+//            | */
+//            |@PackageScope final class Foo {
+//            |    /* class body */
+//            |}
+//            |'''.stripMargin()
+//
+//        assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+//    }
 }

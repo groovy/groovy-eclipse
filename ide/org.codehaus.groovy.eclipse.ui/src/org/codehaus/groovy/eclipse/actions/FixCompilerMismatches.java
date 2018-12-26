@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.wizards.ListMessageDialog;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -38,7 +37,8 @@ import org.eclipse.ui.IWorkbenchPart;
  * Brings up a dialog to fix workspace compiler mismatches.
  */
 public class FixCompilerMismatches implements IObjectActionDelegate {
-    Shell activeShell = null;
+
+    Shell activeShell;
 
     @Override
     public void run(IAction action) {
@@ -50,7 +50,7 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
             }
         }
 
-        if (mismatchedProjects.size() > 0) {
+        if (!mismatchedProjects.isEmpty()) {
             IProject[] toConvert = ListMessageDialog.openViewer(activeShell, mismatchedProjects.toArray(new IProject[0]));
             if (toConvert == null) {
                 return;
@@ -77,16 +77,15 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
     }
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        // noop
-    }
-
-    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         if (targetPart != null) {
             activeShell = targetPart.getSite().getShell();
         } else {
             activeShell = null;
         }
+    }
+
+    @Override
+    public void selectionChanged(IAction action, ISelection selection) {
     }
 }
