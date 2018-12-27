@@ -39,12 +39,16 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.bidi.StructuredTextTypeHandlerFactory;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
@@ -83,6 +87,7 @@ import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.wizards.NewAnnotationWizardPage;
 import org.eclipse.jdt.ui.wizards.NewContainerWizardPage;
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
+import org.eclipse.jdt.ui.wizards.NewTypeWizardPage.ImportsManager;
 import org.eclipse.jface.contentassist.SubjectControlContentAssistant;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -180,7 +185,33 @@ public class NewTypeWizard extends NewElementWizard {
             builder.setStubs(stubs.isSelected(0), stubs.isSelected(1), stubs.isSelected(2));
         }
 
-        fCreatedType = builder.build(monitor);
+        fCreatedType = builder.build(monitor, this::finishType);
+    }
+
+    protected void finishType(IType createdType, IProgressMonitor subMonitor) throws OperationCanceledException {
+        NewAnnotationWizardPage delegate = (NewAnnotationWizardPage) ((PageTwo) getPage(PageTwo.PAGE_NAME)).getActiveControl().getData("AnnotationDelegate");
+        if (delegate != null) {
+            subMonitor.beginTask(NewWizardMessages.NewAnnotationWizardPage_description, 3);
+
+            //CompilationUnit astRoot = delegate.createASTForImports(fCreatedType.getCompilationUnit());
+            CompilationUnit astRoot = ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "createASTForImports",
+                            new Class[] {ICompilationUnit.class}, delegate, new Object[] {createdType.getCompilationUnit()});
+
+            //ImportsManager imports = new ImportsManager(astRoot);
+            ImportsManager imports = ReflectionUtils.invokeConstructor(ReflectionUtils.getConstructor(ImportsManager.class, CompilationUnit.class), astRoot);
+
+            subMonitor.worked(1);
+            if (subMonitor.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+
+            //delegate.createTypeMembers(createdType, imports, ((SubMonitor) subMonitor).split(1));
+            ReflectionUtils.executePrivateMethod(NewAnnotationWizardPage.class, "createTypeMembers",
+                            new Class[] {IType.class, ImportsManager.class, IProgressMonitor.class}, delegate, new Object[] {createdType, imports, ((SubMonitor) subMonitor).split(1)});
+
+            //imports.create(false, ((SubMonitor) subMonitor).split(1));
+            ReflectionUtils.executePrivateMethod(ImportsManager.class, "create", new Class[] {boolean.class, IProgressMonitor.class}, imports, new Object[] {Boolean.FALSE, ((SubMonitor) subMonitor).split(1)});
+        }
     }
 
     @Override
@@ -551,7 +582,7 @@ public class NewTypeWizard extends NewElementWizard {
 
             Map<String, Integer> modifiers = new LinkedHashMap<>();
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_public,    Flags.AccPublic);
-            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
+          //modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_private,   Flags.AccPrivate);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_protected, Flags.AccProtected);
 
@@ -566,11 +597,11 @@ public class NewTypeWizard extends NewElementWizard {
             //delegate.initAnnotationPage();
             ReflectionUtils.executePrivateMethod(NewAnnotationWizardPage.class, "initAnnotationPage", delegate);
 
-            // TODO: call NewAnnotationWizardPage.createTypeMembers(IType, ImportsManager, IProgressMonitor) on finish
-
             createSeparator(composite, nColumns);
 
             createCommentControls(composite, nColumns);
+
+            composite.setData("AnnotationDelegate", delegate);
         }
 
         private void createEnumerationControls(Composite parent) {

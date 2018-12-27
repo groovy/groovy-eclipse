@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
@@ -128,8 +129,11 @@ public class GroovyTypeBuilder {
     //--------------------------------------------------------------------------
 
     public IType build(IProgressMonitor monitor) throws CoreException, InterruptedException {
-        monitor = SubMonitor.convert(monitor, 9);
-        monitor.beginTask(NewWizardMessages.NewTypeWizardPage_operationdesc, 9);
+        return build(monitor, null);
+    }
+
+    public IType build(IProgressMonitor monitor, BiConsumer<IType, IProgressMonitor> otherSteps) throws CoreException, InterruptedException {
+        monitor = SubMonitor.convert(monitor, NewWizardMessages.NewTypeWizardPage_operationdesc, 10);
 
         IProject project = root.getJavaProject().getProject();
         if (!GroovyNature.hasGroovyNature(project)) {
@@ -277,6 +281,11 @@ public class GroovyTypeBuilder {
             captureImports(cu);
             // members can be added now that super types are known/resolved
             buildTypeMembers(createdType, indent, ((SubMonitor) monitor).split(1));
+            if (otherSteps != null) {
+                otherSteps.accept(createdType, ((SubMonitor) monitor).split(1));
+            } else {
+                monitor.worked(1);
+            }
             rewriteImports(true, ((SubMonitor) monitor).split(1));
             JavaModelUtil.reconcile(cu);
             if (monitor.isCanceled()) {
