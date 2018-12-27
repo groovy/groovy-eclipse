@@ -16,6 +16,7 @@
         <file-match-pattern match-pattern="groovy/antlr/parser/GroovyRecognizer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/antlr/parser/GroovyTokenTypes.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/AnnotatedNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/AnnotationNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ASTNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ClassCodeVisitorSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ClassHelper.java" include-pattern="false" />

@@ -270,4 +270,16 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
         method = findMethod(getCUDeclFor("Foo.groovy"), "method4");
         assertTrue("Expected protected but was: " + Modifier.toString(method.modifiers), Modifier.isProtected(method.modifiers));
     }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8940
+    public void testPackageScope9() {
+        String[] sources = {
+            "Tag.groovy",
+            "@groovy.transform.PackageScope\n" +
+            "@interface Tag {\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
 }

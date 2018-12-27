@@ -282,7 +282,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             }
             ClassNode superClass = next.getUnresolvedSuperClass();
             if (superClass != null) {
-                next =  correctToGenericsSpecRecurse(updatedGenericsSpec, superClass);
+                next = correctToGenericsSpecRecurse(updatedGenericsSpec, superClass);
             } else {
                 next = null;
             }
@@ -291,7 +291,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     private static MethodNode getDeclaredMethodCorrected(Map genericsSpec, MethodNode mn, ClassNode correctedNext) {
-        for (MethodNode orig :  correctedNext.getDeclaredMethods(mn.getName())) {
+        for (MethodNode orig : correctedNext.getDeclaredMethods(mn.getName())) {
             MethodNode method = correctToGenericsSpec(genericsSpec, orig);
             if (ParameterUtils.parametersEqual(method.getParameters(), mn.getParameters())) {
                 return method;
@@ -324,7 +324,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     public void addError(String msg, ASTNode expr) {
-        // GRECLIPSE: start: use new form of error message that has an end column
+        // GRECLIPSE add -- use new form of error message that has an end column
         if (expr instanceof AnnotationNode) {
             AnnotationNode aNode = (AnnotationNode) expr;
             this.source.getErrorCollector().addErrorAndContinue(

@@ -321,7 +321,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     protected void addError(String msg, ASTNode expr) {
-        // GRECLIPSE: start: use new form of error message that has an end column
+        // GRECLIPSE add -- use new form of error message that has an end column
         if (expr instanceof AnnotationNode) {
             AnnotationNode aNode = (AnnotationNode) expr;
             this.source.getErrorCollector().addErrorAndContinue(

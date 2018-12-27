@@ -582,7 +582,7 @@ public class NewTypeWizard extends NewElementWizard {
 
             Map<String, Integer> modifiers = new LinkedHashMap<>();
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_public,    Flags.AccPublic);
-          //modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
+            modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_default,   Flags.AccDefault);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_private,   Flags.AccPrivate);
             modifiers.put(NewWizardMessages.NewTypeWizardPage_modifiers_protected, Flags.AccProtected);
 
