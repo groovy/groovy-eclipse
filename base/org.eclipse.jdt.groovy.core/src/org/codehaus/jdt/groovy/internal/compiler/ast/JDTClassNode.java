@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.codehaus.groovy.GroovyBugError;
+import groovy.lang.MissingClassException;
+
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -129,7 +130,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         this.jdtBinding = jdtReferenceBinding;
         this.resolver = resolver;
 
-        // population of the methods/ctors/fields/etc is not done until required
+        // population of fields, methods, etc. is deferred until required
         this.lazyInitDone = false;
 
         // a primary node will result in a class file
@@ -644,7 +645,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 unfindable = true;
             }
         }
-        throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader " + transformLoader);
+        throw new MissingClassException(this, "-- JDTClassNode.getTypeClass() cannot locate it using transform loader " + transformLoader);
     }
 
     public boolean isAnonymous() {
