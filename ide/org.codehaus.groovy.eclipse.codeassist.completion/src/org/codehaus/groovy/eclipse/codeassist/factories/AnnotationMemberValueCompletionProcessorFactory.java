@@ -154,6 +154,8 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
 
                 // generate field proposals from the current scope and (if applicable) enum constants
                 FieldProposalCreator fieldProposalCreator = initProposalCreator(new FieldProposalCreator());
+                fieldProposalCreator.setFavoriteStaticMembers(context.getFavoriteStaticMembers());
+                fieldProposalCreator.setCurrentScope(context.getPerceivedCompletionScope());
 
                 List<ClassNode> completionTypes = new ArrayList<>(2);
                 if (context.containingDeclaration instanceof ClassNode) {
@@ -216,9 +218,6 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
 
             private <T extends AbstractProposalCreator> T initProposalCreator(T proposalCreator) {
                 AssistOptions options = new AssistOptions(javaContext.getProject().getOptions(true));
-
-                proposalCreator.setCurrentScope(context.getPerceivedCompletionScope());
-                proposalCreator.setFavoriteStaticMembers(context.getFavoriteStaticMembers());
                 proposalCreator.setNameMatchingStrategy((String pattern, String candidate) -> {
                     return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.substringMatch);
                 });
