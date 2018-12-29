@@ -25,7 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
  * @author Andrew Eisenberg
  */
 
-assertVersion(groovyEclipse: '3.2.0')
+assertVersion(groovyEclipse: '3.2.1')
 
 interface IPointcut {
     /**
