@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-	<version>3.2.0-SNAPSHOT</version>
+	<version>3.3.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
@@ -19,9 +19,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>1.2.0</tycho-version>
+		<tycho-version>1.3.0</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs-extras/index.html -->
-		<tycho-extras-version>1.2.0</tycho-extras-version>
+		<tycho-extras-version>1.3.0</tycho-extras-version>
 
 		<!-- Version of greclipse maven compiler to use for building. (Some bundles,
 			mostly test related, have groovy code that can't be compiled with standard
@@ -277,7 +277,7 @@
 			<id>release</id>
 			<properties>
 				<dist.type>release</dist.type>
-				<dist.version>3.2.0</dist.version>
+				<dist.version>3.3.0</dist.version>
 				<dist.qualifier>-RELEASE</dist.qualifier>
 				<!-- use the below for 'practice' builds, comment out to do the 'real' build -->
 				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
