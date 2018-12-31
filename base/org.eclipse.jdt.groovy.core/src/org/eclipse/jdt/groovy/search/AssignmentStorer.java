@@ -170,22 +170,7 @@ public class AssignmentStorer {
      * This method is a placeholder for supporting more than just assignments.
      */
     private boolean isInterestingOperation(BinaryExpression assign) {
-        switch (assign.getOperation().getType()) {
-        case Types.EQUALS:
-        // TODO: Should we handle other cases too?
-        //case Types.PLUS_EQUAL:
-        //case Types.MINUS_EQUAL:
-        //case Types.LEFT_SHIFT:
-        //case Types.BITWISE_AND_EQUAL:
-        //case Types.BITWISE_OR_EQUAL:
-        //case Types.BITWISE_XOR_EQUAL:
-        //case Types.DIVIDE_EQUAL:
-        //case Types.LOGICAL_AND_EQUAL:
-        //case Types.LOGICAL_OR_EQUAL:
-            return true;
-        default:
-            return false;
-        }
+        return Types.isAssignment(assign.getOperation().getType()) /*|| Types.LEFT_SHIFT == assign.getOperation().getType()*/;
     }
 
     /**

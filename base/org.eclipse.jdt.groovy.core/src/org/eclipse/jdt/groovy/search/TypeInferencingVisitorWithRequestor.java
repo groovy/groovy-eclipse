@@ -721,7 +721,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryTypeStack.removeLast();
         }
 
-        boolean isAssignment = (node.getOperation().getType() == Types.EQUALS);
+        boolean isAssignment = Types.isAssignment(node.getOperation().getType());
         BinaryExpression oldEnclosingAssignment = enclosingAssignment;
         if (isAssignment) {
             enclosingAssignment = node;

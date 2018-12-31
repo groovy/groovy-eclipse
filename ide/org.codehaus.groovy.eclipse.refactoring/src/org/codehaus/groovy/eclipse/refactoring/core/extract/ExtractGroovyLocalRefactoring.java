@@ -278,9 +278,9 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private boolean isDeclaration(IASTFragment fragment) {
-        Expression associatedExpression = fragment.getAssociatedExpression();
-        if (associatedExpression instanceof VariableExpression) {
-            if (((VariableExpression) associatedExpression).getAccessedVariable() == associatedExpression) {
+        Expression expression = fragment.getAssociatedExpression();
+        if (expression instanceof VariableExpression) {
+            if (((VariableExpression) expression).getAccessedVariable() == expression) {
                 return true;
             }
         }
@@ -288,7 +288,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private boolean isLeftValue(IASTFragment fragment) {
-        return fragment.kind() == ASTFragmentKind.BINARY && ((BinaryExpressionFragment) fragment).getToken().getType() == Types.ASSIGN;
+        return (fragment.kind() == ASTFragmentKind.BINARY &&
+            Types.isAssignment(((BinaryExpressionFragment) fragment).getToken().getType()));
     }
 
     private List<IASTFragment> getMatchingExpressions() {

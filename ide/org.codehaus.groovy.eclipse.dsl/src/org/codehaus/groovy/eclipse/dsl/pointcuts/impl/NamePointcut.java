@@ -66,7 +66,7 @@ public class NamePointcut extends FilteringPointcut<Object> {
                 return ((Variable) object).getName();
             } else if (object instanceof BinaryExpression &&
                 ((BinaryExpression) object).getLeftExpression() instanceof Variable &&
-                ((BinaryExpression) object).getOperation().getType() == Types.ASSIGN) {
+                Types.isAssignment(((BinaryExpression) object).getOperation().getType())) {
                 return ((Variable) ((BinaryExpression) object).getLeftExpression()).getName();
             } else if (object instanceof Expression) {
                 return ((Expression) object).getText();

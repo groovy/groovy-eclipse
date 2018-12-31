@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -38,6 +39,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -129,6 +131,20 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
             visitTypeReference(expression.getType(), false, true);
         }
         super.visitArrayExpression(expression);
+    }
+
+    @Override
+    public void visitBinaryExpression(BinaryExpression expression) {
+        if (Types.isAssignment(expression.getOperation().getType()) &&
+                expression.getLeftExpression() instanceof VariableExpression) {
+            String name = expression.getLeftExpression().getText();
+            int offset = expression.getLeftExpression().getStart();
+            visitNameReference(AccessorSupport.SETTER, name, offset);
+
+            expression.getRightExpression().visit(this);
+        } else {
+            super.visitBinaryExpression(expression);
+        }
     }
 
     @Override
@@ -236,8 +252,8 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     public void visitPropertyExpression(PropertyExpression expression) {
         if (!(expression instanceof AttributeExpression) &&
                 expression.getProperty() instanceof ConstantExpression) {
-            int offset = expression.getProperty().getStart();
             String name = expression.getProperty().getText();
+            int offset = expression.getProperty().getStart();
             visitNameReference(AccessorSupport.ISSER,  name, offset);
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.SETTER, name, offset);
@@ -256,7 +272,13 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {
-        requestor.acceptUnknownReference(expression.getName().toCharArray(), expression.getStart());
+        if (expression.getEnd() > 0) {
+            String name = expression.getName();
+            int offset = expression.getStart();
+            visitNameReference(AccessorSupport.GETTER, name, offset);
+            visitNameReference(AccessorSupport.ISSER,  name, offset);
+            requestor.acceptUnknownReference(name.toCharArray(), offset);
+        }
         //super.visitVariableExpression(expression);
     }
 

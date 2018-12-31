@@ -520,6 +520,22 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
+    @Test
+    public void testClosure29() {
+        String contents =
+            "class Foo {\n" +
+            "  private Number n = 0\n" +
+            "  Number getBar() { return n }\n" +
+            "  void setBar(Number n) { this.n = n }\n" +
+            "}\n" +
+            "new Foo().with {\n" +
+            "  bar += 42\n" + // property-style reference to getter and setter via '+='
+            "}";
+        int offset = contents.indexOf("bar");
+        assertType(contents, offset, offset + "bar".length(), "java.lang.Void");
+        assertDeclaration(contents, offset, offset + "bar".length(), "Foo", "setBar", DeclarationKind.METHOD);
+    }
+
     @Test // closure within closure
     public void testDoubleClosure1() {
         String contents =

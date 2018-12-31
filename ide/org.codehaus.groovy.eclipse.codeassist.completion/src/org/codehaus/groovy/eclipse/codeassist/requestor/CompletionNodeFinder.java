@@ -443,7 +443,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
-        if (expression.getOperation().getType() == Types.ASSIGN) {
+        if (Types.isAssignment(expression.getOperation().getType())) {
             lhsNode = expression.getLeftExpression();
             super.visitBinaryExpression(expression);
             lhsNode = null;

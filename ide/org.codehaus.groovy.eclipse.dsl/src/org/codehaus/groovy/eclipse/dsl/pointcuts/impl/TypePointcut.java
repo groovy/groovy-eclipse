@@ -53,7 +53,7 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
             type = ((Variable) toMatch).getType();
         } else if (toMatch instanceof BinaryExpression &&
             ((BinaryExpression) toMatch).getLeftExpression() instanceof Variable &&
-            ((BinaryExpression) toMatch).getOperation().getType() == Types.ASSIGN) {
+            Types.isAssignment(((BinaryExpression) toMatch).getOperation().getType())) {
             type = ((Variable) ((BinaryExpression) toMatch).getLeftExpression()).getType();
         } else if (toMatch instanceof Expression) {
             type = ((Expression) toMatch).getType();
