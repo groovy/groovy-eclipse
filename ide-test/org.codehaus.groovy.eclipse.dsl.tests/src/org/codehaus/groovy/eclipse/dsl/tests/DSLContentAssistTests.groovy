@@ -797,9 +797,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'meth', 2)
-        proposalExists(proposals, 'pogo : __', isAtLeastGroovy(26) ? 0 : 1)
-        proposalExists(proposals, 'name : __', isAtLeastGroovy(26) ? 1 : 0)
-        proposalExists(proposals, 'type : __', isAtLeastGroovy(26) ? 1 : 0)
+        proposalExists(proposals, 'pogo : __', 1)
+        proposalExists(proposals, 'name : __', 0)
+        proposalExists(proposals, 'type : __', 0)
     }
 
     @Test

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.File;
 import java.util.Arrays;
@@ -1684,7 +1685,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild();
         expectingNoProblems();
-        if (!isAtLeastGroovy(25) || isAtLeastGroovy(26)) {
+        if (!isAtLeastGroovy(25)) {
             expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.Widget");
         } else {
             expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.MyAnnotation$CollectorHelper", "com.demo.Widget");
@@ -1725,7 +1726,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
-        if (!isAtLeastGroovy(25) || isAtLeastGroovy(26)) {
+        if (!isAtLeastGroovy(25)) {
             expectingCompiledClasses("Book", "Length", "NotNull", "ISBN");
         } else {
             expectingCompiledClasses("Book", "Length", "NotNull", "ISBN", "ISBN$CollectorHelper");
@@ -1825,27 +1826,28 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "Launch", "12345678", "");
     }
 
-    /** Verify the processing in ASTTransformationCollectorCodeVisitor - to check it finds everything it expects. */
     @Test
     public void testSpock_GRE558() throws Exception {
+        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
+
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "MyTest",
             "import org.junit.runner.RunWith\n" +
-            "import spock.lang.Specification \n" +
+            "import spock.lang.Specification\n" +
             "\n" +
-            "class MyTest extends Specification {\n" +
-            "//deleting extends Specification is sufficient to remove all 3 errors,\n" +
-            "//necessary to remove model.SpecMetadata\n" +
-            "\n" +
-            "def aField; //delete line to remove the model.FieldMetadata error.\n" +
-            "\n" +
-            "def noSuchLuck() { expect: //delete line to remove model.FeatureMetadata error. \n" +
-            "  println hello }\n" +
-            "public static void main(String[] argv) { print 'success';}\n" +
-            "}");
+            "final class MyTest extends Specification {\n" +
+            "  def aField\n" +
+            "  def aMethod() {\n" +
+            "    expect:\n" +
+            "    println 'hello'\n" +
+            "  }\n" +
+            "  static void main(String[] argv) {\n" +
+            "    print 'success'\n" +
+            "  }\n" +
+            "}\n");
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -1860,8 +1862,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testSpock_GRE605_1() throws Exception {
+        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
+
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",
@@ -1924,8 +1928,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testSpock_GRE605_2() throws Exception {
+        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
+
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",

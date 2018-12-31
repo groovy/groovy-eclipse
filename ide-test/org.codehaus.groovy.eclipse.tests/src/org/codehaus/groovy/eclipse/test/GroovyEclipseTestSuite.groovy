@@ -183,7 +183,7 @@ abstract class GroovyEclipseTestSuite {
 
     protected final void addSpock() {
         def bundle = Platform.getBundle('org.eclipse.jdt.groovy.core.tests.builder')
-        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/spock-core-1.1-groovy-2.4.jar'))
+        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/spock-core-1.2-groovy-2.4.jar'))
         testProject.addExternalLibrary(new Path(jarUrl.file))
     }
 
