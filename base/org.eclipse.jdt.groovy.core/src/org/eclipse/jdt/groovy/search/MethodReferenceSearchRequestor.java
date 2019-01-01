@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -31,6 +30,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -224,9 +224,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             }
 
         // check for pseudo-properties on behalf of SyntheticAccessorsRenameParticipant
-        } else if (node instanceof ConstantExpression) {
-            if (methodName.equals(node.getText()) && Arrays.equals(parameterTypeSignatures,
-                    GroovyUtils.getParameterTypeSignatures((MethodNode) result.declaration, false))) {
+        } else if ((node instanceof ConstantExpression || node instanceof VariableExpression) && methodName.equals(node.getText())) {
+            if (parameterTypesMatch((MethodNode) result.declaration)) {
                 start = node.getStart();
                 end = node.getEnd();
             }
@@ -261,6 +260,25 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             }
         }
         return VisitStatus.CONTINUE;
+    }
+
+    private boolean parameterTypesMatch(MethodNode methodNode) {
+        List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
+        int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
+            return false;
+        }
+        for (int i = 0; i < n; i += 1) {
+            ClassNode parameterType = parameterTypes.get(i);
+            String parameterTypeSignature = Signature.getTypeErasure(parameterTypeSignatures[i]);
+
+            if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
+                continue;
+            }
+            if (parameterType.isPrimitive() || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

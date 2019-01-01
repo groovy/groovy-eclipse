@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -139,7 +139,10 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 expression.getLeftExpression() instanceof VariableExpression) {
             String name = expression.getLeftExpression().getText();
             int offset = expression.getLeftExpression().getStart();
+            // index "setName(x)" for Call Hierarchy/Find References
             visitNameReference(AccessorSupport.SETTER, name, offset);
+            // index "name(x)" for SyntheticAccessorsRenameParticipant
+            requestor.acceptMethodReference(name.toCharArray(), 1, offset);
 
             expression.getRightExpression().visit(this);
         } else {
@@ -170,13 +173,16 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 // ex: @interface X { Y default @Y(...) } -- expression is "@Y(...)"
                 visitTypeReference(expression.getType(), true, true);
             }
-
-            char[] constName = expression.getValue().toString().toCharArray();
-            requestor.acceptFieldReference(constName, expression.getStart());
-            // also could be a method reference
-            // we don't know how many arguments the method has, so go up to 7
-            for (int i = 0; i <= 7; i += 1) {
-                requestor.acceptMethodReference(constName, i, expression.getStart());
+            if (expression.getEnd() > 0 && ClassHelper.STRING_TYPE.equals(expression.getType())) {
+                char[] name = expression.getText().toCharArray();
+                if (Character.isJavaIdentifierStart(name[0])) {
+                    int offset = expression.getStart();
+                    requestor.acceptFieldReference(name, offset);
+                    // we don't know how many arguments the method has, so go up to 7
+                    for (int i = 0; i <= 7; i += 1) {
+                        requestor.acceptMethodReference(name, i, offset);
+                    }
+                }
             }
         }
         super.visitConstantExpression(expression);
@@ -254,6 +260,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 expression.getProperty() instanceof ConstantExpression) {
             String name = expression.getProperty().getText();
             int offset = expression.getProperty().getStart();
+            // index "isName()", "getName()" and "setName(x)"
             visitNameReference(AccessorSupport.ISSER,  name, offset);
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.SETTER, name, offset);
@@ -275,8 +282,12 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         if (expression.getEnd() > 0) {
             String name = expression.getName();
             int offset = expression.getStart();
+            // index "getName()" and "isName()"
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.ISSER,  name, offset);
+            // index "name()" for SyntheticAccessorsRenameParticipant
+            requestor.acceptMethodReference(name.toCharArray(), 0, offset);
+            // index "name" for package references and anything else?
             requestor.acceptUnknownReference(name.toCharArray(), offset);
         }
         //super.visitVariableExpression(expression);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,8 +39,8 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
     private void performRefactoringAndUndo(String newName, TestSource... sources) {
         def units = createUnits(sources)
         def toRename = units[0].types[0].children[0]
-        String id = toRename instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD
-        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(id)
+        String kind = (toRename instanceof IField ? IJavaRefactorings.RENAME_FIELD : IJavaRefactorings.RENAME_METHOD)
+        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(kind)
 
         descriptor.newName = newName
         descriptor.javaElement = toRename
@@ -52,18 +52,17 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         RefactoringStatus result = performRefactoring(refactoring, true)
         assertContents(units, sources*.finalContents)
 
-        // undo
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '!anythingToRedo'
+        RefactoringCore.undoManager.with {
+            // undo
+            performUndo(null, new NullProgressMonitor())
+            assertContents(units, sources*.contents)
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertContents(units, sources*.contents)
-
-        // redo
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '!anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertContents(units, sources*.finalContents)
+            // redo
+            assert anythingToRedo() : 'anythingToRedo'
+            assert !anythingToUndo() : '!anythingToUndo'
+            performRedo(null, new NullProgressMonitor())
+            assertContents(units, sources*.finalContents)
+        }
     }
 
     @Test
@@ -378,6 +377,149 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 p.First.isFoo()
                 p.First.getFoo()
                 p.First.setFoo(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testMultiFileRename5() {
+        performRefactoringAndUndo('getBar', new TestSource(
+            pack: 'p', name: 'Pojo.java',
+            contents: '''\
+                package p;
+                public class Pojo {
+                  public int getFoo() { return this.foo; } // target
+                  public void setFoo(int foo) { this.foo = foo; }
+                  private int foo = -1;
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p;
+                public class Pojo {
+                  public int getBar() { return this.foo; } // target
+                  public void setFoo(int foo) { this.foo = foo; }
+                  private int foo = -1;
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    foo = 1
+                    foo += 1
+                    getFoo()
+                    setFoo(3)
+                    def val = foo + 456
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    foo = 1
+                    foo += 1
+                    getBar()
+                    setFoo(3)
+                    def val = bar + 456
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/784
+    void testMultiFileRename6() {
+        performRefactoringAndUndo('setBar', new TestSource(
+            pack: 'p', name: 'Pojo.java',
+            contents: '''\
+                package p;
+                public class Pojo {
+                  public void setFoo(int foo) { this.foo = foo; }
+                  public int getFoo() { return this.foo; }
+                  private int foo = -1;
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p;
+                public class Pojo {
+                  public void setBar(int foo) { this.foo = foo; }
+                  public int getFoo() { return this.foo; }
+                  private int foo = -1;
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    foo = 1
+                    foo += 1
+                    getFoo()
+                    setFoo(3)
+                    def val = foo + 456
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    bar = 1
+                    bar += 1
+                    getFoo()
+                    setBar(3)
+                    def val = foo + 456
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testMultiFileRename7() {
+        renameGetters = renameSetters = true
+
+        performRefactoringAndUndo('bar', new TestSource(
+            pack: 'p', name: 'Pojo.java',
+            contents: '''\
+                package p;
+                public class Pojo {
+                  private int foo = -1;
+                  public int getFoo() { return this.foo; }
+                  public void setFoo(int val) { this.foo = val; }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p;
+                public class Pojo {
+                  private int bar = -1;
+                  public int getBar() { return this.bar; }
+                  public void setBar(int val) { this.bar = val; }
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    foo = 1
+                    foo += 1
+                    getFoo()
+                    setFoo(3)
+                    def val = foo + 456
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                import p.Pojo
+                new Pojo().with {
+                    bar = 1
+                    bar += 1
+                    getBar()
+                    setBar(3)
+                    def val = bar + 456
+                }
                 '''.stripIndent()
         ))
     }
