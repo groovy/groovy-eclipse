@@ -16,7 +16,7 @@ On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* w
 
 ### Install Execution Environment Descriptions
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, select `2018-09 - http://download.eclipse.org/releases/2018-09` from the *Work with:* field and enter "exeuction" in the filter. Check the boxes next to "API Tools Execution Environment Descriptions", and click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, select `2018-12 - http://download.eclipse.org/releases/2018-12` from the *Work with:* field and enter "exeuction" in the filter. Check the boxes next to "API Tools Execution Environment Descriptions", and click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
 
 ![API Baseline](images/eclipse-api-tools-execution-environment.png)
 
