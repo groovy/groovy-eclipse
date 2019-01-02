@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
             type = ((Variable) toMatch).getType();
         } else if (toMatch instanceof BinaryExpression &&
             ((BinaryExpression) toMatch).getLeftExpression() instanceof Variable &&
-            Types.isAssignment(((BinaryExpression) toMatch).getOperation().getType())) {
+            Types.ofType(((BinaryExpression) toMatch).getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
             type = ((Variable) ((BinaryExpression) toMatch).getLeftExpression()).getType();
         } else if (toMatch instanceof Expression) {
             type = ((Expression) toMatch).getType();

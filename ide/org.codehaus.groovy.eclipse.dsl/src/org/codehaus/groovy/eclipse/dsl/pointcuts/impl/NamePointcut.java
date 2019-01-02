@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ public class NamePointcut extends FilteringPointcut<Object> {
                 return ((Variable) object).getName();
             } else if (object instanceof BinaryExpression &&
                 ((BinaryExpression) object).getLeftExpression() instanceof Variable &&
-                Types.isAssignment(((BinaryExpression) object).getOperation().getType())) {
+                Types.ofType(((BinaryExpression) object).getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
                 return ((Variable) ((BinaryExpression) object).getLeftExpression()).getName();
             } else if (object instanceof Expression) {
                 return ((Expression) object).getText();

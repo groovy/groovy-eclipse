@@ -135,7 +135,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
-        if (Types.isAssignment(expression.getOperation().getType()) &&
+        if (Types.ofType(expression.getOperation().getType(), Types.ASSIGNMENT_OPERATOR) &&
                 expression.getLeftExpression() instanceof VariableExpression) {
             String name = expression.getLeftExpression().getText();
             int offset = expression.getLeftExpression().getStart();

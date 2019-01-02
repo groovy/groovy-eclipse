@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,7 +289,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private boolean isLeftValue(IASTFragment fragment) {
         return (fragment.kind() == ASTFragmentKind.BINARY &&
-            Types.isAssignment(((BinaryExpressionFragment) fragment).getToken().getType()));
+            Types.ofType(((BinaryExpressionFragment) fragment).getToken().getType(), Types.ASSIGNMENT_OPERATOR));
     }
 
     private List<IASTFragment> getMatchingExpressions() {

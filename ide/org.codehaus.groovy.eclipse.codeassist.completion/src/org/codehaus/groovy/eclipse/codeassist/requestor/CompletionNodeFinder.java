@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -443,7 +443,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
-        if (Types.isAssignment(expression.getOperation().getType())) {
+        if (Types.ofType(expression.getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
             lhsNode = expression.getLeftExpression();
             super.visitBinaryExpression(expression);
             lhsNode = null;

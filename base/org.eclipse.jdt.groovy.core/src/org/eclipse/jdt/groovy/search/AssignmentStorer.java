@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,7 +170,7 @@ public class AssignmentStorer {
      * This method is a placeholder for supporting more than just assignments.
      */
     private boolean isInterestingOperation(BinaryExpression assign) {
-        return Types.isAssignment(assign.getOperation().getType()) /*|| Types.LEFT_SHIFT == assign.getOperation().getType()*/;
+        return Types.ofType(assign.getOperation().getType(), Types.ASSIGNMENT_OPERATOR) /*|| Types.LEFT_SHIFT == assign.getOperation().getType()*/;
     }
 
     /**
