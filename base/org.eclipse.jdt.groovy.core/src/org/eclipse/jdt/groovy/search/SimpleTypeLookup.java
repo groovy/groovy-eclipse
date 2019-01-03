@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -270,8 +271,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 if (callTypes.size() > 1) {
                     // non-static inner types may have extra argument for enclosing type
-                    if (callTypes.get(0).equals(declaringType.getOuterClass()) &&
-                            (declaringType.getModifiers() & ClassNode.ACC_STATIC) == 0) {
+                    if (callTypes.get(0).equals(declaringType.getOuterClass()) && !Flags.isStatic(declaringType.getModifiers())) {
                         callTypes.remove(0);
                     }
                 }
@@ -600,7 +600,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for member in outer classes
         if (getBaseDeclaringType(declaringType).getOuterClass() != null) {
             // search only for static declarations if inner class is static
-            isStaticExpression |= ((declaringType.getModifiers() & ClassNode.ACC_STATIC) != 0);
+            isStaticExpression |= Flags.isStatic(declaringType.getModifiers());
             ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
             if (declaration != null) {
                 return declaration;
@@ -737,7 +737,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static ASTNode createLengthField(ClassNode declaringType) {
-        FieldNode lengthField = new FieldNode("length", FieldNode.ACC_PUBLIC, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
+        FieldNode lengthField = new FieldNode("length", Flags.AccPublic, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
         lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import static org.codehaus.groovy.eclipse.dsl.contributions.ContributionElems.re
 
 import java.util.List;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -29,6 +28,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyPropertyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 
 public class PropertyContributionElement implements IContributionElement {
@@ -89,9 +89,10 @@ public class PropertyContributionElement implements IContributionElement {
     }
 
     protected int modifiers() {
-        int modifiers = Opcodes.ACC_PUBLIC;
-        if (isStatic) modifiers |= Opcodes.ACC_STATIC;
-        if (isDeprecated) modifiers |= Opcodes.ACC_DEPRECATED;
+        int modifiers = Flags.AccPublic;
+        if (isStatic) modifiers |= Flags.AccStatic;
+        if (isDeprecated) modifiers |= Flags.AccDeprecated;
+
         return modifiers;
     }
 

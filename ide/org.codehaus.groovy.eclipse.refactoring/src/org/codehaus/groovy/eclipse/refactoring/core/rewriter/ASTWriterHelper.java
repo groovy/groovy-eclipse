@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 import java.util.List;
 
 import org.codehaus.groovy.antlr.LineColumn;
-import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
@@ -41,38 +41,36 @@ public class ASTWriterHelper {
      */
     public static String getAccModifier(int modifiers, int appearance) {
         StringBuilder accMod = new StringBuilder();
-        if ((modifiers & ClassNode.ACC_PRIVATE) != 0) {
+        if (Flags.isPrivate(modifiers)) {
             accMod.append("private ");
-        }
-        else if ((modifiers & ClassNode.ACC_PUBLIC) != 0) {
+        } else if (Flags.isPublic(modifiers)) {
             if (appearance == MOD_METHOD)
                 accMod.append("def ");
             else if (appearance == MOD_FIELD)
                 accMod.append("public ");
-            //for class, write nothing
-        }
-        else if ((modifiers & ClassNode.ACC_PROTECTED) != 0) {
+            // for class, write nothing
+        } else if (Flags.isProtected(modifiers)) {
             accMod.append("protected ");
         }
-        if ((modifiers & ClassNode.ACC_STATIC) != 0) {
+        if (Flags.isStatic(modifiers)) {
             accMod.append("static ");
         }
-        if ((modifiers & ClassNode.ACC_TRANSIENT) != 0) {
+        if (Flags.isTransient(modifiers)) {
             accMod.append("transient ");
         }
-        if ((modifiers & ClassNode.ACC_FINAL) != 0) {
+        if (Flags.isFinal(modifiers)) {
             accMod.append("final ");
         }
-        if ((modifiers & ClassNode.ACC_SYNCHRONIZED) != 0) {
+        if (Flags.isSynchronized(modifiers)) {
             accMod.append("synchronized ");
         }
-        if ((modifiers & ClassNode.ACC_VOLATILE) != 0) {
+        if (Flags.isVolatile(modifiers)) {
             accMod.append("volatile ");
         }
-        if ((modifiers & ClassNode.ACC_NATIVE) != 0) {
+        if (Flags.isNative(modifiers)) {
             accMod.append("native ");
         }
-        if ((modifiers & ClassNode.ACC_STRICT) != 0) {
+        if (Flags.isStrictfp(modifiers)) {
             accMod.append("strictfp ");
         }
         return accMod.toString();
@@ -116,10 +114,11 @@ public class ASTWriterHelper {
         char charBefore = expressionInFile.charAt(0);
         String firstThreeChars = "";
         boolean firstThreeCharsAreSame = false;
-        if(expressionInFile.length() >= 3){
-             firstThreeChars = expressionInFile.substring(0, 3);
-             firstThreeCharsAreSame = ((firstThreeChars.charAt(0) == firstThreeChars.charAt(1)) &&
-                                       (firstThreeChars.charAt(1) == firstThreeChars.charAt(2)));
+        if (expressionInFile.length() >= 3) {
+            firstThreeChars = expressionInFile.substring(0, 3);
+            firstThreeCharsAreSame =
+                firstThreeChars.charAt(0) == firstThreeChars.charAt(1) &&
+                firstThreeChars.charAt(1) == firstThreeChars.charAt(2);
         }
         if (charBefore == '\'' || charBefore == '\"' || charBefore == '/') {
             if (firstThreeCharsAreSame) {

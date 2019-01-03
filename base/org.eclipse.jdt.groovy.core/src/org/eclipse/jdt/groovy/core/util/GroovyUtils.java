@@ -56,6 +56,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.Signature;
 import org.osgi.framework.Version;
 
@@ -428,7 +429,7 @@ public class GroovyUtils {
         } else if (node instanceof MethodNode) {
             flags = ((MethodNode) node).getModifiers();
         }
-        if ((flags & ClassNode.ACC_DEPRECATED) != 0) {
+        if (Flags.isDeprecated(flags)) {
             return true;
         }
 
@@ -440,11 +441,11 @@ public class GroovyUtils {
     }
 
     public static boolean isSynthetic(FieldNode node) {
-        return (node.getModifiers() & FieldNode.ACC_SYNTHETIC) != 0;
+        return Flags.isSynthetic(node.getModifiers());
     }
 
     public static boolean isSynthetic(MethodNode node) {
-        return (node.getModifiers() & MethodNode.ACC_SYNTHETIC) != 0;
+        return Flags.isSynthetic(node.getModifiers());
     }
 
     public static boolean implementsTrait(ClassNode concreteType) {

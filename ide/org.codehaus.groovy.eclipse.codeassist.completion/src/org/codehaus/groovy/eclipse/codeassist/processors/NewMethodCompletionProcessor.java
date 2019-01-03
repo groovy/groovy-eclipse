@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.stream.Collectors;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -39,6 +38,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -170,7 +170,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
         //// Modifiers
         // flush uninteresting modifiers
-        ASTNode.printModifiers(method.getModifiers() & ~(Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC), completion);
+        ASTNode.printModifiers(method.getModifiers() & ~(Flags.AccNative | Flags.AccAbstract | Flags.AccPublic), completion);
 
         //// Return type
         completion.append(ProposalUtils.createSimpleTypeName(method.getReturnType()));

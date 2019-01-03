@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
-import groovyjarjarasm.asm.Opcodes
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSpec
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer
@@ -24,6 +23,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Platform
+import org.eclipse.jdt.core.Flags
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry
@@ -88,17 +88,22 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
     }
 
     private void simulateUserInput() {
-        int modifier = 0
-        String mod = spec.properties['modifier']
-        if (mod.equals('def') || mod.equals('public'))
-            modifier = Opcodes.ACC_PUBLIC
-        if (mod.equals('private'))
-            modifier = Opcodes.ACC_PRIVATE
-        if (mod.equals('protected'))
-            modifier = Opcodes.ACC_PROTECTED
+        switch (spec.properties['modifier']) {
+        case 'def':
+        case 'public':
+            refactoring.modifier = Flags.AccPublic
+            break
+        case 'private':
+            refactoring.modifier = Flags.AccPrivate
+            break
+        case 'protected':
+            refactoring.modifier = Flags.AccProtected
+            break
+        default:
+            refactoring.modifier = Flags.AccDefault
+        }
 
-        refactoring.setModifier(modifier)
-        refactoring.setNewMethodname(spec.properties['newMethodName'])
+        refactoring.newMethodname = spec.properties['newMethodName']
 
         String moveSettings = spec.properties['moveVariable']
         if (moveSettings != null && moveSettings.trim().length() > 0) {

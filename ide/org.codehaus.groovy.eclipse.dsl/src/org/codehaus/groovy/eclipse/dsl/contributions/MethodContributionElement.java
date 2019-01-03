@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -42,6 +41,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentPropo
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 
 public class MethodContributionElement implements IContributionElement {
@@ -239,9 +239,10 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     protected int modifiers() {
-        int modifiers = Opcodes.ACC_PUBLIC;
-        if (isStatic) modifiers |= Opcodes.ACC_STATIC;
-        if (isDeprecated) modifiers |= Opcodes.ACC_DEPRECATED;
+        int modifiers = Flags.AccPublic;
+        if (isStatic) modifiers |= Flags.AccStatic;
+        if (isDeprecated) modifiers |= Flags.AccDeprecated;
+
         return modifiers;
     }
 

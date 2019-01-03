@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodR
 import org.codehaus.groovy.eclipse.refactoring.core.utils.GroovyConventionsBuilder;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.swt.SWT;
@@ -202,16 +203,16 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void setModifier(MouseEvent e) {
-        if(e.getSource() instanceof Button){
+        if (e.getSource() instanceof Button) {
             Button selectedButton = (Button) e.getSource();
             if (selectedButton.getText().equals(MODIFIER_PRIVATE))
-                extractMethodRefactoring.setModifier(ClassNode.ACC_PRIVATE);
+                extractMethodRefactoring.setModifier(Flags.AccPrivate);
             else if (selectedButton.getText().equals(MODIFIER_DEF))
-                extractMethodRefactoring.setModifier(ClassNode.ACC_PUBLIC);
+                extractMethodRefactoring.setModifier(Flags.AccPublic);
             else if (selectedButton.getText().equals(MODIFIER_PROTECTED))
-                extractMethodRefactoring.setModifier(ClassNode.ACC_PROTECTED);
+                extractMethodRefactoring.setModifier(Flags.AccProtected);
             else if (selectedButton.getText().equals(MODIFIER_NONE))
-                extractMethodRefactoring.setModifier(0);
+                extractMethodRefactoring.setModifier(Flags.AccDefault);
         }
     }
 
