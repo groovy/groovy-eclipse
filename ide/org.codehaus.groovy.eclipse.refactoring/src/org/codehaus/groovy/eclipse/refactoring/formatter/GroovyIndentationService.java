@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.EOF;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LBRACK;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LCURLY;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_else;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_for;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_if;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LITERAL_while;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.LPAREN;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.NLS;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RBRACK;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RCURLY;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.RPAREN;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_END;
-import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_START;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.EOF;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LBRACK;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LCURLY;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LITERAL_else;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LITERAL_for;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LITERAL_if;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LITERAL_while;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.LPAREN;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.NLS;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.RBRACK;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.RCURLY;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.RPAREN;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.STRING_CTOR_END;
+import static org.codehaus.groovy.antlr.GroovyTokenTypeBridge.STRING_CTOR_START;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import groovyjarjarantlr.Token;
-import org.codehaus.greclipse.GroovyTokenTypeBridge;
+import org.codehaus.groovy.antlr.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.IJavaProject;
