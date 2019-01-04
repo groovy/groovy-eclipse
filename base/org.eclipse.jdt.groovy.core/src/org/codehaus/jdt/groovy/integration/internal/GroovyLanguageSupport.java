@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
+import org.apache.xbean.classloader.MultiParentClassLoader;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -37,6 +40,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.jdt.groovy.integration.EventHandler;
 import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
+import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyErrorCollectorForJDT;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
@@ -51,6 +55,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -270,6 +275,19 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
 
         return config;
+    }
+
+    public static GroovyClassLoader newGroovyClassLoader(IJavaProject project, ClassLoader parentLoader) {
+        Map<String, String> options = project.getOptions(true);
+        CompilerUtils.configureOptionsBasedOnNature(options, project);
+        GroovyClassLoaderFactory factory = new GroovyClassLoaderFactory(new CompilerOptions(options), null);
+        CompilerConfiguration config = CompilerConfiguration.DEFAULT; // TODO: Use newCompilerConfiguration?
+        ClassLoader projectLoader = factory.getGroovyClassLoaders(config)[1]; // the Groovy transform loader
+
+        MultiParentClassLoader multiParentLoader = new MultiParentClassLoader(
+            project.getElementName(), new URL[0], new ClassLoader[] {projectLoader, parentLoader});
+
+        return new GroovyClassLoader(multiParentLoader);
     }
 
     @Override

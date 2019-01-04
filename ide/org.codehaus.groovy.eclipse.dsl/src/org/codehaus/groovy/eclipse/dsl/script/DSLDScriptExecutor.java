@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
+import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.eclipse.core.internal.resources.ResourceException;
 import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IStorage;
@@ -44,68 +45,67 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Executes a DSLD script and collects the results.
  */
 public class DSLDScriptExecutor {
 
-    private final GroovyClassLoader gcl;
     private final IJavaProject project;
     private PointcutFactory factory;
-    private IStorage scriptFile;
+    private String scriptName;
 
     public DSLDScriptExecutor(IJavaProject project) {
-        // FIXADE Should have one classloader per project
-        gcl = new GroovyClassLoader(GroovyDSLCoreActivator.class.getClassLoader());
         this.project = project;
     }
 
     public Object executeScript(IStorage scriptFile) {
-        this.scriptFile = scriptFile;
+        scriptName = scriptFile.getName();
         String event = null;
         try {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "About to compile script for " + scriptFile);
-                event = "Script creation for " + scriptFile;
+                event = "DSLD processing for " + scriptFile;
                 GroovyLogManager.manager.logStart(event);
             }
             factory = new PointcutFactory(scriptFile, project.getProject());
-            Object result = null;
             try {
-                String scriptContents = getContents(scriptFile);
-                Class<Script> clazz = null;
+                GroovyClassLoader classLoader = getGroovyClassLoader();
+                String scriptText = getContents(scriptFile);
+                @SuppressWarnings("rawtypes")
+                Class scriptType = null;
                 try {
-                    clazz = gcl.parseClass(scriptContents, scriptFile.getName());
+                    scriptType = classLoader.parseClass(scriptText, scriptName);
                 } catch (Exception e) {
                     if (GroovyLogManager.manager.hasLoggers()) {
                         StringWriter writer = new StringWriter();
                         e.printStackTrace(new PrintWriter(writer));
-                        GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptFile + "but failed because:\n" + writer.getBuffer());
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptName + ", but failed because:\n" + writer.getBuffer());
                     }
-                    return result;
+                    return null;
                 }
 
-                if (!Script.class.isAssignableFrom(clazz)) {
-                    // might be some strange compile error
-                    // or a class is accidentally defined
+                if (!Script.class.isAssignableFrom(scriptType)) {
+                    // might be some strange compile error or a class is accidentally defined
                     if (GroovyLogManager.manager.hasLoggers()) {
-                        GroovyLogManager.manager.log(TraceCategory.DSL, "Class " + scriptFile + " is not a script.  Can't execute as DSLD.");
+                        GroovyLogManager.manager.log(TraceCategory.DSL, scriptName + " is not a Groovy script.  Can't execute as DSLD.");
                     }
-                    return result;
+                    return null;
                 }
-                Script dsldScript = clazz.newInstance();
+                Script dsldScript = (Script) scriptType.newInstance();
                 dsldScript.setBinding(new DSLDScriptBinding(dsldScript));
-                result = dsldScript.run();
+
+                return dsldScript.run();
+
             } catch (UnsupportedDSLVersion e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
                 }
             } catch (Exception e) {
-                // log this exception both to the event logger and to the error log
+                // log exception to the event console and the error log
                 GroovyDSLCoreActivator.logException(e);
             }
-            return result;
+            return null;
         } finally {
             if (event != null) {
                 GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
@@ -113,7 +113,7 @@ public class DSLDScriptExecutor {
         }
     }
 
-    public String getContents(IStorage file) throws IOException, CoreException {
+    private static String getContents(IStorage file) throws IOException, CoreException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents()))) {
             return IOGroovyMethods.getText(br);
         } catch (ResourceException e) {
@@ -126,6 +126,17 @@ public class DSLDScriptExecutor {
         }
     }
 
+    /**
+     * Returns loader suitable for loading classes using the project's classpath
+     * and the workspace's Eclipse, Groovy and Java runtimes.
+     */
+    private GroovyClassLoader getGroovyClassLoader() {
+        Bundle bundle = GroovyDSLCoreActivator.getDefault().getBundle();
+        ClassLoader loader = bundle.adapt(BundleWiring.class).getClassLoader();
+
+        return GroovyLanguageSupport.newGroovyClassLoader(project, loader);
+    }
+
     protected Object tryRegister(Object args) {
         Object[] nameAndClosure = extractArgsForRegister(args);
         if (nameAndClosure != null) {
@@ -133,8 +144,8 @@ public class DSLDScriptExecutor {
             return nameAndClosure[1];
         } else {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot register custom pointcut for " +
-                        (args instanceof Object[] ? Arrays.toString((Object[]) args) : args));
+                GroovyLogManager.manager.log(TraceCategory.DSL,
+                    "Cannot register custom pointcut for " + (args instanceof Object[] ? Arrays.toString((Object[]) args) : args));
             }
             return null;
         }
@@ -280,7 +291,7 @@ public class DSLDScriptExecutor {
         private static final long serialVersionUID = 1L;
 
         UnsupportedDSLVersion(String why) {
-            super(scriptFile.getName() + " is not supported because:\n" + why);
+            super(scriptName + " is not supported because:\n" + why);
         }
     }
 
@@ -303,11 +314,11 @@ public class DSLDScriptExecutor {
     }
 
     private final class DSLDScriptBinding extends Binding {
-        private final Script dsldScript;
 
         DSLDScriptBinding(Script dsldScript) {
             this.dsldScript = dsldScript;
         }
+        private final Script dsldScript;
 
         @Override
         public Object invokeMethod(String name, Object args) {
