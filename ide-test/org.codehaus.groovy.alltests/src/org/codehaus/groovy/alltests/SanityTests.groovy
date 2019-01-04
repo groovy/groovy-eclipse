@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.alltests
 
-import org.codehaus.groovy.activator.GroovyActivator
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
 import org.eclipse.core.runtime.Platform
 import org.junit.Before
@@ -36,9 +35,6 @@ final class SanityTests {
     void setUp() {
         println '----------------------------------------'
         println 'Starting: ' + test.methodName
-
-        GroovyActivator.initialize()
-        println 'ClassLoader location: ' + GroovyActivator.classLoader.getResource('.')
     }
 
     @Test
@@ -54,10 +50,5 @@ final class SanityTests {
         int major = groovyVersion.major,
             minor = groovyVersion.minor
         assert "${major}.${minor}" == '3.0'
-    }
-
-    @Test
-    void testGroovyJar() {
-        assert GroovyActivator.GROOVY_JAR_URL != null
     }
 }

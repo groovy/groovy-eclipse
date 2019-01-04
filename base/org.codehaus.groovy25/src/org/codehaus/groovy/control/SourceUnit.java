@@ -25,7 +25,6 @@ import groovyjarjarantlr.NoViableAltException;
 import groovyjarjarantlr.NoViableAltForCharException;
 import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.io.FileReaderSource;
@@ -39,6 +38,7 @@ import org.codehaus.groovy.syntax.Reduction;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.Utilities;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
 import java.io.File;
@@ -373,8 +373,8 @@ public class SourceUnit extends ProcessingUnit {
             }
             return code;
         } catch (Exception e) {
-            GroovyActivator.getDefault().getLog().log(
-                new Status(IStatus.ERROR, GroovyActivator.PLUGIN_ID, "Error reading Groovy source", e));
+            Platform.getLog(org.osgi.framework.FrameworkUtil.getBundle(this.getClass())).log(
+                new Status(IStatus.ERROR, "org.codehaus.groovy", "Error reading Groovy source", e));
         }
         return null;
     }

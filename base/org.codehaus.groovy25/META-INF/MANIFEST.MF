@@ -39,7 +39,6 @@ Export-Package: groovy.beans;version="2.5.5",
  org.apache.groovy.util;version="2.5.5",
  org.apache.groovy.util.concurrentlinkedhashmap;version="2.5.5",
  org.codehaus.groovy;version="2.5.5",
- org.codehaus.groovy.activator;x-friends:="org.codehaus.groovy.alltests",
  org.codehaus.groovy.antlr;version="2.5.5",
  org.codehaus.groovy.antlr.java;version="2.5.5",
  org.codehaus.groovy.antlr.parser;version="2.5.5",
@@ -100,7 +99,6 @@ Export-Package: groovy.beans;version="2.5.5",
 Require-Bundle: org.eclipse.core.runtime,
  org.apache.ant;resolution:=optional,
  org.junit;resolution:=optional
-Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir
