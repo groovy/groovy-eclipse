@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,7 +222,7 @@ public class PointcutFactory {
 
         registerGlobalPointcut("enclosingCall", EnclosingCallPointcut.class, createDoc(//
             "Matches on the method call that is enclosing the current location.",
-            "Can match on the name of the method call and the arguments (using the <code>hasArguments</code> pointcut.",
+            "Can match on the name of the method call and the arguments (using the <code>hasArguments</code> pointcut).",
             "The method call expression as a Groovy AST node."));
 
         registerGlobalPointcut("enclosingCallName", EnclosingCallNamePointcut.class, createDoc(//

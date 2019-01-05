@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
 
 /**
- * This is the meta DSL descriptor for *.dsld files.
+ * This is the DSL descriptor for *.dsld files.
  *
  * @author Andrew Eisenberg
  */
@@ -34,7 +34,7 @@ interface IPointcut {
      *
      * @param group the contribution group to accept
      *
-     * @deprecated Use <code>contribution(<pointcut_expression>)</code> instead
+     * @deprecated Use <code>contribute(&lt;pointcut_expression&gt;)</code> instead
      */
     @Deprecated
     def accept(Closure group)
@@ -50,10 +50,10 @@ def dsldFile = nature('org.eclipse.jdt.groovy.core.groovyNature') & fileExtensio
 def insideContribution = { (enclosingCallName('accept') | enclosingCallName('contribute')) & inClosure() }
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
-(dsldFile & (~insideContribution())  & (~currentType(subType(Script)))).accept { delegatesTo IPointcut }
+contribute(dsldFile & (~insideContribution()) & (~currentType(subType(Script)))) { delegatesTo IPointcut }
 
 // Store all bound names inside of the wormhole so that they can be available later
-(dsldFile & enclosingCallDeclaringType(subType(Script)) & (~enclosingCallName('supportsVersion')) & (~inClosure()) & bind(var: currentIdentifier())).accept {
+contribute(dsldFile & enclosingCallDeclaringType(subType(Script)) & (~enclosingCallName('assertVersion')) & (~enclosingCallName('supportsVersion')) & (~inClosure()) & bind(var: currentIdentifier())) {
     if (enclosingNode instanceof MapEntryExpression && var.contains(((MapEntryExpression) enclosingNode).keyExpression)) {
         def bindings = wormhole.bindings
         if (!bindings) {
@@ -67,7 +67,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
 // Define the kinds of pointcuts
 // note the different ways of calling the two composite pointcuts
 // Also, be careful to use parens around negation '~' since operator precedence may make the '~' apply to the call to 'accept'
-(dsldFile & (~insideContribution()) & currentType(subType(Script)) & (~enclosingCallName('registerPointcut')) & isThisType()).accept {
+contribute(dsldFile & (~insideContribution()) & currentType(subType(Script)) & (~enclosingCallName('registerPointcut')) & isThisType()) {
     provider = 'the meta-DSLD script'
 
     // in here, we can list all pointcuts explicitly, or we can access the internal PointcutFactory object
@@ -111,7 +111,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
-(dsldFile & insideContribution() & isThisType()).accept {
+contribute(dsldFile & insideContribution() & isThisType()) {
     provider = 'the meta-DSLD script'
 
     property name: 'provider', type: String, doc: 'Specifies a <em>Provider</em> for the current contribution. This is displayed during content assist and in other places to give a hint of the contribution\'s origin.'
@@ -226,7 +226,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
                 '''.stripIndent()
 
     method  name: 'setDelegateType',
-            params: [newDelegateType: String],
+            params: [type: String],
             type: void,
             doc: '''\
                 Sets the delegate type inside a closure. This is different from {@code delegatesTo} in that the receiving
@@ -241,6 +241,8 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
     property name: 'currentNode', type: ASTNode, doc: 'This is the ASTNode being evaluated.'
 
     property name: 'enclosingNode', type: ASTNode, doc: 'This is the ASTNode enclosing the ASTNode being evaluated.'
+
+    property name: 'resolver', type: 'org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache', doc: 'Use the resolver to translate from class names to class nodes.'
 
     property name: 'wormhole', type: Map, doc: 'Use the wormhole to stuff in values calculated in one contribution group to make it available later in another contribution group.'
 

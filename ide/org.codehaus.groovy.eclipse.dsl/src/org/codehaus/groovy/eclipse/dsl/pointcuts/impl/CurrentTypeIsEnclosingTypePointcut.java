@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,12 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches when the current type is the same as the lexically enclosing type.  Generally, this matches true
- * for references to 'this', or when a new expression is being started.  However, this pointuct
- * may not match on 'this' when inside of a closure.  This pointcut takes no arguments
+ * Matches when the current type is the same as the lexically enclosing type.
+ * Generally, this matches for references to 'this' or when a new expression is
+ * being started.  However, this pointuct may not match on 'this' when inside a
+ * closure.
+ *
+ * @see IsThisTypePointcut
  */
 public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
 
@@ -35,16 +38,11 @@ public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
-    /**
-     * toMatch parameter is ignored.
-     * No arguments
-     * Just like {@link CurrentTypePointcut}
-     */
     @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
-        ClassNode currentType = pattern.getCurrentType();
-        if (enclosing != null && currentType != null && enclosing.redirect() == currentType.redirect()) {
+    public Collection<?> matches(GroovyDSLDContext context, Object dontCare) {
+        ClassNode currentType = context.getCurrentType();
+        ClassNode enclosingType = context.getCurrentScope().getEnclosingTypeDeclaration();
+        if (currentType != null && enclosingType != null && currentType.redirect() == enclosingType.redirect()) {
             return Collections.singleton(currentType);
         }
         return null;
@@ -58,5 +56,4 @@ public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
         }
         super.verify();
     }
-
 }

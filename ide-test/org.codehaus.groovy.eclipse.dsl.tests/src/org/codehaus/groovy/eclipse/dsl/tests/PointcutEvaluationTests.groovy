@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,16 +45,17 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     private static class PointcutEvaluationRequestor implements ITypeRequestor {
         private final IPointcut toMatch
         private final GroovyDSLDContext context
-        private final Stack<BindingSet> matches = new Stack<BindingSet>()
-        private BindingSet largestMatch = null
-        private Collection<?> largestMatchResult = null
+        private final Stack<BindingSet> matches = new Stack()
+
+        BindingSet largestMatch
+        Collection<?> largestMatchResult
 
         PointcutEvaluationRequestor(IPointcut toMatch, GroovyCompilationUnit unit) {
             this.toMatch = toMatch
             this.context = createContext(unit)
         }
 
-        private GroovyDSLDContext createContext(GroovyCompilationUnit unit) {
+        private static GroovyDSLDContext createContext(GroovyCompilationUnit unit) {
             ModuleNodeInfo info = unit.getModuleInfo(true)
             GroovyDSLDContext context = new GroovyDSLDContext(unit, info.module, info.resolver)
             context.resetBinding()
@@ -63,27 +64,19 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
         @Override
         VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-            if (result != null && result.scope != null) {
-                context.setCurrentScope(result.scope)
-                context.setTargetType(result.type)
+            if (result?.scope != null) {
+                context.currentScope = result.scope
+                context.targetType = result.type
                 context.resetBinding()
                 Collection<?> matchResult = toMatch.matches(context, result.type)
-                BindingSet set = context.getCurrentBinding()
-                matches.push(set)
-                if (largestMatch == null || largestMatch.size() <= set.size()) {
-                    largestMatch = set
+                BindingSet bindingSet = context.currentBinding
+                matches.push(bindingSet)
+                if (largestMatch == null || largestMatch.size() <= bindingSet.size()) {
+                    largestMatch = bindingSet
                     largestMatchResult = matchResult
                 }
             }
             return VisitStatus.CONTINUE
-        }
-
-        Collection getLargestMatchResult() {
-            return largestMatchResult
-        }
-
-        BindingSet getLargestMatch() {
-            return largestMatch
         }
 
         boolean hasMatches() {
@@ -114,75 +107,66 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     private void doTestOfLastMatch(String pkg, String cuContents, String pointcutText, String name) {
         GroovyCompilationUnit unit = addGroovySource(cuContents, nextUnitName(), pkg)
         Collection<?> match = evaluateForMatch(unit, pointcutText)
-        assertSingleBinding(name, match)
+        assertSingleBinding(match, name)
     }
 
     private void assertAllBindings(BindingSet bindings, BindingResult... results) {
         if (results.length == 0) {
-            Assert.assertEquals('Should not have found any bindings', 0, bindings.getBindings().size())
+            Assert.assertEquals('Should not have found any bindings', 0, bindings.bindings.size())
             return
         }
         Assert.assertNotNull('Should have found some bindings.  Expected:\n' + Arrays.toString(results), bindings)
 
-        for (BindingResult result : results) {
+        for (result in results) {
             Collection<?> o = bindings.getBinding(result.bindingName)
             if (o == null) {
-                Assert.fail('Expected binding "' + result.bindingName + '", but not found.\n' + 'Actual bindings:\n' + bindings.getBindings())
+                Assert.fail('Expected binding "' + result.bindingName + '", but not found.\n' + 'Actual bindings:\n' + bindings.bindings)
             }
-            assertSingleBinding(result.bindingToString, o)
+            assertSingleBinding(o, result.bindingToString)
         }
-        Assert.assertEquals('Wrong number of bindings.  Expected Bindings: \n' + Arrays.toString(results) + '\nActualBindings:\n' + bindings.getBindings(), results.length, bindings.getBindings().size())
+        Assert.assertEquals('Wrong number of bindings.  Expected Bindings: \n' + Arrays.toString(results) + '\nActualBindings:\n' + bindings.bindings, results.length, bindings.bindings.size())
     }
 
-    private void assertSingleBinding(String bindingToString, Collection<?> binding) {
-        if (bindingToString == null) {
+    private void assertSingleBinding(Collection<?> binding, String expected) {
+        if (expected == null) {
             Assert.assertNull('Match should have been null', binding)
             return
         }
         Assert.assertNotNull('Match should not be null', binding)
 
-        String[] split = bindingToString.split(', ')
-        Assert.assertEquals('Unexpected number of bindings for ' + BindingSet.printCollection(binding), split.length, binding.size())
-        outer: for (Object object : binding) {
+        String[] tokens = expected.split(',')
+        Assert.assertEquals("Unexpected number of bindings for ${ -> BindingSet.printCollection(binding)}", tokens.length, binding.size())
+
+        binding.each { object ->
             String name = extractName(object)
-            for (String token : split) {
-                String regex = token.replace('(', '\\(').replace(')', '\\)')
-                if (name.matches(regex)) {
-                    continue outer
-                }
+            if (!tokens.any { String token ->
+                String regex = token.trim().replace('(', '\\(').replace(')', '\\)')
+                return name.matches(regex)
+            }) {
+                Assert.fail('Match result ' + name + ' not found in "' + expected + '"')
             }
-            Assert.fail('Expected binding ' + name + ' not found in ' + Arrays.toString(split))
         }
     }
 
-    private String extractName(Object defaultBinding) {
-        if (defaultBinding == null) {
+    private String extractName(Object bindingElement) {
+        if (bindingElement == null) {
             return null
-        } else if (defaultBinding instanceof ClassNode) {
-            return ((ClassNode) defaultBinding).getName()
-        } else if (defaultBinding instanceof FieldNode) {
-            FieldNode fieldNode = (FieldNode) defaultBinding
-            return fieldNode.getDeclaringClass().getName() + '.' + fieldNode.getName()
-        } else if (defaultBinding instanceof MethodNode) {
-            MethodNode methodNode = (MethodNode) defaultBinding
-            return methodNode.getDeclaringClass().getName() + '.' + methodNode.getName()
-        } else if (defaultBinding instanceof AnnotationNode) {
-            AnnotationNode annotationNode = (AnnotationNode) defaultBinding
-            return '@' + annotationNode.getClassNode().getName()
-        } else if (defaultBinding instanceof MethodCallExpression) {
-            return ((MethodCallExpression) defaultBinding).getMethodAsString() + '()'
-        } else if (defaultBinding instanceof VariableExpression) {
-            return 'Var: ' + ((VariableExpression) defaultBinding).getName()
-        } else if (defaultBinding instanceof Collection) {
-            StringBuilder sb = new StringBuilder()
-            for (Object item : ((Collection<?>) defaultBinding)) {
-                sb.append(extractName(item))
-                sb.append(', ')
-            }
-            sb.replace(sb.length()-2, sb.length(), '')
-            return sb.toString()
+        } else if (bindingElement instanceof ClassNode) {
+            return bindingElement.name
+        } else if (bindingElement instanceof FieldNode) {
+            return bindingElement.declaringClass.name + '.' + bindingElement.name
+        } else if (bindingElement instanceof MethodNode) {
+            return bindingElement.declaringClass.name + '.' + bindingElement.name
+        } else if (bindingElement instanceof AnnotationNode) {
+            return '@' + bindingElement.classNode.name
+        } else if (bindingElement instanceof MethodCallExpression) {
+            return bindingElement.methodAsString + '()'
+        } else if (bindingElement instanceof VariableExpression) {
+            return 'Var: ' + bindingElement.name
+        } else if (bindingElement instanceof Collection) {
+            return bindingElement.collect { extractName(it) }.join(', ')
         } else {
-            return defaultBinding.toString()
+            return bindingElement.toString()
         }
     }
 
@@ -191,7 +175,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         PointcutEvaluationRequestor requestor = new PointcutEvaluationRequestor(pc, unit)
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit)
         visitor.visitCompilationUnit(requestor)
-        return requestor.hasMatches() ? requestor.getLargestMatchResult() : null
+        return requestor.hasMatches() ? requestor.largestMatchResult : null
     }
 
     private BindingSet evaluateForBindings(GroovyCompilationUnit unit, String pointcutText) {
@@ -199,38 +183,38 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         PointcutEvaluationRequestor requestor = new PointcutEvaluationRequestor(pc, unit)
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit)
         visitor.visitCompilationUnit(requestor)
-        return requestor.hasMatches() ? requestor.getLargestMatch() : null
+        return requestor.hasMatches() ? requestor.largestMatch : null
     }
 
     //--------------------------------------------------------------------------
 
     @Test
-    void testEvaluateTypeMethodField1() {
+    void testCurrentType1() {
         doTestOfLastMatch('2', 'currentType("java.lang.Integer")', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField2() {
-        doTestOfLastMatch('2', 'currentType(methods("intValue"))', 'java.lang.Integer')
-    }
-
-    @Test
-    void testEvaluateTypeMethodField3() {
+    void testCurrentTypeFields1() {
         doTestOfLastMatch('2', 'currentType(fields("value"))', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField4Fail() {
+    void testCurrentTypeFields2() {
         doTestOfLastMatch('2', 'currentType(fields("notHere"))', null)
     }
 
     @Test
-    void testEvaluateTypeMethodField5() {
+    void testCurrentTypeMethods1() {
+        doTestOfLastMatch('2', 'currentType(methods("intValue"))', 'java.lang.Integer')
+    }
+
+    @Test
+    void testCurrentTypeFieldsAndMethods1() {
         doTestOfLastMatch('2', 'currentType(fields("value") & methods("intValue"))', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField5b() {
+    void testCurrentTypeFieldsAndMethods2() {
         doTestOfLastMatch('2',
             'def left = fields("value")\n' +
             'def right = methods("intValue")\n' +
@@ -238,7 +222,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testEvaluateTypeMethodField5c() {
+    void testCurrentTypeFieldsAndMethods3() {
         doTestOfLastMatch('2',
             'def left = { fields("value") }\n' +
             'def right = { methods("intValue") }\n' +
@@ -246,17 +230,17 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testEvaluateTypeMethodField6Fail_a() {
+    void testCurrentTypeFieldsAndMethods4() {
         doTestOfLastMatch('2', 'currentType(fields("notHere") & methods("intValue"))', null)
     }
 
     @Test
-    void testEvaluateTypeMethodField6Fail_b() {
+    void testCurrentTypeFieldsAndMethods5() {
         doTestOfLastMatch('2', 'currentType(methods("intValue") & fields("notHere"))', null)
     }
 
     @Test
-    void testEvaluateTypeMethodField6Fail_c() {
+    void testCurrentTypeFieldsAndMethods6() {
         doTestOfLastMatch('2',
             'def left = fields("notHere")\n' +
             'def right = methods("intValue")\n' +
@@ -264,85 +248,85 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testEvaluateTypeMethodField7a() {
+    void testCurrentTypeFieldsAndMethods7() {
         doTestOfLastMatch('2', 'currentType(fields("notHere") | methods("intValue"))', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField7b() {
+    void testCurrentTypeFieldsAndMethods8() {
         doTestOfLastMatch('2', 'currentType(methods("intValue") | fields("notHere"))', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField8() {
+    void testCurrentTypeFieldsAndMethods9() {
         doTestOfLastMatch('2', 'currentType(subType("java.lang.Number")) | (currentType(methods("intValue") & fields("notHere")))', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField8b() {
+    void testCurrentTypeFieldsAndMethods10() {
         doTestOfLastMatch('2', '(currentType(methods("intValue") & fields("notHere"))) | currentType(subType("java.lang.Number")) ', 'java.lang.Integer')
     }
 
     @Test
-    void testEvaluateTypeMethodField9Fail_a() {
+    void testCurrentTypeFieldsAndMethods11() {
         doTestOfLastMatch('2', 'currentType("java.lang.Number.NOPE") | (currentType(methods("intValue") & fields("notHere")))', null)
     }
 
     @Test
-    void testEvaluateTypeMethodField9Fail_b() {
+    void testCurrentTypeFieldsAndMethods12() {
         doTestOfLastMatch('2', 'currentType(subType("java.lang.Number")) & (currentType(methods("intValue") & fields("notHere")))', null)
     }
 
     @Test
-    void testAnnotation1() {
+    void testAnnotatedBy1() {
         addGroovySource('@Deprecated\nclass Foo {}', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated"))', 'p.Foo')
     }
 
     @Test
-    void testAnnotation2() {
+    void testAnnotatedBy2() {
         addGroovySource('class Foo {\n@Deprecated def t }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(fields(annotatedBy("java.lang.Deprecated")))', 'p.Foo')
     }
 
     @Test
-    void testAnnotation3() {
+    void testAnnotatedBy3() {
         addGroovySource('class Foo {\n@Deprecated def t() { } }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(methods(annotatedBy("java.lang.Deprecated")))', 'p.Foo')
     }
 
     @Test
-    void testAnnotation4() {
+    void testAnnotatedBy4() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated") & fields("f") )', 'p.Foo')
     }
 
     @Test
-    void testAnnotation5() {
+    void testAnnotatedBy5() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType(annotatedBy("java.lang.Deprecated") | fields("g") )', 'p.Foo')
     }
 
     @Test
-    void testAnnotation6() {
+    void testAnnotatedBy6() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields("g") | annotatedBy("java.lang.Deprecated") )', 'p.Foo')
     }
 
     @Test
-    void testAnnotation7() {
+    void testAnnotatedBy7() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields("g") & annotatedBy("java.lang.Deprecated") )', null)
     }
 
     @Test
-    void testAnnotation8() {
+    void testAnnotatedBy8() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) )', 'p.Foo')
     }
 
     @Test
-    void testAnnotation9() {
+    void testAnnotatedBy9() {
         addGroovySource('@interface Tag { String value(); }', 'Tag', 'a')
         addGroovySource('@interface Tags { Tag[] value(); }', 'Tags', 'a')
         addGroovySource('import a.*; @Tags([@Tag("one"), @Tag("two")]) class Bar { def baz() {} }', 'Bar', 'foo')
@@ -350,7 +334,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnotation9a() {
+    void testAnnotatedBy9a() {
         addGroovySource('@interface Tag { String value(); }', 'Tag', 'a')
         addGroovySource('@interface Tags { Tag[] value(); }', 'Tags', 'a')
         addGroovySource('import a.*; @Tags(@Tag("one")) class Bar { def baz() {} }', 'Bar', 'foo')
@@ -358,32 +342,32 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testEvaluateFileExtension1() {
+    void testFileExtension1() {
         doTestOfLastMatch('2', 'fileExtension("groovy")', 'src/p/TestUnit\\d+.groovy')
     }
 
     @Test
-    void testEvaluateFileExtension2Fail() {
+    void testFileExtension2() {
         doTestOfLastMatch('2', 'fileExtension("invalid")', null)
     }
 
     @Test
-    void testEvaluateNature1() {
+    void testNature1() {
         doTestOfLastMatch('2', 'nature("org.eclipse.jdt.groovy.core.groovyNature")', 'org.eclipse.jdt.groovy.core.groovyNature')
     }
 
     @Test
-    void testEvaluateNature2Fail() {
+    void testNature2Fail() {
         doTestOfLastMatch('2', 'nature("invalid")', null)
     }
 
     @Test
-    void testPackagePath() {
+    void testPackageFolder1() {
         doTestOfLastMatch('p', '2', 'packageFolder("p")', 'p')
     }
 
     @Test
-    void testPackagePathFail() {
+    void testPackageFolder2() {
         doTestOfLastMatch('p', '2', 'packageFolder("invalid")', null)
     }
 
@@ -593,61 +577,61 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnotationBinding1() {
+    void testAnnotatedByBinding1() {
         addGroovySource('@Deprecated\nclass Foo {}', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType(bind( b : annotatedBy("java.lang.Deprecated")))',
             new BindingResult('b', '@java.lang.Deprecated'))
     }
 
     @Test
-    void testAnnotationBinding2() {
+    void testAnnotatedByBinding2() {
         addGroovySource('class Foo {\n@Deprecated def t }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType(bind(b : fields(annotatedBy("java.lang.Deprecated"))))',
             new BindingResult('b', 'p.Foo.t'))
     }
 
     @Test
-    void testAnnotationBinding3() {
+    void testAnnotatedByBinding3() {
         addGroovySource('class Foo {\n@Deprecated def t() { } }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType(bind( b : methods(annotatedBy("java.lang.Deprecated"))))',
             new BindingResult('b', 'p.Foo.t'))
     }
 
     @Test
-    void testAnnotationBinding4() {
+    void testAnnotatedByBinding4() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType(bind ( b : annotatedBy("java.lang.Deprecated") & fields("f") ) )',
             new BindingResult('b', '@java.lang.Deprecated, p.Foo.f'))
     }
 
     @Test
-    void testAnnotationBinding5() {
+    void testAnnotatedByBinding5() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType(bind ( b : annotatedBy("java.lang.Deprecated") | fields("f") ) )',
             new BindingResult('b', '@java.lang.Deprecated, p.Foo.f'))
     }
 
     @Test
-    void testAnnotationBinding6() {
+    void testAnnotatedByBinding6() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( bind( b : fields("g")) | annotatedBy("java.lang.Deprecated") )')
     }
 
     @Test
-    void testAnnotationBinding7Fail() {
+    void testAnnotatedByBinding7Fail() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( fields("g") & bind( b : annotatedBy("java.lang.Deprecated") ) )')
     }
 
     @Test
-    void testAnnotationBinding8() {
+    void testAnnotatedByBinding8() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( bind( b : fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) ) )',
             new BindingResult('b', 'p.Foo.f, p.Foo.g'))
     }
 
     @Test
-    void testAnnotationBinding9() {
+    void testAnnotatedByBinding9() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
         doTestOfLastBindingSet('Foo', 'currentType( fields( bind ( b : annotatedBy("java.lang.Deprecated") ) ) & methods( bind ( b : annotatedBy("java.lang.Deprecated") ) ) )',
             new BindingResult('b', '@java.lang.Deprecated, @java.lang.Deprecated'))

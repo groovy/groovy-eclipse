@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * Matches when the current type is the same as the enclosing type. This matches
- * true
- * for references to 'this', or when a new expression is being started. As
+ * true for references to 'this', or when a new expression is being started.  As
  * opposed to {@link CurrentTypeIsEnclosingTypePointcut}, this pointcut always
- * matches, regardless of whether or not in a closure. This pointcut
- * takes no arguments
+ * matches, regardless of whether or not in a closure.
+ *
+ * @see CurrentTypeIsEnclosingTypePointcut
  */
 public class IsThisTypePointcut extends AbstractPointcut {
 
@@ -38,15 +38,10 @@ public class IsThisTypePointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
-    /**
-     * toMatch parameter is ignored.
-     * No arguments
-     * Just like {@link CurrentTypePointcut}
-     */
     @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        if (pattern.isPrimaryNode()) {
-            ClassNode currentType = pattern.getCurrentType();
+    public Collection<?> matches(GroovyDSLDContext context, Object dontCare) {
+        if (context.isPrimaryNode()) {
+            ClassNode currentType = context.getCurrentType();
             return Collections.singleton(currentType);
         }
         return null;
@@ -60,5 +55,4 @@ public class IsThisTypePointcut extends AbstractPointcut {
         }
         super.verify();
     }
-
 }
