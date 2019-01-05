@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,8 @@ public class DSLDProposalProvider implements IProposalProvider {
 
             GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit, info.module, info.resolver);
             pattern.setCurrentScope(context.currentScope);
-            pattern.setPrimaryNode(context.location == ContentAssistLocation.STATEMENT || (context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
+            pattern.setPrimaryNode(context.location == ContentAssistLocation.SCRIPT || context.location == ContentAssistLocation.STATEMENT ||
+                (context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
             pattern.setStatic(isStatic);
             pattern.setTargetType(completionType);
 

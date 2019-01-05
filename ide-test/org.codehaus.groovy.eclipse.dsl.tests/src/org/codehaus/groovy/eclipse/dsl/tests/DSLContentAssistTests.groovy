@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -502,10 +502,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
             foo {
-              // here
+              #
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('/'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         // should see proposals from String, not Integer
         proposalExists(proposals, 'substring', 2)
         proposalExists(proposals, 'bytes', 1)
@@ -548,15 +548,38 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def foo(Closure block) {
             }
             foo {
-              // here
+              #
               something
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('/'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         // should see proposals from String
         proposalExists(proposals, 'bytes', 1)
         proposalExists(proposals, 'capitalize', 1)
         proposalExists(proposals, 'toUpperCase()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/786
+    void testStatementPosition4() {
+        createDsld '''\
+            contribute(isScript() & isThisType()) {
+              property name: 'xyz'
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            |/*
+            | * blah blah blah
+            | */
+            |
+            |import java.util.regex.Pattern
+            |
+            |def abc = 123
+            |
+            |#
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+        proposalExists(proposals, 'xyz', 1)
     }
 
     @Test
