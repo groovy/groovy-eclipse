@@ -582,6 +582,25 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         proposalExists(proposals, 'xyz', 1)
     }
 
+    @Test // ensures currentNode contains BlockStatement reference
+    void testStatementPosition5() {
+        createDsld '''\
+            contribute(isThisType()) {
+              if (currentNode instanceof org.codehaus.groovy.ast.stmt.BlockStatement) {
+                property name: 'xyz'
+              }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            void meth() {
+              #
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
+        proposalExists(proposals, 'xyz', 1)
+    }
+
     @Test
     void testTrailingClosure1() {
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')

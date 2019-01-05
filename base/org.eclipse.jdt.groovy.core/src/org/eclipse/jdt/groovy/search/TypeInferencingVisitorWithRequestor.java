@@ -809,12 +809,18 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitBlockStatement(BlockStatement block) {
-        scopes.add(new VariableScope(scopes.getLast(), block, false));
+        VariableScope scope = new VariableScope(scopes.getLast(), block, false);
+        scope.setCurrentNode(block);
+        scopes.add(scope);
+
         boolean shouldContinue = handleStatement(block);
         if (shouldContinue) {
             super.visitBlockStatement(block);
         }
-        scopes.removeLast().bubbleUpdates();
+
+        scope.forgetCurrentNode();
+        scope.bubbleUpdates();
+        scopes.removeLast();
     }
 
     @Override
