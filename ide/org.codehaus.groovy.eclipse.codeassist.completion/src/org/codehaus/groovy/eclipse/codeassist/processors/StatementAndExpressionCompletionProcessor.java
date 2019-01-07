@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -359,8 +359,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private static void setClosureQualifiers(Collection<IGroovyProposal> delegateProposals, Collection<IGroovyProposal> ownerProposals, int resolveStrategy) {
 
-        Function<IGroovyProposal, String> toName = (IGroovyProposal proposal) -> {
-            AnnotatedNode node = ((AbstractGroovyProposal) proposal).getAssociatedNode();
+        Function<IGroovyProposal, String> toName = p -> {
+            AnnotatedNode node = ((AbstractGroovyProposal) p).getAssociatedNode();
             if (node instanceof FieldNode) {
                 return ((FieldNode) node).getName();
             }
@@ -373,6 +373,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             throw new IllegalStateException("unexpected node type: " + node.getClass());
         };
 
+        Consumer<IGroovyProposal> reduceRelevance = p -> {
+            AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
+            agp.setRelevanceMultiplier(agp.getRelevanceMultiplier() * 0.9f);
+        };
+
         if (!delegateProposals.isEmpty()) {
             Consumer<IGroovyProposal> addDelegateQualifier = p -> ((AbstractGroovyProposal) p).setRequiredQualifier("delegate");
 
@@ -380,7 +385,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 Set<String> names = ownerProposals.stream().map(toName).collect(Collectors.toSet());
                 delegateProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addDelegateQualifier);
             } else if (resolveStrategy == Closure.TO_SELF) {
-                delegateProposals.forEach(addDelegateQualifier);
+                delegateProposals.forEach(addDelegateQualifier.andThen(reduceRelevance));
             }
         }
 
@@ -391,7 +396,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 Set<String> names = delegateProposals.stream().map(toName).collect(Collectors.toSet());
                 ownerProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addOwnerQualifier);
             } else if (resolveStrategy == Closure.TO_SELF) {
-                ownerProposals.forEach(addOwnerQualifier);
+                ownerProposals.forEach(addOwnerQualifier.andThen(reduceRelevance));
             }
         }
     }
