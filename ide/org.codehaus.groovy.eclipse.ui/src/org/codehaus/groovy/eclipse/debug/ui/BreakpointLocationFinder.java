@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class BreakpointLocationFinder {
 
             @Override
             public void visitMethod(MethodNode node) {
-                if (node.getNameStart() > 0) {
+                if (node.getLineNumber() > 0) {
                     nodes.add(node);
                 }
                 super.visitMethod(node);
@@ -66,7 +66,7 @@ public class BreakpointLocationFinder {
 
             @Override
             public void visitField(FieldNode node) {
-                if (node.getNameStart() > 0) {
+                if (node.getLineNumber() > 0) {
                     nodes.add(node);
                 }
                 super.visitField(node);
@@ -74,12 +74,11 @@ public class BreakpointLocationFinder {
 
             @Override
             public void visitClass(ClassNode node) {
-                if (node.getNameStart() > 0) {
+                if (node.getLineNumber() > 0) {
                     nodes.add(node);
                 }
                 super.visitClass(node);
             }
-
         }.visitModule(module);
 
         this.nodes = Collections.unmodifiableSet(nodes);

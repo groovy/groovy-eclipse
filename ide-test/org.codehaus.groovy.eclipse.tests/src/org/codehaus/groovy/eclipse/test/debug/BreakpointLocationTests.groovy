@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -404,5 +404,24 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assert node instanceof MethodNode
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/790
+    void testBreakpointInClass14() {
+        def node = findBreakpointLocation 'println', '''\
+            class One {
+              void meth() {
+                println 'blah blah'
+              }
+            }
+            class Two {
+              final Map map
+              Two(Map map = Collections.EMPTY_MAP) {
+                this.map = map
+              }
+            }
+            '''.stripIndent()
+
+        assert node.lineNumber == 3
     }
 }
