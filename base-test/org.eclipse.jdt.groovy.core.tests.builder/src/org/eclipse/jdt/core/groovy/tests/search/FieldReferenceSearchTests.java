@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,16 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Test;
 
 public final class FieldReferenceSearchTests extends SearchTestSuite {
@@ -182,15 +191,84 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "f.xxx = f.xxx");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/788
+    public void testFindInnerClassField1() throws Exception {
+        String contents =
+            "class Outer {\n" +
+            "  static class Inner1 {\n" +
+            "    String something\n" +
+            "  }\n" +
+            "  static class Inner2 {\n" +
+            "    String something\n" +
+            "    void meth(Inner1 param) {\n" +
+            "      param.with {\n" +
+            "        something\n" +
+            "        owner.something\n" +
+            "        println \"Something: $something\"\n" +
+            "        println \"Something else: $owner.something\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.indexOf("with {");
+        GroovyCompilationUnit unit = createUnit("Outer", contents);
+        IField field = findType("Outer", unit).getType("Inner1").getField("something");
+
+        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
+        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
+            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
+        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+
+        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
+        assertLocation(searchRequestor.getMatch(0), contents.indexOf("something", offset), "something".length());
+        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$something", offset) + 1, "something".length());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/788
+    public void testFindInnerClassField2() throws Exception {
+        String contents =
+            "class Outer {\n" +
+            "  static class Inner1 {\n" +
+            "    String something\n" +
+            "  }\n" +
+            "  static class Inner2 {\n" +
+            "    String something\n" +
+            "    void meth(Inner1 param) {\n" +
+            "      param.with {\n" +
+            "        something\n" +
+            "        owner.something\n" +
+            "        println \"Something: $something\"\n" +
+            "        println \"Something else: $owner.something\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.indexOf("with {");
+        GroovyCompilationUnit unit = createUnit("Outer", contents);
+        IField field = findType("Outer", unit).getType("Inner2").getField("something");
+
+        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
+        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
+            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
+        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+
+        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
+        assertLocation(searchRequestor.getMatch(0), contents.indexOf("owner.something", offset) + 6, "something".length());
+        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
+    }
+
     //--------------------------------------------------------------------------
 
-    protected void doTestForTwoFieldReferencesInGString(String secondContents) throws Exception {
-        super.doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, "xxx");
+    private static final String FIRST_CONTENTS_CLASS_FOR_FIELDS = "class First {\n  def xxx\n}";
+
+    private void doTestForTwoFieldReferencesInGString(String secondContents) throws Exception {
+        doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, "xxx");
     }
 
     private void doTestForTwoFieldWritesInScript(String secondContents) throws Exception {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.WRITE_ACCESSES);
     }
+
     private void doTestForTwoFieldReadsInScript(String secondContents) throws Exception {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.READ_ACCESSES);
     }
@@ -205,5 +283,48 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
     private void doTestForTwoFieldReferencesInClass(String secondContents) throws Exception {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, false, 0, "xxx");
+    }
+
+    private void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws Exception {
+        doTestForTwoFieldReferences(firstContents, secondContents, contentsIsScript, offsetInParent, matchName, IJavaSearchConstants.REFERENCES);
+    }
+
+    private void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName, int searchFlags) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        String matchedFieldName = "xxx";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
+        SearchPattern pattern = SearchPattern.createPattern(firstField, searchFlags);
+
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        IJavaElement firstMatchEnclosingElement;
+        IJavaElement secondMatchEnclosingElement;
+        if (contentsIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+        } else {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent+2];
+        }
+        // match is enclosed in run method (for script), or x method for class
+
+        checkMatches(secondContents, matchName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
+    }
+
+    // as above, but enclosing element is always the first child of the enclosing type
+    private void doTestForTwoFieldReferencesInGString(String firstContents, String secondContents, String matchName) throws Exception {
+        String firstClassName = "First";
+        String secondClassName = "Second";
+        String matchedFieldName = "xxx";
+        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
+        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
+
+        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        IJavaElement firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
+        IJavaElement secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
+
+        checkMatches(secondContents, matchName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 }

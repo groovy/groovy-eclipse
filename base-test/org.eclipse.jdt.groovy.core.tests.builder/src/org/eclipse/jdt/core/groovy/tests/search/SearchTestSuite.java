@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
@@ -141,7 +140,6 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
     protected final static String FIRST_CONTENTS_CLASS = "class First {}";
     protected final static String FIRST_CONTENTS_INTERFACE = "interface First {}";
-    protected final static String FIRST_CONTENTS_CLASS_FOR_FIELDS = "class First { def xxx }";
     protected final static String FIRST_CONTENTS_CLASS_FOR_METHODS = "class First { def xxx() { } }";
     protected final static String FIRST_CONTENTS_CLASS_FOR_METHODS2 = "class First { def xxx() { } \n def xxx(arg) { } }";
 
@@ -165,51 +163,6 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
 
         checkMatches(secondContents, firstClassName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
-    }
-
-    protected void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
-        doTestForTwoFieldReferences(firstContents, secondContents, contentsIsScript, offsetInParent, matchName, IJavaSearchConstants.REFERENCES);
-    }
-
-    protected void doTestForTwoFieldReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName, int searchFlags) throws JavaModelException {
-        String firstClassName = "First";
-        String secondClassName = "Second";
-        String matchedFieldName = "xxx";
-        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
-        SearchPattern pattern = SearchPattern.createPattern(firstField, searchFlags);
-
-        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
-        IJavaElement firstMatchEnclosingElement;
-        IJavaElement secondMatchEnclosingElement;
-        if (contentsIsScript) {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
-        } else {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent+2];
-        }
-        // match is enclosed in run method (for script), or x method for class
-
-        checkMatches(secondContents, matchName, pattern, second,
-                firstMatchEnclosingElement, secondMatchEnclosingElement);
-    }
-
-    // as above, but enclosing element is always the first child of the enclosing type
-    protected void doTestForTwoFieldReferencesInGString(String firstContents, String secondContents, String matchName) throws JavaModelException {
-        String firstClassName = "First";
-        String secondClassName = "Second";
-        String matchedFieldName = "xxx";
-        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IField firstField = findType(firstClassName, first).getField(matchedFieldName);
-        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
-
-        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
-        IJavaElement firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
-        IJavaElement secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[0];
-
-        checkMatches(secondContents, matchName, pattern, second,
-                firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 
     protected void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
@@ -275,7 +228,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         return searchRequestor.getMatches();
     }
 
-    private IType findType(String firstClassName, GroovyCompilationUnit first) {
+    protected IType findType(String firstClassName, GroovyCompilationUnit first) {
         IType type = first.getType(firstClassName);
         if (! type.exists()) {
             try {
@@ -305,7 +258,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);
     }
 
-    private void checkLocalVarMatches(String contents, String matchName, SearchPattern pattern, GroovyCompilationUnit unit, MatchRegion[] matchLocations) {
+    protected void checkLocalVarMatches(String contents, String matchName, SearchPattern pattern, GroovyCompilationUnit unit, MatchRegion[] matchLocations) {
         MockPossibleMatch match = new MockPossibleMatch(unit);
         ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
@@ -319,7 +272,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         }
     }
 
-    private void checkMatches(String secondContents, String matchText, SearchPattern pattern, GroovyCompilationUnit second, IJavaElement firstMatchEnclosingElement, IJavaElement secondMatchEnclosingElement) {
+    protected void checkMatches(String secondContents, String matchText, SearchPattern pattern, GroovyCompilationUnit second, IJavaElement firstMatchEnclosingElement, IJavaElement secondMatchEnclosingElement) {
         MockPossibleMatch match = new MockPossibleMatch(second);
         ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);

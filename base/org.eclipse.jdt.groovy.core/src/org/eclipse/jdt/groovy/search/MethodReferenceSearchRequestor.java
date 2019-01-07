@@ -335,11 +335,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             return false;
         }
         String declaringTypeName = declaringType.getName().replace('$', '.');
-        if (declaringTypeName.equals("java.lang.Object") && declaringType.getDeclaredMethods(methodName).isEmpty()) {
+        if ("java.lang.Object".equals(declaringTypeName) && declaringType.getDeclaredMethods(methodName).isEmpty()) {
             // local variables have a declaring type of Object; don't accidentally return them as a match
             return false;
         }
-        if (this.declaringTypeName == null || this.declaringTypeName.length() == 0) {
+        if (this.declaringTypeName == null || this.declaringTypeName.isEmpty()) {
             // no type specified, accept all
             return true;
         }

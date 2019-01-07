@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
     protected final SearchRequestor requestor;
     protected final SearchParticipant participant;
 
-    protected final String fieldName, declaringQualifiedName;
+    protected final String fieldName, declaringTypeName;
     protected final Set<Position> acceptedPositions = new HashSet<>();
     protected final boolean readAccess, writeAccess, findReferences, findDeclarations;
 
@@ -61,7 +61,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         String declaringSimpleName = ((arr == null || arr.length == 0) ? "" : String.valueOf(arr));
         arr = ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
         String declaringQualification = ((arr == null || arr.length == 0) ? "" : (String.valueOf(arr) + "."));
-        declaringQualifiedName = declaringQualification + declaringSimpleName;
+        declaringTypeName = declaringQualification + declaringSimpleName;
 
         readAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "readAccess", pattern);
         writeAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern);
@@ -155,16 +155,15 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         return VisitStatus.CONTINUE;
     }
 
-    // recursively check the hierarchy
     private boolean qualifiedNameMatches(ClassNode declaringType) {
         if (declaringType == null) {
             // no declaring type; probably a variable declaration
             return false;
-        } else if (declaringQualifiedName.isEmpty()) {
+        } else if (declaringTypeName.isEmpty()) {
             // no type specified, accept all
             return true;
         }
-        return declaringType.getName().equals(declaringQualifiedName);
+        return declaringType.getName().replace('$', '.').equals(declaringTypeName);
     }
 
     private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
