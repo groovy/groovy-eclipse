@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,49 @@ final class RelevanceTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'get')))
         assertProposalOrdering(proposals, 'getAt', 'getDelegate()', 'getDirective()', 'getMetaClass()', 'getDefaultMetaClass()')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/787
+    void testClosureMethodsAndProperties3() {
+        String contents = '''\
+            class Outer {
+              static class Foo {
+                String string
+              }
+              static class Bar {
+                String string
+                void meth(Foo foo) {
+                  foo.with {
+                    s
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 's')))
+        assertProposalOrdering(proposals, 'string : String - Foo', 'string : String - Bar', 'setString(String value) : void - Foo', 'setString(String value) : void - Bar', 'setMetaClass')
+    }
+
+    @Test
+    void testClosureMethodsAndProperties4() {
+        String contents = '''\
+            class Outer {
+              static class Foo {
+                String string
+              }
+              static class Bar {
+                String string
+                def foo(@DelegatesTo(value=Foo, strategy=Closure.OWNER_FIRST) Closure c) {}
+                void meth() {
+                  foo { ->
+                    s
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 's')))
+        assertProposalOrdering(proposals, 'string : String - Bar', 'string : String - Foo', 'setString(String value) : void - Bar', 'setString(String value) : void - Foo', 'setMetaClass')
     }
 
     @Test

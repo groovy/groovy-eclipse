@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             if ((!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE))) {
                 if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                    setRelevanceMultiplier(proposal, firstTime, isStatic);
+                    setRelevanceMultiplier(proposal, isStatic);
                     proposals.add(proposal);
                 }
 
@@ -115,7 +115,9 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 if (methods != null) {
                     for (MethodNode method : methods) {
                         if (method.isStatic()) {
-                            proposals.add(new GroovyMethodProposal(method));
+                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                            proposal.setRelevanceMultiplier(0.95f);
+                            proposals.add(proposal);
                         }
                     }
                 }
@@ -126,7 +128,9 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             if (type != null) {
                 for (MethodNode method : type.getMethods()) {
                     if (method.isStatic() && matcher.test(prefix, method.getName())) {
-                        proposals.add(new GroovyMethodProposal(method));
+                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                        proposal.setRelevanceMultiplier(0.95f);
+                        proposals.add(proposal);
                     }
                 }
             }
@@ -152,6 +156,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                     if (method.isStatic() && matcher.test(prefix, method.getName())) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRequiredStaticImport(typeName + '.' + method.getName());
+                        proposal.setRelevanceMultiplier(0.95f);
                         proposals.add(proposal);
                     }
                 }
@@ -162,6 +167,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                         if (method.isStatic()) {
                             GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                             proposal.setRequiredStaticImport(favoriteStaticMember);
+                            proposal.setRelevanceMultiplier(0.95f);
                             proposals.add(proposal);
                         }
                     }
@@ -170,21 +176,16 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
     }
 
-    private void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean firstTime, boolean isStatic) {
+    private void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean isStatic) {
         MethodNode method = proposal.getMethod();
 
         float relevanceMultiplier;
         if (isStatic && method.isStatic()) {
-            relevanceMultiplier = 1.10f;
+            relevanceMultiplier = 1.05f;
         } else if (!method.isStatic()) {
             relevanceMultiplier = 1.00f;
         } else {
-            relevanceMultiplier = 0.77f;
-        }
-
-        // de-emphasize 'this' references inside closure
-        if (!firstTime) {
-            relevanceMultiplier *= 0.1f;
+            relevanceMultiplier = 0.95f;
         }
 
         proposal.setRelevanceMultiplier(relevanceMultiplier);

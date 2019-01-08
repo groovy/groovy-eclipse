@@ -375,7 +375,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
         Consumer<IGroovyProposal> reduceRelevance = p -> {
             AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
-            agp.setRelevanceMultiplier(agp.getRelevanceMultiplier() * 0.9f);
+            agp.setRelevanceMultiplier(agp.getRelevanceMultiplier() * 0.999f);
         };
 
         if (!delegateProposals.isEmpty()) {
@@ -383,7 +383,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
             if (resolveStrategy == Closure.OWNER_FIRST && !ownerProposals.isEmpty()) {
                 Set<String> names = ownerProposals.stream().map(toName).collect(Collectors.toSet());
-                delegateProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addDelegateQualifier);
+                delegateProposals.stream().filter(p -> names.contains(toName.apply(p)))
+                                .forEach(addDelegateQualifier.andThen(reduceRelevance));
             } else if (resolveStrategy == Closure.TO_SELF) {
                 delegateProposals.forEach(addDelegateQualifier.andThen(reduceRelevance));
             }
@@ -394,7 +395,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
             if (resolveStrategy == Closure.DELEGATE_FIRST && !delegateProposals.isEmpty()) {
                 Set<String> names = delegateProposals.stream().map(toName).collect(Collectors.toSet());
-                ownerProposals.stream().filter(p -> names.contains(toName.apply(p))).forEach(addOwnerQualifier);
+                ownerProposals.stream().filter(p -> names.contains(toName.apply(p)))
+                                .forEach(addOwnerQualifier.andThen(reduceRelevance));
             } else if (resolveStrategy == Closure.TO_SELF) {
                 ownerProposals.forEach(addOwnerQualifier.andThen(reduceRelevance));
             }

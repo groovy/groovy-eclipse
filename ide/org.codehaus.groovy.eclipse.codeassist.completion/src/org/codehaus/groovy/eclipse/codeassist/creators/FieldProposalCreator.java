@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,12 +59,8 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) && matcher.test(prefix, field.getName())) {
-                // de-emphasize 'this' references inside closure
-                float relevanceMultiplier = !firstTime ? 0.1f : 1.0f;
-                if (field.isEnum()) relevanceMultiplier *= 5.0f;
-
                 GroovyFieldProposal proposal = new GroovyFieldProposal(field);
-                proposal.setRelevanceMultiplier(relevanceMultiplier);
+                proposal.setRelevanceMultiplier(field.isEnum() ? 5 : 1);
                 proposals.add(proposal);
 
                 if (field.getInitialExpression() instanceof ClosureExpression) {
@@ -128,7 +124,9 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             if (fieldName != null && matcher.test(prefix, fieldName)) {
                 FieldNode field = entry.getValue().getType().getField(fieldName);
                 if (field != null && field.isStatic()) {
-                    proposals.add(new GroovyFieldProposal(field));
+                    GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                    proposal.setRelevanceMultiplier(0.95f);
+                    proposals.add(proposal);
                 }
             }
         }
@@ -137,7 +135,9 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             if (type != null) {
                 for (FieldNode field : type.getFields()) {
                     if (field.isStatic() && matcher.test(prefix, field.getName())) {
-                        proposals.add(new GroovyFieldProposal(field));
+                        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                        proposal.setRelevanceMultiplier(0.95f);
+                        proposals.add(proposal);
                     }
                 }
             }
@@ -163,6 +163,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
                     if (field.isStatic() && matcher.test(prefix, field.getName())) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(typeName + '.' + field.getName());
+                        proposal.setRelevanceMultiplier(0.95f);
                         proposals.add(proposal);
                     }
                 }
@@ -172,6 +173,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
                     if (field != null && field.isStatic()) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(favoriteStaticMember);
+                        proposal.setRelevanceMultiplier(0.95f);
                         proposals.add(proposal);
                     }
                 }
