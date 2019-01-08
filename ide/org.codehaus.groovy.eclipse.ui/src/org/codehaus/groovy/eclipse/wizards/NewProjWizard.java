@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,24 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.ui.decorators.GroovyPluginImages;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.ui.util.ExceptionHandler;
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard;
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne;
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard;
 
 public class NewProjWizard extends NewElementWizard implements IExecutableExtension {
@@ -48,7 +53,20 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
 
     @Override
     public void addPages() {
-        pageOne = new NewJavaProjectWizardPageOne();
+        pageOne = new NewJavaProjectWizardPageOne() {
+            @Override
+            public IClasspathEntry[] getDefaultClasspathEntries() {
+                IClasspathEntry[] entries = super.getDefaultClasspathEntries();
+                entries = (IClasspathEntry[]) ArrayUtils.add(entries, GroovyRuntime.createContainerEntry(false));
+
+                String namespace = "org.codehaus.groovy.eclipse.dsl";
+                IPreferenceStore prefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, namespace);
+                if (!prefs.getBoolean(namespace + ".disabled") /*&& prefs.getBoolean(namespace + ".auto.add.support")*/) {
+                    entries = (IClasspathEntry[]) ArrayUtils.add(entries, entries.length - 1, JavaCore.newContainerEntry(GroovyRuntime.DSLD_CONTAINER_ID));
+                }
+                return entries;
+            }
+        };
         pageOne.setTitle(WizardMessages.NewProjWizard_page1_title);
         pageOne.setDescription(WizardMessages.NewProjWizard_page1_message);
         addPage(pageOne);
@@ -69,32 +87,27 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
     public boolean performFinish() {
         boolean result = super.performFinish();
         if (result) {
-            // Fix for 78263
-            BasicNewProjectResourceWizard.updatePerspective(configElement);
-            IProject project = pageTwo.getJavaProject().getProject();
-            selectAndReveal(project);
+            IProject project = getCreatedElement().getProject();
+            try {
+                GroovyRuntime.addGroovyNature(project);
+            } catch (CoreException e) {
+                GroovyPlugin.getDefault().logError("Error adding Groovy nature to project " + project.getName(), e);
+            }
 
             IWorkingSet[] workingSets = pageOne.getWorkingSets();
             if (workingSets.length > 0) {
                 PlatformUI.getWorkbench().getWorkingSetManager().addToWorkingSets(project, workingSets);
             }
 
-            // Force build of the new Groovy project using the Java builder so
-            // that project state can be created. The creation of project state
-            // means that Java projects can reference this project on their
-            // build path and successfully continue to build.
-            try {
-                GroovyRuntime.addGroovyRuntime(project);
-                project.build(IncrementalProjectBuilder.FULL_BUILD, null);
-            } catch (CoreException e) {
-                GroovyPlugin.getDefault().logError("Error adding Groovy runtime to project " + pageTwo.getJavaProject().getElementName(), e);
-            }
+            BasicNewProjectResourceWizard.updatePerspective(configElement);
+
+            selectAndReveal(project);
         }
         return result;
     }
 
     @Override
-    public IJavaElement getCreatedElement() {
+    public IJavaProject getCreatedElement() {
         return pageTwo.getJavaProject();
     }
 
