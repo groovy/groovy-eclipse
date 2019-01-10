@@ -209,6 +209,36 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testCurrentTypeHasConstructor1() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor("int"))', 'java.lang.Integer')
+    }
+
+    @Test
+    void testCurrentTypeHasConstructor2() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor("String"))', 'java.lang.Integer')
+    }
+
+    @Test
+    void testCurrentTypeHasConstructor3() {
+        doTestOfLastMatch('""', 'currentType(hasConstructor("char[],int,int"))', 'java.lang.String')
+    }
+
+    @Test
+    void testCurrentTypeHasConstructor4() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor("Unknown"))', null)
+    }
+
+    @Test
+    void testCurrentTypeHasConstructor5() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor(isPublic()))', 'java.lang.Integer')
+    }
+
+    @Test
+    void testCurrentTypeHasConstructor6() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor(isPrivate()))', null)
+    }
+
+    @Test
     void testCurrentTypeFieldsAndMethods1() {
         doTestOfLastMatch('2', 'currentType(fields("value") & methods("intValue"))', 'java.lang.Integer')
     }
@@ -641,9 +671,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCalls1() {
         doTestOfLastBindingSet(
             'bar {\n' +
-            '	foo {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  foo {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), bar()'),
             new BindingResult('y', 'Var: XXX'))
@@ -653,9 +683,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCalls2() {
         doTestOfLastBindingSet(
             'foo {\n' +
-            '	bar {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  bar {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar(), foo()'),
             new BindingResult('y', 'Var: XXX'))
@@ -665,9 +695,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCalls3() {
         doTestOfLastBindingSet(
             'foo {\n' +
-            '	foo {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  foo {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), foo()'),
             new BindingResult('y', 'Var: XXX'))
@@ -677,9 +707,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCallNames1() {
         doTestOfLastBindingSet(
             'bar {\n' +
-            '	foo {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  foo {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo, bar'),
             new BindingResult('y', 'Var: XXX'))
@@ -689,9 +719,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCallNames2() {
         doTestOfLastBindingSet(
             'foo {\n' +
-            '	bar {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  bar {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar, foo'),
             new BindingResult('y', 'Var: XXX'))
@@ -701,9 +731,9 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNestedCallsName3() {
         doTestOfLastBindingSet(
             'foo {\n' +
-            '	foo {\n' +
-            '		 XXX\n' +
-            '	}\n' +
+            '  foo {\n' +
+            '    XXX\n' +
+            '  }\n' +
             '}',
             'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
 

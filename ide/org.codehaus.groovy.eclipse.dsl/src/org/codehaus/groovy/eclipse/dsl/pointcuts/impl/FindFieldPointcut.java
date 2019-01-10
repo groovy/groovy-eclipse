@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,60 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
- * the match returns true if the pattern passed in has a field with the
- * supplied characteristics (either a name, or another pointcut such as hasAnnotation).
+ * Matches if the input has a field with the supplied characteristics -- either
+ * a name or another pointcut like {@code hasAnnotation}.
  */
-public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
+public class FindFieldPointcut extends FindASTPointcut<FieldNode> {
 
     public FindFieldPointcut(IStorage containerIdentifier, String pointcutName) {
-        super(containerIdentifier, pointcutName, FieldNode.class);
-    }
-
-    /**
-     * Converts toMatch to a collection of field nodes.  Might be null or empty list
-     * In either of these cases, this is considered a non-match
-     * @param toMatch the object to explode
-     */
-    @Override
-    protected Collection<FieldNode> explodeObject(Object toMatch) {
-        if (toMatch instanceof Collection) {
-            Collection<FieldNode> fields = new ArrayList<>();
-            for (Object obj : (Collection<?>) toMatch) {
-                if (obj instanceof FieldNode) {
-                    fields.add((FieldNode) obj);
-                } else if (obj instanceof ClassNode) {
-                    fields.addAll(((ClassNode) obj).getFields());
-                }
-            }
-            return fields;
-        } else if (toMatch instanceof FieldNode) {
-            return Collections.singleton((FieldNode) toMatch);
-        } else if (toMatch instanceof ClassNode) {
-            return new ArrayList<>(GroovyUtils.getWrapperTypeIfPrimitive((ClassNode) toMatch).getFields());
-        }
-        return null;
-    }
-
-    /**
-     * This gets called if the pointcut argument is a String argument
-     */
-    @Override
-    protected FieldNode filterObject(FieldNode result, GroovyDSLDContext context, String firstArgAsString) {
-        if (firstArgAsString == null || result.getName().equals(firstArgAsString)) {
-            return result;
-        } else {
-            return null;
-        }
+        super(containerIdentifier, pointcutName, FieldNode.class, ClassNode::getFields, FieldNode::getName);
     }
 }

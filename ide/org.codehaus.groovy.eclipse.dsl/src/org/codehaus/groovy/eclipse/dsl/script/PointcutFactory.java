@@ -48,6 +48,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingScriptPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileExtensionPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FileNamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindAnnotationPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindCtorPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
@@ -129,6 +130,8 @@ public class PointcutFactory {
         registerGlobalPointcut("methods", FindMethodPointcut.class, createFind("method", "methods"));
 
         registerGlobalPointcut("properties", FindPropertyPointcut.class, createFind("property", "properties"));
+
+        registerGlobalPointcut("hasConstructor", FindCtorPointcut.class, createFind("constructor", "constructors"));
 
         registerGlobalPointcut("name", NamePointcut.class, createDoc(//
             "Matches when the items passed in equal the name specified as the argument.  " +
@@ -308,10 +311,10 @@ public class PointcutFactory {
 
     private static String createFind(String kind, String kinds) {
         return createDoc(
-            "Matches when the containing pointcut passes in a type or a list of " + kind + " that has at least one " + kind + " specified by the argument of this pointcut.",
-            "A String corresponding to a " + kind + " name.  Alternatively, a pointcut, such as <code>annotatedBy</code>, which " + "would match all " + kinds + " annotated by the inner pointcut.",
-            "the " + kind + " or " + kinds + " matched by the argument. " + "Eg- If the surrounding pointcut passes in a type, then the value returned will be a set of all " + kinds + " in that " +
-                "type that match the contained pointcut, or that have the specified name." + "  If the surrounding pointcut passes in a set of " + kinds + ", thne the result will be a subset of those " + kinds + " containing only nodes with the correct annotation.");
+            "Matches when the containing pointcut passes in a type or a list of " + kinds + " that has at least one " + kind + " specified by the argument of this pointcut.",
+            "A String corresponding to a " + kind + ".  Alternatively, a pointcut, such as <code>annotatedBy</code>, which " + "would match all " + kinds + " annotated by the inner pointcut.",
+            "The " + kind + " or " + kinds + " matched by the argument. " + "Eg- If the surrounding pointcut passes in a type, then the value returned will be the set of all " + kinds + " in that " +
+                "type that match the contained pointcut or have the specified signature." + "  If the surrounding pointcut passes in a set of " + kinds + ", then the result will be a subset of those " + kinds + " that satisfy the contained pointcut or have the specified signature.");
     }
 
     private static String createModifier(String modifier) {
