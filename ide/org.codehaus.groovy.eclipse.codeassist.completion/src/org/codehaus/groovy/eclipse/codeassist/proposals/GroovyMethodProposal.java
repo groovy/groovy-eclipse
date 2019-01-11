@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
-import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
+import org.codehaus.groovy.eclipse.codeassist.completions.MethodNodeWithNamedParams;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -129,8 +129,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(completionName(false));
-        if (method instanceof NamedArgsMethodNode) {
-            fillInExtraParameters((NamedArgsMethodNode) method, proposal);
+        if (method instanceof MethodNodeWithNamedParams) {
+            fillInExtraParameters((MethodNodeWithNamedParams) method, proposal);
         } else {
             char[][] parameterNames = getParameterNames(method.getParameters());
             if (parameterNames.length < 1 || (!CharOperation.equals(parameterNames[0], ProposalUtils.ARG0) && !CharOperation.equals(parameterNames[0], ProposalUtils.ARG1))) {
@@ -195,16 +195,16 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return lazyProposal;
     }
 
-    private void fillInExtraParameters(NamedArgsMethodNode namedArgsMethod, GroovyCompletionProposal proposal) {
-        proposal.setParameterNames(getParameterNames(namedArgsMethod.getParameters()));
-        proposal.setRegularParameterNames(getParameterNames(namedArgsMethod.getRegularParams()));
-        proposal.setNamedParameterNames(getParameterNames(namedArgsMethod.getNamedParams()));
-        proposal.setOptionalParameterNames(getParameterNames(namedArgsMethod.getOptionalParams()));
+    private void fillInExtraParameters(MethodNodeWithNamedParams methodNode, GroovyCompletionProposal proposal) {
+        proposal.setNamedParameterNames(getParameterNames(methodNode.getNamedParams()));
+        proposal.setOptionalParameterNames(getParameterNames(methodNode.getOptionalParams()));
+        proposal.setRegularParameterNames(getParameterNames(methodNode.getPositionalParams()));
+        proposal.setParameterNames(getParameterNames(((MethodNode) methodNode).getParameters()));
 
-        proposal.setParameterTypeNames(getParameterTypeNames(namedArgsMethod.getParameters()));
-        proposal.setRegularParameterTypeNames(getParameterTypeNames(namedArgsMethod.getRegularParams()));
-        proposal.setNamedParameterTypeNames(getParameterTypeNames(namedArgsMethod.getNamedParams()));
-        proposal.setOptionalParameterTypeNames(getParameterTypeNames(namedArgsMethod.getOptionalParams()));
+        proposal.setNamedParameterTypeNames(getParameterTypeNames(methodNode.getNamedParams()));
+        proposal.setOptionalParameterTypeNames(getParameterTypeNames(methodNode.getOptionalParams()));
+        proposal.setRegularParameterTypeNames(getParameterTypeNames(methodNode.getPositionalParams()));
+        proposal.setParameterTypeNames(getParameterTypeNames(((MethodNode) methodNode).getParameters()));
     }
 
     protected char[] completionName(boolean includeParens) {

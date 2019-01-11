@@ -239,6 +239,11 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testCurrentTypeHasConstructor7() {
+        doTestOfLastMatch('2', 'currentType(hasConstructor(hasArgument(type(int))))', 'java.lang.Integer')
+    }
+
+    @Test
     void testCurrentTypeFieldsAndMethods1() {
         doTestOfLastMatch('2', 'currentType(fields("value") & methods("intValue"))', 'java.lang.Integer')
     }

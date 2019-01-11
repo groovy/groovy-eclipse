@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
-import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
+import org.codehaus.groovy.eclipse.codeassist.completions.MethodNodeWithNamedParams;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.vmplugin.v5.Java5;
@@ -130,7 +130,7 @@ public class ProposalUtils {
      * @param ignoreParameters number of parameters to ignore at the start
      */
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
-        Parameter[] parameters = (node instanceof NamedArgsMethodNode ? ((NamedArgsMethodNode) node).getVisibleParams() : node.getParameters());
+        Parameter[] parameters = (node instanceof MethodNodeWithNamedParams ? ((MethodNodeWithNamedParams) node).getVisibleParams() : node.getParameters());
         char[][] parameterTypes = new char[parameters.length - ignoreParameters][];
         for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
             parameterTypes[i] = createTypeSignature(parameters[i + ignoreParameters].getType());

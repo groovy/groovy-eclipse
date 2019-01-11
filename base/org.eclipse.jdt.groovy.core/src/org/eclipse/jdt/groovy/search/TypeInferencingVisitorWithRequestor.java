@@ -2634,8 +2634,8 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private static Parameter[] getPositionalParameters(MethodNode methodNode) {
-        if (methodNode.getClass().getSimpleName().equals("NamedArgsMethodNode")) {
-            Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getRegularParams", methodNode);
+        if (Arrays.stream(methodNode.getClass().getInterfaces()).anyMatch(face -> face.getSimpleName().equals("MethodNodeWithNamedParams"))) {
+            Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getPositionalParams", methodNode);
             return parameters;
         }
         return methodNode.getParameters();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -113,9 +114,10 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
     @Override
     public final TypeLookupResult lookupType(Expression expression, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        if (expression instanceof VariableExpression || (expression instanceof ConstantExpression &&
-                (expression.getEnd() < 1 || expression.getLength() == expression.getText().length()))) {
-            String name = expression.getText();
+        boolean isCtorCall = (expression instanceof ConstructorCallExpression);
+        if (isCtorCall || (expression instanceof VariableExpression) || (expression instanceof ConstantExpression &&
+                                                                        (expression.getEnd() < 1 || expression.getLength() == expression.getText().length()))) {
+            String name = (isCtorCall ? "<init>" : expression.getText());
 
             Variable variable = getDeclaredVariable(name, scope);
             if (variable != null && !variable.isDynamicTyped()) {
@@ -123,7 +125,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
             }
 
             List<TypeAndScope> declaringTypes;
-            if (objectExpressionType != null) {
+            if (isCtorCall) {
+                declaringTypes = Collections.singletonList(new TypeAndScope(expression.getType(), scope));
+            } else if (objectExpressionType != null) {
                 declaringTypes = Collections.singletonList(new TypeAndScope(objectExpressionType, scope));
             } else {
                 declaringTypes = new ArrayList<>(); // implicit "this" candidates

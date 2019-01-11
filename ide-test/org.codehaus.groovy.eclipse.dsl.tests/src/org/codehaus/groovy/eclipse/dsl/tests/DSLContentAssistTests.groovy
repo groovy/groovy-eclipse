@@ -821,6 +821,44 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testNamedParamsAnnotation2() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  Pogo(@NamedParams([@NamedParam('name'), @NamedParam(value='type', type=String)]) Map args) { }
+            |}
+            |def pogo = new Pogo()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Pogo', 1)
+        proposalExists(proposals, 'name : __ - java.lang.Object', 1)
+        proposalExists(proposals, 'type : __ - java.lang.String', 1)
+    }
+
+    @Test
+    void testNamedParamsAnnotation2a() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  Pogo(@NamedParams([@NamedParam('name'), @NamedParam(value='type', type=String)]) Map args) { }
+            |}
+            |def pogo = new Pogo(name: null, )
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, ', '))
+        proposalExists(proposals, 'Pogo', 1)
+        proposalExists(proposals, 'name : __ - java.lang.Object', 0)
+        proposalExists(proposals, 'type : __ - java.lang.String', 1)
+    }
+
+    @Test
     void testNamedVariantTransform1() {
         assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
 
@@ -961,6 +999,32 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         proposalExists(proposals, 'name : __', 0)
         proposalExists(proposals, 'date : __', 0)
         proposalExists(proposals, 'dob : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform6() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Color {
+            |  int r, g, b
+            |  @NamedVariant
+            |  Color(int r, int g, int b) {
+            |    this.r = r
+            |    this.g = g
+            |    this.b = b
+            |  }
+            |}
+            |
+            |def color = new Color(r: 0, )
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, ', '))
+        proposalExists(proposals, 'r : __', 0)
+        proposalExists(proposals, 'g : __', 1)
+        proposalExists(proposals, 'b : __', 1)
     }
 
     @Test
