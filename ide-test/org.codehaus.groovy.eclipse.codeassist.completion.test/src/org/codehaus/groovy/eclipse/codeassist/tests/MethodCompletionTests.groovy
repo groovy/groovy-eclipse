@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,30 +94,90 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'cause', 1)
     }
 
+    @Test
+    void testObjectExpr1() {
+        String contents = '''\
+            1.
+            p
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test
+    void testObjectExpr2() {
+        String contents = '''\
+            1.
+            m()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test
+    void testObjectExpr3() {
+        String contents = '''\
+            1.
+            'p'
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test
+    void testObjectExpr4() {
+        String contents = '''\
+            1.
+            'm'()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test
+    void testObjectExpr5() {
+        String contents = '''\
+            1.
+            "$p"
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/792
+    void testObjectExpr6() {
+        String contents = '''\
+            1.
+            "$m"()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
     @Test // GRECLIPSE-1374
-    void testParensExprs1() {
+    void testParensExpr1() {
         String contents = '''\
             (1).
             def u
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(1).'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
 
     @Test // GRECLIPSE-1374
-    void testParensExprs2() {
+    void testParensExpr2() {
         String contents = '''\
             (((1))).
             def u
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(((1))).'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'abs', 1)
     }
 
-    @Test // GRECLIPSE-1374
-    void testParensExprs3() {
+    @Test
+    void testParensExpr3() {
         String contents = '(((1))).abs()'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '(((1))).a'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.a'))
         proposalExists(proposals, 'abs', 1)
     }
 

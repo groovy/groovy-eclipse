@@ -607,16 +607,14 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         objectExpression.visit(this);
 
-        // check for special case "(obj).\ndef var", which is seen by parser as "obj.def(var)"
-        if (supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < methodExpression.getStart()) {
-            // GRECLIPSE-1374: probably a completion after a parenthesized expression
+        if (completionOffset > objectExpression.getEnd() && completionOffset < methodExpression.getStart()) {
+            // probably a completion after dot in 'foo.\nbar()' or 'foo.\n"$bar"()' or '(foo).\ndef bar'
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
 
         methodExpression.visit(this);
 
         visitArguments(arguments, expression);
-
         // at a paren, at a comma, or at the start of an argument expression; do method context
         createContextForCallContext(expression, methodExpression, methodExpression.getText());
     }
@@ -633,9 +631,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         // check for the special case of groovy command expressions
         checkForCommandExpression(objectExpression, propertyExpression);
 
-        // expression contains completion node or supporting node; test for loose match
-        if (objectExpression.getEnd() > 0 && supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < propertyExpression.getStart()) {
-            // GRECLIPSE-1374: probably a completion after a parenthesized expression
+        if (completionOffset > objectExpression.getEnd() && completionOffset < propertyExpression.getStart()) {
+            // probably a completion after dot in 'foo.\nbar' or 'foo.\n"bar"' or 'foo.\n"$bar"', etc.
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
 
