@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.preferences;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -38,38 +41,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
-    private final class MonospaceFieldEditor extends BooleanFieldEditor {
-        Label myLabel;
-
-        private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)", getFieldEditorParent());
-            setEnabled(true, getFieldEditorParent());
-            setPreferenceStore(getPreferenceStore());
-        }
-
-        // override so we can set line wrap
-        @Override
-        public Label getLabelControl(Composite parent) {
-            if (myLabel == null) {
-                myLabel = new Label(parent, SWT.LEFT | SWT.WRAP);
-                myLabel.setFont(parent.getFont());
-                String text = getLabelText();
-                if (text != null) {
-                    myLabel.setText(text);
-                }
-                myLabel.addDisposeListener(event -> { myLabel = null; });
-            } else {
-                checkParent(myLabel, parent);
-            }
-            return myLabel;
-        }
-
-        @Override
-        protected Label getLabelControl() {
-            return myLabel;
-        }
-    }
-
     public GroovyPreferencePage() {
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
@@ -86,7 +57,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
 
     @Override
     protected void createFieldEditors() {
-        // JUnit Monospace
+        // JUnit monospace typeface
         addField(new MonospaceFieldEditor());
         new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP).setText(
             "  This is particularly useful for testing with the assert keyword");
@@ -96,68 +67,85 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             "\nDefault working directory for running Groovy scripts\n  (will not change the working directory of existing scripts)",
             1,
             new String[][] {
-                { "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME  },
-                { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC },
-                { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME  }
+                {"Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME},
+                {"Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME},
+                {"Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC},
             },
             getFieldEditorParent()));
 
         // legacy projects
-        ConvertLegacyProject convert = new ConvertLegacyProject();
-        final IProject[] oldProjects = convert.getAllOldProjects();
+        IProject[] oldProjects = new ConvertLegacyProject().getAllOldProjects();
         if (oldProjects.length > 0) {
-            Label l = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-            l.setText("The following legacy groovy projects exist in the workspace:\n");
-            final List oldProjectsList = new List(getFieldEditorParent(), SWT.MULTI | SWT.V_SCROLL);
-            populateProjectsList(oldProjectsList, oldProjects);
+            Label label = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
+            label.setText("The following legacy groovy projects exist in the workspace:\n");
+            List oldProjectsList = new List(getFieldEditorParent(), SWT.MULTI | SWT.V_SCROLL);
+            oldProjectsList.setItems(Arrays.stream(oldProjects).map(IProject::getName).toArray(String[]::new));
 
-            l = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
-            l.setText("Select the projects to convert.");
+            label = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
+            label.setText("Select the projects to convert.");
 
-            Button convertButton = new Button(getFieldEditorParent(), SWT.PUSH);
-            convertButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-            convertButton.setText("Convert");
-            convertButton.addSelectionListener(new SelectionAdapter() {
+            Button button = new Button(getFieldEditorParent(), SWT.PUSH);
+            button.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+            button.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                     convertSelectedProjects(oldProjectsList.getSelection());
-                    populateProjectsList(oldProjectsList, new ConvertLegacyProject().getAllOldProjects());
+                    IProject[] oldProjects = new ConvertLegacyProject().getAllOldProjects();
+                    oldProjectsList.setItems(Arrays.stream(oldProjects).map(IProject::getName).toArray(String[]::new));
                 }
             });
+            button.setText("Convert");
         }
     }
 
     //--------------------------------------------------------------------------
 
-    private void populateProjectsList(final List oldProjectsList, final IProject[] oldProjects) {
-        final String[] projNames = new String[oldProjects.length];
-        for (int i = 0; i < oldProjects.length; i++) {
-            projNames[i] = oldProjects[i].getName();
-        }
-        oldProjectsList.setItems(projNames);
-    }
-
     private void convertSelectedProjects(String[] selection) {
         if (selection.length == 0) {
             return;
         }
-        IProject[] toConvert = new IProject[selection.length];
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        for (int i = 0; i < toConvert.length; i++) {
-            toConvert[i] = root.getProject(selection[i]);
-        }
+        IProject[] projects = Arrays.stream(selection).map(s -> root.getProject(s)).toArray(IProject[]::new);
         try {
-            new ConvertLegacyProject().convertProjects(toConvert);
-            StringBuffer sb = new StringBuffer();
-            sb.append("The following projects have been converted:\n");
-            for (String projName : selection) {
-                sb.append(projName + "\n");
-            }
-            MessageDialog.openInformation(getShell(), "Successful conversion", sb.toString());
+            new ConvertLegacyProject().convertProjects(projects);
+            MessageDialog.openInformation(getShell(), "Successful conversion",
+                "The following projects have been converted:\n" + Arrays.stream(selection).collect(Collectors.joining("\n")));
         } catch (Exception e) {
-            // some kind of failure
             GroovyCore.logException("Failure when converting legacy projects", e);
             MessageDialog.openError(getShell(), "Error converting projects", "There has been an error converting the projects.  See the error log.");
+        }
+    }
+
+    private class MonospaceFieldEditor extends BooleanFieldEditor {
+        private Label label;
+
+        private MonospaceFieldEditor() {
+            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)", getFieldEditorParent());
+            setEnabled(true, getFieldEditorParent());
+            setPreferenceStore(getPreferenceStore());
+        }
+
+        @Override
+        protected Label getLabelControl() {
+            return label;
+        }
+
+        @Override // so we can set line wrap
+        public Label getLabelControl(Composite parent) {
+            if (label == null) {
+                label = new Label(parent, SWT.LEFT | SWT.WRAP);
+                label.setFont(parent.getFont());
+                String text = getLabelText();
+                if (text != null) {
+                    label.setText(text);
+                }
+                label.addDisposeListener(event -> {
+                    label = null;
+                });
+            } else {
+                checkParent(label, parent);
+            }
+            return label;
         }
     }
 }
