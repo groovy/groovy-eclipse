@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.core.search;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -31,7 +32,6 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -104,30 +104,16 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         if (maybeDeclaration == declaration) {
             return true;
         }
-        // here we need to test for dynamically added fields and methods
-        // they will not be the same instance, so we need to check
-        // for equivalence some other way
+        // test for dynamically added fields and methods; they will not be the same instance, so check for equivalence some other way
         if (maybeDeclaration instanceof FieldNode && declaration instanceof FieldNode) {
-            FieldNode maybeField = (FieldNode) maybeDeclaration;
-            FieldNode field = (FieldNode) declaration;
+            FieldNode maybeField = (FieldNode) maybeDeclaration, field = (FieldNode) declaration;
             return maybeField.getName().equals(field.getName()) && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
-        } else if (declaration instanceof MethodNode) {
-            if (maybeDeclaration instanceof JDTMethodNode) {
-                // GRECLIPSE-1255 Catches the case where the node comes from
-                // JDT, we do not check for parameter count since JDT is
-                // ignorant of possible default parameters
-                MethodNode maybeMethod = (MethodNode) maybeDeclaration;
-                MethodNode method = (MethodNode) declaration;
-                return maybeMethod.getName().equals(method.getName()) &&
-                    maybeMethod.getDeclaringClass().equals(method.getDeclaringClass());
-            } else if (maybeDeclaration instanceof MethodNode) {
-                MethodNode maybeMethod = (MethodNode) maybeDeclaration;
-                MethodNode method = (MethodNode) declaration;
-                return checkParamLength(maybeMethod, method) && maybeMethod.getName().equals(method.getName()) &&
-                    maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
-            }
+        } else if (maybeDeclaration instanceof MethodNode && declaration instanceof MethodNode) {
+            MethodNode maybeMethod = (MethodNode) maybeDeclaration, method = (MethodNode) declaration;
+            return maybeMethod.getName().equals(method.getName()) && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) &&
+                checkParams(Optional.ofNullable(maybeMethod.getOriginal()).orElse(maybeMethod).getParameters(), method.getParameters());
         }
-        // here check for inner class nodes
+        // check for inner class nodes
         if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode) ||
                 (declaration instanceof InnerClassNode && maybeDeclaration instanceof JDTClassNode)) {
             return ((ClassNode) maybeDeclaration).getName().equals(((ClassNode) declaration).getName());
@@ -135,18 +121,24 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         return false;
     }
 
-    private boolean checkParams(MethodNode maybeMethod, MethodNode method) {
-        Parameter[] maybeParameters = maybeMethod.getParameters();
-        Parameter[] parameters = method.getParameters();
+    private static boolean checkParams(Parameter[] maybeParameters, Parameter[] parameters) {
+        if (maybeParameters == null) {
+            return parameters == null;
+        } else if (parameters == null) {
+            return false;
+        }
+        if (maybeParameters.length != parameters.length) {
+            return false;
+        }
         for (int i = 0; i < parameters.length; i += 1) {
-            if (!maybeParameters[i].getName().equals(parameters[i].getName()) || !typeEquals(maybeParameters[i], parameters[i])) {
+            if (!typeEquals(maybeParameters[i], parameters[i])) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean typeEquals(Parameter maybeParameter, Parameter parameter) {
+    private static boolean typeEquals(Parameter maybeParameter, Parameter parameter) {
         ClassNode maybeType = maybeParameter.getType();
         ClassNode type = parameter.getType();
         if (maybeType == null) {
@@ -155,21 +147,5 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             return false;
         }
         return maybeType.getName().equals(type.getName());
-    }
-
-    private boolean checkParamLength(MethodNode maybeMethod, MethodNode method) {
-        Parameter[] maybeParameters = maybeMethod.getParameters();
-        Parameter[] parameters = method.getParameters();
-        if (maybeParameters == null) {
-            return parameters == null;
-        } else if (parameters == null) {
-            return false;
-        }
-
-        if (maybeParameters.length != parameters.length) {
-            return false;
-        }
-
-        return true;
     }
 }

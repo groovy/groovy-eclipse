@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,6 +28,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -67,8 +69,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected final boolean findReferences, findDeclarations, skipPseudoProperties;
 
     protected final Set<Position> acceptedPositions = new HashSet<>();
-    protected static final int MAX_PARAMS = 10; // indices available in each array of:
-    protected final Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<>();
+    protected static final int MAX_PARAMS = 20; // indexes available in each of:
+    protected final Map<ClassNode, BitSet> cachedParameterCounts = new HashMap<>();
     protected final Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<>();
 
     public MethodReferenceSearchRequestor(MethodPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
@@ -168,7 +170,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
     protected static boolean isPrimitiveType(char[] name) {
         // adapted from ASTConverter
-        switch(name[0]) {
+        switch (name[0]) {
         case 'i':
             return (name.length >= 3 && name[1] == 'n' && name[2] == 't' && (name.length == 3 || name[3] == '['));
         case 'l':
@@ -214,7 +216,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
                 // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
                 if (!isDeclaration && (end - start) < ((StaticMethodCallExpression) node).getMethod().length() && skipPseudoProperties) {
-                    start = end = 0;
+                    start = 0;
+                    end = 0;
                 }
 
             // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
@@ -232,12 +235,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         }
 
         if (end > 0) { // name matches, now check declaring type and parameter types
-            // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
+            // don't want to double accept nodes; this could happen if field and object initializers get pushed into multiple constructors
             Position position = new Position(start, end - start);
-            if (!acceptedPositions.contains(position)) {
-                if (nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), isDeclaration
-                        ? GroovyUtils.getParameterTypes(((MethodNode) node).getParameters()) : result.scope.getMethodCallArgumentTypes())) {
+            if (!acceptedPositions.contains(position) && declaringTypeMatches(result.declaringType)) {
 
+                boolean acceptable;
+                if (isDeclaration || result.confidence == TypeConfidence.EXACT) {
+                    acceptable = parameterTypesMatch((MethodNode) result.declaration);
+                } else {
+                    acceptable = argumentTypesMatch(result.scope.getMethodCallArgumentTypes(), result.declaringType);
+                }
+                if (acceptable) {
                     if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
                         enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
                     }
@@ -262,8 +270,46 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         return VisitStatus.CONTINUE;
     }
 
+    private boolean declaringTypeMatches(ClassNode declaringType) {
+        if (declaringType == null) {
+            return false;
+        }
+        String declaringTypeName = declaringType.getName().replace('$', '.');
+        if ("java.lang.Object".equals(declaringTypeName) && declaringType.getDeclaredMethods(methodName).isEmpty()) {
+            // local variables have a declaring type of Object; don't accidentally return them as a match
+            return false;
+        }
+        if (this.declaringTypeName == null || this.declaringTypeName.isEmpty()) {
+            // no type specified, accept all
+            return true;
+        }
+
+        Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
+        if (maybeMatch != null) {
+            return maybeMatch;
+        }
+
+        if (declaringTypeName.equals(this.declaringTypeName)) {
+            cachedDeclaringNameMatches.put(declaringType, Boolean.TRUE);
+            return true;
+        } else { // check the supers
+            maybeMatch = declaringTypeMatches(declaringType.getSuperClass());
+            if (!maybeMatch) {
+                for (ClassNode face : declaringType.getInterfaces()) {
+                    maybeMatch = declaringTypeMatches(face);
+                    if (maybeMatch) {
+                        break;
+                    }
+                }
+            }
+            cachedDeclaringNameMatches.put(declaringType, maybeMatch);
+            return maybeMatch;
+        }
+    }
+
     private boolean parameterTypesMatch(MethodNode methodNode) {
-        List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(methodNode.getParameters());
+        Parameter[] parameters = methodNode.getOriginal().getParameters();
+        List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
         int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
             return false;
         }
@@ -301,86 +347,45 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      *  and return a match
      * </ol>
      */
-    private boolean nameAndArgsMatch(ClassNode declaringType, List<ClassNode> argumentTypes) {
-        if (matchOnName(declaringType)) {
-            if (argumentTypes == null) {
-                return true;
-            }
-            if (argumentTypes.size() == parameterTypeNames.length) {
-                for (int i = 0; i < parameterTypeNames.length; i += 1) {
-                    if (parameterTypeNames[i] == null) continue; // skip check
-                    ClassNode source = argumentTypes.get(i), target = ConstructorReferenceSearchRequestor.makeType(parameterTypeNames[i]);
-                    if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                boolean[] foundParameterNumbers = cachedParameterCounts.get(declaringType);
-                if (foundParameterNumbers == null) {
-                    foundParameterNumbers = new boolean[MAX_PARAMS + 1];
-                    gatherParameters(declaringType, foundParameterNumbers);
-                    cachedParameterCounts.put(declaringType, foundParameterNumbers);
-                }
-                // now, if we find a method that has the same number of parameters in the call,
-                // then assume the call is for this target method (and therefore there is no match)
-                return !foundParameterNumbers[Math.min(MAX_PARAMS, argumentTypes.size())];
-            }
-        }
-        return false;
-    }
-
-    private boolean matchOnName(ClassNode declaringType) {
-        if (declaringType == null) {
-            return false;
-        }
-        String declaringTypeName = declaringType.getName().replace('$', '.');
-        if ("java.lang.Object".equals(declaringTypeName) && declaringType.getDeclaredMethods(methodName).isEmpty()) {
-            // local variables have a declaring type of Object; don't accidentally return them as a match
-            return false;
-        }
-        if (this.declaringTypeName == null || this.declaringTypeName.isEmpty()) {
-            // no type specified, accept all
+    private boolean argumentTypesMatch(List<ClassNode> argumentTypes, ClassNode declaringType) {
+        if (argumentTypes == null) {
             return true;
         }
 
-        Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
-        if (maybeMatch != null) {
-            return maybeMatch;
-        }
-
-        if (declaringTypeName.equals(this.declaringTypeName)) {
-            cachedDeclaringNameMatches.put(declaringType, true);
-            return true;
-        } else { // check the supers
-            maybeMatch = matchOnName(declaringType.getSuperClass());
-            if (!maybeMatch) {
-                for (ClassNode iface : declaringType.getInterfaces()) {
-                    maybeMatch = matchOnName(iface);
-                    if (maybeMatch) {
-                        break;
-                    }
+        if (argumentTypes.size() == parameterTypeNames.length) {
+            for (int i = 0; i < parameterTypeNames.length; i += 1) {
+                if (parameterTypeNames[i] == null) continue; // skip check
+                ClassNode source = argumentTypes.get(i), target = ConstructorReferenceSearchRequestor.makeType(parameterTypeNames[i]);
+                if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
+                    return false;
                 }
             }
-            cachedDeclaringNameMatches.put(declaringType, maybeMatch);
-            return maybeMatch;
+            return true;
         }
+
+        BitSet foundParameterCounts = cachedParameterCounts.computeIfAbsent(declaringType, t -> {
+            BitSet parameterCounts = new BitSet(MAX_PARAMS + 1);
+            gatherParameters(declaringType, parameterCounts);
+            return parameterCounts;
+        });
+        // now, if we find a method that has the same number of parameters in the call,
+        // then assume the call is for this target method (and therefore there is no match)
+        return !foundParameterCounts.get(Math.min(MAX_PARAMS, argumentTypes.size()));
     }
 
-    private void gatherParameters(ClassNode declaringType, boolean[] foundParameterNumbers) {
+    private void gatherParameters(ClassNode declaringType, BitSet foundParameterCounts) {
         if (declaringType == null) {
             return;
         }
         declaringType = findWrappedNode(declaringType.redirect());
         List<MethodNode> methods = declaringType.getMethods(methodName);
         for (MethodNode method : methods) {
-            // GRECLIPSE-1233: ensure default parameters are ignored
-            method = method.getOriginal();
-            foundParameterNumbers[Math.min(method.getParameters().length, MAX_PARAMS)] = true;
+            Parameter[] parameters = method.getParameters();
+            foundParameterCounts.set(Math.min(parameters.length, MAX_PARAMS));
         }
-        gatherParameters(declaringType.getSuperClass(), foundParameterNumbers);
-        for (ClassNode iface : declaringType.getInterfaces()) {
-            gatherParameters(iface, foundParameterNumbers);
+        gatherParameters(declaringType.getSuperClass(), foundParameterCounts);
+        for (ClassNode face : declaringType.getInterfaces()) {
+            gatherParameters(face, foundParameterCounts);
         }
     }
 
@@ -403,7 +408,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 }
             }
         }
-        return wrappedNode == null ? declaringType : wrappedNode;
+        return (wrappedNode == null ? declaringType : wrappedNode);
     }
 
     private int getAccuracy(TypeConfidence confidence) {

@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -467,7 +468,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     Parameter[] parameters = null;
                     if (declaration instanceof MethodNode) {
                         name = ((MethodNode) declaration).getName();
-                        parameters = ((MethodNode) declaration).getParameters();
+                        parameters = Optional.ofNullable(((MethodNode) declaration).getOriginal()).orElse((MethodNode) declaration).getParameters();
                     }
                     maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }

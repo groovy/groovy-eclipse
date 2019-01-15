@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -138,7 +139,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences1() throws Exception {
-        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx()" should match on the method reference with precise # of args as well as method reference with unmatched number of args
         doTestForTwoMethodReferences(
             "interface First {\n" +
             "    void xxx()\n" +
@@ -146,13 +147,13 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}",
             "public class Second implements First {\n" +
             "    public void other() {\n" +
-            "        xxx()\n" +
+            "        xxx()\n" + //yes
             "    }\n" +
             "    public void xxx() {\n" +
-            "        xxx(a)\n" +
+            "        xxx(a)\n" + //no!
             "    }\n" +
             "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" +
+            "        xxx(a,b)\n" + //yes
             "    }\n" +
             "}",
             false, 0, "xxx");
@@ -160,7 +161,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences2() throws Exception {
-        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
         doTestForTwoMethodReferences(
             "interface First {\n" +
             "    void xxx(a)\n" +
@@ -168,13 +169,13 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}",
             "public class Second implements First {\n" +
             "    public void other() {\n" +
-            "        xxx(a)\n" +
+            "        xxx(a)\n" + //yes
             "    }\n" +
             "    public void xxx() {\n" +
-            "        xxx()\n" +
+            "        xxx()\n" + //no!
             "    }\n" +
             "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" +
+            "        xxx(a,b)\n" + //yes
             "    }\n" +
             "}",
             false, 0, "xxx");
@@ -182,7 +183,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences3() throws Exception {
-        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
         createUnit("Sub",
             "interface Sub extends First {\n" +
             "    void xxx(a)\n" +
@@ -194,13 +195,13 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}",
             "public class Second implements Sub {\n" +
             "    public void other() {\n" +
-            "        xxx(a)\n" +
+            "        xxx(a)\n" + //yes
             "    }\n" +
             "    public void xxx() {\n" +
-            "        xxx()\n" +
+            "        xxx()\n" + //no!
             "    }\n" +
             "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" +
+            "        xxx(a,b)\n" + //yes
             "    }\n" +
             "}",
             false, 0, "xxx");
@@ -208,7 +209,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences4() throws Exception {
-        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a,b)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
         createUnit("Sub",
             "interface Sub extends First {\n" +
             "    void xxx(a)\n" +
@@ -222,18 +223,18 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "public class Second implements Sub {\n" +
             "    public void other() {\n" +
             "        First f\n" +
-            "        f.xxx(a,b,c)\n" +
+            "        f.xxx(a,b,c)\n" + //yes
             "    }\n" +
             "    public void xxx() {\n" +
-            "        xxx(a)\n" +
-            "        xxx(a,b,c)\n" +
+            "        xxx(a)\n" + //no!
+            "        xxx(a,b,c)\n" + //no!
             "        Sub s\n" +
-            "        s.xxx(a)\n" +
-            "        s.xxx(a,b,c)\n" +
+            "        s.xxx(a)\n" + //no!
+            "        s.xxx(a,b,c)\n" + //no!
             "    }\n" +
             "    void xxx(a) {\n" +
             "        Sub s\n" +
-            "        s.xxx(a,b)\n" +
+            "        s.xxx(a,b)\n" + //yes
             "    }\n" +
             "}",
             false, 0, "xxx");
@@ -325,6 +326,74 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    }\n" +
             "}",
             false, 0, "xxx");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/776
+    public void testMethodWithDefaultParameters3() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  void doSomething() {}\n" +
+            "  void doSomething(String one, String two = 'x') {}\n" +
+            "}");
+        createUnit("foo", "Baz",
+            "package foo;\n" +
+            "public class Baz {\n" +
+            "  void test(Bar bar) {\n" +
+            "    bar.doSomething();\n" + //no!
+            "    bar.doSomething(\"one\");\n" + //yes
+            "    bar.doSomething(\"one\", \"two\");\n" + //yes
+            "  }\n" +
+            "}");
+
+        IMethod method = groovyUnit.getType("Bar").getMethods()[1];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(2, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals("Baz.groovy", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
+    }
+
+    @Test @Ignore("Only one method signature is searched and Java lacks link to original method")
+    public void testMethodWithDefaultParameters4() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  void doSomething() {}\n" +
+            "  void doSomething(String one, String two = 'x') {}\n" +
+            "}");
+        createJavaUnit("foo", "Baz",
+            "package foo;\n" +
+            "public class Baz {\n" +
+            "  void test(Bar bar) {\n" +
+            "    bar.doSomething();\n" + //no!
+            "    bar.doSomething(\"one\");\n" + //no! (want to be yes)
+            "    bar.doSomething(\"one\", \"two\");\n" + //yes
+            "  }\n" +
+            "}");
+
+        IMethod method = groovyUnit.getType("Bar").getMethods()[1];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(2, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals("Baz.java", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
 
     @Test
@@ -535,7 +604,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}");
         @SuppressWarnings("unused")
         ICompilationUnit javaUnit = createJavaUnit("foo", "Baz",
-            "package foo\n" +
+            "package foo;\n" +
             "import java.util.Date;\n" +
             "public class Baz<T extends Bar> {\n" +
             "  private T test;\n" +

@@ -338,7 +338,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
 
-                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch.getOriginal(), confidence, scope);
+                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
             }
         }
 
@@ -471,6 +471,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
+                    }
+                } else if (candidate instanceof MethodNode) {
+                    // check for call "method(1,2,3)" matched to decl "method(int)"
+                    List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
+                    Parameter[] parameterNodes = ((MethodNode) candidate).getParameters();
+                    if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
+                        newConfidence = TypeConfidence.findLessPrecise(confidence, TypeConfidence.INFERRED);
                     }
                 }
                 decl = candidate;
@@ -625,7 +632,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = declaringType.getMethods(name);
             if (!candidates.isEmpty()) {
-                return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
+                return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
             }
             return null;
         }
@@ -642,7 +649,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             MethodNode innerCandidate = null;
             List<MethodNode> candidates = getMethods(name, type);
             if (!candidates.isEmpty()) {
-                innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
+                innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
+                if (innerCandidate.getOriginal() == null) {
+                    innerCandidate = null; // trait bridge
+                }
                 if (outerCandidate == null) {
                     outerCandidate = innerCandidate;
                 }
