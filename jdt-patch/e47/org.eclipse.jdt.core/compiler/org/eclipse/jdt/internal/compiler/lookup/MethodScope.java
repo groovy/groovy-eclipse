@@ -371,6 +371,18 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 	if (method.isConstructor()) {
 		if (method.isDefaultConstructor())
 			modifiers |= ExtraCompilerModifiers.AccIsDefaultConstructor;
+		// GROOVY add
+		if (method.sourceStart > 0 && method.declarationSourceStart <= 0) {
+			TypeDeclaration type = enclosingClassScope().referenceContext;
+			for (AbstractMethodDeclaration m : type.methods) {
+				if (m != method && m.sourceStart == method.sourceStart) {
+					method.binding = new DelegateMethodBinding(modifiers, declaringClass, m);
+					break;
+				}
+			}
+		}
+		if (method.binding == null)
+		// GROOVY end
 		method.binding = new MethodBinding(modifiers, null, null, declaringClass);
 		checkAndSetModifiersForConstructor(method.binding);
 	} else {
@@ -383,6 +395,18 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 				modifiers |= ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract;
 			}
 		}
+		// GROOVY add
+		if (method.sourceStart > 0 && method.declarationSourceStart <= 0) {
+			TypeDeclaration type = enclosingClassScope().referenceContext;
+			for (AbstractMethodDeclaration m : type.methods) {
+				if (m != method && m.sourceStart == method.sourceStart) {
+					method.binding = new DelegateMethodBinding(modifiers, method.selector, declaringClass, m);
+					break;
+				}
+			}
+		}
+		if (method.binding == null)
+		// GROOVY end
 		method.binding =
 			new MethodBinding(modifiers, method.selector, null, null, null, declaringClass);
 		checkAndSetModifiersForMethod(method.binding);
@@ -427,8 +451,8 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 
 	TypeParameter[] typeParameters = method.typeParameters();
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, If they exist at all, process type parameters irrespective of source level.
-    if (typeParameters == null || typeParameters.length == 0) {
-	    method.binding.typeVariables = Binding.NO_TYPE_VARIABLES;
+	if (typeParameters == null || typeParameters.length == 0) {
+		method.binding.typeVariables = Binding.NO_TYPE_VARIABLES;
 	} else {
 		method.binding.typeVariables = createTypeVariables(typeParameters, method.binding);
 		method.binding.modifiers |= ExtraCompilerModifiers.AccGenericSignature;

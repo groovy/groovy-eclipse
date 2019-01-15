@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -655,14 +655,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
         Parameter[] parameters = node.getOriginal().getParameters();
         if (parameters != null) {
             for (Parameter param : parameters) {
-                ClassNode paramType = param.getType();
-                appendUniqueKeyForClass(sb, paramType, resolvedDeclaringType);
+                appendUniqueKeyForClass(sb, param.getType(), resolvedDeclaringType);
             }
         }
         sb.append(Signature.C_PARAM_END);
 
         // return type
-        appendUniqueKeyForClass(sb, node.getOriginal().getReturnType(), resolvedDeclaringType);
+        appendUniqueKeyForClass(sb, node.getReturnType(), resolvedDeclaringType);
 
         // generic type resolution
         if (generics.length > 0) {

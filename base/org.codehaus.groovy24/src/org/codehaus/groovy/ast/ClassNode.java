@@ -105,8 +105,8 @@ import java.util.Set;
  * @see org.codehaus.groovy.ast.ClassHelper
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
-    // GRECLIPSE private->package
-    static class MapOfLists {
+    // GRECLIPSE private->protected
+    protected static class MapOfLists {
         // GRECLIPSE private->protected
         protected Map<Object, List<MethodNode>> map;
 
@@ -147,7 +147,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean syntheticPublic;
     private ClassNode[] interfaces;
     private MixinNode[] mixins;
-    private List<ConstructorNode> constructors;
+    // GRECLIPSE private->protected
+    protected List<ConstructorNode> constructors;
     private List<Statement> objectInitializers;
     // GRECLIPSE private->protected
     protected MapOfLists methods;

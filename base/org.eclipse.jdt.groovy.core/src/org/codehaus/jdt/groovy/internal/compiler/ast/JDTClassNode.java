@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.DelegateMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
@@ -328,6 +329,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null);
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
             methodNode.setSynthetic(methodBinding instanceof LazilyResolvedMethodBinding); // see GroovyClassScope
+            populateOriginal(methodBinding, methodNode);
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;
@@ -353,6 +355,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             ctorNode.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
         }
         ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
+        ctorNode.putNodeMetaData("JdtBinding", methodBinding);
+        populateOriginal(methodBinding, ctorNode);
         return ctorNode;
     }
 
@@ -448,6 +452,18 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
         }
         return parameters;
+    }
+
+    private void populateOriginal(MethodBinding methodBinding, MethodNode methodNode) {
+        if (methodBinding instanceof DelegateMethodBinding) {
+            MethodBinding target = ((DelegateMethodBinding) methodBinding).delegateMethod.binding;
+            for (MethodNode candidate : methodNode instanceof ConstructorNode ? constructors : methods.getNotNull(methodNode.getName())) {
+                Binding binding = methodNode instanceof JDTNode ? ((JDTNode) candidate).getJdtBinding() : candidate.getNodeMetaData("JdtBinding");
+                if (binding == target) {
+                    methodNode.setOriginal(candidate);
+                }
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
