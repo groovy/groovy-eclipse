@@ -472,7 +472,7 @@ tokens {
         row.put("filename", getFilename());
         row.put("line",     Integer.valueOf(lt.getLine()));
         row.put("column",   Integer.valueOf(lt.getColumn()));
-        // System.out.println(row);
+
         warningList.add(row);
     }
 
@@ -1639,11 +1639,24 @@ constructorBody  {Token first = LT(1); int start = mark();} // GRECLIPSE add
 /** Catch obvious constructor calls, but not the expr.super(...) calls */
 explicitConstructorInvocation
     :   (typeArguments)?
+        /* GRECLIPSE edit
         (   "this"! lp1:LPAREN^ argList RPAREN!
             {#lp1.setType(CTOR_CALL);}
         |   "super"! lp2:LPAREN^ argList RPAREN!
             {#lp2.setType(SUPER_CTOR_CALL);}
         )
+        */
+        (   "this"! lp1:LPAREN^ argList (RPAREN!)?
+            {#lp1.setType(CTOR_CALL);
+             if (LA(0) != RPAREN) // no right paren
+                 reportError(new NoViableAltException(LT(1), getFilename()));}
+        |
+            "super"! lp2:LPAREN^ argList (RPAREN!)?
+            {#lp2.setType(SUPER_CTOR_CALL);
+             if (LA(0) != RPAREN) // no right paren
+                 reportError(new NoViableAltException(LT(1), getFilename()));}
+        )
+        // GRECLIPSE end
     ;
 
 listOfVariables[AST mods, AST t, Token first]

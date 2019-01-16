@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -544,6 +544,19 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Foo()', 0)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSelfConstructorCall1a() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+                this(
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
     @Test
     void testConstructorCompletionSelfConstructorCall2() {
         String contents = '''\
@@ -560,6 +573,22 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Foo()', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSelfConstructorCall2a() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(arg) {
+                this(
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(Object arg)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
     @Test
     void testConstructorCompletionSelfConstructorCall3() {
         String contents = '''\
@@ -568,6 +597,22 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
               Foo() {
                 this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Foo(Object arg)', 1)
+        proposalExists(proposals, 'Foo()', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSelfConstructorCall3a() {
+        String contents = '''\
+            class Foo {
+              Foo(arg) {
+              }
+              Foo() {
+                this(
               }
             }
             '''.stripIndent()
@@ -653,6 +698,19 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Object()', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSuperConstructorCall1a() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+                super(
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Object()', 1)
+    }
+
     @Test
     void testConstructorCompletionSuperConstructorCall2() {
         String contents = '''\
@@ -673,6 +731,26 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Bar(Object... args)', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSuperConstructorCall2a() {
+        String contents = '''\
+            class Bar {
+              Bar() {}
+              Bar(arg) {}
+              Bar(... args) {}
+            }
+            class Foo extends Bar {
+              Foo() {
+                super(
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'Bar()', 1)
+        proposalExists(proposals, 'Bar(Object arg)', 1)
+        proposalExists(proposals, 'Bar(Object... args)', 1)
+    }
+
     @Test
     void testConstructorCompletionSuperConstructorCall3() {
         String contents = '''\
@@ -682,6 +760,23 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             class Foo extends Bar {
               Foo() {
                 super()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'baz : __', 0)
+        proposalExists(proposals, 'Bar()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/789
+    void testConstructorCompletionSuperConstructorCall3a() {
+        String contents = '''\
+            class Bar {
+              def baz
+            }
+            class Foo extends Bar {
+              Foo() {
+                super(
               }
             }
             '''.stripIndent()
