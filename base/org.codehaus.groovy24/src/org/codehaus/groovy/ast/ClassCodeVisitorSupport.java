@@ -191,9 +191,10 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
             start = ((AnnotatedNode) node).getNameStart();
             end = ((AnnotatedNode) node).getNameEnd();
 
-            if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
-                assert node.getStart() > ((AnnotatedNode) node).getNameEnd();
-                end = node.getStart() - 2; // cover constructor arguments
+            // check if error range should cover arguments/parameters
+            Integer offset = node.getNodeMetaData("rparen.offset");
+            if (offset != null) {
+                end = offset;
             }
         } else if (!(node instanceof DeclarationExpression)) {
             start = node.getStart();

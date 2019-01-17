@@ -1886,6 +1886,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             methodNode.setLastColumnNumber(last(ctx.nls()).getStart().getCharPositionInLine() + 1);
             methodNode.setEnd(locationSupport.findOffset(methodNode.getLastLineNumber(), methodNode.getLastColumnNumber()));
         }
+        Token rparen = ctx.formalParameters().rparen().getStart();
+        methodNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
         // GRECLIPSE end
 
         validateMethodDeclaration(ctx, methodNode, modifierManager, classNode);
@@ -3592,6 +3594,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (asBoolean(ctx.anonymousInnerClassDeclaration())) {
                 ctx.anonymousInnerClassDeclaration().putNodeMetaData(ANONYMOUS_INNER_CLASS_SUPER_CLASS, classNode);
                 InnerClassNode anonymousInnerClassNode = this.visitAnonymousInnerClassDeclaration(ctx.anonymousInnerClassDeclaration());
+                // GRECLIPSE add
+                Token rparen = ctx.arguments().rparen().getStart();
+                anonymousInnerClassNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
+                // GRECLIPSE end
 
                 List<InnerClassNode> anonymousInnerClassList = anonymousInnerClassesDefinedInMethodStack.peek();
                 if (null != anonymousInnerClassList) { // if the anonymous class is created in a script, no anonymousInnerClassList is available.

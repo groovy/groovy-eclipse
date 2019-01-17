@@ -633,7 +633,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast()) - 1;
+        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
         node = node.getNextSibling();
         ClassNode superClass = ClassHelper.OBJECT_TYPE;
@@ -659,7 +659,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.addInterface(ClassHelper.Annotation_TYPE);
         // GRECLIPSE add
         classNode.setNameStart(nameStart);
-        classNode.setNameEnd(nameEnd);
+        classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
         configureAST(classNode, classDef);
 
@@ -691,7 +691,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast()) - 1;
+        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
         node = node.getNextSibling();
         ClassNode superClass = ClassHelper.OBJECT_TYPE;
@@ -724,7 +724,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(classNode, classDef);
         // GRECLIPSE add
         classNode.setNameStart(nameStart);
-        classNode.setNameEnd(nameEnd);
+        classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
 
         int oldClassCount = innerClassCounter;
@@ -797,7 +797,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + name.length() - 1;
+        int nameEnd = nameStart + name.length();
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -840,7 +840,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(classNode, classDef);
         // GRECLIPSE add
         classNode.setNameStart(nameStart);
-        classNode.setNameEnd(nameEnd);
+        classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
 
         // we put the class already in output to avoid the most inner classes
@@ -932,7 +932,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast()) - 1;
+        int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
 
         String name = identifier(node);
@@ -956,7 +956,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         objectBlock(node);
         // GRECLIPSE add
         classNode.setNameStart(nameStart);
-        classNode.setNameEnd(nameEnd);
+        classNode.setNameEnd(nameEnd - 1);
         configureAST(classNode, enumNode);
         // GRECLIPSE end
         classNode = oldNode;
@@ -1101,7 +1101,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumnLast()) - 1;
+        int nameEnd = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -1113,6 +1113,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             assertNodeType(PARAMETERS, node);
             parameters = parameters(node);
             if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
+            // GRECLIPSE add
+            groovySourceAST = (GroovySourceAST) node;
+            // GRECLIPSE end
             node = node.getNextSibling();
 
             if (isType(LITERAL_throws, node)) {
@@ -1161,7 +1164,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(methodNode, methodDef);
         // GRECLIPSE add
         methodNode.setNameStart(nameStart);
-        methodNode.setNameEnd(nameEnd);
+        methodNode.setNameEnd(nameEnd - 1);
+        if (isType(PARAMETERS, groovySourceAST)) {
+            methodNode.putNodeMetaData("rparen.offset",
+                locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast()));
+        }
         // GRECLIPSE end
 
         if (classNode != null) {
@@ -1226,7 +1233,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Parameter[] parameters = parameters(node);
         if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
         // GRECLIPSE add
-        int nameEnd = locations.findOffset(node.getLine(), node.getColumn()) - 2;
+        int nameEnd = locations.findOffset(node.getLine(), node.getColumn()) - 1;
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -1253,7 +1260,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(constructorNode, constructorDef);
         // GRECLIPSE add
         constructorNode.setNameStart(nameStart);
-        constructorNode.setNameEnd(nameEnd);
+        constructorNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
     }
 
@@ -1286,7 +1293,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + name.length() - 1;
+        int nameEnd = nameStart + name.length();
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -1306,7 +1313,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         configureAST(fieldNode, fieldDef);
         // GRECLIPSE add
         fieldNode.setNameStart(nameStart);
-        fieldNode.setNameEnd(nameEnd);
+        fieldNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
 
         if (!hasVisibility(modifiers)) {
@@ -3122,6 +3129,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             Expression name = literalExpression(node, null);
             innerClass.setNameStart(name.getStart());
             innerClass.setNameEnd(name.getEnd() - 1);
+            innerClass.putNodeMetaData("rparen.offset",
+                locations.findOffset(((GroovySourceAST) elist).getLineLast(), ((GroovySourceAST) elist).getColumnLast()));
             // GRECLIPSE end
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -978,7 +978,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 2)\n" +
         "\tdef getFinalProperty() {}\n" +
-        "\t    ^^^^^^^^^^^^^^^^\n" +
+        "\t    ^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:You are not allowed to override the final method getFinalProperty() from class 'Bar'.\n" +
         "----------\n");
     }
@@ -1011,7 +1011,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { private void baz() {}\n" +
-        "\t                                     ^^^\n" +
+        "\t                                     ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
         "----------\n");
     }
@@ -1028,7 +1028,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { protected void baz() {}\n" +
-        "\t                                       ^^^\n" +
+        "\t                                       ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
         "----------\n");
     }
@@ -1045,7 +1045,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-        "\t                                                            ^^^\n" +
+        "\t                                                            ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
         "----------\n");
     }
@@ -1062,7 +1062,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { private void baz() {}\n" +
-        "\t                                     ^^^\n" +
+        "\t                                     ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
         "----------\n");
     }
@@ -1079,7 +1079,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-        "\t                                                            ^^^\n" +
+        "\t                                                            ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
         "----------\n");
     }
@@ -1096,7 +1096,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { private void baz() {}\n" +
-        "\t                                     ^^^\n" +
+        "\t                                     ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
         "----------\n");
     }
@@ -1113,7 +1113,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo extends Bar { private void baz() {}\n" +
-        "\t                                     ^^^\n" +
+        "\t                                     ^^^^^\n" +
         "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
         "----------\n");
     }
