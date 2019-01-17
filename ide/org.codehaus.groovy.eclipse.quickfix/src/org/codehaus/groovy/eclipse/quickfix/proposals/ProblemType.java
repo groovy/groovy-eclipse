@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
  * problem, etc..) which the Groovy quick fix framework can understand.
  */
 public enum ProblemType {
+    FINAL_METHOD_OVERRIDE("Groovy:You are not allowed to override the final method"),
     GROOVY_KEYWORD_TYPE1(IProblem.UndefinedType, "as cannot be resolved to a type", "def cannot be resolved to a type"),
     GROOVY_KEYWORD_TYPE2(IProblem.ParsingError, "Syntax error on token \"in\", : expected", "Syntax error on token \"trait\", interface expected"),
     MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, "Syntax error, insert \";\" to complete", "Syntax error, insert \"}\" to complete"),

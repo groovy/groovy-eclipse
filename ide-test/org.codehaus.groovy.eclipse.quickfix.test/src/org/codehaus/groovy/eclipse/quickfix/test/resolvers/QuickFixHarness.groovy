@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.internal.ui.text.correction.AssistContext
+import org.eclipse.jdt.internal.ui.text.correction.ProblemLocation
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 
 /**
@@ -224,19 +225,19 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         // to not solve a similar marker from another compilation unit, in case
         // a project has multiple markers
         // from different Groovy files
-        IResource markResource = marker.getResource(), unitResource = unit.getResource()
-        if (!markResource.equals(unitResource)) {
+        IResource markResource = marker.resource, unitResource = unit.resource
+        if (markResource != unitResource) {
             return null
         }
         if (((Integer) marker.getAttribute(IMarker.SEVERITY)).intValue() == IMarker.SEVERITY_ERROR) {
             String[] markerMessages = getMarkerMessages(marker)
             // NOTE: this is not the same as the marker ID
-            int problemID = ((Integer) marker.getAttribute("id")).intValue()
-            ProblemDescriptor descriptor = new GroovyQuickFixProcessor().getProblemDescriptor(problemID, marker.getType(), markerMessages)
-            if (descriptor != null && descriptor.getType() == problemType) {
+            int problemID = ((Integer) marker.getAttribute('id')).intValue()
+            ProblemDescriptor descriptor = new GroovyQuickFixProcessor().getProblemDescriptor(problemID, marker.type, markerMessages)
+            if (descriptor != null && descriptor.type == problemType) {
                 int offset = ((Integer) marker.getAttribute(IMarker.CHAR_START))
-                int length = ((Integer) marker.getAttribute(IMarker.CHAR_END))
-                return new QuickFixProblemContext(descriptor, new AssistContext(unit, offset, length), null)
+                int length = ((Integer) marker.getAttribute(IMarker.CHAR_END)) - offset
+                return new QuickFixProblemContext(descriptor, new AssistContext(unit, offset, length), new ProblemLocation(offset, length, problemID, null, true, marker.type))
             }
         }
         return null
@@ -262,12 +263,12 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         for (resolver in resolvers) {
             if (resolver instanceof AddMissingGroovyImportsResolver) {
                 AddMissingGroovyImportsResolver importResolver = (AddMissingGroovyImportsResolver) resolver
-                List<IJavaCompletionProposal> proposals = importResolver.getQuickFixProposals()
+                List<IJavaCompletionProposal> proposals = importResolver.quickFixProposals
                 if (proposals != null) {
-                    for (IJavaCompletionProposal proposal : proposals) {
+                    for (proposal in proposals) {
                         if (proposal instanceof AddMissingImportProposal) {
                             AddMissingImportProposal importProposal = (AddMissingImportProposal) proposal
-                            if (importProposal.getSuggestedJavaType().getElementName().equals(unresolvedSimpleName)) {
+                            if (importProposal.suggestedJavaType.elementName == unresolvedSimpleName) {
                                 return importResolver
                             }
                         }
@@ -292,10 +293,9 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         for (resolver in resolvers) {
             if (resolver instanceof AddClassCastResolver) {
                 AddClassCastResolver classCastResolver = (AddClassCastResolver) resolver
-                List<IJavaCompletionProposal> proposals = classCastResolver
-                        .getQuickFixProposals()
+                List<IJavaCompletionProposal> proposals = classCastResolver.quickFixProposals
                 if (proposals != null) {
-                    for (IJavaCompletionProposal proposal : proposals) {
+                    for (proposal in proposals) {
                         if (proposal instanceof AddClassCastProposal) {
                             return classCastResolver
                         }
@@ -306,9 +306,13 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         return null
     }
 
-    protected IMarker[] getCompilationUnitJDTFailureMarkers(ICompilationUnit unit) throws Exception {
+    protected IMarker[] getJDTFailureMarkers(IResource resource) {
         buildProject()
         waitForIndex()
-        return unit.resource.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
+        resource.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
+    }
+
+    protected IMarker[] getCompilationUnitJDTFailureMarkers(ICompilationUnit unit) {
+        getJDTFailureMarkers(unit.resource)
     }
 }

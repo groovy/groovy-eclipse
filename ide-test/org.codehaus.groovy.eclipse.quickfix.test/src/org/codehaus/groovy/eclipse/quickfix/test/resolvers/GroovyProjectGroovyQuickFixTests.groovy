@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
+import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
@@ -25,9 +26,9 @@ import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal
 import org.eclipse.core.resources.IMarker
-import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil
+import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
@@ -59,7 +60,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     }
 
     @Test
-    void testBasicAddImportInnerType() {
+    void testAddImportInnerType() {
         // When an InnerType is referenced with its declaring type, for example,
         // Map.Entry,
         // 'Map' is imported. When the InnerType is referenced by it's simple
@@ -80,7 +81,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     }
 
     @Test
-    void testBasicAddImportInnerType2() {
+    void testAddImportInnerType2() {
         // When an InnerType is referenced with its declaring type, for example,
         // Map.Entry,
         // 'Map' is imported. When the InnerType is referenced by it's simple
@@ -102,7 +103,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     }
 
     @Test
-    void testBasicAddImportInnerInnerType() {
+    void testAddImportInnerInnerType() {
         String typeToImport = 'InnerInnerType'
         String typeToAddImport = 'BarUsingInnerInner'
         String typeToImportFullyQualified = 'com.test.subtest.TopLevelType.InnerType.InnerInnerType'
@@ -267,8 +268,8 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         testMultipleProposalsSameTypeName('CompileDynamic', expectedProposals, 'Test', '@CompileDynamic public class Test {}')
     }
 
-    @Test
-    void testAddImportGRECLIPSE1612() {
+    @Test // GRECLIPSE-1612
+    void testAddImportClassExpression() {
         addJavaSource('''\
             public class FooJava {
               public static String getProperty() {
@@ -289,8 +290,8 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         assert proposal.displayString == 'Import \'FooJava\' (other)'
     }
 
-    @Test
-    void testGRECLIPSE1777() {
+    @Test // GRECLIPSE-1777
+    void testAddTypecast() {
         def unit = addGroovySource('''\
             @groovy.transform.CompileStatic
             class D {
@@ -305,29 +306,118 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
         String expectedQuickFixDisplay = 'Add cast to Integer'
         AddClassCastResolver resolver = getAddClassCastResolver(unit)
-        assert resolver != null : 'Expected a resolver for ' + unit
+        assert resolver != null : "Expected a resolver for ${ -> unit }"
         AddClassCastProposal proposal = getAddClassCastProposal(expectedQuickFixDisplay, resolver)
-        assert proposal != null : 'Expected a quick fix proposal for ' + unit
-        assert proposal.getDisplayString() ==  expectedQuickFixDisplay: 'Actual quick fix display expression should be: ' + expectedQuickFixDisplay
+        assert proposal != null : "Expected a quick fix proposal for ${ -> unit }"
+        assert proposal.displayString ==  expectedQuickFixDisplay: "Actual quick fix display expression should be: ${ -> expectedQuickFixDisplay }"
+    }
+
+    @Test
+    void testRemoveFinalModifier0() {
+        String contents = '''\
+            package foo
+            class Bar {
+              void wait() {} // attempts to override final method
+            }
+            '''.stripIndent()
+        def unit = addGroovySource(contents, 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
+
+        assert proposals.isEmpty() : 'Expected no quick fix for override of final method in binary type'
+    }
+
+    @Test
+    void testRemoveFinalModifier1() {
+        String contents = '''\
+            package foo
+            class Bar {
+              final void meth() {}
+            }
+            class Baz extends Bar {
+              void meth() {} // attempts to override final method
+            }
+            '''.stripIndent()
+        def unit = addGroovySource(contents, 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit)
+        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit.contents))
+    }
+
+    @Test
+    void testRemoveFinalModifier2() {
+        String contents = '''\
+            package foo
+            class Bar {
+              final void meth() {}
+            }
+            '''.stripIndent()
+        def unit1 = addGroovySource(contents, 'Bar', 'foo')
+
+        def unit2 = addGroovySource('''\
+            package foo
+            class Baz extends Bar {
+              void meth() {} // attempts to override final method
+            }
+            '''.stripIndent(), 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit1)
+        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit1.contents))
+    }
+
+    @Test
+    void testRemoveFinalModifier3() {
+        String contents = '''\
+            package foo
+            class Bar {
+              final void meth() {}
+            }
+            '''.stripIndent()
+        def unit1 = addGroovySource(contents, 'Bar', 'foo')
+
+        addGroovySource('''\
+            package foo
+            class Baz extends Bar {
+            }
+            '''.stripIndent(), 'Baz', 'foo')
+
+        def unit2 = addGroovySource('''\
+            package whatever
+            class Something extends foo.Baz {
+              void meth() {} // attempts to override final method
+            }
+            '''.stripIndent(), 'Something', 'whatever')
+
+        def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit1)
+        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit1.contents))
     }
 
     @Test
     void testAddGroovyRuntime() {
-        GroovyRuntime.removeGroovyClasspathContainer(topLevelUnit.getJavaProject())
-        def testProject = topLevelUnit.getJavaProject().getProject()
+        GroovyRuntime.removeGroovyClasspathContainer(topLevelUnit.javaProject)
+        def testProject = topLevelUnit.javaProject.project
         buildProject()
 
-        IMarker[] markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
+        IMarker[] markers = getJDTFailureMarkers(testProject)
         assumeTrue(markers != null && markers.length > 0)
 
         List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit)
         assert resolvers.size() == 1 : 'Should have found exactly one resolver'
         assert resolvers.get(0) instanceof AddGroovyRuntimeResolver : 'Wrong type of resolver'
 
-        resolvers.get(0).getQuickFixProposals().get(0).apply(null)
+        resolvers[0].quickFixProposals[0].apply(null)
         buildProject()
 
-        markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+        markers = getJDTFailureMarkers(testProject)
         assert !markers : 'Should not have found problems in this project'
     }
 
@@ -341,6 +431,15 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         for (type in ProblemType.values()) {
             List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, type, unit)
             assert resolvers == null || resolvers.isEmpty() : 'Encountered resolvers for unknown compilation error; none expected'
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private List<? extends ICompletionProposal> findQuickFixes(ICompilationUnit unit, ProblemType type) {
+        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
+        getAllQuickFixResolversForType(markers, type, unit).collectMany {
+            it.quickFixProposals
         }
     }
 }
