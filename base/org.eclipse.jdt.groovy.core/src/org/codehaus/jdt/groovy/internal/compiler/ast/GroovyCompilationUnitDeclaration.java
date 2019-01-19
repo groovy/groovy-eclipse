@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,6 +155,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
+import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -163,26 +164,31 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 
-    // The groovy compilation unit shared by all files in the same project
-    private CompilationUnit groovyCompilationUnit;
-    // The groovy sourceunit (a member of the groovyCompilationUnit)
-    private SourceUnit groovySourceUnit;
-    private CompilerOptions compilerOptions;
+    private static final boolean DEBUG_CODE_GENERATION = false;
+
+    private static final boolean DEBUG_TASK_TAGS = false;
+
     public static boolean defaultCheckGenerics = false;
 
-    private boolean isScript = false;
-    private TraitHelper traitHelper = new TraitHelper();
-    private static final boolean DEBUG_TASK_TAGS = false;
+    private final CompilationUnit compilationUnit;
+
+    private final CompilerOptions compilerOptions;
+
+    private final SourceUnit groovySourceUnit;
+
+    private final TraitHelper traitHelper = new TraitHelper();
+
+    private boolean isScript; // see buildCompilationUnitScope
 
     public GroovyCompilationUnitDeclaration(
             ProblemReporter problemReporter,
             CompilationResult compilationResult,
             int sourceLength,
-            CompilationUnit groovyCompilationUnit,
+            CompilationUnit compilationUnit,
             SourceUnit groovySourceUnit,
             CompilerOptions compilerOptions) {
         super(problemReporter, compilationResult, sourceLength);
-        this.groovyCompilationUnit = groovyCompilationUnit;
+        this.compilationUnit = compilationUnit;
         this.groovySourceUnit = groovySourceUnit;
         this.compilerOptions = compilerOptions;
     }
@@ -210,8 +216,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             problemReporter.referenceContext = this;
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             try {
-                Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
-                groovyCompilationUnit.compile(phase);
+                Thread.currentThread().setContextClassLoader(compilationUnit.getTransformLoader());
+                compilationUnit.compile(phase);
             } finally {
                 Thread.currentThread().setContextClassLoader(cl);
             }
@@ -222,7 +228,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 return true;
             }
-
         } catch (MultipleCompilationErrorsException mce) {
             fixGroovyRuntimeException(mce);
 
@@ -239,7 +244,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             recordProblems(mce.getErrorCollector().getErrors());
-
         } catch (GroovyBugError gbe) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, gbe.getBugText());
@@ -268,7 +272,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 recordProblems(collector.getErrors());
             }
-
         } finally {
             problemReporter.referenceContext = referenceContext;
         }
@@ -303,7 +306,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      * Returns the Groovy compilation unit shared by all files in the same project.
      */
     public CompilationUnit getCompilationUnit() {
-        return groovyCompilationUnit;
+        return compilationUnit;
     }
 
     /**
@@ -311,10 +314,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      */
     public void populateCompilationUnitDeclaration() {
         UnitPopulator populator = new UnitPopulator();
-        populator.populate(this, groovySourceUnit);
+        populator.populate(this);
     }
-
-    private final static boolean DEBUG = false;
 
     // FIXASC are costly regens being done for all the classes???
     @Override
@@ -326,7 +327,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             //
             // compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, foundBinding, path));
             //
-            // For each generated class (in groovyCompilationUnit.getClasses()) we know:
+            // For each generated class (in compilationUnit.getClasses()) we know:
             // String classname = groovyClass.getName(); = this is the name of the generated type (doesn't matter where the
             // declaration was)
             // byte[] classbytes = groovyClass.getBytes(); = duh
@@ -344,21 +345,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // packages, etc).
 
             // This returns all of them, for all source files
-            List<GroovyClass> classes = groovyCompilationUnit.getClasses();
+            List<GroovyClass> classes = compilationUnit.getClasses();
 
-            if (DEBUG) {
+            if (DEBUG_CODE_GENERATION) {
                 log("Processing sourceUnit " + groovySourceUnit.getName());
             }
 
             for (GroovyClass clazz : classes) {
                 ClassNode classNode = clazz.getClassNode();
-                if (DEBUG) {
+                if (DEBUG_CODE_GENERATION) {
                     log("Looking at class " + clazz.getName());
                     log("ClassNode where it came from " + classNode);
                 }
                 // Only care about those coming about because of this groovySourceUnit
                 if (clazz.getSourceUnit() == groovySourceUnit) {
-                    if (DEBUG) {
+                    if (DEBUG_CODE_GENERATION) {
                         log("It is from this source unit");
                     }
                     // Worth continuing
@@ -367,7 +368,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (types != null && types.length != 0) {
                         binding = findBinding(types, clazz.getClassNode());
                     }
-                    if (DEBUG) {
+                    if (DEBUG_CODE_GENERATION) {
                         log("Binding located? " + (binding != null));
                     }
                     if (binding == null) {
@@ -375,7 +376,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ClassNode current = classNode;
                         while ((current = current.getOuterClass()) != null && binding == null) {
                             binding = findBinding(types, current);
-                            if (DEBUG) {
+                            if (DEBUG_CODE_GENERATION) {
                                 log("Had another look within enclosing class; found binding? " + (binding != null));
                             }
                         }
@@ -581,15 +582,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     }
 
     public ModuleNode getModuleNode() {
-        return groovySourceUnit == null ? null : groovySourceUnit.getAST();
+        return java.util.Optional.ofNullable(getSourceUnit()).map(SourceUnit::getAST).orElse(null);
     }
 
     public SourceUnit getSourceUnit() {
         return groovySourceUnit;
     }
 
-    // TODO: Find a better home for this?
-    @Override
+    @Override // TODO: Find a better home for this?
     public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
         return new GroovyCompilationUnit(ast);
     }
@@ -597,10 +597,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     // for testing
     public String print() {
         return toString();
-    }
-
-    public GroovyCompilationUnitScope getScope() {
-        return (GroovyCompilationUnitScope) scope;
     }
 
     @Override
@@ -686,17 +682,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     }
 
     /**
-     * Take the comments information from the parse and apply it to the compilation unit
+     * Takes the comments information from the parse and applies it to the compilation unit.
      */
     private void setComments() {
-        List<Comment> groovyComments = this.groovySourceUnit.getComments();
-        if (groovyComments == null || groovyComments.size() == 0) {
-            return;
-        }
-        this.comments = new int[groovyComments.size()][2];
-        for (int c = 0, max = groovyComments.size(); c < max; c++) {
-            Comment groovyComment = groovyComments.get(c);
-            this.comments[c] = groovyComment.getPositions(compilationResult.lineSeparatorPositions);
+        List<Comment> groovyComments = groovySourceUnit.getComments();
+        if (groovyComments != null && !groovyComments.isEmpty()) {
+            comments = groovyComments.stream().map(groovyComment ->
+                groovyComment.getPositions(compilationResult.lineSeparatorPositions)
+            ).toArray(int[][]::new);
         }
     }
 
@@ -713,139 +706,139 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
     }
 
-/*
-//	@Override
-//	public void abort(int abortLevel, CategorizedProblem problem) {
-//		// FIXASC look at callers of this, should we be following the abort on first problem policy?
-//		super.abort(abortLevel, problem);
-//	}
+    /*
+    @Override
+    public void abort(int abortLevel, CategorizedProblem problem) {
+        // FIXASC look at callers of this, should we be following the abort on first problem policy?
+        super.abort(abortLevel, problem);
+    }
 
-//	@Override
-//	public void checkUnusedImports() {
-//		super.checkUnusedImports();
-//	}
+    @Override
+    public void checkUnusedImports() {
+        super.checkUnusedImports();
+    }
 
-//	@Override
-//	public CompilationResult compilationResult() {
-//		return super.compilationResult();
-//	}
+    @Override
+    public CompilationResult compilationResult() {
+        return super.compilationResult();
+    }
 
-//	@Override
-//	public TypeDeclaration declarationOfType(char[][] typeName) {
-//		return super.declarationOfType(typeName);
-//	}
+    @Override
+    public TypeDeclaration declarationOfType(char[][] typeName) {
+        return super.declarationOfType(typeName);
+    }
 
-//	@Override
-//	public void finalizeProblems() {
-//		super.finalizeProblems();
-//	}
+    @Override
+    public void finalizeProblems() {
+        super.finalizeProblems();
+    }
 
-//	@Override
-//	public char[] getFileName() {
-//		return super.getFileName();
-//	}
+    @Override
+    public char[] getFileName() {
+        return super.getFileName();
+    }
 
-//	@Override
-//	public char[] getMainTypeName() {
-//		// FIXASC necessary to return something for groovy?
-//		return super.getMainTypeName();
-//	}
+    @Override
+    public char[] getMainTypeName() {
+        // FIXASC necessary to return something for groovy?
+        return super.getMainTypeName();
+    }
 
-//	@Override
-//	public boolean hasErrors() {
-//		return super.hasErrors();
-//	}
+    @Override
+    public boolean hasErrors() {
+        return super.hasErrors();
+    }
 
-//	@Override
-//	public boolean isEmpty() {
-//		return super.isEmpty();
-//	}
+    @Override
+    public boolean isEmpty() {
+        return super.isEmpty();
+    }
 
-//	@Override
-//	public boolean isPackageInfo() {
-//		return super.isPackageInfo();
-//	}
+    @Override
+    public boolean isPackageInfo() {
+        return super.isPackageInfo();
+    }
 
-//	@Override
-//	public StringBuffer print(int indent, StringBuffer output) {
-//		// FIXASC additional stuff to print?
-//		return super.print(indent, output);
-//	}
+    @Override
+    public StringBuffer print(int indent, StringBuffer output) {
+        // FIXASC additional stuff to print?
+        return super.print(indent, output);
+    }
 
-//	@Override
-//	public void propagateInnerEmulationForAllLocalTypes() {
-//		// FIXASC anything to do here for groovy inner types?
-//		super.propagateInnerEmulationForAllLocalTypes();
-//	}
+    @Override
+    public void propagateInnerEmulationForAllLocalTypes() {
+        // FIXASC anything to do here for groovy inner types?
+        super.propagateInnerEmulationForAllLocalTypes();
+    }
 
-//	@Override
-//	public void record(LocalTypeBinding localType) {
-//		super.record(localType);
-//	}
+    @Override
+    public void record(LocalTypeBinding localType) {
+        super.record(localType);
+    }
 
-//	@Override
-//	public void recordStringLiteral(StringLiteral literal, boolean fromRecovery) {
-//		// FIXASC assert not called for groovy, surely
-//		super.recordStringLiteral(literal, fromRecovery);
-//	}
+    @Override
+    public void recordStringLiteral(StringLiteral literal, boolean fromRecovery) {
+        // FIXASC assert not called for groovy, surely
+        super.recordStringLiteral(literal, fromRecovery);
+    }
 
-//	@Override
-//	public void tagAsHavingErrors() {
-//		super.tagAsHavingErrors();
-//	}
+    @Override
+    public void tagAsHavingErrors() {
+        super.tagAsHavingErrors();
+    }
 
-//	@Override
-//	public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
-//		// FIXASC are we well formed enough for this?
-//		super.traverse(visitor, unitScope);
-//	}
+    @Override
+    public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
+        // FIXASC are we well formed enough for this?
+        super.traverse(visitor, unitScope);
+    }
 
-//	@Override
-//	public ASTNode concreteStatement() {
-//		// FIXASC assert not called for groovy, surely
-//		return super.concreteStatement();
-//	}
+    @Override
+    public ASTNode concreteStatement() {
+        // FIXASC assert not called for groovy, surely
+        return super.concreteStatement();
+    }
 
-//	@Override
-//	public boolean isImplicitThis() {
-//		// FIXASC assert not called for groovy, surely
-//		return super.isImplicitThis();
-//	}
+    @Override
+    public boolean isImplicitThis() {
+        // FIXASC assert not called for groovy, surely
+        return super.isImplicitThis();
+    }
 
-//	@Override
-//	public boolean isSuper() {
-//		// FIXASC assert not called for groovy, surely
-//		return super.isSuper();
-//	}
+    @Override
+    public boolean isSuper() {
+        // FIXASC assert not called for groovy, surely
+        return super.isSuper();
+    }
 
-//	@Override
-//	public boolean isThis() {
-//		// FIXASC assert not called for groovy, surely
-//		return super.isThis();
-//	}
+    @Override
+    public boolean isThis() {
+        // FIXASC assert not called for groovy, surely
+        return super.isThis();
+    }
 
-//	@Override
-//	public int sourceEnd() {
-//		return super.sourceEnd();
-//	}
+    @Override
+    public int sourceEnd() {
+        return super.sourceEnd();
+    }
 
-//	@Override
-//	public int sourceStart() {
-//		return super.sourceStart();
-//	}
+    @Override
+    public int sourceStart() {
+        return super.sourceStart();
+    }
 
-//	@Override
-//	public String toString() {
-//		// FIXASC anything to add?
-//		return super.toString();
-//	}
+    @Override
+    public String toString() {
+        // FIXASC anything to add?
+        return super.toString();
+    }
 
-//	@Override
-//	public void traverse(ASTVisitor visitor, BlockScope scope) {
-//		// FIXASC in a good state for traversal? what would cause this to trigger?
-//		super.traverse(visitor, scope);
-//	}
-*/
+    @Override
+    public void traverse(ASTVisitor visitor, BlockScope scope) {
+        // FIXASC in a good state for traversal? what would cause this to trigger?
+        super.traverse(visitor, scope);
+    }
+    */
 
     public void tagAsScript() {
         this.isScript = true;
@@ -858,8 +851,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      */
     private class TraitHelper {
 
+        private boolean lookForTraitAlias;
         private boolean toBeInitialized = true;
-        private boolean lookForTraitAlias = false;
 
         private void initialize() {
             if (imports != null) {
@@ -915,11 +908,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private Map<ClassNode, Object> anonymousLocations;
         private boolean checkGenerics = defaultCheckGenerics;
 
-        void populate(GroovyCompilationUnitDeclaration target, SourceUnit source) {
-            unitDeclaration = target;
-            sourceUnit = source;
+        void populate(GroovyCompilationUnitDeclaration unit) {
+            sourceUnit = unit.getSourceUnit();
+            unitDeclaration = unit;
 
-            ModuleNode moduleNode = sourceUnit.getAST();
+            unit.sourceEnds = new HashtableOfObjectToInt();
+            ModuleNode moduleNode = unit.getModuleNode();
             try {
                 createPackageDeclaration(moduleNode);
                 createImportDeclarations(moduleNode);
@@ -1176,6 +1170,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     typeDeclarations.add(typeDeclaration);
                 }
                 fromClassNodeToDecl.put(classNode, typeDeclaration);
+                unitDeclaration.sourceEnds.put(typeDeclaration, typeDeclaration.sourceEnd);
             }
 
             // now attach local types to their parents; this was not done earlier as sometimes
@@ -1278,7 +1273,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         }
                         fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
 
-                        fieldDeclarations.add(fieldDeclaration);
+                        if (fieldDeclarations.add(fieldDeclaration)) {
+                            unitDeclaration.sourceEnds.put(fieldDeclaration, fieldDeclaration.sourceEnd);
+                        }
                     }
                 }
             }
@@ -1332,7 +1329,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     constructorDecl.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
                 constructorDecl.selector = ctorName;
-                methodDeclarations.add(constructorDecl);
+
+                if (methodDeclarations.add(constructorDecl)) {
+                    unitDeclaration.sourceEnds.put(constructorDecl, constructorDecl.sourceEnd);
+                }
             }
 
             for (ConstructorNode constructorNode : constructorNodes) {
@@ -1344,7 +1344,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 constructorDecl.selector = ctorName;
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 
-                methodDeclarations.add(constructorDecl);
+                if (methodDeclarations.add(constructorDecl)) {
+                    unitDeclaration.sourceEnds.put(constructorDecl, constructorNode.getNameEnd());
+                }
 
                 if (constructorNode.getCode() != null) {
                     Map<String, VariableExpression> variables = new HashMap<>();
@@ -1369,7 +1371,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         variantDecl.bodyStart = 0;
                         variantDecl.bodyEnd = -1;
 
-                        addUnlessDuplicate(methodDeclarations, variantDecl);
+                        if (addUnlessDuplicate(methodDeclarations, variantDecl)) {
+                            unitDeclaration.sourceEnds.put(variantDecl, constructorNode.getNameEnd());
+                        }
                     }
                 }
 
@@ -1395,7 +1399,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
-                    methodDeclarations.add(methodDecl);
+                    if (methodDeclarations.add(methodDecl)) {
+                        unitDeclaration.sourceEnds.put(methodDecl, methodNode.getNameEnd());
+                    }
 
                     if (methodNode.isAbstract()) {
                         typeDeclaration.bits |= ASTNode.HasAbstractMethods;
@@ -1416,7 +1422,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             variantDecl.bodyStart = 0;
                             variantDecl.bodyEnd = -1;
 
-                            addUnlessDuplicate(methodDeclarations, variantDecl);
+                            if (addUnlessDuplicate(methodDeclarations, variantDecl)) {
+                                unitDeclaration.sourceEnds.put(variantDecl, methodNode.getNameEnd());
+                            }
                         }
                     }
 
@@ -2148,8 +2156,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int trailerLength(org.codehaus.groovy.ast.ASTNode node) {
             int length = 0;
 
-            if (sourceUnit != null)
-            if (node.getLastLineNumber() > 0) {
+            if (node.getLastLineNumber() > 0 && sourceUnit != null) {
                 if (janitor == null) janitor = new Janitor();
                 ReaderSource source = sourceUnit.getSource();
                 String line = source.getLine(node.getLastLineNumber(), janitor);
@@ -2457,11 +2464,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             constructorDecl.modifiersSourceStart = constructorNode.getStart();
             constructorDecl.declarationSourceEnd = constructorNode.getEnd()-1;
             constructorDecl.sourceStart = constructorNode.getNameStart();
-            constructorDecl.sourceEnd = constructorNode.getNameEnd();
+            constructorDecl.sourceEnd = rparenOffset(constructorNode);
 
             // opening bracket -- should it be first character after?
             constructorDecl.bodyStart = (constructorNode.getCode() != null ? constructorNode.getCode().getStart()
-                : constructorNode.getNameEnd() + 1); // approximate position of anticipated '{'
+                : constructorDecl.sourceEnd + 1); // approximate position of anticipated '{'
 
             // last character before closing bracket
             constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
@@ -2480,10 +2487,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             // script run() methods have no name, so use the start of the method instead
             methodDecl.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
-            methodDecl.sourceEnd = Math.max(methodNode.getNameEnd(), methodNode.getStart());
+            methodDecl.sourceEnd = Math.max(rparenOffset(methodNode), methodNode.getStart());
 
             // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
-            methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd);
+            methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd + 1);
 
             // last character before closing bracket or semicolon
             methodDecl.bodyEnd = methodDecl.declarationSourceEnd - 1;
@@ -2571,7 +2578,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * default parameter mechanism causes creation of a variant that collides with an existing declaration. I'm not sure if Groovy
          * should be reporting an error when this occurs, but Grails does actually do it and gets no error.
          */
-        private void addUnlessDuplicate(List<AbstractMethodDeclaration> methodDeclarations, AbstractMethodDeclaration newDeclaration) {
+        private boolean addUnlessDuplicate(List<AbstractMethodDeclaration> methodDeclarations, AbstractMethodDeclaration newDeclaration) {
             boolean isDuplicate = false;
 
             for (AbstractMethodDeclaration aMethodDecl : methodDeclarations) {
@@ -2582,7 +2589,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     int vmdArgsLen = vmdArgs == null ? 0 : vmdArgs.length;
                     if (mdArgsLen == vmdArgsLen) {
                         boolean argsTheSame = true;
-                        for (int i = 0; i < mdArgsLen; i++) {
+                        for (int i = 0; i < mdArgsLen; i += 1) {
                             // FIXASC this comparison can fail if some are fully qualified and some not - in fact it
                             // suggests that default param variants should be built by augmentMethod() in a similar
                             // way to the GroovyObject methods, rather than during type declaration construction
@@ -2599,9 +2606,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
             }
 
-            if (!isDuplicate) {
-                methodDeclarations.add(newDeclaration);
-            }
+            return !isDuplicate ? methodDeclarations.add(newDeclaration) : false;
+        }
+
+        private static int rparenOffset(MethodNode methodNode) {
+            Integer rparenOffset = methodNode.getNodeMetaData("rparen.offset");
+            if (rparenOffset != null) return rparenOffset.intValue();
+            int nameEnd = methodNode.getNameEnd();
+            if (nameEnd > 0) nameEnd += 2;
+            return nameEnd;
         }
 
         /**

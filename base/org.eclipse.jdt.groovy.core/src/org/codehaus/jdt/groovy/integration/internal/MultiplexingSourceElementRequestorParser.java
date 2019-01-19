@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.jdt.groovy.integration.internal;
 
 import java.util.Collections;
 
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
@@ -27,18 +28,12 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementNotifier;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.AnnotatableInfo;
 import org.eclipse.jdt.internal.core.CompilationUnitStructureRequestor;
 import org.eclipse.jdt.internal.core.ImportContainerInfo;
@@ -112,11 +107,11 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             // FIXASC ought to reuse to ensure types end up in same groovy CU
             GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, false, true);
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
-            CompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
+            GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
 
             assert scanner.source == null; scanner.source = compilationUnit.getContents();
             SourceElementNotifier notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
-            notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, groovyReportReferenceInfo, createSourceEnds(compUnitDecl), Collections.EMPTY_MAP);
+            notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, groovyReportReferenceInfo, compUnitDecl.sourceEnds, Collections.EMPTY_MAP);
 
             return compUnitDecl;
         } else {
@@ -130,47 +125,6 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
             return super.dietParse(compilationUnit, compilationResult);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-
-    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-    private static HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
-        HashtableOfObjectToInt table = new HashtableOfObjectToInt();
-        if (cDecl.types != null) {
-            for (TypeDeclaration tDecl : cDecl.types) {
-                createSourceEndsForType(tDecl, table);
-            }
-        }
-        return table;
-    }
-
-    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-    private static void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
-        table.put(tDecl, tDecl.sourceEnd);
-        if (tDecl.fields != null) {
-            for (FieldDeclaration fDecl : tDecl.fields) {
-                table.put(fDecl, fDecl.sourceEnd);
-            }
-        }
-        if (tDecl.methods != null) {
-            for (AbstractMethodDeclaration mDecl : tDecl.methods) {
-                table.put(mDecl, mDecl.sourceEnd);
-                if (mDecl.statements != null && mDecl.statements.length > 0) {
-                    for (Statement expr : mDecl.statements) {
-                        if (expr instanceof QualifiedAllocationExpression) {
-                            // assume anon inner type
-                            createSourceEndsForType(((QualifiedAllocationExpression) expr).anonymousType, table);
-                        }
-                    }
-                }
-            }
-        }
-        if (tDecl.memberTypes != null) {
-            for (TypeDeclaration innerTDecl : tDecl.memberTypes) {
-                createSourceEndsForType(innerTDecl, table);
-            }
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -35,9 +33,7 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -46,6 +42,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
@@ -58,8 +55,8 @@ import org.junit.Test;
  * Source locations are deteremined by special marker comments in the code:<pre>
  * markers /*m1s* / /*f1s* / /*t1s* / indicate start of method, field and type
  * markers /*m1e* / /*f1e* / /*t1e* / indicate end of method, field and type
- * markers /*m1sn* / /*f1sn* / /*t1sn* / indicate start of method, field and type names
- * markers /*m1en* / /*f1en* / /*t1en* / indicate end of method, field and type names
+ * markers /*m1sn* / /*f1sn* / /*t1sn* / indicate start of method, field and type name
+ * markers /*m1en* / /*f1en* / /*t1en* / indicate end of method, field and type name
  * markers /*m1sb* / indicate the start of a method body</pre>
  *
  * NOTE: The start of a type body is not being calculated correctly.
@@ -69,9 +66,16 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     private static void assertUnitWithSingleType(String source, ICompilationUnit unit) throws Exception {
         assertUnit(unit, source);
 
-        ASTParser newParser = ASTParser.newParser(JavaConstants.AST_LEVEL);
-        newParser.setSource(unit);
-        CompilationUnit ast = (CompilationUnit) newParser.createAST(null);
+        CompilationUnit ast = null;
+        unit.becomeWorkingCopy(null);
+        try {
+            SimpleProgressMonitor monitor = new SimpleProgressMonitor("reconcile");
+            ast = unit.reconcile(JavaConstants.AST_LEVEL, true, null, monitor);
+            monitor.waitForCompletion();
+        } finally {
+            unit.discardWorkingCopy();
+        }
+
         IType decl = unit.getTypes()[0];
         AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
 
@@ -256,6 +260,15 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         assertEquals(unit + "\nhas incorrect source end value", source.length(), unit.getSourceRange().getLength());
     }
 
+    private ICompilationUnit createCompUnit(String pack, String name, String text) throws Exception {
+        IPath root = createGenericProject();
+        IPath path = env.addGroovyClass(root, pack, name, text);
+
+        fullBuild();
+        expectingNoProblems();
+        return env.getUnit(path);
+    }
+
     private IPath createGenericProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
@@ -264,16 +277,6 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         env.setOutputFolder(projectPath, "bin");
         fullBuild(projectPath);
         return root;
-    }
-
-    private ICompilationUnit createCompUnit(String pack, String name, String source) throws Exception {
-        IPath root = createGenericProject();
-        IPath path = env.addGroovyClass(root, pack, name, source);
-
-        fullBuild();
-        expectingNoProblems();
-        IFile groovyFile = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-        return JavaCore.createCompilationUnitFrom(groovyFile);
     }
 
     //--------------------------------------------------------------------------

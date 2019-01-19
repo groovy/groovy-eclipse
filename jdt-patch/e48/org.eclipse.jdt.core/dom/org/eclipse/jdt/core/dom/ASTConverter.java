@@ -89,10 +89,10 @@ class ASTConverter {
 	protected Set pendingThisExpressionScopeResolution;
 	protected boolean resolveBindings;
 	Scanner scanner;
-	private DefaultCommentMapper commentMapper;
 	// GROOVY add
 	private boolean scannerUsable = true;
 	// GROOVY end
+	private DefaultCommentMapper commentMapper;
 
 	public ASTConverter(Map<String, String> options, boolean resolveBindings, IProgressMonitor monitor) {
 		this.resolveBindings = resolveBindings;
@@ -208,7 +208,7 @@ class ASTConverter {
 						try {
 							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
 						// GROOVY end
-							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
+						typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
 						// GROOVY add
 						} finally {
 							this.scannerUsable = originalValue;
@@ -542,9 +542,10 @@ class ASTConverter {
 		final SimpleName methodName = new SimpleName(this.ast);
 		methodName.internalSetIdentifier(new String(methodDeclaration.selector));
 		int start = methodDeclaration.sourceStart;
-		// GROOVY edit
+		// GROOVY edit -- scanner cannot be used for method with string literal name
 		//int end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
-		int end = (scannerAvailable(methodDeclaration.scope) ? retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd) : methodDeclaration.sourceEnd);
+		int end = (scannerAvailable(methodDeclaration.scope) ? retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd)
+			: methodDeclaration.scope != null ? methodDeclaration.getCompilationUnitDeclaration().sourceEnds.get(methodDeclaration) : -1);
 		// GROOVY end
 		if (end < start)
 			end = start + methodDeclaration.selector.length;// naive recovery with method name

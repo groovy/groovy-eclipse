@@ -1132,7 +1132,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 2)\n" +
         "\tboolean equals(that) { false }\n" +
-        "\t        ^^^^^^\n" +
+        "\t        ^^^^^^^^^^^^\n" +
         "The method equals(Object) of type Foo should be tagged with @Override since it actually overrides a superclass method\n" +
         "----------\n",
         options);
@@ -1156,7 +1156,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 3)\n" +
         "\tdef baz = new Object() {      boolean equals(that) { false }\n" +
-        "\t                                      ^^^^^^\n" +
+        "\t                                      ^^^^^^^^^^^^\n" +
         "The method equals(Object) of type new Object(){} should be tagged with @Override since it actually overrides a superclass method\n" +
         "----------\n",
         options);
@@ -1178,7 +1178,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 2)\n" +
         "\tIterator iterator() { null }\n" +
-        "\t         ^^^^^^^^\n" +
+        "\t         ^^^^^^^^^^\n" +
         "The method iterator() of type Foo should be tagged with @Override since it actually overrides a superinterface method\n" +
         "----------\n",
         options);
@@ -1204,7 +1204,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 3)\n" +
         "\tdef baz = new Iterable() {      Iterator iterator() { null }\n" +
-        "\t                                         ^^^^^^^^\n" +
+        "\t                                         ^^^^^^^^^^\n" +
         "The method iterator() of type new Iterable(){} should be tagged with @Override since it actually overrides a superinterface method\n" +
         "----------\n",
         options);

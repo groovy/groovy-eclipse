@@ -1234,6 +1234,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
         // GRECLIPSE add
         int nameEnd = locations.findOffset(node.getLine(), node.getColumn()) - 1;
+        groovySourceAST = (GroovySourceAST) node;
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -1261,6 +1262,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         constructorNode.setNameStart(nameStart);
         constructorNode.setNameEnd(nameEnd - 1);
+        constructorNode.putNodeMetaData("rparen.offset",
+            locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast()));
         // GRECLIPSE end
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,9 +40,8 @@ public class MultiplexingMatchLocatorParser extends MatchLocatorParser {
                 .isGroovyLikeFileName(sourceUnit.getFileName())) {
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
             // FIXASC ought to reuse to ensure types end up in same groovy CU
-            return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, false, true)
-                    .dietParse(sourceUnit, compilationResult);
-            // return groovyParser.dietParse(sourceUnit, compilationResult);
+            GroovyParser groovyParser = new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, false, true);
+            return groovyParser.dietParse(sourceUnit, compilationResult);
         } else {
             return super.dietParse(sourceUnit, compilationResult);
         }

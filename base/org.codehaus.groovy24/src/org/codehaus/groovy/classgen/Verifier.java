@@ -820,6 +820,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 newMethod.setOriginal(method);
                 newMethod.setNameEnd(method.getNameEnd());
                 newMethod.setNameStart(method.getNameStart());
+                Integer value = method.getNodeMetaData("rparen.offset");
+                if (value != null) newMethod.putNodeMetaData("rparen.offset", value);
                 // GRECLIPSE end
                 newMethod.setGenericsTypes(method.getGenericsTypes());
                 newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
@@ -840,6 +842,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 ctor.setOriginal(method);
                 ctor.setNameEnd(method.getNameEnd());
                 ctor.setNameStart(method.getNameStart());
+                Integer value = method.getNodeMetaData("rparen.offset");
+                if (value != null) ctor.putNodeMetaData("rparen.offset", value);
                 ctor.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
                 // GRECLIPSE end
             }

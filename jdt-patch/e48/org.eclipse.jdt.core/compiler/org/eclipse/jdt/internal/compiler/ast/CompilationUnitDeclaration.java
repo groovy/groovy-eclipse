@@ -827,11 +827,12 @@ public ModuleBinding module(LookupEnvironment environment) {
 	return environment.module;
 }
 // GROOVY add
-//new method so that other compilation unit declarations can built alternative scopes
-public CompilationUnitScope buildCompilationUnitScope(org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment lookupEnvironment) {
+public org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt sourceEnds;
+// new method so that other compilation unit declarations can built alternative scopes
+public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
 	return new CompilationUnitScope(this, lookupEnvironment);
 }
-//If a special dom CompilationUnit is needed return it, otherwise return null (and a default one will be created)
+// if a special CompilationUnit is needed return it, otherwise return null (and a default one will be created)
 public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
 	return null;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,9 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementNotifier;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -70,8 +66,7 @@ public class MultiplexingIndexingParser extends IndexingParser {
             CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration)
-                new GroovyParser(options, problemReporter, false, true).dietParse(unit, compilationResult);
+            GroovyCompilationUnitDeclaration cud = new GroovyParser(options, problemReporter, false, true).dietParse(unit, compilationResult);
 
             if (cud.getModuleNode() != null) {
                 try {
@@ -82,42 +77,8 @@ public class MultiplexingIndexingParser extends IndexingParser {
                 }
             }
 
-            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, createSourceEnds(cud),
-                /* We don't care about the @category tag, so pass empty map */ Collections.EMPTY_MAP);
+            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, cud.sourceEnds, Collections.EMPTY_MAP);
             return cud;
-        }
-    }
-
-    // FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
-    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-    private HashtableOfObjectToInt createSourceEnds(CompilationUnitDeclaration cDecl) {
-        HashtableOfObjectToInt table = new HashtableOfObjectToInt();
-        if (cDecl.types != null) {
-            for (TypeDeclaration tDecl : cDecl.types) {
-                createSourceEndsForType(tDecl, table);
-            }
-        }
-        return table;
-    }
-
-    // FIXASC this code is copied from MultiplexingSourceElementParser. Should combine
-    // FIXASC This should be calculated in GroovyCompilationUnitDeclaration
-    private void createSourceEndsForType(TypeDeclaration tDecl, HashtableOfObjectToInt table) {
-        table.put(tDecl, tDecl.sourceEnd);
-        if (tDecl.fields != null) {
-            for (FieldDeclaration fDecl : tDecl.fields) {
-                table.put(fDecl, fDecl.sourceEnd);
-            }
-        }
-        if (tDecl.methods != null) {
-            for (AbstractMethodDeclaration mDecl : tDecl.methods) {
-                table.put(mDecl, mDecl.sourceEnd);
-            }
-        }
-        if (tDecl.memberTypes != null) {
-            for (TypeDeclaration innerTDecl : tDecl.memberTypes) {
-                createSourceEndsForType(innerTDecl, table);
-            }
         }
     }
 }
