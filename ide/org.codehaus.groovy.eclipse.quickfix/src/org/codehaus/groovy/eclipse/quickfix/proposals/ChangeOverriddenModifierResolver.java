@@ -32,7 +32,7 @@ public class ChangeOverriddenModifierResolver extends AbstractQuickFixResolver {
 
     @Override
     protected ProblemType[] getTypes() {
-        return new ProblemType[] {ProblemType.FINAL_METHOD_OVERRIDE};
+        return new ProblemType[] {ProblemType.FINAL_METHOD_OVERRIDE, ProblemType.WEAKER_ACCESS_OVERRIDE};
     }
 
     @Override
@@ -47,10 +47,21 @@ public class ChangeOverriddenModifierResolver extends AbstractQuickFixResolver {
         case IProblem.CannotOverrideAStaticMethodWithAnInstanceMethod:
             ModifierCorrectionSubProcessor.TO_NON_STATIC
          */
+        QuickFixProblemContext context = getQuickFixProblem();
         try {
+            int kind;
+            switch (context.getProblemDescriptor().getType()) {
+            case FINAL_METHOD_OVERRIDE:
+                kind = ModifierCorrectionSubProcessor.TO_NON_FINAL;
+                break;
+            case WEAKER_ACCESS_OVERRIDE:
+                kind = ModifierCorrectionSubProcessor.TO_VISIBLE;
+                break;
+            default:
+                throw new IllegalStateException("Unsupported problem type: " + context.getProblemDescriptor().getType().name());
+            }
+
             List<ICommandAccess> commands = new ArrayList<>();
-            QuickFixProblemContext context = getQuickFixProblem();
-            int kind = ModifierCorrectionSubProcessor.TO_NON_FINAL;
             ModifierCorrectionSubProcessor.addChangeOverriddenModifierProposal(context.getContext(), context.getLocation(), commands, kind);
             return List.class.cast(commands.stream().filter(command -> command instanceof IJavaCompletionProposal).collect(Collectors.toList()));
         } catch (JavaModelException e) {

@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyRuntimeResolver
@@ -399,6 +401,68 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit1)
         assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit1.contents))
+    }
+
+    @Test
+    void testRaiseVisibilityModifier1() {
+        String contents = '''\
+            package foo
+            class Bar {
+              public void meth() {}
+            }
+            class Baz extends Bar {
+              private void meth() {} // attempts to lower visibility
+            }
+            '''.stripIndent()
+        def unit = addGroovySource(contents, 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit)
+         // TODO: Could replace with ' ' instead of 'public '.
+        assertEquals(contents.replaceFirst('private ', 'public '), String.valueOf(unit.contents))
+    }
+
+    @Test
+    void testRaiseVisibilityModifier2() {
+        String contents = '''\
+            package foo
+            class Bar {
+              protected void meth() {}
+            }
+            class Baz extends Bar {
+              private void meth() {} // attempts to lower visibility
+            }
+            '''.stripIndent()
+        def unit = addGroovySource(contents, 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit)
+        assertEquals(contents.replaceFirst('private ', 'protected '), String.valueOf(unit.contents))
+    }
+
+    @Test @NotYetImplemented
+    void testRaiseVisibilityModifier3() {
+        String contents = '''\
+            package foo
+            import groovy.transform.PackageScope
+            class Bar {
+              @PackageScope void meth() {}
+            }
+            class Baz extends Bar {
+              private void meth() {} // attempts to lower visibility
+            }
+            '''.stripIndent()
+        def unit = addGroovySource(contents, 'Baz', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit)
+        assertEquals(contents.replaceFirst('private ', '@PackageScope '), String.valueOf(unit.contents))
     }
 
     @Test

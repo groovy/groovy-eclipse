@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public enum ProblemType {
     FINAL_METHOD_OVERRIDE("Groovy:You are not allowed to override the final method"),
+    WEAKER_ACCESS_OVERRIDE("attempting to assign weaker access privileges; was "),
     GROOVY_KEYWORD_TYPE1(IProblem.UndefinedType, "as cannot be resolved to a type", "def cannot be resolved to a type"),
     GROOVY_KEYWORD_TYPE2(IProblem.ParsingError, "Syntax error on token \"in\", : expected", "Syntax error on token \"trait\", interface expected"),
     MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, "Syntax error, insert \";\" to complete", "Syntax error, insert \"}\" to complete"),
