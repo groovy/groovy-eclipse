@@ -204,7 +204,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         }
 
         char[] typeName = type.getName().toCharArray();
-        // we don't know how many arguments the ctor has, so go up to 9
+        // we don't know how many arguments the constructor has, so go up to 9
         for (int i = 0; i <= 9; i += 1) {
             requestor.acceptConstructorReference(typeName, i, expression.getNameStart());
         }
@@ -238,14 +238,22 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression expression) {
-        String methodStr = expression.getMethodAsString();
-        if (methodStr != null) {
-            char[] methodName = methodStr.toCharArray();
-            // also could be a field reference
-            requestor.acceptFieldReference(methodName, expression.getStart());
-            // we don't know how many arguments the method has, so go up to 7
-            for (int i = 0; i <= 7; i += 1) {
-                requestor.acceptMethodReference(methodName, i, expression.getStart());
+        String name = expression.getMethodAsString();
+        if (name != null) {
+            if (!"new".equals(name)) {
+                char[] methName = name.toCharArray();
+                // could be a field reference followed by a call operator
+                requestor.acceptFieldReference(methName, expression.getStart());
+                // we don't know how many arguments the method has, so go up to 9
+                for (int i = 0; i <= 9; i += 1) {
+                    requestor.acceptMethodReference(methName, i, expression.getStart());
+                }
+            } else { // assume it's a well-formed @Newify expression like "Type.new()"
+                char[] typeName = expression.getObjectExpression().getText().toCharArray();
+                // we don't know how many arguments the constructor has, so go up to 9
+                for (int i = 0; i <= 9; i += 1) {
+                    requestor.acceptConstructorReference(typeName, i, expression.getNameStart());
+                }
             }
         }
         if (expression.isUsingGenerics() && isNotEmpty(expression.getGenericsTypes())) {

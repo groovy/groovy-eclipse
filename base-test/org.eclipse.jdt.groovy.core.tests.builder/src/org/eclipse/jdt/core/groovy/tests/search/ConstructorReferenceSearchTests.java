@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -263,6 +263,24 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i = 0) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "new Foo()\n" + // yes
+            "new Foo(0)\n" + // yes
+            "new Foo('')\n"); // no
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
+    }
+
+    @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
+    public void testConstructorReferences11a() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i = 0) {}\n" + // search for this
             "  Foo(String s) {this()}\n" + // yes
             "  def m() {\n" +
             "    new Foo()\n" + // yes
@@ -281,6 +299,24 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     public void testConstructorReferences12() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
+            "  Foo(int i) {}\n" +
+            "  Foo(String s = '') {}\n" + // search for this
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "new Foo()\n" + // yes
+            "new Foo(0)\n" + // no
+            "new Foo('')\n"); // yes
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
+    }
+
+    @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
+    public void testConstructorReferences12a() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
             "  Foo(int i) {this()}\n" + // yes
             "  Foo(String s = '') {}\n" + // search for this
             "  def m() {\n" +
@@ -294,6 +330,65 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy"))
             .count();
         assertEquals(3, ctorRefs);
+    }
+
+    @Test
+    public void testConstructorReferences14() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {}\n" +
+            "  Foo(String s) {}\n" + // search for this
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "def bar = new Foo(0) {\n" + // no
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(0, ctorRefs);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/796
+    public void testNewifyConstructorReferences1() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "@Newify\n" +
+            "def m() {\n" +
+            "  Foo.new()\n" + // yes
+            "  Foo.new(0)\n" + // yes
+            "  Foo.new('')\n" + // no
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/796
+    public void testNewifyConstructorReferences2() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "@Newify\n" +
+            "def m() {\n" +
+            "  Foo.new()\n" + // yes
+            "  Foo.new(0)\n" + // yes
+            "  Foo.new('')\n" + // no
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
     }
 
     //--------------------------------------------------------------------------
