@@ -253,7 +253,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  void xxx() {\n" +
             "    URL u = new URL('www.example.com')\n" +
             "    first.doSomething('ciao', u)\n" + //yes
-            "    first.doSomething(1L, u)\n" + //no!
+            "    first.doSomething(1, u)\n" + //no!
             "    first.&doSomething\n" + //yes
             "  }\n" +
             "}",
