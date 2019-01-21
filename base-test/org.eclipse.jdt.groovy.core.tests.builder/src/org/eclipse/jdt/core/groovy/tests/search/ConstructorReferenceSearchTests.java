@@ -336,6 +336,23 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     public void testConstructorReferences13() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
+            "  Foo(int i) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "def bar = new Foo(0) {\n" + // yes
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(1, ctorRefs);
+    }
+
+    @Test
+    public void testConstructorReferences14() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
             "  Foo(int i) {}\n" +
             "  Foo(String s) {}\n" + // search for this
             "}");

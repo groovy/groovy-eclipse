@@ -263,6 +263,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 nodeType = VariableScope.VOID_CLASS_NODE;
                 declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
                 if (call.isSuperCall()) declaringType = declaringType.getUnresolvedSuperClass(false);
+            } else if (call.isUsingAnonymousInnerClass()) {
+                declaringType = declaringType.getUnresolvedSuperClass(false); // nodeType is anon. inner
             }
 
             // try to find best match if there is more than one constructor to choose from
