@@ -308,8 +308,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     /**
-     * Saves LHS node for possible initialization expression of field, property,
-     * method parameter, or annotation attribute.
+     * Saves LHS node for possible initialization expression of field, parameter
+     * or annotation attribute.
      * <p>
      * <b>Note</b>: DynamicVariable and VariableExpression are skipped by design.
      * @see #visitVariableExpression
