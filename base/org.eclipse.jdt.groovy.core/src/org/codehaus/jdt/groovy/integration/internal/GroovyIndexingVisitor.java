@@ -51,6 +51,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
  */
 public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
+    private boolean newify; // for MCEs
     private MethodNode enclosingMethod; // for CCEs
     private final ISourceElementRequestor requestor;
 
@@ -81,7 +82,9 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 visitTypeReference(face, false, true);
             }
         }
+        boolean oldify = newify;
         super.visitClass(node);
+        newify = oldify;
     }
 
     @Override
@@ -89,7 +92,9 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         if (node.getType() != node.getDeclaringClass() && node.getEnd() > 0) {
             visitTypeReference(node.getType(), false, true);
         }
+        boolean oldify = newify;
         super.visitField(node);
+        newify = oldify;
     }
 
     @Override
@@ -107,13 +112,17 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 }
             }
         }
+        boolean oldify = newify;
         super.visitMethod(node);
         enclosingMethod = meth;
+        newify = oldify;
     }
 
     @Override
     protected void visitAnnotation(AnnotationNode node) {
         visitTypeReference(node.getClassNode(), true, true);
+        newify = (newify || "Newify".equals(
+            node.getClassNode().getNameWithoutPackage()));
         super.visitAnnotation(node);
     }
 
@@ -248,7 +257,15 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                 for (int i = 0; i <= 9; i += 1) {
                     requestor.acceptMethodReference(methName, i, expression.getStart());
                 }
-            } else { // assume it's a well-formed @Newify expression like "Type.new()"
+                // check for potential @Newify(Type) expression like "Type(...)"
+                if (newify && expression.isImplicitThis() && Character.isUpperCase(methName[0])) {
+                    // we don't know how many arguments the constructor has, so go up to 9
+                    for (int i = 0; i <= 9; i += 1) {
+                        requestor.acceptConstructorReference(methName, i, expression.getNameStart());
+                    }
+                }
+            } else { assert newify;
+                // assume it's a well-formed @Newify expression like "Type.new(...)"
                 char[] typeName = expression.getObjectExpression().getText().toCharArray();
                 // we don't know how many arguments the constructor has, so go up to 9
                 for (int i = 0; i <= 9; i += 1) {

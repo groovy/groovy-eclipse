@@ -333,7 +333,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testConstructorReferences14() throws Exception {
+    public void testConstructorReferences13() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
             "  Foo(int i) {}\n" +
@@ -383,6 +383,48 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo.new()\n" + // yes
             "  Foo.new(0)\n" + // yes
             "  Foo.new('')\n" + // no
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/797
+    public void testNewifyConstructorReferences3() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "@Newify(Foo)\n" +
+            "def m() {\n" +
+            "  Foo()\n" + // yes
+            "  Foo(0)\n" + // yes
+            "  Foo('')\n" + // no
+            "}\n");
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
+            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
+            .count();
+        assertEquals(2, ctorRefs);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/797
+    public void testNewifyConstructorReferences4() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "@Newify(Foo)\n" +
+            "def m() {\n" +
+            "  Foo()\n" + // yes
+            "  Foo(0)\n" + // yes
+            "  Foo('')\n" + // no
             "}\n");
 
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
