@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,14 +50,10 @@ enum ProjectSourceType {
         // check for GMaven or GMavenPlus
         Plugin plugin = mavenProject.getPlugin("org.codehaus.gmaven:gmaven-plugin");
         if (plugin == null) {
-            // try the old (pre-1.1) version of the plugin
-            plugin = mavenProject.getPlugin("org.codehaus.groovy.maven:gmaven-plugin");
-            if (plugin == null) {
-                plugin = mavenProject.getPlugin("org.codehaus.gmavenplus:gmavenplus-plugin");
-            }
-            if (plugin != null) {
-                return getSourceTypeInGMavenProject(plugin);
-            }
+            plugin = mavenProject.getPlugin("org.codehaus.gmavenplus:gmavenplus-plugin");
+        }
+        if (plugin != null) {
+            return getSourceTypeInGMavenProject(plugin);
         }
 
         // not a groovy project

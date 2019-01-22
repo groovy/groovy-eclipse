@@ -68,12 +68,12 @@
           <goal>testCompile</goal>
           <goal>removeTestStubs</goal>
         </goals>
-        </pluginExecutionFilter>
-        <action>
-          <configurator>
-            <id>org.codehaus.groovy.m2eclipse.configurator</id>
-          </configurator>
-        </action>
+      </pluginExecutionFilter>
+      <action>
+        <configurator>
+          <id>org.codehaus.groovy.m2eclipse.configurator</id>
+        </configurator>
+      </action>
     </pluginExecution>
     <pluginExecution>
       <pluginExecutionFilter>
@@ -90,12 +90,30 @@
           <goal>compileTests</goal>
           <goal>removeTestStubs</goal>
         </goals>
-        </pluginExecutionFilter>
-        <action>
-          <configurator>
-            <id>org.codehaus.groovy.m2eclipse.configurator</id>
-          </configurator>
-        </action>
+      </pluginExecutionFilter>
+      <action>
+        <configurator>
+          <id>org.codehaus.groovy.m2eclipse.configurator</id>
+        </configurator>
+      </action>
+    </pluginExecution>
+    <pluginExecution>
+      <pluginExecutionFilter>
+        <groupId>org.codehaus.gmaven</groupId>
+        <artifactId>gmaven-plugin</artifactId>
+        <versionRange>[1.1,)</versionRange>
+        <goals>
+          <goal>generateStubs</goal>
+          <goal>compile</goal>
+          <goal>generateTestStubs</goal>
+          <goal>testCompile</goal>
+        </goals>
+      </pluginExecutionFilter>
+      <action>
+        <configurator>
+          <id>org.codehaus.groovy.m2eclipse.configurator</id>
+        </configurator>
+      </action>
     </pluginExecution>
   </pluginExecutions>
 </lifecycleMappingMetadata>
