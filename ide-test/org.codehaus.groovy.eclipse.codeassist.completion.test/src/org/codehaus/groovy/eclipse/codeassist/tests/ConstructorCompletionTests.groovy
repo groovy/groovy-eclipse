@@ -540,7 +540,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo()', 0)
     }
 
@@ -553,7 +553,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo()', 0)
     }
 
@@ -568,7 +568,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(Object arg)', 0)
         proposalExists(proposals, 'Foo()', 1)
     }
@@ -584,7 +584,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(Object arg)', 0)
         proposalExists(proposals, 'Foo()', 1)
     }
@@ -600,7 +600,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(Object arg)', 1)
         proposalExists(proposals, 'Foo()', 0)
     }
@@ -616,7 +616,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(Object arg)', 1)
         proposalExists(proposals, 'Foo()', 0)
     }
@@ -632,7 +632,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(Object... args)', 1)
         proposalExists(proposals, 'Foo()', 0)
     }
@@ -648,7 +648,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(String param, Object other)', 1)
         proposalExists(proposals, 'Foo(String param)', 1)
         proposalExists(proposals, 'Foo()', 0)
@@ -660,15 +660,115 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             class Foo {
               Foo() {
               }
-              Foo(java.lang.String param, other = 'value') {
+              Foo(String param, other = 'value') {
                 this()
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
         proposalExists(proposals, 'Foo(String param, Object other)', 0)
         proposalExists(proposals, 'Foo(String param)', 0)
         proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall7() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(Map.Entry param, other = 'value') {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(Entry param, Object other)', 0)
+        proposalExists(proposals, 'Foo(Entry param)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall8() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(List<String> param, other = 'value') {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(List param, Object other)', 0)
+        proposalExists(proposals, 'Foo(List param)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall9() {
+        String contents = '''\
+            class Foo {
+              Foo() {
+              }
+              Foo(String[][][] param, other = 'value') {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(String[][][] param, Object other)', 0)
+        proposalExists(proposals, 'Foo(String[][][] param)', 0)
+        proposalExists(proposals, 'Foo()', 1)
+    }
+
+    @Test @NotYetImplemented
+    void testConstructorCompletionSelfConstructorCall10() {
+        String contents = '''\
+            class Foo {
+              Foo(Date utilDate) {
+              }
+              Foo(java.sql.Date sqlDate) {
+                this()
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(Date sqlDate)', 0)
+        proposalExists(proposals, 'Foo(Date utilDate)', 1)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall11() {
+        String contents = '''\
+            class Foo {
+              Foo(Date utilDate) {
+                this()
+              }
+              Foo(java.sql.Date sqlDate) {
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(Date sqlDate)', 1)
+        proposalExists(proposals, 'Foo(Date utilDate)', 0)
+    }
+
+    @Test
+    void testConstructorCompletionSelfConstructorCall12() {
+        String contents = '''\
+            import java.util.Map as Dictionary
+            class Foo {
+              Foo(Dictionary d) {
+              }
+              Foo(Dictionary.Entry e) {
+                this(Collections.singletonMap(e.key, e.value))
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
+        proposalExists(proposals, 'Foo(Dictionary d)', 1)
+        proposalExists(proposals, 'Foo(Entry e)', 0)
     }
 
     @Test

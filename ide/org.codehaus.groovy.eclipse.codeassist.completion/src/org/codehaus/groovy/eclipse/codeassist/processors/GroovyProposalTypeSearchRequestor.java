@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -320,16 +320,24 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         // if call is "this(...)" then skip proposals for enclosing constructor
         if (isThisCall && context.containingDeclaration.getDeclaringClass().getDeclaredConstructors().stream()
             .filter(ctor -> ctor.getOriginal() == context.containingDeclaration).anyMatch(ctor -> {
-                if (ctor.getParameters().length == parameterCount) {
+                Parameter[] parameters = ctor.getParameters();
+                if (parameters.length == parameterCount) {
                     if (parameterCount == 0) {
                         return true;
                     }
                     if (parameterTypes != null) {
-                        char[][] enclosingParamTypes = new char[parameterCount][];
-                        for (int i = 0; i < parameterCount; i += 1) { // TODO: Exclude generics and qualifiers?
-                            enclosingParamTypes[i] = ctor.getParameters()[i].getType().toString(false).toCharArray();
+                        for (int i = 0; i < parameterCount; i += 1) {
+                            char[] parameterType = resolveImportAlias(parameterTypes[i]);
+                            if (CharOperation.equals(parameterType, toChars(parameters[i].getType(), ClassNode::getName))) {
+                                continue;
+                            }
+                            if ((CharOperation.indexOf('.', parameterType) < 0 || parameters[i].getType().getOuterClass() != null) &&
+                                    CharOperation.equals(parameterType, toChars(parameters[i].getType(), ClassNode::getNameWithoutPackage))) {
+                                continue;
+                            }
+                            return false;
                         }
-                        return CharOperation.equals(enclosingParamTypes, parameterTypes);
+                        return true;
                     }
                 }
                 return false;
@@ -912,8 +920,24 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     /**
+     * "Dictionary.Entry" -> "Map.Entry" iff "import java.util.Map as Dictionary"
+     */
+    private char[] resolveImportAlias(char[] typeName) {
+        String maybeAlias = String.valueOf(firstSegment(typeName, '.')); java.util.function.Predicate<String> equalsMaybeAlias = maybeAlias::equals;
+        return Optional.ofNullable(module.getImport(maybeAlias)).map(importNode -> importNode.getType().getNameWithoutPackage()).filter(equalsMaybeAlias.negate())
+            .map(resolved -> {
+                char[] chars = new char[resolved.length() + (typeName.length - maybeAlias.length())];
+                resolved.getChars(0, resolved.length(), chars, 0); // substitute resolved for maybeAlias in typeName
+                System.arraycopy(typeName, maybeAlias.length(), chars, resolved.length(), typeName.length - maybeAlias.length());
+                return chars;
+            }).orElse(typeName);
+    }
+
+    /**
      * "java.lang", "Object" -> "java.lang", "Object"
      * "java.util", "Map$Entry" -> "java.util.Map", "Entry"
+     *
+     * @see org.eclipse.jdt.groovy.core.util.GroovyUtils.splitName(ClassNode)
      */
     private static char[][] qualifierAndSimpleTypeName(char[] packName, char[] typeName) {
         int pos = CharOperation.lastIndexOf('$', typeName);
@@ -923,6 +947,28 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             packName = CharOperation.concat(packName, CharOperation.replaceOnCopy(typeQual, '$', '.'), '.');
         }
         return new char[][] {packName, typeName};
+    }
+
+    private static char[] toChars(ClassNode type, java.util.function.Function<ClassNode, String> toString) {
+        int dims = 0;
+        while (type.isArray()) {
+            dims += 1;
+            type = type.getComponentType();
+        }
+
+        String string = toString.apply(type);
+
+        char[] chars = new char[string.length() + (dims * 2)];
+        string.getChars(0, string.length(), chars, 0);
+        CharOperation.replace(chars, '$', '.');
+
+        while (dims > 0) {
+            int i = chars.length - (dims * 2);
+            chars[i + 1] = ']';
+            chars[i] = '[';
+            dims -= 1;
+        }
+        return chars;
     }
 
     //--------------------------------------------------------------------------
