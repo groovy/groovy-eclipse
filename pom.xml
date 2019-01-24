@@ -23,14 +23,14 @@
 		<!-- See https://www.eclipse.org/tycho/sitedocs-extras/index.html -->
 		<tycho-extras-version>1.3.0</tycho-extras-version>
 
-		<!-- Version of greclipse maven compiler to use for building. (Some bundles,
-			mostly test related, have groovy code that can't be compiled with standard
-			tycho jdt compiler. These two properties define what compiler will be used
+		<!-- Versions of groovy compiler components to use for building. Some bundles,
+			mostly test related, have Groovy code that can't be compiled with standard
+			tycho ecj compiler. These two properties define what compiler will be used
 			for those bundles.
 		-->
-		<groovy-eclipse-compiler-version>3.3.0-01</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>3.0.0-01</groovy-eclipse-compiler-version>
 
-		<!-- This should be the oldest supported Groovy version. -->
+		<!-- This should align with the oldest supported Groovy version. -->
 		<groovy-eclipse-batch-version>2.4.16-02</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
