@@ -7,6 +7,7 @@
 			<implementation>org.codehaus.groovy.eclipse.compiler.GroovyEclipseCompiler</implementation>
 			<isolated-realm>false</isolated-realm>
 		</component>
+		<!-- https://maven.apache.org/ref/3.6.0/maven-core/default-bindings.html -->
 		<component>
 			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
 			<role-hint>jar</role-hint>
@@ -20,28 +21,28 @@
 								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
 							</initialize>
 							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:resources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:resources
 							</process-resources>
 							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:compile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:compile
 							</compile>
 							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:testResources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:testResources
 							</process-test-resources>
 							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:testCompile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:testCompile
 							</test-compile>
 							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:test
+								org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
 							</test>
 							<package>
-								org.apache.maven.plugins:maven-jar-plugin:jar
+								org.apache.maven.plugins:maven-jar-plugin:2.4:jar
 							</package>
 							<install>
-								org.apache.maven.plugins:maven-install-plugin:install
+								org.apache.maven.plugins:maven-install-plugin:2.4:install
 							</install>
 							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:deploy
+								org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy
 							</deploy>
 						</phases>
 					</lifecycle>
@@ -61,28 +62,28 @@
 								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
 							</initialize>
 							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:resources
 							</process-resources>
 							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:compile
 							</compile>
 							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:testResources
 							</process-test-resources>
 							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:testCompile
 							</test-compile>
 							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
+								org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
 							</test>
 							<package>
-								org.apache.maven.plugins:maven-war-plugin:2.1.1:war
+								org.apache.maven.plugins:maven-war-plugin:2.2:war
 							</package>
 							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
+								org.apache.maven.plugins:maven-install-plugin:2.4:install
 							</install>
 							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
+								org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy
 							</deploy>
 						</phases>
 					</lifecycle>
@@ -102,69 +103,28 @@
 								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
 							</initialize>
 							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:resources
 							</process-resources>
 							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:compile
 							</compile>
 							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:testResources
 							</process-test-resources>
 							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:testCompile
 							</test-compile>
 							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
+								org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
 							</test>
 							<package>
 								org.apache.maven.plugins:maven-rar-plugin:2.2:rar
 							</package>
 							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
+								org.apache.maven.plugins:maven-install-plugin:2.4:install
 							</install>
 							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
-							</deploy>
-						</phases>
-					</lifecycle>
-				</lifecycles>
-			</configuration>
-		</component>
-		<component>
-			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-			<role-hint>par</role-hint>
-			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
-			<configuration>
-				<lifecycles>
-					<lifecycle>
-						<id>default</id>
-						<phases>
-							<initialize>
-								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
-							</initialize>
-							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
-							</process-resources>
-							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
-							</compile>
-							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
-							</process-test-resources>
-							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
-							</test-compile>
-							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
-							</test>
-							<package>
-								org.apache.maven.plugins:maven-par-plugin:par
-							</package>
-							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
-							</install>
-							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
+								org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy
 							</deploy>
 						</phases>
 					</lifecycle>
@@ -184,69 +144,28 @@
 								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
 							</initialize>
 							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:resources
 							</process-resources>
 							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:compile
 							</compile>
 							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:testResources
 							</process-test-resources>
 							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:testCompile
 							</test-compile>
 							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
+								org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
 							</test>
 							<package>
 								org.apache.maven.plugins:maven-ejb-plugin:2.3:ejb
 							</package>
 							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
+								org.apache.maven.plugins:maven-install-plugin:2.4:install
 							</install>
 							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
-							</deploy>
-						</phases>
-					</lifecycle>
-				</lifecycles>
-			</configuration>
-		</component>
-		<component>
-			<role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-			<role-hint>ejb3</role-hint>
-			<implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
-			<configuration>
-				<lifecycles>
-					<lifecycle>
-						<id>default</id>
-						<phases>
-							<initialize>
-								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
-							</initialize>
-							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
-							</process-resources>
-							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
-							</compile>
-							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
-							</process-test-resources>
-							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
-							</test-compile>
-							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
-							</test>
-							<package>
-								org.apache.maven.plugins:maven-ejb3-plugin:ejb3
-							</package>
-							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
-							</install>
-							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
+								org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy
 							</deploy>
 						</phases>
 					</lifecycle>
@@ -265,33 +184,33 @@
 							<initialize>
 								org.codehaus.groovy:groovy-eclipse-compiler:add-groovy-build-paths
 							</initialize>
-							<generate-resources>
-								org.apache.maven.plugins:maven-plugin-plugin:2.7:descriptor
-							</generate-resources>
 							<process-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:resources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:resources
 							</process-resources>
 							<compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:compile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:compile
 							</compile>
+							<process-classes>
+								org.apache.maven.plugins:maven-plugin-plugin:3.2:descriptor
+							</process-classes>
 							<process-test-resources>
-								org.apache.maven.plugins:maven-resources-plugin:2.4.3:testResources
+								org.apache.maven.plugins:maven-resources-plugin:2.6:testResources
 							</process-test-resources>
 							<test-compile>
-								org.apache.maven.plugins:maven-compiler-plugin:2.3.2:testCompile
+								org.apache.maven.plugins:maven-compiler-plugin:3.6.2:testCompile
 							</test-compile>
 							<test>
-								org.apache.maven.plugins:maven-surefire-plugin:2.7.2:test
+								org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test
 							</test>
 							<package>
-								org.apache.maven.plugins:maven-jar-plugin:2.3.1:jar,
-								org.apache.maven.plugins:maven-plugin-plugin:2.7:addPluginArtifactMetadata
+								org.apache.maven.plugins:maven-jar-plugin:2.4:jar,
+								org.apache.maven.plugins:maven-plugin-plugin:3.2:addPluginArtifactMetadata
 							</package>
 							<install>
-								org.apache.maven.plugins:maven-install-plugin:2.3.1:install
+								org.apache.maven.plugins:maven-install-plugin:2.4:install
 							</install>
 							<deploy>
-								org.apache.maven.plugins:maven-deploy-plugin:2.5:deploy
+								org.apache.maven.plugins:maven-deploy-plugin:2.7:deploy
 							</deploy>
 						</phases>
 					</lifecycle>

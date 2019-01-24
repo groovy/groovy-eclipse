@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,9 +64,9 @@ import org.codehaus.plexus.util.cli.Commandline;
 @Component(role = Compiler.class, hint = "groovy-eclipse-compiler")
 public class GroovyEclipseCompiler extends AbstractCompiler {
 
-    // IMPORTANT!!! This class must not reference any JDT classes directly.  Must be loadable even if batch compiler not around.
+    // IMPORTANT!!! This class must not reference any JDT classes directly.  It must be loadable even if batch compiler is absent.
 
-    private static final String PROB_SEPARATOR = "----------\r?\n";
+    private static final String PROBLEM_SEPARATOR = "----------\r?\n";
 
     public GroovyEclipseCompiler() {
         // Here is a bit of a hack. Maven only wants a single file extension
@@ -74,7 +74,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
 
-    private boolean verbose;
+    private final List<String> vmArgs = new ArrayList<>();
+
+    private boolean verbose = false;
 
     private String javaAgentClass = "";
 
@@ -117,6 +119,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         } else {
             StringWriter out = new StringWriter();
+            if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
             InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
 
             List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
@@ -235,8 +238,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         Map<String, String> args = new DeduplicatingHashMap<>(getLogger());
 
-        String cp = getPathString(config.getClasspathEntries());
         verbose = config.isVerbose();
+        if (verbose) {
+            args.put("-verbose", null);
+        }
+
+        String cp = getPathString(config.getClasspathEntries());
         if (verbose) {
             getLogger().info("Classpath: " + cp);
         }
@@ -244,8 +251,20 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-cp", cp.trim());
         }
 
+        String mp = getPathString(config.getModulepathEntries());
+        if (verbose) {
+            getLogger().info("Modulepath: " + mp);
+        }
+        if (isNotBlank(mp)) {
+            args.put("-p", mp.trim());
+        }
+
         if (isNotBlank(config.getOutputLocation())) {
             args.put("-d", config.getOutputLocation().trim());
+        }
+
+        if (config.getGeneratedSourcesDirectory() != null) {
+            args.put("-s", config.getGeneratedSourcesDirectory().getAbsolutePath());
         }
 
         if (config.isDebug()) {
@@ -256,57 +275,72 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
-        if ("none".equals(config.getProc())) {
-            args.put("-proc:none", null);
-        } else if ("only".equals(config.getProc())) {
-            args.put("-proc:only", null);
+        if (isNotBlank(config.getSourceEncoding())) {
+            args.put("-encoding", config.getSourceEncoding().trim());
         }
 
-        if (config.getGeneratedSourcesDirectory() != null) {
-            args.put("-s", config.getGeneratedSourcesDirectory().getAbsolutePath());
+        String release = config.getReleaseVersion();
+        if (isNotBlank(release)) {
+            args.put("--release", release.trim());
         }
-
         String source = config.getSourceVersion();
         if (isNotBlank(source)) {
             args.put("-source", source.trim());
-        } else {
+        } else if (isBlank(release)) {
             args.put("-source", "1.5");
         }
         String target = config.getTargetVersion();
         if (isNotBlank(target)) {
             args.put("-target", target.trim());
-        } else {
+        } else if (isBlank(release)) {
             args.put("-target", "1.5");
         }
 
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
         }
+        /*if (config.isFailOnWarning()) {
+            args.put("-err:TODO", null);
+        }*/
         if (!config.isShowWarnings()) {
             args.put("-nowarn", null);
         }
+        if (config.isParameters()) {
+            args.put("-parameters", null);
+        }
+
+        if ("none".equals(config.getProc())) {
+            args.put("-proc:none", null);
+        } else if ("only".equals(config.getProc())) {
+            args.put("-proc:only", null);
+        }
 
         if (config.getAnnotationProcessors() != null) {
-            StringBuilder procArg = new StringBuilder();
-            for (String proc : config.getAnnotationProcessors()) {
-                if (isNotBlank(proc)) {
-                    procArg.append(proc.trim());
-                    procArg.append(",");
+            StringBuilder processor = new StringBuilder();
+            for (String item : config.getAnnotationProcessors()) {
+                if (isNotBlank(item)) {
+                    processor.append(item.trim()).append(',');
                 }
             }
-            if (procArg.length() > 0) {
+            if (processor.length() > 0) {
                 // remove the trailing comma
-                procArg.setLength(procArg.length() - 1);
-                args.put("-processor", procArg.toString());
+                processor.setLength(processor.length() - 1);
+                args.put("-processor", processor.toString());
             }
         }
 
-        if (verbose) {
-            args.put("-verbose", null);
-        }
-
-        if (isNotBlank(config.getSourceEncoding())) {
-            args.put("-encoding", config.getSourceEncoding().trim());
+        if (config.getProcessorPathEntries() != null) {
+            StringBuilder processorpath = new StringBuilder();
+            for (String item : config.getProcessorPathEntries()) {
+                if (isNotBlank(item)) {
+                    processorpath.append(item.trim()).append(';');
+                }
+            }
+            if (processorpath.length() > 0) {
+                // remove the trailing semicolon
+                processorpath.setLength(processorpath.length() - 1);
+                args.put("-processorpath", processorpath.toString());
+            }
         }
 
         for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
@@ -314,22 +348,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (startsWithHyphen(key)) {
                 if ("-javaAgentClass".equals(key)) {
                     setJavaAgentClass(entry.getValue());
-                } else {
+                } else if (!key.startsWith("-J")) {
                     args.put(key, entry.getValue());
+                } else {
+                    vmArgs.add(key.substring(2));
                 }
-            } else if (!"org.osgi.framework.system.packages".equals(key)) { // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore the system packages option
+            } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
                 args.put("-" + key, entry.getValue());
             }
         }
 
         args.putAll(composeSourceFiles(sourceFiles));
 
-        String[] argsList = flattenArgumentsMap(args);
-        if (verbose) {
-            getLogger().info("All args: " + Arrays.toString(argsList));
-        }
-
-        return argsList;
+        return flattenArgumentsMap(args);
     }
 
     private CompilerResult compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args) throws CompilerException {
@@ -338,25 +369,27 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         cli.setExecutable(executable);
 
         try {
-            // set any javaagent before the -jar flag
             if (isNotBlank(javaAgentClass)) {
                 cli.addArguments(new String[] {"-javaagent:" + getAdditionnalJavaAgentLocation()});
-            } else {
-                getLogger().debug("No javaAgentClass seems to be set");
+            }
+
+            if (isNotBlank(config.getMeminitial())) {
+                cli.addArguments(new String[] {"-Xms" + config.getMeminitial()});
+            }
+
+            if (isNotBlank(config.getMaxmem())) {
+                cli.addArguments(new String[] {"-Xmx" + config.getMaxmem()});
+            }
+
+            if (!vmArgs.isEmpty()) {
+                cli.addArguments(vmArgs.toArray(new String[vmArgs.size()]));
             }
 
             cli.addArguments(new String[] {"-jar", groovyEclipseLocation});
 
-            if (isNotBlank(config.getMeminitial())) {
-                cli.addArguments(new String[] {"-J-Xms" + config.getMeminitial()});
-            }
-
-            if (isNotBlank(config.getMaxmem())) {
-                cli.addArguments(new String[] {"-J-Xmx" + config.getMaxmem()});
-            }
-
+            if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
             File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
-            cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/')});
+            cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath()});
         } catch (IOException e) {
             throw new CompilerException("Error creating file with javac arguments", e);
         }
@@ -376,7 +409,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
-        getLogger().info("Compiling in a forked process using " + groovyEclipseLocation);
+        getLogger().info(verbose ? cli.toString() : "Compiling in a forked process using " + groovyEclipseLocation);
+
         int returnCode;
         try {
             returnCode = CommandLineUtils.executeCommandLine(cli, out, err);
@@ -401,7 +435,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) {
         List<CompilerMessage> parsedMessages = new ArrayList<>();
 
-        for (String msg : input.split(PROB_SEPARATOR)) {
+        for (String msg : input.split(PROBLEM_SEPARATOR)) {
             if (isBlank(msg)) continue;
 
             CompilerMessage message = parseMessage(msg, showWarnings, false);
@@ -419,7 +453,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                         if (showWarnings || message.getKind() == Kind.ERROR) {
                             parsedMessages.add(message);
                         }
-                    } else if (!PROB_SEPARATOR.equals(line)) {
+                    } else if (!PROBLEM_SEPARATOR.equals(line)) {
                         unrecognized.append(line).append("\n");
                     }
                 }
@@ -490,9 +524,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     private File createFileWithArguments(String[] args, String outputDirectory) throws IOException {
         File tempFile;
         if (getLogger().isDebugEnabled()) {
-            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments", new File(outputDirectory));
+            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), ".txt", new File(outputDirectory));
         } else {
-            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments");
+            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), ".txt");
             tempFile.deleteOnExit();
         }
 
@@ -594,7 +628,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @param args Map to be converted
      * @return Array with {@code args} converted to an array
      */
-    private String[] flattenArgumentsMap(Map<String, String> args) {
+    private static String[] flattenArgumentsMap(Map<String, String> args) {
         List<String> argsList = new ArrayList<>(args.size() * 2);
 
         for (Map.Entry<String, String> entry : args.entrySet()) {

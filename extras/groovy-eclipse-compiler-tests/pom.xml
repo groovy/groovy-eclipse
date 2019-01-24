@@ -12,7 +12,7 @@
 		<!-- groovy-batch version to use for tests: -->
 		<groovy.xx.version>2.5.5-01</groovy.xx.version>
 		<!-- maven-compiler version to use for tests: -->
-		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+		<maven-compiler-plugin.version>3.6.2</maven-compiler-plugin.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
