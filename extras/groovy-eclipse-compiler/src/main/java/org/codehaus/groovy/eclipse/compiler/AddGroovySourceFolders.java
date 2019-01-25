@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,21 +21,18 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Adds src/main/groovy and src/main/groovy as source folders
+ * Adds <tt>src/main/groovy</tt> and <tt>src/test/groovy</tt> as source folders.
  *
- * @goal add-groovy-build-paths
+ * @goal  add-groovy-build-paths
  * @phase initialize
- * @NOexecute phase="initialize" lifecycle="default"
- * @NOrequiresDependencyResolution compile
  * @since 2.6.0
  */
 public class AddGroovySourceFolders extends AbstractMojo {
 
     /**
      * @parameter property="project"
-     * @required
      * @readonly
-     * @since 1.0
+     * @required
      */
     private MavenProject project;
 

@@ -9,34 +9,31 @@
         - org.codehaus.groovy.eclipse.ant
     2) Update build.properties to point to the appropriate locations and versions
     3) Comment/uncomment do-24-build, do-25-build or ... (exactly one of these must be uncommented at once)
-    4a) run `extract-create` to build the groovy-eclipse-batch jar and pom
+    4a) Run `package` to build the groovy-eclipse-batch jars and pom
      OR
-    4b) run `extract-create-install` to build groovy-eclipse-batch and install it locally
-     OR
-    4c) run `publish` to publish to codehaus and mirror it on maven central
+    4b) Run `install` to build groovy-eclipse-batch artifacts and install them locally
 -->
-<project name="groovy-eclipse-batch" basedir="." default="extract-create">
+<project name="groovy-eclipse-batch" basedir="." default="package">
 
     <property file="build.properties"/>
-    <property name="jar.dest" location="${basedir}/build"/>
-    <property name="jar.prefix" value="groovy-eclipse-batch"/>
-    <property name="extract.loc" location="${jar.dest}/extract"/>
-
-    <import file="maven/build-maven.xml"/>
+    <property name="build.dir" location="${basedir}/build"/>
+    <property name="maven.dir" location="${basedir}/maven"/>
+    <property name="stage.dir" location="${build.dir}/stage"/>
 
 
     <target name="clean">
-        <delete dir="build" quiet="true"/>
+        <delete dir="${build.dir}" quiet="true"/>
     </target>
 
 
-    <target name="extract-create" depends="-init,-extract" description="Create artifacts for deployment">
-        <property name="jar.name" value="${jar.prefix}-${version}.jar"/>
-        <property name="pom.name" value="${jar.prefix}-${version}.pom"/>
+    <target name="package" depends="-extract" description="Create artifacts for deployment">
+        <!-- copy pom.xml and inject version -->
+        <copy file="${maven.dir}/pom.xml" tofile="${build.dir}/${maven.pom}"/>
+        <replace file="${build.dir}/${maven.pom}" token="REPLACE_WITH_VERSION" value="${version}"/>
 
-        <!-- create groovy-eclipse-batch.jar from extract directory -->
-        <jar destfile="${jar.dest}/${jar.name}" manifest="maven/MANIFEST.MF">
-            <fileset dir="${extract.loc}">
+        <!-- create main artifact from stage directory -->
+        <jar destfile="${build.dir}/${main.jar}">
+            <fileset dir="${stage.dir}">
                 <exclude name="**/*.g"/>
                 <exclude name="**/*.groovy"/>
                 <exclude name="**/*.html"/>
@@ -57,36 +54,55 @@
                 <exclude name="META-INF/*.RSA"/>
                 <exclude name="META-INF/*.SF"/>
             </fileset>
+            <manifest>
+                <attribute name="Implementation-Version" value="${version}" />
+                <attribute name="Implementation-Vendor" value="Pivotal Software, Inc." />
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main" />
+            </manifest>
         </jar>
 
-        <!-- copy pom.xml and inject version -->
-        <copy file="maven/pom.xml" tofile="${jar.dest}/${pom.name}"/>
-        <replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}"/>
+        <!-- create javadoc artifact -->
+        <jar destfile="${build.dir}/${javadoc.jar}">
+            <!-- TODO -->
+        </jar>
+
+        <!-- create sources artifact -->
+        <jar destfile="${build.dir}/${sources.jar}">
+            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch" includes="**/Main.java" />
+        </jar>
     </target>
 
 
-    <target name="install" depends="extract-create,-mavenInit" description="Install artifacts to local repository">
-        <mavenInstall version="${version}" prefix="${jar.prefix}"/>
+    <target name="install" depends="package" description="Install artifacts to local repository" xmlns:artifact="urn:maven-artifact-ant">
+        <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant">
+            <classpath>
+                <fileset file="${maven.dir}/maven-ant-tasks-*.jar"/>
+            </classpath>
+        </typedef>
+
+        <echo message="Installing ${ant.project.name} artifacts into local repository"/>
+
+        <artifact:pom file="${build.dir}/${maven.pom}" id="the_pom"/>
+        <artifact:install file="${build.dir}/${main.jar}">
+            <attach file="${build.dir}/${javadoc.jar}" type="jar" classifier="javadoc"/>
+            <attach file="${build.dir}/${sources.jar}" type="jar" classifier="sources"/>
+            <pom refid="the_pom"/>
+        </artifact:install>
     </target>
 
 
-    <target name="publish" depends="install,-mavenDeployInit" description="Publish artifacts to remote repository">
-        <mavenDeploy version="${version}" prefix="${jar.prefix}"/>
-    </target>
+    <target name="-extract" depends="-init" description="extract the contents of all jars and copy them to the stage location">
+        <mkdir dir="${build.dir}"/>
+        <delete dir="${stage.dir}" quiet="true"/>
+        <mkdir dir="${stage.dir}"/>
 
-
-    <target name="-extract" description="extract the contents of all jars and copy them to the extract location">
-        <mkdir dir="${jar.dest}"/>
-        <delete dir="${extract.loc}" quiet="true"/>
-        <mkdir dir="${extract.loc}"/>
-
-        <unzip dest="${extract.loc}">
+        <unzip dest="${stage.dir}">
             <fileset refid="orig.plugin.jars"/>
             <fileset refid="orig.groovy.jars"/>
         </unzip>
 
         <!-- Overwrite existing with classes from workspace bin folders-->
-        <copy todir="${extract.loc}">
+        <copy todir="${stage.dir}">
             <fileset refid="jdt.groovy.core.class.files"/>
             <fileset refid="jdt.core.class.files"/>
             <fileset refid="groovy.core.class.files"/>
@@ -95,7 +111,7 @@
         </copy>
 
         <!-- now unzip the jdt compiler adapter jar. It's a jar within a jar. -->
-        <unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/jdtCompilerAdapter.jar"/>
+        <unzip dest="${stage.dir}" src="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/jdtCompilerAdapter.jar"/>
     </target>
 
 
@@ -135,6 +151,11 @@
         <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="ant.groovy.class.files">
             <include name="**/*.*"/>
         </fileset>
+
+        <property name="main.jar" value="${ant.project.name}-${version}.jar"/>
+        <property name="maven.pom" value="${ant.project.name}-${version}.pom"/>
+        <property name="javadoc.jar" value="${ant.project.name}-${version}-javadoc.jar"/>
+        <property name="sources.jar" value="${ant.project.name}-${version}-sources.jar"/>
     </target>
 
 
