@@ -331,7 +331,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                             if (CharOperation.equals(parameterType, toChars(parameters[i].getType(), ClassNode::getName))) {
                                 continue;
                             }
-                            if ((CharOperation.indexOf('.', parameterType) < 0 || parameters[i].getType().getOuterClass() != null) &&
+                            if (CharOperation.equals(parameterNames[i], parameters[i].getName().toCharArray()) &&
+                                    (CharOperation.indexOf('.', parameterType) < 0 || parameters[i].getType().getOuterClass() != null) &&
                                     CharOperation.equals(parameterType, toChars(parameters[i].getType(), ClassNode::getNameWithoutPackage))) {
                                 continue;
                             }

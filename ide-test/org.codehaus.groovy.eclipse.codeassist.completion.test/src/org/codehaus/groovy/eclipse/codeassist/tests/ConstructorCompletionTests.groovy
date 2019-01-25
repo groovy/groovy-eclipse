@@ -722,7 +722,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'Foo()', 1)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionSelfConstructorCall10() {
         String contents = '''\
             class Foo {
