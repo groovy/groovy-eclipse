@@ -2,14 +2,14 @@
 
 rm -fr ~/.m2/repository/org/codehaus/groovy
 
-echo Building groovy-eclipse-batch and installing to maven local
+echo Building groovy-eclipse-batch artifacts
 cd groovy-eclipse-batch-builder
-ant extract-create-install
+ant clean install
 
-echo Installing groovy-eclipse-compiler to maven local
+echo Building groovy-eclipse-compiler artifacts
 cd ../groovy-eclipse-compiler
 mvn clean install
 
 echo Running integration tests...
 cd ../groovy-eclipse-compiler-tests
-mvn clean install
+mvn clean integration-test
