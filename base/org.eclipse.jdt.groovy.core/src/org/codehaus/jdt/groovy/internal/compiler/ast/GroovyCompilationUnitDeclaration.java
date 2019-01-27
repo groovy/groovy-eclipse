@@ -1463,13 +1463,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int modifiers = getModifiers(methodNode);
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
-                // source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
-                if (Flags.isStatic(modifiers) && params != null && params.length == 1 && "main".equals(methodNode.getName())) {
+                // 'static main(args)' would become 'static Object main(Object args)' so make it 'static void main(String[] args)'
+                if (Flags.isStatic(modifiers) && "main".equals(methodNode.getName()) && params != null && params.length == 1) {
                     Parameter p = params[0];
                     if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
-                        String name = p.getName();
-                        params = new Parameter[1];
-                        params[0] = new Parameter(ClassHelper.STRING_TYPE.makeArray(), name);
+                        params = new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), p.getName())};
+                        params[0].setSourcePosition(p);
                         if (returnType.getName().equals(ClassHelper.OBJECT)) {
                             returnType = ClassHelper.VOID_TYPE;
                         }
@@ -2418,7 +2417,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 // start and end of the type name; scripts do not have a name, so use start instead
                 typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
-                typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
+                typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart()); // incl. extends/implements?
 
                 // start and end of the entire declaration including Javadoc and ending at the last close bracket
                 Javadoc doc = findJavadoc(classNode.getLineNumber());
@@ -2445,7 +2444,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 // TODO: start past the opening brace and end before the closing brace
                 //       except that scripts do not have a name, use the start instead
-                typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
+                //typeDeclaration.bodyStart = typeDeclaration.sourceEnd;
                 typeDeclaration.bodyEnd = typeDeclaration.declarationSourceEnd;
 
                 // start of the modifiers after the javadoc
