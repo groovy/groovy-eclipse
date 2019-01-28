@@ -66,6 +66,7 @@ import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
@@ -1999,20 +2000,11 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
-        // TODO: Check for MethodCall once 2.1 is the minimum supported Groovy runtime
-        Expression arguments = null;
-        if (node instanceof MethodCallExpression) {
-            arguments = ((MethodCallExpression) node).getArguments();
-        } else if (node instanceof ConstructorCallExpression) {
-            arguments = ((ConstructorCallExpression) node).getArguments();
-        } else if (node instanceof StaticMethodCallExpression) {
-            arguments = ((StaticMethodCallExpression) node).getArguments();
-        }
-
-        if (arguments != null) {
+        if (node instanceof MethodCall) {
+            Expression arguments = ((MethodCall) node).getArguments();
             if (arguments instanceof ArgumentListExpression) {
                 List<Expression> expressions = ((ArgumentListExpression) arguments).getExpressions();
-                if (!expressions.isEmpty()) {
+                if (isNotEmpty(expressions)) {
                     List<ClassNode> types = new ArrayList<>(expressions.size());
                     for (Expression expression : expressions) {
                         ClassNode exprType = expression.getType();

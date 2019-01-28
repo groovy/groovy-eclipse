@@ -680,7 +680,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return outerCandidate;
     }
 
-    protected MethodNode findMethodDeclaration0(List<MethodNode> candidates, List<ClassNode> argumentTypes, boolean isStaticExpression) {
+    protected static MethodNode findMethodDeclaration0(List<MethodNode> candidates, List<ClassNode> argumentTypes, boolean isStaticExpression) {
         int argumentCount = (argumentTypes == null ? -1 : argumentTypes.size());
 
         MethodNode closestMatch = null;
@@ -815,25 +815,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     /**
      * @param declaration the declaration to look up
-     * @param resolvedType the unredirected type that declares this declaration somewhere in its hierarchy
-     * @return class node with generics replaced by actual types
+     * @param declaringType the unredirected type that declares this declaration somewhere in its hierarchy
      */
-    protected static ClassNode getTypeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
+    protected static ClassNode getTypeFromDeclaration(ASTNode declaration, ClassNode declaringType) {
         ClassNode typeOfDeclaration;
         if (declaration instanceof PropertyNode) {
-            FieldNode field = ((PropertyNode) declaration).getField();
-            if (field != null) {
-                declaration = field;
+            PropertyNode property = (PropertyNode) declaration;
+            if (property.getField() != null) {
+                declaration = property.getField();
             }
         }
         if (declaration instanceof FieldNode) {
-            FieldNode fieldNode = (FieldNode) declaration;
-            typeOfDeclaration = fieldNode.getType();
-            if (VariableScope.OBJECT_CLASS_NODE.equals(typeOfDeclaration)) {
-                // check to see if we can do better by looking at the initializer of the field
-                if (fieldNode.hasInitialExpression()) {
-                    typeOfDeclaration = fieldNode.getInitialExpression().getType();
-                }
+            FieldNode field = (FieldNode) declaration;
+            typeOfDeclaration = field.getType();
+            if (field.isDynamicTyped() && field.hasInitialExpression()) {
+                typeOfDeclaration = field.getInitialExpression().getType();
             }
         } else if (declaration instanceof MethodNode) {
             typeOfDeclaration = ((MethodNode) declaration).getReturnType();
