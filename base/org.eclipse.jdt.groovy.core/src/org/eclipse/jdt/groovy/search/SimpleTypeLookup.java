@@ -25,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import groovy.lang.Closure;
 
@@ -461,6 +462,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 decl instanceof MethodNode ||
                 decl instanceof PropertyNode) {
 
+                if (decl instanceof PropertyNode) {
+                    PropertyNode prop = (PropertyNode) decl; // check for pseudo-property
+                    if (prop.isDynamicTyped() && prop.getField().hasNoRealSourcePosition()) {
+                        Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(), declaringType,
+                            (scope.getWormhole().get("lhs") == var), prop.isStatic(), scope.getMethodCallArgumentTypes());
+                        decl = accessor.map(meth -> (ASTNode) meth).orElse(decl);
+                    }
+                }
+
                 declaringType = ((AnnotatedNode) decl).getDeclaringClass();
                 type = getTypeFromDeclaration(decl, declaringType);
                 variableInfo = null; // use field/method/property
@@ -555,7 +565,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
         }
 
-        if (methodCallArgumentTypes != null) {
+        if (!isLhsExpression && methodCallArgumentTypes != null) {
             MethodNode method = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, isStaticExpression);
             if (isCompatible(method, isStaticExpression)) {
                 return method;
@@ -564,10 +574,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for canonical accessor method
-        MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false, !isLhsExpression ? READER : WRITER);
-        if (accessor != null && !isSynthetic(accessor) && isCompatible(accessor, isStaticExpression) &&
-                !(directFieldAccess && declaringType.equals(accessor.getDeclaringClass()))) {
-            return accessor;
+        Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes);
+        if (accessor.filter(it -> !isSynthetic(it) && !(directFieldAccess && declaringType.equals(it.getDeclaringClass()))).isPresent()) {
+            return accessor.get();
         }
 
         LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<>();
@@ -602,8 +611,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for static or synthetic accessor
-        if (isCompatible(accessor, isStaticExpression)) {
-            return accessor;
+        if (accessor.isPresent()) {
+            return accessor.get();
         }
 
         // look for member in outer classes
@@ -730,6 +739,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         return candidates.get(0);
+    }
+
+    protected static Optional<MethodNode> findPropertyAccessorMethod(String propertyName, ClassNode declaringType, boolean isLhsExpression, boolean isStaticExpression, List<ClassNode> methodCallArgumentTypes) {
+        Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
+        accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression));
+        if (isLhsExpression) {
+            // use methodCallArgumentTypes to select closer match
+            accessors = accessors.sorted((m1, m2) -> (m1 == closer(m2, m1, methodCallArgumentTypes) ? -1 : +1));
+        }
+        return accessors.findFirst();
     }
 
     //--------------------------------------------------------------------------

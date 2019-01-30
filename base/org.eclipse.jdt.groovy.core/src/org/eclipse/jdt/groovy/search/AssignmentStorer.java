@@ -78,7 +78,6 @@ public class AssignmentStorer {
                 handleSingleAssignment(lhs, scope, rhsType);
             }
         }
-        // TODO: What about "exp.getOperation().getType() == Types.LEFT_SHIFT"?
     }
 
     public void storeField(FieldNode node, VariableScope scope) {
@@ -164,7 +163,8 @@ public class AssignmentStorer {
             // in "a.b.c = x", lhs is "c" and rhsType is "typeof(x)"
 
             // save ref to help find an accessor
-            scope.getWormhole().put("lhs", lhs); // TODO: store rhsType
+            scope.getWormhole().put("lhs", lhs);
+            lhs.putNodeMetaData("rhsType", rhsType);
 
         } else if (lhs instanceof PropertyExpression) {
             PropertyExpression exp = (PropertyExpression) lhs;

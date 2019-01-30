@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2541,7 +2541,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testMethodOverloadsAndPerfectArgumentMatching() {
+    public void testMethodOverloadsArgumentMatching1() {
         createJavaUnit("MyEnum", "enum MyEnum { A, B }");
 
         String contents = "class Issue405 {\n" +
@@ -2571,7 +2571,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/405
-    public void testMethodOverloadsAndImperfectArgumentMatching() {
+    public void testMethodOverloadsArgumentMatching2() {
         createJavaUnit("MyEnum", "enum MyEnum { A, B }");
 
         String contents = "class Issue405 {\n" +
@@ -2598,7 +2598,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/644
-    public void testMethodOverloadsAndImperfectArgumentMatching2() {
+    public void testMethodOverloadsArgumentMatching3() {
         String contents = "Arrays.toString(new Object())";
 
         String target = "toString";
@@ -2607,5 +2607,155 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String arrayType = m.getParameters()[0].getType().toString(false);
         Assert.assertEquals("Expected '" + target + "(Object[])' but was '" + target + "(" + arrayType + ")'", "java.lang.Object[]", arrayType);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching4() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    bar = 1\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching4a() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    bar = 1\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching4b() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    bar = new Date()\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(Date)' but was 'setBar(int)'", "java.util.Date", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching5() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    this.bar = 1\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching5a() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    this.bar = 1\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching5b() {
+        String contents = "class Foo {\n" +
+            "  Foo() {\n" +
+            "    this.bar = new Date()\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(Date)' but was 'setBar(int)'", "java.util.Date", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching6() {
+        String contents = "class Foo {\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void meth() {\n" +
+            "    this.with {\n" +
+            "      bar = 1\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching6a() {
+        String contents = "class Foo {\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "  void meth() {\n" +
+            "    this.with {\n" +
+            "      bar = 1\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(int)' but was 'setBar(Date)'", "int", m.getParameters()[0].getType().toString(false));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/801
+    public void testMethodOverloadsArgumentMatching6b() {
+        String contents = "class Foo {\n" +
+            "  void setBar(int value) {\n" +
+            "  }\n" +
+            "  void setBar(Date date) {\n" +
+            "  }\n" +
+            "  void meth() {\n" +
+            "    this.with {\n" +
+            "      bar = new Date()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("bar = ");
+        MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setBar(Date)' but was 'setBar(int)'", "java.util.Date", m.getParameters()[0].getType().toString(false));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
+
 import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -75,44 +77,40 @@ public enum AccessorSupport {
     }
 
     public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
+        return findAccessorMethodsForPropertyName(name, declaringType, isCategory, kinds).findFirst().orElse(null);
+    }
+
+    public static Stream<MethodNode> findAccessorMethodsForPropertyName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport... kinds) {
+        Stream<MethodNode> methods = Stream.empty();
+
         if (name != null && name.length() > 0 && kinds != null && kinds.length > 0) {
             String suffix = MetaClassHelper.capitalize(name);
             for (AccessorSupport kind : kinds) {
                 if (kind == NONE) continue;
                 String methodName = kind.prefix + suffix;
-                MethodNode meth = findAccessorMethodForMethodName(methodName, declaringType, isCategory, kind);
-                if (meth != null) {
-                    return meth;
-                }
-                // abstract types do not track undeclared super interface methods
-                if (declaringType.isInterface() || declaringType.isAbstract()) {
+                methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
+
+                // abstract types do not track undeclared abstract methods
+                if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
                     LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {
-                        meth = findAccessorMethodForMethodName(methodName, face, isCategory, kind);
-                        if (meth != null) {
-                            return meth;
-                        }
+                        methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, face, isCategory, kind));
                     }
                     // one implicit accessor exists in Object
                     if (!isCategory && kind == GETTER && "getClass".equals(methodName)) {
-                        return ClassHelper.OBJECT_TYPE.getMethod("getClass", Parameter.EMPTY_ARRAY);
+                        methods = Stream.concat(methods, Stream.of(ClassHelper.OBJECT_TYPE.getMethod("getClass", Parameter.EMPTY_ARRAY)));
                     }
                 }
             }
         }
-        return null;
+
+        return methods;
     }
 
-    private static MethodNode findAccessorMethodForMethodName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport kind) {
-        List<MethodNode> methods = declaringType.getMethods(name);
-        for (MethodNode meth : methods) {
-            if (kind == findAccessorKind(meth, isCategory)) {
-                return meth;
-            }
-        }
-        return null;
+    private static Stream<MethodNode> findAccessorMethodsForMethodName(String name, ClassNode declaringType, boolean isCategory, AccessorSupport kind) {
+        return SimpleTypeLookup.getMethods(name, declaringType).stream().filter(meth -> kind == findAccessorKind(meth, isCategory));
     }
 
     /**

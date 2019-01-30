@@ -2049,6 +2049,22 @@ assert primaryExprType != null && dependentExprType != null;
             // TODO: Might be useful to look into TupleExpression
             return Collections.emptyList();
         }
+
+        // "bar = 123" may refer to "setBar(x)"
+        if (node instanceof VariableExpression && node == scopes.getLast().getWormhole().get("lhs")) {
+            VariableScope.VariableInfo info = scopes.getLast().lookupName(node.getText());
+            return (info != null ? Collections.singletonList(info.type) : null);
+        }
+
+        // "foo.bar = 123" may refer to "setBar(x)"
+        while (node instanceof PropertyExpression) {
+            node = ((PropertyExpression) node).getProperty();
+        }
+        if (node == scopes.getLast().getWormhole().get("lhs")) {
+            ClassNode rhsType = node.getNodeMetaData("rhsType");
+            if (rhsType != null) return Collections.singletonList(rhsType);
+        }
+
         return null;
     }
 

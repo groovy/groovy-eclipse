@@ -51,7 +51,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInScript2() throws Exception {
-        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx = f.xxx");
+        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx\n f\n.\nxxx");
     }
 
     @Test
@@ -104,14 +104,16 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInClass3() throws Exception {
+        // "class First { def xxx() { } }"
         doTestForTwoMethodReferencesInClass(
             "class Second extends First {\n" +
             "  def method() {\n" +
-            "    this.xxx = 'nothing'\n" + // yes
+            "    def closure = this.&xxx\n" + // yes
+            "    this.xxx = 'nothing'\n" + // no
             "  }\n" +
-            "  def xxx() {}\n" +  // no
-            "  def method2() {\n" +  // no
-            "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+            "  def xxx() {}\n" +  // no; an overload is a declaration, not a reference
+            "  def method2() {\n" +
+            "    def nothing = this.xxx()\n" +  // yes
             "  }\n" +
             "}");
     }
@@ -122,17 +124,19 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class Third {\n" +
             "  def xxx() {}\n" + // no
             "}\n");
+        // "class First { def xxx() { } }"
         doTestForTwoMethodReferencesInClass(
             "class Second extends First {\n" +
             "  def method() {\n" +
-            "    this.xxx = 'nothing'\n" + // yes
+            "    def closure = super.&xxx\n" + // yes
+            "    super.xxx = 'nothing'\n" + // no
             "  }\n" +
             "  def xxx() {}\n" +  // no
-            "  def method3(xxx) {\n" +  // no
+            "  def method2(xxx) {\n" +  // no
             "    new Third().xxx()\n" + // no
-            "    xxx()\n" + // no...this will try to execute the xxx parameter, not the method
+            "    xxx()\n" + // no; ref to parameter, not the method
             "    xxx = xxx\n" +  // no, no
-            "    def nothing = super.xxx\n" +  // yes...method reference passed as a closure
+            "    def nothing = super.xxx()\n" +  // yes
             "  }\n" +
             "}");
     }
@@ -520,7 +524,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "def bar = new Bar(string: null)\n" + // exact
             "bar.setString(null)\n" + // exact
             "bar.'setString'(null)\n" + // exact
-            "bar.string = null\n" + // potential
+            "bar.string = null\n" + // exact
             "def str = bar.string\n" +
             "bar.@string = null\n" +
             "bar.&setString\n" + // potential
@@ -542,7 +546,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).indexOf("setString"), matches.get(1).getOffset());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("'setString'"), matches.get(2).getOffset());
-        assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("string = "), matches.get(3).getOffset());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(4).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("setString"), matches.get(4).getOffset());

@@ -188,7 +188,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             //if (pName != null && pName.equals(name))
             //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
             if (name.equals(pName)) {
-                PropertyNode property = new PropertyNode(name, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
+                PropertyNode property = new PropertyNode(name, mn.getModifiers(), ClassHelper.DYNAMIC_TYPE, cn, null, null, null);
                 property.getField().setHasNoRealSourcePosition(true); property.getField().setSynthetic(true);
                 property.getField().setDeclaringClass(cn);
                 property.setDeclaringClass(cn);
@@ -238,15 +238,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         }
         return null;
     }
-
-    // GRECLIPSE add
-    private static ClassNode getPropertyType(MethodNode m) {
-        if (ClassHelper.VOID_TYPE.equals(m.getReturnType())) {
-            return m.getParameters()[0].getType();
-        }
-        return m.getReturnType();
-    }
-    // GRECLIPSE end
 
     // -------------------------------
     // different Variable based checks
