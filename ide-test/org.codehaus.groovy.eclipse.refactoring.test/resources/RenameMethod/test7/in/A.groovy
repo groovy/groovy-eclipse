@@ -6,14 +6,14 @@ interface A{
 
 class impl implements A{
     def m(){
-        m
         m()
+        m
         def g = new A()
-        g.m
         g.m()
+        g.m
         g = new randomClass()
-        g.m
         g.m()
+        g.m
     }
 }
 
@@ -21,8 +21,8 @@ class Impl2 implements A{
     A a
     Impl2 b
     def m(){
-        m
         m()
+        m
         a.m
         b.m
     }
@@ -30,7 +30,7 @@ class Impl2 implements A{
 
 class randomClass{
     def m(){
-        m
         m()
+        m
     }
 }

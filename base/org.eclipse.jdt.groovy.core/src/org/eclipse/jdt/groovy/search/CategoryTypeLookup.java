@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,9 +53,11 @@ public class CategoryTypeLookup implements ITypeLookup {
             List<MethodNode> candidates = new ArrayList<>();
 
             for (ClassNode category : scope.getCategoryNames()) {
-                for (MethodNode method : category.getMethods(simpleName)) {
-                    if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
-                        candidates.add(method);
+                if (!(node instanceof VariableExpression) || scope.getMethodCallArgumentTypes() != null) {
+                    for (MethodNode method : category.getMethods(simpleName)) {
+                        if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
+                            candidates.add(method);
+                        }
                     }
                 }
                 String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);

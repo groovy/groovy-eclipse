@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -431,7 +431,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure20() {
         String contents =
             "''.foo {\n" +
-            "  substring" +
+            "  substring()" +
             "}";
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
@@ -441,7 +441,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure21() {
         String contents =
             "''.foo {\n" +
-            "  delegate.substring" +
+            "  delegate.substring()" +
             "}";
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
@@ -451,7 +451,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure22() {
         String contents =
             "''.foo {\n" +
-            "  this.substring" +
+            "  this.substring()" +
             "}";
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
@@ -461,7 +461,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure23() {
         String contents =
             "''.with {\n" +
-            "  substring" +
+            "  substring()" +
             "}";
         int offset = contents.indexOf("substring");
         assertType(contents, offset, offset + "substring".length(), "java.lang.String");
@@ -563,7 +563,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    intValue\n" +
             "  }" +
             "}";
-        assertExprType(contents, "intValue", "java.lang.Integer");
+        int offset = contents.indexOf("intValue");
+        assertUnknownConfidence(contents, offset, offset + "intValue".length(), null, false);
     }
 
     @Test
@@ -596,10 +597,11 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    abs\n" +
             "  }" +
             "}";
-        assertExprType(contents, "abs", "java.lang.Integer");
+        int offset = contents.indexOf("abs");
+        assertUnknownConfidence(contents, offset, offset + "abs".length(), null, false);
     }
 
-    @Test
+    @Test // DGM
     public void testDoubleClosure6() {
         String contents =
             "''.with {\n" +

@@ -169,9 +169,9 @@ public class AssignmentStorer {
         } else if (lhs instanceof PropertyExpression) {
             PropertyExpression exp = (PropertyExpression) lhs;
             handleSingleAssignment(exp.getProperty(), scope, rhsType);
-        } else {
+        }/* else {
             System.err.println("AssignmentStorer.storeAssignment: LHS is " + lhs.getClass().getSimpleName());
-        }
+        }*/
     }
 
     private static ClassNode findComponentType(ClassNode type) {

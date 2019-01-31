@@ -94,12 +94,32 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInClass1() throws Exception {
-        doTestForTwoMethodReferencesInClass("class Second extends First {\n def method() {\n this.xxx}\ndef xxx() {}\n def method2() {\n super.xxx}}");
+        // "class First { def xxx() { } }"
+        doTestForTwoMethodReferencesInClass(
+            "class Second extends First {\n" +
+            "  def method() {\n" +
+            "    this.xxx\n" + // no; TODO
+            "  }\n" +
+            "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
+            "  def method2() {\n" +
+            "    super.xxx\n" + // no; TODO
+            "  }\n" +
+            "}\n");
     }
 
     @Test
     public void testMethodReferencesInClass2() throws Exception {
-        doTestForTwoMethodReferencesInClass("class Second extends First {\n def method() {\n xxx}\ndef xxx() {}\n def method2(xxx) {\n xxx = super.xxx}}");
+        // "class First { def xxx() { } }"
+        doTestForTwoMethodReferencesInClass(
+            "class Second extends First {\n" +
+            "  def method() {\n" +
+            "    this.xxx()\n" + // yes
+            "  }\n" +
+            "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
+            "  def method2(xxx) {\n" + // no
+            "    xxx = super.xxx()\n" + // no, yes
+            "  }\n" +
+            "}\n");
     }
 
     @Test
@@ -122,7 +142,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     public void testMethodReferencesInClass4() throws Exception {
         createUnit("Third",
             "class Third {\n" +
-            "  def xxx() {}\n" + // no
+            "  def xxx() {}\n" +
             "}\n");
         // "class First { def xxx() { } }"
         doTestForTwoMethodReferencesInClass(

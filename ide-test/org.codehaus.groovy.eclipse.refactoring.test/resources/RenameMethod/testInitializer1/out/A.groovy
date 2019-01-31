@@ -1,8 +1,9 @@
 package p
-class A { 
-    { k }
+
+class A {
+    { k() }
     def k() { }
-    def other = k
-    def doOperation= { k }
-    { k }
+    def other = k()
+    def doOperation= { k() }
+    { k() }
 }

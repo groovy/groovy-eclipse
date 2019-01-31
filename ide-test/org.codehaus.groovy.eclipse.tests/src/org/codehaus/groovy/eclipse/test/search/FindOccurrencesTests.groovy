@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,7 +212,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @Test // GRECLIPSE-1031
-    void testFindStaticMethods() {
+    void testFindStaticMethods1() {
         String contents = '''\
             class Static {
               static staticMethod()  { staticMethod() }
@@ -228,23 +228,22 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
 
-        String methName = 'staticMethod'
-        int len = methName.length()
-        int start = contents.indexOf(methName)
-        int start1 = contents.indexOf(methName)
-        int start2 = contents.indexOf(methName, start1 + 1)
-        int start3 = contents.indexOf(methName, start2 + 1)
-        int start4 = contents.indexOf(methName, start3 + 1)
-        int start5 = contents.indexOf(methName, start4 + 1)
-        int start6 = contents.indexOf(methName, start5 + 1)
-        int start7 = contents.indexOf(methName, start6 + 1)
-        int start8 = contents.indexOf(methName, start7 + 1)
-        int start9 = contents.indexOf(methName, start8 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len, start7, len, start8, len, start9, len)
+        def target = 'staticMethod'
+        int length = target.length()
+        int start1 = contents.indexOf(target)
+        int start2 = contents.indexOf(target, start1 + 1)
+        int start3 = contents.indexOf(target, start2 + 1)
+        int start4 = contents.indexOf(target, start3 + 1)
+        int start5 = contents.indexOf(target, start4 + 1)
+        int start6 = contents.indexOf(target, start5 + 1)
+        int start7 = contents.indexOf(target, start6 + 1)
+        int start8 = contents.indexOf(target, start7 + 1)
+        int start9 = contents.indexOf(target, start8 + 1)
+        doTest(contents, start1, length, start1, length, start2, length, start3, length, start4, length, start5, length, start6, length, /*start7, length,*/ start8, length, start9, length)
     }
 
     @Test // GRECLIPSE-1031
-    void testFindStaticMethods18() {
+    void testFindStaticMethods2() {
         String contents = '''\
             class Static {
               static staticMethod(nuthin)  { }
@@ -254,22 +253,19 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
                 def b = staticMethod(3, 4, 5)
                 def c = Static.staticMethod 3, 4, 5
                 def d = Static.staticMethod(3, 4, 5)
-                // this one is commented out because of GRECLIPSE-4761\
-                // def z = staticMethod 3
               }
             }
             '''.stripIndent()
 
-        String methName = 'staticMethod'
-        int len = methName.length()
-        int start = contents.indexOf(methName)
-        int start1 = contents.indexOf(methName)
-        int start2 = contents.indexOf(methName, start1 + 1)
-        int start3 = contents.indexOf(methName, start2 + 1)
-        int start4 = contents.indexOf(methName, start3 + 1)
-        int start5 = contents.indexOf(methName, start4 + 1)
-        int start6 = contents.indexOf(methName, start5 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len)
+        def target = 'staticMethod'
+        int length = target.length()
+        int start1 = contents.indexOf(target)
+        int start2 = contents.indexOf(target, start1 + 1)
+        int start3 = contents.indexOf(target, start2 + 1)
+        int start4 = contents.indexOf(target, start3 + 1)
+        int start5 = contents.indexOf(target, start4 + 1)
+        int start6 = contents.indexOf(target, start5 + 1)
+        doTest(contents, start1, length, start1, length, /*start2, length,*/ start3, length, start4, length, start5, length, start6, length)
     }
 
     @Test // GRECLIPSE-1023
@@ -645,8 +641,8 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
         String contents = '''\
             import static p.Other.BAR
-            BAR
-            p.Other.BAR
+            BAR()
+            p.Other.BAR()
             '''.stripIndent()
 
         int offset = contents.indexOf('BAR')

@@ -477,7 +477,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (accessedVar instanceof DynamicVariable) {
             ASTNode candidate = findDeclarationForDynamicVariable(var, getMorePreciseType(declaringType, variableInfo), scope, resolveStrategy);
-            if (candidate != null) {
+            if (candidate != null && (!(candidate instanceof MethodNode) || scope.getMethodCallArgumentTypes() != null ||
+                    (AccessorSupport.isGetter((MethodNode) candidate) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;
                     ClassNode owner = field.getDeclaringClass();

@@ -2,9 +2,9 @@ package p;
 
 def x = k()
 k(x, x, x)
-k
+m
 
 def k() {
     k()
-    k
+    m
 }

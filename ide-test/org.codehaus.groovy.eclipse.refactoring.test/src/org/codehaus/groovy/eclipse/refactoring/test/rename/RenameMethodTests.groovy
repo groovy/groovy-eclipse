@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     }
 
     @Test
-    void test10() {
+    void testStaticImport() {
         createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java',
             'package o;\npublic class Other { public static int FOO() { return 0; }\n }')
 
@@ -125,7 +125,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
     @Test
     void testAnonOverrides() {
-        // rename I.run() to sam() and anon. inners in A should change
+        // rename I.run() to sam() and anonymous inners in A should change
         runTest('I', 'run', 'sam')
     }
 

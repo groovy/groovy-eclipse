@@ -87,40 +87,99 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testLocalVar1() {
-        String contents = "def x; this.x";
-        int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+        String contents = "int x; x";
+        assertExprType(contents, "x", "java.lang.Integer");
     }
 
     @Test
     public void testLocalVar2() {
-        String contents = "def x; def y = { this.x }";
-        int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+        String contents = "def x; x()";
+        assertExprType(contents, "x", "java.lang.Object");
     }
 
     @Test
     public void testLocalVar3() {
-        String contents = "def x; def y = { this.x() }";
-        int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+        String contents = "int x; foo(x)";
+        assertExprType(contents, "x", "java.lang.Integer");
     }
 
     @Test
     public void testLocalVar4() {
+        String contents = "int x; this.x";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar5() {
         String contents = "int x; def y = { x }";
         assertExprType(contents, "x", "java.lang.Integer");
     }
 
     @Test
-    public void testLocalVar5() {
-        String contents = "def x = predicate() ? 'literal' : something.toString()\n" +
-            "x";
+    public void testLocalVar6() {
+        String contents = "def x; def y = { this.x }";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar7() {
+        String contents = "def x; def y = { this.x() }";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar8() {
+        String contents = "def x; def y = { owner.x }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar9() {
+        String contents = "def x; def y = { owner.x() }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar10() {
+        String contents = "def x; def y = { delegate.x }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar11() {
+        String contents = "def x; def y = { delegate.x() }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar12() {
+        String contents = "def x; def y = { thisObject.x }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar13() {
+        String contents = "def x; def y = { thisObject.x() }\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+    }
+
+    @Test
+    public void testLocalVar14() {
+        String contents = "def x = predicate() ? 'literal' : something.toString(); x";
         assertExprType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar6() {
+    public void testLocalVar15() {
         String contents = "def x\n" +
             "x = 1\n" +
             "x = 1.0d\n" +
@@ -144,7 +203,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar7() {
+    public void testLocalVar16() {
         String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
@@ -169,7 +228,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar7a() {
+    public void testLocalVar17() {
         String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
@@ -192,7 +251,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar8() {
+    public void testLocalVar18() {
         String contents = "def x\n" +
             "x = [] as List\n" +
             "if (predicate()) {\n" +
@@ -214,7 +273,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar8a() {
+    public void testLocalVar19() {
         String contents = "def x\n" +
             "x = [] as List\n" +
             "if (predicate())\n" +
@@ -235,7 +294,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar9() {
+    public void testLocalVar20() {
         String contents = "def x\n" +
             "if (predicate()) {\n" +
             "  x = new String()\n" +
@@ -258,7 +317,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar9a() {
+    public void testLocalVar21() {
         String contents = "def x\n" +
             "if (predicate())\n" +
             "  x = new String()\n" +
@@ -280,7 +339,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar10() {
+    public void testLocalVar22() {
         String contents = "def x\n" +
             "x = ''\n" +
             "if (predicate()) {\n" +
@@ -307,7 +366,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar10a() {
+    public void testLocalVar23() {
         String contents = "def x\n" +
             "x = ''\n" +
             "if (predicate())\n" +
@@ -333,7 +392,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar11() {
+    public void testLocalVar24() {
         String contents = "def x\n" +
             "x = ''\n" +
             "if (predicate()) {\n" +
@@ -362,7 +421,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar12() {
+    public void testLocalVar25() {
         String contents = "def x\n" +
             "x = ''\n" +
             "def cl = { ->\n" +
@@ -397,21 +456,21 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar13() {
+    public void testLocalVar26() {
         String contents = "String x\n" +
             "x";
         assertExprType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar14() {
+    public void testLocalVar27() {
         String contents = "String x = 7\n" +
             "x";
         assertExprType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar15() {
+    public void testLocalVar28() {
         String contents = "String x\n" +
             "x = 7\n" + // GroovyCastException at runtime
             "x";
@@ -420,58 +479,61 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testLocalMethod1() {
-        String contents = "int x() { }\ndef y = { x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents =
+            "int x() {}\n" +
+            "def y = {\n" +
+            "  x()\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/802
     public void testLocalMethod2() {
-        String contents = "int x() { }\ndef y = { x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents =
+            "int x() {}\n" +
+            "def y = {\n" +
+            "  x\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/802
     public void testLocalMethod3() {
-        String contents = "int x() { }\ndef y = { def z = { x } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents =
+            "int x() {}\n" +
+            "def y = {\n" +
+            "  def z = x\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
     }
 
     @Test
     public void testLocalMethod4() {
-        String contents = "int x() { }\ndef y = { def z = { x() } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        String contents =
+            "int x() {}\n" +
+            "def y = {\n" +
+            "  def z = {\n" +
+            "    x()\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test
     public void testLocalMethod5() {
-        String contents = "int x() { }\ndef y = { def z = { this.x() } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod6() {
-        String contents = "def x\ndef y = { delegate.x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testLocalMethod7() {
-        String contents = "def x\ndef y = { delegate.x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
+        String contents =
+            "int x() {}\n" +
+            "def y = {\n" +
+            "  def z = {\n" +
+            "    this.x()\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test
@@ -896,35 +958,51 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethodCall() {
+    public void testStaticMethod1() {
         String contents = "Two.x()\n class Two {\n static String x() {\n \"\" } } ";
         String expr = "x";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
     @Test
-    public void testStaticMethodCall2() {
+    public void testStaticMethod2() {
         String contents = "Two.x\n class Two {\n static String x() {\n \"\" } } ";
         String expr = "x";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
     @Test
-    public void testStaticMethodCall3() {
-        String contents = "class Two {\n def other() { \n x(); } \n static String x() {\n \"\" } } ";
-        String expr = "x()";
-        assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
+    public void testStaticMethod3() {
+        String contents =
+            "class Two {\n" +
+            "  def other() {\n" +
+            "    x()\n" + // this
+            "  }\n" +
+            "  static String x() {\n" +
+            "    \"\"\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.String");
     }
 
     @Test
-    public void testStaticMethodCall4() {
-        String contents = "class Two {\n def other() { \n x } \n static String x() {\n \"\" } } ";
-        String expr = "x";
-        assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
+    public void testStaticMethod4() {
+        String contents =
+            "class Two {\n" +
+            "  def other() {\n" +
+            "    x\n" + // this
+            "  }\n" +
+            "  static String x() {\n" +
+            "    \"\"\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.indexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, null, false);
     }
 
     @Test // GRECLISPE-1244
-    public void testStaticMethodCall5() {
+    public void testStaticMethod5() {
         String contents =
             "class Parent {\n" +
             "    static p() {}\n" +
@@ -939,7 +1017,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLISPE-1244
-    public void testStaticMethodCall6() {
+    public void testStaticMethod6() {
         createUnit("Parent",
             "class Parent {\n" +
             "    static p() {}\n" +
@@ -955,7 +1033,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethodCall7() throws Exception {
+    public void testStaticMethod7() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -970,7 +1048,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethodCall8() throws Exception {
+    public void testStaticMethod8() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -985,7 +1063,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethodCall9() throws Exception {
+    public void testStaticMethod9() throws Exception {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -1049,7 +1127,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testFieldWithInitializer1() {
-        String contents = "class A {\ndef x = 9\n}\n new A().x";
+        String contents =
+            "class A {\n" +
+            "  def x = 9\n" +
+            "}\n" +
+            "new A().x";
         int offset = contents.lastIndexOf('x');
         assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
@@ -1058,22 +1140,56 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testFieldWithInitializer2() {
         createUnit("A", "class A {\ndef x = 9\n}");
         String contents = "new A().x";
-        int start = contents.lastIndexOf('x');
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        int offset = contents.lastIndexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test // GRECLIPSE-731
+    public void testLocalWithInitializer1() {
+        String contents = "def foo() {}\nString xxx = foo()\nxxx";
+        int offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + "xxx".length(), "java.lang.String");
+    }
+
+    @Test // GRECLIPSE-731
+    public void testLocalWithInitializer2() {
+        String contents = "def foo() {}\ndef xxx = foo()\nxxx";
+        int offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + "xxx".length(), "java.lang.Object");
+    }
+
+    @Test // GRECLIPSE-731
+    public void testLocalWithInitializer3() {
+        String contents = "String foo() {}\ndef xxx = foo()\nxxx";
+        int offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + "xxx".length(), "java.lang.String");
+    }
+
+    @Test // GRECLIPSE-731
+    public void testLocalWithInitializer4() {
+        String contents = "int foo() {}\ndef xxx = foo()\nxxx";
+        int offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + "xxx".length(), "java.lang.Integer");
+    }
+
+    @Test // GRECLIPSE-731
+    public void testLocalWithInitializer5() {
+        String contents = "def foo() {}\nString xxx\nxxx = foo()\nxxx";
+        int offset = contents.lastIndexOf("xxx");
+        assertType(contents, offset, offset + "xxx".length(), "java.lang.String");
     }
 
     @Test
-    public void testTernaryExpression() {
-        String contents = "def x = true ? 2 : 1\nx";
+    public void testElvisInitializer() {
+        String contents = "def x = 2 ?: 1\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test
-    public void testElvisOperator() {
-        String contents = "def x = 2 ?: 1\nx";
+    public void testTernaryInitializer() {
+        String contents = "def x = true ? 2 : 1\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
         assertType(contents, start, end, "java.lang.Integer");
@@ -1387,56 +1503,6 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGRECLIPSE731a() {
-        String contents = "def foo() { } \nString xxx = foo()\nxxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testGRECLIPSE731b() {
-        String contents = "def foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.Object");
-    }
-
-    @Test
-    public void testGRECLIPSE731c() {
-        String contents = "String foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testGRECLIPSE731d() {
-        String contents = "int foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testGRECLIPSE731e() {
-        // ignore assignments to object expressions
-        String contents = "def foo() { } \nString xxx\nxxx = foo()\nxxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testGRECLIPSE731f() {
-        // ignore assignments to object expressions
-        String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx } }";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
     public void testCatchBlock1() {
         String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.lastIndexOf("NullPointerException");
@@ -1520,36 +1586,9 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "javax.swing.text.html.HTML$Attribute");
     }
 
-    @Test
-    public void testDGM1() {
-        String contents = "\"$print\"";
-        String lookFor = "print";
-        int start = contents.indexOf(lookFor);
-        int end = start + lookFor.length();
-        assertDeclaringType(contents, start, end, "groovy.lang.Script");
-    }
-
-    @Test
-    public void testDGM2() {
-        String contents = "\"${print}\"";
-        String lookFor = "print";
-        int start = contents.indexOf(lookFor);
-        int end = start + lookFor.length();
-        assertDeclaringType(contents, start, end, "groovy.lang.Script");
-    }
-
-    @Test
-    public void testDGM3() {
-        String contents = "class Foo {\n def m() {\n \"${print()}\"\n } }";
-        String lookFor = "print";
-        int start = contents.indexOf(lookFor);
-        int end = start + lookFor.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-    }
-
     private static final String CONTENTS_GETAT1 =
         "class GetAt {\n" +
-        "  String getAt(foo) { }\n" +
+        "  String getAt(foo) {}\n" +
         "}\n" +
         "\n" +
         "new GetAt()[0].startsWith()\n" +
