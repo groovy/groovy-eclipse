@@ -48,12 +48,13 @@ public class CategoryTypeLookup implements ITypeLookup {
             ClassNode expectedType = objectExpressionType;
             if (expectedType == null) expectedType = scope.getDelegateOrThis();
             ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
+            boolean isMethodPointer = (scope.getEnclosingNode() instanceof MethodPointerExpression);
 
             //
             List<MethodNode> candidates = new ArrayList<>();
 
             for (ClassNode category : scope.getCategoryNames()) {
-                if (scope.isMethodCall()) {
+                if (scope.isMethodCall() || isMethodPointer) {
                     for (MethodNode method : category.getMethods(simpleName)) {
                         if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
                             candidates.add(method);
@@ -61,7 +62,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                     }
                 }
                 String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);
-                if (getterName != null) {
+                if (getterName != null && !isMethodPointer) {
                     for (MethodNode method : category.getMethods(getterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER &&
                                 isCompatibleCategoryMethod(method, normalizedType, scope)) {
@@ -70,7 +71,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                     }
                 }
                 String setterName = AccessorSupport.SETTER.createAccessorName(simpleName);
-                if (setterName != null) {
+                if (setterName != null && !isMethodPointer) {
                     for (MethodNode method : category.getMethods(setterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER &&
                                 isCompatibleCategoryMethod(method, normalizedType, scope)) {
@@ -98,11 +99,8 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
-        if (node instanceof ConstantExpression && !scope.isTopLevel()) {
-            org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
-            if (!(enclosingNode instanceof AttributeExpression || enclosingNode instanceof MethodPointerExpression)) {
-                return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
-            }
+        if (node instanceof ConstantExpression && !(scope.getEnclosingNode() instanceof AttributeExpression) && !scope.isTopLevel()) {
+            return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
         }
         return false;
     }

@@ -440,6 +440,12 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "result", "java.lang.Number");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/804
+    public void testDGM51() {
+        String contents = "def answer = (-42).&abs\n";
+        assertExprType(contents, "abs", "java.lang.Integer");
+    }
+
     @Test // GRECLIPSE-1131
     public void testEachOnNonIterables1() {
         String contents = "1.each { it }";
