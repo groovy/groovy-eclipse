@@ -1,4 +1,5 @@
-package p;
+package p
+
 class A {
     void m() {
         def a = new A()
@@ -8,18 +9,19 @@ class A {
         a.m()
         a.m
         m()
-        k
+        m
     }
 }
+
 class D {
     void m() {
-        def a = new A()
-        a.m()
-        a.m
-        a = new D()
-        a.m()
-        a.m
+        def x = new A()
+        x.m()
+        x.m
+        x = new D()
+        x.m()
+        x.m
         m()
-        k
+        m
     }
 }

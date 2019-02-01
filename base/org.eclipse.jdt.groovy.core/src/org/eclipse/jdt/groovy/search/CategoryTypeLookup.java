@@ -53,7 +53,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             List<MethodNode> candidates = new ArrayList<>();
 
             for (ClassNode category : scope.getCategoryNames()) {
-                if (!(node instanceof VariableExpression) || scope.getMethodCallArgumentTypes() != null) {
+                if (scope.isMethodCall()) {
                     for (MethodNode method : category.getMethods(simpleName)) {
                         if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
                             candidates.add(method);

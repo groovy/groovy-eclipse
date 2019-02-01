@@ -549,7 +549,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         int start4 = contents.indexOf('meth', start3 + 1)
         int start5 = contents.indexOf('meth', start4 + 1)
         int start6 = contents.indexOf('meth', start5 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len)
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, /*start6, len*/)
     }
 
     @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments

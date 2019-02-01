@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArray5() {
-        String contents = "def x = ['1', '2'] as CharSequence[]; x[0].length";
+        String contents = "def x = ['1', '2'] as CharSequence[]; x[0].length()";
         assertExprType(contents, "length", "java.lang.Integer");
     }
 
@@ -64,7 +64,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArray7() {
-        String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i].length";
+        String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i].length()";
         assertExprType(contents, "length", "java.lang.Integer");
     }
 

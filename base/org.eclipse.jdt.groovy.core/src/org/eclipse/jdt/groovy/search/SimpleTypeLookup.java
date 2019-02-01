@@ -361,6 +361,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         TypeConfidence confidence0 = confidence;
         boolean isFieldAccessDirect = (isThisObjectExpression(scope) ? scope.isFieldAccessDirect() : false);
         ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, isFieldAccessDirect, scope.getMethodCallArgumentTypes());
+        if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
+                (!AccessorSupport.isGetter((MethodNode) declaration) || name.equals(((MethodNode) declaration).getName()))) {
+            declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
+        }
 
         ClassNode realDeclaringType;
         VariableInfo variableInfo;
@@ -477,7 +481,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (accessedVar instanceof DynamicVariable) {
             ASTNode candidate = findDeclarationForDynamicVariable(var, getMorePreciseType(declaringType, variableInfo), scope, resolveStrategy);
-            if (candidate != null && (!(candidate instanceof MethodNode) || scope.getMethodCallArgumentTypes() != null ||
+            if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     (AccessorSupport.isGetter((MethodNode) candidate) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;

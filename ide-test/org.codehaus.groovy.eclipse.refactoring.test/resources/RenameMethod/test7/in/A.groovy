@@ -1,35 +1,35 @@
-package p;
+package p
 
-interface A{
+interface A {
     def m()
 }
 
-class impl implements A{
-    def m(){
+class B implements A {
+    def m() {
         m()
         m
-        def g = new A()
-        g.m()
-        g.m
-        g = new randomClass()
-        g.m()
-        g.m
+        def x = new A()
+        x.m()
+        x.m
+        x = new randomClass()
+        x.m()
+        x.m
     }
 }
 
-class Impl2 implements A{
+class C implements A {
     A a
-    Impl2 b
-    def m(){
+    C c
+    def m() {
         m()
         m
         a.m
-        b.m
+        c.m
     }
 }
 
-class randomClass{
-    def m(){
+class D {
+    def m() {
         m()
         m
     }

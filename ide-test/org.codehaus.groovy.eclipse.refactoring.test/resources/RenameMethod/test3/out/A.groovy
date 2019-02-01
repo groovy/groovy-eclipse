@@ -1,26 +1,30 @@
-package p;
-class A{
-    static void k(D self) { }
+package p
+
+class A {
+    static void k(D self) {
+    }
 }
-class D{
-    void m(){
-        m()
+
+class D {
+    void m() {
         m
+        m()
         this.m
         this.m()
         use(A) {
+            m
             k()
+            this.m
             this.k()
-            this.k
-            new A().k
+            new A().m
             new A().k()
             def x = new A()
-            x.k
+            x.m
             x.k()
         }
+        m
+        m()
         this.m
         this.m()
-        m()
-        m
     }
 }

@@ -41,55 +41,55 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testMethodReferencesInScript1() throws Exception {
-        doTestForTwoMethodReferencesInScript("new First().xxx\nnew First()\n.\nxxx");
-    }
-
-    @Test
-    public void testMethodReferencesInScript1GRE_1180() throws Exception {
-        doTestForTwoMethodReferencesInScript("new First().xxx\n'xxx'\n\"xxx\"\n\"\"\"xxx\"\"\"\nnew First()\n.\nxxx");
+        doTestForTwoMethodReferencesInScript("new First().xxx()\nnew First()\n.\nxxx()");
     }
 
     @Test
     public void testMethodReferencesInScript2() throws Exception {
-        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx\n f\n.\nxxx");
+        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx()\n f\n.\nxxx()");
     }
 
     @Test
     public void testMethodReferencesInScript3() throws Exception {
-        doTestForTwoMethodReferencesInScript("First f = new First()\n \"$f.xxx\"\n\"$f.xxx\"");
+        doTestForTwoMethodReferencesInScript("First f = new First()\n \"${f.xxx()}\"\n\"${f.xxx()}\"");
     }
 
     @Test
     public void testMethodReferencesInScript4() throws Exception {
-        doTestForTwoMethodReferencesInScriptWithQuotes("First f = new First()\n f.'xxx'\nf.'xxx'");
+        doTestForTwoMethodReferencesInScriptWithQuotes("First f = new First()\n f.'xxx'()\nf.'xxx'()");
     }
 
-    @Test
+    @Test // GRECLIPSE-1180
     public void testMethodReferencesInScript5() throws Exception {
-        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx\ndef xxx = 0\nxxx++\nf.xxx");
+        doTestForTwoMethodReferencesInScript("new First().xxx()\n'xxx'\n\"xxx\"\n\"\"\"xxx\"\"\"\nnew First()\n.\nxxx()");
     }
 
     @Test
     public void testMethodReferencesInScript6() throws Exception {
-        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx\ndef xxx = 0\nxxx++\nf.xxx");
+        doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx()\ndef xxx = 0\nxxx++\nf.xxx()");
     }
 
     @Test
     public void testMethodReferencesInScript7() throws Exception {
-        createUnit("Other.groovy", "class Other {\ndef xxx\n}");
-        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx\nnew Other().xxx = 0\nf.xxx");
+        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx()\ndef xxx = 0\nxxx++\nf.xxx()");
     }
 
     @Test
     public void testMethodReferencesInScript8() throws Exception {
+        createUnit("Other.groovy", "class Other {\ndef xxx\n}");
+        doTestForTwoMethodReferencesInScript("class SubClass extends First {} \n SubClass f = new SubClass()\n f.xxx()\nnew Other().xxx = 0\nf.xxx()");
+    }
+
+    @Test
+    public void testMethodReferencesInScript9() throws Exception {
         doTestForTwoMethodReferencesInScript(
             "class SubClass extends First {}\n" +
             "def f = new SubClass()\n" +
-            "f.xxx\n" + // here
+            "f.xxx()\n" + // here
             "f = 9\n" +
             "f.xxx\n" +  // invalid reference
             "f = new SubClass()\n" +
-            "f.xxx");  // here
+            "f.xxx()");  // here
     }
 
     @Test
@@ -98,32 +98,19 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         doTestForTwoMethodReferencesInClass(
             "class Second extends First {\n" +
             "  def method() {\n" +
-            "    this.xxx\n" + // no; TODO
+            "    this.xxx()\n" + // yes
+            "    this.xxx\n" + // no
             "  }\n" +
             "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
             "  def method2() {\n" +
-            "    super.xxx\n" + // no; TODO
+            "    super.xxx\n" + // no
+            "    super.xxx()\n" + // yes
             "  }\n" +
             "}\n");
     }
 
     @Test
     public void testMethodReferencesInClass2() throws Exception {
-        // "class First { def xxx() { } }"
-        doTestForTwoMethodReferencesInClass(
-            "class Second extends First {\n" +
-            "  def method() {\n" +
-            "    this.xxx()\n" + // yes
-            "  }\n" +
-            "  def xxx() {}\n" + // no; an overload is a declaration, not a reference
-            "  def method2(xxx) {\n" + // no
-            "    xxx = super.xxx()\n" + // no, yes
-            "  }\n" +
-            "}\n");
-    }
-
-    @Test
-    public void testMethodReferencesInClass3() throws Exception {
         // "class First { def xxx() { } }"
         doTestForTwoMethodReferencesInClass(
             "class Second extends First {\n" +
@@ -139,7 +126,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testMethodReferencesInClass4() throws Exception {
+    public void testMethodReferencesInClass3() throws Exception {
         createUnit("Third",
             "class Third {\n" +
             "  def xxx() {}\n" +
@@ -346,7 +333,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    }\n" +
             "    void other2() {\n" +
             "        First f\n" +
-            "        f.xxx\n" +
+            "        f.&xxx\n" +
             "    }\n" +
             "}",
             false, 0, "xxx");

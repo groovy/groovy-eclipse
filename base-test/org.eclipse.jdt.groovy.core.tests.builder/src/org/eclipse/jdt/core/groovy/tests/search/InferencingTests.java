@@ -1417,7 +1417,7 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testAnonInner4() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo.compareTo";
+            "foo.compareTo('one', 'two')";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
         assertDeclaringType(contents, start, end, "Search$1");
@@ -1427,7 +1427,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testAnonInner5() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
             "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo.compareTo";
+            "foo.compareTo('one', 'two')";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
         assertDeclaringType(contents, start, end, "Search$2");

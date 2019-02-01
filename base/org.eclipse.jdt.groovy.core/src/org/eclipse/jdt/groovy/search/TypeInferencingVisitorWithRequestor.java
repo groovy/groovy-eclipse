@@ -1651,16 +1651,16 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private void visitUnaryExpression(Expression node, Expression expression, String operation) {
+    private void visitUnaryExpression(Expression node, Expression operand, String operation) {
         scopes.getLast().setCurrentNode(node);
         completeExpressionStack.add(node);
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
-        expression.visit(this);
+        operand.visit(this);
 
         ClassNode primaryType = primaryTypeStack.removeLast();
-        // now infer the type of the operator. It could have been overloaded
+        // now infer the type of the (possibly overloaded) operator
         String associatedMethod = findUnaryOperatorName(operation);
         ClassNode completeExprType;
         if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE) ||
@@ -1669,8 +1669,10 @@ assert primaryExprType != null && dependentExprType != null;
         } else {
             // there is an overloadable method associated with this operation
             // convert to a constant expression and infer type
-            TypeLookupResult result = lookupExpressionType(
-                new ConstantExpression(associatedMethod), primaryType, false, scopes.getLast());
+            VariableScope scope = scopes.getLast();
+            scope.setMethodCallArgumentTypes(Collections.emptyList());
+            TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryType, false, scope);
+
             completeExprType = result.type;
         }
         completeExpressionStack.removeLast();

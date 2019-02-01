@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -574,19 +574,19 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGMDeclaring1() {
-        String contents = "''.eachLine";
+        String contents = "''.eachLine { line -> }";
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring2() {
-        String contents = "new File().eachLine";
+        String contents = "new File().eachLine { line -> }";
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring3() {
-        String contents = "Writer w; w.leftShift";
+        String contents = "Writer w; w.leftShift(null)";
         assertDeclType(contents, "leftShift", "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -712,7 +712,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
             "MyMap<Integer,Class> m\n" +
-            "m.get";
+            "m.get(Object)";
         String toFind = "get";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();

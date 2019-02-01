@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -180,7 +180,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             new C().getXxx
             '''.stripIndent()
 
-        assertCodeSelect([contents], 'getXxx')
+        assertCodeSelect([contents], 'getXxx', null)
     }
 
     @Test
@@ -201,7 +201,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             class C {
               String xxx
             }
-            new C().getXxx
+            new C().getXxx()
             '''.stripIndent()
 
         assertCodeSelect([contents], 'getXxx', 'xxx')
@@ -213,7 +213,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             class C {
               boolean xxx
             }
-            new C().isXxx
+            new C().isXxx()
             '''.stripIndent()
 
         assertCodeSelect([contents], 'isXxx', 'xxx')
