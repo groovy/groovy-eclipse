@@ -211,7 +211,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (isCompatible(field, isStaticObjectExpression)) {
                         return new TypeLookupResult(field.getType(), clazz, field, TypeConfidence.EXACT, scope);
                     } else {
-                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, clazz, null, TypeConfidence.UNKNOWN, scope);
+                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
                     }
                 }
 

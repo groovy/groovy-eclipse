@@ -43,11 +43,10 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        if (node instanceof VariableExpression || isCompatibleConstantExpression(node, scope)) {
+        if (node instanceof VariableExpression || isCompatibleConstantExpression(node, scope, objectExpressionType)) {
             String simpleName = node.getText();
-            ClassNode expectedType = objectExpressionType;
-            if (expectedType == null) expectedType = scope.getDelegateOrThis();
-            ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
+            ClassNode selfType = GroovyUtils.getWrapperTypeIfPrimitive(
+                objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis());
             boolean isMethodPointer = (scope.getEnclosingNode() instanceof MethodPointerExpression);
 
             //
@@ -56,7 +55,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             for (ClassNode category : scope.getCategoryNames()) {
                 if (scope.isMethodCall() || isMethodPointer) {
                     for (MethodNode method : category.getMethods(simpleName)) {
-                        if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
+                        if (isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
                     }
@@ -65,7 +64,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 if (getterName != null && !isMethodPointer) {
                     for (MethodNode method : category.getMethods(getterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER &&
-                                isCompatibleCategoryMethod(method, normalizedType, scope)) {
+                                isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
                     }
@@ -74,7 +73,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 if (setterName != null && !isMethodPointer) {
                     for (MethodNode method : category.getMethods(setterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER &&
-                                isCompatibleCategoryMethod(method, normalizedType, scope)) {
+                                isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
                     }
@@ -84,7 +83,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             if (!candidates.isEmpty()) {
                 int args = 1 + scope.getMethodCallNumberOfArguments();
                 List<ClassNode> argumentTypes = new ArrayList<>(args);
-                argumentTypes.add(normalizedType); // lhs of dot or delegate type
+                argumentTypes.add(selfType); // lhs of dot or delegate type
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
                 MethodNode method = selectBestMatch(candidates, argumentTypes);
@@ -98,9 +97,13 @@ public class CategoryTypeLookup implements ITypeLookup {
         return null;
     }
 
-    protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
-        if (node instanceof ConstantExpression && !(scope.getEnclosingNode() instanceof AttributeExpression) && !scope.isTopLevel()) {
-            return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
+    protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope, ClassNode selfType) {
+        if (node instanceof ConstantExpression && !scope.isTopLevel()) {
+            org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
+            if (!(enclosingNode instanceof AttributeExpression || (enclosingNode instanceof MethodPointerExpression &&
+                                                                    VariableScope.CLASS_CLASS_NODE.equals(selfType)))) {
+                return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
+            }
         }
         return false;
     }

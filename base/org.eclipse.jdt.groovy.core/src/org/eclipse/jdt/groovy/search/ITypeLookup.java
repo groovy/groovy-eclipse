@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,9 @@ public interface ITypeLookup {
      *
      * @param node the AST Node to determine the type for
      * @param scope the variable scope at this location
-     * @param objectExpressionType if the parent of node is a {@link PropertyExpression}, then this value contains the type of
-     *        {@link PropertyExpression#getObjectExpression()}, otherwise null
+     * @param objectExpressionType if the parent of node is a ClassExpression,
+     *     PropertyExpression, AttributeExpression, MethodPointerExpression, or
+     *     the like then this value contains the type of the left-hand expression
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
     TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType);
