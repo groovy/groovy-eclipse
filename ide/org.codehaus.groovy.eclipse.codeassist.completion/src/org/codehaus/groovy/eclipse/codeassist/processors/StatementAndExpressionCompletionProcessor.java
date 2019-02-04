@@ -137,37 +137,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             context.lhsType = requestor.lhsType;
             completionType = getCompletionType(completionNode, context, requestor);
 
-            int closureStrategy = -1;
-            if (isPrimary && requestor.currentScope.getEnclosingClosure() != null) {
-                closureStrategy = requestor.currentScope.getEnclosingClosureResolveStrategy();
-            }
-
+            VariableScope currentScope = requestor.currentScope;
             List<IProposalCreator> creators = chooseProposalCreators(context);
-            // if completionType is delegate, use instance (non-static) semantics
-            boolean isStatic1 = (isStatic && closureStrategy < Closure.OWNER_FIRST);
-            proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary);
+            proposalCreatorOuterLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic, isPrimary);
 
-            if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
-                    !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
-                    !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-                // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
-                boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
-                proposalCreatorLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary);
-            }
-
-            // within a closure, include content assist for the enclosing type (aka "owner")
-            if (closureStrategy >= Closure.OWNER_FIRST) {
-                ClassNode enclosingType = requestor.currentScope.getOwner();
-                if (enclosingType != null && !enclosingType.equals(completionType)) {
-                    List<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
-                    proposalCreatorLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
-
-                    // if "delegate" and/or "owner" qualifiers are required, add them now
-                    setClosureQualifiers(groovyProposals, ownerProposals, closureStrategy);
-
-                    groovyProposals.addAll(ownerProposals);
-                }
-            }
+            requestor.currentScope = currentScope;
 
             if (isPrimary) {
                 // if receiver type is an enum, propose its constants directly
@@ -282,7 +256,48 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return creators;
     }
 
-    private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators,
+    private void proposalCreatorOuterLoop(Collection<IGroovyProposal> groovyProposals, Collection<IProposalCreator> creators,
+            ExpressionCompletionRequestor requestor, ContentAssistContext context, AssistOptions options,
+            ClassNode completionType, boolean isStatic, boolean isPrimary) {
+
+        int closureStrategy = -1;
+        if (isPrimary && requestor.currentScope.getEnclosingClosure() != null) {
+            closureStrategy = requestor.currentScope.getEnclosingClosureResolveStrategy();
+        }
+
+        // if completionType is delegate, use instance (non-static) semantics
+        boolean isStatic1 = (isStatic && closureStrategy < Closure.OWNER_FIRST);
+        proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic1, isPrimary);
+
+        if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
+                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
+                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+            // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
+            boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
+            proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary);
+        }
+
+        // within a closure, include content assist for the enclosing type (aka "owner")
+        if (closureStrategy >= Closure.OWNER_FIRST) {
+            ClassNode enclosingType = requestor.currentScope.getOwner();
+            if (enclosingType != null && !enclosingType.equals(completionType)) {
+                List<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
+                proposalCreatorInnerLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
+
+                // if "delegate" and/or "owner" qualifiers are required, add them now
+                setClosureQualifiers(groovyProposals, ownerProposals, closureStrategy);
+
+                groovyProposals.addAll(ownerProposals);
+
+                requestor.currentScope = enclosingType.getNodeMetaData("outer.scope");
+                if (requestor.currentScope != null) { // TODO: add another "owner." qualifier
+                    proposalCreatorOuterLoop(groovyProposals, creators, requestor, context, options, requestor.currentScope.getDelegate(), isStatic, isPrimary);
+                }
+            }
+        }
+    }
+
+    private void proposalCreatorInnerLoop(Collection<IGroovyProposal> groovyProposals, Collection<IProposalCreator> creators,
             ExpressionCompletionRequestor requestor, ContentAssistContext context, AssistOptions options,
             ClassNode completionType, boolean isStatic, boolean isPrimary) {
 
@@ -295,7 +310,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 });
             }
             String completionExpression = context.getPerceivedCompletionExpression();
-            proposals.addAll(
+            groovyProposals.addAll(
                 creator.findAllProposals(completionType, requestor.categories, completionExpression, isStatic, isPrimary));
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -553,6 +553,47 @@ final class FieldCompletionTests extends CompletionTestSuite {
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
         applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/803
+    void testClosure13() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              static class C {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.OWNER_FIRST) Closure c) {}
+              def bar(@DelegatesTo(value=C, strategy=Closure.OWNER_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  bar {
+                    zz // delegate is C, owner.delegate is B, owner.owner is A
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 3)
+
+        proposals.each { ICompletionProposal proposal ->
+            switch (proposal.displayString) {
+            case 'zzz : String - A':
+              //applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.owner.zzz //'))
+                break
+            case 'zzz : String - B':
+              //applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.delegate.zzz //'))
+                break
+            case 'zzz : String - C':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'delegate.zzz //'))
+                break
+            }
+        }
     }
 
     @Test
