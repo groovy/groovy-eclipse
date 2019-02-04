@@ -26,8 +26,6 @@ import java.security.PrivilegedAction;
 /**
  * A base class for data structures that can collect messages and errors
  * during processing.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
 public abstract class ProcessingUnit {
 
@@ -67,7 +65,7 @@ public abstract class ProcessingUnit {
         this.configuration = configuration;
         this.setClassLoader(classLoader);
         configure((configuration == null ? new CompilerConfiguration() : configuration));
-        if (er==null) er = new ErrorCollector(getConfiguration());
+        if (er == null) er = new ErrorCollector(getConfiguration());
         this.errorCollector = er;
     }
 

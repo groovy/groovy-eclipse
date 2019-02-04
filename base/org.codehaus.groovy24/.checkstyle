@@ -24,6 +24,7 @@
         <file-match-pattern match-pattern="groovy/ast/CodeVisitorSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/CompileUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ConstructorNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/FieldNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/GenericsType.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/GroovyCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ImportNode.java" include-pattern="false" />
@@ -71,6 +72,7 @@
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/MethodCallExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/stc/TraitTypeCheckingExtension.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/vmplugin/v5/Java5.java" include-pattern="false" />

@@ -81,4 +81,22 @@ public class Java8 extends Java7 {
         }
     }
     // GRECLIPSE end
+
+    /* GRECLIPSE edit
+    @Override
+    protected Parameter[] processParameters(CompileUnit compileUnit, Method m) {
+        java.lang.reflect.Parameter[] parameters = m.getParameters();
+        Type[] types = m.getGenericParameterTypes();
+        Parameter[] params = Parameter.EMPTY_ARRAY;
+        if (types.length > 0) {
+            params = new Parameter[types.length];
+            for (int i = 0; i < params.length; i++) {
+                java.lang.reflect.Parameter p = parameters[i];
+                String name = p.isNamePresent() ? p.getName() : "param" + i;
+                params[i] = makeParameter(compileUnit, types[i], m.getParameterTypes()[i], m.getParameterAnnotations()[i], name);
+            }
+        }
+        return params;
+    }
+    */
 }

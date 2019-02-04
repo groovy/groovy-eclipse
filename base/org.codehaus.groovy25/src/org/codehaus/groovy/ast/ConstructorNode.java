@@ -25,8 +25,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 
 /**
  * Represents a constructor declaration
- * 
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class ConstructorNode extends MethodNode {
 

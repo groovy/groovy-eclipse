@@ -59,8 +59,6 @@ import java.util.List;
 
 /**
  * java 5 based functions
- *
- * @author Jochen Theodorou
  */
 public class Java5 implements VMPlugin {
     private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -379,7 +377,10 @@ public class Java5 implements VMPlugin {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method m : methods) {
                 ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
+                // GRECLIPSE edit
+                //Parameter[] params = processParameters(compileUnit, m);
                 Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations(), m);
+                // GRECLIPSE end
                 ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
                 MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
                 mn.setSynthetic(m.isSynthetic());
@@ -390,7 +391,19 @@ public class Java5 implements VMPlugin {
             }
             Constructor[] constructors = clazz.getDeclaredConstructors();
             for (Constructor ctor : constructors) {
+                /* GRECLIPSE edit
+                Type[] types = ctor.getGenericParameterTypes();
+                Parameter[] params1 = Parameter.EMPTY_ARRAY;
+                if (types.length > 0) {
+                    params1 = new Parameter[types.length];
+                    for (int i = 0; i < params1.length; i++) {
+                        params1[i] = makeParameter(compileUnit, types[i], ctor.getParameterTypes()[i], getConstructorParameterAnnotations(ctor)[i], "param" + i);
+                    }
+                }
+                Parameter[] params = params1;
+                */
                 Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), getConstructorParameterAnnotations(ctor), ctor);
+                // GRECLIPSE end
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
                 classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
             }
@@ -410,6 +423,20 @@ public class Java5 implements VMPlugin {
             throw new RuntimeException("Unable to configure class node for class "+classNode.toString(false)+" due to malformed parameterized types", e);
         }
     }
+
+    /* GRECLIPSE edit
+    protected Parameter[] processParameters(CompileUnit compileUnit, Method m) {
+        Type[] types = m.getGenericParameterTypes();
+        Parameter[] params = Parameter.EMPTY_ARRAY;
+        if (types.length > 0) {
+            params = new Parameter[types.length];
+            for (int i = 0; i < params.length; i++) {
+                params[i] = makeParameter(compileUnit, types[i], m.getParameterTypes()[i], m.getParameterAnnotations()[i], "param" + i);
+            }
+        }
+        return params;
+    }
+    */
 
     /**
      * Synthetic parameters such as those added for inner class constructors may
@@ -498,20 +525,9 @@ public class Java5 implements VMPlugin {
     }
 
     /* GRECLIPSE edit
-    private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
-        Parameter[] params = Parameter.EMPTY_ARRAY;
-        if (types.length > 0) {
-            params = new Parameter[types.length];
-            for (int i = 0; i < params.length; i++) {
-                params[i] = makeParameter(cu, types[i], cls[i], parameterAnnotations[i], i);
-            }
-        }
-        return params;
-    }
-
-    private Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, int idx) {
+    protected Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, String name) {
         ClassNode cn = makeClassNode(cu, type, cl);
-        Parameter parameter = new Parameter(cn, "param" + idx);
+        Parameter parameter = new Parameter(cn, name);
         setAnnotationMetaData(annotations, parameter);
         return parameter;
     }

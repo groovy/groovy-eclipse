@@ -486,9 +486,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * Given a field node, checks if we are accessing or setting a private field from an inner class.
      */
     private void checkOrMarkPrivateAccess(Expression source, FieldNode fn, boolean lhsOfAssignment) {
+        if (fn == null) return;
         ClassNode enclosingClassNode = typeCheckingContext.getEnclosingClassNode();
         ClassNode declaringClass = fn.getDeclaringClass();
-        if (fn != null && Modifier.isPrivate(fn.getModifiers()) &&
+        if (fn.isPrivate() &&
                 (declaringClass != enclosingClassNode || typeCheckingContext.getEnclosingClosure() != null) &&
                 declaringClass.getModule() == enclosingClassNode.getModule()) {
             if (!lhsOfAssignment && enclosingClassNode.isDerivedFrom(declaringClass)) {
@@ -508,6 +509,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             StaticTypesMarker marker = lhsOfAssignment ? StaticTypesMarker.PV_FIELDS_MUTATION : StaticTypesMarker.PV_FIELDS_ACCESS;
             addPrivateFieldOrMethodAccess(source, declaringClass, marker, fn);
         }
+    }
+
+    /**
+     * Given a field node, checks if we are accessing or setting a public or protected field from an inner class.
+     */
+    private String checkOrMarkInnerFieldAccess(Expression source, FieldNode fn, boolean lhsOfAssignment, String delegationData) {
+        if (fn == null || fn.isStatic()) return delegationData;
+        ClassNode enclosingClassNode = typeCheckingContext.getEnclosingClassNode();
+        ClassNode declaringClass = fn.getDeclaringClass();
+        // private handled elsewhere
+        if ((fn.isPublic() || fn.isProtected()) &&
+                (declaringClass != enclosingClassNode || typeCheckingContext.getEnclosingClosure() != null) &&
+                declaringClass.getModule() == enclosingClassNode.getModule() && !lhsOfAssignment && enclosingClassNode.isDerivedFrom(declaringClass)) {
+            if (source instanceof PropertyExpression) {
+                PropertyExpression pe = (PropertyExpression) source;
+                // this and attributes handled elsewhere
+                if ("this".equals(pe.getPropertyAsString()) || source instanceof AttributeExpression) return delegationData;
+                pe.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, "owner");
+            }
+            return "owner";
+        }
+        return delegationData;
     }
 
     private MethodNode findValidGetter(ClassNode classNode, String name) {
@@ -1711,6 +1734,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
+        delegationData = checkOrMarkInnerFieldAccess(expressionToStoreOn, field, lhsOfAssignment, delegationData);
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
@@ -1722,6 +1746,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitProperty(propertyNode);
         storeWithResolve(propertyNode.getOriginType(), receiver, propertyNode.getDeclaringClass(), propertyNode.isStatic(), expressionToStoreOn);
         if (delegationData != null) {
+            delegationData = adjustData(delegationData, receiver, typeCheckingContext.delegationMetadata);
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
         return true;
@@ -3398,6 +3423,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             }
                             String data = chosenReceiver.getData();
                             if (data != null) {
+                                data = adjustData(data, chosenReceiver.getType(), typeCheckingContext.delegationMetadata);
                                 // the method which has been chosen is supposed to be a call on delegate or owner
                                 // so we store the information so that the static compiler may reuse it
                                 call.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, data);
@@ -3454,6 +3480,39 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.popEnclosingMethodCall();
             extension.afterMethodCall(call);
         }
+    }
+
+    // adjust data to handle cases like nested .with since we didn't have enough information earlier
+    // TODO see if we can make the earlier detection smarter and then remove this adjustment
+    private static String adjustData(String data, ClassNode type, DelegationMetadata dmd) {
+        StringBuilder path = new StringBuilder();
+        int i = 0;
+        String[] propertyPath = data.split("\\.");
+        while (dmd != null) {
+            int strategy = dmd.getStrategy();
+            ClassNode delegate = dmd.getType();
+            dmd = dmd.getParent();
+            switch (strategy) {
+                case Closure.DELEGATE_FIRST:
+                    if (!delegate.isDerivedFrom(CLOSURE_TYPE) && !delegate.isDerivedFrom(type)) {
+                        path.append("owner"); // must be non-delegate case
+                    } else {
+                        path.append("delegate");
+                    }
+                    break;
+                default:
+                    if (i >= propertyPath.length) return data;
+                    path.append(propertyPath[i]);
+            }
+            if (type.equals(delegate)) break;
+            i++;
+            if (dmd != null) path.append('.');
+        }
+        String result = path.toString();
+        if (!result.isEmpty()) {
+            return result;
+        }
+        return data;
     }
 
     /**

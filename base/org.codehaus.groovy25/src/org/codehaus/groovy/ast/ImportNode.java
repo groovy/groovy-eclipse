@@ -23,10 +23,6 @@ import groovyjarjarasm.asm.Opcodes;
 
 /**
  * Represents an import statement of a single class
- *
- * @author Jochen Theodorou
- * @author Paul King
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class ImportNode extends AnnotatedNode implements Opcodes {
 

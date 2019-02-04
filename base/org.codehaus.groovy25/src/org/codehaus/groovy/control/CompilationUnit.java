@@ -75,10 +75,6 @@ import java.util.Map;
  * <p>
  * You can also add PhaseOperations to this compilation using the addPhaseOperation method.
  * This is commonly used when you want to wire a new AST Transformation into the compilation.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -911,15 +907,8 @@ public class CompilationUnit extends ProcessingUnit {
                 cn = getResolveVisitor().resolve(name);
                 if (cn!=null) return cn;
                 // GRECLIPSE end
-                // try class loader classes
-                try {
-                    cn = ClassHelper.make(
-                            cu.getClassLoader().loadClass(name,false,true),
-                            false);
-                } catch (Exception e) {
-                    throw new GroovyBugError(/*GRECLIPSE add*/e.toString(),/*GRECLIPSE end*/e);
-                }
-                return cn;
+                ClassNodeResolver.LookupResult lookupResult = getClassNodeResolver().resolveName(name, CompilationUnit.this);
+                return lookupResult == null ? null : lookupResult.getClassNode();
             }
             private ClassNode getCommonSuperClassNode(ClassNode c, ClassNode d) {
                 // adapted from ClassWriter code
