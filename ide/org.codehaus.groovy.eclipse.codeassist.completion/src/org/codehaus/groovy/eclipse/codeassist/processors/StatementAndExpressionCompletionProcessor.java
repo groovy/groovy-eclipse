@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -281,18 +282,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         if (closureStrategy >= Closure.OWNER_FIRST) {
             ClassNode enclosingType = requestor.currentScope.getOwner();
             if (enclosingType != null && !enclosingType.equals(completionType)) {
-                List<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
+                Collection<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
                 proposalCreatorInnerLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
+
+                requestor.currentScope = enclosingType.getNodeMetaData("outer.scope");
+                if (requestor.currentScope != null) { // TODO: add another "owner." qualifier
+                    proposalCreatorOuterLoop(ownerProposals, creators, requestor, context, options, requestor.currentScope.getDelegate(), isStatic, isPrimary);
+                }
 
                 // if "delegate" and/or "owner" qualifiers are required, add them now
                 setClosureQualifiers(groovyProposals, ownerProposals, closureStrategy);
 
                 groovyProposals.addAll(ownerProposals);
-
-                requestor.currentScope = enclosingType.getNodeMetaData("outer.scope");
-                if (requestor.currentScope != null) { // TODO: add another "owner." qualifier
-                    proposalCreatorOuterLoop(groovyProposals, creators, requestor, context, options, requestor.currentScope.getDelegate(), isStatic, isPrimary);
-                }
             }
         }
     }
@@ -388,13 +389,21 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             throw new IllegalStateException("unexpected node type: " + node.getClass());
         };
 
+        BiConsumer<IGroovyProposal, String> addQualifier = (p, q) -> {
+            AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
+            if (agp.getRequiredQualifier() != null) {
+                q += "." + agp.getRequiredQualifier();
+            }
+            agp.setRequiredQualifier(q);
+        };
+
         Consumer<IGroovyProposal> reduceRelevance = p -> {
             AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
             agp.setRelevanceMultiplier(agp.getRelevanceMultiplier() * 0.999f);
         };
 
         if (!delegateProposals.isEmpty()) {
-            Consumer<IGroovyProposal> addDelegateQualifier = p -> ((AbstractGroovyProposal) p).setRequiredQualifier("delegate");
+            Consumer<IGroovyProposal> addDelegateQualifier = bind(addQualifier, "delegate");
 
             if (resolveStrategy == Closure.OWNER_FIRST && !ownerProposals.isEmpty()) {
                 Set<String> names = ownerProposals.stream().map(toName).collect(Collectors.toSet());
@@ -406,7 +415,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         if (!ownerProposals.isEmpty()) {
-            Consumer<IGroovyProposal> addOwnerQualifier = p -> ((AbstractGroovyProposal) p).setRequiredQualifier("owner");
+            Consumer<IGroovyProposal> addOwnerQualifier = bind(addQualifier, "owner");
 
             if (resolveStrategy == Closure.DELEGATE_FIRST && !delegateProposals.isEmpty()) {
                 Set<String> names = delegateProposals.stream().map(toName).collect(Collectors.toSet());
@@ -453,6 +462,10 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private static VariableScope createTopLevelScope(ClassNode completionType) {
         return new VariableScope(null, completionType, false);
+    }
+
+    private static <A, B> Consumer<A> bind(BiConsumer<A, B> consumer, B b) {
+        return (A a) -> consumer.accept(a, b);
     }
 
     //--------------------------------------------------------------------------
