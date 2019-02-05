@@ -531,8 +531,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
                 if (isLhsExpr) scope.getWormhole().put("lhs", var);
-                VariableScope.CallAndType cat = outer.getEnclosingMethodCallExpression();
-                int enclosingResolveStrategy = (cat == null ? 0 : cat.getResolveStrategy(outer.getEnclosingClosure()));
+                int enclosingResolveStrategy = outer.getEnclosingClosureResolveStrategy();
                 candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, enclosingResolveStrategy);
             } else {
                 candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);

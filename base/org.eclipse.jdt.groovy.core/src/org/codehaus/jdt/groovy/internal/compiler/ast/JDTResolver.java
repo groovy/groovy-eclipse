@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
@@ -273,23 +274,24 @@ public class JDTResolver extends ResolveVisitor {
                 }
             }
 
-            ClassNode firstClass = compilationUnit.getFirstClassNode();
-            String mainClassName = firstClass.getModule().getMainClassName();
-            Set<String> unresolvable = unresolvables.computeIfAbsent(mainClassName, x -> new HashSet<>());
-            if (!unresolvable.contains(name)) {
-                synchronized (this) {
-                    ClassNode previousClass = currentClass;
-                    try {
-                        currentClass = firstClass.getPlainNodeReference();
+            List<ModuleNode> modules = compilationUnit.getAST().getModules();
+            if (!modules.isEmpty() && !modules.get(0).getClasses().isEmpty()) {
+                Set<String> unresolvable = unresolvables.computeIfAbsent(modules.get(0).getMainClassName(), x -> new HashSet<>());
+                if (!unresolvable.contains(name)) {
+                    synchronized (this) {
+                        ClassNode previousClass = currentClass;
+                        try {
+                            currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
 
-                        ClassNode type = ClassHelper.makeWithoutCaching(name);
-                        if (super.resolve(type, true, true, true)) {
-                            return type.redirect();
-                        } else {
-                            unresolvable.add(name);
+                            ClassNode type = ClassHelper.makeWithoutCaching(name);
+                            if (super.resolve(type, true, true, true)) {
+                                return type.redirect();
+                            } else {
+                                unresolvable.add(name);
+                            }
+                        } finally {
+                            currentClass = previousClass;
                         }
-                    } finally {
-                        currentClass = previousClass;
                     }
                 }
             }

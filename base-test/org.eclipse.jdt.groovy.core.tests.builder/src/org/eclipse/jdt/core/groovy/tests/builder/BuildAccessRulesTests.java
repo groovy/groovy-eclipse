@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,14 +48,15 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
 
     @Before
     public void setUp() throws Exception {
-        IPath projectPath = env.addProject("Project");
+        IPath projectPath = env.addProject("Project", "1.7");
         env.setClasspath(projectPath, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src = projectPath.append("src")),
             JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
             JavaCore.newContainerEntry(new Path("org.eclipse.jdt.launching.JRE_CONTAINER"),
-                new IAccessRule[] {new ClasspathAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false) // create access restriction
+                new IAccessRule[] {new ClasspathAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false), // create access restriction
         });
         env.createFolder(src);
+        fullBuild(projectPath);
 
         problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
                                     " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
@@ -63,7 +64,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
 
     private void assertAccessRestriction(String source, String... types) {
         IPath foo = env.addGroovyClass(src, "Foo", source);
-        fullBuild();
+        incrementalBuild();
 
         // read back contents in case of line delimeters change or package statement addition or ...
         source = env.readTextFile(foo);
@@ -83,7 +84,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
 
     @Test
     public void testAccessForImport() {
-        String source = "import java.beans.BeanDescriptor";
+        String source = "import java.beans.BeanDescriptor\n";
 
         assertAccessRestriction(source, "java.beans.BeanDescriptor");
     }
@@ -91,7 +92,8 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForExtends() {
         String source = "import java.beans.*\n" +
-            "class Foo extends BeanDescriptor {}";
+            "class Foo extends BeanDescriptor {\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanDescriptor");
     }
@@ -99,7 +101,8 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForImplements() {
         String source = "import java.beans.*\n" +
-            "abstract class Foo implements BeanInfo {}";
+            "abstract class Foo implements BeanInfo {\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -107,7 +110,8 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForExtendsGenerics() {
         String source = "import java.beans.*\n" +
-            "abstract class Foo extends ArrayList<BeanDescriptor> {}";
+            "abstract class Foo extends ArrayList<BeanDescriptor> {\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanDescriptor");
     }
@@ -115,7 +119,8 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForImplementsGenerics() {
         String source = "import java.beans.*\n" +
-            "abstract class Foo implements List<BeanInfo> {}";
+            "abstract class Foo implements List<BeanInfo> {\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -123,7 +128,9 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForField() {
         String source = "import java.beans.*\n" +
-            "class Foo { private BeanInfo info }";
+            "class Foo {\n" +
+            "  private BeanInfo info\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -131,7 +138,9 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForProperty() {
         String source = "import java.beans.*\n" +
-            "class Foo { BeanInfo info }";
+            "class Foo {\n" +
+            "  BeanInfo info\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -139,7 +148,9 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForFieldGenerics() {
         String source = "import java.beans.*\n" +
-            "class Foo { private List<BeanInfo> info }";
+            "class Foo {\n" +
+            "  private List<BeanInfo> info\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -147,7 +158,9 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Test
     public void testAccessForPropertyGenerics() {
         String source = "import java.beans.*\n" +
-            "class Foo { List<BeanInfo> info }";
+            "class Foo {\n" +
+            "  List<BeanInfo> info\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -167,7 +180,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     public void testAccessForMethodParameter() {
         String source = "import java.beans.*\n" +
             "class Foo {\n" +
-            "  def meth(BeanInfo info) { }\n" +
+            "  def meth(BeanInfo info) {}\n" +
             "}";
 
         assertAccessRestriction(source, "BeanInfo");
@@ -177,7 +190,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     public void testAccessForMethodReturnType() {
         String source = "import java.beans.*\n" +
             "class Foo {\n" +
-            "  BeanInfo meth() { }\n" +
+            "  BeanInfo meth() {}\n" +
             "}";
 
         assertAccessRestriction(source, "BeanInfo");
@@ -187,8 +200,8 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     public void testAccessForMethodParameterGenerics() {
         String source = "import java.beans.*\n" +
             "class Foo {\n" +
-            "  def meth(List<BeanInfo> info) { }\n" +
-            "  }";
+            "  def meth(List<BeanInfo> info) {}\n" +
+            "}";
 
         assertAccessRestriction(source, "BeanInfo");
     }
@@ -197,7 +210,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     public void testAccessForMethodReturnTypeGenerics() {
         String source = "import java.beans.*\n" +
             "class Foo {\n" +
-            "  List<BeanInfo> meth() { }\n" +
+            "  List<BeanInfo> meth() {}\n" +
             "}";
 
         assertAccessRestriction(source, "BeanInfo");

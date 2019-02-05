@@ -55,7 +55,6 @@
 					<execution>
 						<id>integration-test</id>
 						<goals>
-							<goal>integration-test</goal>
 							<goal>run</goal>
 						</goals>
 					</execution>
