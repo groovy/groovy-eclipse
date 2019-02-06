@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -375,7 +376,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private static void setClosureQualifiers(Collection<IGroovyProposal> delegateProposals, Collection<IGroovyProposal> ownerProposals, int resolveStrategy) {
 
-        Function<IGroovyProposal, String> toName = p -> {
+        Function<IGroovyProposal, String> toName = (p) -> {
             AnnotatedNode node = ((AbstractGroovyProposal) p).getAssociatedNode();
             if (node instanceof FieldNode) {
                 return ((FieldNode) node).getName();
@@ -389,18 +390,23 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             throw new IllegalStateException("unexpected node type: " + node.getClass());
         };
 
-        BiConsumer<IGroovyProposal, String> addQualifier = (p, q) -> {
-            AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
-            if (agp.getRequiredQualifier() != null) {
-                q += "." + agp.getRequiredQualifier();
-            }
-            agp.setRequiredQualifier(q);
+        Predicate<IGroovyProposal> isQualified = (p) -> {
+            return ((AbstractGroovyProposal) p).getRequiredQualifier() != null;
         };
 
-        Consumer<IGroovyProposal> reduceRelevance = p -> {
+        BiConsumer<IGroovyProposal, String> addQualifier = (p, q) -> {
+            if (isQualified.test(p)) {
+                q += "." + ((AbstractGroovyProposal) p).getRequiredQualifier();
+            }
+            ((AbstractGroovyProposal) p).setRequiredQualifier(q);
+        };
+
+        Consumer<IGroovyProposal> reduceRelevance = (p) -> {
             AbstractGroovyProposal agp = (AbstractGroovyProposal) p;
             agp.setRelevanceMultiplier(agp.getRelevanceMultiplier() * 0.999f);
         };
+
+        //
 
         if (!delegateProposals.isEmpty()) {
             Consumer<IGroovyProposal> addDelegateQualifier = bind(addQualifier, "delegate");
@@ -419,10 +425,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
             if (resolveStrategy == Closure.DELEGATE_FIRST && !delegateProposals.isEmpty()) {
                 Set<String> names = delegateProposals.stream().map(toName).collect(Collectors.toSet());
-                ownerProposals.stream().filter(p -> names.contains(toName.apply(p)))
-                                .forEach(addOwnerQualifier.andThen(reduceRelevance));
+                ownerProposals.stream().filter(isQualified.or(p -> names.contains(toName.apply(p))))
+                                                .forEach(addOwnerQualifier.andThen(reduceRelevance));
             } else if (resolveStrategy == Closure.TO_SELF) {
                 ownerProposals.forEach(addOwnerQualifier.andThen(reduceRelevance));
+            } else {
+                ownerProposals.stream().filter(isQualified).forEach(addOwnerQualifier);
             }
         }
     }

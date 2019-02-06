@@ -628,10 +628,92 @@ final class FieldCompletionTests extends CompletionTestSuite {
                 applyProposalAndCheck(proposal, contents.replace('zz //', 'zzz //'))
                 break
             case 'zzz : String - B':
-                applyProposalAndCheck(proposal, contents.replace('zz //', 'delegate.zzz //')) // TODO: "owner.delegate.zzz"
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.delegate.zzz //'))
                 break
             case 'zzz : String - C':
                 applyProposalAndCheck(proposal, contents.replace('zz //', 'delegate.zzz //'))
+                break
+            }
+        }
+    }
+
+    @Test
+    void testClosure13b() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              static class C {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.DELEGATE_FIRST) Closure c) {}
+              def bar(@DelegatesTo(value=C, strategy=Closure.OWNER_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  bar {
+                    zz // delegate is C, owner.delegate is B, owner.owner is A
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 3)
+
+        proposals.each { ICompletionProposal proposal ->
+            switch (proposal.displayString) {
+            case 'zzz : String - A':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.owner.zzz //'))
+                break
+            case 'zzz : String - B':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'zzz //'))
+                break
+            case 'zzz : String - C':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'delegate.zzz //'))
+                break
+            }
+        }
+    }
+
+    @Test
+    void testClosure13c() {
+        String contents = '''\
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              static class C {
+                String zzz
+              }
+              def foo(@DelegatesTo(value=B, strategy=Closure.OWNER_FIRST) Closure c) {}
+              def bar(@DelegatesTo(value=C, strategy=Closure.DELEGATE_FIRST) Closure c) {}
+              void test() {
+                foo {
+                  bar {
+                    zz // delegate is C, owner.delegate is B, owner.owner is A
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 3)
+
+        proposals.each { ICompletionProposal proposal ->
+            switch (proposal.displayString) {
+            case 'zzz : String - A':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.zzz //')) // TODO: owner.owner.zzz
+                break
+            case 'zzz : String - B':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.delegate.zzz //'))
+                break
+            case 'zzz : String - C':
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'zzz //'))
                 break
             }
         }
