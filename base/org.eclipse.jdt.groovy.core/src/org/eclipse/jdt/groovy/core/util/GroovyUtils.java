@@ -448,6 +448,18 @@ public class GroovyUtils {
         return Flags.isSynthetic(node.getModifiers());
     }
 
+    public static boolean isUsingGenerics(MethodNode node) {
+        if (getGenericsTypes(node).length > 0) {
+            return true;
+        }
+        if (getGenericsTypes(node.getDeclaringClass()).length > 0) {
+            Stream<ClassNode> types = Stream.concat(Stream.of(node.getReturnType()),
+                                        getParameterTypes(node.getParameters()).stream());
+            return types.anyMatch(type -> type.isUsingGenerics() || type.isGenericsPlaceHolder());
+        }
+        return false;
+    }
+
     public static boolean implementsTrait(ClassNode concreteType) {
         return concreteType.getNodeMetaData(Traits.class, x -> {
             ClassNode type = concreteType.redirect();

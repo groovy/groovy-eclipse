@@ -809,7 +809,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testClassReference4b() {
         String contents = "Class clazz = String; clazz.package";
         assertExprType(contents, "package", "java.lang.Package");
-        assertDeclType(contents, "package", "java.lang.Class<java.lang.Object>");
+        assertDeclType(contents, "package", "java.lang.Class");
     }
 
     @Test // GRECLIPSE-1229: constructors with map parameters

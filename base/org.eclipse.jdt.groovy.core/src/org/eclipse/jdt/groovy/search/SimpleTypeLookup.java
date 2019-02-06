@@ -183,7 +183,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope,
             TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 
-        MethodNode target; // use value from node metadata if it is available
+        MethodNode target; // use value from node metadata if it's available
         if (scope.isMethodCall() && (target = getMethodTarget(node)) != null) {
             return new TypeLookupResult(target.getReturnType(), target.getDeclaringClass(), target, confidence, scope);
         }
@@ -369,7 +369,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         ClassNode realDeclaringType;
         VariableInfo variableInfo;
         if (declaration != null) {
-            type = getTypeFromDeclaration(declaration, declaringType);
+            type = getTypeFromDeclaration(declaration);
             realDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
         } else if ("this".equals(name)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
@@ -476,11 +476,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
 
                 declaringType = ((AnnotatedNode) decl).getDeclaringClass();
-                type = getTypeFromDeclaration(decl, declaringType);
                 variableInfo = null; // use field/method/property
+                type = getTypeFromDeclaration(decl);
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            ASTNode candidate = findDeclarationForDynamicVariable(var, getMorePreciseType(declaringType, variableInfo), scope, resolveStrategy);
+            declaringType = getMorePreciseType(declaringType, variableInfo);
+            ASTNode candidate = findDeclarationForDynamicVariable(var, declaringType, scope, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     (AccessorSupport.isGetter((MethodNode) candidate) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
@@ -494,15 +495,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
                     Parameter[] parameterNodes = ((MethodNode) candidate).getParameters();
                     if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
-                        newConfidence = TypeConfidence.findLessPrecise(confidence, TypeConfidence.INFERRED);
+                        newConfidence = TypeConfidence.findLessPrecise(confidence, TypeConfidence.LOOSELY_INFERRED);
                     }
                 }
                 decl = candidate;
-                declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
-                type = getTypeFromDeclaration(decl, declaringType);
+                type = getTypeFromDeclaration(decl);
+                declaringType = getDeclaringTypeFromDeclaration(decl, declaringType);
             } else {
-                newConfidence = TypeConfidence.UNKNOWN;
                 type = VariableScope.OBJECT_CLASS_NODE;
+                newConfidence = TypeConfidence.UNKNOWN;
                 // dynamic variables are not allowed outside of script mainline
                 if (variableInfo != null && !scope.inScriptRunMethod()) variableInfo = null;
             }
@@ -771,9 +772,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return next;
     }
 
-    protected static ASTNode createLengthField(ClassNode declaringType) {
+    protected static FieldNode createLengthField(ClassNode declaringType) {
         FieldNode lengthField = new FieldNode("length", Flags.AccPublic, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
-        lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;
     }
@@ -836,11 +836,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
     }
 
-    /**
-     * @param declaration the declaration to look up
-     * @param declaringType the unredirected type that declares this declaration somewhere in its hierarchy
-     */
-    protected static ClassNode getTypeFromDeclaration(ASTNode declaration, ClassNode declaringType) {
+    protected static ClassNode getTypeFromDeclaration(ASTNode declaration) {
         ClassNode typeOfDeclaration;
         if (declaration instanceof PropertyNode) {
             PropertyNode property = (PropertyNode) declaration;
@@ -864,23 +860,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return typeOfDeclaration;
     }
 
-    protected static ClassNode getDeclaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
-        ClassNode typeOfDeclaration;
+    protected static ClassNode getDeclaringTypeFromDeclaration(ASTNode declaration, ClassNode inferredDeclaringType) {
+        ClassNode declaringType;
         if (declaration instanceof FieldNode) {
-            typeOfDeclaration = ((FieldNode) declaration).getDeclaringClass();
+            declaringType = ((FieldNode) declaration).getDeclaringClass();
         } else if (declaration instanceof MethodNode) {
-            typeOfDeclaration = ((MethodNode) declaration).getDeclaringClass();
+            declaringType = ((MethodNode) declaration).getDeclaringClass();
         } else if (declaration instanceof PropertyNode) {
-            typeOfDeclaration = ((PropertyNode) declaration).getDeclaringClass();
+            declaringType = ((PropertyNode) declaration).getDeclaringClass();
         } else {
-            typeOfDeclaration = VariableScope.OBJECT_CLASS_NODE;
+            declaringType = VariableScope.OBJECT_CLASS_NODE;
         }
-        // don't necessarily use the typeOfDeclaration. the resolvedTypeOfDeclaration includes the types of generics
-        // so if the names are the same, then used the resolved version
-        if (typeOfDeclaration.getName().equals(resolvedTypeOfDeclaration.getName())) {
-            return resolvedTypeOfDeclaration;
+        // retain inferredDeclaringType's generics if possible
+        if (declaringType.equals(inferredDeclaringType)) {
+            return inferredDeclaringType;
         } else {
-            return typeOfDeclaration;
+            return declaringType;
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -848,8 +848,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public static MethodNode resolveTypeParameterization(GenericsMapper mapper, MethodNode method) {
-        if (mapper.hasGenerics() && (GroovyUtils.getGenericsTypes(method).length > 0 ||
-                GroovyUtils.getGenericsTypes(method.getDeclaringClass()).length > 0)) {
+        if (mapper.hasGenerics() && GroovyUtils.isUsingGenerics(method)) {
 
             ClassNode returnType = resolveTypeParameterization(mapper, clone(method.getReturnType()));
 

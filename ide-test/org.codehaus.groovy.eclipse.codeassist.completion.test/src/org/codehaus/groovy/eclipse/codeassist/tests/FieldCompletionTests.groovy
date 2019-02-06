@@ -707,7 +707,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposals.each { ICompletionProposal proposal ->
             switch (proposal.displayString) {
             case 'zzz : String - A':
-                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.zzz //')) // TODO: owner.owner.zzz
+                applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.zzz //'))
                 break
             case 'zzz : String - B':
                 applyProposalAndCheck(proposal, contents.replace('zz //', 'owner.delegate.zzz //'))

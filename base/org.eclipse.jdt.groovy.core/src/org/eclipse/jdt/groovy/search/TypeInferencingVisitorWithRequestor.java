@@ -1826,7 +1826,7 @@ assert primaryExprType != null && dependentExprType != null;
         // as the declaring type since this will mess things up inside closures
         ClassNode rememberedDeclaringType = result.declaringType;
         if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
-            rememberedDeclaringType = primaryType != null ? primaryType : scope.getDelegateOrThis();
+            rememberedDeclaringType = (primaryType != null ? primaryType : scope.getDelegateOrThis());
         }
         if (rememberedDeclaringType == null) {
             rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
