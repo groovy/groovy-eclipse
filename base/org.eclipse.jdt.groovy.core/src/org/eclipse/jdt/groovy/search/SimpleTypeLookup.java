@@ -509,7 +509,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (variableInfo != null && !(decl instanceof MethodNode)) {
+        if (variableInfo != null && (!(decl instanceof MethodNode) || VariableScope.CLOSURE_CLASS_NODE.equals(declaringType))) {
             type = variableInfo.type;
             if (VariableScope.isThisOrSuper(var)) decl = type;
             declaringType = getMorePreciseType(declaringType, variableInfo);

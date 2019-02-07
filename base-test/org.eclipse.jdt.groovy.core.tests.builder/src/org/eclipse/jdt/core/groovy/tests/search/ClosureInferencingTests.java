@@ -106,14 +106,18 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "      this\n" +
             "      super\n" +
             "      owner\n" +
+            "      getOwner()\n" +
             "      delegate\n" +
+            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",     "Bar");
-        assertExprType(contents, "super",    "Foo");
-        assertExprType(contents, "owner",    "Bar");
-        assertExprType(contents, "delegate", "Bar");
+        assertExprType(contents, "this",          "Bar");
+        assertExprType(contents, "super",         "Foo");
+        assertExprType(contents, "owner",         "Bar");
+        assertExprType(contents, "getOwner()",    "Bar");
+        assertExprType(contents, "delegate",      "Bar");
+        assertExprType(contents, "getDelegate()", "Bar");
     }
 
     @Test // closure with non-default resolve strategy
@@ -126,17 +130,21 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "      this\n" +
             "      super\n" +
             "      owner\n" +
+            "      getOwner()\n" +
             "      delegate\n" +
+            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",     "Bar");
-        assertExprType(contents, "super",    "java.lang.Object");
-        assertExprType(contents, "owner",    "Bar");
-        assertExprType(contents, "delegate", "Foo");
+        assertExprType(contents, "this",          "Bar");
+        assertExprType(contents, "super",         "java.lang.Object");
+        assertExprType(contents, "owner",         "Bar");
+        assertExprType(contents, "getOwner()",    "Bar");
+        assertExprType(contents, "delegate",      "Foo");
+        assertExprType(contents, "getDelegate()", "Foo");
     }
 
-    @Test // closure within static scope wrt owner
+    @Test // closure in static scope wrt owner
     public void testClosure9() {
         String contents =
             "class Foo {}\n" +
@@ -144,12 +152,20 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  static void main(args) {\n" +
             "    def fn = {\n" +
             "      owner\n" +
+            "      getOwner()\n" +
             "      delegate\n" +
+            "      getDelegate()\n" +
+            "      thisObject\n" +
+            "      getThisObject()\n" +
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "owner",    "java.lang.Class<Bar>");
-        assertExprType(contents, "delegate", "java.lang.Class<Bar>");
+        assertExprType(contents, "owner",           "java.lang.Class<Bar>");
+        assertExprType(contents, "getOwner()",      "java.lang.Class<Bar>");
+        assertExprType(contents, "delegate",        "java.lang.Class<Bar>");
+        assertExprType(contents, "getDelegate()",   "java.lang.Class<Bar>");
+        assertExprType(contents, "thisObject",      "java.lang.Class<Bar>");
+        assertExprType(contents, "getThisObject()", "java.lang.Class<Bar>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
@@ -257,8 +273,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure12() {
         String contents =
             "def fn = {\n" +
-            "  thisObject\n" +
-            "  getThisObject()\n" +
             "  directive\n" +
             "  getDirective()\n" +
             "  resolveStrategy\n" +
@@ -268,8 +282,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}";
-        assertExprType(contents, "thisObject", "java.lang.Object");
-        assertExprType(contents, "getThisObject", "java.lang.Object");
         assertExprType(contents, "directive", "java.lang.Integer");
         assertExprType(contents, "getDirective", "java.lang.Integer");
         assertExprType(contents, "resolveStrategy", "java.lang.Integer");
@@ -280,12 +292,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }
 
-    @Test // other members of Closure (within static scope wrt owner)
+    @Test // other members of Closure (in static scope wrt owner)
     public void testClosure13() {
         String contents =
             "class A { static void main(args) { def fn = {\n" +
-            "  thisObject\n" +
-            "  getThisObject()\n" +
             "  directive\n" +
             "  getDirective()\n" +
             "  resolveStrategy\n" +
@@ -295,8 +305,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}}}";
-        assertExprType(contents, "thisObject", "java.lang.Object");
-        assertExprType(contents, "getThisObject", "java.lang.Object");
         assertExprType(contents, "directive", "java.lang.Integer");
         assertExprType(contents, "getDirective", "java.lang.Integer");
         assertExprType(contents, "resolveStrategy", "java.lang.Integer");
@@ -397,8 +405,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "getThisObject", "java.lang.Object");
-        assertExprType(contents, "thisObject", "java.lang.Object");
+        assertExprType(contents, "getThisObject", "B");
+        assertExprType(contents, "thisObject", "B");
         assertExprType(contents, "super", "A");
         assertExprType(contents, "this", "B");
 
@@ -541,16 +549,20 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = { def y = {\n" +
             "  owner\n" +
+            "  getOwner()\n" +
             "  delegate\n" +
+            "  getDelegate()\n" +
             "  thisObject\n" +
             "  getThisObject()\n" +
             "  resolveStrategy\n" +
             "  getResolveStrategy()\n" +
             "}}";
         assertExprType(contents, "owner", "groovy.lang.Closure");
+        assertExprType(contents, "getOwner", "groovy.lang.Closure");
         assertExprType(contents, "delegate", "groovy.lang.Closure");
-        assertExprType(contents, "thisObject", "java.lang.Object");
-        assertExprType(contents, "getThisObject", "java.lang.Object");
+        assertExprType(contents, "getDelegate", "groovy.lang.Closure");
+        assertExprType(contents, "thisObject", "Search");
+        assertExprType(contents, "getThisObject", "Search");
         assertExprType(contents, "resolveStrategy", "java.lang.Integer");
         assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
     }

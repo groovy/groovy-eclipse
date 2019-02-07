@@ -686,7 +686,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     // this is very rough; it only works for an attribute that directly follows '('
                     attr.setStart(node.getEnd() + 2); attr.setEnd(attr.getStart() + name.length());
 
-                    noLookup = new TypeLookupResult(ClassHelper.VOID_TYPE,
+                    noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE,
                         node.getClassNode().redirect(), null, TypeConfidence.UNKNOWN, scope);
                 }
                 noLookup.enclosingAnnotation = node; // set context for requestor
@@ -888,23 +888,15 @@ assert primaryExprType != null && dependentExprType != null;
         } else {
             ClassNode ownerType = scope.getThis();
             // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
-            VariableScope.VariableInfo inf = scope.lookupName("owner");
-            if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+            VariableScope.VariableInfo info = scope.lookupName("owner");
+            if (info == null || info.scopeNode instanceof ClosureExpression) {
                 scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
             }
             scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
 
-            // only do this if we are not already in a closure; no need to add twice
-            scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("resolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("getResolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            // only set this if not already in a closure; type doesn't vary with nesting
+            scope.addVariable("thisObject", ownerType, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getThisObject", ownerType, VariableScope.CLOSURE_CLASS_NODE);
         }
 
         // if enclosing method call, delegate type can be specified by the method, otherwise it's 'typeof(owner)'

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import static org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE;
+import static org.eclipse.jdt.groovy.search.VariableScope.CLASS_CLASS_NODE;
 import static org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS_NODE;
-import static org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE;
-import static org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.FieldNode;
@@ -82,25 +81,25 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     private List<ICompletionProposal> createClosureProposals() {
         ContentAssistContext context = getContext();
         if (context.currentScope != null && context.currentScope.getEnclosingClosure() != null) {
-            org.eclipse.jdt.groovy.search.VariableScope scope = context.currentScope;
-            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("getOwner");
-            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("getDelegate");
+            ClassNode thisType = context.currentScope.getThis();
+            ClassNode ownerType = context.currentScope.getOwner();
+            ClassNode delegateType = context.currentScope.getDelegate();
 
             List<ICompletionProposal> proposals = new ArrayList<>();
-            maybeAddClosureProperty(proposals, "owner", ownerInfo.declaringType, ownerInfo.type, false);
-            maybeAddClosureProperty(proposals, "getOwner", ownerInfo.declaringType, ownerInfo.type, true);
-            maybeAddClosureProperty(proposals, "delegate", delegateInfo.declaringType, delegateInfo.type, false);
-            maybeAddClosureProperty(proposals, "getDelegate", delegateInfo.declaringType, delegateInfo.type, true);
-            maybeAddClosureProperty(proposals, "thisObject", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getThisObject", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "directive", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getDirective", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "resolveStrategy", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getResolveStrategy", CLOSURE_CLASS_NODE, OBJECT_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "parameterTypes", CLOSURE_CLASS_NODE, CLASS_ARRAY_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getParameterTypes", CLOSURE_CLASS_NODE, CLASS_ARRAY_CLASS_NODE, true);
-            maybeAddClosureProperty(proposals, "maximumNumberOfParameters", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, false);
-            maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters", CLOSURE_CLASS_NODE, INTEGER_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "owner", CLOSURE_CLASS_NODE, ownerType, false);
+            maybeAddClosureProperty(proposals, "getOwner", CLOSURE_CLASS_NODE, ownerType, true);
+            maybeAddClosureProperty(proposals, "thisObject", CLOSURE_CLASS_NODE, thisType, false);
+            maybeAddClosureProperty(proposals, "getThisObject", CLOSURE_CLASS_NODE, thisType, true);
+            maybeAddClosureProperty(proposals, "delegate", CLOSURE_CLASS_NODE, delegateType, false);
+            maybeAddClosureProperty(proposals, "getDelegate", CLOSURE_CLASS_NODE, delegateType, true);
+            maybeAddClosureProperty(proposals, "directive", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, false);
+            maybeAddClosureProperty(proposals, "getDirective", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, true);
+            maybeAddClosureProperty(proposals, "resolveStrategy", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, false);
+            maybeAddClosureProperty(proposals, "getResolveStrategy", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, true);
+            maybeAddClosureProperty(proposals, "parameterTypes", CLOSURE_CLASS_NODE, CLASS_CLASS_NODE.makeArray(), false);
+            maybeAddClosureProperty(proposals, "getParameterTypes", CLOSURE_CLASS_NODE, CLASS_CLASS_NODE.makeArray(), true);
+            maybeAddClosureProperty(proposals, "maximumNumberOfParameters", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, false);
+            maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters", CLOSURE_CLASS_NODE, ClassHelper.int_TYPE, true);
             return proposals;
         } else {
             return Collections.emptyList();
