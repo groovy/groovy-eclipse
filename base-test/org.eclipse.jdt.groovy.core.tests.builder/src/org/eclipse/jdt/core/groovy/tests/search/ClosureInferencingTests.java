@@ -545,7 +545,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // closure within closure
-    public void testDoubleClosure1() {
+    public void testNestedClosure1() {
         String contents =
             "def x = { def y = {\n" +
             "  owner\n" +
@@ -568,99 +568,193 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDoubleClosure2() {
+    public void testNestedClosure2() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    intValue\n" +
-            "  }" +
+            "  }\n" +
             "}";
         int offset = contents.indexOf("intValue");
         assertUnknownConfidence(contents, offset, offset + "intValue".length(), null, false);
     }
 
     @Test
-    public void testDoubleClosure3() {
+    public void testNestedClosure3() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    intValue()\n" +
-            "  }" +
+            "  }\n" +
             "}";
         assertExprType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test
-    public void testDoubleClosure4() {
+    public void testNestedClosure4() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    delegate.intValue()\n" +
-            "  }" +
+            "  }\n" +
             "}";
         assertExprType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test // DGM
-    public void testDoubleClosure5() {
+    public void testNestedClosure5() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    abs\n" +
-            "  }" +
+            "  }\n" +
             "}";
         int offset = contents.indexOf("abs");
         assertUnknownConfidence(contents, offset, offset + "abs".length(), null, false);
     }
 
     @Test // DGM
-    public void testDoubleClosure6() {
+    public void testNestedClosure6() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    abs()\n" +
-            "  }" +
+            "  }\n" +
             "}";
         assertExprType(contents, "abs", "java.lang.Integer");
     }
 
     @Test
-    public void testDoubleClosure7() {
+    public void testNestedClosure7() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    delegate.abs()\n" +
-            "  }" +
+            "  }\n" +
             "}";
         assertExprType(contents, "abs", "java.lang.Integer");
     }
 
     @Test
-    public void testDoubleClosure8() {
+    public void testNestedClosure8() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    this.abs()\n" +
-            "  }" +
+            "  }\n" +
             "}";
-        int start = contents.lastIndexOf("abs");
-        int end = start + "abs".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
+        int offset = contents.indexOf("abs");
+        assertUnknownConfidence(contents, offset, offset + "abs".length(), null, false);
     }
 
     @Test
-    public void testDoubleClosure9() {
+    public void testNestedClosure9() {
         String contents =
             "''.with {\n" +
             "  1.with {\n" +
             "    this\n" +
-            "  }" +
+            "  }\n" +
             "}";
         assertExprType(contents, "this", "Search");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure10() {
+        String contents =
+            "''.with {\n" +
+            "  1.with {\n" +
+            "    owner.thisObject\n" +
+            "    owner.getThisObject()\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "thisObject", "Search");
+        assertExprType(contents, "getThisObject", "Search");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure11() {
+        String contents =
+            "42.with {\n" +
+            "  ''.with {\n" +
+            "    owner.delegate\n" +
+            "    owner.getDelegate()\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "delegate", "java.lang.Integer");
+        assertExprType(contents, "getDelegate", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure12() {
+        String contents =
+            "42.with {\n" +
+            "  ''.with {\n" +
+            "    def x = owner.owner\n" +
+            "    def y = owner.getOwner()\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "Search");
+        assertExprType(contents, "y", "Search");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure13() {
+        String contents =
+            "(~/.../).with {\n" +
+            "  ''.with {\n" +
+            "    42.with {\n" +
+            "      owner.owner.delegate\n" +
+            "      owner.owner.getDelegate()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "delegate", "java.util.regex.Pattern");
+        assertExprType(contents, "getDelegate", "java.util.regex.Pattern");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/809
+    public void testNestedClosure14() {
+        String contents =
+            "class Foo {\n" +
+            "  Number nnn\n" +
+            "  static class Bar {\n" +
+            "    Number nnn\n" +
+            "  }\n" +
+            "  static class Baz {\n" +
+            "    Number nnn\n" +
+            "  }\n" +
+
+            "  def bar(@DelegatesTo(value=Bar, strategy=Closure.OWNER_FIRST) Closure c) {}\n" +
+            "  def baz(@DelegatesTo(value=Baz, strategy=Closure.OWNER_FIRST) Closure c) {}\n" +
+
+            "  void meth() {\n" +
+            "    bar {\n" +
+            "      baz {\n" +
+            "        def v = nnn\n" + // refers to Foo.nnn
+            "        def x = owner.nnn\n" + // refers to Foo.nnn
+            "        def y = delegate.nnn\n" + // refers to Baz.nnn
+            "        def z = owner.delegate.nnn\n" + // refers to Bar.nnn
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "v", "java.lang.Number");
+        assertExprType(contents, "x", "java.lang.Number");
+        assertExprType(contents, "y", "java.lang.Number");
+        assertExprType(contents, "z", "java.lang.Number");
+
+        int offset = contents.indexOf("= nnn") + 2;
+        assertDeclaringType(contents, offset, offset + "nnn".length(), "Foo");
+            offset = contents.indexOf("nnn", offset + 3);
+        assertDeclaringType(contents, offset, offset + "nnn".length(), "Foo");
+            offset = contents.indexOf("nnn", offset + 3);
+        assertDeclaringType(contents, offset, offset + "nnn".length(), "Foo$Baz");
+            offset = contents.indexOf("nnn", offset + 3);
+        assertDeclaringType(contents, offset, offset + "nnn".length(), "Foo$Bar");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
-    public void testDoubleClosure10() {
+    public void testNestedClosure15() {
         String contents =
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
@@ -672,17 +766,17 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    bean.with {\n" +
             "      addPropertyChangeListener('name') { PropertyChangeEvent event ->\n" +
             "        info\n" + // from outer delegate
-            "      }" +
+            "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("info");
-        assertType(contents, offset, offset + 4, "java.lang.Number");
-        assertDeclaringType(contents, offset, offset + 4, "B"); // outer delegate
+        assertType(contents, offset, offset + "info".length(), "java.lang.Number");
+        assertDeclaringType(contents, offset, offset + "info".length(), "B"); // outer delegate
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
-    public void testDoubleClosure11() {
+    public void testNestedClosure16() {
         String contents =
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
@@ -694,13 +788,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    bean.with {\n" +
             "      addPropertyChangeListener('name') { PropertyChangeEvent event ->\n" +
             "        meth(1, '2', ~/3/)\n" + // from outer delegate
-            "      }" +
+            "      }\n" +
             "    }\n" +
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("meth");
-        assertType(contents, offset, offset + 4, "java.lang.Boolean");
-        assertDeclaringType(contents, offset, offset + 4, "B"); // outer delegate
+        assertType(contents, offset, offset + "info".length(), "java.lang.Boolean");
+        assertDeclaringType(contents, offset, offset + "info".length(), "B"); // outer delegate
     }
 
     @Test

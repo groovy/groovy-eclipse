@@ -188,22 +188,35 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(target.getReturnType(), target.getDeclaringClass(), target, confidence, scope);
         }
 
+        ClassNode nodeType = node.getType();
+
         if (node instanceof VariableExpression) {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
-        } else if (node instanceof ConstantExpression && isPrimaryExpression && scope.isMethodCall()) {
-            VariableExpression expr = new VariableExpression(new DynamicVariable(node.getText(), false));
-            TypeLookupResult result = findTypeForVariable(expr, scope, confidence, declaringType);
-            if (isCompatible((AnnotatedNode) result.declaration, isStaticObjectExpression)) {
-                return result;
-            }
-            if (isStaticObjectExpression) { // might be reference to a method defined on java.lang.Class
-                return findTypeForVariable(expr, scope, confidence, VariableScope.newClassClassNode(declaringType));
-            }
-        }
 
-        ClassNode nodeType = node.getType();
-        if (node instanceof ConstantExpression) {
-            if (!isPrimaryExpression) {
+        } else if (node instanceof ConstantExpression) {
+            if (isPrimaryExpression) {
+                if (scope.isMethodCall()) { // handle method call without object expression like a free variable
+                    VariableExpression call = new VariableExpression(new DynamicVariable(node.getText(), false));
+                    TypeLookupResult result = findTypeForVariable(call, scope, confidence, declaringType);
+                    if (isCompatible((AnnotatedNode) result.declaration, isStaticObjectExpression)) {
+                        return result;
+                    }
+                    if (isStaticObjectExpression) { // might be reference to a method defined on java.lang.Class
+                        return findTypeForVariable(call, scope, confidence, VariableScope.newClassClassNode(declaringType));
+                    }
+                }
+            } else {
+                // handle method or property with "owner" object expression like a free variable in the outer scope
+                VariableScope outer = declaringType.getNodeMetaData("outer.scope");
+                if (outer != null) {
+                    List<ClassNode> types = outer.getMethodCallArgumentTypes();
+                    try { outer.setMethodCallArgumentTypes(scope.getMethodCallArgumentTypes());
+                        return findTypeForVariable(new VariableExpression(new DynamicVariable(node.getText(), false)), outer, confidence, declaringType);
+                    } finally {
+                        outer.setMethodCallArgumentTypes(types);
+                    }
+                }
+
                 // short-circuit if object expression is part of direct field access (aka AttributeExpression)
                 if (scope.getEnclosingNode() instanceof AttributeExpression) {
                     ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
@@ -345,7 +358,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (!(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+        if (!(node instanceof TupleExpression) && VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
             confidence = TypeConfidence.UNKNOWN;
         }
 
