@@ -110,6 +110,7 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.CharLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
 import org.eclipse.jdt.internal.compiler.ast.Clinit;
@@ -150,6 +151,7 @@ import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
@@ -1194,11 +1196,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             methodDeclaration.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(methodDeclaration.statements != null
                                         ? methodDeclaration.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
                         } else if (location instanceof FieldDeclaration) {
-                            FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
+                            FieldDeclarationWithInitializer fieldDeclaration = (FieldDeclarationWithInitializer) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
-                            fieldDeclaration.initialization = innerTypeDeclaration.allocation;
-                            if (innerTypeDeclaration.getClassNode().isEnum())
+                            if (innerTypeDeclaration.getClassNode().isEnum()) {
                                 innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
+                                fieldDeclaration.initialization = innerTypeDeclaration.allocation;
+                            } else if (fieldDeclaration.initialization == null) {
+                                if (CharOperation.equals(fieldDeclaration.type.getLastToken(), TypeConstants.OBJECT) || GroovyUtils.isAnonymous(fieldDeclaration.initializer.getType())) {
+                                    fieldDeclaration.initialization = innerTypeDeclaration.allocation;
+                                } else { // in case of indirect anon. inner like "Type foo = bar(1, '2', new Baz() { ... })", fool JDT with "Type foo = (Type) (Object) new Baz() { ... }"
+                                    fieldDeclaration.initialization = new CastExpression(innerTypeDeclaration.allocation, createTypeReferenceForClassNode(ClassHelper.OBJECT_TYPE));
+                                    fieldDeclaration.initialization.sourceStart = innerTypeDeclaration.sourceStart;
+                                    fieldDeclaration.initialization.sourceEnd = innerTypeDeclaration.sourceEnd;
+
+                                    fieldDeclaration.initialization = new CastExpression(fieldDeclaration.initialization, fieldDeclaration.type);
+                                    fieldDeclaration.initialization.sourceStart = innerTypeDeclaration.sourceStart;
+                                    fieldDeclaration.initialization.sourceEnd = innerTypeDeclaration.sourceEnd;
+                                }
+                            } else {
+                                throw new GroovyEclipseBug("Can't handle more than one anon. inner class in field initializer");
+                            }
                         } else {
                             throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }

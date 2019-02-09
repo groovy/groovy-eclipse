@@ -34,6 +34,8 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
+import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -358,9 +360,14 @@ public class GroovyClassScope extends ClassScope {
         super.buildFieldsAndMethods();
 
         for (FieldDeclaration field : referenceContext.fields) {
-            if (field.initialization instanceof QualifiedAllocationExpression) {
-                QualifiedAllocationExpression initialization = (QualifiedAllocationExpression) field.initialization;
-                if (initialization.anonymousType != null && initialization.anonymousType.scope == null) { // anon. inner initialization
+            Expression initialization = field.initialization;
+            // unwrap "field = (Type) (Object) new Anon() {}"
+            while (initialization instanceof CastExpression) {
+                initialization = ((CastExpression) initialization).expression;
+            }
+            if (initialization instanceof QualifiedAllocationExpression) {
+                QualifiedAllocationExpression allocation = (QualifiedAllocationExpression) initialization;
+                if (allocation.anonymousType != null && allocation.anonymousType.scope == null) { // anon. inner initialization
                     MethodScope scope = (field.isStatic() ? referenceContext.staticInitializerScope : referenceContext.initializerScope);
                     if (field.binding.type == null) {
                         field.binding.type = (field.getKind() == ENUM_CONSTANT ? scope.enclosingSourceType() : field.type.resolveType(scope));

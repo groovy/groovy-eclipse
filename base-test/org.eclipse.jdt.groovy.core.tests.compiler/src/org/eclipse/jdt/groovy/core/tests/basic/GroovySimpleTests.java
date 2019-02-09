@@ -5055,6 +5055,181 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/800
+    public void testAnonymousInnerClass11() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            // field with anon. inner initializer argument:
+            "  C cee = new C(1, '2', new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  })\n" +
+            "  static main(args) {\n" +
+            "    new A()\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C {\n" +
+            "  C(int one, String two, Runnable three) {\n" +
+            "    three.run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private C cee = (C) (java.lang.Object) new Runnable() {\n" +
+            "  x() {\n" +
+            "    super();\n" +
+            "  }\n" +
+            "  public void run() {\n" +
+            "  }\n" +
+            "};\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass11a() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            // field with anon. inner initializer argument:
+            "  C cee = newC(1, '2', new Runnable() {\n" +
+            "    void run() {\n" +
+            "    }\n" +
+            "  })\n" +
+            "  static C newC(int one, String two, Runnable three) {\n" +
+            "    new C()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A()\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C {\n" +
+            "}\n",
+        },
+        "");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private C cee = (C) (java.lang.Object) new Runnable() {\n" +
+            "  x() {\n" +
+            "    super();\n" +
+            "  }\n" +
+            "  public void run() {\n" +
+            "  }\n" +
+            "};\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static C newC(int one, String two, Runnable three) {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass11b() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            // field with anon. inner initializer argument:
+            "  C cee = newC().one(1).two('2').three(new Runnable() {\n" +
+            "    void run() {\n" +
+            "    }\n" +
+            "  })\n" +
+            "  static C newC() {\n" +
+            "    new C()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A()\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C {\n" +
+            "  C one(int i) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "  C two(String s) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "  C three(Runnable r) {\n" +
+            "    this\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private C cee = (C) (java.lang.Object) new Runnable() {\n" +
+            "  x() {\n" +
+            "    super();\n" +
+            "  }\n" +
+            "  public void run() {\n" +
+            "  }\n" +
+            "};\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static C newC() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass12() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  static main(args) {\n" +
+            // local with anon. inner initializer argument:
+            "    C cee = new C(1, '2', new Runnable() {\n" +
+            "      void run() {\n" +
+            "        println 'hi!'\n" +
+            "      }\n" +
+            "    })\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "class C {\n" +
+            "  C(int one, String two, Runnable three) {\n" +
+            "    three.run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "    C cee;\n" +
+            "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
+            "      public void run() {\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "}\n");
+    }
+
     @Test
     public void testAbstractMethodWithinEnum1() {
         runNegativeTest(new String[] {
