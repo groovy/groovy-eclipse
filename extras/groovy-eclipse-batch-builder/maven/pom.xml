@@ -28,6 +28,19 @@
     <url>https://pivotal.io</url>
   </organization>
 
+  <developers>
+    <developer>
+      <name>Andy Clement</name>
+      <organization>Pivotal Software, Inc.</organization>
+      <organizationUrl>https://pivotal.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Eric Milles</name>
+      <organization>Thomson Reuters</organization>
+      <organizationUrl>https://thomsonreuters.com</organizationUrl>
+    </developer>
+  </developers>
+
   <issueManagement>
     <url>https://github.com/groovy/groovy-eclipse/issues</url>
   </issueManagement>
