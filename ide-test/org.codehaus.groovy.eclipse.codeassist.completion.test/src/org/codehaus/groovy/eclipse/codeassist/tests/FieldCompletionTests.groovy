@@ -719,6 +719,38 @@ final class FieldCompletionTests extends CompletionTestSuite {
         }
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/803
+    void testClosure14() {
+        String contents = '''\
+            import groovy.transform.stc.*
+            class A {
+              String zzz
+              static class B {
+                String zzz
+              }
+              static class C {
+                String zzz
+              }
+              def foo(@ClosureParams(value=SimpleType, options='A.B') Closure block) {}
+              def bar(@ClosureParams(value=SimpleType, options='A.C') Closure block) {}
+              void test() {
+                foo { b ->
+                  bar { c ->
+                    zz // delegate is Closure, owner is Closure, owner.delegate is Closure, owner.owner is A
+                  }
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'zz'))
+
+        proposalExists(proposals, 'zzz', 1)
+        findFirstProposal(proposals, 'zzz').with {
+            assert displayString == 'zzz : String - A' // not B or C
+            applyProposalAndCheck(it, contents.replace('zz //', 'zzz //'))
+        }
+    }
+
     @Test
     void testArrayLength1() {
         String contents = 'int[] arr; arr.len'

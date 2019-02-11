@@ -282,12 +282,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         // within a closure, include content assist for the enclosing type (aka "owner")
         if (closureStrategy >= Closure.OWNER_FIRST) {
             ClassNode enclosingType = requestor.currentScope.getOwner();
-            if (enclosingType != null && !enclosingType.equals(completionType)) {
-                Collection<IGroovyProposal> ownerProposals = new ArrayList<>(); // keep proposals separate
-                proposalCreatorInnerLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
+            if (enclosingType != null) {
+                Collection<IGroovyProposal> ownerProposals = new ArrayList<>();
 
-                requestor.currentScope = enclosingType.getNodeMetaData("outer.scope");
-                if (requestor.currentScope != null) { // TODO: add another "owner." qualifier
+                if (!enclosingType.equals(completionType)) {
+                    proposalCreatorInnerLoop(ownerProposals, creators, requestor, context, options, enclosingType, isStatic, isPrimary);
+                }
+                if ((requestor.currentScope = enclosingType.getNodeMetaData("outer.scope")) != null) {
                     proposalCreatorOuterLoop(ownerProposals, creators, requestor, context, options, requestor.currentScope.getDelegate(), isStatic, isPrimary);
                 }
 
