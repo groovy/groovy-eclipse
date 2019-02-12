@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  *
@@ -13,6 +14,11 @@
  *     Terry Parker <tparker@google.com> - Bug 418092
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
@@ -374,6 +380,17 @@ public String[] getParameterNames() throws JavaModelException {
 			}
 		}
 		if (methodDoc != null) {
+			// GROOVY add
+			int indexOfDefsList = methodDoc.indexOf("<dl>");
+			if (indexOfDefsList != -1) { List<String> names = new ArrayList<>();
+				String defsList = methodDoc.substring(indexOfDefsList, methodDoc.indexOf("</dl>", indexOfDefsList) + 5);
+				Matcher matcher = Pattern.compile("<dd><code>(\\p{javaJavaIdentifierPart}+)</code>.*?</dd>").matcher(defsList);
+				while (matcher.find()) {
+					names.add(matcher.group(1));
+				}
+				return this.parameterNames = names.toArray(new String[names.size()]);
+			}
+			// GROOVY end
 			int indexOfOpenParen = methodDoc.indexOf('(');
 			// Annotations may have parameters, so make sure we are parsing the actual method parameters.
 			if (info.getAnnotations() != null) {
