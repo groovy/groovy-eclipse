@@ -31,7 +31,9 @@ public class Braces {
 			case 3:
 				print 3
 		}
-		"hello".each { print it }
+		"hello".each {
+			print it
+		}
 	}
 }
 ###end

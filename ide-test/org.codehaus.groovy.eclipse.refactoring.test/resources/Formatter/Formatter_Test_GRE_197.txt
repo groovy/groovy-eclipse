@@ -32,7 +32,9 @@ class EmailCommand {
 
 	void fun() {
 		def a = [3]
-		a.each { println it }
+		a.each {
+			println it
+		}
 	}
 }
 ###end

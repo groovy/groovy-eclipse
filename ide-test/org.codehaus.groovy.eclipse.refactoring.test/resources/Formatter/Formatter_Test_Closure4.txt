@@ -8,5 +8,7 @@ a = {
 ###exp
 a = { 0 } as List
 
-a = { 0 } as List
+a = {
+	0
+} as List
 ###end

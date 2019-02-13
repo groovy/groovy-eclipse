@@ -13,7 +13,9 @@ print it }
 	print param
 }
 ###exp
-"hello".each { print it }
+"hello".each {
+	print it
+}
 5.times { param ->
 	print param
 	print param

@@ -65,7 +65,9 @@ class A {
     }
 
     static constraints =
-    { 'test' }
+    {
+        'test'
+    }
 
     def method2() {
         def a = 1; def b = 2

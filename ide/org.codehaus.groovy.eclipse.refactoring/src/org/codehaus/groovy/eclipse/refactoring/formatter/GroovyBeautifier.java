@@ -100,27 +100,19 @@ public class GroovyBeautifier {
             }
 
             if (clExp.getCode() instanceof BlockStatement) {
-                BlockStatement codeblock = (BlockStatement) clExp.getCode();
                 int posParamDelim = posClStart;
                 if (clExp.getParameters() != null && clExp.getParameters().length > 0) {
                     // position Parameters on same line
                     posParamDelim = formatter.getPosOfNextTokenOfType(posClStart, GroovyTokenTypeBridge.CLOSABLE_BLOCK_OP);
                     replaceNLSWithSpace(edits, posClStart, posParamDelim);
                 }
-                // combine closure with only one statments with less than 5 tokens to one line
-                if (codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
-                    replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
-                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                // check if there is a linebreak after the parameters
+                if (posParamDelim > 0 && formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypeBridge.NLS) {
+                    addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter.getNewLine()), edits);
                 } else {
-                    // check if there is a linebreak after the parameters
-                    if (posParamDelim > 0 &&
-                        formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypeBridge.NLS) {
-                        addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter.getNewLine()), edits);
-                    } else {
-                        // if there are no parameters check if the first statement is on the next line
-                        if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypeBridge.NLS) {
-                            addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter.getNewLine()), edits);
-                        }
+                    // if there are no parameters check if the first statement is on the next line
+                    if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypeBridge.NLS) {
+                        addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter.getNewLine()), edits);
                     }
                 }
             }

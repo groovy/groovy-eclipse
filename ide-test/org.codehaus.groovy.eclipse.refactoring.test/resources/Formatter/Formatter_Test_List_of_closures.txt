@@ -24,7 +24,9 @@ def all_prints = [
 	{ println "B" }
 ]
 
-def shortClosureList = [{ println "hah" }]
+def shortClosureList = [{
+		println "hah"
+	}]
 
 def shortList = [1, 2, 3]
 
