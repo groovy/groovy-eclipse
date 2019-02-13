@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
@@ -1692,7 +1691,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@interface Anno { Class<? super Integer> value(); }\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(String.class)\n" +
             "\t      ^^^^^^^^^^^^^\n" +
@@ -1721,7 +1721,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "interface I {}\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
@@ -1750,7 +1751,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "interface I {}\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
@@ -1758,7 +1760,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore("FIXASC groovy bug? Why does groovy not care about bounds violation?")
+    @Test
     public void testWildcards10() {
         String[] sources = {
             "p/X.groovy",
@@ -1779,7 +1781,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "interface I {}\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
             "\tObject o = new Wibble<Integer>().run();\n" +
             "\t                      ^^^^^^^\n" +
@@ -1811,7 +1814,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Foo implements I {}\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tpublic class X extends Wibble<Foo> {\n" +
             "\t                       ^^^^^^\n" +
@@ -1819,7 +1823,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore("FIXASC groovy bug? why doesn't it complain - the type parameter doesn't meet the secondary upper bound")
+    @Test
     public void testWildcards12() {
         String[] sources = {
             "p/X.groovy",
@@ -1843,7 +1847,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Foo implements I {}\n",
         };
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tpublic class X extends Wibble<Foo> {\n" +
             "\t               ^^\n" +
