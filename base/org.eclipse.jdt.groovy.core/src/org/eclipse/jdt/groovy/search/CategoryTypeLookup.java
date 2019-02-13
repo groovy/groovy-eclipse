@@ -197,7 +197,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             // TODO: This can fail in a lot of cases; is there a better way to call it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
         } catch (Throwable t) {
-            return Long.MAX_VALUE;
+            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
         }
     }
 

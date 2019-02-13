@@ -447,135 +447,151 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1131
-    public void testEachOnNonIterables1() {
+    public void testDGMClosure1() {
         String contents = "1.each { it }";
         assertExprType(contents, "it", "java.lang.Object"); // not Integer because no @ClosureParams on this each
     }
 
     @Test // GRECLIPSE-1131
-    public void testEachOnNonIterables2() {
+    public void testDGMClosure2() {
         String contents = "each { it }";
         assertExprType(contents, "it", "java.lang.Object"); // not Search because no @ClosureParams on this each
     }
 
     @Test
-    public void testDGMClosure1() {
+    public void testDGMClosure3() {
         String contents = "[''].each { it }";
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
-    public void testDGMClosure2() {
+    public void testDGMClosure4() {
         String contents = "[''].reverseEach { val -> val }";
         assertExprType(contents, "val", "java.lang.String");
     }
 
     @Test
-    public void testDGMClosure3() {
+    public void testDGMClosure5() {
         String contents = "(1..4).find { it }";
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure4() {
+    public void testDGMClosure6() {
         String contents = "['a':1].collect { it.key }";
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
-    public void testDGMClosure5() {
+    public void testDGMClosure7() {
         String contents = "['a':1].collect { it.value }";
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test // Integer is explicit, so should use that as a type
-    public void testDGMClosure7() {
+    public void testDGMClosure8() {
         String contents = "[''].reverseEach { Integer val -> val }";
         assertExprType(contents, "val", "java.lang.Integer");
     }
 
     @Test // Integer is explicit, so should use that as a type
-    public void testDGMClosure8() {
+    public void testDGMClosure9() {
         String contents = "[''].reverseEach { Integer it -> it }";
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure9() {
+    public void testDGMClosure10() {
         String contents = "[new Date()].eachWithIndex { val, i -> val }";
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
-    public void testDGMClosure10() {
+    public void testDGMClosure11() {
         String contents = "[''].eachWithIndex { val, i -> i }";
         assertExprType(contents, "i", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure11() {
+    public void testDGMClosure12() {
         String contents = "[1:new Date()].eachWithIndex { key, val, i -> val }";
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
-    public void testDGMClosure12() {
+    public void testDGMClosure13() {
         String contents = "[1:new Date()].eachWithIndex { key, val, i -> key }";
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure13() {
+    public void testDGMClosure14() {
         String contents = "[1:new Date()].eachWithIndex { key, val, i -> i }";
         assertExprType(contents, "i", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure14() {
+    public void testDGMClosure15() {
         String contents = "[1:new Date()].each { key, val -> key }";
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure15() {
+    public void testDGMClosure16() {
         String contents = "[1:new Date()].each { key, val -> val }";
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
-    public void testDGMClosure16() {
+    public void testDGMClosure17() {
         String contents = "[1:new Date()].collect { key, val -> key }";
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure17() {
+    public void testDGMClosure18() {
         String contents = "[1:new Date()].collect { key, val -> val }";
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
-    public void testDGMClosure18() {
+    public void testDGMClosure19() {
         String contents = "[1].unique { a, b -> b }";
         assertExprType(contents, "b", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure19() {
+    public void testDGMClosure20() {
         String contents = "[1].unique { a, b -> a }";
         assertExprType(contents, "a", "java.lang.Integer");
     }
 
     @Test
-    public void testDGMClosure20() {
+    public void testDGMClosure21() {
         String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
         assertExprType(contents, "value", "java.lang.Double");
     }
 
     @Test
-    public void testDGMClosure21() {
+    public void testDGMClosure22() {
         String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
         assertExprType(contents, "key", "java.lang.Float");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/810
+    public void testDGMClosure23() {
+        String contents =
+            "class Bar { Number number }\n" +
+            "class Foo implements Iterable<Bar> {\n" +
+            "  List<Bar> bars\n" +
+            "  Iterator<Bar> iterator() {\n" +
+            "    return bars.iterator()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    this.any { bar -> bar.number > 0 }\n" + // any(Object,Closure) vs. any(Iterable,Closure)
+            "  }\n" +
+            "}\n";
+        assertExprType(contents, "bar", "Bar"); // not "java.lang.Object"
     }
 
     @Test
