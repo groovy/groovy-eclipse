@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,12 @@
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
@@ -35,17 +37,10 @@ import org.eclipse.text.edits.InsertEdit;
  */
 public class AddClassCastResolver extends AbstractQuickFixResolver {
 
-    private static final Set<String> DEFAULT_IMPORTS = new HashSet<>();
-    static {
-        DEFAULT_IMPORTS.add("java.io.*");
-        DEFAULT_IMPORTS.add("java.lang.*");
-        DEFAULT_IMPORTS.add("java.net.*");
-        DEFAULT_IMPORTS.add("java.util.*");
-        DEFAULT_IMPORTS.add("groovy.lang.*");
-        DEFAULT_IMPORTS.add("groovy.util.*");
-        DEFAULT_IMPORTS.add("java.math.BigDecimal");
-        DEFAULT_IMPORTS.add("java.math.BigInteger");
-    }
+    private static final Set<String> DEFAULT_IMPORTS = Stream.concat(
+        Stream.of(ResolveVisitor.DEFAULT_IMPORTS).map(p -> p + "*"),
+        Stream.of("java.math.BigDecimal", "java.math.BigInteger")
+    ).collect(Collectors.toSet());
 
     protected AddClassCastResolver(QuickFixProblemContext problem) {
         super(problem);
@@ -54,8 +49,7 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
     @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
         List<IJavaCompletionProposal> proposals = new ArrayList<>();
-        proposals.add(new AddClassCastProposal(getQuickFixProblem(),
-                (GroovyCompilationUnit) getQuickFixProblem().getCompilationUnit()));
+        proposals.add(new AddClassCastProposal(getQuickFixProblem(), (GroovyCompilationUnit) getQuickFixProblem().getCompilationUnit()));
         return proposals;
     }
 

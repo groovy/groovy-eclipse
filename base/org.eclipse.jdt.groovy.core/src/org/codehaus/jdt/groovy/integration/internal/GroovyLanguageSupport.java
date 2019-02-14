@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
+import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.jdt.groovy.integration.EventHandler;
@@ -147,13 +148,8 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     @Override
     public Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
-        Collection<String> implicitImportContainerNames = new ArrayList<>();
-        implicitImportContainerNames.add("java.io");
-        implicitImportContainerNames.add("java.net");
-        implicitImportContainerNames.add("java.lang");
-        implicitImportContainerNames.add("java.util");
-        implicitImportContainerNames.add("groovy.lang");
-        implicitImportContainerNames.add("groovy.util");
+        Collection<String> implicitImportContainerNames = Arrays.stream(ResolveVisitor.DEFAULT_IMPORTS)
+                .map(p -> p.substring(0, p.length() - 1)).collect(java.util.stream.Collectors.toList());
 
         ModuleNode module = ((GroovyCompilationUnit) compilationUnit).getModuleNode();
         if (module != null) {

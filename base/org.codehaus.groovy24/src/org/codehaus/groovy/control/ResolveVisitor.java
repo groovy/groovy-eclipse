@@ -90,7 +90,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE private->protected
     protected ClassNode currentClass;
     // note: BigInteger and BigDecimal are also imported by default
-    public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
+    public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.util.", "java.io.", "java.net.", "groovy.lang.", "groovy.util."};
     // GRECLIPSE private->public
     public CompilationUnit compilationUnit;
     private SourceUnit source;
