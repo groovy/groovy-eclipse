@@ -378,14 +378,16 @@ public String[] getParameterNames() throws JavaModelException {
 		}
 		if (methodDoc != null) {
 			// GROOVY add
-			int indexOfDefsList = methodDoc.indexOf("<dl>");
-			if (indexOfDefsList != -1) { List<String> names = new ArrayList<>();
-				String defsList = methodDoc.substring(indexOfDefsList, methodDoc.indexOf("</dl>", indexOfDefsList) + 5);
-				Matcher matcher = Pattern.compile("<dd><code>(\\p{javaJavaIdentifierPart}+)</code>.*?</dd>").matcher(defsList);
+			int indexOfPre = methodDoc.indexOf("<pre>");
+			if (indexOfPre != -1) { List<String> names = new ArrayList<>();
+				String methodSig = methodDoc.substring(indexOfPre, methodDoc.indexOf("</pre>", indexOfPre) + 6);
+				Matcher matcher = Pattern.compile("&nbsp;(\\p{javaJavaIdentifierPart}+)[,)]").matcher(methodSig);
 				while (matcher.find()) {
 					names.add(matcher.group(1));
 				}
-				return this.parameterNames = names.toArray(new String[names.size()]);
+				if (this.parameterTypes.length == names.size()) {
+					return this.parameterNames = names.toArray(new String[names.size()]);
+				}
 			}
 			// GROOVY end
 			int indexOfOpenParen = methodDoc.indexOf('(');
