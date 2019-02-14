@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
@@ -1510,7 +1511,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // FIXASC groovy bug?  Why didn't it complain that String doesn't meet the bound - at the moment letting JDT complain...
+    @Test
     public void testWildcards01() {
         String[] sources = {
             "p/X.groovy",
@@ -1672,7 +1673,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "success");
     }
 
-    @Test // bounds violation: String does not meet '? super Integer'
+    @Test
     public void testWildcards07() {
         String[] sources = {
             "p/X.groovy",
@@ -1700,93 +1701,99 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // double upper bounds
+    @Test
     public void testWildcards08() {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    Object o = new Wibble<Integer>().run();\n" +
-            "    System.out.println(\"success\");\n" +
+            "  public static void main(String[] args) {\n" +
+            "    new J<Integer>().run();\n" +
             "  }\n" +
             "}\n",
 
-            "p/Anno.java",
-            "package p;\n" +
-            "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
             "p/I.java",
             "package p;\n" +
-            "interface I {}\n",
+            "public interface I {\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J<T extends Number & I> {\n" +
+            "  Class<T> run() { return null; }\n" +
+            "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
-            "\tObject o = new Wibble<Integer>().run();\n" +
-            "\t                      ^^^^^^^\n" +
-            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
+            "\tnew J<Integer>().run();\n" +
+            "\t      ^^^^^^^\n" +
+            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type J<T>\n" +
             "----------\n");
     }
 
-    @Test // double upper bounds
+    @Test
     public void testWildcards09() {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    Object o = new Wibble<Integer>().run();\n" +
-            "    System.out.println(\"success\");\n" +
+            "  public static void main(String[] args) {\n" +
+            "    new G<Integer>().run();\n" +
             "  }\n" +
             "}\n",
 
-            "p/Anno.groovy",
-            "package p;\n" +
-            "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
             "p/I.java",
             "package p;\n" +
-            "interface I {}\n",
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.java (at line 4)\n" +
-            "\tObject o = new Wibble<Integer>().run();\n" +
-            "\t                      ^^^^^^^\n" +
-            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
+            "\tnew G<Integer>().run();\n" +
+            "\t      ^^^^^^^\n" +
+            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type G<T>\n" +
             "----------\n");
     }
 
-    @Test
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8990")
     public void testWildcards10() {
         String[] sources = {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    Object o = new Wibble<Integer>().run();\n" +
-            "    System.out.println(\"success\");\n" +
+            "package p\n" +
+            "class X {\n" +
+            "  static main(args) {\n" +
+            "    new G<Integer>().run()\n" +
             "  }\n" +
             "}\n",
 
-            "p/Anno.groovy",
-            "package p;\n" +
-            "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
-
             "p/I.java",
             "package p;\n" +
-            "interface I {}\n",
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in p\\X.java (at line 4)\n" +
-            "\tObject o = new Wibble<Integer>().run();\n" +
-            "\t                      ^^^^^^^\n" +
-            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type Wibble<T>\n" +
+            "1. ERROR in p\\X.groovy (at line 4)\n" +
+            "\tnew G<Integer>().run()\n" +
+            "\t      ^^^^^^^\n" +
+            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
 
@@ -1794,65 +1801,58 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     public void testWildcards11() {
         String[] sources = {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X extends Wibble<Foo> {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
+            "package p\n" +
+            "class W implements I {}\n" +
+            "class X extends G<W> {\n" +
             "}\n",
-
-            "p/Anno.groovy",
-            "package p;\n" +
-            "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
             "package p;\n" +
-            "interface I {}\n",
+            "public interface I {\n" +
+            "}\n",
 
-            "p/Foo.java",
-            "package p;\n" +
-            "class Foo implements I {}\n",
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\tpublic class X extends Wibble<Foo> {\n" +
-            "\t                       ^^^^^^\n" +
-            "Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\tclass X extends G<W> {\n" +
+            "\t                ^\n" +
+            "Groovy:The type W is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
 
-    @Test
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8990")
     public void testWildcards12() {
         String[] sources = {
             "p/X.groovy",
-            "package p;\n" +
-            "public class X extends Wibble<Integer> {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
+            "package p\n" +
+            "class X extends G<Integer> {\n" +
             "}\n",
-
-            "p/Anno.groovy",
-            "package p;\n" +
-            "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
             "package p;\n" +
-            "interface I {}\n",
+            "public interface I {\n" +
+            "}\n",
 
-            "p/Foo.java",
-            "package p;\n" +
-            "class Foo implements I {}\n",
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\tpublic class X extends Wibble<Foo> {\n" +
-            "\t               ^^\n" +
-            "Groovy:The type Foo is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
+            "\tclass X extends G<Integer> {\n" +
+            "\t                ^\n" +
+            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
 }
