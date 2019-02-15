@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1940,13 +1941,17 @@ assert primaryExprType != null && dependentExprType != null;
                     jdtParamTypes = (String[]) ArrayUtils.add(jdtParamTypes, 0, typeSignature);
                 }
 
+                if (methods.size() > 1) {
+                    methods.sort(Comparator.comparingInt(m -> m.getParameters().length));
+                }
+
                 outer: for (MethodNode methodNode : methods) {
                     Parameter[] groovyParams = methodNode.getParameters();
                     if (groovyParams == null) groovyParams = NO_PARAMETERS;
-                    if (groovyParams.length != jdtParamTypes.length) {
+                    if (groovyParams.length < jdtParamTypes.length) {
                         continue;
                     }
-                    inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
+                    inner: for (int i = 0, n = jdtParamTypes.length; i < n; i += 1) {
                         String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false, false);
                         if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
                             continue inner;

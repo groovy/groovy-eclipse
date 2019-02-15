@@ -553,6 +553,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                 candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
             }
+            if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
+                for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {
+                    if (parameter.getName().equals(var.getName())) {
+                        candidate = parameter; break;
+                    }
+                }
+            }
         }
         if (candidate == null && resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
             candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, false, callArgs);

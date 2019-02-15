@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2290,6 +2290,44 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('strings'), 'strings'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('findSomething'), 'findSomething'.length(), METHOD),
             new HighlightedTypedPosition(contents.indexOf('inputs'), 'inputs'.length(), PARAMETER))
+    }
+
+    @Test
+    void testMethodOverloads2() {
+        String contents = '''\
+            class X {
+              void meth(String one, Object two, ... three) {
+                def var = three
+              }
+              void meth(String one, Object two) {
+                def var = two
+              }
+              void meth(String one) {
+                def var = one
+              }
+            }
+            '''.stripIndent()
+
+        int m1 = contents.indexOf('meth')
+        int m2 = contents.indexOf('meth', m1 + 4)
+        int m3 = contents.indexOf('meth', m2 + 4)
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(m1, 'meth'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('one'), 'one'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var'), 'var'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('three', contents.indexOf('var')), 'three'.length(), PARAMETER),
+            new HighlightedTypedPosition(m2, 'meth'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('one', m2), 'one'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('two', m2), 'two'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var', m2), 'var'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('two', contents.indexOf('var', m2)), 'two'.length(), PARAMETER),
+            new HighlightedTypedPosition(m3, 'meth'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('one', m3), 'one'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var', m3), 'var'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('one', contents.indexOf('var', m3)), 'one'.length(), PARAMETER))
     }
 
     @Test
