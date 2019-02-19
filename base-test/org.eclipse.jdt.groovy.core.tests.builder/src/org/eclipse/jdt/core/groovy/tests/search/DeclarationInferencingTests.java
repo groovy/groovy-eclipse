@@ -408,14 +408,14 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     public void testGetterAndField10b() {
         createUnit("Foo",
             "class Foo {\n" +
-            "  String xxx\n" +
+            "  protected String xxx\n" +
             "  String getXxx() { xxx }\n" +
             "}");
 
         int start, end;
         String contents =
             "class Bar extends Foo {\n" +
-            "  String yyy\n" +
+            "  protected String yyy\n" +
             "  def meth() {\n" +
             "    this.@yyy = super.@xxx\n" +
             "  }\n" +

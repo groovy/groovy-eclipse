@@ -1078,7 +1078,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticThisAndSuper() {
+    public void testStaticThisAndSuper1() {
         String contents =
             "class A {\n" +
             "  static main(args) {\n" +
@@ -1093,7 +1093,8 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testStaticThisAndSuper2() {
         String contents =
-            "class A { }\n" +
+            "class A {\n" +
+            "}\n" +
             "class B extends A {\n" +
             "  static main(args) {\n" +
             "    this\n" +
@@ -1105,24 +1106,187 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testSuperFieldReference() {
-        String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
-        String expr = "myOther";
-        assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
+    public void testSuperFieldReference1() {
+        String contents =
+            "class A {\n" +
+            "  Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "field", "java.lang.Number");
     }
 
     @Test
-    public void testSuperClassMethod() {
-        String contents = "class A { void m() { } }\n" + "class B extends A { }\n" + "new B().m()";
-        int offset = contents.lastIndexOf('m');
-        assertDeclaringType(contents, offset, offset + 1, "A");
+    public void testSuperFieldReference2() {
+        String contents =
+            "class A {\n" +
+            "  protected Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "field", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperFieldReference3() {
+        String contents =
+            "class A {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("field");
+        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperFieldReference3a() {
+        String contents =
+            "class A {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.field\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("field");
+        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperFieldReference3b() {
+        String contents =
+            "class A {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.field\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("field");
+        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperFieldReference3c() {
+        String contents =
+            "class A {\n" +
+            "  private String field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.@field\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("field");
+        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+    }
+
+    @Test
+    public void testSuperClassMethod1() {
+        String contents =
+            "class A {\n" +
+            "  void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "new B().method()\n";
+        assertDeclType(contents, "method", "A");
     }
 
     @Test
     public void testSuperClassMethod2() {
-        String contents = "class A { void m(Runnable r) { } }\n" + "class B extends A { }\n" + "new B().m() { -> }";
-        int offset = contents.lastIndexOf('m');
-        assertDeclaringType(contents, offset, offset + 1, "A");
+        String contents =
+            "class A {\n" +
+            "  void method(Runnable r) {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "new B().method() { -> }\n";
+        assertDeclType(contents, "method", "A");
+    }
+
+    @Test
+    public void testSuperClassMethod3() {
+        String contents =
+            "class A {\n" +
+            "  protected void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void something() {\n" +
+            "    method()\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "A");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperClassMethod4() {
+        String contents =
+            "class A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void something() {\n" +
+            "    method()\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("method");
+        assertUnknownConfidence(contents, offset, offset + "method".length(), "A", false);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperClassMethod4a() {
+        String contents =
+            "class A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void something() {\n" +
+            "    this.method()\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("method");
+        assertUnknownConfidence(contents, offset, offset + "method".length(), "A", false);
+    }
+
+    @Test
+    public void testSuperClassMethod4b() {
+        String contents =
+            "class A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void something() {\n" +
+            "    super.method()\n" + // this is ok
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "A");
+    }
+
+    @Test
+    public void testSuperClassMethod4c() {
+        String contents =
+            "class A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  void something() {\n" +
+            "    super.&method\n" + // GROOVY-8999: resolves to MethodClosure, but it NPEs when called
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "A");
     }
 
     @Test
