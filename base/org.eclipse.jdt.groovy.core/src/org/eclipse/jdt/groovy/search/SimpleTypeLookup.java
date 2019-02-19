@@ -954,7 +954,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static boolean isNotThisOrOuterClass(final ClassNode thisType, final ClassNode declaringClass) {
-        return (!thisType.equals(declaringClass) && !thisType.getOuterClasses().contains(declaringClass));
+        return (!thisType.equals(declaringClass) && !thisType.getOuterClasses().contains(declaringClass) && !(implementsTrait(thisType) && thisType.implementsInterface(declaringClass)));
     }
 
     /**

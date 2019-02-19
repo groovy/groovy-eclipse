@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,60 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
+    }
+
+    @Test
+    public void testPrivateMethod2() {
+        String contents =
+            "trait A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  void something() {\n" +
+            "    method()\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "A");
+        assertExprType(contents, "method", "java.lang.Void");
+    }
+
+    @Test
+    public void testPrivateMethod3() {
+        String contents =
+            "trait A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  void something() {\n" +
+            "    A.super.method()\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "A$Trait$Helper");
+        assertExprType(contents, "method", "java.lang.Void");
+    }
+
+    @Test
+    public void testPrivateMethod4() {
+        String contents =
+            "trait A {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  private void method() {}\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  void something() {\n" +
+            "    B.super.method()\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "method", "B$Trait$Helper");
+        assertExprType(contents, "method", "java.lang.Void");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8854
