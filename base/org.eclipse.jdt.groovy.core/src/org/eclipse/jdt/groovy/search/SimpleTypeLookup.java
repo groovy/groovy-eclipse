@@ -74,39 +74,35 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected GroovyCompilationUnit unit;
 
     @Override
-    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+    public void initialize(final GroovyCompilationUnit unit, final VariableScope topLevelScope) {
         this.unit = unit;
     }
 
     @Override
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        TypeConfidence[] confidence = {TypeConfidence.EXACT};
-        objectExpressionType = GroovyUtils.getWrapperTypeIfPrimitive(objectExpressionType);
-        ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
-        TypeLookupResult result = findType(node, declaringType, scope, confidence[0],
-            isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
-
-        return result;
+    public TypeLookupResult lookupType(final Expression node, final VariableScope scope, final ClassNode objectExpressionType, final boolean isStaticObjectExpression) {
+        ClassNode declaringType = Optional.ofNullable(GroovyUtils.getWrapperTypeIfPrimitive(objectExpressionType)).orElseGet(() -> findDeclaringType(node, scope));
+        boolean isPrimary = (objectExpressionType == null), isStatic = (isStaticObjectExpression || (isPrimary && scope.isStatic()));
+        return findType(node, declaringType, scope, isPrimary, isStatic);
     }
 
     @Override
-    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final FieldNode node, final VariableScope scope) {
         return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
     @Override
-    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
         return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
     @Override
-    public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final AnnotationNode node, final VariableScope scope) {
         ClassNode baseType = node.getClassNode();
         return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     @Override
-    public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final ImportNode node, final VariableScope scope) {
         ClassNode baseType = Optional.ofNullable(node.getType()).orElse(VariableScope.NULL_TYPE);
         return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
@@ -115,36 +111,29 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @return {@code node}, unless the declaration is an {@link InnerClassNode}
      */
     @Override
-    public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-        ClassNode resultType;
+    public TypeLookupResult lookupType(final ClassNode node, final VariableScope scope) {
+        ClassNode type;
         if (node.getOuterClass() != null && !node.isRedirectNode()) {
-            resultType = node.getSuperClass();
-            if (resultType.getName().equals(VariableScope.OBJECT_CLASS_NODE.getName()) && node.getInterfaces().length > 0) {
-                resultType = node.getInterfaces()[0];
+            type = node.getSuperClass();
+            if (type.getName().equals(VariableScope.OBJECT_CLASS_NODE.getName()) && node.getInterfaces().length > 0) {
+                type = node.getInterfaces()[0];
             }
         } else {
-            resultType = node;
+            type = node;
         }
-        return new TypeLookupResult(resultType, resultType, node, TypeConfidence.EXACT, scope);
+        return new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
     }
 
     @Override
-    public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-        // look up the type in the current scope to see if the type has
-        // has been predetermined (eg- for loop variables)
-        VariableInfo info = scope.lookupNameInCurrentScope(node.getName());
-        ClassNode type;
-        if (info != null) {
-            type = info.type;
-        } else {
-            type = node.getType();
-        }
-        return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, TypeConfidence.EXACT, scope);
+    public TypeLookupResult lookupType(final Parameter node, final VariableScope scope) {
+        // look up the name in the current scope to see if the type has been pre-determined (e.g. for loop variables)
+        ClassNode type = Optional.ofNullable(scope.lookupNameInCurrentScope(node.getName())).map(info -> info.type).orElse(node.getType());
+        return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node, TypeConfidence.EXACT, scope);
     }
 
     //--------------------------------------------------------------------------
 
-    protected ClassNode findDeclaringType(Expression node, VariableScope scope, TypeConfidence[] confidence) {
+    protected static ClassNode findDeclaringType(final Expression node, final VariableScope scope) {
         if (node instanceof ClassExpression || node instanceof ConstructorCallExpression) {
             return node.getType();
 
@@ -180,29 +169,29 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return VariableScope.OBJECT_CLASS_NODE;
     }
 
-    protected TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope,
-            TypeConfidence confidence, final boolean isStaticObjectExpression, final boolean isPrimaryExpression) {
+    protected TypeLookupResult findType(final Expression node, final ClassNode declaringType, final VariableScope scope, final boolean isPrimaryExpression, final boolean isStaticObjectExpression) {
+
+        ClassNode nodeType = node.getType();
+        TypeConfidence confidence = TypeConfidence.EXACT;
 
         MethodNode target; // use value from node metadata if it's available
         if (scope.isMethodCall() && (target = getMethodTarget(node)) != null) {
             return new TypeLookupResult(target.getReturnType(), target.getDeclaringClass(), target, confidence, scope);
         }
 
-        ClassNode nodeType = node.getType();
-
         if (node instanceof VariableExpression) {
-            return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
+            return findTypeForVariable((VariableExpression) node, scope, declaringType);
 
         } else if (node instanceof ConstantExpression) {
             if (isPrimaryExpression) {
                 if (scope.isMethodCall()) { // handle method call without object expression like a free variable
                     VariableExpression call = new VariableExpression(new DynamicVariable(node.getText(), false));
-                    TypeLookupResult result = findTypeForVariable(call, scope, confidence, declaringType);
+                    TypeLookupResult result = findTypeForVariable(call, scope, declaringType);
                     if (isCompatible((AnnotatedNode) result.declaration, isStaticObjectExpression)) {
                         return result;
                     }
                     if (isStaticObjectExpression) { // might be reference to a method defined on java.lang.Class
-                        return findTypeForVariable(call, scope, confidence, VariableScope.newClassClassNode(declaringType));
+                        return findTypeForVariable(call, scope, VariableScope.newClassClassNode(declaringType));
                     }
                 }
             } else {
@@ -211,7 +200,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (outer != null) {
                     List<ClassNode> types = outer.getMethodCallArgumentTypes();
                     try { outer.setMethodCallArgumentTypes(scope.getMethodCallArgumentTypes());
-                        return findTypeForVariable(new VariableExpression(new DynamicVariable(node.getText(), false)), outer, confidence, declaringType);
+                        return findTypeForVariable(new VariableExpression(new DynamicVariable(node.getText(), false)), outer, declaringType);
                     } finally {
                         outer.setMethodCallArgumentTypes(types);
                     }
@@ -221,16 +210,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (scope.getEnclosingNode() instanceof AttributeExpression) {
                     ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
                     FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
-                    if (isCompatible(field, isStaticObjectExpression)) {
-                        boolean isPrivateSuperField = Flags.isPrivate(field.getModifiers()) && isSuperObjectExpression(scope);
-                        return new TypeLookupResult(field.getType(), clazz, field, !isPrivateSuperField ? TypeConfidence.EXACT : TypeConfidence.UNKNOWN, scope);
-                    } else {
+                    if (!isCompatible(field, isStaticObjectExpression)) {
                         return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
+                    } else {
+                        boolean isPrivateSuperField = Flags.isPrivate(field.getModifiers()) && isSuperObjectExpression(scope);
+                        return new TypeLookupResult(field.getType(), clazz, field, !isPrivateSuperField ? confidence : TypeConfidence.UNKNOWN, scope);
                     }
                 }
 
                 boolean isLhsExpression = (scope.getWormhole().remove("lhs") == node);
-                return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence, isLhsExpression, isStaticObjectExpression);
+                return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, isLhsExpression, isStaticObjectExpression);
             }
 
             ConstantExpression cexp = (ConstantExpression) node;
@@ -274,21 +263,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression call = (ConstructorCallExpression) node;
+            ClassNode resolvedDeclaringType = declaringType;
             if (call.isSpecialCall()) {
                 nodeType = VariableScope.VOID_CLASS_NODE;
-                declaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
-                if (call.isSuperCall()) declaringType = declaringType.getUnresolvedSuperClass(false);
+                resolvedDeclaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
+                if (call.isSuperCall()) resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false);
             } else if (call.isUsingAnonymousInnerClass()) {
-                declaringType = declaringType.getUnresolvedSuperClass(false); // nodeType is anon. inner
+                resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false); // nodeType is anon. inner
             }
 
             // try to find best match if there is more than one constructor to choose from
-            List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
+            List<ConstructorNode> declaredConstructors = resolvedDeclaringType.getDeclaredConstructors();
             if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 if (callTypes.size() > 1) {
                     // non-static inner types may have extra argument for enclosing type
-                    if (callTypes.get(0).equals(declaringType.getOuterClass()) && !Flags.isStatic(declaringType.getModifiers())) {
+                    if (callTypes.get(0).equals(resolvedDeclaringType.getOuterClass()) && !Flags.isStatic(resolvedDeclaringType.getModifiers())) {
                         callTypes.remove(0);
                     }
                 }
@@ -297,7 +287,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 for (ConstructorNode ctor : declaredConstructors) {
                     if (callTypes.size() == ctor.getParameters().length) {
                         if (Boolean.TRUE.equals(isTypeCompatible(callTypes, ctor.getParameters()))) {
-                            return new TypeLookupResult(nodeType, declaringType, ctor, confidence, scope);
+                            return new TypeLookupResult(nodeType, resolvedDeclaringType, ctor, confidence, scope);
                         }
                         // argument types may not be fully resolved; at least the number of arguments matched
                         looseMatches.add(ctor);
@@ -308,8 +298,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
 
-            ASTNode declaration = (!declaredConstructors.isEmpty() ? declaredConstructors.get(0) : declaringType);
-            return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
+            ASTNode declaration = (!declaredConstructors.isEmpty() ? declaredConstructors.get(0) : resolvedDeclaringType);
+            return new TypeLookupResult(nodeType, resolvedDeclaringType, declaration, confidence, scope);
 
         } else if (node instanceof StaticMethodCallExpression) {
             List<MethodNode> candidates = new LinkedList<>();
@@ -366,10 +356,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(nodeType, declaringType, null, confidence, scope);
     }
 
-    protected TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType, VariableScope scope,
-            TypeConfidence confidence, final boolean isLhsExpression, final boolean isStaticObjectExpression) {
+    protected TypeLookupResult findTypeForNameWithKnownObjectExpression(final String name, final ClassNode type, final ClassNode declaringType, final VariableScope scope, final boolean isLhsExpression, final boolean isStaticObjectExpression) {
 
-        final TypeConfidence confidence0 = confidence;
+        TypeConfidence confidence = TypeConfidence.EXACT;
         boolean isFieldAccessDirect = (isThisObjectExpression(scope) ? scope.isFieldAccessDirect() : false);
         ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, isFieldAccessDirect, scope.getMethodCallArgumentTypes());
         if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
@@ -377,24 +366,24 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
         }
 
-        ClassNode realDeclaringType;
+        ClassNode resolvedType = type, resolvedDeclaringType;
         if (declaration != null) {
-            type = getTypeFromDeclaration(declaration);
-            realDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
+            resolvedType = getTypeFromDeclaration(declaration);
+            resolvedDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
         } else if ("call".equals(name)) {
             // assume that this is a synthetic call method for calling a closure
-            realDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
-            declaration = realDeclaringType.getMethods("call").get(0);
+            resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
+            declaration = resolvedDeclaringType.getMethods("call").get(0);
         } else if ("this".equals(name)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
-            declaration = type = realDeclaringType = declaringType.getGenericsTypes()[0].getType();
+            declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
         } else {
-            realDeclaringType = declaringType;
+            resolvedDeclaringType = declaringType;
             confidence = TypeConfidence.UNKNOWN;
         }
 
         if (declaration != null) {
-            if (!VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType) && !VariableScope.CLASS_CLASS_NODE.equals(type)) {
+            if (!VariableScope.CLASS_CLASS_NODE.equals(resolvedDeclaringType) && !VariableScope.CLASS_CLASS_NODE.equals(resolvedType)) {
                 // check to see if the object expression is static but the declaration is not -- and some other conditions
                 if (declaration instanceof FieldNode) {
                     FieldNode field = (FieldNode) declaration;
@@ -405,7 +394,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         if (isSuperObjectExpression(scope)) {
                             confidence = TypeConfidence.UNKNOWN;
                         // "this.field" reference to private field of super class yields MissingPropertyException
-                        } else if (isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, realDeclaringType)) {
+                        } else if (isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                             confidence = TypeConfidence.UNKNOWN;
                         }
                     }
@@ -423,7 +412,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     MethodNode method = (MethodNode) declaration;
                     if (isStaticObjectExpression && !method.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (Flags.isPrivate(method.getModifiers()) && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, realDeclaringType)) {
+                    } else if (Flags.isPrivate(method.getModifiers()) && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters())) {
@@ -431,7 +420,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
                 }
-            } else if (VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType) && declaration instanceof MethodNode) {
+            } else if (VariableScope.CLASS_CLASS_NODE.equals(resolvedDeclaringType) && declaration instanceof MethodNode) {
                 // beware of matching Class methods too aggressively; Arrays.toString(Object[]) vs. Class.toString()
                 MethodNode classMethod = (MethodNode) declaration;
                 if (isStaticObjectExpression && !classMethod.isStatic()) {
@@ -451,22 +440,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
                 // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations
-                return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, confidence0, isLhsExpression, isStaticObjectExpression);
+                return findTypeForNameWithKnownObjectExpression(name, resolvedType, typeParam, scope, isLhsExpression, isStaticObjectExpression);
             }
         }
 
-        return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
+        return new TypeLookupResult(resolvedType, resolvedDeclaringType, declaration, confidence, scope);
     }
 
-    protected TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence, ClassNode declaringType) {
+    protected TypeLookupResult findTypeForVariable(final VariableExpression var, final VariableScope scope, final ClassNode declaringType) {
         ASTNode decl = var;
         ClassNode type = var.getType();
-        final TypeConfidence confidence0 = confidence;
+        ClassNode resolvedDeclaringType = declaringType;
+        TypeConfidence confidence = TypeConfidence.EXACT;
         Variable accessedVar = var.getAccessedVariable();
         VariableInfo variableInfo = scope.lookupName(var.getName());
         int resolveStrategy = scope.getEnclosingClosureResolveStrategy();
         boolean direct = (accessedVar instanceof AnnotatedNode &&
-            declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
+            resolvedDeclaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
 
         if ((accessedVar instanceof FieldNode && !(direct && scope.isFieldAccessDirect())) ||
                 (direct && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
@@ -483,19 +473,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (decl instanceof PropertyNode) {
                     PropertyNode prop = (PropertyNode) decl; // check for pseudo-property
                     if (prop.isDynamicTyped() && prop.getField().hasNoRealSourcePosition()) {
-                        Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(), declaringType,
+                        Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(), resolvedDeclaringType,
                             (scope.getWormhole().get("lhs") == var), prop.isStatic(), scope.getMethodCallArgumentTypes());
                         decl = accessor.map(meth -> (ASTNode) meth).orElse(decl);
                     }
                 }
 
-                declaringType = ((AnnotatedNode) decl).getDeclaringClass();
+                resolvedDeclaringType = ((AnnotatedNode) decl).getDeclaringClass();
                 variableInfo = null; // use field/method/property
                 type = getTypeFromDeclaration(decl);
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            declaringType = getMorePreciseType(declaringType, variableInfo);
-            ASTNode candidate = findDeclarationForDynamicVariable(var, declaringType, scope, resolveStrategy);
+            resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
+            ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     (AccessorSupport.isGetter((MethodNode) candidate) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
@@ -503,7 +493,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
-                    } else if (Flags.isPrivate(field.getModifiers()) && isNotThisOrOuterClass(declaringType, field.getDeclaringClass())) {
+                    } else if (Flags.isPrivate(field.getModifiers()) && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
@@ -511,15 +501,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
                     Parameter[] parameterNodes = ((MethodNode) candidate).getParameters();
                     if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
-                        confidence = TypeConfidence.findLessPrecise(confidence0, TypeConfidence.LOOSELY_INFERRED);
+                        confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (Flags.isPrivate(((MethodNode) candidate).getModifiers()) && isNotThisOrOuterClass(declaringType, ((MethodNode) candidate).getDeclaringClass())) {
+                    if (Flags.isPrivate(((MethodNode) candidate).getModifiers()) && isNotThisOrOuterClass(resolvedDeclaringType, ((MethodNode) candidate).getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
                 decl = candidate;
                 type = getTypeFromDeclaration(decl);
-                declaringType = getDeclaringTypeFromDeclaration(decl, declaringType);
+                resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, resolvedDeclaringType);
             } else {
                 type = VariableScope.OBJECT_CLASS_NODE;
                 confidence = TypeConfidence.UNKNOWN;
@@ -528,17 +518,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (variableInfo != null && (!(decl instanceof MethodNode) || VariableScope.CLOSURE_CLASS_NODE.equals(declaringType))) {
+        if (variableInfo != null && (!(decl instanceof MethodNode) || VariableScope.CLOSURE_CLASS_NODE.equals(resolvedDeclaringType))) {
             type = variableInfo.type;
+            confidence = TypeConfidence.INFERRED;
             if (VariableScope.isThisOrSuper(var)) decl = type;
-            declaringType = getMorePreciseType(declaringType, variableInfo);
-            confidence = TypeConfidence.findLessPrecise(confidence0, TypeConfidence.INFERRED);
+            resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
         }
 
-        return new TypeLookupResult(type, declaringType, decl, confidence, scope);
+        return new TypeLookupResult(type, resolvedDeclaringType, decl, confidence, scope);
     }
 
-    protected ASTNode findDeclarationForDynamicVariable(VariableExpression var, ClassNode owner, VariableScope scope, int resolveStrategy) {
+    protected ASTNode findDeclarationForDynamicVariable(final VariableExpression var, final ClassNode owner, final VariableScope scope, final int resolveStrategy) {
         ASTNode candidate = null;
         List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
         boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
@@ -586,7 +576,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @param methodCallArgumentTypes types of arguments to the associated method call
      *        (or {@code null} if not a method call)
      */
-    protected ASTNode findDeclaration(String name, ClassNode declaringType, boolean isLhsExpression, boolean isStaticExpression, boolean directFieldAccess, List<ClassNode> methodCallArgumentTypes) {
+    protected ASTNode findDeclaration(final String name, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final boolean directFieldAccess, final List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
             // only length exists on arrays
             if ("length".equals(name)) {
@@ -649,8 +639,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for member in outer classes
         if (getBaseDeclaringType(declaringType).getOuterClass() != null) {
             // search only for static declarations if inner class is static
-            isStaticExpression |= Flags.isStatic(declaringType.getModifiers());
-            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+            boolean isStatic = (isStaticExpression || Flags.isStatic(declaringType.getModifiers()));
+            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStatic, directFieldAccess, methodCallArgumentTypes);
             if (declaration != null) {
                 return declaration;
             }
@@ -669,7 +659,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * with the same number of arguments, but if multiple methods exist with same name,
      * then will return an arbitrary one.
      */
-    protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> argumentTypes, boolean isStaticExpression) {
+    protected MethodNode findMethodDeclaration(final String name, final ClassNode declaringType, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
         // concrete types (without mixins/traits) return all declared methods from getMethods(String)
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = declaringType.getMethods(name);
@@ -720,7 +710,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return outerCandidate;
     }
 
-    protected static MethodNode findMethodDeclaration0(List<MethodNode> candidates, List<ClassNode> argumentTypes, boolean isStaticExpression) {
+    protected static MethodNode findMethodDeclaration0(final List<MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
         int argumentCount = (argumentTypes == null ? -1 : argumentTypes.size());
 
         MethodNode closestMatch = null;
@@ -772,7 +762,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return candidates.get(0);
     }
 
-    protected static Optional<MethodNode> findPropertyAccessorMethod(String propertyName, ClassNode declaringType, boolean isLhsExpression, boolean isStaticExpression, List<ClassNode> methodCallArgumentTypes) {
+    protected static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
         Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
         accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression));
         if (isLhsExpression) {
@@ -788,7 +778,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static final AccessorSupport[] READER = {AccessorSupport.GETTER, AccessorSupport.ISSER};
     protected static final AccessorSupport[] WRITER = {AccessorSupport.SETTER};
 
-    protected static MethodNode closer(MethodNode next, MethodNode last, List<ClassNode> args) {
+    protected static MethodNode closer(final MethodNode next, final MethodNode last, final List<ClassNode> args) {
         if (last != null) {
             long d1 = CategoryTypeLookup.calculateParameterDistance(args, last.getParameters());
             long d2 = CategoryTypeLookup.calculateParameterDistance(args, next.getParameters());
@@ -798,7 +788,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return next;
     }
 
-    protected static FieldNode createLengthField(ClassNode declaringType) {
+    protected static FieldNode createLengthField(final ClassNode declaringType) {
         FieldNode lengthField = new FieldNode("length", Flags.AccPublic, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;
@@ -808,19 +798,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * Given {@code Class<T>} and {@code T} is not {@code ?}, {@code Class}, or
      * {@code Object} returns {@code T}; otherwise returns {@code declaringType}.
      */
-    protected static ClassNode getBaseDeclaringType(ClassNode declaringType) {
+    protected static ClassNode getBaseDeclaringType(final ClassNode declaringType) {
         if (VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
             ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) &&
                 !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
 
-                declaringType = typeParam;
+                return typeParam;
             }
         }
         return declaringType;
     }
 
-    protected static List<MethodNode> getMethods(String name, ClassNode type) {
+    protected static List<MethodNode> getMethods(final String name, final ClassNode type) {
         List<MethodNode> methods = type.getMethods(name);
         List<MethodNode> traitMethods =
             type.redirect().getNodeMetaData("trait.methods");
@@ -838,7 +828,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     /**
      * @return target of method call expression if available or {@code null}
      */
-    protected static MethodNode getMethodTarget(Expression expr) {
+    protected static MethodNode getMethodTarget(final Expression expr) {
         if (expr instanceof MethodCallExpression) {
             MethodNode target = ((MethodCallExpression) expr).getMethodTarget();
             return target;
@@ -853,7 +843,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return null;
     }
 
-    protected static ClassNode getMorePreciseType(ClassNode declaringType, VariableInfo info) {
+    protected static ClassNode getMorePreciseType(final ClassNode declaringType, final VariableInfo info) {
         ClassNode maybeDeclaringType = info != null ? info.declaringType : VariableScope.OBJECT_CLASS_NODE;
         if (maybeDeclaringType.equals(VariableScope.OBJECT_CLASS_NODE) && !VariableScope.OBJECT_CLASS_NODE.equals(declaringType)) {
             return declaringType;
@@ -862,31 +852,32 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
     }
 
-    protected static ClassNode getTypeFromDeclaration(ASTNode declaration) {
-        ClassNode typeOfDeclaration;
-        if (declaration instanceof PropertyNode) {
-            PropertyNode property = (PropertyNode) declaration;
+    protected static ClassNode getTypeFromDeclaration(final ASTNode declaration) {
+        ClassNode type;
+        ASTNode decl = declaration;
+        if (decl instanceof PropertyNode) {
+            PropertyNode property = (PropertyNode) decl;
             if (property.getField() != null) {
-                declaration = property.getField();
+                decl = property.getField();
             }
         }
-        if (declaration instanceof FieldNode) {
-            FieldNode field = (FieldNode) declaration;
-            typeOfDeclaration = field.getType();
+        if (decl instanceof FieldNode) {
+            FieldNode field = (FieldNode) decl;
+            type = field.getType();
             if (field.isDynamicTyped() && field.hasInitialExpression()) {
-                typeOfDeclaration = field.getInitialExpression().getType();
+                type = field.getInitialExpression().getType();
             }
-        } else if (declaration instanceof MethodNode) {
-            typeOfDeclaration = ((MethodNode) declaration).getReturnType();
-        } else if (declaration instanceof Expression) {
-            typeOfDeclaration = ((Expression) declaration).getType();
+        } else if (decl instanceof MethodNode) {
+            type = ((MethodNode) decl).getReturnType();
+        } else if (decl instanceof Expression) {
+            type = ((Expression) decl).getType();
         } else {
-            typeOfDeclaration = VariableScope.OBJECT_CLASS_NODE;
+            type = VariableScope.OBJECT_CLASS_NODE;
         }
-        return typeOfDeclaration;
+        return type;
     }
 
-    protected static ClassNode getDeclaringTypeFromDeclaration(ASTNode declaration, ClassNode inferredDeclaringType) {
+    protected static ClassNode getDeclaringTypeFromDeclaration(final ASTNode declaration, final ClassNode inferredDeclaringType) {
         ClassNode declaringType;
         if (declaration instanceof FieldNode) {
             declaringType = ((FieldNode) declaration).getDeclaringClass();
@@ -905,7 +896,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
     }
 
-    protected static Optional<FieldNode> findTraitField(String name, ClassNode type) {
+    protected static Optional<FieldNode> findTraitField(final String name, final ClassNode type) {
         String[] parts = name.split("__");
         for (ClassNode face : type.getInterfaces()) {
             if (face.getName().equals(parts[0].replace('_', '.'))) {
@@ -917,7 +908,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return Optional.empty();
     }
 
-    protected static Expression getObjectExpression(VariableScope scope) {
+    protected static Expression getObjectExpression(final VariableScope scope) {
         ASTNode node = scope.getEnclosingNode();
         if (node instanceof PropertyExpression) {
             return ((PropertyExpression) node).getObjectExpression();
@@ -931,19 +922,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return null;
     }
 
-    // TODO: Test for "Type.this.name" expressions for inner classes?
-    protected static boolean isThisObjectExpression(VariableScope scope) {
+    protected static boolean isThisObjectExpression(final VariableScope scope) {
+        // TODO: Test for "Type.this.name" expressions for inner classes?
         Expression expr = getObjectExpression(scope);
         return (expr instanceof VariableExpression && ((VariableExpression) expr).isThisExpression());
     }
 
-    // TODO: Test for "Type.super.name" expressions for traits?
-    protected static boolean isSuperObjectExpression(VariableScope scope) {
+    protected static boolean isSuperObjectExpression(final VariableScope scope) {
+        // TODO: Test for "Type.super.name" expressions for traits?
         Expression expr = getObjectExpression(scope);
         return (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression());
     }
 
-    protected static boolean isCompatible(AnnotatedNode declaration, boolean isStaticExpression) {
+    protected static boolean isCompatible(final AnnotatedNode declaration, final boolean isStaticExpression) {
         if (declaration != null) {
             boolean isStatic = false;
             if (declaration instanceof FieldNode) {
@@ -962,7 +953,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return false;
     }
 
-    protected static boolean isNotThisOrOuterClass(ClassNode thisType, ClassNode declaringClass) {
+    protected static boolean isNotThisOrOuterClass(final ClassNode thisType, final ClassNode declaringClass) {
         return (!thisType.equals(declaringClass) && !thisType.getOuterClasses().contains(declaringClass));
     }
 
@@ -970,7 +961,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * Determines if the specified method node is synthetic (i.e. generated or
      * implicit in some sense).
      */
-    protected static boolean isSynthetic(MethodNode method) {
+    protected static boolean isSynthetic(final MethodNode method) {
         // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
         return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE);
     }
@@ -979,7 +970,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * Supplements {@link #isTypeCompatible} by supporting unequal lengths and
      * tagging Closure -> SAM type as an inexact match.
      */
-    protected static boolean isLooseMatch(List<ClassNode> arguments, Parameter[] parameters) {
+    protected static boolean isLooseMatch(final List<ClassNode> arguments, final Parameter[] parameters) {
         int argCount = (arguments == null ? -1 : arguments.size());
         if (argCount != parameters.length && !(GenericsMapper.isVargs(parameters) &&
                 (argCount == parameters.length - 1 || argCount > parameters.length))) {
@@ -998,7 +989,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      *
      * @return {@link Boolean#TRUE true} for exact match, {@code null} for loose match, and {@link Boolean#FALSE false} for not a match
      */
-    protected static Boolean isTypeCompatible(List<ClassNode> arguments, Parameter[] parameters) {
+    protected static Boolean isTypeCompatible(final List<ClassNode> arguments, final Parameter[] parameters) {
         Boolean result = Boolean.TRUE;
         for (int i = 0, n = Math.max(arguments.size(), parameters.length); i < n; i += 1) {
             ClassNode parameter = parameters[Math.min(i, parameters.length - 1)].getType();
@@ -1029,7 +1020,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     // TODO: How much of this could/should be moved to GroovyUtils.isAssignable?
-    protected static Boolean isTypeCompatible(ClassNode source, ClassNode target) {
+    protected static Boolean isTypeCompatible(final ClassNode source, final ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
             !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) /*&&
