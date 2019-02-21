@@ -271,37 +271,37 @@
       <repositoryList
           name="2019-03">
         <repository
-            url="http://download.eclipse.org/releases/2019-03"/>
+            url="https://download.eclipse.org/releases/2019-03"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.11milestones"/>
+            url="https://download.eclipse.org/eclipse/updates/4.11milestones"/>
       </repositoryList>
       <repositoryList
           name="2018-12">
         <repository
-            url="http://download.eclipse.org/releases/2018-12"/>
+            url="https://download.eclipse.org/releases/2018-12"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.10"/>
+            url="https://download.eclipse.org/eclipse/updates/4.10"/>
       </repositoryList>
       <repositoryList
           name="2018-09">
         <repository
-            url="http://download.eclipse.org/releases/2018-09"/>
+            url="https://download.eclipse.org/releases/2018-09"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.9"/>
+            url="https://download.eclipse.org/eclipse/updates/4.9"/>
       </repositoryList>
       <repositoryList
           name="Photon">
         <repository
-            url="http://download.eclipse.org/releases/photon"/>
+            url="https://download.eclipse.org/releases/photon"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.8"/>
+            url="https://download.eclipse.org/eclipse/updates/4.8"/>
       </repositoryList>
       <repositoryList
           name="Oxygen">
         <repository
-            url="http://download.eclipse.org/releases/oxygen"/>
+            url="https://download.eclipse.org/releases/oxygen"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.7"/>
+            url="https://download.eclipse.org/eclipse/updates/4.7"/>
       </repositoryList>
     </targlet>
   </setupTask>

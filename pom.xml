@@ -116,12 +116,12 @@
 				<repository>
 					<id>2019-03</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/2019-03</url>
+					<url>https://download.eclipse.org/releases/2019-03</url>
 				</repository>
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.11milestones</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.11milestones</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -142,12 +142,12 @@
 				<repository>
 					<id>2018-12</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/2018-12</url>
+					<url>https://download.eclipse.org/releases/2018-12</url>
 				</repository>
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.10</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.10</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -168,12 +168,12 @@
 				<repository>
 					<id>2018-09</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/2018-09</url>
+					<url>https://download.eclipse.org/releases/2018-09</url>
 				</repository>
 				<repository>
 					<id>eclipse49</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.9</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.9</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -184,7 +184,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.9</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e49${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -194,12 +194,12 @@
 				<repository>
 					<id>photon</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/photon</url>
+					<url>https://download.eclipse.org/releases/photon</url>
 				</repository>
 				<repository>
 					<id>eclipse48</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.8</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -220,12 +220,12 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/oxygen</url>
+					<url>https://download.eclipse.org/releases/oxygen</url>
 				</repository>
 				<repository>
 					<id>eclipse47</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.7</url>
 				</repository>
 			</repositories>
 			<modules>
