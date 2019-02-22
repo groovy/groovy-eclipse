@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<!-- I don't like how this works, it is terribly long and complicated for basically being just
@@ -22,9 +23,9 @@
 
 	<pluginRepositories>
 		<pluginRepository>
-			<id>plugins-snapshot-local</id>
-			<name>plugins-snapshot-local</name>
-			<url>http://repo.spring.io/plugins-snapshot-local</url>
+			<id>spring-plugins-release</id>
+			<name>Spring Plugins Repository</name>
+			<url>https://repo.spring.io/plugins-release</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
@@ -217,7 +218,7 @@
 								<for list="${dist.targets}" param="eXX">
 									<sequential>
 										<echo message="delete/upload ${dist.path} pattern: @{eXX}/**" />
-									
+
 										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
