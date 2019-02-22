@@ -151,7 +151,7 @@
 								<name>Groovy Eclipse Latest Release for Eclipse @item@</name>
 								<target>${project.build.directory}/site/@item@</target>
 								<sites>
-									<param>http://dist.springsource.org/release/GRECLIPSE/${dist.version}/@item@</param>
+									<param>https://dist.springsource.org/release/GRECLIPSE/${dist.version}/@item@</param>
 								</sites>
 							</configuration>
 							</pluginExecutor>
@@ -169,12 +169,12 @@
 					<dependency>
 						<groupId>org.springframework.build</groupId>
 						<artifactId>org.springframework.build.aws.ant</artifactId>
-						<version>3.0.5.RELEASE</version>
+						<version>3.0.6.RELEASE</version>
 					</dependency>
 					<dependency>
-						<groupId>net.java.dev.jets3t</groupId>
-						<artifactId>jets3t</artifactId>
-						<version>0.7.2</version>
+						<groupId>org.jets3t</groupId>
+						<artifactId>com.springsource.org.jets3t</artifactId>
+						<version>0.8.1</version>
 					</dependency>
  					<dependency>
 						<groupId>ant-contrib</groupId>

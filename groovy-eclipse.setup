@@ -129,7 +129,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.11"/>
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.11"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -137,7 +137,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.10"/>
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.10"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -145,7 +145,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.9"/>
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.9"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -153,7 +153,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.8"/>
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.8"/>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
@@ -161,7 +161,7 @@
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/>
+        url="https://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
