@@ -86,8 +86,12 @@ public class CompletionOnJavadocTag extends JavadocSingleNameReference implement
 		switch (kind) {
 			case Scope.COMPILATION_UNIT_SCOPE:
 				// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=255752
-				// Check for FAKE_TYPE_NAME to allow proposals (@see CompletionParser#consumeCompilationUnit)
+				// Check for FAKE_TYPE_NAME to allow proposals (@see CompletionParser#consumeCompilationUnit)		
 				CompilationUnitDeclaration compilationUnit = scope.referenceCompilationUnit();
+				if(compilationUnit != null && compilationUnit.isModuleInfo() ) {
+					specifiedTags = MODULE_TAGS;
+					break;
+				}
 				if (compilationUnit != null &&
 						(compilationUnit.types.length > 0 && compilationUnit.types[0].name == CompletionParser.FAKE_TYPE_NAME)) {
 					specifiedTags = CLASS_TAGS;

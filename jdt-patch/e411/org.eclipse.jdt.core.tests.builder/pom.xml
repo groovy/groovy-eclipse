@@ -5,7 +5,7 @@
   are made available under the terms of the Eclipse Distribution License v1.0
   which accompanies this distribution, and is available at
   http://www.eclipse.org/org/documents/edl-v10.php
- 
+
   Contributors:
      Igor Fedorenko - initial implementation
 -->
@@ -19,6 +19,6 @@
   </parent>
   <groupId>org.eclipse.jdt</groupId>
   <artifactId>org.eclipse.jdt.core.tests.builder</artifactId>
-  <version>3.10.400-SNAPSHOT</version>
+  <version>3.10.500-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 </project>

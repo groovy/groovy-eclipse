@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -42,6 +42,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -963,6 +964,17 @@ public class TypeVariableBinding extends ReferenceBinding {
 			return this.firstBound;
 		}
 		return this.superclass; // java/lang/Object
+	}
+
+	public TypeBinding[] allUpperBounds() {
+		if (this.superclass == null)
+			return this.superInterfaces;
+		if (this.superInterfaces == null || this.superInterfaces.length == 0)
+			return new TypeBinding[] { this.superclass };
+		int nInterfaces = this.superInterfaces.length;
+		TypeBinding[] all = Arrays.copyOf(this.superInterfaces, nInterfaces+1);
+		all[nInterfaces] = this.superclass;
+		return all;
 	}
 
 	public void evaluateNullAnnotations(Scope scope, TypeParameter parameter) {

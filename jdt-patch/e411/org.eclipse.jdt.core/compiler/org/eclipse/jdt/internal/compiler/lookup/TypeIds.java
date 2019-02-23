@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,10 +18,12 @@
  *								bug 400421 - [compiler] Null analysis for fields does not take @com.google.inject.Inject into account
  *								bug 382069 - [null] Make the null analysis consider JUnit's assertNotNull similarly to assertions
  *								Bug 410218 - Optional warning for arguments of "unexpected" types to Map#get(Object), Collection#remove(Object) et al.
- *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
+ *     Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -140,6 +142,9 @@ public interface TypeIds {
 	// classes with methods with "dangerous" signatures:
 	final int T_JavaUtilMap = 91;
 	final int T_JavaUtilList = 92;
+
+	// @MethodSource
+	final int T_OrgJunitJupiterParamsProviderMethodSource = 93;
 
 	// If you add new type id, make sure to bump up T_LastWellKnownTypeId if there is a cross over.
 	final int T_LastWellKnownTypeId = 128;

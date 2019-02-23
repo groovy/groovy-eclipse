@@ -29,6 +29,8 @@
  *                              Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *    Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *    Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -316,6 +318,9 @@ public interface TypeConstants {
 	
 	char[] JUNIT = "junit".toCharArray(); //$NON-NLS-1$
 	char[] FRAMEWORK = "framework".toCharArray(); //$NON-NLS-1$
+	char[] JUPITER = "jupiter".toCharArray(); //$NON-NLS-1$
+	char[] PARAMS = "params".toCharArray(); //$NON-NLS-1$
+	char[] PROVIDER = "provider".toCharArray(); //$NON-NLS-1$
 	char[][] JUNIT_FRAMEWORK_ASSERT = new char[][] { JUNIT, FRAMEWORK, ASSERT_CLASS };
 	char[][] ORG_JUNIT_ASSERT = new char[][] { ORG, JUNIT, ASSERT_CLASS };
 	// ... methods:
@@ -323,6 +328,9 @@ public interface TypeConstants {
 	char[] ASSERT_NOTNULL = "assertNotNull".toCharArray(); //$NON-NLS-1$
 	char[] ASSERT_TRUE = "assertTrue".toCharArray(); //$NON-NLS-1$
 	char[] ASSERT_FALSE = "assertFalse".toCharArray(); //$NON-NLS-1$
+	// ... annotations:
+	char[] METHOD_SOURCE = "MethodSource".toCharArray(); //$NON-NLS-1$
+	char[][] ORG_JUNIT_METHOD_SOURCE = new char[][] { ORG, JUNIT, JUPITER, PARAMS, PROVIDER, METHOD_SOURCE };
 	
 	char[] VALIDATE_CLASS = "Validate".toCharArray(); //$NON-NLS-1$
 	char[][] ORG_APACHE_COMMONS_LANG_VALIDATE = new char[][] { ORG, APACHE, COMMONS, LANG, VALIDATE_CLASS };
@@ -333,7 +341,6 @@ public interface TypeConstants {
 	// ... methods:
 	char[] IS_TRUE = "isTrue".toCharArray(); //$NON-NLS-1$
 	char[] NOT_NULL = "notNull".toCharArray(); //$NON-NLS-1$
-	char[] PROVIDER = "provider".toCharArray(); //$NON-NLS-1$
 
 	char[][] COM_GOOGLE_COMMON_BASE_PRECONDITIONS = new char[][] { 
 			COM, GOOGLE, "common".toCharArray(), "base".toCharArray(), "Preconditions".toCharArray() }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

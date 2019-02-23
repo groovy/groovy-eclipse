@@ -301,6 +301,7 @@ public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 			Map<String, Set<ModuleBinding>> pack2mods = new HashMap<>();
 			for (ModuleBinding requiredModule : this.binding.getAllRequiredModules()) {
 				for (PackageBinding exportedPackage : requiredModule.getExports()) {
+					exportedPackage = exportedPackage.getVisibleFor(requiredModule, true);
 					if (this.binding.canAccess(exportedPackage)) {
 						String packName = String.valueOf(exportedPackage.readableName());
 						Set<ModuleBinding> mods = pack2mods.get(packName);

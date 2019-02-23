@@ -19,6 +19,8 @@
  *								Bug 424727 - [compiler][null] NullPointerException in nullAnnotationUnsupportedLocation(ProblemReporter.java:5708)
  *								Bug 457210 - [1.8][compiler][null] Wrong Nullness errors given on full build build but not on incremental build?
  *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
+  *    Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              Bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -31,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.flow.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.parser.*;
 import org.eclipse.jdt.internal.compiler.problem.*;
+import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class TypeDeclaration extends Statement implements ProblemSeverities, ReferenceContext {
@@ -746,6 +749,7 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 	if (this.methods != null) {
 		UnconditionalFlowInfo outerInfo = flowInfo.unconditionalFieldLessCopy();
 		FlowInfo constructorInfo = nonStaticFieldInfo.unconditionalInits().discardNonFieldInitializations().addInitializationsFrom(outerInfo);
+		SimpleSetOfCharArray jUnitMethodSourceValues = getJUnitMethodSourceValues();
 		for (int i = 0, count = this.methods.length; i < count; i++) {
 			AbstractMethodDeclaration method = this.methods[i];
 			if (method.ignoreFurtherInvestigation)
@@ -761,6 +765,10 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 					((ConstructorDeclaration)method).analyseCode(this.scope, initializerContext, constructorInfo.copy(), flowInfo.reachMode());
 				}
 			} else { // regular method
+				// JUnit 5 only accepts methods without arguments for method sources
+				if (method.arguments == null && jUnitMethodSourceValues.includes(method.selector) && method.binding != null) {
+					method.binding.modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
+				}
 				// pass down the parentContext (NOT an initializer context, see above):
 				((MethodDeclaration)method).analyseCode(this.scope, parentContext, flowInfo.copy());
 			}
@@ -770,6 +778,31 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 	if (this.binding.isEnum() && !this.binding.isAnonymousType()) {
 		this.enumValuesSyntheticfield = this.binding.addSyntheticFieldForEnumValues();
 	}
+}
+
+private SimpleSetOfCharArray getJUnitMethodSourceValues() {
+	SimpleSetOfCharArray junitMethodSourceValues = new SimpleSetOfCharArray();
+	for (AbstractMethodDeclaration methodDeclaration : this.methods) {
+		junitMethodSourceValues.add(getJUnitMethodSourceValue(methodDeclaration));
+	}
+	return junitMethodSourceValues;
+}
+
+private char[] getJUnitMethodSourceValue(AbstractMethodDeclaration methodDeclaration) {
+	if (methodDeclaration.annotations != null) {
+		for (Annotation annotation : methodDeclaration.annotations) {
+			if (annotation.resolvedType != null && annotation.resolvedType.id == TypeIds.T_OrgJunitJupiterParamsProviderMethodSource) {
+				for (MemberValuePair memberValuePair : annotation.memberValuePairs()) {
+					if (CharOperation.equals(memberValuePair.name, TypeConstants.VALUE)) {
+						return ((StringLiteral) memberValuePair.value).source;
+					}
+				}
+				// value member not specified (i.e. marker annotation): JUnit 5 defaults to the test method's name
+				return methodDeclaration.selector;
+			}
+		}
+	}
+	return CharOperation.NO_CHAR;
 }
 
 public final static int kind(int flags) {

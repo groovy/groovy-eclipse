@@ -1439,8 +1439,13 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 			@Override
 			public boolean visit(
 		    		LocalDeclaration localDeclaration, BlockScope scope) {
-				if (localDeclaration.type instanceof SingleTypeReference && ((SingleTypeReference)localDeclaration.type).token == assistIdentifier)
-					throw new SelectionNodeFound(localDeclaration.binding.type);
+				if (localDeclaration.type instanceof SingleTypeReference && ((SingleTypeReference)localDeclaration.type).token == assistIdentifier) {
+					if(localDeclaration.binding != null) {
+						throw new SelectionNodeFound(localDeclaration.binding.type);
+					} else {
+						throw new SelectionNodeFound();
+					}
+				}
 				return true; // do nothing by default, keep traversing
 			}
 			@Override

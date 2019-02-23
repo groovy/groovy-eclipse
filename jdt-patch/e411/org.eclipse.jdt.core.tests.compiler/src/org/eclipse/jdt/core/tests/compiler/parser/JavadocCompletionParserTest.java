@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -159,6 +159,7 @@ protected void verifyCompletionOnJavadocTag(char[] tag, char[][] expectedTags, b
 }
 
 protected void verifyAllTagsCompletion() {
+	char[][] allTagsFinal =null;
 	char[][] allTags = {
 		// Block tags
 		TAG_AUTHOR, TAG_DEPRECATED, TAG_EXCEPTION, TAG_PARAM, TAG_RETURN, TAG_SEE, TAG_VERSION, TAG_CATEGORY,
@@ -168,6 +169,15 @@ protected void verifyAllTagsCompletion() {
 		TAG_LINK,
 		TAG_DOC_ROOT,
 	};
+	char[][]  allTagsJava9Plus = {
+				// Block tags
+				TAG_AUTHOR, TAG_DEPRECATED, TAG_EXCEPTION, TAG_PARAM, TAG_RETURN, TAG_SEE, TAG_VERSION, TAG_CATEGORY,
+				TAG_SINCE,
+				TAG_SERIAL, TAG_SERIAL_DATA, TAG_SERIAL_FIELD , TAG_THROWS, TAG_USES, TAG_PROVIDES,
+				// Inline tags
+				TAG_LINK,
+				TAG_DOC_ROOT
+			};
 	char[][] additionalTags = null;
 	if(this.complianceLevel == ClassFileConstants.JDK1_4) {
 		additionalTags = new char[][] {
@@ -179,13 +189,14 @@ protected void verifyAllTagsCompletion() {
 			TAG_CODE, TAG_LITERAL
 		};
 	}
+	allTagsFinal = this.complianceLevel > ClassFileConstants.JDK1_8 ? allTagsJava9Plus  : allTags;
 	if (additionalTags != null) {
-		int length = allTags.length;
+		int length = allTagsFinal.length;
 		int add = additionalTags.length;
-		System.arraycopy(allTags, 0, allTags = new char[length+add][], 0, length);
-		System.arraycopy(additionalTags, 0, allTags, length, add);
+		System.arraycopy(allTagsFinal, 0, allTagsFinal = new char[length+add][], 0, length);
+		System.arraycopy(additionalTags, 0, allTagsFinal, length, add);
 	}
-	verifyCompletionOnJavadocTag(null, allTags, false);
+	verifyCompletionOnJavadocTag(null, allTagsFinal, false);
 }
 
 /**

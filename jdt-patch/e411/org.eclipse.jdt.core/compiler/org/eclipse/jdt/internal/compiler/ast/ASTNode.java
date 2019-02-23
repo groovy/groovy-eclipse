@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -513,7 +513,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	* An access in the same compilation unit is allowed.
 	*/
 	public final boolean isMethodUseDeprecated(MethodBinding method, Scope scope,
-			boolean isExplicitUse) {
+			boolean isExplicitUse, InvocationSite invocation) {
 		// ignore references insing Javadoc comments
 		if ((this.bits & ASTNode.InsideJavadoc) == 0 && method.isOrEnclosedByPrivateType() && !scope.isDefinedInMethod(method)) {
 			// ignore cases where method is used from inside itself (e.g. direct recursions)
@@ -530,7 +530,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			AccessRestriction restriction =
 				env.getAccessRestriction(method.declaringClass.erasure());
 			if (restriction != null) {
-				scope.problemReporter().forbiddenReference(method, this,
+				scope.problemReporter().forbiddenReference(method, invocation,
 						restriction.classpathEntryType, restriction.classpathEntryName,
 						restriction.getProblemId());
 			}

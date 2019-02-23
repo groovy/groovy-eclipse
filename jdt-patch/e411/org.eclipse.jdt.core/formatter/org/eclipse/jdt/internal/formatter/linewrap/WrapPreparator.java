@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2018 Mateusz Matela and others.
+ * Copyright (c) 2014, 2019 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -90,7 +90,6 @@ import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -616,7 +615,7 @@ public class WrapPreparator extends ASTVisitor {
 
 		int wrappingOption = OPERATOR_WRAPPING_OPTION.get(node.getOperator()).applyAsInt(this.options);
 		boolean wrapBeforeOperator = OPERATOR_WRAP_BEFORE_OPTION.get(node.getOperator()).test(this.options);
-		if (isStringConcatenation(node)) {
+		if (this.tm.isStringConcatenation(node)) {
 			wrappingOption = this.options.alignment_for_string_concatenation;
 			wrapBeforeOperator = this.options.wrap_before_string_concatenation;
 		}
@@ -673,21 +672,6 @@ public class WrapPreparator extends ASTVisitor {
 		}
 	}
 
-	private boolean isStringConcatenation(InfixExpression node) {
-		if (!node.getOperator().equals(Operator.PLUS))
-			return false;
-		List<Expression> operands = new ArrayList<Expression>(node.extendedOperands());
-		operands.add(node.getLeftOperand());
-		operands.add(node.getRightOperand());
-		for (Expression o : operands) {
-			if (o instanceof StringLiteral)
-				return true;
-			if ((o instanceof InfixExpression) && isStringConcatenation((InfixExpression) o))
-				return true;
-		}
-		return false;
-	}
-
 	private boolean samePrecedence(InfixExpression expression1, InfixExpression expression2) {
 		Integer precedence1 = OPERATOR_PRECEDENCE.get(expression1.getOperator());
 		Integer precedence2 = OPERATOR_PRECEDENCE.get(expression2.getOperator());
@@ -698,16 +682,50 @@ public class WrapPreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(ConditionalExpression node) {
+		boolean chainsMatter = (this.options.alignment_for_conditional_expression_chain
+				& Alignment.SPLIT_MASK) != Alignment.M_NO_ALIGNMENT;
+		boolean isNextInChain = node.getParent() instanceof ConditionalExpression
+				&& node == ((ConditionalExpression) node.getParent()).getElseExpression();
+		boolean isFirstInChain = node.getElseExpression() instanceof ConditionalExpression && !isNextInChain;
 		boolean wrapBefore = this.options.wrap_before_conditional_operator;
 		List<Integer> before = wrapBefore ? this.wrapIndexes : this.secondaryWrapIndexes;
 		List<Integer> after = wrapBefore ? this.secondaryWrapIndexes : this.wrapIndexes;
-		before.add(this.tm.firstIndexAfter(node.getExpression(), TokenNameQUESTION));
-		before.add(this.tm.firstIndexAfter(node.getThenExpression(), TokenNameCOLON));
-		after.add(this.tm.firstIndexIn(node.getThenExpression(), -1));
-		after.add(this.tm.firstIndexIn(node.getElseExpression(), -1));
-		this.wrapParentIndex = this.tm.lastIndexIn(node.getExpression(), -1);
-		this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
-		handleWrap(this.options.alignment_for_conditional_expression);
+		if (!chainsMatter || (!isFirstInChain && !isNextInChain)) {
+			before.add(this.tm.firstIndexAfter(node.getExpression(), TokenNameQUESTION));
+			before.add(this.tm.firstIndexAfter(node.getThenExpression(), TokenNameCOLON));
+			after.add(this.tm.firstIndexIn(node.getThenExpression(), -1));
+			after.add(this.tm.firstIndexIn(node.getElseExpression(), -1));
+			this.wrapParentIndex = this.tm.lastIndexIn(node.getExpression(), -1);
+			this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
+			handleWrap(this.options.alignment_for_conditional_expression);
+
+		} else if (isFirstInChain) {
+			List<ConditionalExpression> chain = new ArrayList<>();
+			chain.add(node);
+			ConditionalExpression next = node;
+			while (next.getElseExpression() instanceof ConditionalExpression) {
+				next = (ConditionalExpression) next.getElseExpression();
+				chain.add(next);
+			}
+
+			for (ConditionalExpression conditional : chain) {
+				before.add(this.tm.firstIndexAfter(conditional.getThenExpression(), TokenNameCOLON));
+				after.add(this.tm.firstIndexIn(conditional.getElseExpression(), -1));
+			}
+			this.wrapParentIndex = this.tm.firstIndexIn(node.getExpression(), -1);
+			this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
+			handleWrap(this.options.alignment_for_conditional_expression_chain);
+
+			this.currentDepth++;
+			for (ConditionalExpression conditional : chain) {
+				before.add(this.tm.firstIndexAfter(conditional.getExpression(), TokenNameQUESTION));
+				after.add(this.tm.firstIndexIn(conditional.getThenExpression(), -1));
+				this.wrapParentIndex = this.tm.firstIndexIn(conditional.getExpression(), -1);
+				this.wrapGroupEnd = this.tm.lastIndexIn(conditional.getThenExpression(), -1);
+				handleWrap(this.options.alignment_for_conditional_expression);
+			}
+			this.currentDepth--;
+		}
 		return true;
 	}
 
@@ -779,10 +797,14 @@ public class WrapPreparator extends ASTVisitor {
 		int rParen = this.tm.firstIndexAfter(node.getExpression(), TokenNameRPAREN);
 		handleParenthesesPositions(lParen, rParen, this.options.parenthesis_positions_in_if_while_statement);
 
+		Statement elseStatement = node.getElseStatement();
 		boolean keepThenOnSameLine = this.options.keep_then_statement_on_same_line
-				|| (this.options.keep_simple_if_on_one_line && node.getElseStatement() == null);
+				|| (this.options.keep_simple_if_on_one_line && elseStatement == null);
 		if (keepThenOnSameLine)
 			handleSimpleLoop(node.getThenStatement(), this.options.alignment_for_compact_if);
+
+		if (this.options.keep_else_statement_on_same_line && elseStatement != null)
+			handleSimpleLoop(elseStatement, this.options.alignment_for_compact_if);
 		return true;
 	}
 

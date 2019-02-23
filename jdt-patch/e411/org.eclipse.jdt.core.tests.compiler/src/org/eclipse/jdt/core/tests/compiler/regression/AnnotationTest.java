@@ -25,6 +25,8 @@
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -5010,9 +5012,10 @@ public void test143() {
     }
     //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99009
     public void test157() {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_ReportHiddenCatchBlock, CompilerOptions.WARNING);
-        this.runNegativeTest(
+    	Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportHiddenCatchBlock, CompilerOptions.WARNING);
+        runner.testFiles =
             new String[] {
                 "X.java",
     			"public class X {\n" +
@@ -5029,12 +5032,39 @@ public void test143() {
 	   			"class AX extends Exception {}\n" +
 				"@SuppressWarnings({\"serial\"})\n" +
     			"class BX extends AX {}\n"
-            },
-			"",
-			null,
-			true,
-			options
-		);
+            };
+        runner.javacTestOptions = JavacTestOptions.SKIP; // javac doesn't support @SW("hiding") here, see test157b
+        runner.runConformTest();
+    }
+    public void test157b() {
+    	Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportHiddenCatchBlock, CompilerOptions.WARNING);
+        runner.testFiles =
+            new String[] {
+                "X.java",
+    			"public class X {\n" +
+    			"	public static void main(String[] args) {\n" +
+    			"		try {\n" +
+    			"			throw new BX();\n" +
+    			"		} catch(BX e) {\n" +
+    			"		} catch(AX e) {\n" +
+    			"		}\n" +
+    			"	}\n" +
+    			"} \n" +
+				"@SuppressWarnings({\"serial\"})\n" +
+	   			"class AX extends Exception {}\n" +
+				"@SuppressWarnings({\"serial\"})\n" +
+    			"class BX extends AX {}\n"
+            };
+        runner.expectedCompilerLog =
+        		"----------\n" + 
+        		"1. WARNING in X.java (at line 6)\n" + 
+        		"	} catch(AX e) {\n" + 
+        		"	        ^^\n" + 
+        		"Unreachable catch block for AX. Only more specific exceptions are thrown and they are handled by previous catch block(s).\n" + 
+        		"----------\n";
+        runner.runWarningTest();
     }
     //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99009
     public void test158() {
@@ -5064,9 +5094,10 @@ public void test143() {
     }
     //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99009
     public void test159() {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_ReportIndirectStaticAccess, CompilerOptions.WARNING);
-        this.runNegativeTest(
+    	Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportIndirectStaticAccess, CompilerOptions.WARNING);
+        runner.testFiles =
             new String[] {
                 "X.java",
 				"@SuppressWarnings({\"static-access\"})\n" +
@@ -5090,18 +5121,16 @@ public void test143() {
     			"}\n" +
     			"class XZ extends XY {\n" +
     			"}"
-            },
-			"",
-			null,
-			true,
-			options
-		);
+            };
+        runner.javacTestOptions = JavacTestOptions.SKIP; // only testing Eclipse-specific @SW
+        runner.runConformTest();
     }
     //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99009
     public void test160() {
-		Map options = getCompilerOptions();
-		options.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.WARNING);
-        this.runNegativeTest(
+    	Runner runner = new Runner();
+		runner.customOptions = getCompilerOptions();
+		runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.WARNING);
+        runner.testFiles =
             new String[] {
                 "X.java",
 				"@SuppressWarnings(\"static-access\")\n" +
@@ -5113,12 +5142,9 @@ public void test143() {
     			"class XY {\n" +
     			"	static int S = 10;\n" +
     			"}"
-            },
-			"",
-			null,
-			true,
-			options
-		);
+            };
+        runner.javacTestOptions = JavacTestOptions.SKIP; // only testing Eclipse-specific @SW
+        runner.runConformTest();
     }
     //https://bugs.eclipse.org/bugs/show_bug.cgi?id=99009
     public void test161() {
@@ -5659,8 +5685,8 @@ public void test143() {
     			"public class X extends Exception {\n" +
     			"   @SuppressWarnings(\"nls\")\n" +
     			"	String s = \"Hello\"; \n" +
-    			"   @SuppressWarnings(\"serial\")\n" +
-    			"	String s2 = \"Hello2\"; \n" +
+    			"   @SuppressWarnings(\"serial\")\n" + 	// no nls-warning here
+    			"	String s2 = \"Hello2\"; \n" +		// but an nls-warning here
     			"}"
             },
             null, customOptions,
@@ -5680,7 +5706,7 @@ public void test143() {
     		"	            ^^^^^^^^\n" +
     		"Non-externalized string literal; it should be followed by //$NON-NLS-<n>$\n" +
     		"----------\n",
-    		null, null, JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
+    		null, null, JavacTestOptions.SKIP); // nls-warnings are specific to Eclipse - special-casing this special case is irrelevant for javac
     }
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=97220 - variation
     public void test172() {
@@ -5749,7 +5775,7 @@ public void test143() {
     		"	            ^^^^^^^^\n" +
     		"Non-externalized string literal; it should be followed by //$NON-NLS-<n>$\n" +
     		"----------\n",
-			null, null, JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
+			null, null, JavacTestOptions.SKIP); // nls-warnings are specific to Eclipse - special-casing this special case is irrelevant for javac
     }
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=97220 - variation
     public void test174() {
@@ -5923,7 +5949,7 @@ public void test143() {
     		"",
     		"",
     		null,
-    		JavacTestOptions.EclipseJustification.EclipseBug112433);
+    		JavacTestOptions.JavacHasABug.JavacBug6337964);
     }
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=116028
     public void test180() {
@@ -6656,7 +6682,7 @@ public void test199() {
 		"",
 		"",
 		null,
-		JavacTestOptions.EclipseJustification.EclipseBug112433);
+		JavacTestOptions.JavacHasABug.JavacBug6337964);
 }
 // JLS 3 - 9.6: cannot override Object's methods
 public void test200() {
@@ -9367,8 +9393,7 @@ public void test278() {
 		"----------\n";
 	this.runNegativeTest(
 			testString,
-			expectedOutput,
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+			expectedOutput);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=301683
 public void test279() {
@@ -9392,8 +9417,7 @@ public void test279() {
 		"----------\n";
 	this.runNegativeTest(
 			testString,
-			expectedOutput,
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+			expectedOutput);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=295551
 public void test280() {
@@ -9869,15 +9893,16 @@ public void test296() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=343621
 public void test297() {
-	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_SuppressWarnings, CompilerOptions.ENABLED);
-	customOptions.put(CompilerOptions.OPTION_ReportUnhandledWarningToken, CompilerOptions.WARNING);
-	customOptions.put(CompilerOptions.OPTION_SuppressOptionalErrors, CompilerOptions.ENABLED);
-	customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
-	customOptions.put(CompilerOptions.OPTION_ReportComparingIdentical, CompilerOptions.ERROR);
-	customOptions.put(CompilerOptions.OPTION_ReportUncheckedTypeOperation, CompilerOptions.ERROR);
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_SuppressWarnings, CompilerOptions.ENABLED);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnhandledWarningToken, CompilerOptions.WARNING);
+	runner.customOptions.put(CompilerOptions.OPTION_SuppressOptionalErrors, CompilerOptions.ENABLED);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.WARNING);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportComparingIdentical, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUncheckedTypeOperation, CompilerOptions.ERROR);
 	
-	String expectedErrors = 
+	runner.expectedCompilerLog = 
 		"----------\n" + 
 		"1. ERROR in A.java (at line 15)\n" + 
 		"	return i == i;\n" + 
@@ -9886,7 +9911,7 @@ public void test297() {
 		"----------\n";
 
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		expectedErrors =
+		runner.expectedCompilerLog =
 			"----------\n" + 
 			"1. ERROR in A.java (at line 10)\n" + 
 			"	public final Object build(Class<? super Object>... objects) {\n" + 
@@ -9899,7 +9924,7 @@ public void test297() {
 			"Comparing identical expressions\n" + 
 			"----------\n";
 	}
-	String testFiles [] = new String[] {
+	runner.testFiles = new String[] {
 			"A.java",
 			"public class A {\n" + 
 			"	public void one() {\n" + 
@@ -9919,12 +9944,8 @@ public void test297() {
 			"	}\n" + 
 			"}"
 	};
-	runNegativeTest(
-			testFiles,
-			expectedErrors,
-			null,
-			true,
-			customOptions);
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 // Bug 366003 - CCE in ASTNode.resolveAnnotations(ASTNode.java:639) 
 // many syntax errors fixed, does not trigger CCE 
@@ -10327,7 +10348,7 @@ public void testBug365437b() {
 				null,
 				customOptions,
 				expectedErrorString,
-				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+				isJRE9Plus ? JavacTestOptions.SKIP : JavacTestOptions.Excuse.EclipseWarningConfiguredAsError); // javac9+ cannot access javax.annotation
 	} finally {
 		this.javaClassLib = save;
 	}
@@ -10906,7 +10927,8 @@ public void testBug386356_2() {
 				"		return null;\n" +
 				"	}\n" +
 				"}"
-			});
+			},
+			isJRE9Plus ? JavacTestOptions.SKIP : JavacTestOptions.DEFAULT); // javac9+ cannot access javax.xml.bind
 	} finally {
 		this.javaClassLib = save;
 	}
@@ -11719,11 +11741,12 @@ public void testBug506888a() throws Exception {
 	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
 		return;
 	}
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.ERROR);
-	options.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.IGNORE);
-	options.put(CompilerOptions.OPTION_ReportMissingDefaultCase, CompilerOptions.WARNING);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMissingDefaultCase, CompilerOptions.WARNING);
+	runner.testFiles =
 		new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -11732,14 +11755,16 @@ public void testBug506888a() throws Exception {
 				"	void foo() {\n" +
 				"	}\n" +
 				"}	\n",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. INFO in X.java (at line 3)\n" + 
 		"	@SuppressWarnings({\"incomplete-switch\"})\n" + 
 		"	                   ^^^^^^^^^^^^^^^^^^^\n" + 
 		"At least one of the problems in category \'incomplete-switch\' is not analysed due to a compiler option being ignored\n" + 
-		"----------\n", 
-		null, true, options);
+		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 public void testBug506888b() throws Exception {
 	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
@@ -11768,12 +11793,13 @@ public void testBug506888c() throws Exception {
 	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
 		return;
 	}
-	Map options = getCompilerOptions();
-	options.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.WARNING);
-	options.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.WARNING);
-	options.put(CompilerOptions.OPTION_ReportMissingDefaultCase, CompilerOptions.WARNING);
-	options.put(CompilerOptions.OPTION_ReportUncheckedTypeOperation, CompilerOptions.WARNING);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedWarningToken, CompilerOptions.WARNING);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, CompilerOptions.WARNING);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMissingDefaultCase, CompilerOptions.WARNING);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUncheckedTypeOperation, CompilerOptions.WARNING);
+	runner.testFiles =
 		new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -11785,14 +11811,16 @@ public void testBug506888c() throws Exception {
 				"	}\n" +
 				"	enum Color { BLUE, RED; } \n" +
 				"}	\n",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 3)\n" + 
 		"	@SuppressWarnings({\"incomplete-switch\", \"unchecked\"})\n" + 
 		"	                                        ^^^^^^^^^^^\n" + 
 		"Unnecessary @SuppressWarnings(\"unchecked\")\n" + 
-		"----------\n", 
-		null, true, options);
+		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 public void testBug506888d() throws Exception {
 	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
@@ -11882,7 +11910,7 @@ public void testBug506888f() throws Exception {
 			null /* vmArguments */,
 			options,
 			new Requestor(true, requestor, false, true),
-			JavacTestOptions.DEFAULT);
+			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 	assertNotNull(requestor.problemArguments);
 	assertEquals(1, requestor.problemArguments.length);
 	assertEquals(JavaCore.COMPILER_PB_UNUSED_PARAMETER, requestor.problemArguments[0]);
@@ -11977,5 +12005,115 @@ public void testBug537593_001() {
 			new Requestor(true, requestor, false, true),
 			JavacTestOptions.DEFAULT);
 	assertNull(requestor.problemArguments);
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=542520 - [JUnit 5] Warning The method xxx from the type X 
+// is never used locally is shown when using MethodSource - common case
+public void testBug542520a() throws Exception {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	runner.testFiles =
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @MethodSource(\"getIntegers\")\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers() {\n" + 
+			"		return Arrays.asList(0, 5, 1);\n" + 
+			"	}\n" +
+			"}\n",
+		};
+	runner.runConformTest();
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=542520 - [JUnit 5] Warning The method xxx from the type X 
+// is never used locally is shown when using MethodSource - variation with fully qualified annotation
+public void testBug542520b() throws Exception {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	runner.testFiles =
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @org.junit.jupiter.params.provider.MethodSource(\"getIntegers\")\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers() {\n" + 
+			"		return Arrays.asList(0, 5, 1);\n" + 
+			"	}\n" +
+			"}\n",
+		};
+	runner.runConformTest();
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=542520 - [JUnit 5] Warning The method xxx from the type X 
+// is never used locally is shown when using MethodSource - marker annotation
+public void testBug542520c() throws Exception {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	runner.testFiles =
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @MethodSource\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> testIntegers() {\n" + 
+			"		return Arrays.asList(0, 5, 1);\n" + 
+			"	}\n" +
+			"}\n",
+		};
+	runner.runConformTest();
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=542520 - [JUnit 5] Warning The method xxx from the type X 
+// is never used locally is shown when using MethodSource - missing no-args method source
+public void testBug542520d() throws Exception {
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	this.runNegativeTest(
+		true,
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @MethodSource(\"getIntegers\")\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers(int i) {\n" +
+			"		return Arrays.asList(0, 5, 1);\n" + 
+			"	}\n" +
+			"}\n",
+		},
+		null, customOptions,
+		"----------\n" + 
+		"1. ERROR in ExampleTest.java (at line 9)\n" + 
+		"	private static List<Integer> getIntegers(int i) {\n" + 
+		"	                             ^^^^^^^^^^^^^^^^^^\n" + 
+		"The method getIntegers(int) from the type ExampleTest is never used locally\n" + 
+		"----------\n",
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 }

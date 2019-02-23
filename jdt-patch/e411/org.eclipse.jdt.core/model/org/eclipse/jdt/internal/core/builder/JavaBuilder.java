@@ -344,8 +344,14 @@ private void createInconsistentBuildMarker(CoreException coreException) throws C
 
 private void cleanup() {
 	this.participants = null;
-	this.nameEnvironment = null;
-	this.testNameEnvironment = null;
+	if(this.nameEnvironment != null) {
+		this.nameEnvironment.cleanup();
+		this.nameEnvironment = null;
+	}
+	if(this.testNameEnvironment != null) {
+		this.testNameEnvironment.cleanup();
+		this.testNameEnvironment = null;
+	}
 	this.binaryLocationsPerProject = null;
 	this.lastState = null;
 	this.notifier = null;

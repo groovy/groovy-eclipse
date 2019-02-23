@@ -2974,7 +2974,7 @@ public abstract class Scope {
 				char[][] qName = new char[][] { compoundName[0] };
 				return new ProblemReferenceBinding(qName, null /* no closest match since search for pkg*/, ProblemReasons.NotFound);
 			}
-			return binding;
+			return problemType(compoundName, -1, binding);
 		}
 		if (!(binding instanceof PackageBinding)) return null; // compoundName does not start with a package
 
@@ -2983,7 +2983,7 @@ public abstract class Scope {
 		while (currentIndex < length) {
 			binding = packageBinding.getTypeOrPackage(compoundName[currentIndex++], module(), currentIndex<length);
 			if (binding == null) {
-				return new ProblemReferenceBinding(CharOperation.subarray(compoundName, 0, currentIndex), null /* no closest match since search for pkg*/, ProblemReasons.NotFound);
+				return problemType(compoundName, currentIndex, null);
 			}
 			if (!binding.isValidBinding() && binding.problemId() != ProblemReasons.Ambiguous)
 				return new ProblemReferenceBinding(
@@ -2995,6 +2995,29 @@ public abstract class Scope {
 			packageBinding = (PackageBinding) binding;
 		}
 		return new ProblemReferenceBinding(compoundName, null /* no closest match since search for pkg*/, ProblemReasons.NotFound);
+	}
+
+	/**
+	 * Return the most suitable ProblemReferenceBinding:
+	 * (1) previousProblem if provided and problem different from NotFound
+	 * (2) a new NotAccessible binding
+	 * (3) previousProblem if provided otherwise
+	 * (4) a new NotFound binding
+	 */
+	Binding problemType(char[][] compoundName, int currentIndex, Binding previousProblem) {
+		if (previousProblem != null && previousProblem.problemId() != ProblemReasons.NotFound)
+			return previousProblem;
+		
+		LookupEnvironment environment = environment();
+		if (environment.useModuleSystem && module() != environment.UnNamedModule) {
+			// try if the UnNamedModule can see the type:
+			ReferenceBinding notAccessibleType = environment.root.getType(compoundName, environment.UnNamedModule);
+			if (notAccessibleType != null && notAccessibleType.isValidBinding())
+				return new ProblemReferenceBinding(compoundName, notAccessibleType, ProblemReasons.NotAccessible);
+		}
+		return previousProblem != null 
+			? previousProblem
+			: new ProblemReferenceBinding(CharOperation.subarray(compoundName, 0, currentIndex), null, ProblemReasons.NotFound);
 	}
 
 	/* Answer the package from the compoundName or null if it begins with a type.

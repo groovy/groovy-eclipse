@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -731,8 +731,6 @@ protected static class JavacTestOptions {
 					}
 					// WORK consider adding reversed pivots
 				} : null,
-			EclipseBug112433 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
-				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null,
 			EclipseBug126712 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126712 & http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342411
 				new EclipseJustification(MismatchType.StandardOutputMismatch) {
 					Excuse excuseFor(JavacCompiler compiler) {
@@ -785,8 +783,12 @@ protected static class JavacTestOptions {
 					 new EclipseJustification(MismatchType.StandardOutputMismatch) : null;
 		public static final EclipseJustification
 			EclipseJustification0001 = RUN_JAVAC ?
-					new EclipseJustification(MismatchType.EclipseErrorsJavacNone) : null;
-			/* javac properly detects duplicate attributes in annotations in the
+					new EclipseJustification(MismatchType.EclipseErrorsJavacNone) {
+						Excuse excuseFor(JavacCompiler compiler) { 
+							return compiler.compliance < ClassFileConstants.JDK1_7 ? this : null;
+						}
+					} : null;
+			/* javac 1.6- properly detects duplicate attributes in annotations in the
 			 * simplest case (AnnotationTest#18b) but fails on a slightly more
 			 * complex one where the duplicate is within an embedded annotation;
 			 * there seems to be no reason for not reporting the error
@@ -911,11 +913,15 @@ protected static class JavacTestOptions {
 			JavacBug8144673 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144673
 				new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0100) : null,
 			JavacBug8204534 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8204534
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ((long)55)<<16, 0000) : null, // FIXME: use JDK11
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK11, 0000) : null,
 			JavacBug8207032 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8207032
 				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
 			JavacBug8044196 = RUN_JAVAC ? // likely https://bugs.openjdk.java.net/browse/JDK-8044196, intermittently masked by https://bugs.openjdk.java.net/browse/JDK-8029161
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK9, 0000, true) : null;
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK9, 0000, true) : null,
+			JavacBug6337964 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK1_6, 1045/*guessed*/, true) : null,
+			JavacBug8144832 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144832
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0000) : null;
 
 		// bugs that have been fixed but that we've not identified
 		public static JavacHasABug
@@ -937,9 +943,6 @@ protected static class JavacTestOptions {
 					ClassFileConstants.JDK9, 0100 /* 9.0.1 or better */) : null;
 		// bugs that have neither been fixed nor formally identified but which outcomes are obvious enough to clear any doubts
 		public static JavacHasABug
-			JavacGeneratesByteCodeUponWhichJavaThrowsAnException = RUN_JAVAC ?
-				new JavacHasABug(
-					MismatchType.StandardOutputMismatch) : null,
 			JavacThrowsAnException = RUN_JAVAC ? // some of these are transient - that is, depend on the system on which the test is run, aka stack overflow
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone) : null,
@@ -2310,10 +2313,7 @@ protected void runJavac(
 					//      potentially holding indications regarding the failure
 					if (expectedErrorString != null /* null skips error test */ && mismatch == 0) {
 						err = adjustErrorOutput(stderr.toString().trim());
-						if (!expectedErrorString.equals(err) && // special case: command-line java does not like missing main methods
-								!(expectedErrorString.length() == 0 &&
-									(err.indexOf("java.lang.NoSuchMethodError: main") != -1)
-									|| err.indexOf("Error: Main method not found in class") != -1)) {
+						if (!errorStringMatch(expectedErrorString, err)) {
 							mismatch = JavacTestOptions.MismatchType.ErrorOutputMismatch;
 						}
 					}
@@ -2331,6 +2331,28 @@ protected void runJavac(
 					expectedErrorString, compilerLog, output, err, excuse, mismatch);
 		}
 	}
+}
+private boolean errorStringMatch(String expectedErrorStringStart, String actualError) {
+	/*
+	 * From TestVerifier.checkBuffers(): 
+	 * This is an opportunistic heuristic for error strings comparison:
+	 * - null means skip test;
+	 * - empty means exactly empty;
+	 * - other means starts with.
+	 * If this became insufficient, we could envision using specific
+	 * matchers for specific needs.
+	 */
+	if (expectedErrorStringStart == null)
+		return true;
+	// special case: command-line java does not like missing main methods ...
+	if (actualError.indexOf("java.lang.NoSuchMethodError: main") != -1
+			|| actualError.indexOf("Error: Main method not found in class") != -1)
+		return true; // ... ignore this.
+	if (expectedErrorStringStart.length() == 0)
+		return expectedErrorStringStart.equals(actualError);
+	if (actualError.startsWith(expectedErrorStringStart))
+		return true;
+	return false;
 }
 /** Hook for AbstractRegressionTest9 */
 protected String expandFileNameForJavac(String fileName) {
@@ -3001,8 +3023,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 		// non-javac part
 		if (shouldFlushOutputDirectory)
 			Util.flushDirectoryContent(new File(OUTPUT_DIR));
-		// complain early in RUN_JAVAC mode (avoid to do it else until we've fixed all tests)
-		if (RUN_JAVAC && testFiles != null && (testFiles.length % 2) != 0) {
+		if (testFiles != null && (testFiles.length % 2) != 0) {
 			fail("odd number of strings in testFiles");
 		}
 

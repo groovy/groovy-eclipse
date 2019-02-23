@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -609,6 +609,10 @@ public class JavadocParser extends AbstractCommentParser {
 						valid = parseParam();
 					}
 				}
+				if (length == TAG_PROVIDES_LENGTH && CharOperation.equals(TAG_PROVIDES, tagName, 0, length)) {
+					this.tagValue = TAG_PROVIDES_VALUE;
+					this.tagWaitingForDescription = this.tagValue;
+				}
 				break;
 			case 'r':
 				if (length == TAG_RETURN_LENGTH && CharOperation.equals(TAG_RETURN, tagName, 0, length)) {
@@ -636,7 +640,7 @@ public class JavadocParser extends AbstractCommentParser {
 				} else if (length == TAG_SINCE_LENGTH && CharOperation.equals(TAG_SINCE, tagName, 0, length)) {
 					this.tagValue = TAG_SINCE_VALUE;
 					this.tagWaitingForDescription = this.tagValue;
-				}					
+				}
 				break;
 			case 't':
 				if (length == TAG_THROWS_LENGTH && CharOperation.equals(TAG_THROWS, tagName, 0, length)) {
@@ -644,6 +648,12 @@ public class JavadocParser extends AbstractCommentParser {
 					if (!this.inlineTagStarted) {
 						valid = parseThrows();
 					}
+				}
+				break;
+			case 'u':
+				if (length == TAG_USES_LENGTH && CharOperation.equals(TAG_USES, tagName, 0, length)) {
+					this.tagValue = TAG_USES_VALUE;
+					this.tagWaitingForDescription = this.tagValue;
 				}
 				break;
 			case 'v':

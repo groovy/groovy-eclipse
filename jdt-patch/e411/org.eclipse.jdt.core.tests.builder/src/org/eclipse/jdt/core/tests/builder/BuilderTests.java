@@ -13,23 +13,31 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
+import static org.eclipse.jdt.core.tests.util.AbstractCompilerTest.*;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
-import junit.framework.*;
-
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
-import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
-import org.eclipse.jdt.core.compiler.CharOperation;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Base class for Java image builder tests
@@ -50,7 +58,7 @@ public class BuilderTests extends TestCase {
 		env.cleanBuild();
 		this.debugRequestor.deactivate();
 	}
-	
+
 	protected void cleanBuild(String name) {
 		this.debugRequestor.clearResult();
 		this.debugRequestor.activate();
@@ -536,18 +544,25 @@ public class BuilderTests extends TestCase {
 			TestAttributeBuilderTests.class,
 			Bug530366Test.class,
 			Bug531382Test.class,
-			ParallelBuildTests.class
+			ParallelBuildTests.class,
+			LeakTestsBefore9.class,
 		};
-
-		if ((AbstractCompilerTest.getPossibleComplianceLevels()  & AbstractCompilerTest.F_1_5) != 0) {
-			int length = classes.length;
-			System.arraycopy(classes, 0, classes = new Class[length+4], 0, length);
-			classes[length++] = Java50Tests.class;
-			classes[length++] = PackageInfoTest.class;
-			classes[length++] = ParticipantBuildTests.class;
-			classes[length++] = AnnotationDependencyTests.class;
+		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));
+		if (matchesCompliance(F_1_5)) {
+			list.add(Java50Tests.class);
+			list.add(PackageInfoTest.class);
+			list.add(ParticipantBuildTests.class);
+			list.add(AnnotationDependencyTests.class);
 		}
-		return classes;
+		if (matchesCompliance(F_9)) {
+			list.add(LeakTestsAfter9.class);
+		}
+		return list.toArray(new Class[0]);
+	}
+
+	static boolean matchesCompliance(int level) {
+		int complianceLevels = getPossibleComplianceLevels();
+		return complianceLevels >= level;
 	}
 
 	public static Test buildTestSuite(Class evaluationTestClass, long ordering) {
@@ -601,5 +616,19 @@ public class BuilderTests extends TestCase {
 		}
 
 		return suite;
+	}
+
+	static IPath addEmptyInternalJar(IPath projectPath, String jarName) throws IOException, JavaModelException {
+		IProject project = env.getProject(projectPath);
+		String jarFile = project.getLocation().append(jarName).toOSString();
+		Util.createEmptyJar(jarFile, JavaCore.VERSION_1_4);
+		IPath jarPath = null;
+		try (FileInputStream fis = new FileInputStream(jarFile)) {
+			int length = fis.available();
+			byte[] jarContent = new byte[length];
+			fis.read(jarContent);
+			jarPath = env.addInternalJar(projectPath, jarName, jarContent);
+		}
+		return jarPath;
 	}
 }

@@ -14,6 +14,8 @@
  *								bug 376590 - Private fields with @Inject are ignored by unused field validation
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -67,6 +69,21 @@ public class AbstractComparableTest extends AbstractRegressionTest {
 		"	boolean required() default true;\n" +
 		"\n" +
 		"}";
+
+	protected static final String JUNIT_METHODSOURCE_NAME = "org/junit/jupiter/params/provider/MethodSource.java";
+	protected static final String JUNIT_METHODSOURCE_CONTENT =
+	    "package org.junit.jupiter.params.provider;\n" +
+	    "import java.lang.annotation.ElementType;\n" +
+	    "import java.lang.annotation.Retention;\n" +
+	    "import java.lang.annotation.RetentionPolicy;\n" +
+	    "import java.lang.annotation.Target;\n" +
+	    "@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})\n" +
+	    "@Retention(RetentionPolicy.RUNTIME)\n" +
+	    "public @interface MethodSource {\n" +
+	    "\n" +
+	    "	String[] value() default \"\";\n" +
+	    "\n" +
+	    "}";
 
 	public static Test buildComparableTestSuite(Class evaluationTestClass) {
 		Test suite = buildMinimalComplianceTestSuite(evaluationTestClass, F_1_5);

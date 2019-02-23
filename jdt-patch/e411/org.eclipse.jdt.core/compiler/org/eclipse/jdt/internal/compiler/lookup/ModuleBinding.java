@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation and others.
+ * Copyright (c) 2016, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -325,25 +325,37 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 
 	protected void recordExportRestrictions(PackageBinding exportedPackage, char[][] targetModules) {
 		if (targetModules != null && targetModules.length > 0) {
-			SimpleSetOfCharArray targetModuleSet = new SimpleSetOfCharArray(targetModules.length);
+			SimpleSetOfCharArray targetModuleSet = null;
+			if (this.exportRestrictions != null) {
+				targetModuleSet = this.exportRestrictions.get(exportedPackage);
+			} else {
+				this.exportRestrictions = new HashMap<>();
+			}
+			if (targetModuleSet == null) {
+				targetModuleSet = new SimpleSetOfCharArray(targetModules.length);
+				this.exportRestrictions.put(exportedPackage, targetModuleSet);
+			}
 			for (int i = 0; i < targetModules.length; i++) {
 				targetModuleSet.add(targetModules[i]);
 			}
-			if (this.exportRestrictions == null)
-				this.exportRestrictions = new HashMap<>();
-			this.exportRestrictions.put(exportedPackage, targetModuleSet);
 		}
 	}
 
 	protected void recordOpensRestrictions(PackageBinding openedPackage, char[][] targetModules) {
 		if (targetModules != null && targetModules.length > 0) {
-			SimpleSetOfCharArray targetModuleSet = new SimpleSetOfCharArray(targetModules.length);
+			SimpleSetOfCharArray targetModuleSet = null;
+			if (this.openRestrictions != null) {
+				targetModuleSet = this.openRestrictions.get(openedPackage);
+			} else {
+				this.openRestrictions = new HashMap<>();
+			}
+			if (targetModuleSet == null) {
+				targetModuleSet = new SimpleSetOfCharArray(targetModules.length);
+				this.openRestrictions.put(openedPackage, targetModuleSet);
+			}
 			for (int i = 0; i < targetModules.length; i++) {
 				targetModuleSet.add(targetModules[i]);
 			}
-			if (this.openRestrictions == null)
-				this.openRestrictions = new HashMap<>();
-			this.openRestrictions.put(openedPackage, targetModuleSet);
 		}
 	}
 
@@ -431,6 +443,13 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	}
 
 	/**
+	 * Answer the name of this module as it should be used for hasCompilationUnit() checks.
+	 */
+	public char[] nameForCUCheck() {
+		return nameForLookup();
+	}
+
+	/**
 	 * Check if the specified package is owned by the current module and exported to the client module.
 	 * True if the package appears in the list of exported packages and when the export is targeted,
 	 * the module appears in the targets of the exports statement.
@@ -494,7 +513,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		// remember:
 		if (binding != null) {
 			this.environment.knownPackages.put(name, binding);
-			binding = addPackage(binding, false);
+			binding = addPackage(binding, false); // no further lookup needed, binding is already complete (split?)
 		} else {
 			this.environment.knownPackages.put(name, LookupEnvironment.TheNotFoundPackage);
 		}
@@ -545,8 +564,16 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 			declaringModuleNames = moduleEnv.getUniqueModulesDeclaringPackage(parentName, name, nameForLookup());
 			if (declaringModuleNames != null) {
 				if (CharOperation.containsEqual(declaringModuleNames, this.moduleName)) {
-					// declared here, not yet known, so create it now:
-					binding = new PackageBinding(subPkgCompoundName, parent, this.environment, this);
+					if (parent instanceof SplitPackageBinding) {
+						// parent.getPackage0() may have been too shy, so drill into the split:
+						PackageBinding singleParent = ((SplitPackageBinding) parent).getIncarnation(this);
+						if (singleParent != null)
+							binding = singleParent.getPackage0(name);
+					}
+					if (binding == null) {
+						// declared here, not yet known, so create it now:
+						binding = new PackageBinding(subPkgCompoundName, parent, this.environment, this);
+					}
 				} else if (considerRequiredModules) {
 					// visible but foreign (when current is unnamed or auto):
 					for (char[] declaringModuleName : declaringModuleNames) {
@@ -559,7 +586,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 								if (declaredPackage != null) {
 									// don't add foreign package to 'parent' (below), but to its own parent:
 									if (declaredPackage.parent != null)
-										declaredPackage.parent.addPackage(declaredPackage, declaringModule, true);
+										declaredPackage.parent.addPackage(declaredPackage, declaringModule);
 									parent = null;
 									//
 									binding = SplitPackageBinding.combine(declaredPackage, binding, this);
@@ -576,18 +603,27 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 
 		// enrich with split-siblings from visible modules:
 		if (considerRequiredModules) {
+			if (parent != null && binding != null)
+				parent.addPackage(binding, this); // preliminarily add to avoid creating duplicates, will be updated below
 			binding = combineWithPackagesFromOtherRelevantModules(binding, subPkgCompoundName, declaringModuleNames);
 		}
 		if (binding == null || !binding.isValidBinding()) {
-			if (parent != null && !packageMayBeIncomplete) // don't remember package that may still lack some siblings
+			if (parent != null
+					&& !packageMayBeIncomplete  // don't remember package that may still lack some siblings
+					&& !(parent instanceof SplitPackageBinding)) // don't store problem into SPB, because from different focus things may look differently
+			{
 				parent.knownPackages.put(name, binding == null ? LookupEnvironment.TheNotFoundPackage : binding);
+			}
 			return null;
 		}
 		// remember
-		if (parentName.length == 0)
+		if (parentName.length == 0) {
 			binding.environment.knownPackages.put(name, binding);
-		else if (parent != null)
-			binding = parent.addPackage(binding, this, false);
+		} else if (parent != null) {
+			binding = parent.addPackage(binding, this);
+		}
+		if (packageMayBeIncomplete)
+			return binding;
 		return addPackage(binding, false);
 	}
 

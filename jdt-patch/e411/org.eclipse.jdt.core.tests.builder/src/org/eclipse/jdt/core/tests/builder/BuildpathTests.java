@@ -13,25 +13,35 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import junit.framework.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.core.*;
+import org.eclipse.jdt.internal.core.JavaModel;
+import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.JavaProject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
+import junit.framework.Test;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class BuildpathTests extends BuilderTests {
@@ -115,27 +125,8 @@ public void testClasspathFileChange() throws JavaModelException {
 
 public void testClosedProject() throws JavaModelException, IOException {
 	IPath project1Path = env.addProject("CP1"); //$NON-NLS-1$
-	IProject project1 = ResourcesPlugin.getWorkspace().getRoot().getProject("CP1");
 	env.addExternalJars(project1Path, Util.getJavaClassLibs());
-	
-	String jarFile = project1.getLocation().toOSString() + File.separator + "temp.jar";
-	
-	org.eclipse.jdt.core.tests.util.Util.createEmptyJar(
-			jarFile,
-			JavaCore.VERSION_1_4);
-
-	IPath jarPath = null;
-	FileInputStream fis = null;
-	try {
-		fis = new FileInputStream(jarFile);
-		int length = fis.available();
-		byte[] jarContent = new byte[length];
-		fis.read(jarContent); 
-		jarPath = env.addInternalJar(project1Path, "temp.jar", jarContent); //$NON-NLS-1$
-	}
-	finally {
-		if (fis != null) fis.close();
-	}
+	IPath jarPath = addEmptyInternalJar(project1Path, "temp.jar");
 
 	IPath project2Path = env.addProject("CP2"); //$NON-NLS-1$
 	env.addExternalJars(project2Path, Util.getJavaClassLibs());

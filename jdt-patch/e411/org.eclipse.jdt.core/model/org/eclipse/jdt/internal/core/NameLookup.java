@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -879,8 +879,6 @@ public class NameLookup implements SuffixConstants {
 		try {
 			if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
 				module = root.getJavaProject().getModuleDescription(); // from any root in this project
-			else
-				module = root.getModuleDescription();
 		} catch (JavaModelException e) {
 			cache.put(root, NO_MODULE);
 			return null;
@@ -890,9 +888,14 @@ public class NameLookup implements SuffixConstants {
 			IClasspathEntry classpathEntry = rootToEntry.apply(root);
 			if (classpathEntry instanceof ClasspathEntry) {
 				if (((ClasspathEntry) classpathEntry).isModular()) {
-					// modular but no module-info implies this is an automatic module
-					module = ((PackageFragmentRoot) root).getAutomaticModuleDescription(classpathEntry);
+					module = root.getModuleDescription();
+					if (module == null) {
+						// modular but no module-info implies this is an automatic module
+						module = ((PackageFragmentRoot) root).getAutomaticModuleDescription(classpathEntry);
+					}
 				}
+			} else if (root instanceof JrtPackageFragmentRoot) {
+				module = root.getModuleDescription(); // always considered modular
 			}
 		}
 		cache.put(root, module != null ? module : NO_MODULE);

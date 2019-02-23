@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -942,6 +942,7 @@ protected int valueLambdaNestDepth = -1;
 private int stateStackLengthStack[] = new int[0];
 protected boolean parsingJava8Plus;
 protected boolean parsingJava9Plus;
+protected boolean parsingJava11Plus;
 protected int unstackedAct = ERROR_ACTION;
 private boolean haltOnSyntaxError = false;
 private boolean tolerateDefaultClassMethods = false;
@@ -960,6 +961,7 @@ public Parser(ProblemReporter problemReporter, boolean optimizeStringLiterals) {
 	initializeScanner();
 	this.parsingJava8Plus = this.options.sourceLevel >= ClassFileConstants.JDK1_8;
 	this.parsingJava9Plus = this.options.sourceLevel >= ClassFileConstants.JDK9;
+	this.parsingJava11Plus = this.options.sourceLevel >= ClassFileConstants.JDK11;
 	this.astLengthStack = new int[50];
 	this.expressionLengthStack = new int[30];
 	this.typeAnnotationLengthStack = new int[30];
@@ -8553,6 +8555,31 @@ protected void consumeLambdaHeader() {
 		this.currentElement.lambdaNestLevel++;
 	}
 }
+private void setArgumentsTypeVar(LambdaExpression lexp) {
+	Argument[] args =  lexp.arguments;
+	if (!this.parsingJava11Plus || args == null || args.length == 0) {
+		lexp.argumentsTypeVar = false;
+		return;
+	}
+
+	boolean isVar = false, mixReported = false;
+	for (int i = 0, l = args.length; i < l; ++i) {
+		Argument arg = args[i];
+		TypeReference type = arg.type;
+		char[][] typeName = type != null ? type.getTypeName() : null;
+		boolean prev = isVar;
+		isVar = typeName != null && typeName.length == 1 &&
+				CharOperation.equals(typeName[0], TypeConstants.VAR);
+		lexp.argumentsTypeVar |= isVar;
+		if (i > 0 && prev != isVar && !mixReported) { // report only once per list
+			this.problemReporter().varCannotBeMixedWithNonVarParams(isVar ? arg : args[i - 1]);
+			mixReported = true;
+		}
+		if (isVar && (type.dimensions() > 0 || type.extraDimensions() > 0)) {
+			this.problemReporter().varLocalCannotBeArray(arg);
+		}
+	}
+}
 protected void consumeLambdaExpression() {
 	
 	// LambdaExpression ::= LambdaHeader LambdaBody
@@ -8582,6 +8609,7 @@ protected void consumeLambdaExpression() {
 	if (!this.parsingJava8Plus) {
 		problemReporter().lambdaExpressionsNotBelow18(lexp);
 	}
+	setArgumentsTypeVar(lexp);
 	pushOnExpressionStack(lexp);
 	if (this.currentElement != null) {
 		this.lastCheckPoint = body.sourceEnd + 1;

@@ -83,22 +83,18 @@ public class SplitPackageBinding extends PackageBinding {
 			}
 		}
 	}
-	PackageBinding addPackage(PackageBinding element, ModuleBinding module) {
-		return addPackage(element, module, true);
-	}
 	@Override
-	PackageBinding addPackage(PackageBinding element, ModuleBinding module, boolean enrichWithSplitSiblings) {
+	PackageBinding addPackage(PackageBinding element, ModuleBinding module) {
 		char[] simpleName = element.compoundName[element.compoundName.length-1];
 		// enrich
-		if (enrichWithSplitSiblings)
-			element = combineWithSiblings(element, simpleName, module);
+		element = combineWithSiblings(element, simpleName, module);
 
 		PackageBinding visible = this.knownPackages.get(simpleName);
 		visible = SplitPackageBinding.combine(element, visible, this.enclosingModule);
 		this.knownPackages.put(simpleName, visible);
 		PackageBinding incarnation = getIncarnation(element.enclosingModule);
 		if (incarnation != null)
-			incarnation.addPackage(element, module, enrichWithSplitSiblings);
+			incarnation.addPackage(element, module);
 		return element;
 	}
 
@@ -111,6 +107,8 @@ public class SplitPackageBinding extends PackageBinding {
 			for (PackageBinding incarnation :  this.incarnations) {
 				ModuleBinding moduleBinding = incarnation.enclosingModule;
 				if (moduleBinding == module)
+					continue;
+				if (childPackage.isDeclaredIn(moduleBinding))
 					continue;
 				PackageBinding next = moduleBinding.getVisiblePackage(incarnation, name, false);
 				childPackage = combine(next, childPackage, primaryModule);

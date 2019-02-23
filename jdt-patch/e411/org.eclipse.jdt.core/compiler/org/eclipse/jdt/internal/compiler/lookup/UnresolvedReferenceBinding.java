@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -107,10 +107,10 @@ ReferenceBinding resolve(LookupEnvironment environment, boolean convertGenericTo
 	if (targetType == null) {
 		char[] typeName = this.compoundName[this.compoundName.length - 1];
 		targetType = this.fPackage.getType0(typeName);
-		if (targetType == this) { //$IDENTITY-COMPARISON$
+		if (targetType == this || targetType == null) { //$IDENTITY-COMPARISON$
 			if (this.fPackage instanceof SplitPackageBinding) // leverage SplitPackageBinding to avoid duplicate creation of BinaryTypeBinding
 				targetType = environment.askForType(this.fPackage, typeName, this.fPackage.enclosingModule);
-			else
+			else if (targetType == this) //$IDENTITY-COMPARISON$
 				targetType = environment.askForType(this.compoundName, this.fPackage.enclosingModule);
 		}
 		if ((targetType == null || targetType == this) && CharOperation.contains('.', typeName)) { //$IDENTITY-COMPARISON$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2017 IBM Corporation and others.
+ * Copyright (c) 2005, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3071,6 +3071,40 @@ public void test526911a() {
 		"}",
 	};
 	this.runConformTest(sourceFiles, "1 11", options);
+}
+public void testBug533475() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return;
+	runConformTest(
+		new String[] {
+			"SwitchBug.java",
+			"public class SwitchBug {\n" + 
+			"    static class MyClass {\n" + 
+			"        private static final Object C = \"\";\n" + 
+			"\n" + 
+			"        public enum State {\n" + 
+			"            ENABLED(C); // pass null constant\n" + 
+			"\n" + 
+			"            State(Object value) {\n" + 
+			"            } // value can be ignored\n" + 
+			"        }\n" + 
+			"\n" + 
+			"        /* unused method with switch statement IN SAME CLASS */\n" + 
+			"        private void unusedMethod() {\n" + 
+			"            switch (State.ENABLED) {\n" + 
+			"            case ENABLED:\n" + 
+			"                break;\n" + 
+			"            }\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"    \n" + 
+			"    public static void main(String[] args) {\n" + 
+			"        // access enum values from an other class\n" + 
+			"        MyClass.State.values();\n" + 
+			"        System.out.println(\"It runs.\");\n" + 
+			"    }\n" + 
+			"}\n"
+		});
 }
 public static Class testClass() {
 	return SwitchTest.class;

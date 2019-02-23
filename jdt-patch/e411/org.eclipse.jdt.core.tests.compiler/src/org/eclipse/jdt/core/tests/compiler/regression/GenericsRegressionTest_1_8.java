@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2018 GK Software AG, and others.
+ * Copyright (c) 2013, 2019 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -7006,7 +7006,7 @@ public void testBug502350() {
 			"",
 		},
 		"----------\n" + 
-		"1. ERROR in makeCompilerFreeze\\\u0045clipseJava8Bug.java (at line 20)\n" + 
+		"1. ERROR in makeCompilerFreeze\\EclipseJava8Bug.java (at line 20)\n" + 
 		"	Stuff.func(Comparator.naturalOrder());\n" + 
 		"	      ^^^^\n" + 
 		"The method func(Comparator<T>) in the type Stuff is not applicable for the arguments (Comparator<Comparable<Comparable<B>>>)\n" + 
@@ -9467,6 +9467,66 @@ public void testBug508834_comment0() {
 			"	public static <H extends A, T> void test(C<? super B<? super T, ? super H>> test)\n" + 
 			"	{\n" + 
 			"		test(test); // fails compilation (incorrect)\n" + 
+			"	}\n" +
+			"}\n"
+		};
+		runner.runConformTest();
+	}
+	public void testBug543820() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"A.java",
+			"import java.util.concurrent.atomic.AtomicReference;\n" + 
+			"import java.util.Optional;\n" +
+			"public class A {\n" +
+			"	private final ThreadLocal<AtomicReference<Optional<Long>>> var =\n" + 
+			"		ThreadLocal.withInitial(() -> new AtomicReference<>(Optional.empty()));" +
+			"}\n"
+		};
+		runner.runConformTest();
+	}
+	public void testBug540846() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"Test.java",
+			"import java.util.*;\n" + 
+			"import java.util.stream.*;\n" + 
+			"import java.math.*;\n" + 
+			"\n" + 
+			"public class Test {\n" + 
+			"    private List<Object> getRowValues(Map<String, BigDecimal> record, Stream<String> factors) {\n" + 
+			"        return Stream.concat(\n" + 
+			"            factors.map(f -> {\n" + 
+			"                if (f.equals(\"x\")) {\n" + 
+			"                    return record.get(f);\n" + 
+			"                } else {\n" + 
+			"                    return \"NM\";\n" + 
+			"                }\n" + 
+			"            }),\n" + 
+			"            Stream.of(BigDecimal.ONE)\n" + 
+			"        )\n" + 
+			"        .map(v -> (v instanceof BigDecimal) ? ((BigDecimal) v).setScale(10, BigDecimal.ROUND_HALF_UP) : v)\n" + 
+			"        .collect(Collectors.toList());\n" + 
+			"    }\n" + 
+			"}\n"
+		};
+		runner.runConformTest();
+	}
+	public void testBug538192() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"Test.java",
+			"import java.util.*;\n" + 
+			"import java.util.function.Function;\n" +
+			"interface ListFunc<T> extends Function<List<String>, T> {}\n" + 
+			"interface MapFunc<T> extends Function<Map<String,String>, T> {}\n" + 
+			"class DTT {\n" + 
+			"	public <T> DTT(Class<T> c, ListFunc<T> f) {}\n" + 
+			"	public <T> DTT(Class<T> c, MapFunc<T> f) {} \n" + 
+			"}\n" +
+			"public class Test {\n" +
+			"	void test() {\n" +
+			"		new DTT(Integer.class, (Map<String, String> row) -> Integer.valueOf(0));\n" +
 			"	}\n" +
 			"}\n"
 		};

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3073,7 +3073,7 @@ public void generateSyntheticBodyForSwitchTable(SyntheticMethodBinding methodBin
 		}
 	}
 	aload_0();
-	if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK9) {
+	if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK9 || !syntheticFieldBinding.isFinal()) {
 		// Modifying a final field outside of the <clinit> method is not allowed in 9
 		dup();
 		fieldAccess(Opcodes.OPC_putstatic, syntheticFieldBinding, null /* default declaringClass */);

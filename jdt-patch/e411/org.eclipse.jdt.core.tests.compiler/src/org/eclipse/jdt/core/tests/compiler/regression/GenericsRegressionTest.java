@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -6475,6 +6475,37 @@ public void testBug478708() {
 			"T.AbstractD cannot be resolved to a type\n" + 
 			"----------\n";
 	runner.runNegativeTest();
+}
+public void testBug543526() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"C.java",
+			"class C {\n" +
+			"	<T extends CharSequence & java.util.List<T>> boolean m(T x) {\n" +
+			"		return x instanceof String;\n" +
+			"	}\n" +
+			"}\n"
+	};
+	runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in C.java (at line 3)\n" + 
+			"	return x instanceof String;\n" + 
+			"	       ^^^^^^^^^^^^^^^^^^^\n" + 
+			"Incompatible conditional operand types T and String\n" + 
+			"----------\n";
+	runner.runNegativeTest();
+}
+public void testBug543526b() {
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"C.java",
+			"class C {\n" +
+			"	<T extends CharSequence & java.util.List<T>> boolean m(T x) {\n" +
+			"		return x instanceof Comparable<?>;\n" + // no problem casting to an interface
+			"	}\n" +
+			"}\n"
+	};
+	runner.runConformTest();
 }
 }
 

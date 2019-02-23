@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation and others.
+ * Copyright (c) 2016, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -383,8 +383,8 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 	        "----------\n" + 
     		"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/p/X.java (at line 4)\n" + 
     		"	java.sql.Connection con = null;\n" + 
-    		"	^^^^^^^^\n" + 
-    		"java.sql cannot be resolved to a type\n" + 
+    		"	^^^^^^^^^^^^^^^^^^^\n" + 
+    		"The type java.sql.Connection is not accessible\n" + 
     		"----------\n" + 
     		"1 problem (1 error)\n",
 	        true,
@@ -1959,8 +1959,8 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"----------\n" + 
 				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/p/X.java (at line 2)\n" + 
 				"	public class X extends a.A {\n" + 
-				"	                       ^\n" + 
-				"a cannot be resolved to a type\n" + 
+				"	                       ^^^\n" + 
+				"The type a.A is not accessible\n" + 
 				"----------\n" + 
 				"1 problem (1 error)\n",
 				false,
@@ -2017,8 +2017,8 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"----------\n" + 
 				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/p/X.java (at line 2)\n" + 
 				"	public class X extends a.A {\n" + 
-				"	                       ^\n" + 
-				"a cannot be resolved to a type\n" + 
+				"	                       ^^^\n" + 
+				"The type a.A is not accessible\n" + 
 				"----------\n" + 
 				"1 problem (1 error)\n",
 				false,

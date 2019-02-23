@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -315,5 +315,30 @@ public void testBug536159_04() throws IOException {
 			"	            ^\n" + 
 			"\'var\' is not allowed as an element type of an array\n" + 
 			"----------\n");
+}
+public void testBug541532_01() throws IOException {
+	runConformTest(new String[] {
+			"X.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"\n" +
+			"public class X {\n" +
+			"\n" +
+			"	public static void foo(List<String> list) {\n" +
+			"		list.stream()\n" +
+			"		  .map((var s) -> s.toLowerCase())\n" +
+			"		  .forEach(System.out::println);\n" +
+			"\n" +
+			"		list.stream()\n" +
+			"		  .filter((var s) -> s.length() == 1)\n" +
+			"		  .forEach(System.out::println);\n" +
+			"	}\n" +
+			"	public static void main(String[] args) {\n" +
+			"		String[] greetings = {\"hello\", \"world\"};\n" +
+			"		X.foo(Arrays.asList(greetings));\n" +
+			"	}\n" +
+			"}\n"
+		},
+		"hello\nworld");
 }
 }

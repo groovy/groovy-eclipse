@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -409,7 +409,8 @@ private static NameEnvironmentAnswer fromSplitPackageOrOracle(IModuleAwareNameEn
 		if (binding != null && binding.isValidBinding()) {
 			if (binding instanceof UnresolvedReferenceBinding)
 				binding = ((UnresolvedReferenceBinding) binding).resolve(module.environment, false);
-			return new NameEnvironmentAnswer(binding, module);
+			if (binding.isValidBinding())
+				return new NameEnvironmentAnswer(binding, module);
 		}
 	}
 	return moduleEnv.findType(name, packageBinding.compoundName, module.nameForLookup());
@@ -778,7 +779,7 @@ private PackageBinding computePackageFrom(char[][] constantPoolName, boolean isM
 			if (isMissing) {
 				packageBinding.tagBits |= TagBits.HasMissingType;
 			}
-			packageBinding = parent.addPackage(packageBinding, this.module, true);
+			packageBinding = parent.addPackage(packageBinding, this.module);
 		}
 	}
 	if (packageBinding instanceof SplitPackageBinding) {
@@ -1128,7 +1129,7 @@ public PackageBinding createPackage(char[][] compoundName) {
 			}
 			if (packageBinding == null) {
 				packageBinding = new PackageBinding(CharOperation.subarray(compoundName, 0, i + 1), parent, this, this.module);
-				packageBinding = parent.addPackage(packageBinding, this.module, true);
+				packageBinding = parent.addPackage(packageBinding, this.module);
 			}
 		}
 	}

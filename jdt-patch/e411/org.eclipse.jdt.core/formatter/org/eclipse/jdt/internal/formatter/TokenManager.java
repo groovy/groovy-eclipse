@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2018 Mateusz Matela and others.
+ * Copyright (c) 2014, 2019 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -26,6 +26,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.InfixExpression.Operator;
 import org.eclipse.jdt.internal.formatter.Token.WrapMode;
 import org.eclipse.jdt.internal.formatter.linewrap.CommentWrapExecutor;
 
@@ -384,6 +388,21 @@ public class TokenManager implements Iterable<Token> {
 	private boolean tokenInside(ASTNode node, int index) {
 		return get(index).originalStart >= node.getStartPosition()
 				&& get(index).originalEnd <= node.getStartPosition() + node.getLength();
+	}
+
+	public boolean isStringConcatenation(InfixExpression node) {
+		if (!node.getOperator().equals(Operator.PLUS))
+			return false;
+		List<Expression> operands = new ArrayList<Expression>(node.extendedOperands());
+		operands.add(node.getLeftOperand());
+		operands.add(node.getRightOperand());
+		for (Expression o : operands) {
+			if (o instanceof StringLiteral)
+				return true;
+			if ((o instanceof InfixExpression) && isStringConcatenation((InfixExpression) o))
+				return true;
+		}
+		return false;
 	}
 
 	public void addNLSAlignIndex(int index, int align) {

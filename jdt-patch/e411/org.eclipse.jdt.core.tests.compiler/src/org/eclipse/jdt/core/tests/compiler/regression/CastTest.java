@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2017 IBM Corporation and others.
+ * Copyright (c) 2003, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -21,6 +21,7 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.Excuse;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -1497,7 +1498,7 @@ public void test036() {
 		"no base" /* expected output string */,
 		"" /* expected error string */,
 		// javac options
-		JavacTestOptions.JavacHasABug.JavacGeneratesByteCodeUponWhichJavaThrowsAnException /* javac test options */);
+		JavacTestOptions.JavacHasABug.JavacBugFixed_7 /* javac test options */);
 }
 public void test037() {
 	this.runNegativeTest(
@@ -1828,7 +1829,8 @@ public void test048() {
 public void test049() {
 	CompilerOptions options = new CompilerOptions(getCompilerOptions());
 	if (options.sourceLevel < ClassFileConstants.JDK1_5) return;
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"A.java",
 			"public class A {\n" +
@@ -1844,14 +1846,18 @@ public void test049() {
 			"	class Member2<U> extends Other<U>.Member {\n" +
 			"	}\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in A.java (at line 3)\n" + 
 		"	Other<?>.Member m = (Other<?>.Member) om2;\n" + 
 		"	                    ^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Unnecessary cast from Other2<?>.Member2<capture#1-of ?> to Other<?>.Member\n" + 
-		"----------\n"
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		Excuse.EclipseHasSomeMoreWarnings; // javac is inconsistent: accepting both assignments, not issuing a warning though in simpler cases it does
+	// note that javac 1.6 doesn't even accept the syntax of this cast
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=302919
 public void test050() {
@@ -2521,7 +2527,9 @@ public void testBug428274() {
 public void testBug428274b() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return; // uses generics
-	String source = 
+	Runner runner = new Runner();
+	runner.testFiles = new String[] {
+			"Junk4.java",
 			"public class Junk4<T> {\n" + 
 			"    void setValue(T n) {\n" + 
 			"        int rounded = (int) Math.round((double) n);\n" +
@@ -2532,26 +2540,22 @@ public void testBug428274b() {
 			"		j.setValue(Double.valueOf(3.3));\n" +
 			"		j.setValue(Double.valueOf(3.7));\n" +
 			"	}\n" + 
-			"}\n";
+			"}\n"
+	};
 	if (this.complianceLevel < ClassFileConstants.JDK1_7) {
-		runNegativeTest(
-			new String[] {
-				"Junk4.java",
-				source
-			},
+		runner.expectedCompilerLog =
 			"----------\n" + 
 			"1. ERROR in Junk4.java (at line 3)\n" + 
 			"	int rounded = (int) Math.round((double) n);\n" + 
 			"	                               ^^^^^^^^^^\n" + 
 			"Cannot cast from T to double\n" + 
-			"----------\n");
+			"----------\n";
+		runner.runNegativeTest();
 	} else {
-		runConformTest(
-			new String[] {
-				"Junk4.java",
-				source
-			},
-			"3\n4");
+		runner.expectedOutputString =
+			"3\n4";
+		runner.javacTestOptions = JavacTestOptions.JavacHasABug.JavacBug8144832;
+		runner.runConformTest();
 	}
 }
 // note: spec allows all reference types, but neither javac nor common sense accept arrays :)
@@ -3232,9 +3236,10 @@ public void test461706() {
 public void test461706a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_8)
 		return;
-	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
+	runner.testFiles =
 		new String[] {
 			"Bug.java",
 			"import java.util.ArrayList;\n" + 
@@ -3261,16 +3266,15 @@ public void test461706a() {
 			"				.orElse(ICondition.TRUE);\n" + 
 			"	}\n" + 
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" +
-		"1. ERROR in Bug.java (at line 20)\n" +
+		"1. WARNING in Bug.java (at line 20)\n" +
 		"	.map(x -> (ICondition)x)\n" +
 		"	          ^^^^^^^^^^^^^\n" +
 		"Unnecessary cast from Bug.ICondition to Bug.ICondition\n" +
-		"----------\n",
-		null,
-		true,
-		customOptions);
+		"----------\n";
+	runner.runWarningTest();
 }
 public void testAnonymous_bug520727() {
 	String[] source = {
@@ -3297,6 +3301,52 @@ public void testAnonymous_bug520727() {
 		runConformTest(source,"");
 	}
 }
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=543727 False positive "Unnecessary cast"
+public void test543727() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_7)
+		return;
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
+	this.runConformTest(
+		new String[] {
+			"Bug.java",
+			"import java.util.ArrayList;\n" +
+			"import java.util.List;\n" +
+			"public class Bug {\n" +
+			"   public static void main(String[] args) {\n" +
+	 		"       List<Comparable<?>> vector = new ArrayList<>();\n" +
+			"       vector.add(0);\n" +
+	 		"       if (vector.get(0) == (Integer)0) {\n" +
+			"           System.out.print(\"SUCCESS\");\n" +
+	 		"       }\n" +
+	 		"   }" +
+			"}\n",
+		},
+		"SUCCESS");
+}
+public void test543727_notequals() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_7)
+		return;
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
+	this.runConformTest(
+		new String[] {
+			"Bug.java",
+			"import java.util.ArrayList;\n" +
+			"import java.util.List;\n" +
+			"public class Bug {\n" +
+			"   public static void main(String[] args) {\n" +
+	 		"       List<Comparable<?>> vector = new ArrayList<>();\n" +
+			"       vector.add(0);\n" +
+	 		"       if (vector.get(0) != (Integer)1) {\n" +
+			"           System.out.print(\"SUCCESS\");\n" +
+	 		"       }\n" +
+	 		"   }" +
+			"}\n",
+		},
+		"SUCCESS");
+}
+
 public static Class testClass() {
 	return CastTest.class;
 }

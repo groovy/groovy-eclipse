@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -503,7 +503,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	if ((this.binding.tagBits & TagBits.HasMissingType) != 0) {
 		scope.problemReporter().missingTypeInConstructor(this, this.binding);
 	}
-	if (isMethodUseDeprecated(this.binding, scope, true)) {
+	if (isMethodUseDeprecated(this.binding, scope, true, this)) {
 		scope.problemReporter().deprecatedMethod(this.binding, this);
 	}
 	if (checkInvocationArguments(scope, null, this.resolvedType, this.binding, this.arguments, this.argumentTypes, this.argsContainCast, this)) {
@@ -591,7 +591,7 @@ public MethodBinding inferConstructorOfElidedParameterizedType(final Scope scope
 			if (this.expressionContext == INVOCATION_CONTEXT && this.typeExpected == null)
 				constructor = ParameterizedGenericMethodBinding.computeCompatibleMethod18(constructor.shallowOriginal(), this.argumentTypes, scope, this);
 		}
-		if (this.typeExpected != null)
+		if (this.typeExpected != null && this.typeExpected.isProperType(true))
 			registerResult(this.typeExpected, constructor);
 	}
 	return constructor;
@@ -808,5 +808,13 @@ public ExpressionContext getExpressionContext() {
 @Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return new InferenceContext18(scope, this.arguments, this, this.outerInferenceContext);
+}
+@Override
+public int nameSourceStart() {
+	return this.type.sourceStart;
+}
+@Override
+public int nameSourceEnd() {
+	return this.type.sourceEnd;
 }
 }

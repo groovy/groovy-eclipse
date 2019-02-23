@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -936,10 +936,13 @@ public class EqualExpression extends BinaryExpression {
 			if (unnecessaryLeftCast || unnecessaryRightCast) {
 				TypeBinding alternateLeftType = unnecessaryLeftCast ? ((CastExpression)this.left).expression.resolvedType : leftType;
 				TypeBinding alternateRightType = unnecessaryRightCast ? ((CastExpression)this.right).expression.resolvedType : rightType;
-				if (checkCastTypesCompatibility(scope, alternateLeftType, alternateRightType, null)
-						|| checkCastTypesCompatibility(scope, alternateRightType, alternateLeftType, null)) {
-					if (unnecessaryLeftCast) scope.problemReporter().unnecessaryCast((CastExpression)this.left);
-					if (unnecessaryRightCast) scope.problemReporter().unnecessaryCast((CastExpression)this.right);
+				// Bug 543727 - check if either cast is really needed
+				if (!isCastNeeded(alternateLeftType, alternateRightType)) {
+					if (checkCastTypesCompatibility(scope, alternateLeftType, alternateRightType, null)
+							|| checkCastTypesCompatibility(scope, alternateRightType, alternateLeftType, null)) {
+						if (unnecessaryLeftCast) scope.problemReporter().unnecessaryCast((CastExpression)this.left);
+						if (unnecessaryRightCast) scope.problemReporter().unnecessaryCast((CastExpression)this.right);
+					}
 				}
 			}
 			// check whether comparing identical expressions
@@ -955,6 +958,20 @@ public class EqualExpression extends BinaryExpression {
 		scope.problemReporter().notCompatibleTypesError(this, leftType, rightType);
 		return null;
 	}
+
+	private boolean isCastNeeded(TypeBinding leftType, TypeBinding rightType) {
+		// Bug 543727 - if either type is parameterized and the other is a base type,
+		// a cast is necessary, even if boxing the base type will result in a compatible
+		// type.
+		if (leftType.isParameterizedType()) {
+			return rightType.isBaseType();
+		}
+		if (rightType.isParameterizedType()) {
+			return leftType.isBaseType();
+		}
+		return false;
+	}
+
 	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {

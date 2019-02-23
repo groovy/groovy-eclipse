@@ -46,6 +46,8 @@
  *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -889,6 +891,14 @@ public void computeId() {
 					if (CharOperation.equals(TypeConstants.AUTOWIRED, this.compoundName[5])) {
 						if (CharOperation.equals(TypeConstants.ORG_SPRING_AUTOWIRED, this.compoundName)) {
 							this.id = TypeIds.T_OrgSpringframeworkBeansFactoryAnnotationAutowired;
+						}
+					}
+					return;
+				}
+				if (CharOperation.equals(TypeConstants.JUNIT, this.compoundName[1])) {
+					if (CharOperation.equals(TypeConstants.METHOD_SOURCE, this.compoundName[5])) {
+						if (CharOperation.equals(TypeConstants.ORG_JUNIT_METHOD_SOURCE, this.compoundName)) {
+							this.id = TypeIds.T_OrgJunitJupiterParamsProviderMethodSource;
 						}
 					}
 					return;

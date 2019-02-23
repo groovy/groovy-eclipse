@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -86,10 +86,10 @@ private void addNotFoundType(char[] simpleName) {
 }
 /**
  * Remembers a sub-package.
- * For a split parent package this will include enriching with siblings, if checkForSplitSiblings is true
+ * For a split parent package this will include potentially enriching with siblings,
  * in which case the enriched (split) binding will be returned.
  */
-PackageBinding addPackage(PackageBinding element, ModuleBinding module, boolean checkForSplitSiblings) {
+PackageBinding addPackage(PackageBinding element, ModuleBinding module) {
 	if ((element.tagBits & TagBits.HasMissingType) == 0) clearMissingTagBit();
 	this.knownPackages.put(element.compoundName[element.compoundName.length - 1], element);
 	return element;
@@ -442,13 +442,13 @@ public PackageBinding getVisibleFor(ModuleBinding module, boolean preferLocal) {
 public boolean hasCompilationUnit(boolean checkCUs) {
 	if (this.knownTypes != null) {
 		for (ReferenceBinding knownType : this.knownTypes.valueTable) {
-			if (knownType != null && knownType != LookupEnvironment.TheNotFoundType)
+			if (knownType != null && knownType != LookupEnvironment.TheNotFoundType && !knownType.isUnresolvedType())
 				return true;
 		}
 	}
 	if (this.environment.useModuleSystem) {
 		IModuleAwareNameEnvironment moduleEnv = (IModuleAwareNameEnvironment) this.environment.nameEnvironment;
-		return moduleEnv.hasCompilationUnit(this.compoundName, this.enclosingModule.nameForLookup(), checkCUs);
+		return moduleEnv.hasCompilationUnit(this.compoundName, this.enclosingModule.nameForCUCheck(), checkCUs);
 	}
 	return false;
 }

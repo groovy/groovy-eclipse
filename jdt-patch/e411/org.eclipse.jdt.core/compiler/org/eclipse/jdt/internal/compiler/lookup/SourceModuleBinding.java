@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2018 GK Software AG, and others.
+ * Copyright (c) 2017, 2019 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -41,7 +41,7 @@ public class SourceModuleBinding extends ModuleBinding {
 	}
 
 	public void setRequires(ModuleBinding[] requires, ModuleBinding[] requiresTransitive) {
-		// TODO(SHMOD): it's a bit awkward that we may get called after applyModuleUpdates() has already worked.
+		// remember that we may get called after applyModuleUpdates() has already worked.
 		ModuleBinding javaBase = this.environment.javaBaseModule();
 		this.requires = merge(this.requires, requires, javaBase, ModuleBinding[]::new);
 		this.requiresTransitive = merge(this.requiresTransitive, requiresTransitive, null, ModuleBinding[]::new);
@@ -106,18 +106,32 @@ public class SourceModuleBinding extends ModuleBinding {
 	
 	@Override
 	Stream<ModuleBinding> getRequiredModules(boolean transitiveOnly) {
-		if (this.requires == NO_MODULES) {
-			this.scope.referenceContext.moduleDeclaration.resolveModuleDirectives(this.scope);
-		}
+		// don't rely on "if (this.requires == NO_MODULES)" - could have been modified by completeIfNeeded()
+		this.scope.referenceContext.moduleDeclaration.resolveModuleDirectives(this.scope);
 		return super.getRequiredModules(transitiveOnly);
 	}
 
 	@Override
 	public ModuleBinding[] getAllRequiredModules() {
-		if (this.scope != null)
-			this.scope.referenceContext.moduleDeclaration.resolveModuleDirectives(this.scope);
+		// don't rely on "if (this.requires == NO_MODULES)" - could have been modified by completeIfNeeded()
+		this.scope.referenceContext.moduleDeclaration.resolveModuleDirectives(this.scope);
 		return super.getAllRequiredModules();
 	}
+
+	@Override
+	public PackageBinding[] getExports() {
+		// don't rely on "if (this.exportedPackages == Binding.NO_PACKAGES)" - could have been modified by completeIfNeeded()
+		this.scope.referenceContext.moduleDeclaration.resolvePackageDirectives(this.scope);
+		return super.getExports();
+	}
+
+	@Override
+	public PackageBinding[] getOpens() {
+		// don't rely on "if (this.openedPackages == Binding.NO_PACKAGES)" - could have been modified by completeIfNeeded()
+		this.scope.referenceContext.moduleDeclaration.resolvePackageDirectives(this.scope);
+		return super.getOpens();
+	}
+
 	@Override
 	public long getAnnotationTagBits() {
 		ensureAnnotationsResolved();

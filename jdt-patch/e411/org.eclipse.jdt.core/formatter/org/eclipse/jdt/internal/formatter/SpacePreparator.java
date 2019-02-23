@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2018 Mateusz Matela and others.
+ * Copyright (c) 2014, 2019 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,7 +18,12 @@ package org.eclipse.jdt.internal.formatter;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -54,6 +59,7 @@ import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InfixExpression.Operator;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.LabeledStatement;
@@ -72,7 +78,6 @@ import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.ProvidesDirective;
-import org.eclipse.jdt.core.dom.PrefixExpression.Operator;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
@@ -99,6 +104,43 @@ import org.eclipse.jdt.core.dom.WildcardType;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 public class SpacePreparator extends ASTVisitor {
+
+	private static final Map<Operator, Predicate<DefaultCodeFormatterOptions>> SPACE_BEFORE_OPERATOR;
+	private static final Map<Operator, Predicate<DefaultCodeFormatterOptions>> SPACE_AFTER_OPERATOR;
+
+	static {
+		Map<Operator, Predicate<DefaultCodeFormatterOptions>> spaceBeforeOperator = new HashMap<>();
+		Map<Operator, Predicate<DefaultCodeFormatterOptions>> spaceAfterOperator = new HashMap<>();
+		for (Operator op : Arrays.asList(Operator.TIMES, Operator.DIVIDE, Operator.REMAINDER)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_multiplicative_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_multiplicative_operator);
+		}
+		for (Operator op : Arrays.asList(Operator.PLUS, Operator.MINUS)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_additive_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_additive_operator);
+		}
+		for (Operator op : Arrays.asList(Operator.LEFT_SHIFT, Operator.RIGHT_SHIFT_SIGNED,
+				Operator.RIGHT_SHIFT_UNSIGNED)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_shift_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_shift_operator);
+		}
+		for (Operator op : Arrays.asList(Operator.LESS, Operator.GREATER, Operator.LESS_EQUALS,
+				Operator.GREATER_EQUALS, Operator.EQUALS, Operator.NOT_EQUALS)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_relational_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_relational_operator);
+		}
+		for (Operator op : Arrays.asList(Operator.AND, Operator.XOR, Operator.OR)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_bitwise_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_bitwise_operator);
+		}
+		for (Operator op : Arrays.asList(Operator.CONDITIONAL_AND, Operator.CONDITIONAL_OR)) {
+			spaceBeforeOperator.put(op, o -> o.insert_space_before_logical_operator);
+			spaceAfterOperator.put(op, o -> o.insert_space_after_logical_operator);
+		}
+		SPACE_BEFORE_OPERATOR = Collections.unmodifiableMap(spaceBeforeOperator);
+		SPACE_AFTER_OPERATOR = Collections.unmodifiableMap(spaceAfterOperator);
+	}
+
 	TokenManager tm;
 	private DefaultCodeFormatterOptions options;
 
@@ -710,21 +752,26 @@ public class SpacePreparator extends ASTVisitor {
 
 	@Override
 	public boolean visit(InfixExpression node) {
-		String operator = node.getOperator().toString();
-		handleOperator(operator, node.getRightOperand(), this.options.insert_space_before_binary_operator,
-				this.options.insert_space_after_binary_operator);
+		Operator operator = node.getOperator();
+		boolean spaceBefore = SPACE_BEFORE_OPERATOR.get(operator).test(this.options);
+		boolean spaceAfter = SPACE_AFTER_OPERATOR.get(operator).test(this.options);
+		if (this.tm.isStringConcatenation(node)) {
+			spaceBefore = this.options.insert_space_before_string_concatenation;
+			spaceAfter = this.options.insert_space_after_string_concatenation;
+		}
+		handleOperator(operator.toString(), node.getRightOperand(), spaceBefore, spaceAfter);
 		List<Expression> extendedOperands = node.extendedOperands();
 		for (Expression operand : extendedOperands) {
-			handleOperator(operator, operand, this.options.insert_space_before_binary_operator,
-					this.options.insert_space_after_binary_operator);
+			handleOperator(operator.toString(), operand, spaceBefore, spaceAfter);
 		}
 		return true;
 	}
 
 	@Override
 	public boolean visit(PrefixExpression node) {
-		Operator operator = node.getOperator();
-		if (operator.equals(Operator.INCREMENT) || operator.equals(Operator.DECREMENT)) {
+		PrefixExpression.Operator operator = node.getOperator();
+		if (operator.equals(PrefixExpression.Operator.INCREMENT)
+				|| operator.equals(PrefixExpression.Operator.DECREMENT)) {
 			handleOperator(operator.toString(), node.getOperand(),
 					this.options.insert_space_before_prefix_operator,
 					this.options.insert_space_after_prefix_operator);
@@ -782,8 +829,8 @@ public class SpacePreparator extends ASTVisitor {
 	public boolean visit(IntersectionType node) {
 		List<Type> types = node.types();
 		for (int i = 1; i < types.size(); i++)
-			handleTokenBefore(types.get(i), TokenNameAND, this.options.insert_space_before_binary_operator,
-					this.options.insert_space_after_binary_operator);
+			handleTokenBefore(types.get(i), TokenNameAND, this.options.insert_space_before_bitwise_operator,
+					this.options.insert_space_after_bitwise_operator);
 		return true;
 	}
 
@@ -910,8 +957,8 @@ public class SpacePreparator extends ASTVisitor {
 	public boolean visit(UnionType node) {
 		List<Type> types = node.types();
 		for (int i = 1; i < types.size(); i++)
-			handleTokenBefore(types.get(i), TokenNameOR, this.options.insert_space_before_binary_operator,
-					this.options.insert_space_after_binary_operator);
+			handleTokenBefore(types.get(i), TokenNameOR, this.options.insert_space_before_bitwise_operator,
+					this.options.insert_space_after_bitwise_operator);
 		return true;
 	}
 

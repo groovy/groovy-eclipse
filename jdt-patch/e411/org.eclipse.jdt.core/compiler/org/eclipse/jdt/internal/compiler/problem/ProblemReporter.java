@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2466,7 +2466,7 @@ public void forbiddenReference(FieldBinding field, ASTNode location,
 }
 /** @param classpathEntryType one of {@link AccessRestriction#COMMAND_LINE},
  * {@link AccessRestriction#LIBRARY}, {@link AccessRestriction#PROJECT} */
-public void forbiddenReference(MethodBinding method, ASTNode location,
+public void forbiddenReference(MethodBinding method, InvocationSite location,
 		byte classpathEntryType, String classpathEntryName, int problemId) {
 	int severity = computeSeverity(problemId);
 	if (severity == ProblemSeverities.Ignore) return;
@@ -2479,8 +2479,8 @@ public void forbiddenReference(MethodBinding method, ASTNode location,
 				classpathEntryName,
 				new String(method.shortReadableName())},
 			severity,
-			location.sourceStart,
-			location.sourceEnd);
+			location.nameSourceStart(),
+			location.nameSourceEnd());
 	else
 		this.handle(
 			problemId,
@@ -2491,8 +2491,8 @@ public void forbiddenReference(MethodBinding method, ASTNode location,
 				new String(method.shortReadableName()),
 		        new String(method.declaringClass.shortReadableName())},
 		    severity,
-			location.sourceStart,
-			location.sourceEnd);
+		    location.nameSourceStart(),
+			location.nameSourceEnd());
 }
 /** @param classpathEntryType one of {@link AccessRestriction#COMMAND_LINE},
  * {@link AccessRestriction#LIBRARY}, {@link AccessRestriction#PROJECT} */
@@ -3357,10 +3357,9 @@ public void importProblem(ImportReference importRef, Binding expectedImport) {
 	}
 	invalidType(importRef, (TypeBinding)expectedImport);
 }
-public void conflictingPackagesFromModules(SplitPackageBinding splitPackage, int sourceStart, int sourceEnd) {
-	ModuleBinding enclosingModule = splitPackage.enclosingModule;
+public void conflictingPackagesFromModules(SplitPackageBinding splitPackage, ModuleBinding focusModule, int sourceStart, int sourceEnd) {
 	String modules = splitPackage.incarnations.stream()
-						.filter(enclosingModule::canAccess)
+						.filter(focusModule::canAccess)
 						.map(p -> String.valueOf(p.enclosingModule.readableName()))
 						.sorted()
 						.collect(Collectors.joining(", ")); //$NON-NLS-1$

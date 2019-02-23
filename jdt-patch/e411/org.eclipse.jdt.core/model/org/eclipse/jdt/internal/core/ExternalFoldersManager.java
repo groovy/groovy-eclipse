@@ -41,6 +41,7 @@ import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -71,7 +72,33 @@ public class ExternalFoldersManager {
 		// Prevent instantiation
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=377806
 		if (Platform.isRunning()) {
-			getFolders();
+			/*
+			 * The code here runs during JavaCore start-up.
+			 * So if we need to open the external folders project, we do this from a job.
+			 * Otherwise workspace jobs that attempt to access JDT core functionality can cause a deadlock.
+			 *
+			 * See https://bugs.eclipse.org/bugs/show_bug.cgi?id=542860.
+			 */
+			class InitializeFolders extends WorkspaceJob {
+				public InitializeFolders() {
+					super("Initialize external folders"); //$NON-NLS-1$
+				}
+
+				@Override
+				public IStatus runInWorkspace(IProgressMonitor monitor) {
+					getFolders();
+					return Status.OK_STATUS;
+				}
+
+				@Override
+				public boolean belongsTo(Object family) {
+					return family == InitializeFolders.class;
+				}
+			}
+			InitializeFolders initializeFolders = new InitializeFolders();
+			IProject project = getExternalFoldersProject();
+			initializeFolders.setRule(project);
+			initializeFolders.schedule();
 		}
 	}
 
@@ -429,7 +456,11 @@ public class ExternalFoldersManager {
 			} catch (CoreException e) {
 				Util.log(e, "Exception while initializing external folders"); //$NON-NLS-1$
 			}
-			this.folders = Collections.synchronizedMap(tempFolders);
+			synchronized (this) {
+				if (this.folders == null) {
+					this.folders = Collections.synchronizedMap(tempFolders);
+				}
+			}
 		}
 		return this.folders;
 	}
