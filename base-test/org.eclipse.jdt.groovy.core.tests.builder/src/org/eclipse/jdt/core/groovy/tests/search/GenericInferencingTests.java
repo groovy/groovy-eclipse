@@ -1129,6 +1129,29 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertEquals("Second overload should be selected", "java.lang.Object", printTypeName(m.getParameters()[1].getType()));
     }
 
+    @Test
+    public void testCircularReference() {
+        String contents =
+            "abstract class Abstract<T extends Abstract<T>> {\n" +
+            "  T withStuff(value) {\n" +
+            "    return (T) this\n" +
+            "  }\n" +
+            "}\n" +
+            "class Concrete extends Abstract<Concrete> {\n" +
+            "  Concrete withThing(value) {\n" +
+            "    return this\n" +
+            "  }\n" +
+            "}\n" +
+            "def x,y\n" +
+            "new Concrete().withThing(x).withStuff(y)\n" +
+            "new Concrete().withStuff(x).withThing(y)\n";
+
+        int offset = contents.lastIndexOf("withThing(x)");
+        assertType(contents, offset, offset + "withThing".length(), "Concrete");
+            offset = contents.lastIndexOf("withStuff(x)");
+        assertType(contents, offset, offset + "withStuff".length(), "Concrete");
+    }
+
     @Test @Ignore
     public void testJira1718() throws Exception {
         IPath p2 = env.addPackage(project.getFolder("src").getFullPath(), "p2");

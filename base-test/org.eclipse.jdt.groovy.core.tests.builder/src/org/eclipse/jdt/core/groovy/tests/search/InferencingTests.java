@@ -1380,7 +1380,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "(1..10).getFrom()";
         int start = contents.lastIndexOf("getFrom");
         int end = start + "getFrom".length();
-        assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test
@@ -1388,7 +1388,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "(1..10).getTo()";
         int start = contents.lastIndexOf("getTo");
         int end = start + "getTo".length();
-        assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test

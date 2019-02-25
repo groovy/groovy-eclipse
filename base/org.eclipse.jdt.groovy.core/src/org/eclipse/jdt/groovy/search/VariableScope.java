@@ -803,11 +803,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             ClassNode resolved = mapper.findParameter(toParameterizeName, generic.getType());
 
             // there are three known possibilities for resolved:
-            // 1. it is the resolution of a type parameter itself (eg- E --> String)
-            // 2. it is the resolved type parameter of a generic type (eg- Iterator<E> --> Iterator<String>)
-            // 3. it is a substitution of one type parameter for another (eg- List<T> --> List<E>, where T comes from the declaring type)
+            // 1. it is the resolution of a type parameter itself (e.g. E --> String)
+            // 2. it is the resolved type parameter of a generic type (e.g. Iterator<E> --> Iterator<String>)
+            // 3. it is a substitution of one type parameter for another (e.g. List<T> --> List<E>, where T comes from the declaring type)
 
-            if (typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
+            if (!unresolved.toString(false).equals(toParameterizeName) && typeParameterExistsInRedirected(unresolved, toParameterizeName)) {
                 Assert.isLegal(unresolved.redirect() != unresolved, "Error: trying to resolve type parameters of a type declaration: " + unresolved);
                 // Iterator<E> --> Iterator<String>
                 generic.setLowerBound(null);
