@@ -251,9 +251,6 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
-		// GROOVY add
-		boolean reset = true;
-		// GROOVY end
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor, !isTestSource(unitElement.getJavaProject(), unitElement));
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -261,13 +258,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
 			// GROOVY add
-			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
 			if (!creatingAST) {
 				compilerOptions.groovyCompilerConfigScript = null;
-			}
-			if (compilerOptions.buildGroovyFiles == 2) {
-				reset = false;
 			}
 			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
@@ -344,9 +337,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller
 			// GROOVY edit -- reset() can cause OOB exceptions in TypeSystem
-			//if (problemFinder != null && !creatingAST)
-			if (problemFinder != null && !creatingAST && reset)
-			// GROOVY end
+			if (problemFinder != null && !creatingAST && !LanguageSupportFactory.isInterestingSourceFile(unitElement.getElementName()))
 				problemFinder.lookupEnvironment.reset();
 		}
 		return unit;

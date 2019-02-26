@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2687,7 +2687,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         ReflectionUtils.setPrivateField(ResolveVisitor.class, "currentClass", resolver, moduleInfo.module.getScriptClassDummy());
         ClassNode url = resolver.resolve("java.net.URL");
         assertNotNull("Should have found the java.net.URL ClassNode", url);
-        assertEquals("Wrong classnode found", "java.net.URL", url.getName());
+        assertEquals("Wrong ClassNode found", "java.net.URL", url.getName());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/737
