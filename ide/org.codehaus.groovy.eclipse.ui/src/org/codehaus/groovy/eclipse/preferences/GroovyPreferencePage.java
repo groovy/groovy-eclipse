@@ -33,7 +33,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
@@ -57,14 +56,9 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
 
     @Override
     protected void createFieldEditors() {
-        // JUnit monospace typeface
-        addField(new MonospaceFieldEditor());
-        new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP).setText(
-            "  This is particularly useful for testing with the assert keyword");
-
         // default launch location for scripts
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
-            "\nDefault working directory for running Groovy scripts\n  (will not change the working directory of existing scripts)",
+            "Default working directory for running Groovy scripts\n  (will not change the working directory of existing scripts)",
             1,
             new String[][] {
                 {"Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME},
@@ -73,9 +67,19 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
             },
             getFieldEditorParent()));
 
+        new Label(getFieldEditorParent(), SWT.NONE).setText("");
+
+        // JUnit monospace typeface
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT,
+            "&Use monospace font for JUnit (deprecated)", getFieldEditorParent()));
+        new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP).setText(
+            "  This is particularly useful for testing with the assert keyword");
+
         // legacy projects
         IProject[] oldProjects = new ConvertLegacyProject().getAllOldProjects();
         if (oldProjects.length > 0) {
+            new Label(getFieldEditorParent(), SWT.NONE).setText("");
+
             Label label = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
             label.setText("The following legacy groovy projects exist in the workspace:\n");
             List oldProjectsList = new List(getFieldEditorParent(), SWT.MULTI | SWT.V_SCROLL);
@@ -98,8 +102,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         }
     }
 
-    //--------------------------------------------------------------------------
-
     private void convertSelectedProjects(String[] selection) {
         if (selection.length == 0) {
             return;
@@ -113,39 +115,6 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         } catch (Exception e) {
             GroovyCore.logException("Failure when converting legacy projects", e);
             MessageDialog.openError(getShell(), "Error converting projects", "There has been an error converting the projects.  See the error log.");
-        }
-    }
-
-    private class MonospaceFieldEditor extends BooleanFieldEditor {
-        private Label label;
-
-        private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)", getFieldEditorParent());
-            setEnabled(true, getFieldEditorParent());
-            setPreferenceStore(getPreferenceStore());
-        }
-
-        @Override
-        protected Label getLabelControl() {
-            return label;
-        }
-
-        @Override // so we can set line wrap
-        public Label getLabelControl(Composite parent) {
-            if (label == null) {
-                label = new Label(parent, SWT.LEFT | SWT.WRAP);
-                label.setFont(parent.getFont());
-                String text = getLabelText();
-                if (text != null) {
-                    label.setText(text);
-                }
-                label.addDisposeListener(event -> {
-                    label = null;
-                });
-            } else {
-                checkParent(label, parent);
-            }
-            return label;
         }
     }
 }
