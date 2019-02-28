@@ -68,7 +68,10 @@
 
         <!-- create sources artifact -->
         <jar destfile="${build.dir}/${sources.jar}">
-            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch" includes="**/Main.java" />
+            <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch">
+                <include name="**/BatchCompiler.java" />
+                <include name="**/Main.java" />
+            </fileset>
         </jar>
     </target>
 
