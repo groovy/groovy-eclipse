@@ -32,9 +32,7 @@ public class NameEnvironmentAnswer {
 	String externalAnnotationPath; // should be an absolute file system path
 
 	public NameEnvironmentAnswer(IBinaryType binaryType, AccessRestriction accessRestriction) {
-		this.binaryType = binaryType;
-		this.accessRestriction = accessRestriction;
-		this.moduleName = binaryType.getModule();
+		this(binaryType, accessRestriction, binaryType.getModule());
 	}
 
 	public NameEnvironmentAnswer(IBinaryType binaryType, AccessRestriction accessRestriction, char[] module) {

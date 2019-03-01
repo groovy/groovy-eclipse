@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -56,7 +56,7 @@ private long previousStructuralBuildTime;
 private StringSet structurallyChangedTypes;
 public static int MaxStructurallyChangedTypes = 100; // keep track of ? structurally changed types, otherwise consider all to be changed
 
-public static final byte VERSION = 0x0021;
+public static final byte VERSION = 0x0022;
 
 static final byte SOURCE_FOLDER = 1;
 static final byte BINARY_FOLDER = 2;
@@ -233,7 +233,7 @@ void removeQualifiedTypeName(String qualifiedTypeNameToRemove) {
 	this.typeLocators.removeKey(qualifiedTypeNameToRemove);
 }
 
-static State read(IProject project, DataInputStream in) throws IOException {
+static State read(IProject project, DataInputStream in) throws IOException, CoreException {
 	if (JavaBuilder.DEBUG)
 		System.out.println("About to read state " + project.getName()); //$NON-NLS-1$
 	if (VERSION != in.readByte()) {
@@ -568,13 +568,20 @@ void write(DataOutputStream out) throws IOException {
 			out.writeBoolean(jar.isOnModulePath);
 			out.writeUTF(jar.compliance == null ? "" : jar.compliance); //$NON-NLS-1$
 			
-		} else {
+		} else if (c instanceof ClasspathJrt) {
 			ClasspathJrt jrt = (ClasspathJrt) c;
 			out.writeByte(EXTERNAL_JAR);
 			out.writeUTF(jrt.zipFilename);
 			writeRestriction(jrt.accessRuleSet, out);
 			out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
-			out.writeUTF(jrt.release != null ? jrt.release : ""); //$NON-NLS-1$
+			out.writeUTF(""); //$NON-NLS-1$
+		} else {
+			ClasspathJrtWithReleaseOption jrt = (ClasspathJrtWithReleaseOption) c;
+			out.writeByte(EXTERNAL_JAR);
+			out.writeUTF(jrt.zipFilename);
+			writeRestriction(jrt.accessRuleSet, out);
+			out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
+			out.writeUTF(jrt.release);
 		}
 		char[] patchName = c.patchModuleName == null ? CharOperation.NO_CHAR : c.patchModuleName.toCharArray();
 		writeName(patchName, out);
@@ -680,13 +687,20 @@ void write(DataOutputStream out) throws IOException {
 				out.writeUTF(jar.externalAnnotationPath != null ? jar.externalAnnotationPath : ""); //$NON-NLS-1$
 				out.writeBoolean(jar.isOnModulePath);
 				out.writeUTF(jar.compliance != null ? jar.compliance : ""); //$NON-NLS-1$
-			} else {
+			} else if (c instanceof ClasspathJrt) {
 				ClasspathJrt jrt = (ClasspathJrt) c;
 				out.writeByte(EXTERNAL_JAR);
 				out.writeUTF(jrt.zipFilename);
 				writeRestriction(jrt.accessRuleSet, out);
 				out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
-				out.writeUTF(jrt.release != null ? jrt.release : ""); //$NON-NLS-1$
+				out.writeUTF(""); //$NON-NLS-1$
+			} else {
+				ClasspathJrtWithReleaseOption jrt = (ClasspathJrtWithReleaseOption) c;
+				out.writeByte(EXTERNAL_JAR);
+				out.writeUTF(jrt.zipFilename);
+				writeRestriction(jrt.accessRuleSet, out);
+				out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
+				out.writeUTF(jrt.release);
 			}
 		}
 

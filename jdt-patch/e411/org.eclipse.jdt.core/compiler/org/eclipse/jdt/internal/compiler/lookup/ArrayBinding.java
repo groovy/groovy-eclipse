@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -341,6 +341,16 @@ public boolean isSubtypeOf(TypeBinding otherType, boolean simulatingBugJDK802652
 					return false;
 			}
 			return true;
+		case Binding.TYPE_PARAMETER:
+			// check compatibility with capture of ? super X
+			if (otherType.isCapture()) {
+				CaptureBinding otherCapture = (CaptureBinding) otherType;
+				TypeBinding otherLowerBound;
+				if ((otherLowerBound = otherCapture.lowerBound) != null) {
+					if (!otherLowerBound.isArrayType()) return false;
+					return isSubtypeOf(otherLowerBound, simulatingBugJDK8026527);
+				}
+			}
 	}
 	switch (otherType.leafComponentType().id) {
 	    case TypeIds.T_JavaLangObject :

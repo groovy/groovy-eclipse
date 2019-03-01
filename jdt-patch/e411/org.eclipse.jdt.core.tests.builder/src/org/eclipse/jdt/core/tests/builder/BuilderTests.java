@@ -544,7 +544,6 @@ public class BuilderTests extends TestCase {
 			TestAttributeBuilderTests.class,
 			Bug530366Test.class,
 			Bug531382Test.class,
-			ParallelBuildTests.class,
 			LeakTestsBefore9.class,
 		};
 		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));

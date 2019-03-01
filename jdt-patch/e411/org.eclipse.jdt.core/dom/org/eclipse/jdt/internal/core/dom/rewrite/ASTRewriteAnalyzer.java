@@ -1695,19 +1695,23 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		if (!hasChildrenChanges(node)) {
 			return doVisitUnchangedChildren(node);
 		}
-
-		if (node.getAST().apiLevel() >= JLS9_INTERNAL && node.getModule() != null) {
-			rewriteNode(node, CompilationUnit.MODULE_PROPERTY, 0, ASTRewriteFormatter.NONE);
-			return false;
+		int startPos = 0;
+		boolean isModuleInfo = node.getAST().apiLevel() >= JLS9_INTERNAL && node.getModule() != null;
+		
+		if (!isModuleInfo) {
+			startPos = rewriteNode(node, CompilationUnit.PACKAGE_PROPERTY, 0, ASTRewriteFormatter.NONE);
+	
+			if (getChangeKind(node, CompilationUnit.PACKAGE_PROPERTY) == RewriteEvent.INSERTED) {
+				doTextInsert(0, getLineDelimiter(), getEditGroup(node, CompilationUnit.PACKAGE_PROPERTY));
+			}
 		}
-		int startPos= rewriteNode(node, CompilationUnit.PACKAGE_PROPERTY, 0, ASTRewriteFormatter.NONE);
 
-		if (getChangeKind(node, CompilationUnit.PACKAGE_PROPERTY) == RewriteEvent.INSERTED) {
-			doTextInsert(0, getLineDelimiter(), getEditGroup(node, CompilationUnit.PACKAGE_PROPERTY));
+		startPos = rewriteParagraphList(node, CompilationUnit.IMPORTS_PROPERTY, startPos, 0, 0, 2);
+		if (isModuleInfo) {
+			rewriteNode(node, CompilationUnit.MODULE_PROPERTY, startPos, ASTRewriteFormatter.NONE);
+		} else {
+			rewriteParagraphList(node, CompilationUnit.TYPES_PROPERTY, startPos, 0, -1, 2);
 		}
-
-		startPos= rewriteParagraphList(node, CompilationUnit.IMPORTS_PROPERTY, startPos, 0, 0, 2);
-		rewriteParagraphList(node, CompilationUnit.TYPES_PROPERTY, startPos, 0, -1, 2);
 		return false;
 	}
 

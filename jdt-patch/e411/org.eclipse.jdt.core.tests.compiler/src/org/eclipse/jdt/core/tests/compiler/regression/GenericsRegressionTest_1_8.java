@@ -9532,4 +9532,44 @@ public void testBug508834_comment0() {
 		};
 		runner.runConformTest();
 	}
+	public void testBug536860() {
+		runConformTest(
+			new String[] {
+				"Snippet.java",
+				"import java.io.IOException;\n" + 
+				"import java.io.InputStream;\n" + 
+				"import java.nio.file.Path;\n" + 
+				"import java.util.Map;\n" + 
+				"import java.util.concurrent.Callable;\n" + 
+				"import java.util.function.Function;\n" + 
+				"\n" + 
+				"interface EntityReader<T, S> { }\n" + 
+				"class ExtraIOUtils {\n" + 
+				"	public static Callable<InputStream> getInputStreamProvider() {\n" + 
+				"		return null;\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"\n" + 
+				"public class Snippet {\n" + 
+				"	public <T> EntityReader<T, Path> createEntityReader(\n" + 
+				"	    Function<? super String, ? extends String> colNameMapper,\n" + 
+				"	    Function<? super String[], ? extends T> instantiator,\n" + 
+				"	    Map<String, ?> runtimeValues)\n" + 
+				"	         throws IOException {\n" + 
+				"	        EntityReader<T, ?> streamReader =\n" + 
+				"	            createEntityStreamReader(\n" + 
+				"	            		ExtraIOUtils.getInputStreamProvider(),\n" + 
+				"	                colNameMapper, instantiator, runtimeValues);\n" +
+				"			return null;\n" + 
+				"	}\n" + 
+				"	public <T> EntityReader<T, Callable<InputStream>> createEntityStreamReader(\n" + 
+				"	        Callable<InputStream> streamProvider,\n" + 
+				"	        Function<? super String, ? extends String> colNameMapper, Function<? super String[], ? extends T> instantiator,\n" + 
+				"	        Map<String, ?> runtimeValues)\n" + 
+				"	            throws IOException {\n" + 
+				"		return null;\n" + 
+				"	}\n" + 
+				"}\n"
+			});
+	}
 }

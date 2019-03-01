@@ -2525,6 +2525,12 @@ public class DefaultCodeFormatterOptions {
 	 * This method is used to handle deprecated preferences which might be replaced by
 	 * one or more preferences.
 	 * Depending on deprecated option handling policy, set the new formatting option(s).
+	 * <p>
+	 * Note: Also add deprecated preference keys in {@link org.eclipse.jdt.internal.core.JavaCorePreferenceInitializer#initializeDeprecatedOptions}
+	 * so that the formatter recognizes those deprecated options when used with project specific formatter profiles.
+	 * (see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=544776">Bug 544776</a>)
+	 * </p>
+	 * 
 	 * @param settings the given map
 	 * @deprecated
 	 */

@@ -53,6 +53,7 @@ public class AbstractCompilerTest extends TestCase {
 	protected boolean enableAPT = false;
 	protected static boolean isJRE9Plus = false; // Stop gap, so tests need not be run at 9, but some tests can be adjusted for JRE 9
 	protected static boolean isJRE11Plus = false;
+	protected static boolean isJRE12Plus = false;
 	protected static boolean reflectNestedClassUseDollar;
 
 	/**
@@ -147,6 +148,7 @@ public class AbstractCompilerTest extends TestCase {
          int lessthan9 = F_1_3 | F_1_4 | F_1_5 | F_1_6 | F_1_7 | F_1_8;
          isJRE9Plus = !isJRELevel(lessthan9);
          isJRE11Plus = isJRELevel(F_11);
+         isJRE12Plus = "12".equals(System.getProperty("java.specification.version"));
 	 }
 
 	/**

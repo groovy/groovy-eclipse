@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -164,11 +164,14 @@ public class FileSystem implements IModuleAwareNameEnvironment, SuffixConstants 
 	Set<String> knownFileNames;
 	protected boolean annotationsFromClasspath; // should annotation files be read from the classpath (vs. explicit separate path)?
 	private static HashMap<File, Classpath> JRT_CLASSPATH_CACHE = null;
-	
 	protected Map<String,Classpath> moduleLocations = new HashMap<>();
 
 	/** Tasks resulting from --add-reads or --add-exports command line options. */
 	Map<String,UpdatesByKind> moduleUpdates = new HashMap<>();
+	static final boolean isJRE12Plus;
+	static {
+		isJRE12Plus = "12".equals(System.getProperty("java.specification.version")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 
 /*
 	classPathNames is a collection is Strings representing the full path of each class path
@@ -205,6 +208,8 @@ protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annot
 		final Classpath classpath = paths[i];
 		try {
 			classpath.initialize();
+			for (String moduleName : classpath.getModuleNames(limitedModules))
+				this.moduleLocations.put(moduleName, classpath);
 			this.classpaths[counter++] = classpath;
 		} catch(IOException | InvalidPathException exception) {
 			// JRE 9 could throw an IAE if the linked JAR paths have invalid chars, such as ":"
@@ -256,7 +261,9 @@ public static Classpath getJrtClasspath(String jdkHome, String encoding, AccessR
 	return new ClasspathJrt(new File(convertPathSeparators(jdkHome)), true, accessRuleSet, null);
 }
 public static Classpath getOlderSystemRelease(String jdkHome, String release, AccessRuleSet accessRuleSet) {
-	return new ClasspathJep247(new File(convertPathSeparators(jdkHome)), release, accessRuleSet);
+	return isJRE12Plus ? 
+			new ClasspathJep247Jdk12(new File(convertPathSeparators(jdkHome)), release, accessRuleSet) :
+			new ClasspathJep247(new File(convertPathSeparators(jdkHome)), release, accessRuleSet);
 }
 public static Classpath getClasspath(String classpathName, String encoding,
 		boolean isSourceOnly, AccessRuleSet accessRuleSet,

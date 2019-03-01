@@ -40,7 +40,7 @@ import junit.framework.Test;
 public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 
 	static {
-//		 TESTS_NAMES = new String[] { "testBug540067e" };
+//		 TESTS_NAMES = new String[] { "test001" };
 		// TESTS_NUMBERS = new int[] { 1 };
 		// TESTS_RANGE = new int[] { 298, -1 };
 	}
@@ -3975,11 +3975,11 @@ public void testBug521362_emptyFile() {
 					"}",
 				},
 		     "\"" + OUTPUT_DIR +  File.separator + "X.java\""
-		     + " --release 6 -d \"" + OUTPUT_DIR + "\"",
+		     + " --release 7 -d \"" + OUTPUT_DIR + "\"",
 		     "",
 		     "",
 		     true);
-		String expectedOutput = "// Compiled from X.java (version 1.6 : 50.0, super bit)";
+		String expectedOutput = "// Compiled from X.java (version 1.7 : 51.0, super bit)";
 			checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
 	public void testReleaseOption4() throws Exception {
@@ -4094,6 +4094,7 @@ public void testBug521362_emptyFile() {
 		     true);
 	}
 	public void testReleaseOption10() throws Exception {
+		if (isJRE12Plus) return;
 		this.runNegativeTest(
 				new String[] {
 					"X.java",

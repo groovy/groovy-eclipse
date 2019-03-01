@@ -2981,9 +2981,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		ArchiveValidity validity = getArchiveValidity(path);
 		IOException reason;
 		switch (validity) {
-			case BAD_FORMAT: reason = new ZipException(); break;
-			case FILE_NOT_FOUND: reason = new FileNotFoundException(); break;
-			case UNABLE_TO_READ: reason = new IOException(); break;
+			case BAD_FORMAT: reason = new ZipException("Bad format in archive: " + path); break; //$NON-NLS-1$
+			case FILE_NOT_FOUND: reason = new FileNotFoundException("Archive not found for path: " + path); break; //$NON-NLS-1$
+			case UNABLE_TO_READ: reason = new IOException("Unable to read archive: " + path); break; //$NON-NLS-1$
 			default: reason = null;
 		}
 		if (reason != null) {
