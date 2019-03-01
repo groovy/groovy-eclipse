@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.ui.preferences.PropertyAndPreferencePage;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -58,6 +60,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbenchPropertyPage;
@@ -136,7 +139,7 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
         Label compilerLabel = new Label(panel, SWT.WRAP);
         compilerLabel.setFont(parent.getFont());
         compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-        compilerLabel.setText("Groovy compiler level for this project:");
+        compilerLabel.setText(Messages.getString("GroovyCompilerPreferencesPage.ProjectCompilerLevel"));
 
         // row 1, col 2
         compilerSelector = new ComboViewer(new Combo(panel, SWT.DROP_DOWN | SWT.READ_ONLY));
@@ -163,7 +166,7 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
         gridData.grabExcessHorizontalSpace = false;
         Label explainLabel = new Label(panel, SWT.WRAP);
         explainLabel.setLayoutData(gridData);
-        explainLabel.setText("If the project compiler level does not match the workspace compiler level, a build error will appear on the project.");
+        explainLabel.setText(Messages.getString("GroovyCompilerPreferencesPage.ProjectCompilerError"));
 
         // row 3, col *
         gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
@@ -172,7 +175,7 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
         Composite subpanel = new Composite(panel, SWT.NONE);
         subpanel.setFont(parent.getFont());
         subpanel.setLayoutData(gridData);
-        configScriptSelector = new FileFieldEditor(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "Compiler config script:", subpanel) {
+        configScriptSelector = new FileFieldEditor(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, Messages.getString("GroovyCompilerPreferencesPage.CompilerConfigScript"), subpanel) {
             @Override
             protected String changePressed() {
                 String value = super.changePressed();
@@ -194,11 +197,12 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
                     try {
                         ((IPersistentPreferenceStore) store).save();
                     } catch (IOException e) {
-                        String message = JFaceResources.format("PreferenceDialog.saveErrorMessage", new Object[] {"Groovy Compiler", e.getMessage()});
+                        String message = JFaceResources.format("PreferenceDialog.saveErrorMessage", new Object[] {
+                            Messages.getString("GroovyCompilerPreferencesPage.GroovyCompilerLabel"), e.getMessage()});
                         Policy.getStatusHandler().show(new Status(IStatus.ERROR, Policy.JFACE, message, e), JFaceResources.getString("PreferenceDialog.saveErrorTitle"));
                     }
                 }
-            };
+            }
         };
         configScriptSelector.setFilterPath(getProject().getLocation().toFile());
         configScriptSelector.setPreferenceStore(// this preference is from JavaCore scope
@@ -207,58 +211,42 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
     }
 
     private void createWorkspaceCompilerSection(Composite parent) {
-        Label compilerLabel = new Label(parent, SWT.WRAP);
-        compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-        compilerLabel.setFont(JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT));
-        compilerLabel.setText("Groovy Compiler settings:");
+        Group group = new Group(parent, SWT.SHADOW_NONE);
+        group.setFont(parent.getFont());
+        group.setLayout(new GridLayout());
+        group.setText(Messages.getString("GroovyCompilerPreferencesPage.GroovyCompilerLabel"));
 
-        Composite compilerPage = new Composite(parent, SWT.NONE | SWT.BORDER);
-        GridLayout layout = new GridLayout();
-        layout.marginHeight = 3;
-        layout.marginWidth = 3;
-        layout.numColumns = 1;
-        compilerPage.setLayout(layout);
-        compilerPage.setFont(parent.getFont());
-        compilerPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).applyTo(group);
 
-        CompilerSwitchUIHelper.createCompilerSwitchBlock(compilerPage);
+        //
+        CompilerSwitchUIHelper.createCompilerSwitchBlock(group);
 
-        compilerMismatchCheck = new Button(compilerPage, SWT.CHECK);
-        compilerMismatchCheck.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        compilerMismatchCheck = new Button(group, SWT.CHECK);
         compilerMismatchCheck.setSelection(getCompilerCheckPref());
-        compilerMismatchCheck.setText("Enable checking for mismatches between the project and workspace Groovy compiler levels");
+        compilerMismatchCheck.setText(Messages.getString("GroovyCompilerPreferencesPage.ProjectCompilerCheck"));
     }
 
     private void createClasspathContainerSection(Composite parent) {
-        Label gccLabel = new Label(parent, SWT.WRAP);
-        gccLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
-        gccLabel.setFont(JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT));
-        gccLabel.setText("Groovy Classpath Container:");
+        Group group = new Group(parent, SWT.SHADOW_NONE);
+        group.setFont(parent.getFont());
+        group.setLayout(new GridLayout());
+        group.setText(Messages.getString("GroovyCompilerPreferencesPage.ClasspathContainerLabel"));
 
-        Composite subsection = new Composite(parent, SWT.BORDER);
-        GridLayout layout = new GridLayout();
-        layout.marginHeight = 3;
-        layout.marginWidth = 3;
-        layout.numColumns = 1;
-        subsection.setLayout(layout);
-        subsection.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).indent(0, IDialogConstants.VERTICAL_MARGIN).applyTo(group);
 
-        groovyLibCheck = new Button(subsection, SWT.CHECK);
+        //
+        groovyLibCheck = new Button(group, SWT.CHECK);
         groovyLibCheck.setSelection(getGroovyLibsPref());
-        groovyLibCheck.setText("Include all jars in ~/.groovy/lib on the classpath");
+        groovyLibCheck.setText(Messages.getString("GroovyCompilerPreferencesPage.IncludeGroovyLibs"));
 
-        GridData layoutData = new GridData(SWT.FILL, SWT.TOP, true, false);
-        layoutData.widthHint = 400;
+        //
+        Label groovyLibLabel = new Label(group, SWT.WRAP);
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).hint(400, SWT.DEFAULT).applyTo(groovyLibLabel);
+        groovyLibLabel.setText(Messages.getString("GroovyCompilerPreferencesPage.IncludeGroovyLibsDesc"));
 
-        Label groovyLibLabel = new Label(subsection, SWT.WRAP);
-        groovyLibLabel.setLayoutData(layoutData);
-        groovyLibLabel.setText("This is the default setting and individual projects can be configured by clicking on the properties page of the Groovy Support classpath container.");
-
-        @SuppressWarnings("unused")
-        Label spacerLabel = new Label(subsection, SWT.NONE);
-
-        Button updateButton = new Button(subsection, SWT.PUSH);
-        updateButton.setText("Update all Groovy Classpath Containers");
+        //
+        Button updateButton = new Button(group, SWT.PUSH);
+        updateButton.setText(Messages.getString("GroovyCompilerPreferencesPage.UpdateGroovyLibs"));
         updateButton.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -270,10 +258,12 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
                 updateClasspathContainers();
             }
         });
+        GridDataFactory.swtDefaults().indent(0, 10).applyTo(updateButton);
 
-        Label updateLabel = new Label(subsection, SWT.WRAP);
-        updateLabel.setLayoutData(layoutData);
-        updateLabel.setText("Perform this action if there are changes to ~/.groovy/lib that should be reflected in your projects' classpaths.");
+        //
+        Label updateLabel = new Label(group, SWT.WRAP);
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).hint(400, SWT.DEFAULT).applyTo(updateLabel);
+        updateLabel.setText(Messages.getString("GroovyCompilerPreferencesPage.UpdateGroovyLibsDesc"));
     }
 
     @Override
