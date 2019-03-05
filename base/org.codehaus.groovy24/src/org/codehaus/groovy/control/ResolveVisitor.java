@@ -81,10 +81,6 @@ import java.util.Set;
  * will force creation of a ClassExpression for C
  * <p>
  * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
- *
- * @author Jochen Theodorou
- * @author Roshan Dawrani
- * @author Alex Tkachman
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE private->protected
@@ -217,7 +213,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public ResolveVisitor(CompilationUnit cu) {
         compilationUnit = cu;
-        this.classNodeResolver = new ClassNodeResolver();
+        // GRECLIPSE edit -- fix for NPE
+        //this.classNodeResolver = new ClassNodeResolver();
+        setClassNodeResolver(new ClassNodeResolver() {
+            public LookupResult findClassNode(String name, CompilationUnit compilationUnit) {
+                return compilationUnit == null ? null : super.findClassNode(name, compilationUnit);
+            }
+        });
+        // GRECLIPSE end
     }
 
     public void startResolving(ClassNode node, SourceUnit source) {
