@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,6 +62,14 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
         String contents = 'abstract class Type extends java.lang.Number { }'
         assertCodeSelect([contents], 'lang', 'java.lang')
         assertCodeSelect([contents], 'java', 'java')
+    }
+
+    @Test
+    void testSelectSuperClass4() {
+        String another = 'class Super { }'
+        // "<T extends Type<T>>" allows methods to return this as sub-type (aka T)
+        String contents = 'abstract class Type<T extends Type<T>> extends Super {}'
+        assertCodeSelect([another, contents], 'Super')
     }
 
     @Test
