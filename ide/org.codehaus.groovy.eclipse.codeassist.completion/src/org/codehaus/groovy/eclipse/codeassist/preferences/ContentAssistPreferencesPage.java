@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,6 +213,8 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
         //
         fieldGroup = createFieldGroup("Filtering");
+        ((GridData) fieldGroup.getParent().getLayoutData())
+            .verticalIndent = IDialogConstants.VERTICAL_MARGIN;
 
         addField(new CompletionFilterListEditor("Filtered DGMs",
             "Default Groovy Methods that will be filtered from content assist", fieldGroup));
