@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,12 +33,14 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -265,6 +268,28 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             check(call.getOwnerType());
         }
         super.visitStaticMethodCallExpression(call);
+    }
+
+    @Override
+    public void visitArgumentlistExpression(ArgumentListExpression expression) {
+        visitAnnotations(expression.getAnnotations());
+
+        Iterator<Expression> arguments = expression.iterator();
+        if (arguments.hasNext()) {
+            Expression first = arguments.next();
+            // named and positional arguments may be interleaved, so visit named arguments expression last
+            if (!(first instanceof MapExpression) || first.getEnd() != expression.getEnd()) {
+                first.visit(this); first = null;
+            }
+            while (arguments.hasNext()) {
+                arguments.next().visit(this);
+            }
+            if (first != null) {
+                first.visit(this);
+            }
+        }
+
+        visitExpression(expression);
     }
 
     @Override

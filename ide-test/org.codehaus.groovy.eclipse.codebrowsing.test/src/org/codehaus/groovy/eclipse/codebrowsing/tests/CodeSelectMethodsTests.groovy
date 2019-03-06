@@ -484,6 +484,69 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testCodeSelectNamedArguments1() {
+        String contents = '''\
+            void meth(Map agrs) {}
+            meth(one: null, two: Date)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test
+    void testCodeSelectNamedArguments2() {
+        String contents = '''\
+            void meth(Map agrs, int three) {}
+            meth(one: null, two: Date, 3)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test
+    void testCodeSelectNamedArguments2a() {
+        String contents = '''\
+            void meth(Map agrs, int three) {}
+            meth(one: null, 3, two: Date)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test
+    void testCodeSelectNamedArguments2b() {
+        String contents = '''\
+            void meth(Map agrs, int three) {}
+            meth(3, two: Date, one: null)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/827
+    void testCodeSelectNamedArguments3() {
+        String contents = '''\
+            void meth(Map agrs, Class type) {}
+            meth(one: null, two: null, Date)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/827
+    void testCodeSelectNamedArguments3a() {
+        String contents = '''\
+            void meth(Map agrs, Class type) {}
+            meth(one: null, Date, two: null)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/827
+    void testCodeSelectNamedArguments3b() {
+        String contents = '''\
+            void meth(Map agrs, Class type) {}
+            meth(Date, one: null, two: null)
+            '''.stripIndent()
+        assertCodeSelect([contents], 'Date')
+    }
+
+    @Test
     void testCodeSelectConstructor() {
         String contents = 'def x = new java.util.Date()'
         IJavaElement elem = assertCodeSelect([contents], 'Date')
