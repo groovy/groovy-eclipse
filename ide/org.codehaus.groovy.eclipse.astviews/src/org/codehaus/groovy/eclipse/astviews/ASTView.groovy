@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.eclipse.editor.GroovyEditor
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.runtime.Adapters
-import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.ElementChangedEvent
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IElementChangedListener
@@ -121,7 +120,7 @@ class ASTView extends ViewPart {
                         }
                     }
                 } catch (err) {
-                    Activator.default.log.log(new Status(Status.WARNING, Activator.PLUGIN_ID, 'Error updating AST Viewer', err))
+                    Activator.warn('Error updating AST Viewer', err)
                 }
                 partClosed(part)
             }
@@ -176,16 +175,9 @@ class ASTView extends ViewPart {
     //--------------------------------------------------------------------------
 
     private static boolean isUnitInDelta(IJavaElementDelta delta, ICompilationUnit unit) {
-        if (delta.element.elementType == IJavaElement.COMPILATION_UNIT) {
-            // comparing with a compilation unit
-            // if test fails, no need to go further
-            return delta.element.elementName == unit.elementName
-        }
-
         ICompilationUnit icu = (ICompilationUnit) delta.element.getAncestor(IJavaElement.COMPILATION_UNIT)
         if (icu != null) {
-            // now if test fails, no need to go further
-            return icu.elementName == unit.elementName
+            return (icu.elementName == unit.elementName)
         }
 
         // delta is a potential ancestor of this compilationUnit
