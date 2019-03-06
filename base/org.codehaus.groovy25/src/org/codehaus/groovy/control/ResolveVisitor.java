@@ -378,6 +378,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // when resolving the outer class later, we set the resolved type of ConstructedOuterNestedClass instance to the actual inner class node(SEE GROOVY-7812(#2))
     private boolean resolveToOuterNested(ClassNode type) {
         CompileUnit compileUnit = currentClass.getCompileUnit();
+        // GRECLIPSE add -- fix for NPE in config script
+        if (compileUnit == null) return false;
+        // GRECLIPSE end
         String typeName = type.getName();
 
         ModuleNode module = currentClass.getModule();
