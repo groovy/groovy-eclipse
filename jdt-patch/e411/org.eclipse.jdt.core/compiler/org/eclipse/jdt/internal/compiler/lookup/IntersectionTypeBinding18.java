@@ -187,22 +187,15 @@ public class IntersectionTypeBinding18 extends ReferenceBinding {
 			rightIntersectingTypes = ((IntersectionTypeBinding18) right).intersectingTypes;
 		}
 		if (rightIntersectingTypes != null) {
-			int numRequired = rightIntersectingTypes.length;
-			TypeBinding[] required = new TypeBinding[numRequired];
-			System.arraycopy(rightIntersectingTypes, 0, required, 0, numRequired);
-			for (int i = 0; i < this.length; i++) {
-				TypeBinding provided = this.intersectingTypes[i];
-				for (int j = 0; j < required.length; j++) {
-					if (required[j] == null) continue;
-					if (provided.isCompatibleWith(required[j], scope)) {
-						required[j] = null;
-						if (--numRequired == 0)
-							return true;
-						break;
-					}
+			nextRequired:
+			for (TypeBinding required : rightIntersectingTypes) {
+				for (TypeBinding provided : this.intersectingTypes) {
+					if (provided.isCompatibleWith(required, scope))
+						continue nextRequired;
 				}
+				return false;
 			}
-			return false;
+			return true;
 		}
 
 		// normal case:

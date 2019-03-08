@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 GK Software AG.
+ * Copyright (c) 2013, 2019 GK Software AG.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -155,22 +155,15 @@ public class CaptureBinding18 extends CaptureBinding {
 					rightIntersectingTypes = ((IntersectionTypeBinding18) otherType).intersectingTypes;
 				}
 				if (rightIntersectingTypes != null) {
-					int numRequired = rightIntersectingTypes.length;
-					TypeBinding[] required = new TypeBinding[numRequired];
-					System.arraycopy(rightIntersectingTypes, 0, required, 0, numRequired);
-					for (int i = 0; i < length; i++) {
-						TypeBinding provided = this.upperBounds[i];
-						for (int j = 0; j < required.length; j++) {
-							if (required[j] == null) continue;
-							if (provided.isCompatibleWith(required[j], captureScope)) {
-								required[j] = null;
-								if (--numRequired == 0)
-									return true;
-								break;
-							}
+					nextRequired:
+					for (TypeBinding required : rightIntersectingTypes) {
+						for (TypeBinding provided : this.upperBounds) {
+							if (provided.isCompatibleWith(required, captureScope))
+								continue nextRequired;
 						}
+						return false;
 					}
-					return false;
+					return true;
 				}
 
 				for (int i = 0; i < length; i++) {

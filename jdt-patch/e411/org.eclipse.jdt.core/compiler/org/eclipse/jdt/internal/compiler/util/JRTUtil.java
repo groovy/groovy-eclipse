@@ -254,6 +254,9 @@ class JrtFileSystemWithOlderRelease extends JrtFileSystem {
 			try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(releasePath)) {
 				for (final java.nio.file.Path subdir: stream) {
 					String r = subdir.getFileName().toString();
+					if (r.endsWith("/")) { //$NON-NLS-1$
+						r = r.substring(0, r.length() - 1);
+					}
 					if (r.contains(this.releaseInHex)) {
 						sub.add(r);
 					} else {

@@ -79,7 +79,11 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 
 				@Override
 				public FileVisitResult visitModule(Path mod) throws IOException {
-					if (!JrtPackageFragmentRoot.this.moduleName.equals(mod.toString())) {
+					String name = mod.toString();
+					if (name.endsWith("/")) { //$NON-NLS-1$
+						name = name.substring(0, name.length() - 1);
+					}
+					if (!JrtPackageFragmentRoot.this.moduleName.equals(name)) {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 					return FileVisitResult.CONTINUE;

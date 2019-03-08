@@ -9572,4 +9572,17 @@ public void testBug508834_comment0() {
 				"}\n"
 			});
 	}
+	public void testBug545121() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" + 
+				"	<T extends V, U extends T, V> void foo(U arg1, T arg2, V arg3) {}\n" + 
+				"\n" + 
+				"	void check() {\n" + 
+				"		foo((Long) 0l, 0d, \"\");\n" + 
+				"	}\n" + 
+				"}\n"
+			});
+	}
 }

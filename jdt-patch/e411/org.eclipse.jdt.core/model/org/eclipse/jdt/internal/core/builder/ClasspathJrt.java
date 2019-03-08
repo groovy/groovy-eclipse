@@ -106,6 +106,9 @@ static HashMap<String, SimpleSet> findPackagesInModules(final ClasspathJrt jrt) 
 				}
 				this.packageSet = new SimpleSet(41);
 				this.packageSet.add(""); //$NON-NLS-1$
+				if (name.endsWith("/")) { //$NON-NLS-1$
+					name = name.substring(0, name.length() - 1);
+				}
 				packagesInModule.put(name, this.packageSet);
 				return FileVisitResult.CONTINUE;
 			}
