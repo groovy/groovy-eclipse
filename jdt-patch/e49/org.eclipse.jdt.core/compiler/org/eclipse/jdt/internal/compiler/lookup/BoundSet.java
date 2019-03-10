@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2013, 2017 GK Software AG.
  *
@@ -35,7 +36,7 @@ class BoundSet {
 
 	static final BoundSet TRUE = new BoundSet();	// empty set of bounds
 	static final BoundSet FALSE = new BoundSet();	// pseudo bounds
-	
+
 	/**
 	 * For a given inference variable this structure holds all type bounds
 	 * with a relation in { SUPERTYPE, SAME, SUBTYPE }.
@@ -309,24 +310,26 @@ class BoundSet {
 			this.instantiation = type;
 		}
 	}
+
 	// main storage of type bounds:
 	HashMap<InferenceVariable, ThreeSets> boundsPerVariable = new HashMap<>();
-	
+
 	/**
 	 * 18.1.3 bullet 4: G<α1, ..., αn> = capture(G<A1, ..., An>)
 	 * On both sides we only enter types with nonnull arguments. 
 	 */
-	HashMap<ParameterizedTypeBinding,ParameterizedTypeBinding> captures = new HashMap<>();
+	HashMap<ParameterizedTypeBinding, ParameterizedTypeBinding> captures = new HashMap<>();
+
 	/** 18.1.3 bullet 5: throws α */
 	Set<InferenceVariable> inThrows = new HashSet<>();
 
-	private TypeBound [] incorporatedBounds = new TypeBound[0];
-	private TypeBound [] unincorporatedBounds = new TypeBound [1024];
+	private TypeBound [] incorporatedBounds = Binding.NO_TYPE_BOUNDS;
+	private TypeBound [] unincorporatedBounds = new TypeBound [4];
 	private int unincorporatedBoundsCount = 0;
-	private TypeBound [] mostRecentBounds = new TypeBound[4]; // for quick & dirty duplicate elimination.
-	
+	private TypeBound [] mostRecentBounds = new TypeBound [4]; // for quick & dirty duplicate elimination
+
 	public BoundSet() {}
-	
+
 	// pre: typeParameters != null, variables[i].typeParameter == typeParameters[i]
 	public void addBoundsFromTypeParameters(InferenceContext18 context, TypeVariableBinding[] typeParameters, InferenceVariable[] variables) {
 		int length = typeParameters.length;
@@ -348,8 +351,13 @@ class BoundSet {
 		Iterator<ThreeSets> outerIt = this.boundsPerVariable.values().iterator();
 		while (outerIt.hasNext())
 			size += outerIt.next().size();
+		// GROOVY add
+		if (size == 0) return Binding.NO_TYPE_BOUNDS;
+		// GROOVY end
 		TypeBound[] collected = new TypeBound[size];
-		if (size == 0) return collected;
+		// GROOVY edit
+		//if (size == 0) return collected;
+		// GROOVY end
 		outerIt = this.boundsPerVariable.values().iterator();
 		int idx = 0;
 		while (outerIt.hasNext())
@@ -363,14 +371,26 @@ class BoundSet {
 	 */
 	public BoundSet copy() {
 		BoundSet copy = new BoundSet();
+		// GROOVY add
+		if (!this.boundsPerVariable.isEmpty()) {
+		// GROOVY end
 		Iterator<Entry<InferenceVariable, ThreeSets>> setsIterator = this.boundsPerVariable.entrySet().iterator();
 		while (setsIterator.hasNext()) {
 			Entry<InferenceVariable, ThreeSets> entry = setsIterator.next();
 			copy.boundsPerVariable.put(entry.getKey(), entry.getValue().copy());
 		}
+		// GROOVY add
+		}
+		// GROOVY end
 		copy.inThrows.addAll(this.inThrows);
 		copy.captures.putAll(this.captures);
+		// GROOVY add
+		if (this.incorporatedBounds.length > 0)
+		// GROOVY end
 		System.arraycopy(this.incorporatedBounds, 0, copy.incorporatedBounds = new TypeBound[this.incorporatedBounds.length], 0, this.incorporatedBounds.length);
+		// GROOVY add
+		if (this.unincorporatedBoundsCount > 0)
+		// GROOVY end
 		System.arraycopy(this.unincorporatedBounds, 0, copy.unincorporatedBounds = new TypeBound[this.unincorporatedBounds.length], 0, this.unincorporatedBounds.length);
 		copy.unincorporatedBoundsCount = this.unincorporatedBoundsCount;
 		return copy;
@@ -403,7 +423,7 @@ class BoundSet {
 		this.mostRecentBounds[2] = this.mostRecentBounds[1];
 		this.mostRecentBounds[1] = this.mostRecentBounds[0];
 		this.mostRecentBounds[0] = bound;
-				
+		
 		InferenceVariable variable = bound.left.prototype();
 		ThreeSets three = this.boundsPerVariable.get(variable);
 		if (three == null)
@@ -440,13 +460,13 @@ class BoundSet {
 		}
 		return hasProperBound;
 	}
-	
+
 	public void addBounds(BoundSet that, LookupEnvironment environment) {
 		if (that == null || environment == null)
 			return;
 		addBounds(that.flatten(), environment);
 	}
-	
+
 	public boolean isInstantiated(InferenceVariable inferenceVariable) {
 		ThreeSets three = this.boundsPerVariable.get(inferenceVariable.prototype());
 		if (three != null)
@@ -474,11 +494,11 @@ class BoundSet {
 		}
 		return num;
 	}
-	
+
 	// Driver for the real workhorse - Implements generational incorporation a la generational garbage collector. 
 	boolean incorporate(InferenceContext18 context) throws InferenceFailureException {
 		
-		if (this.unincorporatedBoundsCount == 0 && this.captures.size() == 0)
+		if (this.unincorporatedBoundsCount == 0 && this.captures.isEmpty())
 			return true;
 		
 		do {
@@ -489,10 +509,10 @@ class BoundSet {
 			// Pairwise bidirectional compare all bounds from previous generation with the fresh set.
 			if (!incorporate(context, this.incorporatedBounds, freshBounds))
 				return false;
-			// Pairwise bidirectional compare all fresh bounds. 
+			// Pairwise bidirectional compare all fresh bounds.
 			if (!incorporate(context, freshBounds, freshBounds))
 				return false;
-
+			
 			// Merge the bounds into one incorporated generation.
 			final int incorporatedLength = this.incorporatedBounds.length;
 			final int unincorporatedLength = freshBounds.length;
@@ -505,6 +525,7 @@ class BoundSet {
 		
 		return true;
 	}
+
 	/**
 	 * <b>JLS 18.3:</b> Try to infer new constraints from pairs of existing type bounds.
 	 * Each new constraint is first reduced and checked for TRUE or FALSE, which will
@@ -755,7 +776,7 @@ class BoundSet {
 		}
 		return null;
 	}
-	
+
 	private ConstraintTypeFormula combineSameSubSuper(TypeBound boundS, TypeBound boundT) {
 		//  α = S and α <: T imply ⟨S <: T⟩ 
 		//  α = S and T <: α imply ⟨T <: S⟩
@@ -781,7 +802,7 @@ class BoundSet {
 			if (TypeBinding.equalsEquals(alpha, boundT.right)) {
 				TypeBinding t = boundT.left;
 				return ConstraintTypeFormula.create(t, s, boundT.relation, boundT.isSoft||boundS.isSoft);
-			}			
+			}
 		}
 		
 		//  α = U and S <: T imply ⟨S[α:=U] <: T[α:=U]⟩ 
@@ -812,7 +833,7 @@ class BoundSet {
 		}
 		return null;
 	}
-	
+
 	private ConstraintTypeFormula combineEqualSupers(TypeBound boundS, TypeBound boundT) {
 		//  more permutations of: S <: α and α <: T imply ⟨S <: T⟩
 		if (TypeBinding.equalsEquals(boundS.left, boundT.right))
@@ -823,7 +844,6 @@ class BoundSet {
 			return ConstraintTypeFormula.create(boundS.left, boundT.right, boundS.relation, boundT.isSoft||boundS.isSoft);
 		return null;
 	}
-
 
 	private ConstraintTypeFormula[] deriveTypeArgumentConstraints(TypeBound boundS, TypeBound boundT) {
 		/* From 18.4:
@@ -1009,7 +1029,7 @@ class BoundSet {
 		// TODO: if !onlyProper: should we also consider ThreeSets.inverseBounds,
 		//        or is it safe to rely on incorporation to produce the required bounds?
 	}
-	
+
 	/**
 	 * JLS 18.1.3:
 	 * Answer all lower bounds for the given inference variable as defined by any bounds in this set. 
@@ -1048,6 +1068,7 @@ class BoundSet {
 		if (three == null) return null;
 		return three.findSingleWrapperType();
 	}
+
 	// this condition is just way too complex to check it in-line:
 	public boolean condition18_5_2_bullet_3_3_1(InferenceVariable alpha, TypeBinding targetType) {
 		// T is a reference type, but is not a wildcard-parameterized type, and either 
@@ -1126,6 +1147,7 @@ class BoundSet {
 		}
 		return false;
 	}
+
 	private boolean superOnlyRaw(TypeBinding g, TypeBinding s, LookupEnvironment env) {
 		if (s instanceof InferenceVariable)
 			return false; // inference has no super types
@@ -1134,7 +1156,7 @@ class BoundSet {
 			return s.isCompatibleWith(env.convertToRawType(g, false));
 		return false;
 	}
-	
+
 	protected TypeBinding[] superTypesWithCommonGenericType(TypeBinding s, TypeBinding t) {
 		if (s == null || s.id == TypeIds.T_JavaLangObject || t == null || t.id == TypeIds.T_JavaLangObject)
 			return null;
