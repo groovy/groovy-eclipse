@@ -118,7 +118,7 @@
         name="net.sf.eclipsecs.feature.group"
         optional="true"/>
     <repository
-        url="http://ifedorenko.github.com/m2e-extras"/>
+        url="https://ifedorenko.github.com/m2e-extras"/>
     <repository
         url="https://checkstyle.github.io/eclipse-cs/update"/>
     <description></description>

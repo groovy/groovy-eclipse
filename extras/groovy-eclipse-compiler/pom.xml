@@ -13,7 +13,7 @@
 	<licenses>
 		<license>
 			<name>The Eclipse Public License</name>
-			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<url>https://www.eclipse.org/legal/epl-v10.html</url>
 		</license>
 	</licenses>
 
@@ -40,7 +40,7 @@
 	</issueManagement>
 
 	<scm>
-		<url>http://github.com/groovy/groovy-eclipse.git</url>
+		<url>https://github.com/groovy/groovy-eclipse.git</url>
 		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
 		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
 	</scm>
