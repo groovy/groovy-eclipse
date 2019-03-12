@@ -324,7 +324,7 @@ class BoundSet {
 	Set<InferenceVariable> inThrows = new HashSet<>();
 
 	private TypeBound [] incorporatedBounds = Binding.NO_TYPE_BOUNDS;
-	private TypeBound [] unincorporatedBounds = new TypeBound [4];
+	private TypeBound [] unincorporatedBounds = new TypeBound [8];
 	private int unincorporatedBoundsCount = 0;
 	private TypeBound [] mostRecentBounds = new TypeBound [4]; // for quick & dirty duplicate elimination
 

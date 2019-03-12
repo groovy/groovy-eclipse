@@ -219,7 +219,7 @@ class BoundSet {
 								return boundType;
 						}
 					}
-				}		
+				}
 			}
 			if (this.superBounds != null) {
 				Iterator<TypeBound> it = this.superBounds.iterator();
@@ -238,7 +238,7 @@ class BoundSet {
 								return boundType;
 						}
 					}
-				}		
+				}
 			}
 			return null;
 		}
@@ -324,7 +324,7 @@ class BoundSet {
 	Set<InferenceVariable> inThrows = new HashSet<>();
 
 	private TypeBound [] incorporatedBounds = Binding.NO_TYPE_BOUNDS;
-	private TypeBound [] unincorporatedBounds = new TypeBound [4];
+	private TypeBound [] unincorporatedBounds = new TypeBound [8];
 	private int unincorporatedBoundsCount = 0;
 	private TypeBound [] mostRecentBounds = new TypeBound [4]; // for quick & dirty duplicate elimination
 
@@ -606,7 +606,7 @@ class BoundSet {
 						mostRecentFormulas[2] = mostRecentFormulas[1];
 						mostRecentFormulas[1] = mostRecentFormulas[0];
 						mostRecentFormulas[0] = newConstraint;
-					
+						
 						if (!reduceOneConstraint(context, newConstraint))
 							return false;
 						
