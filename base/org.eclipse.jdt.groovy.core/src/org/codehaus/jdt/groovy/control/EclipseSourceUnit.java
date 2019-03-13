@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,19 +24,15 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.resources.IFile;
 
-/**
- * Eclipse specific subclass of SourceUnit, attaches extra information to a
- * SourceUnit that is specific to compilation in an Eclipse context.
- */
 public class EclipseSourceUnit extends SourceUnit {
 
     private final IFile file;
     public final JDTResolver resolver;
 
-    public EclipseSourceUnit(IFile file, String filePath, String sourceCode, boolean isReconcile,
+    public EclipseSourceUnit(/*@Nullable*/ IFile file, String filePath, char[] sourceCode, boolean isReconcile,
         CompilerConfiguration compilerConfig, GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
 
-        super(filePath, sourceCode, compilerConfig, classLoader, errorCollector);
+        super(filePath, new CharArrayReaderSource(sourceCode), compilerConfig, classLoader, errorCollector);
         this.file = file;
         this.resolver = resolver;
         this.isReconcile = isReconcile;
@@ -52,11 +48,11 @@ public class EclipseSourceUnit extends SourceUnit {
     @Override
     public void convert() throws CompilationFailedException {
         super.convert();
-        super.cst = null;
+        cst = null;
     }
 
     @Override
     public String toString() {
-        return "EclipseSourceUnit(" + name + ")";
+        return "EclipseSourceUnit(" + getName() + ")";
     }
 }

@@ -38,6 +38,8 @@ import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.control.io.ReaderSource;
+import org.codehaus.jdt.groovy.control.CharArrayReaderSource;
 import org.codehaus.jdt.groovy.integration.EventHandler;
 import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
@@ -181,6 +183,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
 
             String unitName = String.valueOf(compilationResult.getFileName());
+            ReaderSource unitSource = new CharArrayReaderSource(icu.getContents());
 
             if (problemReporter.options.groovyCompilerConfigScript != null) {
                 IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -196,7 +199,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
             GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(unitName, String.valueOf(icu.getContents()), compilerConfig, classLoader, errorCollector);
+            SourceUnit groovySourceUnit = new SourceUnit(unitName, unitSource, compilerConfig, classLoader, errorCollector);
 
             org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
             JDTResolver resolver = new JDTResolver(gcu);
