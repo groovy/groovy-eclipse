@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,9 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.IClassFileReader;
-import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.core.AbstractClassFile;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.BufferManager;
 import org.eclipse.jdt.internal.core.ClassFile;
@@ -47,36 +48,44 @@ import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
 import org.eclipse.jdt.internal.core.JavaModelStatus;
+import org.eclipse.jdt.internal.core.ModularClassFile;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.util.Disassembler;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Working copy for groovy class files. Allows access to the ModuleNode for class files if the source is available. Copied from
- * {@link ClassFileWorkingCopy} Groovy changes marked
+ * Working copy for Groovy class files. Allows access to the ModuleNode if the
+ * source is available. Copied from {@link ClassFileWorkingCopy}; changes marked.
  */
 public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
     public final ClassFile classFile;
 
-    // GROOVY Change
-    private final PerWorkingCopyInfo info;
-    private CompilationUnitElementInfo elementInfo;
+    // GROOVY add
     private ModuleNode moduleNode;
     private ModuleNodeInfo moduleNodeInfo;
-    // GROOVY End
+    private final PerWorkingCopyInfo copyInfo;
+    private CompilationUnitElementInfo elementInfo;
+    // GROOVY end
 
     public GroovyClassFileWorkingCopy(ClassFile classFile, WorkingCopyOwner owner) {
-        super((PackageFragment) classFile.getParent(), ((BinaryType) classFile.getType())
-                .getSourceFileName(null/* no info available */), owner);
+        super((PackageFragment) classFile.getParent(), sourceFileName(classFile), owner);
         this.classFile = classFile;
-        // GROOVY Change
+        // GROOVY add
         if (this.owner == null) {
             this.owner = DefaultWorkingCopyOwner.PRIMARY;
         }
-        info = new PerWorkingCopyInfo(this, null);
-        // GROOVY End
+        this.copyInfo = new PerWorkingCopyInfo(this, null);
+        // GROOVY end
+    }
+
+    private static String sourceFileName(AbstractClassFile classFile) {
+        if (classFile instanceof ModularClassFile) {
+            return TypeConstants.MODULE_INFO_FILE_NAME_STRING;
+        } else {
+            return ((BinaryType) ((ClassFile) classFile).getType()).getSourceFileName(null/*no info available*/);
+        }
     }
 
     @Override
@@ -86,11 +95,10 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
     @Override
     public IBuffer getBuffer() throws JavaModelException {
-        // GROOVY Always use the classFile's buffer
-        // old
-        // if (isWorkingCopy())
-        // return super.getBuffer();
-        // else
+        // GROOVY edit -- always use classFile's buffer
+        //if (isWorkingCopy())
+        //    return super.getBuffer();
+        //else
         // GROOVY end
         return this.classFile.getBuffer();
     }
@@ -99,16 +107,21 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     public char[] getContents() {
         try {
             IBuffer buffer = getBuffer();
-            if (buffer == null)
-                return CharOperation.NO_CHAR;
+            if (buffer == null) return CharOperation.NO_CHAR;
             char[] characters = buffer.getCharacters();
-            if (characters == null)
-                return CharOperation.NO_CHAR;
+            if (characters == null) return CharOperation.NO_CHAR;
             return characters;
         } catch (JavaModelException e) {
             return CharOperation.NO_CHAR;
         }
     }
+
+    // GROOVY add
+    @Override
+    public char[] getFileName() {
+        return this.name.toCharArray();
+    }
+    // GROOVY end
 
     @Override
     public IPath getPath() {
@@ -117,8 +130,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
     @Override
     public IJavaElement getPrimaryElement(boolean checkOwner) {
-        if (checkOwner && isPrimary())
-            return this;
+        if (checkOwner && isPrimary()) return this;
         return new ClassFileWorkingCopy(this.classFile, DefaultWorkingCopyOwner.PRIMARY);
     }
 
@@ -136,37 +148,26 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
 
         // create buffer
-        IBuffer buffer = this.owner.createBuffer(this);
-        if (buffer == null)
-            return null;
+        IBuffer buffer = BufferManager.createBuffer(this);
 
         // set the buffer source
-        if (buffer.getCharacters() == null) {
-            IBuffer classFileBuffer = this.classFile.getBuffer();
-            if (classFileBuffer != null) {
-                buffer.setContents(classFileBuffer.getCharacters());
-            } else {
-                // Disassemble
-                IClassFileReader reader = ToolFactory.createDefaultClassFileReader(this.classFile, IClassFileReader.ALL);
-                Disassembler disassembler = new Disassembler();
-                String contents = disassembler.disassemble(reader,
-                        Util.getLineSeparator("", getJavaProject()), ClassFileBytesDisassembler.WORKING_COPY);
-                buffer.setContents(contents);
-            }
+        IBuffer classFileBuffer = this.classFile.getBuffer();
+        if (classFileBuffer != null) {
+            buffer.setContents(classFileBuffer.getCharacters());
+        } else {
+            // Disassemble
+            IClassFileReader reader = ToolFactory.createDefaultClassFileReader(this.classFile, IClassFileReader.ALL);
+            Disassembler disassembler = new Disassembler();
+            String contents = disassembler.disassemble(reader, Util.getLineSeparator("", getJavaProject()), ClassFileBytesDisassembler.WORKING_COPY); //$NON-NLS-1$
+            buffer.setContents(contents);
         }
 
         // add buffer to buffer cache
         BufferManager bufManager = getBufferManager();
-
-        // GROOVY Change access to private member
-        // old
-        // bufManager.addBuffer(buffer);
-        // new
-        if (buffer.getContents() != null) {
-            ReflectionUtils.executePrivateMethod(BufferManager.class,
-                    "addBuffer", new Class<?>[] { IBuffer.class }, bufManager, new Object[] { buffer });
-        }
-        // GROOVY End
+        // GROOVY edit
+        //bufManager.addBuffer(buffer);
+        ReflectionUtils.executePrivateMethod(BufferManager.class, "addBuffer", new Class[] {IBuffer.class}, bufManager, new Object[] {buffer});
+        // GROOVY end
 
         // listen to buffer changes
         buffer.addBufferChangedListener(this);
@@ -179,21 +180,55 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         buffer.append(this.classFile.getElementName());
     }
 
-    // GROOVY Change
-    // all be a working copy
-    // build structure only needs to happen once.
+    // GROOVY add
     @Override
-    public PerWorkingCopyInfo getPerWorkingCopyInfo() {
-        if (elementInfo == null) {
+    public ModuleNode getModuleNode() {
+        // ensure moduleNode is initialized
+        getPerWorkingCopyInfo();
+        return this.moduleNode;
+    }
+
+    @Override
+    public ModuleNodeInfo getModuleInfo(boolean force) {
+        if (this.moduleNodeInfo == null) {
             try {
-                elementInfo = (CompilationUnitElementInfo) createElementInfo();
-                openWhenClosed(elementInfo, true, new NullProgressMonitor());
+                this.reconcile(true, null);
             } catch (JavaModelException e) {
-                elementInfo = null;
-                Activator.getDefault().getLog().log(e.getJavaModelStatus());
+                Util.log(e);
             }
         }
-        return info;
+        return this.moduleNodeInfo;
+    }
+
+    @Override
+    public ModuleNodeInfo getNewModuleInfo() {
+        if (this.moduleNodeInfo == null) {
+            try {
+                this.open(null);
+            } catch (JavaModelException e) {
+                Util.log(e);
+            }
+        }
+        return this.moduleNodeInfo;
+    }
+
+    @Override
+    public PerWorkingCopyInfo getPerWorkingCopyInfo() {
+        if (this.elementInfo == null) {
+            try {
+                this.elementInfo = (CompilationUnitElementInfo) createElementInfo();
+                openWhenClosed(this.elementInfo, true, new NullProgressMonitor());
+            } catch (JavaModelException e) {
+                this.elementInfo = null;
+                Util.log(e);
+            }
+        }
+        return this.copyInfo;
+    }
+
+    @Override
+    public boolean isOnBuildPath() {
+        return true;
     }
 
     /**
@@ -202,68 +237,20 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     @Override
     protected void maybeCacheModuleNode(PerWorkingCopyInfo perWorkingCopyInfo, GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
         if (compilationUnitDeclaration != null) {
-            moduleNode = compilationUnitDeclaration.getModuleNode();
-            moduleNode.setDescription(this.name);
-            moduleNodeInfo = new ModuleNodeInfo(moduleNode, (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor());
+            this.moduleNode = compilationUnitDeclaration.getModuleNode();
+            this.moduleNode.setDescription(this.name); // aka "source.groovy"
+            this.moduleNodeInfo = new ModuleNodeInfo(this.moduleNode, (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor());
         }
     }
 
-    @Override
-    public ModuleNodeInfo getModuleInfo(boolean force) {
-        if (moduleNodeInfo == null) {
-            try {
-                this.reconcile(true, null);
-            } catch (JavaModelException e) {
-                Util.log(e);
-            }
-        }
-        return moduleNodeInfo;
-    }
-
-    @Override
-    public ModuleNodeInfo getNewModuleInfo() {
-        if (moduleNodeInfo == null) {
-            try {
-                this.open(null);
-            } catch (JavaModelException e) {
-                Util.log(e);
-            }
-        }
-        return moduleNodeInfo;
-    }
+    //--------------------------------------------------------------------------
 
     /**
-     * ModuleNode is not cached in the Mapper, but rather cached locally
-     */
-    @Override
-    public ModuleNode getModuleNode() {
-        // ensure moduleNode is initialized
-        getPerWorkingCopyInfo();
-        return moduleNode;
-    }
-
-    @Override
-    public IResource resource() {
-        return getJavaProject().getResource();
-    }
-
-    @Override
-    public char[] getFileName() {
-        return name.toCharArray();
-    }
-
-    @Override
-    public boolean isOnBuildPath() {
-        // a call to super.isOnBuildPath() will always return false,
-        // but it should be true
-        return true;
-    }
-
-    /**
-     * Translates from the source element of this synthetic compilation unit into a binary element of the underlying classfile.
+     * Translates from the source element of this synthetic compilation unit to
+     * a binary element of the underlying class file.
      *
      * @param source the source element to translate
-     * @return the same element, but in binary form, or closest possible match if this element doesn't exist
+     * @return binary form of element or the closest possible match if it doesn't exist
      */
     public IJavaElement convertToBinary(IJavaElement source) {
         if (source.isReadOnly()) {
@@ -271,10 +258,10 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
             return source;
         }
         if (source.getElementType() == IJavaElement.COMPILATION_UNIT) {
-            return classFile;
+            return this.classFile;
         }
         if (!(source instanceof IMember)) {
-            return classFile;
+            return this.classFile;
         }
 
         // get ancestors to type root
@@ -286,9 +273,9 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         }
 
         // now, traverse the classFile using the ancestor list in reverse order
-        IJavaElement binCandidate = classFile;
+        IJavaElement binCandidate = this.classFile;
         try {
-            while (srcAncestors.size() > 0) {
+            while (!srcAncestors.isEmpty()) {
                 srcCandidate = srcAncestors.remove(srcAncestors.size() - 1);
                 if (!(srcCandidate instanceof IParent)) {
                     break;
@@ -299,9 +286,8 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
                 boolean found = false;
                 for (IJavaElement binChild : binChildren) {
                     if (binChild.getElementName().equals(candidateName) ||
-                    // check for implicit closure class
-                            (binChild.getElementType() == IJavaElement.TYPE && binChild.getParent().getElementName()
-                                    .equals(candidateName + '$' + binChild.getElementName() + ".class"))) {
+                            // check for implicit closure class
+                            (binChild.getElementType() == IJavaElement.TYPE && binChild.getParent().getElementName().equals(candidateName + '$' + binChild.getElementName() + ".class"))) {
                         binCandidate = binChild;
                         found = true;
                         break;
@@ -317,5 +303,5 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
         return binCandidate;
     }
-    // GROOVY End
+    // GROOVY end
 }
