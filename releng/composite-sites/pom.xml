@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<!-- I don't like how this works, it is terribly long and complicated for basically being just
@@ -24,7 +24,7 @@
 		<pluginRepository>
 			<id>plugins-snapshot-local</id>
 			<name>plugins-snapshot-local</name>
-			<url>http://repo.spring.io/plugins-snapshot-local</url>
+			<url>https://repo.spring.io/plugins-snapshot-local</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
@@ -147,7 +147,7 @@
 								<name>Groovy Eclipse Latest Release for Eclipse @item@</name>
 								<target>${project.build.directory}/site/@item@</target>
 								<sites>
-									<param>http://dist.springsource.org/release/GRECLIPSE/${dist.version}/@item@</param>
+									<param>https://dist.springsource.org/release/GRECLIPSE/${dist.version}/@item@</param>
 								</sites>
 							</configuration>
 							</pluginExecutor>
