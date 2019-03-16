@@ -39,6 +39,18 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGM1() {
         String contents = "1.with { it.intValue() }";
         assertExprType(contents, "it", "java.lang.Integer");
+        assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test
+    public void testDGM1a() {
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  1.with { it.intValue() }" +
+            "}";
+        assertExprType(contents, "it", "java.lang.Integer");
+        assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test

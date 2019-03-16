@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -32,15 +31,15 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
@@ -51,80 +50,87 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 public class STCTypeLookup implements ITypeLookup {
 
-    // only enabled for Groovy 2.0 or greater
+    // enabled for Groovy 2.0 or greater
     private static final boolean isEnabled = (CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2);
 
     @Override
-    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+    public void initialize(final GroovyCompilationUnit unit, final VariableScope topLevelScope) {
     }
 
     @Override
-    public TypeLookupResult lookupType(Expression expr, VariableScope scope, ClassNode objectExpressionType) {
+    public TypeLookupResult lookupType(final Expression expr, final VariableScope scope, final ClassNode objectExpressionType) {
         if (isEnabled) {
+            boolean isGroovy = false;
             ASTNode declaration = expr;
             ClassNode declaringType = objectExpressionType;
             TypeConfidence confidence = TypeConfidence.INFERRED;
             Object inferredType = expr.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
 
-            if (expr instanceof ClassExpression) {
-                declaration = expr.getType();
-            } else if (expr instanceof FieldExpression) {
-                declaration = ((FieldExpression) expr).getField();
-            } else if (expr instanceof VariableExpression) {
-                VariableExpression vexp = (VariableExpression) expr;
-                if (vexp.isThisExpression() || vexp.isSuperExpression()) {
-                    declaration = (ClassNode) inferredType;
-                } else {
-                    Variable accessedVariable = vexp.getAccessedVariable();
-                    if (accessedVariable instanceof DynamicVariable) {
-                        // defer to other type lookup impls
-                        confidence = TypeConfidence.UNKNOWN;
-                    } else if (accessedVariable instanceof ASTNode) {
-                        declaration = (ASTNode) accessedVariable;
-                        if (inferredType instanceof ClassNode &&
-                                VariableScope.isPlainClosure((ClassNode) inferredType)) {
-                            VariableInfo info = scope.lookupName(accessedVariable.getName());
-                            if (info != null && VariableScope.isParameterizedClosure(info.type)) {
-                                inferredType = info.type; // Closure --> Closure<String>
+            if (inferredType instanceof ClassNode) {
+                if (expr instanceof ClassExpression) {
+                    declaration = expr.getType();
+                } else if (expr instanceof FieldExpression) {
+                    declaration = ((FieldExpression) expr).getField();
+                } else if (expr instanceof VariableExpression) {
+                    VariableExpression vexp = (VariableExpression) expr;
+                    if (vexp.isThisExpression() || vexp.isSuperExpression()) {
+                        declaration = (ClassNode) inferredType;
+                    } else {
+                        Variable accessedVariable = vexp.getAccessedVariable();
+                        if (accessedVariable instanceof ASTNode) {
+                            declaration = (ASTNode) accessedVariable;
+                            if (inferredType instanceof ClassNode &&
+                                    VariableScope.isPlainClosure((ClassNode) inferredType)) {
+                                VariableInfo info = scope.lookupName(accessedVariable.getName());
+                                if (info != null && VariableScope.isParameterizedClosure(info.type)) {
+                                    inferredType = info.type; // Closure --> Closure<String>
+                                }
                             }
+                        } else {
+                            // defer to other type lookup impls
+                            confidence = TypeConfidence.UNKNOWN;
                         }
                     }
-                }
-            } else if (expr instanceof ConstantExpression &&
-                    (declaration = scope.getEnclosingNode()) instanceof MethodCallExpression &&
-                    ((MethodCallExpression) declaration).getMethod() == expr && !(inferredType instanceof ClassNode)) {
-                MethodNode target = getMopMethodTarget((MethodCallExpression) declaration);
-                if (target != null) {
-                    declaration = target;
-                    inferredType = target.getReturnType();
-                    declaringType = target.getDeclaringClass();
-                }
-            } else if (expr instanceof MethodCallExpression ||
-                    expr instanceof StaticMethodCallExpression || expr instanceof ConstructorCallExpression ||
-                    !(inferredType instanceof ClassNode) && // check for VariableExpressionTransformer's substitution
-                    expr instanceof ConstantExpression && (declaration = scope.getEnclosingNode()) instanceof PropertyExpression) {
-                Object target = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                if (target instanceof MethodNode) {
-                    declaration = (MethodNode) target;
-                    declaringType = ((MethodNode) target).getDeclaringClass();
-                    if (!(inferredType instanceof ClassNode) && !(expr instanceof ConstructorCallExpression)) {
-                        inferredType = ((MethodNode) target).getReturnType();
+                } else if (expr instanceof MethodCall) {
+                    Object methodTarget = declaration.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    if (methodTarget instanceof MethodNode) {
+                        declaration = (MethodNode) methodTarget;
+                        declaringType = ((MethodNode) methodTarget).getDeclaringClass();
                     }
-                } else {
-                    // defer to other type lookup impls
-                    confidence = TypeConfidence.UNKNOWN;
+                }
+            } else if (expr instanceof ConstantExpression) {
+                ASTNode enclosingNode = scope.getEnclosingNode(), methodTarget = null;
+                if (enclosingNode instanceof PropertyExpression && ((PropertyExpression) enclosingNode).getProperty() == expr) {
+                    methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                } else if (enclosingNode instanceof MethodCallExpression && ((MethodCallExpression) enclosingNode).getMethod() == expr) {
+                    methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
+                }
+
+                if (methodTarget instanceof ExtensionMethodNode) {
+                    methodTarget = ((ExtensionMethodNode) methodTarget).getExtensionMethodNode();
+                    isGroovy = true;
+                }
+
+                if (methodTarget instanceof MethodNode) {
+                    declaration = methodTarget;
+                    declaringType = ((MethodNode) methodTarget).getDeclaringClass();
+                    inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    if (inferredType == null) inferredType = ((MethodNode) methodTarget).getReturnType();
                 }
             }
 
             if (inferredType instanceof ClassNode) {
-                return new TypeLookupResult((ClassNode) inferredType, declaringType, declaration, confidence, scope);
+                TypeLookupResult result = new TypeLookupResult((ClassNode) inferredType, declaringType, declaration, confidence, scope);
+                result.isGroovy = isGroovy;
+                return result;
             }
         }
         return null;
     }
 
     @Override
-    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final FieldNode node, final VariableScope scope) {
         if (isEnabled) {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
             if (inferredType instanceof ClassNode) {
@@ -135,7 +141,7 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     @Override
-    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
         if (isEnabled) {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
             if (inferredType instanceof ClassNode) {
@@ -146,22 +152,22 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     @Override
-    public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final AnnotationNode node, final VariableScope scope) {
         return null;
     }
 
     @Override
-    public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final ImportNode node, final VariableScope scope) {
         return null;
     }
 
     @Override
-    public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
+    public TypeLookupResult lookupType(final ClassNode node, final VariableScope scope) {
         return null;
     }
 
     @Override
-    public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
+    public TypeLookupResult lookupType(final Parameter node, final VariableScope scope) {
         return null;
     }
 
@@ -172,7 +178,7 @@ public class STCTypeLookup implements ITypeLookup {
      *
      * @see MethodCallExpressionTransformer.transformToMopSuperCall
      */
-    private static MethodNode getMopMethodTarget(MethodCallExpression call) {
+    private static MethodNode getMopMethodTarget(final MethodCallExpression call) {
         if (call.isImplicitThis() && MopWriter.isMopMethod(call.getMethodAsString()) &&
                 call.getObjectExpression().getNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION) != null) {
             Matcher m = Pattern.compile("super\\$(\\d+)\\$(.+)").matcher(call.getMethodAsString());

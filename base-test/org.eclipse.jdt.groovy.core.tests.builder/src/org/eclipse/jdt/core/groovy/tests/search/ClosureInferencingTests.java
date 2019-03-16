@@ -944,7 +944,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+        assertType(contents, start, end, "java.lang.String");
     }
 
     @Test
@@ -971,11 +971,11 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+        assertType(contents, start, end, "java.lang.String");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "p.D");
+        assertType(contents, start, end, "p.D");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
@@ -1009,7 +1009,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+        assertType(contents, start, end, "java.lang.String");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();

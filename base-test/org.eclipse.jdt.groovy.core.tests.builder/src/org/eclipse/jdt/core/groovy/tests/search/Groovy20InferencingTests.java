@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,6 +138,80 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         assertExprType(contents, "isEarly", "java.lang.Boolean");
+    }
+
+    @Test // indirect static-star method reference
+    public void testCompileStatic11() {
+        String contents = "import static B.*\n" +
+            "class A {\n" +
+            "  static boolean isOne() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  static boolean isTwo() {}\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  isOne()\n" +
+            "  isTwo()\n" +
+            "}";
+        assertExprType(contents, "isOne", "java.lang.Boolean");
+        assertExprType(contents, "isTwo", "java.lang.Boolean");
+    }
+
+    @Test // indirect static-star property reference
+    public void testCompileStatic12() {
+        String contents = "import static B.*\n" +
+            "class A {\n" +
+            "  static boolean isOne() {}\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  static boolean isTwo() {}\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  one\n" +
+            "  two\n" +
+            "}";
+        assertExprType(contents, "one", "java.lang.Boolean");
+        assertExprType(contents, "two", "java.lang.Boolean");
+    }
+
+    @Test
+    public void testCompileStatic13() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class X {\n" +
+            "  Number getReadOnly() {}\n" +
+            "  static {\n" +
+            "    new X().with {\n" +
+            "      def val = readOnly\n" +
+            "      readOnly = []\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.indexOf("readOnly");
+        assertType(contents, offset, offset + "readOnly".length(), "java.lang.Number");
+            offset = contents.lastIndexOf("readOnly");
+        assertUnknownConfidence(contents, offset, offset + "readOnly".length(), null, false);
+    }
+
+    @Test
+    public void testCompileStatic14() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class X {\n" +
+            "  void setWriteOnly(Number value) {}\n" +
+            "  static {\n" +
+            "    new X().with {\n" +
+            "      writeOnly = 42\n" +
+            "      def val = writeOnly\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.indexOf("writeOnly");
+        assertType(contents, offset, offset + "writeOnly".length(), "java.lang.Integer");
+            offset = contents.lastIndexOf("writeOnly");
+        assertUnknownConfidence(contents, offset, offset + "writeOnly".length(), null, false);
     }
 
     @Test // tests CompareToNullExpression
