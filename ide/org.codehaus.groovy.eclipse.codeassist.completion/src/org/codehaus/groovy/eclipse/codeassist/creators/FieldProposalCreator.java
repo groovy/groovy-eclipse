@@ -104,37 +104,26 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         return proposals;
     }
 
-    private MethodNode convertToMethodProposal(FieldNode field) {
-        MethodNode method = new MethodNode(field.getName(), field.getModifiers(), field.getType(),
-            extractParameters(field.getInitialExpression()), ClassNode.EMPTY_ARRAY, new BlockStatement());
-        method.setDeclaringClass(field.getDeclaringClass());
-        return method;
-    }
-
-    private Parameter[] extractParameters(Expression expr) {
-        if (expr instanceof ClosureExpression) {
-            return ((ClosureExpression) expr).getParameters();
-        }
-        return Parameter.EMPTY_ARRAY;
-    }
-
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
-        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
-            String fieldName = entry.getValue().getFieldName();
-            if (fieldName != null && matcher.test(prefix, fieldName)) {
-                FieldNode field = entry.getValue().getType().getField(fieldName);
-                if (field != null && field.isStatic()) {
-                    GroovyFieldProposal proposal = new GroovyFieldProposal(field);
-                    proposal.setRelevanceMultiplier(0.95f);
-                    proposals.add(proposal);
+        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
+            ClassNode typeNode = entry.getValue().getType();
+            if (typeNode != null) {
+                for (FieldNode field : getAllFields(typeNode, alreadySeen)) {
+                    if (field.isStatic() && matcher.test(prefix, field.getName())) {
+                        GroovyFieldProposal proposal = new GroovyFieldProposal(field);
+                        proposal.setRelevanceMultiplier(0.95f);
+                        proposals.add(proposal);
+                    }
                 }
             }
         }
-        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
-            ClassNode type = entry.getValue().getType();
-            if (type != null) {
-                for (FieldNode field : type.getFields()) {
-                    if (field.isStatic() && matcher.test(prefix, field.getName())) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
+            String fieldName = entry.getValue().getFieldName();
+            if (fieldName != null && matcher.test(prefix, fieldName)) {
+                ClassNode typeNode = entry.getValue().getType();
+                // do not add to 'alreadySeen' since this loop is limited to 'fieldName'
+                for (FieldNode field : getAllFields(typeNode, new HashSet<>(alreadySeen))) {
+                    if (field.isStatic() && field.getName().equals(fieldName)) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRelevanceMultiplier(0.95f);
                         proposals.add(proposal);
@@ -159,7 +148,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             }
 
             if ("*".equals(fieldName)) {
-                for (FieldNode field : typeNode.getFields()) {
+                for (FieldNode field : getAllFields(typeNode, alreadySeen)) {
                     if (field.isStatic() && matcher.test(prefix, field.getName())) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(typeName + '.' + field.getName());
@@ -167,10 +156,10 @@ public class FieldProposalCreator extends AbstractProposalCreator {
                         proposals.add(proposal);
                     }
                 }
-            } else {
-                if (matcher.test(prefix, fieldName)) {
-                    FieldNode field = typeNode.getField(fieldName);
-                    if (field != null && field.isStatic()) {
+            } else if (matcher.test(prefix, fieldName)) {
+                // do not add to 'alreadySeen' since this loop is limited to 'fieldName'
+                for (FieldNode field : getAllFields(typeNode, new HashSet<>(alreadySeen))) {
+                    if (field.isStatic() && field.getName().equals(fieldName)) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(favoriteStaticMember);
                         proposal.setRelevanceMultiplier(0.95f);
@@ -179,5 +168,21 @@ public class FieldProposalCreator extends AbstractProposalCreator {
                 }
             }
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static MethodNode convertToMethodProposal(FieldNode field) {
+        MethodNode method = new MethodNode(field.getName(), field.getModifiers(), field.getType(),
+            extractParameters(field.getInitialExpression()), ClassNode.EMPTY_ARRAY, new BlockStatement());
+        method.setDeclaringClass(field.getDeclaringClass());
+        return method;
+    }
+
+    private static Parameter[] extractParameters(Expression expr) {
+        if (expr instanceof ClosureExpression) {
+            return ((ClosureExpression) expr).getParameters();
+        }
+        return Parameter.EMPTY_ARRAY;
     }
 }

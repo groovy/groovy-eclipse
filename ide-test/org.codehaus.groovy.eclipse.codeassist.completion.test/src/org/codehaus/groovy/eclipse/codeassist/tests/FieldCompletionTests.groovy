@@ -878,7 +878,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testStaticFields() {
+    void testStaticFields1() {
         String contents = '''\
             import java.util.regex.Pattern
             Pattern.
@@ -889,7 +889,26 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testImportStaticField() {
+    void testStaticFields2() {
+        addGroovySource '''\
+            abstract class A {
+              public static final Number SOME_THING = 42
+            }
+            class C extends A {
+              public static final Number SOME_THANG = -1
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import p.C
+            C.SOME
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'SOME'))
+        proposalExists(proposals, 'SOME_THANG', 1)
+        proposalExists(proposals, 'SOME_THING', 1)
+    }
+
+    @Test
+    void testImportStaticField1() {
         String contents = '''\
             import static java.util.regex.Pattern.DOTALL
             DOT
@@ -898,7 +917,26 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testImportStaticStarField() {
+    void testImportStaticField2() {
+        addGroovySource '''\
+            abstract class A {
+              public static final Number SOME_THING = 42
+            }
+            class C extends A {
+              public static final Number SOME_THANG = -1
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import static p.C.SOME_THANG
+            import static p.C.SOME_THING
+            SOME
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'SOME', 'SOME_THANG')
+        checkUniqueProposal(contents, 'SOME', 'SOME_THING')
+    }
+
+    @Test
+    void testImportStaticStarField1() {
         String contents = '''\
             import static java.util.regex.Pattern.*
             DOT
@@ -907,7 +945,25 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testFavoriteStaticStarField() {
+    void testImportStaticStarField2() {
+        addGroovySource '''\
+            abstract class A {
+              public static final Number SOME_THING = 42
+            }
+            class C extends A {
+              public static final Number SOME_THANG = -1
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import static p.C.*
+            SOME
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'SOME', 'SOME_THANG')
+        checkUniqueProposal(contents, 'SOME', 'SOME_THING')
+    }
+
+    @Test
+    void testFavoriteStaticStarField1() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
 
         String contents = '''\

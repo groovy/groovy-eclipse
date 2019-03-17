@@ -108,26 +108,25 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     }
 
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
-        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
-            String fieldName = entry.getValue().getFieldName();
-            if (matcher.test(prefix, fieldName)) {
-                List<MethodNode> methods = entry.getValue().getType().getDeclaredMethods(fieldName);
-                if (methods != null) {
-                    for (MethodNode method : methods) {
-                        if (method.isStatic()) {
-                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                            proposal.setRelevanceMultiplier(0.95f);
-                            proposals.add(proposal);
-                        }
+        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
+            ClassNode typeNode = entry.getValue().getType();
+            if (typeNode != null) {
+                for (MethodNode method : getAllMethods(typeNode, alreadySeen)) {
+                    if (method.isStatic() && matcher.test(prefix, method.getName())) {
+                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                        proposal.setRelevanceMultiplier(0.95f);
+                        proposals.add(proposal);
                     }
                 }
             }
         }
-        for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
-            ClassNode type = entry.getValue().getType();
-            if (type != null) {
-                for (MethodNode method : type.getMethods()) {
-                    if (method.isStatic() && matcher.test(prefix, method.getName())) {
+        for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
+            String fieldName = entry.getValue().getFieldName();
+            if (matcher.test(prefix, fieldName)) {
+                ClassNode typeNode = entry.getValue().getType();
+                // do not add to 'alreadySeen' since this loop is limited to 'fieldName'
+                for (MethodNode method : getAllMethods(typeNode, new HashSet<>(alreadySeen))) {
+                    if (method.isStatic() && method.getName().equals(fieldName)) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRelevanceMultiplier(0.95f);
                         proposals.add(proposal);
@@ -152,7 +151,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             }
 
             if ("*".equals(fieldName)) {
-                for (MethodNode method : typeNode.getMethods()) {
+                for (MethodNode method : getAllMethods(typeNode, alreadySeen)) {
                     if (method.isStatic() && matcher.test(prefix, method.getName())) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRequiredStaticImport(typeName + '.' + method.getName());
@@ -160,23 +159,23 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                         proposals.add(proposal);
                     }
                 }
-            } else {
-                if (matcher.test(prefix, fieldName)) {
-                    List<MethodNode> methods = typeNode.getDeclaredMethods(fieldName);
-                    for (MethodNode method : methods) {
-                        if (method.isStatic()) {
-                            GroovyMethodProposal proposal = new GroovyMethodProposal(method);
-                            proposal.setRequiredStaticImport(favoriteStaticMember);
-                            proposal.setRelevanceMultiplier(0.95f);
-                            proposals.add(proposal);
-                        }
+            } else if (matcher.test(prefix, fieldName)) {
+                // do not add to 'alreadySeen' since this loop is limited to 'fieldName'
+                for (MethodNode method : getAllMethods(typeNode, new HashSet<>(alreadySeen))) {
+                    if (method.isStatic() && method.getName().equals(fieldName)) {
+                        GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                        proposal.setRequiredStaticImport(favoriteStaticMember);
+                        proposal.setRelevanceMultiplier(0.95f);
+                        proposals.add(proposal);
                     }
                 }
             }
         }
     }
 
-    private void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean isStatic) {
+    //--------------------------------------------------------------------------
+
+    private static void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean isStatic) {
         MethodNode method = proposal.getMethod();
 
         float relevanceMultiplier;

@@ -446,7 +446,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testStaticMethods() {
+    void testStaticMethods1() {
         String contents = '''\
             import java.util.regex.Pattern
             Pattern.
@@ -457,7 +457,26 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testImportStaticMethod() {
+    void testStaticMethods2() {
+        addGroovySource '''\
+            abstract class A {
+              static void someThing() {}
+            }
+            class C extends A {
+              static void someThang() {}
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import p.C
+            C.some
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
+        proposalExists(proposals, 'someThang', 1)
+        proposalExists(proposals, 'someThing', 1)
+    }
+
+    @Test
+    void testImportStaticMethod1() {
         String contents = '''\
             import static java.util.regex.Pattern.compile
             comp
@@ -467,13 +486,52 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testImportStaticStarMethod() {
+    void testImportStaticMethod2() {
+        addGroovySource '''\
+            abstract class A {
+              static void someThing() {}
+            }
+            class C extends A {
+              static void someThang() {}
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import static p.C.someThang
+            import static p.C.someThing
+            some
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
+        proposalExists(proposals, 'someThang', 1)
+        proposalExists(proposals, 'someThing', 1)
+    }
+
+    @Test
+    void testImportStaticStarMethod1() {
         String contents = '''\
             import static java.util.regex.Pattern.*
             comp
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
+    }
+
+    @Test
+    void testImportStaticStarMethod2() {
+        addGroovySource '''\
+            abstract class A {
+              static void someThing() {}
+            }
+            class C extends A {
+              static void someThang() {}
+            }
+            '''.stripIndent(), 'C', 'p'
+        String contents = '''\
+            import static p.C.*
+            some
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'some'))
+        proposalExists(proposals, 'someThang', 1)
+        proposalExists(proposals, 'someThing', 1)
     }
 
     @Test
@@ -506,7 +564,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testFavoriteStaticMethod() {
+    void testFavoriteStaticMethod1() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
 
         String contents = '''\
