@@ -25,10 +25,7 @@ import groovyjarjarasm.asm.Opcodes;
 import java.util.List;
 
 /**
- * Represents a method declaration
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author Hamlet D'Arcy
+ * Represents a method declaration.
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 
@@ -74,8 +71,10 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      */
     public String getTypeDescriptor() {
         if (typeDescriptor == null) {
-            StringBuilder buf = new StringBuilder(name.length() + parameters.length * 10);
-            buf.append(returnType.getName());
+            String name = getName();
+            Parameter[] parameters = getParameters();
+            StringBuilder buf = new StringBuilder(64);
+            buf.append(formatTypeName(getReturnType()));
             buf.append(' ');
             buf.append(name);
             buf.append('(');
@@ -234,7 +233,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     }
 
     public String toString() {
-        return "MethodNode@" + hashCode() + "[" + getTypeDescriptor() + "]";
+        return super.toString() + "[" + getTypeDescriptor() + " from " + formatTypeName(getDeclaringClass()) + "]";
     }
 
     public void setReturnType(ClassNode returnType) {

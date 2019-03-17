@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.apache.groovy.ast.tools.MethodNodeUtils;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -26,10 +27,7 @@ import groovyjarjarasm.asm.Opcodes;
 import java.util.List;
 
 /**
- * Represents a method declaration
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author Hamlet D'Arcy
+ * Represents a method declaration.
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 
@@ -204,7 +202,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     }
 
     public String toString() {
-        return "MethodNode@" + hashCode() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
+        return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
     }
 
     public void setReturnType(ClassNode returnType) {
