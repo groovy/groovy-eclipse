@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
@@ -144,10 +143,11 @@ public class OrganizeGroovyImports {
                     if (imp.isStar()) {
                         if (!imp.isStatic()) {
                             rewriter.addImport(imp.getPackageName() + "*");
+                            importsSlatedForRemoval.put(imp.getPackageName() + "*", imp);
                         } else {
                             rewriter.addStaticImport(imp.getClassName().replace('$', '.'), "*", true);
+                            importsSlatedForRemoval.put(imp.getClassName().replace('$', '.') + ".*", imp);
                         }
-                        // GRECLIPSE-929: Ensure that on-demand (i.e. star) imports are never removed.
                     } else {
                         String className = imp.getClassName().replace('$', '.');
                         if (!imp.isStatic()) {
@@ -205,6 +205,26 @@ public class OrganizeGroovyImports {
                             }
                         }
                         importsSlatedForRemoval.put(key, imp);
+                    }
+                }
+                // sub-type static-star imports are not handled by ImportRewrite
+                for (ImportNode imp : allImports) {
+                    if (imp.isStatic() && imp.isStar()) {
+                        // "import static Type.*" covers "import static Super.*" or "import static Super.member"
+                        for (ImportNode i : allImports) {
+                            if (i != imp && i.isStatic() && !isAliased(i) &&
+                                    !imp.getType().equals(i.getType()) && imp.getType().isDerivedFrom(i.getType())) {
+
+                                String className = i.getClassName().replace('$', '.');
+                                if (i.isStar()) {
+                                    importsSlatedForRemoval.put(className + ".*", i);
+                                } else {
+                                    importsSlatedForRemoval.put(className + "." + i.getFieldName(), i);
+                                }
+                                if (imp.getEnd() > 0)
+                                    importsSlatedForRemoval.remove(imp.getClassName().replace('$', '.') + ".*");
+                            }
+                        }
                     }
                 }
 
@@ -350,7 +370,7 @@ public class OrganizeGroovyImports {
      */
     private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
         for (ImportNode imp : allImports) {
-            if (DefaultGroovyMethods.asBoolean(imp.getAnnotations())) {
+            if (!imp.getAnnotations().isEmpty()) {
                 return false;
             }
         }
@@ -518,7 +538,15 @@ public class OrganizeGroovyImports {
         public void visitMethodCallExpression(MethodCallExpression expression) {
             if (expression.getEnd() > 0) {
                 if (expression.isImplicitThis()) {
-                    checkRetainImport(expression.getMethodAsString()); // could it be static?
+                    MethodNode methodTarget = expression.getMethodTarget();
+                    if (methodTarget != null && methodTarget.isStatic()) {
+                        String staticImport = methodTarget.getDeclaringClass().getName().replace('$', '.') + "." + expression.getMethodAsString();
+                        Object alias = expression.getNodeMetaData("static.import.alias");
+                        if (alias != null) {
+                            staticImport += " as " + alias;
+                        }
+                        doNotRemoveImport(staticImport);
+                    }
                 } else if (isNotEmpty(expression.getGenericsTypes())) {
                     visitTypeParameters(expression.getGenericsTypes(), null);
                 }
@@ -544,12 +572,12 @@ public class OrganizeGroovyImports {
         @Override
         public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
             if (expression.getEnd() > 0) {
-                String method = expression.getOwnerType().getName().replace('$', '.') + '.' + expression.getMethod();
+                String staticImport = expression.getOwnerType().getName().replace('$', '.') + "." + expression.getMethod();
                 Object alias = expression.getNodeMetaData("static.import.alias");
                 if (alias != null) {
-                    method += " as " + alias;
+                    staticImport += " as " + alias;
                 }
-                doNotRemoveImport(method);
+                doNotRemoveImport(staticImport);
             }
             super.visitStaticMethodCallExpression(expression);
         }
@@ -718,8 +746,14 @@ public class OrganizeGroovyImports {
             return false;
         }
 
-        private void doNotRemoveImport(Object which) {
+        private void doNotRemoveImport(String which) {
             importsSlatedForRemoval.remove(which);
+            if (!which.contains(" as ")) { // alias
+                int index = which.lastIndexOf('.');
+                if (index > 0) {
+                    importsSlatedForRemoval.remove(which.substring(0, index + 1) + "*");
+                }
+            }
         }
     }
 }

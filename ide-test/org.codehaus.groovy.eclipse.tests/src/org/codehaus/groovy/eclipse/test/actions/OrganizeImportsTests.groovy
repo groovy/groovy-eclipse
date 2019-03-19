@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -568,10 +568,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     @Test
     void testRetainImport11() {
         String contents = '''\
-            import java.lang.annotation.*
+            import java.util.regex.Pattern
+            def parse = Pattern.&compile
+            '''
+        doContentsCompareTest(contents)
+    }
 
+    @Test
+    void testRetainImport12() {
+        String contents = '''\
             import groovy.lang.DelegatesTo.*
-            import groovy.lang.DelegatesTo.Target
 
             Target target
             '''
@@ -880,6 +886,14 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // not organized
+    void testStaticImport0() {
+        String contents = '''\
+            import static java.lang.String.format
+            '''
+        doContentsCompareTest(contents)
+    }
+
     @Test
     void testStaticImport1() {
         String contents = '''\
@@ -1056,7 +1070,15 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test // GRECLIPSE-929
+    @Test // not organized
+    void testStarImport0() {
+        String contents = '''\
+            import javax.swing.text.html.*
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
     void testStarImport1() {
         String contents = '''\
             import javax.swing.text.html.*
@@ -1065,13 +1087,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test // GRECLIPSE-929
+    @Test
     void testStarImport2() {
-        // never remove star imports
-        String contents = '''\
+        String originalContents = '''\
             import javax.swing.text.html.*
+            println 'trace'
             '''
-        doContentsCompareTest(contents)
+        String expectedContents = '''\
+            println 'trace'
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     @Test
@@ -1088,23 +1113,61 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test // GRECLIPSE-929
-    void testStaticStarImport1() {
-        // never remove static star imports
+    @Test
+    void testStarImport4() {
+        String originalContents = '''\
+            import java.util.regex.*
+            import java.util.regex.Pattern
+            Pattern p = ~/123|456/
+            Matcher m = p.matcher('456')
+            '''
+        String expectedContents = '''\
+            import java.util.regex.*
+            Pattern p = ~/123|456/
+            Matcher m = p.matcher('456')
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test // not organized
+    void testStaticStarImport0() {
         String contents = '''\
             import static java.lang.String.*
-            format
             '''
         doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-929
-    void testStaticStarImport2() {
-        // never remove static star imports
+    void testStaticStarImport1() {
         String contents = '''\
             import static java.lang.String.*
+            format('fmt str', 'arg str', 929)
             '''
         doContentsCompareTest(contents)
+    }
+
+    @Test // GRECLIPSE-929
+    void testStaticStarImport1a() {
+        String contents = '''\
+            import static java.lang.String.*
+            @groovy.transform.CompileStatic
+            void test() {
+              format('fmt str', 'arg str', 929)
+            }
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testStaticStarImport2() {
+        String originalContents = '''\
+            import static java.lang.String.*
+            println 'trace'
+            '''
+        String expectedContents = '''\
+            println 'trace'
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     @Test
@@ -1119,6 +1182,74 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             List l = emptyList()
             '''
         doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/840
+    void testStaticStarImport4() {
+        addGroovySource '''\
+            class Bar {
+              static boolean isThing() {}
+            }
+            class Baz extends Bar {
+              static boolean isThang() {}
+            }
+            '''.stripIndent(), 'BarBaz', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.*
+            import static foo.Baz.*
+            class Three {
+              void meth() {
+                isThang()
+                isThing()
+              }
+            }
+            '''
+        doContentsCompareTest(contents, contents - ~/import static foo.Bar.\*\s+/)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/840
+    void testStaticStarImport5() {
+        addGroovySource '''\
+            class Bar {
+              static boolean isThing() {}
+            }
+            class Baz extends Bar {
+            }
+            '''.stripIndent(), 'BarBaz', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.*
+            import static foo.Baz.*
+            class Three {
+              void meth() {
+                thing
+              }
+            }
+            '''
+        doContentsCompareTest(contents, contents - ~/import static foo.Bar.\*\s+/)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/840
+    void testStaticStarImport6() {
+        addGroovySource '''\
+            class Bar {
+              static boolean isThing() {}
+            }
+            class Baz extends Bar {
+            }
+            '''.stripIndent(), 'BarBaz', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.isThing
+            import static foo.Baz.*
+            class Three {
+              void meth() {
+                thing
+              }
+            }
+            '''
+        doContentsCompareTest(contents, contents - ~/import static foo.Bar.isThing\s+/)
     }
 
     @Test // GRECLIPSE-1219
@@ -1246,7 +1377,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1392
     void testDefaultImport1() {
-        // test a simple default import is removed
         String originalContents = '''\
             import java.util.List
             import groovy.util.Proxy
@@ -1262,7 +1392,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1392
     void testDefaultImport2() {
-        // test that star default imports are removed
         String originalContents = '''\
             import java.util.*
             import groovy.util.*
@@ -1278,7 +1407,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1392
     void testDefaultImport3() {
-        // test that BigInteger and BigDecimal are removed
         String originalContents = '''\
             import java.math.BigDecimal
             import java.math.BigInteger
@@ -1294,7 +1422,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1392
     void testDefaultImport5() {
-        // test that static import whose container is default is not removed
         String contents = '''\
             import static java.util.Collections.swap
             swap
@@ -1312,12 +1439,8 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             List list
             '''
         String expectedContents = '''\
-            import java.awt.*
-            import java.util.List
-
             List list
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1336,7 +1459,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
             Date date
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1346,7 +1468,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             class Bar {
                 String name
             }'''
-
         String contents = '''
             import groovy.transform.CompileStatic
 
@@ -1358,7 +1479,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
                   new Bar([name: 'test'])
               }
             }'''
-
         doContentsCompareTest(contents)
     }
 
@@ -1386,7 +1506,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             Pattern p = ~/abc/
             Node n = null
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1404,7 +1523,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-
         doContentsCompareTest(contents)
     }
 
@@ -1437,7 +1555,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
               }
             }
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1457,7 +1574,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @Field
             TimeUnit units = DAYS
             '''
-
         doContentsCompareTest(contents)
     }
 
@@ -1483,7 +1599,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             def method() {
             }
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1510,7 +1625,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @interface Tag {
             }
             '''
-
         doContentsCompareTest(originalContents, expectedContents)
     }
 
@@ -1529,7 +1643,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
             Date sqlDateNotUtilDate
             '''
-
         doContentsCompareTest(contents)
     }
 
@@ -1569,9 +1682,39 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             class Two {
               String value
             }
-            '''.stripIndent()
-
+            '''
         doContentsCompareTest(contents)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/840
+    void testOrganizeWithExtraImports7() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                staticStar 'foo.Baz'
+              }
+            }
+            '''
+
+        addGroovySource '''\
+            class Bar {
+              static boolean isThing() {}
+            }
+            class Baz extends Bar {
+              static boolean isThang() {}
+            }
+            '''.stripIndent(), 'BarBaz', 'foo'
+
+        String contents = '''\
+            import static foo.Bar.*
+            class Three {
+              void meth() {
+                isThang()
+                isThing()
+              }
+            }
+            '''
+        doContentsCompareTest(contents, contents - ~/import static foo.Bar.\*\s+/)
     }
 
     @Test @NotYetImplemented

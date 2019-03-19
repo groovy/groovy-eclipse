@@ -63,7 +63,7 @@ import static org.apache.groovy.ast.tools.ExpressionUtils.transformInlineConstan
 import static org.codehaus.groovy.runtime.MetaClassHelper.capitalize;
 
 /**
- * Visitor to resolve constants and method calls from static Imports
+ * Visitor to resolve constants and method calls from static imports.
  */
 public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private ClassNode currentClass;
@@ -436,10 +436,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         // look for one of these:
         //   import static MyClass.prop [as otherProp]
         // when resolving prop or field reference
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         if (importNodes.containsKey(name)) {
             ImportNode importNode = importNodes.get(name);
             // GRECLIPSE add
-            try {
             if (!isReconcile) {
             // GRECLIPSE end
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
@@ -449,12 +451,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
-            // GRECLIPSE add
-            } finally {
-                // store the identifier to facilitate organizing static imports
-                if (expression != null) expression.putNodeMetaData("static.import.alias", name);
-            }
-            // GRECLIPSE end
         }
         // look for one of these:
         //   import static MyClass.*
@@ -466,6 +462,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             expression = findStaticField(node, name);
             if (expression != null) return expression;
         }
+        // GRECLIPSE add
+        } finally {
+            // store the identifier to facilitate organizing static imports
+            if (expression != null) expression.putNodeMetaData("static.import.alias", name);
+        }
+        // GRECLIPSE end
         return null;
     }
 

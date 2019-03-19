@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -249,10 +249,34 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
+    void testRetainStaticAlias1a() {
+        String contents = '''\
+            import static java.lang.Math.PI as Pie
+            @groovy.transform.CompileStatic
+            void test() {
+              def x = Pie
+            }
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
     void testRetainStaticAlias2() {
         String contents = '''\
             import static java.lang.Math.pow as f
             f(2,Math.PI)
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainStaticAlias2a() {
+        String contents = '''\
+            import static java.lang.Math.pow as f
+            @groovy.transform.CompileStatic
+            void test() {
+              f(2,Math.PI)
+            }
             '''
         doContentsCompareTest(contents)
     }
