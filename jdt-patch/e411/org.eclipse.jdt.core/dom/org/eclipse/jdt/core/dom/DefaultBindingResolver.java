@@ -450,7 +450,7 @@ class DefaultBindingResolver extends BindingResolver {
 					return binding;
 				} else {
 					/*
-					 * http://dev.eclipse.org/bugs/show_bug.cgi?id=24449
+					 * https://dev.eclipse.org/bugs/show_bug.cgi?id=24449
 					 */
 					if (variableBinding instanceof ProblemFieldBinding) {
 						ProblemFieldBinding problemFieldBinding = (ProblemFieldBinding) variableBinding;
@@ -503,7 +503,7 @@ class DefaultBindingResolver extends BindingResolver {
 				}
 			} else {
 				/*
-				 * http://dev.eclipse.org/bugs/show_bug.cgi?id=24449
+				 * https://dev.eclipse.org/bugs/show_bug.cgi?id=24449
 				 */
 				if (variableBinding instanceof ProblemFieldBinding) {
 					ProblemFieldBinding problemFieldBinding = (ProblemFieldBinding) variableBinding;
@@ -1426,7 +1426,7 @@ class DefaultBindingResolver extends BindingResolver {
 						return this.getVariableBinding((org.eclipse.jdt.internal.compiler.lookup.VariableBinding) binding);
 					} else {
 						/*
-						 * http://dev.eclipse.org/bugs/show_bug.cgi?id=24449
+						 * https://dev.eclipse.org/bugs/show_bug.cgi?id=24449
 						 */
 						if (binding instanceof ProblemFieldBinding) {
 							ProblemFieldBinding problemFieldBinding = (ProblemFieldBinding) binding;

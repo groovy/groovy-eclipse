@@ -2,7 +2,7 @@
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * https://ifs.hsr.ch/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

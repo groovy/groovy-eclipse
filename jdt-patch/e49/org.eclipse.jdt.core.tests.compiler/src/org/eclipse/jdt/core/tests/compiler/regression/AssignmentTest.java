@@ -52,7 +52,7 @@ public static Test suite() {
 }
 /*
  * no effect assignment bug
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=27235
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=27235
  */
 public void test001() {
 	this.runConformTest(		new String[] {
@@ -801,7 +801,7 @@ public void test034() {
 }
 /*
  * Check scenario:  i = i++
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=84480
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=84480
  * disabled: https://bugs.eclipse.org/bugs/show_bug.cgi?id=111898
  */
 public void test035() {

@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -318,7 +318,7 @@ public class JavadocTestForClass extends JavadocTest {
 				"	/**\n"
 					+ "	 * Valid URL link references \n"
 					+ "	 *\n"
-					+ "	 * @see <a href=\"http://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</a>\n"
+					+ "	 * @see <a href=\"https://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</a>\n"
 					+ "	 */\n"
 					+ "public class X {\n"
 					+ "	public void s_foo() {\n"

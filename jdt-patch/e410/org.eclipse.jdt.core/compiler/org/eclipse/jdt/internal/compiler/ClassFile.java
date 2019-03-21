@@ -3969,7 +3969,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 	/**
 	 * INTERNAL USE-ONLY
 	 * Generate the byte for problem method infos that correspond to missing abstract methods.
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=3179
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=3179
 	 *
 	 * @param methodDeclarations Array of all missing abstract methods
 	 */

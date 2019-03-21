@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -45,7 +45,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test001() {
 		String sourceA001 = "\\u003b";
@@ -60,7 +60,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		assertEquals("Wrong token type", ITerminalSymbols.TokenNameSEMICOLON, token);
 	}
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test002() {
 		String sourceA002 = "// tests\n  ";
@@ -78,7 +78,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		}
 	}
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test003() {
 		String sourceA003 = "// tests\n  ";
@@ -100,7 +100,7 @@ public class ScannerTest extends AbstractRegressionTest {
 
 	/**
 	 * float constant can have exponent part without dot: 01e0f
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
 	 */
 	public void test004() {
 		String source = "01e0f";

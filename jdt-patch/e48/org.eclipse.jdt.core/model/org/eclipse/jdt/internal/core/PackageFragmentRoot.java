@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -537,7 +537,7 @@ public Object[] getNonJavaResources() throws JavaModelException {
  */
 @Override
 public IPackageFragment getPackageFragment(String packageName) {
-	// tolerate package names with spaces (e.g. 'x . y') (http://bugs.eclipse.org/bugs/show_bug.cgi?id=21957)
+	// tolerate package names with spaces (e.g. 'x . y') (https://bugs.eclipse.org/bugs/show_bug.cgi?id=21957)
 	String[] pkgName = Util.getTrimmedSimpleNames(packageName);
 	return getPackageFragment(pkgName);
 }

@@ -535,7 +535,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
     }
 
     public boolean isOnBuildPath() {
-        // fix for bug http://dev.eclipse.org/bugs/show_bug.cgi?id=20051
+        // fix for bug https://dev.eclipse.org/bugs/show_bug.cgi?id=20051
         IJavaProject project = this.getJavaProject();
         if (!project.isOnClasspath(this)) {
             return false;

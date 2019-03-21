@@ -33,7 +33,7 @@ public class InternalScannerTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test001() {
 		String source =	"//Comment";
@@ -51,7 +51,7 @@ public class InternalScannerTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=73762
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=73762
 	 */
 	public void test002() throws InvalidInputException {
 		Scanner scanner = new Scanner();

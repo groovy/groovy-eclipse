@@ -8387,7 +8387,7 @@ public void test010(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=25233
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=25233
  */
 public void test011(){
 	String str =
@@ -8424,7 +8424,7 @@ public void test011(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=27370
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=27370
  */
 public void test012(){
 	String str =
@@ -8458,7 +8458,7 @@ public void test012(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=27735
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=27735
  */
 public void test013(){
 	String str =
@@ -8498,7 +8498,7 @@ public void test013(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=27941
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=27941
  */
 public void test014(){
 	String str =
@@ -8535,7 +8535,7 @@ public void test014(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=39502
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=39502
  */
 public void test015(){
 	String str =
@@ -8572,7 +8572,7 @@ public void test015(){
 		testName);
 }
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=39502
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=39502
  */
 public void test016(){
 	String str =

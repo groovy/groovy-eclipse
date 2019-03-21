@@ -91,7 +91,7 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 /**
  * Special case for message send in javadoc comment. They can be in fact bound to a constructor.
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
  */
 @Override
 public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {

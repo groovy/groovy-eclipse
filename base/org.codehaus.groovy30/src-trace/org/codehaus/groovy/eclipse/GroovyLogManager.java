@@ -26,7 +26,7 @@ import java.util.Map;
  * NOTE: This class is a singleton.
  */
 // Some code here borrowed from org.eclipse.ajdt.core.AJLog under EPL license
-// See http://www.eclipse.org/legal/epl-v10.html
+// See https://www.eclipse.org/legal/epl-v10.html
 public class GroovyLogManager {
     public static final GroovyLogManager manager = new GroovyLogManager();
 

@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 /**
  * Sorting utilities.
- * Originally developed for the <a href="http://www.eclipse.org/objectteams">Object Teams project</a>.
+ * Originally developed for the <a href="https://www.eclipse.org/objectteams">Object Teams project</a>.
  */
 public class Sorting {
 

@@ -321,7 +321,7 @@ public class JavadocTestForClass extends JavadocTest {
 				"	/**\n"
 					+ "	 * Valid URL link references \n"
 					+ "	 *\n"
-					+ "	 * @see <a href=\"http://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</a>\n"
+					+ "	 * @see <a href=\"https://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</a>\n"
 					+ "	 */\n"
 					+ "public class X {\n"
 					+ "	public void s_foo() {\n"

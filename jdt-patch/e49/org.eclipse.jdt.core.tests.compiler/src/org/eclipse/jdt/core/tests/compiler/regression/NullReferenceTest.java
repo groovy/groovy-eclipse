@@ -15864,7 +15864,7 @@ public void test367879() {
 					"    public void test() throws IOException {\n" + 
 					"    HttpURLConnection http = null;\n" + 
 					"        try {\n" + 
-					"            http = (HttpURLConnection) new URL(\"http://example.com/\").openConnection();\n" + 
+					"            http = (HttpURLConnection) new URL(\"https://example.com/\").openConnection();\n" + 
 					"            try (InputStream in = http.getInputStream()) { /* get input */ }\n" + 
 					"            http.getURL();\n" + // shouldn't *not* flag as Potential null pointer access 
 					"        } finally {\n" + 

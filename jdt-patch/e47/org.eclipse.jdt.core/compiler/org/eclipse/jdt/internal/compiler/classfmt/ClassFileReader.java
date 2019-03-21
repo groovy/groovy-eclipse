@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -696,7 +696,7 @@ public IBinaryNestedType[] getMemberTypes() {
 			/*
 			 * Checking that outerClassNameIDx is different from 0 should be enough to determine if an inner class
 			 * attribute entry is a member class, but due to the bug:
-			 * http://dev.eclipse.org/bugs/show_bug.cgi?id=14592
+			 * https://dev.eclipse.org/bugs/show_bug.cgi?id=14592
 			 * we needed to add an extra check. So we check that innerNameIndex is different from 0 as well.
 			 *
 			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=49879

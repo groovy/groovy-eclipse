@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -37,7 +37,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=15051
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=15051
 	 */
 	public void test001() throws Exception {
 		String source =
@@ -70,7 +70,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=25188
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=25188
 	 */
 	public void test002() throws Exception {
 		String source =
@@ -99,7 +99,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26098
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26098
 	 */
 	public void test003() throws Exception {
 		String source =
@@ -141,7 +141,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test004() throws Exception {
 		String source =
@@ -187,7 +187,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test005() throws Exception {
 		String source =
@@ -225,7 +225,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test006() throws Exception {
 		String source =
@@ -255,7 +255,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test007() throws Exception {
 		String source =
@@ -291,7 +291,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test008() throws Exception {
 		String source =
@@ -321,7 +321,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test009() throws Exception {
 		String source =
@@ -367,7 +367,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test010() throws Exception {
 		String source =
@@ -401,7 +401,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test011() throws Exception {
 		String source =
@@ -439,7 +439,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test012() throws Exception {
 		String source =
@@ -472,7 +472,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test013() throws Exception {
 		String source =
@@ -508,7 +508,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test014() throws Exception {
 		String source =
@@ -561,7 +561,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test015() throws Exception {
 		String source =
@@ -599,7 +599,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test016() throws Exception {
 		String source =
@@ -637,7 +637,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test017() throws Exception {
 		String source =
@@ -673,7 +673,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test018() throws Exception {
 		String source =
@@ -709,7 +709,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 * http:  //bugs.eclipse.org/bugs/show_bug.cgi?id=26881
 	 */
 	public void test019() throws Exception {
@@ -759,7 +759,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test020() throws Exception {
 		String source =
@@ -798,7 +798,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test021() throws Exception {
 		String source =
@@ -835,7 +835,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test022() throws Exception {
 		String source =
@@ -872,7 +872,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test023() throws Exception {
 		String source =
@@ -909,7 +909,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test024() throws Exception {
 		String source =
@@ -946,7 +946,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test025() throws Exception {
 		String source =
@@ -986,7 +986,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test026() throws Exception {
 		String source =
@@ -1024,7 +1024,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test027() throws Exception {
 		String source =
@@ -1061,7 +1061,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test028() throws Exception {
 		String source =
@@ -1100,7 +1100,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test029() throws Exception {
 		String source =
@@ -1138,7 +1138,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test030() throws Exception {
 		String source =
@@ -1175,7 +1175,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test031() throws Exception {
 		String source =
@@ -1214,7 +1214,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test032() throws Exception {
 		String source =
@@ -1253,7 +1253,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test033() throws Exception {
 		String source =
@@ -1307,7 +1307,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test034() throws Exception {
 		String source =
@@ -1345,7 +1345,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test035() throws Exception {
 		String source =
@@ -1375,7 +1375,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test036() throws Exception {
 		String source =
@@ -1411,7 +1411,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test037() throws Exception {
 		String source =
@@ -1441,7 +1441,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test038() throws Exception {
 		String source =
@@ -1495,7 +1495,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test039() throws Exception {
 		String source =
@@ -1529,7 +1529,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test040() throws Exception {
 		String source =
@@ -1567,7 +1567,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test041() throws Exception {
 		String source =
@@ -1600,7 +1600,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test042() throws Exception {
 		String source =
@@ -1636,7 +1636,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test043() throws Exception {
 		String source =
@@ -1690,7 +1690,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test044() throws Exception {
 		String source =
@@ -1728,7 +1728,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test045() throws Exception {
 		String source =
@@ -1766,7 +1766,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test046() throws Exception {
 		String source =
@@ -1802,7 +1802,7 @@ public class ClassFileReaderTest_1_4 extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26753
 	 */
 	public void test047() throws Exception {
 		String source =

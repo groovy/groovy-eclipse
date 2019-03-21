@@ -153,7 +153,7 @@ void checkMethodParse(
 	}
 }
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=30946
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=30946
  */
 public void testBug30946() {
 	final SpecialSelectionParser parser = createParser();

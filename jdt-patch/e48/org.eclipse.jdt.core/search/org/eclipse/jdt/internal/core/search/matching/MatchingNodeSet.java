@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -87,7 +87,7 @@ public int addMatch(ASTNode node, int matchLevel) {
 public void addPossibleMatch(ASTNode node) {
 	// remove existing node at same position from set
 	// (case of recovery that created the same node several time
-	// see http://bugs.eclipse.org/bugs/show_bug.cgi?id=29366)
+	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=29366)
 	long key = (((long) node.sourceStart) << 32) + node.sourceEnd;
 	ASTNode existing = (ASTNode) this.possibleMatchingNodesKeys.get(key);
 	if (existing != null && existing.getClass().equals(node.getClass()))
@@ -104,7 +104,7 @@ public void addTrustedMatch(ASTNode node, boolean isExact) {
 void addTrustedMatch(ASTNode node, Integer level) {
 	// remove existing node at same position from set
 	// (case of recovery that created the same node several time
-	// see http://bugs.eclipse.org/bugs/show_bug.cgi?id=29366)
+	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=29366)
 	long key = (((long) node.sourceStart) << 32) + node.sourceEnd;
 	ASTNode existing = (ASTNode) this.matchingNodesKeys.get(key);
 	if (existing != null && existing.getClass().equals(node.getClass()))

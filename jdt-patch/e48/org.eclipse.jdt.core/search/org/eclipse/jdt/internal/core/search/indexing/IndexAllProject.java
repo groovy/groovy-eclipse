@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -120,7 +120,7 @@ public class IndexAllProject extends IndexRequest {
 				IResource sourceFolder = root.findMember(entry.getPath());
 				if (sourceFolder != null) {
 
-					// collect output locations if source is project (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=32041)
+					// collect output locations if source is project (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=32041)
 					final HashSet outputs = new HashSet();
 					if (sourceFolder.getType() == IResource.PROJECT) {
 						// Do not create marker while getting output location (see bug 41859)

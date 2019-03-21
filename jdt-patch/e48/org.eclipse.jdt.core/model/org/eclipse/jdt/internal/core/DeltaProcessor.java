@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -508,7 +508,7 @@ public class DeltaProcessor {
 					case IResourceDelta.ADDED:
 					case IResourceDelta.REMOVED:
 						// Close the containing package fragment root to reset its cached children.
-						// See http://bugs.eclipse.org/500714
+						// See https://bugs.eclipse.org/500714
 						try {
 							IPackageFragmentRoot root = findContainingPackageFragmentRoot(resource);
 							if (root != null && root.isOpen())
@@ -535,7 +535,7 @@ public class DeltaProcessor {
 							int flags = delta.getFlags();
 							if ((flags & IResourceDelta.CONTENT) == 0  // only consider content change
 								&& (flags & IResourceDelta.ENCODING) == 0 // and encoding change
-								&& (flags & IResourceDelta.MOVED_FROM) == 0) {// and also move and override scenario (see http://dev.eclipse.org/bugs/show_bug.cgi?id=21420)
+								&& (flags & IResourceDelta.MOVED_FROM) == 0) {// and also move and override scenario (see https://dev.eclipse.org/bugs/show_bug.cgi?id=21420)
 								break;
 							}
 						//$FALL-THROUGH$

@@ -17781,7 +17781,7 @@ public void test0500(){
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=87956
 	public void test0561() {
-		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+		// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 				"----------\n" + 
 				"1. WARNING in X.java (at line 2)\n" + 
@@ -17918,7 +17918,7 @@ X.java:4: method foo in class X cannot be applied to given types
 			"");
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=87550 - variation
-	// Awaiting clarification on http://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-November/000428.html
+	// Awaiting clarification on https://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-November/000428.html
 	public void test0564() {
 		this.runConformTest(
 			new String[] {
@@ -18201,7 +18201,7 @@ X.java:4: method foo in class X cannot be applied to given types
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=90423 - variation
 	public void test0574() {
-		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+		// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 		String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 				"----------\n" + 
 				"1. WARNING in X.java (at line 6)\n" + 
@@ -22730,7 +22730,7 @@ class BB extends AA<CC> { <U> BB test() {return null;} }
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=97219
 public void test0706a() {
-	// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+	// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 	String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 			"----------\n" + 
 			"1. ERROR in X.java (at line 4)\n" + 
@@ -22811,7 +22811,7 @@ class BB extends AA<CC> { <U> BB test() {return null;} }
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=97219
 public void test0706b() {
-	// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+	// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 	String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 			"----------\n" + 
 			"1. ERROR in X.java (at line 4)\n" + 
@@ -24073,7 +24073,7 @@ public void test0747() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=100007
 public void test0748() {
-	// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+	// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 	String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 			"----------\n" + 
 			"1. WARNING in X.java (at line 5)\n" + 
@@ -41299,7 +41299,7 @@ public void test1180() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=204534
 public void test1181() {
-	// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+	// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 	String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6)?
 			"----------\n" + 
 			"1. ERROR in X.java (at line 2)\n" + 
@@ -44940,7 +44940,7 @@ public void test1280() {
 			"");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=216686 - variation
-// FAIL EXTRA ERR, see http://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000444.html
+// FAIL EXTRA ERR, see https://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000444.html
 public void test1281() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_8)
 		return;
@@ -51440,7 +51440,7 @@ public void test1459() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643
 // SHOULD FAIL AT 1.8 (18.2.3): The method get(Class<W>, T) in the type Test is not applicable for the arguments (Class<Test.W_Description>, Object)
-// FIXME: javac rejects (correctly? how?), see http://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000443.html
+// FIXME: javac rejects (correctly? how?), see https://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000443.html
 public void test277643() {
 	this.runNegativeTest(
 		false /* skipJavac */,
@@ -51539,7 +51539,7 @@ public void test280054() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=283306
 // SHOULD FAIL AT 1.8 (18.2.3): The method get(Class<V>, Class<S>) in the type X.L is not applicable for the arguments (Class<V>, Class<X.B>)
-// FIXME: javac rejects (correctly? how?), see http://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000443.html
+// FIXME: javac rejects (correctly? how?), see https://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000443.html
 public void test283306() {
 	this.runNegativeTest(
 		false /* skipJavac */,

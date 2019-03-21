@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1034,7 +1034,7 @@ void setSourceStart(int sourceStart);
 	 */
 	/**
 	 * Problem signaled on an invalid URL reference.
-	 * Valid syntax example: @see "http://www.eclipse.org/"
+	 * Valid syntax example: @see "https://www.eclipse.org/"
 	 * @since 3.4
 	 */
 	int JavadocInvalidSeeUrlReference = Javadoc + Internal + 462;
@@ -1094,7 +1094,7 @@ void setSourceStart(int sourceStart);
 	int JavadocInvalidSeeReference = Javadoc + Internal + 483;
 	/**
 	 * Problem signaled on an invalid URL reference that does not conform to the href syntax.
-	 * Valid syntax example: @see <a href="http://www.eclipse.org/">Eclipse Home Page</a>
+	 * Valid syntax example: @see <a href="https://www.eclipse.org/">Eclipse Home Page</a>
 	 * @since 3.0
 	 */
 	int JavadocInvalidSeeHref = Javadoc + Internal + 484;

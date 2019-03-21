@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -152,7 +152,7 @@ private void buildCUSource(String lineSeparator) {
 	buffer.append(this.codeSnippet);
 	// a line separator is required after the code snippet source code
 	// in case the code snippet source code ends with a line comment
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=14838
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=14838
 	buffer.append(lineSeparator).append('}').append(lineSeparator);
 
 	// end of class declaration

@@ -111,7 +111,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		"  }\n"+
 		"}\n";
 	
-	// http://types.cs.washington.edu/jsr308/specification/java-annotation-design.pdf
+	// https://types.cs.washington.edu/jsr308/specification/java-annotation-design.pdf
 	//		type_annotation {
 	//			// New fields in JSR 308:
 	//			u1 target_type; // the type of the targeted program element, see Section 3.2

@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -841,7 +841,7 @@ public class Util implements SuffixConstants {
 				char[] folderPattern = pattern;
 				if (isFolderPath) {
 					int lastSlash = CharOperation.lastIndexOf('/', pattern);
-					if (lastSlash != -1 && lastSlash != pattern.length-1){ // trailing slash -> adds '**' for free (see http://ant.apache.org/manual/dirtasks.html)
+					if (lastSlash != -1 && lastSlash != pattern.length-1){ // trailing slash -> adds '**' for free (see https://ant.apache.org/manual/dirtasks.html)
 						int star = CharOperation.indexOf('*', pattern, lastSlash);
 						if ((star == -1
 								|| star >= pattern.length-1

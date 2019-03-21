@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1308,7 +1308,7 @@ public final class JavaCore extends Plugin {
 	 * <p>The severity of the problem is controlled with option {@link #COMPILER_PB_INVALID_JAVADOC}.</p>
 	 * <p>It does not depend on option {@link #COMPILER_PB_INVALID_JAVADOC_TAGS}.</p>
 	 * <p>When this option is valued to {@link #COMPILER_PB_MISSING_JAVADOC_TAG_DESCRIPTION_ALL_STANDARD_TAGS},
-	 *       a subset of the standard <a href="http://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html#javadoctags">Javadoc tags</a>
+	 *       a subset of the standard <a href="https://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html#javadoctags">Javadoc tags</a>
 	 *       that have a description, text or label are checked. While this set may grow in the future, note that user-defined tags are not and will not be checked.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.missingJavadocTagDescription"</code></dd>

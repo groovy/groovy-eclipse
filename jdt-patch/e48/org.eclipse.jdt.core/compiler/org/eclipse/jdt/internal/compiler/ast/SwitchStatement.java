@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -157,7 +157,7 @@ public class SwitchStatement extends Statement {
 	 * This assumes that hashCode() specification for java.lang.String is API
 	 * and is stable.
 	 *
-	 * @see "http://download.oracle.com/javase/6/docs/api/java/lang/String.html"
+	 * @see "https://download.oracle.com/javase/6/docs/api/java/lang/String.html"
 	 *
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
@@ -382,7 +382,7 @@ public class SwitchStatement extends Statement {
 				if ((long) (this.caseCount * 2.5) > ((long) max - (long) min)) {
 
 					// work-around 1.3 VM bug, if max>0x7FFF0000, must use lookup bytecode
-					// see http://dev.eclipse.org/bugs/show_bug.cgi?id=21557
+					// see https://dev.eclipse.org/bugs/show_bug.cgi?id=21557
 					if (max > 0x7FFF0000 && currentScope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_4) {
 						codeStream.lookupswitch(defaultLabel, this.constants, sortedIndexes, caseLabels);
 

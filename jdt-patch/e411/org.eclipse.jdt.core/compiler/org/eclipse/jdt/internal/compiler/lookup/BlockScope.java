@@ -808,7 +808,7 @@ public VariableBinding[] getEmulationPath(LocalVariableBinding outerLocalVariabl
  * 	#((arg) this$n access$m... access$p) 		: available as as a constructor arg + a sequence of synthetic accessors to synthetic fields
  * 	#((fieldDescr) this$n access#m... access$p)	: available as a first synthetic field + a sequence of synthetic accessors to synthetic fields
  * 	null 		 															: not found
- *	jls 15.9.2 + http://www.ergnosis.com/java-spec-report/java-language/jls-8.8.5.1-d.html
+ *	jls 15.9.2 + http://dynamicaspects.org
  */
 public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean onlyExactMatch, boolean denyEnclosingArgInConstructorCall) {
 	MethodScope currentMethodScope = methodScope();

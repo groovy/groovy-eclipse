@@ -28,8 +28,8 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * This class does not tests syntax error option as it's considered already
  * tested by other JavadocTest* classes.
  *
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=46854"
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=46976"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=46854"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=46976"
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class JavadocTestOptions extends JavadocTest {
@@ -2190,7 +2190,7 @@ public class JavadocTestOptions extends JavadocTest {
 
 	/**
 	 * Test fix for bug 52264.
-	 * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=52264">52264</a>
+	 * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=52264">52264</a>
 	 */
 	// Test invalid javadoc "error" with javadoc comment support disabled
 	public void testInvalidTagsJavadocSupportDisabled() {

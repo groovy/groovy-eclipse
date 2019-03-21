@@ -72,7 +72,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23894
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23894
 	 */
 	public void testToDoMarker() throws JavaModelException {
 		Hashtable options = JavaCore.getOptions();
@@ -104,7 +104,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=91426
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=91426
 	 */
 	public void testToDoMarker2() throws JavaModelException {
 		Hashtable options = JavaCore.getOptions();
@@ -166,7 +166,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
 	 */
 	public void testTags() throws JavaModelException {
 		Hashtable options = JavaCore.getOptions();
@@ -222,7 +222,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=110797
 	 */
 	public void testTags2() throws JavaModelException {
 		Hashtable options = JavaCore.getOptions();
@@ -308,7 +308,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
 	 */
 	public void testUnusedImport() throws JavaModelException {
 		Hashtable options = JavaCore.getOptions();
@@ -352,7 +352,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
 	 */
 	public void test98667() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

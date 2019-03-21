@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1570,7 +1570,7 @@ public String toString() {
 					toString(buffer, root, 1, false);
 				}
 			} else if (this.rootClasses.size == 0) {
-				// see http://bugs.eclipse.org/bugs/show_bug.cgi?id=24691
+				// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=24691
 				buffer.append("No root classes"); //$NON-NLS-1$
 			}
 		}

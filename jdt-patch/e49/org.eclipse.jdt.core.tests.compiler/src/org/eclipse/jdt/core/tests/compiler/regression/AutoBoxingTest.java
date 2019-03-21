@@ -2524,7 +2524,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
         );
     }
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=84480 - variation with autoboxing diagnosis on
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=84480 - variation with autoboxing diagnosis on
 	 */
 	public void test088() {
 		Map customOptions = getCompilerOptions();

@@ -94,7 +94,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Test fix for bug 70891: [1.5][javadoc] Compiler should accept new 1.5 syntax for @param
-	 * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=70891">70891</a>
+	 * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=70891">70891</a>
 	 * These two tests fail for 1.5 source level but should pass for 1.3 or 1.4
 	 * @see JavadocTest_1_4
 	 */
@@ -1131,7 +1131,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Test fix for bug 80257: [javadoc] Invalid missing reference warning on @see or @link tags
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=80257"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=80257"
 	 */
 	public void testBug80257() {
 		runNegativeTest(
@@ -1160,7 +1160,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Test fix for bug 82514: [1.5][javadoc] Problem with generics in javadoc
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=82514"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=82514"
 	 */
 	// FAIL ERRMSG
 	public void _testBug82514() {
@@ -1201,7 +1201,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Test fix for bug 83127: [1.5][javadoc][dom] Wrong / strange bindings for references in javadoc to methods with type variables as parameter types
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83127"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83127"
 	 */
 	public void testBug83127a() {
 		this.reportMissingJavadocTags = CompilerOptions.IGNORE;
@@ -1567,7 +1567,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 83393: [1.5][javadoc] reference to vararg method also considers non-array type as correct
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83393"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83393"
 	 */
 	public void testBug83393a() {
 		runConformTest(
@@ -1663,7 +1663,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 83804: [1.5][javadoc] Missing Javadoc node for package declaration
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83804"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83804"
 	 */
 	public void testBug83804() {
 		runNegativeTest(
@@ -1731,7 +1731,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 86769: [javadoc] Warn/Error for 'Missing javadoc comments' doesn't recognize private inner classes
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=86769"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=86769"
 	 */
 	public void testBug86769() {
 		this.reportMissingJavadocComments = CompilerOptions.ERROR;
@@ -1826,7 +1826,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 95286: [1.5][javadoc] package-info.java incorrectly flags "Missing comment for public declaration"
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=95286"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=95286"
 	 */
 	public void testBug95286_Default() {
 		this.reportMissingJavadocComments = CompilerOptions.ERROR;
@@ -1857,7 +1857,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 95521: [1.5][javadoc] validation with @see tag not working for generic method
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=95521"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=95521"
 	 */
 	public void testBug95521() {
 		runConformTest(
@@ -1935,7 +1935,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 96237: [javadoc] Inner types must be qualified
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=96237"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=96237"
 	 */
 	public void testBug96237_Public01() {
 		this.reportInvalidJavadocVisibility = CompilerOptions.PUBLIC;
@@ -2470,7 +2470,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 101283: [1.5][javadoc] Javadoc validation raises missing implementation in compiler
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=101283"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=101283"
 	 */
 	public void testBug101283a() {
 		runNegativeTest(
@@ -2726,7 +2726,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 112346: [javadoc] {&#064;inheritedDoc} should be inactive for non-overridden method
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=112346"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=112346"
 	 */
 	public void testBug112346() {
 		this.reportMissingJavadocTags = CompilerOptions.IGNORE;
@@ -2748,7 +2748,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 119857: [javadoc] Some inner class references should be flagged as unresolved
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=119857"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=119857"
 	 */
 	public void testBug119857() {
 		runConformTest(
@@ -3005,7 +3005,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 132430: [1.5][javadoc] Unwanted missing tag warning for overridden method with parameter containing type variable
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=132430"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=132430"
 	 */
 	public void testBug132430() {
 		runConformTest(
@@ -3078,7 +3078,7 @@ public class JavadocTest_1_5 extends JavadocTest {
 
 	/**
 	 * Bug 145007: [1.5][javadoc] Generics + Inner Class -> Javadoc "missing @throws" warning
-	 * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=145007"
+	 * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=145007"
 	 */
 	public void testBug145007() {
 		runConformTest(

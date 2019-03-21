@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1119,7 +1119,7 @@ public void test028() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test029() {
 	this.runConformTest(
@@ -1160,7 +1160,7 @@ public void test029() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test030() {
 	this.runConformTest(
@@ -1197,7 +1197,7 @@ public void test030() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test031() {
 	this.runConformTest(
@@ -1235,7 +1235,7 @@ public void test031() {
 }
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test032() {
 	this.runConformTest(
@@ -1258,7 +1258,7 @@ public void test032() {
 
 /*
  * unused cast diagnosis
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=54763
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=54763
  */
 public void test033() {
 	Map customOptions = getCompilerOptions();
@@ -1589,7 +1589,7 @@ public void test039() {
 		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=116647
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=116647
 public void test040() {
 	this.runNegativeTest(
 		new String[] {

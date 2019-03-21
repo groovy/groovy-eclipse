@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -15861,7 +15861,7 @@ public void test367879() {
 					"    public void test() throws IOException {\n" + 
 					"    HttpURLConnection http = null;\n" + 
 					"        try {\n" + 
-					"            http = (HttpURLConnection) new URL(\"http://example.com/\").openConnection();\n" + 
+					"            http = (HttpURLConnection) new URL(\"https://example.com/\").openConnection();\n" + 
 					"            try (InputStream in = http.getInputStream()) { /* get input */ }\n" + 
 					"            http.getURL();\n" + // shouldn't *not* flag as Potential null pointer access 
 					"        } finally {\n" + 

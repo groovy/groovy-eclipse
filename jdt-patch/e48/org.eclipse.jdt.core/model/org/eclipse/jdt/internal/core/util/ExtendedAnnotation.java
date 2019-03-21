@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -23,7 +23,7 @@ import org.eclipse.jdt.core.util.IExtendedAnnotation;
 import org.eclipse.jdt.core.util.IExtendedAnnotationConstants;
 import org.eclipse.jdt.core.util.ILocalVariableReferenceInfo;
 
-/* http://types.cs.washington.edu/jsr308/specification/java-annotation-design.pdf
+/* https://types.cs.washington.edu/jsr308/specification/java-annotation-design.pdf
  type_annotation {
    // New fields in JSR 308:
    u1 target_type; // the type of the targeted program element, see Section 3.2

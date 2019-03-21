@@ -49,7 +49,7 @@ public class GroovyScanner {
         lexer.setWhitespaceIncluded(whiteSpaceIncluded);
         this.stream = lexer.plumb();
         /*
-         * TODO Remove ones http://jira.codehaus.org/browse/GROOVY-6608 is fixed Initializes the parser to avoid NPE in Groovy code
+         * TODO Remove ones https://jira.codehaus.org/browse/GROOVY-6608 is fixed Initializes the parser to avoid NPE in Groovy code
          */
         GroovyRecognizer.make(lexer);
     }

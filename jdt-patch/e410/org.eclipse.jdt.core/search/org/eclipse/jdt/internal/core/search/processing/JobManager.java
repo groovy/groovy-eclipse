@@ -451,7 +451,7 @@ public abstract class JobManager implements Runnable {
 		discardJobs(null); // will wait until current executing job has completed
 		Thread thread = this.processingThread;
 		try {
-			if (thread != null) { // see http://bugs.eclipse.org/bugs/show_bug.cgi?id=31858
+			if (thread != null) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=31858
 				synchronized (this) {
 					this.processingThread = null; // mark the job manager as shutting down so that the thread will stop by itself
 					notifyAll(); // ensure its awake so it can be shutdown

@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1390,7 +1390,7 @@ public class NameLookup implements SuffixConstants {
 					//the type name of the inner type
 					unqualifiedName = Util.localTypeName(name, index, name.length());
 					// unqualifiedName is empty if the name ends with a '$' sign.
-					// See http://dev.eclipse.org/bugs/show_bug.cgi?id=14642
+					// See https://dev.eclipse.org/bugs/show_bug.cgi?id=14642
 				}
 				int matchLength = name.length();
 				for (int i = 0; i < length; i++) {

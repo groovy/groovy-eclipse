@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -45,7 +45,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
  * <code>&lt;property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/&gt;</code>
  * </p>
  * <p>
- * For more information on Ant check out the website at http://jakarta.apache.org/ant/ .
+ * For more information on Ant check out the website at https://jakarta.apache.org/ant/ .
  * </p>
  *
  * @since 2.0

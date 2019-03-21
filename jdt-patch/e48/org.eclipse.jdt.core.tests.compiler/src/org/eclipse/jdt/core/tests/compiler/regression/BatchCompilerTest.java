@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -981,7 +981,7 @@ public void test012b(){
 		String logContents = Util.fileContent(logFileName);
 		String expectedLogContents =
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-			"<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.005 Compiler//EN\" \"http://www.eclipse.org/jdt/core/compiler_32_005.dtd\">\n" + 
+			"<!DOCTYPE compiler PUBLIC \"-//Eclipse.org//DTD Eclipse JDT 3.2.005 Compiler//EN\" \"https://www.eclipse.org/jdt/core/compiler_32_005.dtd\">\n" + 
 			"<compiler copyright=\"{2}\" name=\"{1}\" version=\"{3}\">\n" + 
 			"	<command_line>\n" + 
 			"		<argument value=\"---OUTPUT_DIR_PLACEHOLDER---{0}X.java\"/>\n" + 
@@ -5354,7 +5354,7 @@ public void test148_access_restrictions(){
   "6 problems (1 error, 5 warnings)\n",
   true);
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=168230
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=168230
 public void test149() {
 	this.runConformTest(
 		new String[] {
@@ -5372,7 +5372,7 @@ public void test149() {
 		"",
 		true);
 }
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=192875
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=192875
 // default in now on for nullDereference
 public void test150_null_ref_options() {
 	this.runConformTest(
@@ -5398,7 +5398,7 @@ public void test150_null_ref_options() {
 		"1 problem (1 warning)\n",
 		true);
 }
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=192875
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=192875
 // default in now on for nullDereference
 public void test151_null_ref_options() {
 	this.runConformTest(

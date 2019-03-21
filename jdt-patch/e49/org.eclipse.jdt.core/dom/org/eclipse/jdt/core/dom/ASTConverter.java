@@ -985,7 +985,7 @@ class ASTConverter {
 		int rightEnd = Math.max(typeEnd, argument.declarationSourceEnd);
 		/*
 		 * There is extra work to do to set the proper type positions
-		 * See PR http://bugs.eclipse.org/bugs/show_bug.cgi?id=23284
+		 * See PR https://bugs.eclipse.org/bugs/show_bug.cgi?id=23284
 		 */
 		if (isVarArgs) {
 			Dimension lastDimension = null;
@@ -3542,7 +3542,7 @@ class ASTConverter {
 		int rightEnd = Math.max(typeEnd, sourceEnd);
 		/*
 		 * There is extra work to do to set the proper type positions
-		 * See PR http://bugs.eclipse.org/bugs/show_bug.cgi?id=23284
+		 * See PR https://bugs.eclipse.org/bugs/show_bug.cgi?id=23284
 		 */
 		setTypeForSingleVariableDeclaration(variableDecl, type, extraDimensions);
 		variableDecl.setSourceRange(localDeclaration.declarationSourceStart, rightEnd - localDeclaration.declarationSourceStart + 1);
@@ -3909,7 +3909,7 @@ class ASTConverter {
 				final SimpleName simpleName = new SimpleName(this.ast);
 				simpleName.internalSetIdentifier(new String(name));
 				// we need to search for the starting position of the first brace in order to set the proper length
-				// PR http://dev.eclipse.org/bugs/show_bug.cgi?id=10759
+				// PR https://dev.eclipse.org/bugs/show_bug.cgi?id=10759
 				int[] positions = retrieveEndOfElementTypeNamePosition(sourceStart < annotationsEnd ? annotationsEnd : sourceStart, sourceStart + length);
 				int end = positions[1];
 				if (end == -1) {

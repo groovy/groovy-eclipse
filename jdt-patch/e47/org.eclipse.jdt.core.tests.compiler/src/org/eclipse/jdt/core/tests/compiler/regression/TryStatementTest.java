@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -580,7 +580,7 @@ public void test018() {
 		"SUCCESS");
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=16279
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=16279
  */
 public void test019() {
 	this.runConformTest(
@@ -615,7 +615,7 @@ public void test019() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=16279
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=16279
  * shifting of finaly scopes against try/catch ones makes the custom ret address shifting
  * unnecessary.
  */
@@ -675,7 +675,7 @@ public void test020() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=21116
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=21116
  * protected type visibility check
  */
 public void test021() {
@@ -708,7 +708,7 @@ public void test021() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=19916
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=19916
  * nested try/synchronized statements (local var index alloc)
  */
 public void test022() {
@@ -787,7 +787,7 @@ public void test023() {
 }
 
  /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21203
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21203
  * NPE in ExceptionFlowContext
  */
 public void test024() {

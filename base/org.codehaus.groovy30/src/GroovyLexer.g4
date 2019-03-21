@@ -5,7 +5,7 @@
  *  All rights reserved.
  *  [The "BSD licence"]
  *
- *    http://www.opensource.org/licenses/bsd-license.php
+ *    https://www.opensource.org/licenses/bsd-license.php
  *
  * Subsequent modifications by the Groovy community have been done under the Apache License v2:
  *

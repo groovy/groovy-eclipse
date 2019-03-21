@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     Till Brychcy - initial API and implementation
@@ -21,7 +21,7 @@ public class AutomaticModuleNaming {
 
 	/**
 	 * Determine the automatic module name of a given jar as specified in {@link <a href=
-	 * "http://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">
+	 * "https://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">
 	 * ModuleFinder.of</a>}
 	 */
 	public static char[] determineAutomaticModuleName(final String jarFileName) {
@@ -44,7 +44,7 @@ public class AutomaticModuleNaming {
 
 	/**
 	 * Determine the automatic module name of a given jar or project as specified in {@link <a href=
-	 * "http://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">
+	 * "https://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">
 	 * ModuleFinder.of</a>}
 	 * @param fileName names either a jar file or a java project in the workspace
 	 * @param isFile <code>true</code> indicates that fileName denotes a file, <code>false</code> must be used for projects
@@ -80,7 +80,7 @@ public class AutomaticModuleNaming {
 	/**
 	 * Determine the automatic module name if no "Automatic-Module-Name" was found in the Manifest, as specified in
 	 * {@link <a href=
-	 * "http://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">ModuleFinder.of</a>}
+	 * "https://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">ModuleFinder.of</a>}
 	 * 
 	 * @param name
 	 *            the filename (or directory name)

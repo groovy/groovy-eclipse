@@ -1901,11 +1901,11 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 	
 	/**
 	 * Implements the "Algorithm for Inheriting Method Comments" as specified for
-	 * <a href="http://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html#inheritingcomments">1.6</a>.
+	 * <a href="https://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html#inheritingcomments">1.6</a>.
 	 *
 	 * <p>
 	 * Unfortunately, the implementation is broken in Javadoc implementations since 1.5, see
-	 * <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6376959">Sun's bug</a>.
+	 * <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6376959">Sun's bug</a>.
 	 * </p>
 	 *
 	 * <p>

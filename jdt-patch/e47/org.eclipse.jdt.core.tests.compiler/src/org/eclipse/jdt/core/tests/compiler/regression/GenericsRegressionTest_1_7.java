@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -2629,7 +2629,7 @@ public void test0061() {
 			"import java.util.Collections;\n" +
 			"public class X {\n" +
 			"	 public static void foo() {\n" +
-			"    	URI uri = URI.create(\"http://www.eclipse.org\");\n" +
+			"    	URI uri = URI.create(\"https://www.eclipse.org\");\n" +
 			"		FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
 			"	 }\n" +
 			"}\n"

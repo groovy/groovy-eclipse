@@ -158,7 +158,7 @@ public class IncrementalTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=17329
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=17329
 	 */
 	public void testRenameMainType() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -219,7 +219,7 @@ public class IncrementalTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=17807
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=17807
 	 * case 1
 	 */
 	public void testRemoveSecondaryType() throws JavaModelException {
@@ -290,7 +290,7 @@ public class IncrementalTests extends BuilderTests {
 	}
 
 	/*
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=17807
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=17807
 	 * case 2
 	 */
 	public void testRemoveSecondaryType2() throws JavaModelException {
@@ -720,7 +720,7 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath1);
 	}
 
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=27658
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=27658
 	public void testObjectWithSuperInterfaces() throws JavaModelException {
 		try {
 			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -997,7 +997,7 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath);
 	}
 
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType001() throws JavaModelException {
 
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -1039,7 +1039,7 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath);
 	}
 
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType002() throws JavaModelException {
 
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -1084,7 +1084,7 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath);
 	}
 
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType003() throws JavaModelException {
 
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

@@ -1122,7 +1122,7 @@ public void test028() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test029() {
 	this.runConformTest(
@@ -1163,7 +1163,7 @@ public void test029() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test030() {
 	this.runConformTest(
@@ -1200,7 +1200,7 @@ public void test030() {
 
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test031() {
 	this.runConformTest(
@@ -1238,7 +1238,7 @@ public void test031() {
 }
 /*
  * verify error when assigning null to array
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26903
  */
 public void test032() {
 	this.runConformTest(
@@ -1261,7 +1261,7 @@ public void test032() {
 
 /*
  * unused cast diagnosis
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=54763
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=54763
  */
 public void test033() {
 	Map customOptions = getCompilerOptions();
@@ -1592,7 +1592,7 @@ public void test039() {
 		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=116647
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=116647
 public void test040() {
 	this.runNegativeTest(
 		new String[] {

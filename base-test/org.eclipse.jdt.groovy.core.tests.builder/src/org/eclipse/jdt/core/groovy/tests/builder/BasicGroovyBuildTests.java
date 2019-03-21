@@ -3138,7 +3138,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     /*
-     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
      */
     @Test
     public void testUnusedImport() throws Exception {
@@ -3170,7 +3170,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     /*
-     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
+     * https://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
      */
     @Test
     public void test98667() throws Exception {

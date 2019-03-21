@@ -36,7 +36,7 @@ public final class DelegateTests extends GroovyCompilerTestSuite {
     }
 
     /**
-     * Test code based on <a href="http://www.infoq.com/articles/groovy-1.5-new">article</a>.
+     * Test code based on <a href="https://www.infoq.com/articles/groovy-1.5-new">article</a>.
      * The groups of tests are loosely based on the article contents, but what is
      * really exercised here is the accessibility of the described constructs
      * across the Java/Groovy divide.

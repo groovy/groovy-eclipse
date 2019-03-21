@@ -38,7 +38,7 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
             ],
             doc: '''\
                 Actions are the lifeblood of a full fledged swing application. Other sources can expound on their usefullness.
-                <p> see <a href="http://groovy.codehaus.org/SwingBuilder.action">http://groovy.codehaus.org/SwingBuilder.action</a>
+                <p> see <a href="https://groovy.codehaus.org/SwingBuilder.action">https://groovy.codehaus.org/SwingBuilder.action</a>
                 '''.stripIndent()
 
     method  name: 'frame',
@@ -54,11 +54,11 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
             ],
             doc: '''\
                 Generates a JFrame.
-                <p> see <a href="http://groovy.codehaus.org/SwingBuilder.frame">http://groovy.codehaus.org/SwingBuilder.frame</a>
+                <p> see <a href="https://groovy.codehaus.org/SwingBuilder.frame">https://groovy.codehaus.org/SwingBuilder.frame</a>
                 '''.stripIndent()
 
     def add = { String name, Class type ->
-        String doc = "See <a href=\"http://groovy.codehaus.org/SwingBuilder.${name}\">SwingBuilder.${name}</a>"
+        String doc = "See <a href=\"https://groovy.codehaus.org/SwingBuilder.${name}\">SwingBuilder.${name}</a>"
         method name: name, type: type, doc: doc
     }
 

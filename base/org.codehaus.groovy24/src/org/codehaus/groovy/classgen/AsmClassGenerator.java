@@ -316,7 +316,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     /*
      * Classes but not interfaces should have ACC_SUPER set
-     * See http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
+     * See https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
      * for what flags are allowed depending on the fact we are writing the inner class table
      * or the class itself
      */
@@ -349,7 +349,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     /*
      * Classes but not interfaces should have ACC_SUPER set
-     * See http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
+     * See https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
      * for what flags are allowed depending on the fact we are writing the inner class table
      * or the class itself
      */
@@ -717,7 +717,7 @@ public class AsmClassGenerator extends ClassGenerator {
     /**
      * Generate byte code for constants
      *
-     * @see <a href="http://java.sun.com/docs/books/vmspec/2nd-edition/html/ClassFile.doc.html#14152">Class field types</a>
+     * @see <a href="https://java.sun.com/docs/books/vmspec/2nd-edition/html/ClassFile.doc.html#14152">Class field types</a>
      */
     public void visitConstantExpression(ConstantExpression expression) {
         final String constantName = expression.getConstantName();

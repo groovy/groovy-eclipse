@@ -600,7 +600,7 @@ protected void consumePrimaryNoNewArrayWithName() {
 	// PrimaryNoNewArray ::=  PushLPAREN Expression PushRPAREN
 	pushOnExpressionStack(getUnspecifiedReferenceOptimized());
 	// pop parenthesis positions (and don't update expression positions
-	// (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=23329)
+	// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=23329)
 	this.intPtr--;
 	this.intPtr--;
 }

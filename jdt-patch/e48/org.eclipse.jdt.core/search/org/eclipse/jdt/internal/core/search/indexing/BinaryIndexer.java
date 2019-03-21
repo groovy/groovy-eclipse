@@ -4,7 +4,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -626,7 +626,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 					name = replace('/', '.', name); // so that it looks like java.lang.String
 					addTypeReference(name);
 
-					// also add a simple reference on each segment of the qualification (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=24741)
+					// also add a simple reference on each segment of the qualification (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=24741)
 					char[][] qualification = CharOperation.splitOn('.', name);
 					for (int j = 0, length = qualification.length; j < length; j++) {
 						addNameReference(qualification[j]);

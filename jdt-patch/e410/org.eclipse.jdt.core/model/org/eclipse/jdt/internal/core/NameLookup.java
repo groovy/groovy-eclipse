@@ -1393,7 +1393,7 @@ public class NameLookup implements SuffixConstants {
 					//the type name of the inner type
 					unqualifiedName = Util.localTypeName(name, index, name.length());
 					// unqualifiedName is empty if the name ends with a '$' sign.
-					// See http://dev.eclipse.org/bugs/show_bug.cgi?id=14642
+					// See https://dev.eclipse.org/bugs/show_bug.cgi?id=14642
 				}
 				int matchLength = name.length();
 				for (int i = 0; i < length; i++) {

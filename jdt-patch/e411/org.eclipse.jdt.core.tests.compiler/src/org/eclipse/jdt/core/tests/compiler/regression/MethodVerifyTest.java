@@ -10908,7 +10908,7 @@ public void test186() {
 		Excuse.EclipseHasSomeMoreWarnings
 	);
 }
-// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6182950
+// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6182950
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=?
 public void test187() {
 	String expectedCompilerLog = (this.complianceLevel == ClassFileConstants.JDK1_6 )?

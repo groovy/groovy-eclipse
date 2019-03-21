@@ -277,13 +277,13 @@ public void testSeveralVariableInstallations() {
 
 		// Recreate the variables
 		var3 = this.context.newVariable(var3.getTypeName(), var3.getName(), var3.getInitializer());
-		var4 = this.context.newVariable("java.net.URL".toCharArray(), "var4".toCharArray(), "new java.net.URL(\"http://www.ibm.com/index.html\")".toCharArray());
+		var4 = this.context.newVariable("java.net.URL".toCharArray(), "var4".toCharArray(), "new java.net.URL(\"https://www.ibm.com/index.html\")".toCharArray());
 		installVariables(7);
 
 		// Get their values
 		evaluateWithExpectedValue(var1, "1".toCharArray(), "int".toCharArray());
 		evaluateWithExpectedValue(var3, "c".toCharArray(), "char".toCharArray());
-		evaluateWithExpectedValue(var4, "http://www.ibm.com/index.html".toCharArray(), "java.net.URL".toCharArray());
+		evaluateWithExpectedValue(var4, "https://www.ibm.com/index.html".toCharArray(), "java.net.URL".toCharArray());
 		evaluateWithExpectedValue(var7, "1".toCharArray(), "long".toCharArray());
 		evaluateWithExpectedValue(var8, "hello".toCharArray(), "java.lang.String".toCharArray());
 		evaluateWithExpectedValue(var9, "an object".toCharArray(), "java.lang.Object".toCharArray());

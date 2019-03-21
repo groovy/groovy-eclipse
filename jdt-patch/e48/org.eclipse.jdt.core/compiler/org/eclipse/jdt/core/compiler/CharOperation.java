@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -3076,7 +3076,7 @@ public static final boolean match(
  * Answers true if the pattern matches the filepath using the pathSepatator, false otherwise.
  *
  * Path char[] pattern matching, accepting wild-cards '**', '*' and '?' (using Ant directory tasks
- * conventions, also see "http://jakarta.apache.org/ant/manual/dirtasks.html#defaultexcludes").
+ * conventions, also see "https://jakarta.apache.org/ant/manual/dirtasks.html#defaultexcludes").
  * Path pattern matching is enhancing regular pattern matching in supporting extra rule where '**' represent
  * any folder combination.
  * Special rule:

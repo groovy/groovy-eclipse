@@ -1754,10 +1754,10 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	}
 
 	private String bootstrapMethodDescription(IBootstrapMethodsEntry entry, IConstantPool constantPool) {
-		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
+		// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
 		// The BootstrapMethods attribute records bootstrap method specifiers referenced by invokedynamic instructions.
 		// The value of the bootstrap_method_ref item must be a valid index into the constant_pool table. The constant_pool entry at that index must be a CONSTANT_MethodHandle_info structure (§4.4.8).
-		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
+		// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
 		// constantpoolentry.getKind() = IConstantPoolConstant.CONSTANT_MethodHandle
 
 		ConstantPoolEntry2 constantPoolEntry2 =  (ConstantPoolEntry2) constantPool.decodeEntry(entry.getBootstrapMethodReference());
@@ -1777,7 +1777,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	}
 
 	private String[] bootstrapArgumentsDescription(IBootstrapMethodsEntry entry, IConstantPool constantPool) {
-		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.21
+		// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.21
 		// bootstrap_arguments
 		// 	    Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table.
 		//      The constant_pool entry at that index must be a CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info
@@ -1794,7 +1794,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					arguments[i] = ((Integer) constantPoolEntry.getIntegerValue()).toString();
 					break;
 				case IConstantPoolConstant.CONSTANT_MethodHandle:
-					// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
+					// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
 					// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic),
 					// 7 (REF_invokeSpecial), or 8 (REF_newInvokeSpecial), then the constant_pool entry at that
 					// index must be a CONSTANT_Methodref_info structure (§4.4.2) representing a class's method or

@@ -4736,7 +4736,7 @@ public abstract class Scope {
 	}
 
 	private ReferenceBinding[] getFilteredExceptions(MethodBinding method) {
-		// http://bugs.eclipse.org/387612 - Unreachable catch block...exception is never thrown from the try
+		// https://bugs.eclipse.org/387612 - Unreachable catch block...exception is never thrown from the try
 		// Need to filter redundant exceptions within the same throws clause.
 		// In this filtering the *most general* exception wins in order to capture all possible exceptions
 		// that could be thrown by the given method.

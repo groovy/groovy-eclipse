@@ -20,7 +20,7 @@ import java.util.Vector;
 
 /**
  * This is a new vm launcher to support Apache Harmony
- * (http://harmony.apache.org) settings
+ * (https://harmony.apache.org) settings
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class DRLVMLauncher extends StandardVMLauncher {

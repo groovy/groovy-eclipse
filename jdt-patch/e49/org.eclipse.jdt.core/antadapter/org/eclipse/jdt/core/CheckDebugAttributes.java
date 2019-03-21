@@ -34,7 +34,7 @@ import org.eclipse.jdt.internal.antadapter.AntAdapterMessages;
  * <code>&lt;eclipse.checkDebugAttributes property="hasDebug" file="${basedir}/bin/p/A.class"/&gt;</code>
  * </p>
  * <p>
- * For more information on Ant check out the website at http://jakarta.apache.org/ant/ .
+ * For more information on Ant check out the website at https://jakarta.apache.org/ant/ .
  * </p>
  *
  * This is not intended to be subclassed by users.

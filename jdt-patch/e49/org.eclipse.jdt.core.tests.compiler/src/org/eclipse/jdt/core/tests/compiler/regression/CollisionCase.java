@@ -70,7 +70,7 @@ public void test002() {
 		"foo.bar cannot be resolved to a type\n" +
 		"----------\n");
 }
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=84886
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=84886
 public void test003() {
 	this.runNegativeTest(
 		new String[] {

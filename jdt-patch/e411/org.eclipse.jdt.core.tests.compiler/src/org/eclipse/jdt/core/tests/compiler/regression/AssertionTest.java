@@ -225,7 +225,7 @@ public class AssertionTest extends AbstractRegressionTest {
 		true, // flush previous output dir content
 		new String[] {"-ea"});
 	}
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=22334
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=22334
 	public void test010() {
 		this.runConformTest(new String[] {
 			"X.java",
@@ -254,7 +254,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=28750
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=28750
 	 */
 	public void test011() {
 		this.runConformTest(
@@ -276,7 +276,7 @@ public class AssertionTest extends AbstractRegressionTest {
 			"SUCCESS"); // expected output
 	}
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=57743
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=57743
 	 */
 	public void test012() {
 		this.runConformTest(
@@ -298,7 +298,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=157389
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=157389
 	 */
 	public void test013() {
 		this.runConformTest(
@@ -323,7 +323,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=163600
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=163600
 	 */
 	public void test014() {
 		this.runConformTest(
@@ -359,7 +359,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=163600
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=163600
 	 */
 	public void test015() {
 		this.runConformTest(
@@ -403,7 +403,7 @@ public class AssertionTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://dev.eclipse.org/bugs/show_bug.cgi?id=163600
+	 * https://dev.eclipse.org/bugs/show_bug.cgi?id=163600
 	 */
 	public void test016() {
 		this.runConformTest(

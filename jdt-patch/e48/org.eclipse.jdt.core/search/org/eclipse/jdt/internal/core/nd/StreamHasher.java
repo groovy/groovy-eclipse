@@ -3,12 +3,12 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  * 	   Sergey Prigogin (Google) - initial API and implementation
  *
- * Based on lookup3.c, by Bob Jenkins {@link "http://burtleburtle.net/bob/c/lookup3.c"}
+ * Based on lookup3.c, by Bob Jenkins {@link "https://burtleburtle.net/bob/c/lookup3.c"}
  *
  * Here is the original comment by Bob Jenkins:
  * -------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ package org.eclipse.jdt.internal.core.nd;
  *   int64 hashValue = hasher.computeHash();
  * </pre>
  *
- * Based on lookup3.c by Bob Jenkins from {@link "http://burtleburtle.net/bob/c/lookup3.c"}
+ * Based on lookup3.c by Bob Jenkins from {@link "https://burtleburtle.net/bob/c/lookup3.c"}
  */
 public final class StreamHasher {
 	private static final long SEED = 3141592653589793238L;  // PI
@@ -176,7 +176,7 @@ public final class StreamHasher {
 	 *    14  9  3  7 17  3
 	 * Well, "9 15 3 18 27 15" didn't quite get 32 bits diffing
 	 * for "differ" defined as + with a one-bit base and a two-bit delta.
-	 * I used http://burtleburtle.net/bob/hash/avalanche.html to choose
+	 * I used https://burtleburtle.net/bob/hash/avalanche.html to choose
 	 * the operations, constants, and arrangements of the variables.
      *
 	 * This does not achieve avalanche.  There are input bits of a, b, c

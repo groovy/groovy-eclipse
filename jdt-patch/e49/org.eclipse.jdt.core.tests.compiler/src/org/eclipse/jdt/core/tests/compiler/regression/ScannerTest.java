@@ -48,7 +48,7 @@ public class ScannerTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test001() {
 		String sourceA001 = "\\u003b";
@@ -63,7 +63,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		assertEquals("Wrong token type", ITerminalSymbols.TokenNameSEMICOLON, token);
 	}
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test002() {
 		String sourceA002 = "// tests\n  ";
@@ -81,7 +81,7 @@ public class ScannerTest extends AbstractRegressionTest {
 		}
 	}
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23181
 	 */
 	public void test003() {
 		String sourceA003 = "// tests\n  ";
@@ -103,7 +103,7 @@ public class ScannerTest extends AbstractRegressionTest {
 
 	/**
 	 * float constant can have exponent part without dot: 01e0f
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
 	 */
 	public void test004() {
 		String source = "01e0f";

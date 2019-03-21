@@ -4,11 +4,11 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Tom Tromey - patch for readTable(String) as described in http://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
+ *     Tom Tromey - patch for readTable(String) as described in https://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
  *     Stephan Herrmann - Contributions for 
  *								bug 366003 - CCE in ASTNode.resolveAnnotations(ASTNode.java:639)
  *								bug 374605 - Unreasonable warning for enum-based switch statements

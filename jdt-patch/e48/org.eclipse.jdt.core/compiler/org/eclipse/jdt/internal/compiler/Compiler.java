@@ -4,7 +4,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1060,7 +1060,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				// fault in fields & methods
 				unit.scope.faultInTypes();
 				if (unit.scope != null && verifyMethods) {
-					// http://dev.eclipse.org/bugs/show_bug.cgi?id=23117
+					// https://dev.eclipse.org/bugs/show_bug.cgi?id=23117
  					// verify inherited methods
 					unit.scope.verifyMethods(this.lookupEnvironment.methodVerifier());
 				}

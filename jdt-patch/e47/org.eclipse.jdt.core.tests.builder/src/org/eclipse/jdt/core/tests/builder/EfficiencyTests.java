@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -368,7 +368,7 @@ public class EfficiencyTests extends BuilderTests {
 		expectingCompiledClasses(new String[]{"p1.X", "p1.X$1"}); //$NON-NLS-1$ //$NON-NLS-2$
 		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java" });
 	}
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType001() throws JavaModelException {
 
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

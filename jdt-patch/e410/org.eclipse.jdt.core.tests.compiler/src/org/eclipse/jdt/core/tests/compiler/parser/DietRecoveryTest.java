@@ -5849,7 +5849,7 @@ public void test97() {
 		expectedCompletionDietUnitToString, testName);
 }
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=9084
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=9084
  */
 
 public void test98() {

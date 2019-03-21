@@ -1399,7 +1399,7 @@ public void test005() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=26129
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=26129
  */
 public void test006() {
 	this.runConformTest(
@@ -1777,7 +1777,7 @@ public void test006() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=31811
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=31811
  */
 public void test007() {
 	this.runConformTest(

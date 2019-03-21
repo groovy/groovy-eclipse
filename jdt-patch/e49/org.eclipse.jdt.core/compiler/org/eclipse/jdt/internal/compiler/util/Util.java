@@ -844,7 +844,7 @@ public class Util implements SuffixConstants {
 				char[] folderPattern = pattern;
 				if (isFolderPath) {
 					int lastSlash = CharOperation.lastIndexOf('/', pattern);
-					if (lastSlash != -1 && lastSlash != pattern.length-1){ // trailing slash -> adds '**' for free (see http://ant.apache.org/manual/dirtasks.html)
+					if (lastSlash != -1 && lastSlash != pattern.length-1){ // trailing slash -> adds '**' for free (see https://ant.apache.org/manual/dirtasks.html)
 						int star = CharOperation.indexOf('*', pattern, lastSlash);
 						if ((star == -1
 								|| star >= pattern.length-1

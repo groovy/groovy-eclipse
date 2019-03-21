@@ -119,7 +119,7 @@ public class InferenceContext18 {
 	
 	/**
 	 * Detail flag to control the extent of {@link #SIMULATE_BUG_JDK_8026527}.
-	 * A setting of 'false' implements the advice from http://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000447.html
+	 * A setting of 'false' implements the advice from https://mail.openjdk.java.net/pipermail/lambda-spec-experts/2013-December/000447.html
 	 * i.e., raw types are not considered as compatible in constraints/bounds derived from invocation arguments,
 	 * but only for constraints derived from type variable bounds.
 	 */

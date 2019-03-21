@@ -123,7 +123,7 @@ public class IndexAllProject extends IndexRequest {
 				IResource sourceFolder = root.findMember(entry.getPath());
 				if (sourceFolder != null) {
 
-					// collect output locations if source is project (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=32041)
+					// collect output locations if source is project (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=32041)
 					final HashSet outputs = new HashSet();
 					if (sourceFolder.getType() == IResource.PROJECT) {
 						// Do not create marker while getting output location (see bug 41859)

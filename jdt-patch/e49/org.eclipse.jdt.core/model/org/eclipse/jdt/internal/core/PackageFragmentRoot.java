@@ -540,7 +540,7 @@ public Object[] getNonJavaResources() throws JavaModelException {
  */
 @Override
 public IPackageFragment getPackageFragment(String packageName) {
-	// tolerate package names with spaces (e.g. 'x . y') (http://bugs.eclipse.org/bugs/show_bug.cgi?id=21957)
+	// tolerate package names with spaces (e.g. 'x . y') (https://bugs.eclipse.org/bugs/show_bug.cgi?id=21957)
 	String[] pkgName = Util.getTrimmedSimpleNames(packageName);
 	return getPackageFragment(pkgName);
 }

@@ -2632,7 +2632,7 @@ public void test0061() {
 			"import java.util.Collections;\n" +
 			"public class X {\n" +
 			"	 public static void foo() {\n" +
-			"    	URI uri = URI.create(\"http://www.eclipse.org\");\n" +
+			"    	URI uri = URI.create(\"https://www.eclipse.org\");\n" +
 			"		FileSystems.<String, Object>newFileSystem(uri, Collections.emptyMap());\n" +
 			"	 }\n" +
 			"}\n"

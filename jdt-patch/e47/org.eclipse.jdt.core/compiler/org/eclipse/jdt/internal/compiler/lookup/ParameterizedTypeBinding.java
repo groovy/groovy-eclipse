@@ -4,7 +4,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -40,7 +40,7 @@
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 456508 - Unexpected RHS PolyTypeBinding for: <code-snippet>
  *								Bug 390064 - [compiler][resource] Resource leak warning missing when extending parameterized class
- *     Jesper S Møller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *     Jesper S Mï¿½ller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
  *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;

@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *		Stephan Herrmann - Initial API and implementation
@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 /**
  * Sorting utilities.
- * Originally developed for the <a href="http://www.eclipse.org/objectteams">Object Teams project</a>.
+ * Originally developed for the <a href="https://www.eclipse.org/objectteams">Object Teams project</a>.
  */
 public class Sorting {
 

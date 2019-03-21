@@ -347,7 +347,7 @@ public class JavadocTestForField extends JavadocTest {
 					+ "	/**\n"
 					+ "	 * Valid URL link references \n"
 					+ "	 *\n"
-					+ "	 * @see <A HREF = \"http://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</A>\n"
+					+ "	 * @see <A HREF = \"https://download.oracle.com/javase/6/docs/technotes/tools/windows/javadoc.html\">Valid URL link reference</A>\n"
 					+ "	 */\n"
 					+ "	public int x;\n"
 					+ "}\n" });

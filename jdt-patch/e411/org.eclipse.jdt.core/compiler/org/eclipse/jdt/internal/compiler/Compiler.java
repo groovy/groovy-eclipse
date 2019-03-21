@@ -1063,7 +1063,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				// fault in fields & methods
 				unit.scope.faultInTypes();
 				if (unit.scope != null && verifyMethods) {
-					// http://dev.eclipse.org/bugs/show_bug.cgi?id=23117
+					// https://dev.eclipse.org/bugs/show_bug.cgi?id=23117
  					// verify inherited methods
 					unit.scope.verifyMethods(this.lookupEnvironment.methodVerifier());
 				}

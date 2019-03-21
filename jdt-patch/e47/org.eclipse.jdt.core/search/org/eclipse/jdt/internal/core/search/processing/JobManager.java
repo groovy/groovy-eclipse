@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -446,7 +446,7 @@ public abstract class JobManager implements Runnable {
 		discardJobs(null); // will wait until current executing job has completed
 		Thread thread = this.processingThread;
 		try {
-			if (thread != null) { // see http://bugs.eclipse.org/bugs/show_bug.cgi?id=31858
+			if (thread != null) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=31858
 				synchronized (this) {
 					this.processingThread = null; // mark the job manager as shutting down so that the thread will stop by itself
 					notifyAll(); // ensure its awake so it can be shutdown

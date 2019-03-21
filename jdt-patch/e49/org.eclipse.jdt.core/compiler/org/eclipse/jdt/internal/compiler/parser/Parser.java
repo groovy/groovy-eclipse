@@ -11,7 +11,7 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Tom Tromey - patch for readTable(String) as described in http://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
+ *     Tom Tromey - patch for readTable(String) as described in https://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
  *     Stephan Herrmann - Contributions for 
  *								bug 366003 - CCE in ASTNode.resolveAnnotations(ASTNode.java:639)
  *								bug 374605 - Unreasonable warning for enum-based switch statements

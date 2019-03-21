@@ -43,7 +43,7 @@ public class SuperTypeTest extends AbstractRegressionTest {
 	}
 
 	/**
-	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=136106
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=136106
 	 */
 	public void test001() {
 		this.runConformTest(

@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -19,24 +19,24 @@
   	<td class="title3">
 	  <font size="-1">
 	  Here are the build notes for the Eclipse JDT/Core plug-in project
-	  <a href="http://www.eclipse.org/jdt/core/index.php"><b>org.eclipse.jdt.core</b></a>,
-	  describing <a href="https://bugs.eclipse.org/bugs" target=new>bug</a> resolution and substantial changes in the <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core"><b>HEAD</b></a> branch.
-	  For more information on 3.7 planning, please refer to <a href="http://www.eclipse.org/jdt/core/r3.7/plan.php">JDT/Core release plan</a>,
-	  the next <a href="http://www.eclipse.org/jdt/core/r3.7/plan.php#current-milestone">milestone plan</a>,
-	  the overall <a href="http://www.eclipse.org/projects/project-plan.php?planurl=http://www.eclipse.org/eclipse/development/plans/eclipse_project_plan_3_7.xml">official plan</a>,
-	  or the <a href="http://www.eclipse.org/eclipse/platform-releng/buildSchedule.html">build schedule</a>.
-	  This present document covers all changes since Release 3.6 (also see a summary of <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/API_changes.html">API changes</a>).
+	  <a href="https://www.eclipse.org/jdt/core/index.php"><b>org.eclipse.jdt.core</b></a>,
+	  describing <a href="https://bugs.eclipse.org/bugs" target=new>bug</a> resolution and substantial changes in the <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core"><b>HEAD</b></a> branch.
+	  For more information on 3.7 planning, please refer to <a href="https://www.eclipse.org/jdt/core/r3.7/plan.php">JDT/Core release plan</a>,
+	  the next <a href="https://www.eclipse.org/jdt/core/r3.7/plan.php#current-milestone">milestone plan</a>,
+	  the overall <a href="https://www.eclipse.org/projects/project-plan.php?planurl=https://www.eclipse.org/eclipse/development/plans/eclipse_project_plan_3_7.xml">official plan</a>,
+	  or the <a href="https://www.eclipse.org/eclipse/platform-releng/buildSchedule.html">build schedule</a>.
+	  This present document covers all changes since Release 3.6 (also see a summary of <a href="https://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/API_changes.html">API changes</a>).
 	  <br>Maintenance of previous releases of JDT/Core is performed in parallel branches:
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_6_maintenance">R3.6.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_5_maintenance">R3.5.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_4_maintenance">R3.4.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_3_maintenance">R3.3.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_2_maintenance">R3.2.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_1_maintenance">R3.1.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_0_maintenance">R3.0.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_1_maintenance">R2.1.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_0_1">R2.0.x</a>,
-		  <a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=ECLIPSE_1_0">R1.0.x</a>.
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_6_maintenance">R3.6.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_5_maintenance">R3.5.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_4_maintenance">R3.4.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_3_maintenance">R3.3.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_2_maintenance">R3.2.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_1_maintenance">R3.1.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R3_0_maintenance">R3.0.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_1_maintenance">R2.1.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=R2_0_1">R2.0.x</a>,
+		  <a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=ECLIPSE_1_0">R1.0.x</a>.
 	  </font>
 	</td>
   </tr>
@@ -48,7 +48,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7 - June 7, 2011
 <br>Project org.eclipse.jdt.core v_B61
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B61">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B61">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Update batch compiler version to refer to 3.7.0 and not 3.7.0 RC2</li>
@@ -61,7 +61,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC2 - May 19, 2011
 <br>Project org.eclipse.jdt.core v_B60
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B60">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B60">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -88,7 +88,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 12, 2011 - 3.7.0 RC1
 <br>Project org.eclipse.jdt.core v_B59
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B59">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B59">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -103,7 +103,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 11, 2011
 <br>Project org.eclipse.jdt.core v_B58
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B58">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B58">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -124,7 +124,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 10, 2011
 <br>Project org.eclipse.jdt.core v_B57
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B57">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B57">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -141,7 +141,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 6, 2011
 <br>Project org.eclipse.jdt.core v_B56
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B56">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B56">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Reverting fix for bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336648">336648</a></li>
@@ -157,7 +157,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 5, 2011
 <br>Project org.eclipse.jdt.core v_B55
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B55">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B55">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -172,7 +172,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7RC1 - May 4, 2011
 <br>Project org.eclipse.jdt.core v_B54
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B54">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B54">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -185,7 +185,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 27, 2011 - 3.7.0 M7
 <br>Project org.eclipse.jdt.core v_B53
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B53">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B53">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Reverting fix for bug 292087: anonymous class in array member initializer confuses content assist</li>
@@ -199,7 +199,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 27, 2011
 <br>Project org.eclipse.jdt.core v_B52
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B52">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B52">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Update copyrights</li>
@@ -214,7 +214,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 25, 2011
 <br>Project org.eclipse.jdt.core v_B51
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B51">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B51">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -233,7 +233,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 21, 2011
 <br>Project org.eclipse.jdt.core v_B50
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B50">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B50">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -254,7 +254,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 21, 2011
 <br>Project org.eclipse.jdt.core v_B49
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B49">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B49">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -271,7 +271,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 19, 2011
 <br>Project org.eclipse.jdt.core v_B48
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B48">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B48">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -292,7 +292,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 13, 2011
 <br>Project org.eclipse.jdt.core v_B47
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B47">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B47">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -315,7 +315,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 6, 2011
 <br>Project org.eclipse.jdt.core v_B46
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B46">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B46">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -330,7 +330,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - April 6, 2011
 <br>Project org.eclipse.jdt.core v_B45
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B45">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B45">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -355,7 +355,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - March 22, 2011
 <br>Project org.eclipse.jdt.core v_B44
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B44">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B44">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -380,7 +380,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M7 - March 15, 2011
 <br>Project org.eclipse.jdt.core v_B43
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B43">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B43">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -409,7 +409,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - March 9, 2011 - 3.7.0 M6
 <br>Project org.eclipse.jdt.core v_B42
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B42">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B42">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -422,7 +422,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - March 8, 2011
 <br>Project org.eclipse.jdt.core v_B41
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B41">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B41">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -439,7 +439,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - March 6, 2011
 <br>Project org.eclipse.jdt.core v_B40
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B40">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B40">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -460,7 +460,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - March 1, 2011
 <br>Project org.eclipse.jdt.core v_B39
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B39">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B39">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Added new constant on org.eclipse.jdt.core.IJavaProject to provide the value of the classpath file path. See details in bug
@@ -494,7 +494,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - February 22, 2011
 <br>Project org.eclipse.jdt.core v_B38
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B38">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B38">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Added a new API to ease the retrieval of method parameter's annotations (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334783">334783</a> for details):
@@ -542,7 +542,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - February 15, 2011
 <br>Project org.eclipse.jdt.core v_B37
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B37">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B37">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Adding a new token "javadoc" for @suppressWarnings to remove all warnings related to javadoc.</li>
@@ -570,7 +570,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M6 - February 11, 2011
 <br>Project org.eclipse.jdt.core v_B36
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B36">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B36">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>All JDT/Core projects (tests included) have been set to force strict compatibility between the JRE used for the project
@@ -603,7 +603,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - January 25, 2011 - 3.7.0 M5
 <br>Project org.eclipse.jdt.core v_B35
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B35">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B35">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -618,7 +618,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - January 24, 2011
 <br>Project org.eclipse.jdt.core v_B34
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B34">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B34">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>New code formatter option to preserve existing white space between code and line comments.
@@ -658,7 +658,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - January 18, 2011
 <br>Project org.eclipse.jdt.core v_B33
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B33">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B33">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -677,7 +677,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - January 11, 2011
 <br>Project org.eclipse.jdt.core v_B32
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B32">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B32">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -706,7 +706,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - January 4, 2011
 <br>Project org.eclipse.jdt.core v_B31
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B31">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B31">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -729,7 +729,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - December 21, 2010
 <br>Project org.eclipse.jdt.core v_B30
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B30">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B30">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_MISSING_STATIC_ON_METHOD added to raise warning or error for a method
@@ -811,7 +811,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M5 - December 14, 2010
 <br>Project org.eclipse.jdt.core v_B29
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B29">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B29">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -824,7 +824,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - December 6, 2010 - 3.7.0 M4
 <br>Project org.eclipse.jdt.core v_B28
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B28">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B28">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -841,7 +841,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - December 4, 2010 - 3.7.0 M4
 <br>Project org.eclipse.jdt.core v_B27
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B27">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B27">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -864,7 +864,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - November 30, 2010
 <br>Project org.eclipse.jdt.core v_B26
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B26">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B26">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -891,7 +891,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - November 23, 2010
 <br>Project org.eclipse.jdt.core v_B25
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B25">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B25">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li> Added a new API in org.eclipse.jdt.core.compiler.CharOperation to find if a given character array starts with a given prefix, at the given index. (see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=329288">329288</a>):
@@ -952,7 +952,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - November 16, 2010
 <br>Project org.eclipse.jdt.core v_B24
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B24">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B24">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -971,7 +971,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M4 - November 9, 2010
 <br>Project org.eclipse.jdt.core v_B23
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B23">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B23">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1004,7 +1004,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 28, 2010 - 3.7.0 M3
 <br>Project org.eclipse.jdt.core v_B22
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B22">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B22">cvs</a>).
 <h2>What's new in this drop</h2>
 This build input simply reverts the change made for bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850">324850</a>.
 
@@ -1016,7 +1016,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 27, 2010
 <br>Project org.eclipse.jdt.core v_B21
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B21">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B21">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1033,7 +1033,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 25, 2010
 <br>Project org.eclipse.jdt.core v_B20
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B20">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B20">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1048,7 +1048,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 24, 2010
 <br>Project org.eclipse.jdt.core v_B19
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B19">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B19">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1073,7 +1073,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 19, 2010
 <br>Project org.eclipse.jdt.core v_B18
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B18">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B18">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1088,7 +1088,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 12, 2010
 <br>Project org.eclipse.jdt.core v_B17
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B17">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B17">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_MISSING_JAVADOC_TAGS_METHOD_TYPE_PARAMETERS added to enable or disable the missing Javadoc tag warning or error for a method
@@ -1170,7 +1170,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - October 5, 2010 - 3.7.0 M3
 <br>Project org.eclipse.jdt.core v_B16
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B16">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B16">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_INCLUDE_ASSERTS_IN_NULL_ANALYSIS added to give the user flexibility to see null related warning arising because of assert statements (see details in <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=325342">bug 325342</a>):
@@ -1206,7 +1206,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - September 28, 2010
 <br>Project org.eclipse.jdt.core v_B15
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B15">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B15">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1225,7 +1225,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M3 - September 21, 2010
 <br>Project org.eclipse.jdt.core v_B14a
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B14a">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B14a">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1238,7 +1238,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - September 21, 2010 - 3.7.0 M2
 <br>Project org.eclipse.jdt.core v_B13a
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B13a">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B13a">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1251,7 +1251,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - September 15, 2010
 <br>Project org.eclipse.jdt.core v_B13
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B13">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B13">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1268,7 +1268,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - September 13, 2010
 <br>Project org.eclipse.jdt.core v_B12a
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B12a">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B12a">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1283,10 +1283,10 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - September 9, 2010 - 3.7.0 M2
 <br>Project org.eclipse.jdt.core v_B11
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B11">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B11">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
-<li>Adding missing API methods on org.eclipse.jdt.core.ILocalVariable (see details in <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48420">bug 48420</a>):
+<li>Adding missing API methods on org.eclipse.jdt.core.ILocalVariable (see details in <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48420">bug 48420</a>):
 <pre>
     /**
      * Returns true if this local variable is a method parameter, false otherwise.
@@ -1328,7 +1328,7 @@ Eclipse SDK 3.7M2 - September 9, 2010 - 3.7.0 M2
     ITypeRoot getTypeRoot();
 </pre>
 </li>
-<li>Adding missing API method on org.eclipse.jdt.core.ITypeParameter (see details in <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48420">bug 48420</a>):
+<li>Adding missing API method on org.eclipse.jdt.core.ITypeParameter (see details in <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48420">bug 48420</a>):
 <pre>
     /**
      * Returns the Java type root in which this type parameter is declared.
@@ -1365,7 +1365,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - September 7, 2010
 <br>Project org.eclipse.jdt.core v_B10
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B10">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B10">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>Code formatter: 4 new options were added to better handle the addition of
@@ -1395,7 +1395,7 @@ new lines after annotations.
  *     - possible values:   { INSERT, DO_NOT_INSERT }
  *     - default:           INSERT
 </pre>
-The addition of new lines after annotations has been discussed in <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=308000">bug 308000</a><br>
+The addition of new lines after annotations has been discussed in <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=308000">bug 308000</a><br>
 Also note that previously available code formatter constant FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER has been deprecated.<br>
 All new options must be enabled to activate old strategy.
 </li>
@@ -1485,7 +1485,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M2 - August 31, 2010 - 3.7.0 M2
 <br>Project org.eclipse.jdt.core v_B09
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B09">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B09">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1508,7 +1508,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - August 24, 2010
 <br>Project org.eclipse.jdt.core v_B08
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B08">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B08">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1531,7 +1531,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - August 17, 2010
 <br>Project org.eclipse.jdt.core v_B07
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B07">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B07">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1550,7 +1550,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - August 10, 2010
 <br>Project org.eclipse.jdt.core v_B06
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B06">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B06">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1569,7 +1569,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - July 30, 2010 - 3.7.0 M1
 <br>Project org.eclipse.jdt.core v_B05
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B05">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B05">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
 <li>
@@ -1630,7 +1630,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - July 27, 2010
 <br>Project org.eclipse.jdt.core v_B04
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B04">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B04">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1655,7 +1655,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - July 20, 2010
 <br>Project org.eclipse.jdt.core v_B03
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B03">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B03">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1674,7 +1674,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - July 13, 2010
 <br>Project org.eclipse.jdt.core v_B02
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B02">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B02">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1697,7 +1697,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - July 6, 2010 - 3.7M1
 <br>Project org.eclipse.jdt.core v_B01
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B01">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B01">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1716,7 +1716,7 @@ Eclipse Platform Build Notes<br>
 Java development tools core</h1>
 Eclipse SDK 3.7M1 - June 29, 2010
 <br>Project org.eclipse.jdt.core v_B00
-(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B00">cvs</a>).
+(<a href="https://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B00">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
@@ -1759,11 +1759,11 @@ Typo in org.eclipse.jdt.core.dom.NameEnviromentWithProgress
 
 
 <hr>
-<p>For earlier build notes, also see <a href="http://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/R36_buildnotes_jdt-core.html">build notes up to Release 3.6</a>.</p>
+<p>For earlier build notes, also see <a href="https://dev.eclipse.org/viewcvs/index.cgi/%7Echeckout%7E/org.eclipse.jdt.core/notes/R36_buildnotes_jdt-core.html">build notes up to Release 3.6</a>.</p>
 <br>
   <p>
-    <a href="http://validator.w3.org/check?uri=referer"><img
-        src="http://www.w3.org/Icons/valid-html401"
+    <a href="https://validator.w3.org/check?uri=referer"><img
+        src="https://www.w3.org/Icons/valid-html401"
         alt="Valid HTML 4.01 Transitional" height="31" width="88"></a>
   </p>
 </body>

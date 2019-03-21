@@ -36,7 +36,7 @@ public class DebugAttributeTest extends AbstractRegressionTest {
 	}
 
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=124212
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=124212
  */
 public void test001() throws Exception {
 	this.runConformTest(

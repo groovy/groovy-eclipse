@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -660,7 +660,7 @@ protected static class JavacTestOptions {
 				} : null,
 			EclipseBug112433 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
 				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null,
-			EclipseBug126712 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126712 & http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342411
+			EclipseBug126712 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=126712 & https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6342411
 				new EclipseJustification(MismatchType.StandardOutputMismatch) {
 					Excuse excuseFor(JavacCompiler compiler) {
 						return compiler.compliance > ClassFileConstants.JDK1_5 ? this : null;
@@ -780,38 +780,38 @@ protected static class JavacTestOptions {
 		}
 		// bugs that we know precisely of
 		public static JavacHasABug
-			JavacBug4094180 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4094180
+			JavacBug4094180 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4094180
 				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug4660984 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4660984 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=235555
+			JavacBug4660984 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4660984 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=235555
 				new JavacHasABug(MismatchType.JavacErrorsEclipseNone) : null,
-			JavacBug5042462 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5042462 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=208873
+			JavacBug5042462 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5042462 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=208873
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
 					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b17 */) : null,
-			JavacBug5061359 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5061359
+			JavacBug5061359 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5061359
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone,
 					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */) : null,
-			JavacBug6302954 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6302954 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=98379
+			JavacBug6302954 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6302954 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=98379
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
 					ClassFileConstants.JDK1_7, 0 /* 1.7.0 b03 */) : null,
-			JavacBug6400189 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6400189 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=106744 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=167952
+			JavacBug6400189 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6400189 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=106744 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=167952
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone) {
 						Excuse excuseFor(JavacCompiler compiler) {
 							return compiler.compliance == ClassFileConstants.JDK1_6 ? this : null;
 						}
 					} : null,
-			JavacBug6500701 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6500701 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=209779
+			JavacBug6500701 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6500701 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=209779
 				new JavacHasABug(
 					MismatchType.StandardOutputMismatch,
 					ClassFileConstants.JDK1_7, 0) : null,
-			JavacBug6531075 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6531075
+			JavacBug6531075 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6531075
 				new JavacHasABug(
 					MismatchType.StandardOutputMismatch,
 					ClassFileConstants.JDK1_7, 0) : null, // fixed in jdk7 b27; unfortunately, we do not have a distinct minor for this, hence former jdk7s will report an unused excuse
-			JavacBug6569404 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6569404
+			JavacBug6569404 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6569404
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone) {
 						Excuse excuseFor(JavacCompiler compiler) {
@@ -819,13 +819,13 @@ protected static class JavacTestOptions {
 							return (compiler.compliance == ClassFileConstants.JDK1_6 && compiler.minor >= 10) ? this : null;
 						}
 					} : null,
-			JavacBug6557661 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6557661 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=129261
+			JavacBug6557661 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6557661 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=129261
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug6573446 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6573446 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=190945
+			JavacBug6573446 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6573446 & https://bugs.eclipse.org/bugs/show_bug.cgi?id=190945
 				new JavacHasABug(
 					MismatchType.EclipseErrorsJavacNone) : null,
-			JavacBug6575821 = RUN_JAVAC ? // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6575821
+			JavacBug6575821 = RUN_JAVAC ? // https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6575821
 				new JavacHasABug(
 					MismatchType.JavacErrorsEclipseNone,
 					ClassFileConstants.JDK1_6, 10 /* 1.6.0_10_b08 or better - maybe before */) : null,

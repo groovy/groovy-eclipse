@@ -723,7 +723,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
     	}
 		/* May still need an extra substitution at the end (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=121369)
 		   to properly substitute a remaining unresolved variable which also appear in a formal bound. See also
-		   http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5021635. It is questionable though whether this extra
+		   https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5021635. It is questionable though whether this extra
 		   substitution should take place when the invocation site offers no guidance whatsoever and the type variables
 		   are inferred to be the glb of the published bounds - as there can recursion in the formal bounds, the
 		   inferred bounds would no longer be glb.
@@ -770,7 +770,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=347600 && https://bugs.eclipse.org/bugs/show_bug.cgi?id=242159
 	   Sometimes due to recursion/circularity in formal bounds, even *published bounds* fail bound check. We need to
 	   break the circularity/self reference in order not to be overly strict during type equivalence checks.  
-	   See also http://bugs.sun.com/view_bug.do?bug_id=6932571
+	   See also https://bugs.java.com/view_bug.do?bug_id=6932571
 	 */
 	private static class LingeringTypeVariableEliminator implements Substitution {
 

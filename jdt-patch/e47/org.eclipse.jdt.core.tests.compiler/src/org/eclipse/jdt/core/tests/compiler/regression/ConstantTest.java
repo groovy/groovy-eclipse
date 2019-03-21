@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -286,7 +286,7 @@ public void test006() {
 
 /*
  * null is not a constant
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26585
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26585
  */
 public void test007() {
 	this.runConformTest(
@@ -308,7 +308,7 @@ public void test007() {
 
 /*
  * null is not a constant
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
  */
 public void test008() {
 	this.runConformTest(
@@ -329,11 +329,11 @@ public void test008() {
 
 /*
  * null is not a constant
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
  */
 /*
  * null is not a constant
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
  */
 public void test009() throws Exception {
 	this.runConformTest(
@@ -514,7 +514,7 @@ public void test009() throws Exception {
 
 /*
  * null is not a constant
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=26138
  */
 public void test010() throws Exception {
 	this.runConformTest(
@@ -568,7 +568,7 @@ public void test010() throws Exception {
 	}
 }
 
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=30704
 public void test011() {
 	this.runConformTest(
 		new String[] {
@@ -582,7 +582,7 @@ public void test011() {
 		"true");
 }
 
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=79545
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=79545
 public void test012() {
 	this.runConformTest(
 		new String[] {
@@ -599,7 +599,7 @@ public void test012() {
 		},
 		"3232");
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=97190
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=97190
 public void test013() {
 	this.runNegativeTest(
 		new String[] {
@@ -1056,7 +1056,7 @@ public void test016() throws Exception {
 		assertEquals("Wrong contents", expectedOutput, result);
 	}
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=117495
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=117495
 public void test017() {
 	this.runConformTest(
 		new String[] {
@@ -1070,7 +1070,7 @@ public void test017() {
 		},
 		"n: 2.0");
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=117495
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=117495
 public void test018() {
 	this.runConformTest(
 		new String[] {
@@ -1084,7 +1084,7 @@ public void test018() {
 		"n: 2.0");
 }
 
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=154822
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=154822
 // null is not a constant - again
 public void test019() {
 	this.runConformTest(
@@ -1103,7 +1103,7 @@ public void test019() {
 		"");
 }
 
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=154822
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=154822
 // null is not a constant - again
 public void test020() {
 	this.runNegativeTest(

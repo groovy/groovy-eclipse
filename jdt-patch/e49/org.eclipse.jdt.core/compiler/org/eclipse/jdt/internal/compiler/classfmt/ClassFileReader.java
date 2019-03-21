@@ -724,7 +724,7 @@ public IBinaryNestedType[] getMemberTypes() {
 			/*
 			 * Checking that outerClassNameIDx is different from 0 should be enough to determine if an inner class
 			 * attribute entry is a member class, but due to the bug:
-			 * http://dev.eclipse.org/bugs/show_bug.cgi?id=14592
+			 * https://dev.eclipse.org/bugs/show_bug.cgi?id=14592
 			 * we needed to add an extra check. So we check that innerNameIndex is different from 0 as well.
 			 *
 			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=49879

@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -88,7 +88,7 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 /**
  * Special case for message send in javadoc comment. They can be in fact bound to a constructor.
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
  */
 @Override
 public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {

@@ -990,7 +990,7 @@ public void test028() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=10634
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=10634
  */
 public void test029() {
 	this.runNegativeTest(
@@ -1017,7 +1017,7 @@ public void test029() {
 		"----------\n");
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11435
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11435
  * 1.3 compiler must accept classfiles without abstract method (target >=1.2)
  */
 public void test030() {
@@ -1067,7 +1067,7 @@ public void test030() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - must filter abstract methods when searching concrete methods
  */
 public void test031() {
@@ -1102,8 +1102,8 @@ public void test031() {
 }
 
 /**
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=29211
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=29213
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=29211
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=29213
  */
 public void test032() {
 	this.runNegativeTest(

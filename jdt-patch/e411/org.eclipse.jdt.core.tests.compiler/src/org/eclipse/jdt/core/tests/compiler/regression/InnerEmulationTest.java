@@ -2720,7 +2720,7 @@ public void test068(){
 		"X.baz()-X1.baz1()-X2.baz2()");
 }
 
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=26122
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=26122
 // synthetic outer local variables must be appended after user arguments
 public void test069() {
 	this.runConformTest(
@@ -3634,7 +3634,7 @@ public void test094() {
 		"Cannot use an expression of the type int as a valid enclosing instance\n" +
 		"----------\n");
 }
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=30280
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=30280
 public void test095() {
 	this.runNegativeTest(
 		new String[] {
@@ -3673,7 +3673,7 @@ public void test096() {
 		"----------\n");
 }
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=35456
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=35456
  */
 public void test097() {
 	this.runConformTest(
@@ -3707,7 +3707,7 @@ public void test097() {
 }
 
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=33751
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=33751
  */
 public void test098() {
 	this.runConformTest(
@@ -3742,7 +3742,7 @@ public void test098() {
 }
 
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=40240
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=40240
  */
 public void test099() {
 	this.runConformTest(

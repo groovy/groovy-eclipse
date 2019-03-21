@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1396,7 +1396,7 @@ public void test005() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=26129
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=26129
  */
 public void test006() {
 	this.runConformTest(
@@ -1774,7 +1774,7 @@ public void test006() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=31811
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=31811
  */
 public void test007() {
 	this.runConformTest(

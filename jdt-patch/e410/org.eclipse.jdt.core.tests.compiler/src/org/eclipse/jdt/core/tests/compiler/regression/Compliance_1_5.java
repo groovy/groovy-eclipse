@@ -577,7 +577,7 @@ public void test021() {
 		assertTrue("did not bind 'new Z().init()' to Z.init()'", check);
 }
  /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - applicable error diagnosis
  */
 public void test022() {
@@ -619,7 +619,7 @@ public void test022() {
 }
 
  /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - applicable error diagnosis
  */
 public void test023() {
@@ -660,7 +660,7 @@ public void test023() {
 		"----------\n");
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - applicable error diagnosis
  */
 public void test024() {
@@ -716,7 +716,7 @@ public void test024() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - applicable error diagnosis (no matter if super is abstract or not)
  */
 public void test025() {
@@ -750,7 +750,7 @@ public void test025() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11511
  * variant - applicable error diagnosis (no matter if super is abstract or not)
  */
 public void test026() {
@@ -783,7 +783,7 @@ public void test026() {
 		"----------\n");
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11922
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11922
  * should report unreachable empty statement
  */
 public void test027() {
@@ -816,7 +816,7 @@ public void test027() {
 );
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=12445
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=12445
  * should report unreachable empty statement
  */
 public void test028() {
@@ -853,7 +853,7 @@ public void test028() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
  * verify error on qualified name ref in 1.4
  */
 public void test029() {
@@ -890,7 +890,7 @@ public void test029() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
  * 1.4 signals invocations of non-visible abstract protected method implementations.
  */
 public void test030() {
@@ -951,7 +951,7 @@ public void test030() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
  * 1.4 signals invocations of non-visible abstract protected method implementations.
  */
 public void test031() {
@@ -1011,7 +1011,7 @@ public void test031() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21580
  * 1.4 signals invocations of non-visible abstract protected field implementations.
  */
 public void test032() {
@@ -1062,7 +1062,7 @@ public void test032() {
 
 /*
  * Initialization of synthetic fields prior to super constructor call
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=23075
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=23075
  */
 public void test033() {
 
@@ -1111,7 +1111,7 @@ public void test033() {
 }
 /*
  * Initialization of synthetic fields prior to super constructor call - NPE check
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=25174
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=25174
  */
 public void test034() {
 
@@ -1197,8 +1197,8 @@ public void test036() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=24744
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=23096
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=24744
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=23096
  *
  * NOTE: since JLS got revised to allow unterminated line comments (32476)
  */
@@ -1233,8 +1233,8 @@ public void test037() {
 }
 
 /*
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=24833
- * http://dev.eclipse.org/bugs/show_bug.cgi?id=23096
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=24833
+ * https://dev.eclipse.org/bugs/show_bug.cgi?id=23096
  *
  * NOTE: since JLS got revised to allow unterminated line comments (32476)
  */
@@ -1319,7 +1319,7 @@ public void test039() {
 		"----------\n");
 }
 // jls6.5.5.1 - simple type names favor member type over toplevel one.
-//http://bugs.eclipse.org/bugs/show_bug.cgi?id=30705
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=30705
 public void test040() {
 	this.runNegativeTest(
 		new String[] {
@@ -1473,7 +1473,7 @@ public void _test043() {
 }
 /*
  * array.clone() should use array type in methodRef
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=36307
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=36307
  */
 public void test044() throws Exception {
 	this.runConformTest(
@@ -1530,7 +1530,7 @@ public void test045() {
 	);
 }
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=39467
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=39467
  * should diagnose missing abstract method implementation
  */
 public void test046() {
@@ -1565,7 +1565,7 @@ public void test046() {
 	);
 }
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=40442
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=40442
  * Abstract class fails to invoke interface-defined method in 1.4 compliance mode.
  */
 public void test047() {
@@ -1599,7 +1599,7 @@ public void test047() {
 	);
 }
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=40442
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=40442
  * Abstract class fails to invoke interface-defined method in 1.4 compliance mode.
  * variation with 2 found methods
  */
@@ -1635,7 +1635,7 @@ public void test048() {
 	);
 }
 /**
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=41278
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=41278
  */
 public void test049() {
 	this.runNegativeTest(
@@ -2032,7 +2032,7 @@ public void test060() {
 }
 
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=32342
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=32342
  */
 public void test061() {
 	runConformTest(
@@ -2063,7 +2063,7 @@ public void test061() {
 		JavacTestOptions.DEFAULT /* javac test options */);
 }
 /*
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=11435
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=11435
  * variant - must still complain when targeting super abstract method
  */
 public void test062() {
@@ -2541,7 +2541,7 @@ public void test073() {
 
 // checking for captured outer local initialization status
 // NOTE: only complain against non-inlinable outer locals
-// http://bugs.eclipse.org/bugs/show_bug.cgi?id=26134
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=26134
 public void test074() {
 	this.runNegativeTest(
 		new String[] {
@@ -2610,7 +2610,7 @@ public void test075() {
 
 /**
  * Test fix for bug 58069.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=58069">58069</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=58069">58069</a>
  */
 public void test076() {
 	this.docSupport = true;
@@ -2856,7 +2856,7 @@ public void test082() {
 
 /**
  * Test fix for bug 71079: [1.5] ClassCastException resolving Javadoc
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=71079">71079</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=71079">71079</a>
  */
 public void test083() {
 	this.docSupport = true;
@@ -3222,7 +3222,7 @@ public void test093() {
 }
 /*
  * Test unused import warning in presence of syntax errors
- * http://bugs.eclipse.org/bugs/show_bug.cgi?id=21022
+ * https://bugs.eclipse.org/bugs/show_bug.cgi?id=21022
  */
 public void test094(){
 

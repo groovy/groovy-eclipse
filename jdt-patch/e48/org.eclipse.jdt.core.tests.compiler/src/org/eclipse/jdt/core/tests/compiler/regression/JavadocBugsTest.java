@@ -3,7 +3,7 @@
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -111,7 +111,7 @@ protected void setUp() throws Exception {
  * Bug 45596.
  * When this bug happened, compiler wrongly complained on missing parameter javadoc
  * entries for method declaration in anonymous class.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45596">45596</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45596">45596</a>
  */
 public void testBug45596() {
 	runConformTest(
@@ -240,7 +240,7 @@ public void testBug45596b() {
 /**
  * Bug 45592.
  * When this bug happened, a NullPointerException occured during the compilation.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45592">45592</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45592">45592</a>
  */
 public void testBug45592() {
 	runConformTest(
@@ -289,7 +289,7 @@ public void testBug45592() {
 /**
  * Bug 45737.
  * When this bug happened, compiler complains on return type and argument of method bar.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45737">45737</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45737">45737</a>
  */
 public void testBug45737() {
 	runConformTest(
@@ -320,7 +320,7 @@ public void testBug45737() {
 
 /**
  * Bug 45669.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45669">45669</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45669">45669</a>
  */
 public void testBug45669() {
 	runConformTest(
@@ -390,7 +390,7 @@ public void testBug45669a() {
 
 /**
  * Bug 45958.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45958">45958</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45958">45958</a>
  */
 public void testBug45958() {
 	runConformTest(
@@ -493,7 +493,7 @@ public void testBug45958c() {
 
 /**
  * Bug 46901.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=46901">46901</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=46901">46901</a>
  */
 public void testBug46901() {
 	runConformTest(
@@ -515,7 +515,7 @@ public void testBug46901() {
 
 /**
  * Bug 47215.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=47215">47215</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=47215">47215</a>
  */
 public void testBug47215() {
 	runNegativeTest(
@@ -568,7 +568,7 @@ public void testBug47215() {
 
 /**
  * Bug 47341.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=47341">47341</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=47341">47341</a>
  */
 public void testBug47341() {
 	runConformTest(
@@ -607,7 +607,7 @@ public void testBug47341() {
 
 /**
  * Bug 47132.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=47132">47132</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=47132">47132</a>
  */
 public void testBug47132() {
 	this.reportMissingJavadocComments = CompilerOptions.ERROR;
@@ -630,7 +630,7 @@ public void testBug47132() {
 
 /**
  * Bug 47339.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=47339">47339</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=47339">47339</a>
  */
 public void testBug47339() {
 	runConformTest(
@@ -731,7 +731,7 @@ public void testBug47339c() {
 
 /**
  * Bug 48064.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48064">48064</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48064">48064</a>
  */
 public void testBug48064() {
 	this.reportMissingJavadocTags = CompilerOptions.ERROR;
@@ -796,7 +796,7 @@ public void testBug48064a() {
 
 /**
  * Bug 48523.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48523">48523</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48523">48523</a>
  */
 public void testBug48523() {
 	runConformTest(
@@ -821,7 +821,7 @@ public void testBug48523() {
 
 /**
  * Bug 48711.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48711">48711</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48711">48711</a>
  */
 public void testBug48711() {
 	runConformTest(
@@ -844,7 +844,7 @@ public void testBug48711() {
 /**
  * Bug 45782.
  * When this bug happened, compiler wrongly complained on missing parameters declaration
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=45782">45782</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=45782">45782</a>
  */
 public void testBug45782() {
 	runConformTest(
@@ -917,7 +917,7 @@ public void testBug45782a() {
 /**
  * Bug 49260.
  * When this bug happened, compiler wrongly complained on Invalid parameters declaration
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=49260">49260</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=49260">49260</a>
  */
 public void testBug49260() {
 	runConformTest(
@@ -940,7 +940,7 @@ public void testBug49260() {
 /**
  * Bug 48385.
  * When this bug happened, compiler does not complain on CharOperation references in @link tags
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48385">48385</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48385">48385</a>
  */
 public void testBug48385() {
 	runNegativeTest(
@@ -1103,7 +1103,7 @@ public void testBug48385a() {
 /**
  * Bug 49491.
  * When this bug happened, compiler complained on duplicated throws tag
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=49491">49491</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=49491">49491</a>
  */
 public void testBug49491() {
 	runConformTest(
@@ -1151,7 +1151,7 @@ public void testBug49491a() {
 /**
  * Bug 48376.
  * When this bug happened, compiler complained on duplicated throws tag
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=48376">48376</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=48376">48376</a>
  */
 public void testBug48376() {
 	runConformTest(
@@ -1240,7 +1240,7 @@ public void testBug48376a() {
 /**
  * Bug 50644.
  * When this bug happened, compiler complained on duplicated throws tag
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=50644">50644</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=50644">50644</a>
  */
 public void testBug50644() {
 	this.reportInvalidJavadoc = CompilerOptions.IGNORE;
@@ -1268,7 +1268,7 @@ public void testBug50644() {
 
 /**
  * Bug 50695.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=50695">50695</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=50695">50695</a>
  */
 public void testBug50695() {
 	runConformTest(
@@ -1306,7 +1306,7 @@ public void testBug50695b() {
 
 /**
  * Bug 51626.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=51626">51626</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=51626">51626</a>
  */
 public void testBug51626() {
 	runConformTest(
@@ -1334,7 +1334,7 @@ public void testBug51626() {
 
 /**
  * Bug 52216.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=52216">52216</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=52216">52216</a>
  */
 public void testBug52216() {
 	runConformTest(
@@ -1342,7 +1342,7 @@ public void testBug52216() {
 			"X.java",
 			"/**\n" +
 				" * Valid ref with white spaces at the end\n" +
-				"* @see <a href=\"http://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>		   \n" +
+				"* @see <a href=\"https://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>		   \n" +
 				"*/\n" +
 				"public class X {\n" +
 				"}\n"
@@ -1364,9 +1364,9 @@ public void testBug52216b() {
 		new String[] {
 			"X.java",
 			"/**\n" +
-				"* @see <a href=\"http://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>		   \n" +
-				"* @see <a href=\"http://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>\n" +
-				"* @see <a href=\"http://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>			,\n" +
+				"* @see <a href=\"https://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>		   \n" +
+				"* @see <a href=\"https://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>\n" +
+				"* @see <a href=\"https://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>			,\n" +
 				"* @see \"Valid ref with white spaces at the end\"\n" +
 				"* @see \"Valid ref with white spaces at the end\"	   \n" +
 				"* @see \"Invalid ref\"	   .\n" +
@@ -1376,7 +1376,7 @@ public void testBug52216b() {
 		 },
 		"----------\n" +
 			"1. ERROR in X.java (at line 4)\n" +
-			"	* @see <a href=\"http://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>			,\n" +
+			"	* @see <a href=\"https://www.ietf.org/rfc/rfc2045.txt\">RFC 2045 - Section 6.8</a>			,\n" +
 			"	                                                                            ^^^^^^^\n" +
 			"Javadoc: Unexpected text\n" +
 			"----------\n" +
@@ -1391,7 +1391,7 @@ public void testBug52216b() {
 
 /**
  * Bug 51529.
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=51529">51529</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=51529">51529</a>
  */
 public void testBug51529() {
 	runConformTest(
@@ -1447,7 +1447,7 @@ public void testBug51529b() {
 
 /**
  * @bug 51911: [Javadoc] @see method w/out ()
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=51911"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=51911"
  */
 // Conform since bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=191322 has been fixed
 public void testBug51911() {
@@ -1513,7 +1513,7 @@ public void testBug51911c() {
 
 /**
  * Bug 53279: [Javadoc] Compiler should complain when inline tag is not terminated
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=53279">53279</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=53279">53279</a>
  */
 public void testBug53279() {
 	runNegativeTest(
@@ -1614,7 +1614,7 @@ public void testBug53279c() {
 
 /**
  * Bug 53290: [Javadoc] Compiler should complain when tag name is not correct
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=53290">53290</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=53290">53290</a>
  */
 public void testBug53290() {
 	runNegativeTest(
@@ -1648,7 +1648,7 @@ public void testBug53290() {
 
 /**
  * Bug 62812: Some malformed javadoc tags are not reported as malformed
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=62812">62812</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=62812">62812</a>
  */
 public void testBug62812() {
 	runNegativeTest(
@@ -1722,7 +1722,7 @@ public void testBug62812a() {
 
 /**
  * Bug 51606: [Javadoc] Compiler should complain when tag name is not correct
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=51606">51606</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=51606">51606</a>
  */
 // Cleaned up this test as part of fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=247037
 // We should not complain about the missing @param tag for Y.foo at all, since the comments are
@@ -1829,7 +1829,7 @@ public void testBug51606c() {
 
 /**
  * Bug 65174: Spurious "Javadoc: Missing reference" error
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=65174">65174</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=65174">65174</a>
  */
 public void testBug65174() {
 	runConformTest(
@@ -1929,9 +1929,9 @@ public void testBug65174d() {
 
 /**
  * @bug 65180: Spurious "Javadoc: xxx cannot be resolved or is not a field" error with inner classes
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=65180"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=65180"
  */
- // Conform since bug "http://bugs.eclipse.org/bugs/show_bug.cgi?id=191322" has been fixed
+ // Conform since bug "https://bugs.eclipse.org/bugs/show_bug.cgi?id=191322" has been fixed
 public void testBug65180() {
 	runConformTest(
 		new String[] {
@@ -1997,7 +1997,7 @@ public void testBug65180b() {
 		}
 	);
 }
- // Conform since bug "http://bugs.eclipse.org/bugs/show_bug.cgi?id=191322" has been fixed
+ // Conform since bug "https://bugs.eclipse.org/bugs/show_bug.cgi?id=191322" has been fixed
 public void testBug65180c() {
 	runConformTest(
 		new String[] {
@@ -2094,7 +2094,7 @@ public void testBug65180f() {
  * @test Verify that @@return is not interpreted as a return tag<br>
  * 	Note that since fix for bug 237742, the '@' in a tag name does no longer
  * 	flag it as invalid...
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=65253"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=65253"
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=237742"
  */
 public void testBug65253() {
@@ -2129,7 +2129,7 @@ public void testBug65253() {
 
 /**
  * Bug 66551: Error in org.eclipse.swt project on class PrinterData
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=66551">66551</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=66551">66551</a>
  */
 public void testBug66551() {
 	runConformTest(
@@ -2198,7 +2198,7 @@ public void testBug66551c() {
 
 /**
  * Bug 66573: Shouldn't bind to local constructs
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=66573">66573</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=66573">66573</a>
  */
 public void testBug66573() {
 	runNegativeTest(
@@ -2227,7 +2227,7 @@ public void testBug66573() {
 
 /**
  * Bug 68017: Javadoc processing does not detect missing argument to @return
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=68017">68017</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=68017">68017</a>
  */
 public void testBug68017conform() {
 	runConformTest(
@@ -2358,7 +2358,7 @@ public void testBug68017javadocWarning3() {
 
 /**
  * Bug 68025: Javadoc processing does not detect some wrong links
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=68025">68025</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=68025">68025</a>
  */
 public void testBug68025conform() {
 	runConformTest(
@@ -2439,7 +2439,7 @@ public void testBug68025negative() {
 
 /**
  * Bug 68726: [Javadoc] Target attribute in @see link triggers warning
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=68726">68726</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=68726">68726</a>
  */
 public void testBug68726conform1() {
 	runConformTest(
@@ -2447,10 +2447,10 @@ public void testBug68726conform1() {
 			"X.java",
 			"public class X {\n" +
 				"	/**\n" +
-				"	 *	@see Object <a href=\"http://www.eclipse.org\" target=\"_top\">Eclipse</a>\n" +
+				"	 *	@see Object <a href=\"https://www.eclipse.org/\" target=\"_top\">Eclipse</a>\n" +
 				"	 */\n" +
 				"	void foo1() {}\n" +
-				"	/**@see Object <a href=\"http://www.eclipse.org\" target=\"_top\" target1=\"_top1\" target2=\"_top2\">Eclipse</a>*/\n" +
+				"	/**@see Object <a href=\"https://www.eclipse.org/\" target=\"_top\" target1=\"_top1\" target2=\"_top2\">Eclipse</a>*/\n" +
 				"	void foo2() {}\n" +
 				"}\n"
 		}
@@ -2631,7 +2631,7 @@ public void testBug68726negative2() {
 
 /**
  * Bug 69272: [Javadoc] Invalid malformed reference (missing separator)
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=69272">69272</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=69272">69272</a>
  */
 public void testBug69272classValid() {
 	runConformTest(
@@ -2797,23 +2797,23 @@ public void testBug69272methodInvalid() {
 
 /**
  * Bug 69275: [Javadoc] Invalid warning on @see link
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=69275">69275</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=69275">69275</a>
  */
 public void testBug69275conform() {
 	runConformTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>*/\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>*/\n" +
 				"	void foo1() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>\n" +
 				"	*/\n" +
 				"	void foo2() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>		*/\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>		*/\n" +
 				"	void foo3() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>**/\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>**/\n" +
 				"	void foo4() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>     *****/\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>     *****/\n" +
 				"	void foo5() {}\n" +
 				"}\n"
 		}
@@ -2824,23 +2824,23 @@ public void testBug69275negative() {
 		new String[] {
 			"X.java",
 			"public class X {\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>* */\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>* */\n" +
 				"	void foo1() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>	** **/\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>	** **/\n" +
 				"	void foo2() {}\n" +
-				"	/**@see <a href=\"http://www.eclipse.org\">text</a>**\n" +
+				"	/**@see <a href=\"https://www.eclipse.org/\">text</a>**\n" +
 				"	*/\n" +
 				"	void foo3() {}\n" +
 				"}\n"
 		},
 		"----------\n" +
 			"1. ERROR in X.java (at line 2)\n" +
-			"	/**@see <a href=\"http://www.eclipse.org\">text</a>* */\n" +
+			"	/**@see <a href=\"https://www.eclipse.org/\">text</a>* */\n" +
 			"	                                              ^^^^^^^\n" +
 			"Javadoc: Unexpected text\n" +
 			"----------\n" +
 			"2. ERROR in X.java (at line 4)\n" +
-			"	/**@see <a href=\"http://www.eclipse.org\">text</a>	** **/\n" +
+			"	/**@see <a href=\"https://www.eclipse.org/\">text</a>	** **/\n" +
 			"	                                              ^^^^^^^^^^\n" +
 			"Javadoc: Unexpected text\n" +
 			"----------\n",
@@ -2850,7 +2850,7 @@ public void testBug69275negative() {
 
 /**
  * Bug 69302: [Javadoc] Invalid reference warning inconsistent with javadoc tool
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=69302"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=69302"
  */
 public void testBug69302conform1() {
 	runConformTest(
@@ -2858,7 +2858,7 @@ public void testBug69302conform1() {
 			"X.java",
 			"public class X {\n" +
 				"	/**\n" +
-				"	 *	@see Object <a href=\"http://www.eclipse.org\">Eclipse</a>\n" +
+				"	 *	@see Object <a href=\"https://www.eclipse.org/\">Eclipse</a>\n" +
 				"	 */\n" +
 				"	void foo1() {}\n" +
 				"	/**\n" +
@@ -2875,7 +2875,7 @@ public void testBug69302negative1() {
 			"X.java",
 			"public class X {\n" +
 				"	/**\n" +
-				"	 *	@see Unknown <a href=\"http://www.eclipse.org\">Eclipse</a>\n" +
+				"	 *	@see Unknown <a href=\"https://www.eclipse.org/\">Eclipse</a>\n" +
 				"	 */\n" +
 				"	void foo1() {}\n" +
 				"	/**\n" +
@@ -2886,7 +2886,7 @@ public void testBug69302negative1() {
 		},
 		"----------\n" +
 		"1. ERROR in X.java (at line 3)\n" +
-		"	*	@see Unknown <a href=\"http://www.eclipse.org\">Eclipse</a>\n" +
+		"	*	@see Unknown <a href=\"https://www.eclipse.org/\">Eclipse</a>\n" +
 		"	 	     ^^^^^^^\n" +
 		"Javadoc: Unknown cannot be resolved to a type\n" +
 		"----------\n" +
@@ -2903,7 +2903,7 @@ public void testBug69302negative2() {
 		new String[] {
 			"X.java",
 			"public class X {\n" +
-				"	/**@see Unknown blabla <a href=\"http://www.eclipse.org\">text</a>*/\n" +
+				"	/**@see Unknown blabla <a href=\"https://www.eclipse.org/\">text</a>*/\n" +
 				"	void foo1() {}\n" +
 				"	/**@see Unknown blabla \"Valid string reference\"*/\n" +
 				"	void foo2() {}\n" +
@@ -2911,7 +2911,7 @@ public void testBug69302negative2() {
 		},
 		"----------\n" +
 		"1. ERROR in X.java (at line 2)\n" +
-		"	/**@see Unknown blabla <a href=\"http://www.eclipse.org\">text</a>*/\n" +
+		"	/**@see Unknown blabla <a href=\"https://www.eclipse.org/\">text</a>*/\n" +
 		"	        ^^^^^^^\n" +
 		"Javadoc: Unknown cannot be resolved to a type\n" +
 		"----------\n" +
@@ -2927,7 +2927,7 @@ public void testBug69302negative2() {
 /**
  * @bug 70892: [1.5][Javadoc] Compiler should parse reference for inline tag @value
  * @test Ensure that reference in tag 'value' is only verified when source level >= 1.5
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=70892"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=70892"
  */
 public void testBug70892a() {
 	runConformTest(
@@ -3014,7 +3014,7 @@ public void testBug70892b() {
 
 /**
  * Bug 73348: [Javadoc] Missing description for return tag is not always warned
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=73348">73348</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=73348">73348</a>
  */
 public void testBug73348conform() {
 	runConformTest(
@@ -3285,7 +3285,7 @@ public void testBug73352d() {
 
 /**
  * Bug 73479: [Javadoc] Improve error message for invalid link in @see tags
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=73479">73479</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=73479">73479</a>
  */
 public void testBug73479() {
 	runNegativeTest(
@@ -3310,7 +3310,7 @@ public void testBug73479() {
 
 /**
  * Bug 73995: [Javadoc] Wrong warning for missing return type description for &#064;return {&#064;inheritdoc}
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=73995">73995</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=73995">73995</a>
  */
 public void testBug73995() {
 	runConformTest(
@@ -3338,7 +3338,7 @@ public void testBug73995() {
 
 /**
  * Bug 74369: [Javadoc] incorrect javadoc in local class
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=74369">74369</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=74369">74369</a>
  */
 public void testBug74369() {
 	runConformTest(
@@ -3401,7 +3401,7 @@ public void testBug74369deprecated() {
 
 /**
  * Bug 76324: [Javadoc] Wrongly reports invalid link format in @see and @link
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=76324">76324</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=76324">76324</a>
  */
 public void testBug76324() {
 	runConformTest(
@@ -3411,16 +3411,16 @@ public void testBug76324() {
 				"/**\n" +
 				" * Subclasses perform GUI-related work in a dedicated thread. For instructions\n" +
 				" * on using this class, see\n" +
-				" * {@link <a  href=\"http://download.oracle.com/javase/tutorial/uiswing/misc/index.html\"> Swing tutorial </a>}\n" +
+				" * {@link <a  href=\"https://download.oracle.com/javase/tutorial/uiswing/misc/index.html\"> Swing tutorial </a>}\n" +
 				" * \n" +
 				" * @see <a\n" +
 				" *      href=\"http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html\">\n" +
 				" *      EDU.oswego.cs.dl.util.concurrent </a>\n" +
 				" * @see <a\n" +
-				" *      href=\"http://download.oracle.com/javase/6/docs/api/java/util/concurrent/package-summary.html\">\n" +
+				" *      href=\"https://download.oracle.com/javase/6/docs/api/java/util/concurrent/package-summary.html\">\n" +
 				" *      JDK 6.0 </a>\n" +
-				" * @author {@link <a href=\"http://gee.cs.oswego.edu/dl\">Doug Lea</a>}\n" +
-				" * @author {@link <a href=\"http://home.pacbell.net/jfai\">J?rgen Failenschmid</a>}\n" +
+				" * @author {@link <a href=\"http://gee.cs.oswego.edu/dl/\">Doug Lea</a>}\n" +
+				" * @author {@link <a href=\"https://home.pacbell.net/jfai\">J?rgen Failenschmid</a>}\n" +
 				"  *\n" +
 				"  * It is assumed that you have read the introductory document\n" +
 				"  * {@link <a HREF=\"../../../../../internat/overview.htm\">\n" +
@@ -3580,7 +3580,7 @@ public void testBug76324string() {
 
 /**
  * Bug 77510: [javadoc] compiler wrongly report deprecation when option "process javadoc comments" is not set
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=77510">77510</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=77510">77510</a>
  */
 public void testBug77510enabled() {
 	runNegativeTest(
@@ -3921,7 +3921,7 @@ public void testBug77602_Public() {
 
 /**
  * Bug 78091: [1.5][javadoc] Compiler should accept new 1.5 syntax for @param
- * @see <a href="http://bugs.eclipse.org/bugs/show_bug.cgi?id=78091">78091</a>
+ * @see <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=78091">78091</a>
  */
 public void testBug78091() {
 	this.reportMissingJavadocTags = CompilerOptions.ERROR;
@@ -3964,7 +3964,7 @@ public void testBug78091() {
 
 /**
  * Bug 80910: [javadoc] Invalid missing reference warning on @see or @link tags
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=80910"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=80910"
  */
 public void testBug80910() {
 	runNegativeTest(
@@ -3993,7 +3993,7 @@ public void testBug80910() {
 
 /**
  * Bug 82088: [search][javadoc] Method parameter types references not found in @see/@link tags
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=82088"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=82088"
  */
 public void testBug82088() {
 	runNegativeTest(
@@ -4022,7 +4022,7 @@ public void testBug82088() {
 
 /**
  * Bug 83285: [javadoc] Javadoc reference to constructor of secondary type has no binding / not found by search
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
  */
 public void testBug83285a() {
 	runConformTest(
@@ -4123,7 +4123,7 @@ public void testBug83285c() {
 
 /**
  * Bug 86769: [javadoc] Warn/Error for 'Missing javadoc comments' doesn't recognize private inner classes
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=86769"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=86769"
  */
 public void testBug86769_Classes1() {
 	this.reportMissingJavadocComments = CompilerOptions.ERROR;
@@ -4588,7 +4588,7 @@ public void testBug86769_Methods2() {
 
 /**
  * Bug 87404: [javadoc] Unexpected not defined warning on constructor
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=87404"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=87404"
  */
 public void testBug87404() {
 	runConformTest(
@@ -4616,7 +4616,7 @@ public void testBug87404() {
 
 /**
  * Bug 90302: [javadoc] {&#064;inheritDoc} should be inactive for non-overridden method
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=90302"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=90302"
  */
 public void testBug90302() {
 	this.reportMissingJavadocTags = CompilerOptions.ERROR;
@@ -4724,7 +4724,7 @@ public void testBug90302b() {
 
 /**
  * Bug 103304: [Javadoc] Wrong reference proposal for inner classes.
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=103304"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=103304"
  */
 public void testBug103304a_public() {
 	String[] units = new String[] {
@@ -5149,7 +5149,7 @@ public void testBug103304f() {
 
 /**
  * Bug 116464: [javadoc] Unicode tag name are not correctly parsed
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=116464"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=116464"
  */
 public void testBug116464() {
 	this.reportMissingJavadocTags = CompilerOptions.ERROR;
@@ -5294,7 +5294,7 @@ public void testBug125518e() {
 
 /**
  * Bug 125903: [javadoc] Treat whitespace in javadoc tags as invalid tags
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=125903"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=125903"
  */
 public void testBug125903() {
 	this.reportMissingJavadocTags = CompilerOptions.ERROR;
@@ -5325,7 +5325,7 @@ public void testBug125903() {
 
 /**
  * Bug 128954: Javadoc problems with category CAT_INTERNAL
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=128954"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=128954"
  */
 public void testBug128954() {
 	this.reportInvalidJavadoc = CompilerOptions.WARNING;
@@ -5370,7 +5370,7 @@ public void testBug128954() {
 
 /**
  * Bug 128954: Javadoc problems with category CAT_INTERNAL - variation
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=128954"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=128954"
  */
 public void testBug128954a() {
 	this.reportInvalidJavadoc = CompilerOptions.WARNING;
@@ -5409,7 +5409,7 @@ public void testBug128954a() {
 
 /**
  * Bug 129241: [Javadoc] deprecation warning wrongly reported when ignoring Malformed Javadoc comments
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=129241"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=129241"
  */
 public void testBug129241a() {
 	runNegativeTest(
@@ -5507,7 +5507,7 @@ public void testBug129241d() {
 
 /**
  * Bug 132813: NPE in Javadoc.resolve(Javadoc.java:196) + log swamped
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=132813"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=132813"
  */
 public void testBug132813() {
 	runNegativeTest(
@@ -5540,7 +5540,7 @@ public void testBug132813() {
 
 /**
  * Bug 149013: [javadoc] In latest 3.3 build, there is a javadoc error in org.eclipse.core.resources
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=149013"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=149013"
  */
 public void testBug149013_Private01() {
 	this.reportMissingJavadocTags = CompilerOptions.IGNORE;
@@ -5792,7 +5792,7 @@ public void testBug149013_Public03() {
 /**
  * @bug 153399: [javadoc] JDT Core should warn if the @value tag is not used correctly
  * @test Ensure that 'value' tag is well warned when not used correctly
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=153399"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=153399"
  */
 public void testBug153399a() {
 	String[] testFiles = new String[] {
@@ -5954,7 +5954,7 @@ public void testBug153399e() {
 
 /**
  * @bug 160015: [1.5][javadoc] Missing warning on autoboxing compatible methods
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=160015"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=160015"
  */
 public void testBug160015() {
 	runNegativeTest(new String[] {
@@ -5988,7 +5988,7 @@ public void testBug160015() {
 /**
  * @bug 163659: [javadoc] Compiler should warn when method parameters are not identical
  * @test Ensure that a warning is raised when method parameter types are not identical
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=163659"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=163659"
  */
 public void testBug163659() {
 	runNegativeTest(
@@ -6018,7 +6018,7 @@ public void testBug163659() {
 /**
  * @bug 165794: [javadoc] Should not report ambiguous on method with parameterized types as parameters
  * @test Ensure that no warning are raised when ambiguous parameterized methods are present in javadoc comments
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=165794"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=165794"
  */
 public void _testBug165794() {
 	String[] testFiles = new String[] {
@@ -6058,7 +6058,7 @@ public void _testBug165794() {
 /**
  * @bug 166365: [javadoc] severity level of malformed javadoc comments did not work properly
  * @test Ensure that no warning is raised when visibility is lower than the javadoc option one
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=166365"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=166365"
  */
 public void testBug166365() {
 	String[] testFiles = new String[] {
@@ -6105,7 +6105,7 @@ public void testBug166365() {
 /**
  * @bug 166436: [javadoc] Potentially wrong javadoc warning for unexpected duplicate tag value
  * @test Ensure that no duplicate warning is raised for value tag
- * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=166436"
+ * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=166436"
  */
 public void testBug166436() {
 	String[] testFiles = new String[] {
@@ -6187,7 +6187,7 @@ public void testBug168849a() {
 		"\n" +
 		"public class X {\n" +
 		"	/**\n" +
-		"	 * @see http://www.eclipse.org/\n" +
+		"	 * @see https://www.eclipse.org/\n" +
 		"	 */\n" +
 		"	public void foo() { \n" +
 		"	 \n" +
@@ -6198,7 +6198,7 @@ public void testBug168849a() {
 	runConformTest(true, units,
 			"----------\n" +
 			"1. WARNING in pkg\\X.java (at line 5)\n" +
-			"	* @see http://www.eclipse.org/\n" +
+			"	* @see https://www.eclipse.org/\n" +
 			"	       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Javadoc: Invalid URL reference. Double quote the reference or use the href syntax\n" +
 			"----------\n",
@@ -6213,7 +6213,7 @@ public void testBug168849b() {
 		"\n" +
 		"public class X {\n" +
 		"	/**\n" +
-		"	 * @see http://ftp.eclipse.org/\n" +
+		"	 * @see https://ftp.eclipse.org/\n" +
 		"	 */\n" +
 		"	public void foo() { \n" +
 		"	 \n" +
@@ -6224,7 +6224,7 @@ public void testBug168849b() {
 	runConformTest(true, units,
 			"----------\n" +
 			"1. WARNING in pkg\\X.java (at line 5)\n" +
-			"	* @see http://ftp.eclipse.org/\n" +
+			"	* @see https://ftp.eclipse.org/\n" +
 			"	       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Javadoc: Invalid URL reference. Double quote the reference or use the href syntax\n" +
 			"----------\n",
@@ -6277,7 +6277,7 @@ public void testBug168849d() {
 	runConformTest(true, units,
 			"----------\n" +
 			"1. WARNING in pkg\\X.java (at line 5)\n" +
-			"	* @see http://www.eclipse.org\n" +
+			"	* @see https://www.eclipse.org/\n" +
 			"	       ^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Javadoc: Invalid URL reference. Double quote the reference or use the href syntax\n" +
 			"----------\n",
@@ -6310,7 +6310,7 @@ public void testBug168849f() {
 		"\n" +
 		"public class X {\n" +
 		"	/**\n" +
-		"	 * @see \"http://www.eclipse.org/\"\n" +
+		"	 * @see \"https://www.eclipse.org/\"\n" +
 		"	 */\n" +
 		"	public void foo() { \n" +
 		"	 \n" +
@@ -7552,8 +7552,8 @@ public void testBug207765() {
 			"\n" +
 			"public class X {\n" +
 			"	/**\n" + 
-			"	 * {@link \"http://www.eclipse.org/}\n" +
-			"	 * @see \"http://www.eclipse.org/\n" +
+			"	 * {@link \"https://www.eclipse.org/}\n" +
+			"	 * @see \"https://www.eclipse.org/\n" +
 			"	 */\n" +
 			"	public void foo() { \n" +
 			"	 \n" +
@@ -7562,12 +7562,12 @@ public void testBug207765() {
 		},
 		"----------\n" + 
 		"1. ERROR in pkg\\X.java (at line 5)\n" + 
-		"	* {@link \"http://www.eclipse.org/}\n" + 
+		"	* {@link \"https://www.eclipse.org/}\n" + 
 		"	         ^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Javadoc: Invalid reference\n" + 
 		"----------\n" + 
 		"2. ERROR in pkg\\X.java (at line 6)\n" + 
-		"	* @see \"http://www.eclipse.org/\n" + 
+		"	* @see \"https://www.eclipse.org/\n" + 
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Javadoc: Invalid URL reference. Double quote the reference or use the href syntax\n" + 
 		"----------\n"
@@ -7997,8 +7997,8 @@ public void testBug237937() {
 		new String[] {
 			"Link.java",
 			"/**\n" + 
-			" * @see <a href=\"http://www.eclipse.org/\">http://www.eclipse.org</a>\n" + 
-			" * @see <a href=\"http://www.eclipse.org/\">//</a>\n" + 
+			" * @see <a href=\"https://www.eclipse.org/\">https://www.eclipse.org/</a>\n" + 
+			" * @see <a href=\"https://www.eclipse.org/\">//</a>\n" + 
 			" */\n" + 
 			"public class Link {}\n"
 		}

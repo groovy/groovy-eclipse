@@ -1127,7 +1127,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			"----------\n");
 	}
 
-	//http://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
+	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
 	public void test032() {
 		this.runConformTest(
 			new String[] {
@@ -1151,7 +1151,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			"true");
 	}
 
-	//http://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
+	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
 	public void test032b() {
 		this.runNegativeTest(
 			new String[] {
@@ -1180,7 +1180,7 @@ public class StaticImportTest extends AbstractComparableTest {
 		);
 	}
 
-	//http://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
+	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
 	public void test032c() {
 		this.runConformTest(
 			new String[] {
@@ -1204,7 +1204,7 @@ public class StaticImportTest extends AbstractComparableTest {
 			"true");
 	}
 
-	//http://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
+	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=97809
 	public void test032d() {
 		this.runConformTest(
 			new String[] {

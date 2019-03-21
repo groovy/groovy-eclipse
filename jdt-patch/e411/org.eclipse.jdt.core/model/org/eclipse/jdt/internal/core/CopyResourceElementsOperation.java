@@ -394,7 +394,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			}
 			// update new resource content
 			// in case we do a saveas on the same resource we have to simply update the contents
-			// see http://dev.eclipse.org/bugs/show_bug.cgi?id=9351
+			// see https://dev.eclipse.org/bugs/show_bug.cgi?id=9351
 			if (edit != null){
 				saveContent(dest, destName, edit, sourceEncoding, destFile);
 			}
@@ -460,7 +460,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			PackageFragment newFrag = root.getPackageFragment(newFragName);
 			IResource[] resources = collectResourcesOfInterest(source);
 
-			// if isMove() can we move the folder itself ? (see http://bugs.eclipse.org/bugs/show_bug.cgi?id=22458)
+			// if isMove() can we move the folder itself ? (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=22458)
 			boolean shouldMoveFolder = isMove() && !newFrag.resource().exists(); // if new pkg fragment exists, it is an override
 			IFolder srcFolder = (IFolder)source.resource();
 			IPath destPath = newFrag.getPath();

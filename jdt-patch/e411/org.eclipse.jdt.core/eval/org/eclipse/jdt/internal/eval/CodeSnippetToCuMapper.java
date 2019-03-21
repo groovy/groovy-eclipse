@@ -155,7 +155,7 @@ private void buildCUSource(String lineSeparator) {
 	buffer.append(this.codeSnippet);
 	// a line separator is required after the code snippet source code
 	// in case the code snippet source code ends with a line comment
-	// http://dev.eclipse.org/bugs/show_bug.cgi?id=14838
+	// https://dev.eclipse.org/bugs/show_bug.cgi?id=14838
 	buffer.append(lineSeparator).append('}').append(lineSeparator);
 
 	// end of class declaration
