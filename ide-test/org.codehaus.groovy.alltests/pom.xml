@@ -19,8 +19,8 @@
         <version>${tycho-version}</version>
 
         <!-- Useful references:
-          http://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
-          http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
+          https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
+          https://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
         -->
         <configuration>
           <argLine>-Xmx1G -XX:-OmitStackTraceInFastThrow</argLine>

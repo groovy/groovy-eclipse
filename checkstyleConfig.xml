@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE module PUBLIC
-  "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
-  "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+  "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+  "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
     <property name="severity" value="info" />
@@ -25,7 +25,7 @@
         </module>
 
 
-        <!-- Annotation checks ~ http://checkstyle.sourceforge.net/config_annotation.html -->
+        <!-- Annotation checks ~ https://checkstyle.org/config_annotation.html -->
         <module name="AnnotationLocation">
             <message key="annotation.location.alone" value="Annotation ''{0}'' should be alone on a line" />
             <property name="tokens" value="INTERFACE_DEF,CLASS_DEF,ENUM_DEF,CTOR_DEF,METHOD_DEF,ANNOTATION_DEF,ANNOTATION_FIELD_DEF" />
@@ -51,7 +51,7 @@
         </module>
 
 
-        <!-- Block checks ~ http://checkstyle.sourceforge.net/config_blocks.html -->
+        <!-- Block checks ~ https://checkstyle.org/config_blocks.html -->
         <module name="AvoidNestedBlocks">
             <message key="block.nested" value="Nested blocks should not be used" />
             <property name="allowInSwitchCase" value="true" />
@@ -101,7 +101,7 @@
         </module>
 
 
-        <!-- Class checks ~ http://checkstyle.sourceforge.net/config_design.html -->
+        <!-- Class checks ~ https://checkstyle.org/config_design.html -->
         <!--module name="FinalClass">
             <message key="final.class" value="A class with only private constructors should be declared final" />
             <property name="severity" value="warning" />
@@ -129,7 +129,7 @@
         </module-->
 
 
-        <!-- Coding checks ~ http://checkstyle.sourceforge.net/config_coding.html -->
+        <!-- Coding checks ~ https://checkstyle.org/config_coding.html -->
         <module name="ArrayTrailingComma">
             <!-- NOTE: This check does not apply to annotation array initializers. -->
             <message key="array.trailing.comma" value="Multi-line array initializer list should end with a comma" />
@@ -311,7 +311,7 @@
         </module>
 
 
-        <!-- Import checks ~ http://checkstyle.sourceforge.net/config_imports.html -->
+        <!-- Import checks ~ https://checkstyle.org/config_imports.html -->
         <module name="AvoidStarImport">
             <message key="import.avoidStar" value="Wildcard import ''{0}'' should be replaced by precise import statement(s)" />
             <property name="severity" value="warning" />
@@ -335,7 +335,7 @@
         </module>
 
 
-        <!-- Miscellaneous checks ~ http://checkstyle.sourceforge.net/config_misc.html -->
+        <!-- Miscellaneous checks ~ https://checkstyle.org/config_misc.html -->
         <module name="ArrayTypeStyle">
             <message key="array.type.style" value="Array declaration should use Java style (square brackets with the type)" />
         </module>
@@ -396,7 +396,7 @@
         </module>
 
 
-        <!-- Modifier checks ~ http://checkstyle.sourceforge.net/config_modifier.html -->
+        <!-- Modifier checks ~ https://checkstyle.org/config_modifier.html -->
         <module name="ModifierOrder">
             <message key="annotation.order" value="Annotation modifier ''{0}'' should precede non-annotation modifiers" />
             <message key="mod.order" value="Modifier order should be corrected -- the preferred order is: access, abstract, static, final, transient, volatile, synchronized" />
@@ -437,7 +437,7 @@
         </module>
 
 
-        <!-- Naming checks ~ http://checkstyle.sourceforge.net/config_naming.html -->
+        <!-- Naming checks ~ https://checkstyle.org/config_naming.html -->
         <module name="PackageName">
             <message key="name.invalidPattern" value="Package ''{0}'' does not follow lowercase naming convention" />
             <property name="format" value="^org(?:\.[a-z][a-z0-9]*)+$" />
@@ -495,7 +495,7 @@
         </module>
 
 
-        <!-- Size checks ~ http://checkstyle.sourceforge.net/config_sizes.html -->
+        <!-- Size checks ~ https://checkstyle.org/config_sizes.html -->
         <module name="LineLength">
             <message key="maxLineLen" value="Line should be no longer than {0,number,integer} characters" />
             <property name="ignorePattern" value="^$" />
@@ -503,7 +503,7 @@
         </module>
 
 
-        <!-- Whitespace checks ~ http://checkstyle.sf.net/config_whitespace.html -->
+        <!-- Whitespace checks ~ https://checkstyle.org/config_whitespace.html -->
         <module name="NoLineWrap">
             <message key="no.line.wrap" value="{0} statement should be on a single line" />
             <property name="tokens" value="PACKAGE_DEF,IMPORT" />
@@ -881,7 +881,7 @@
     <module name="RegexpHeader">
         <message key="header.missing" value="File should begin with copyright statement" />
         <message key="header.mismatch" value="Line should match expected header line of &quot;{0}&quot;" />
-        <property name="header" value="^/\*$\n^ \* Copyright 2009-201\d the original author or authors.$\n^ \*$\n^ \* Licensed under the Apache License, Version 2\.0 \(the &quot;License&quot;\);$\n^ \* you may not use this file except in compliance with the License\.$\n^ \* You may obtain a copy of the License at$\n^ \*$\n^ \*     http://www\.apache\.org/licenses/LICENSE-2\.0$\n^ \*$\n^ \* Unless required by applicable law or agreed to in writing, software$\n^ \* distributed under the License is distributed on an &quot;AS IS&quot; BASIS,$\n^ \* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\.$\n^ \* See the License for the specific language governing permissions and$\n^ \* limitations under the License\.\s*$\n^ \*/\s*$" />
+        <property name="header" value="^/\*$\n^ \* Copyright 2009-201\d the original author or authors.$\n^ \*$\n^ \* Licensed under the Apache License, Version 2\.0 \(the &quot;License&quot;\);$\n^ \* you may not use this file except in compliance with the License\.$\n^ \* You may obtain a copy of the License at$\n^ \*$\n^ \*     https?://www\.apache\.org/licenses/LICENSE-2\.0$\n^ \*$\n^ \* Unless required by applicable law or agreed to in writing, software$\n^ \* distributed under the License is distributed on an &quot;AS IS&quot; BASIS,$\n^ \* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\.$\n^ \* See the License for the specific language governing permissions and$\n^ \* limitations under the License\.\s*$\n^ \*/\s*$" />
         <property name="fileExtensions" value="groovy,java,dsld" />
         <property name="severity" value="warning" />
     </module>
