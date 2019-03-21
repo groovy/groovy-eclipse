@@ -7,7 +7,7 @@
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
@@ -80,7 +80,7 @@ import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRE
  * <li>potentially a utility inner class to assist with implementing trait fields</li>
  * </ul>
  *
- * @author Cédric Champeau
+ * @author Cï¿½dric Champeau
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class TraitASTTransformation extends AbstractASTTransformation implements CompilationUnitAware {
