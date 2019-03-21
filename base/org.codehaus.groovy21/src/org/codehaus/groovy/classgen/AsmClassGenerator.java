@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -238,7 +238,7 @@ public class AsmClassGenerator extends ClassGenerator {
     private int adjustedClassModifiersForInnerClassTable(ClassNode classNode) {
         int modifiers = classNode.getModifiers();
         modifiers = modifiers & ~ACC_SUPER;
-        // (JLS ¤9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
+        // (JLS ï¿½9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
         if (classNode.isInterface()) {
             modifiers = modifiers & ~ACC_ENUM;
             modifiers = modifiers & ~ACC_FINAL;
@@ -269,7 +269,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 modifiers = (modifiers & ~Modifier.PROTECTED) | Modifier.PUBLIC;
             }
         }
-        // (JLS ¤9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
+        // (JLS ï¿½9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
         if (classNode.isInterface()) {
             modifiers = modifiers & ~ACC_ENUM;
             modifiers = modifiers & ~ACC_FINAL;
