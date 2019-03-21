@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -180,10 +181,14 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     @Override
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit icu, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
-        if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
+        if (ContentTypeUtils.isGroovyLikeFileName(icu.getFileName())) {
 
-            String unitName = String.valueOf(compilationResult.getFileName());
-            ReaderSource unitSource = new CharArrayReaderSource(icu.getContents());
+            String unitName = String.valueOf(icu.getFileName());
+            ReaderSource unitSource = new CharArrayReaderSource(icu.getContents()) {
+                @Override public URI getURI() {
+                    return URI.create("platform:/resource" + unitName);
+                }
+            };
 
             if (problemReporter.options.groovyCompilerConfigScript != null) {
                 IWorkspace workspace = ResourcesPlugin.getWorkspace();

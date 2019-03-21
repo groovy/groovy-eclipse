@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 package org.codehaus.jdt.groovy.control;
+
+import static org.eclipse.core.filesystem.URIUtil.toURI;
+
+import java.net.URI;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -32,14 +36,19 @@ public class EclipseSourceUnit extends SourceUnit {
     public EclipseSourceUnit(/*@Nullable*/ IFile file, String filePath, char[] sourceCode, boolean isReconcile,
         CompilerConfiguration compilerConfig, GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
 
-        super(filePath, new CharArrayReaderSource(sourceCode), compilerConfig, classLoader, errorCollector);
+        super(filePath, new CharArrayReaderSource(sourceCode) {
+            @Override public URI getURI() {
+                return toURI(filePath);
+            }
+        }, compilerConfig, classLoader, errorCollector);
+
         this.file = file;
         this.resolver = resolver;
         this.isReconcile = isReconcile;
     }
 
     /**
-     * Will be null if workspace is closed (ie- batch compilation mode)
+     * Will be {@code null} if workspace is closed (ie- batch compilation mode).
      */
     public IFile getEclipseFile() {
         return file;

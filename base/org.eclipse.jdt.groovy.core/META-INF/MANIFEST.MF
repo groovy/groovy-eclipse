@@ -14,6 +14,7 @@ Export-Package: org.codehaus.jdt.groovy.integration.internal;x-internal:=true,
 Import-Package: org.eclipse.jdt.launching
 Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.16,4)";visibility:=reexport,
  org.eclipse.core.expressions;visibility:=reexport,
+ org.eclipse.core.filesystem;visibility:=reexport,
  org.eclipse.core.resources;visibility:=reexport,
  org.eclipse.core.runtime;visibility:=reexport,
  org.eclipse.core.variables,
