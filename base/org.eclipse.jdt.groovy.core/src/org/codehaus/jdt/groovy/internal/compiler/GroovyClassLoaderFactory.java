@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner;
 import org.codehaus.groovy.runtime.m12n.SimpleExtensionModule;
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -153,15 +152,11 @@ public final class GroovyClassLoaderFactory {
                         "Transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
-                ClassLoader parentClassLoader = null; // no parent loader by default
-                // FIXME: This is a stopgap measure to provide basic support for Java 9+
-                if (classPaths.stream().anyMatch(path -> path.endsWith("jrt-fs.jar"))) {
-                    parentClassLoader = GroovyParser.class.getClassLoader();
-                }
+                ClassLoader parentClassLoader = ClassLoader.getSystemClassLoader();
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
                     new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, parentClassLoader), compilerConfiguration),
-                    new GroovyClassLoader(newClassLoader(xformPaths, GroovyParser.class.getClassLoader())/*, compilerConfiguration*/),
+                    new GroovyClassLoader(newClassLoader(xformPaths, getClass().getClassLoader())/*, compilerConfiguration*/),
                 });
             });
 
