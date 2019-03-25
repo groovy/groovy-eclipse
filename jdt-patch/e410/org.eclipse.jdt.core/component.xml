@@ -13,9 +13,9 @@
         IBM Corporation - initial API and implementation
  -->
 
-<component xmlns="http://eclipse.org/component"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://eclipse.org/component ../component.xsd "
+<component xmlns="https://eclipse.org/component"
+   xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="https://eclipse.org/component ../component.xsd "
    name="org.eclipse.jdt.core">
  <plugin id="org.eclipse.jdt.core" />
 

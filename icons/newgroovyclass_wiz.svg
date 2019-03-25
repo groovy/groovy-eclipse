@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" id="svg2" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" id="svg2" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="https://www.w3.org/2000/svg">
   <defs id="defs4">
     <filter id="filter8410-9-1" x="-0.23999982" width="1.4799995" y="-0.24000017" height="1.4800004" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="1.4653611" id="feGaussianBlur8412-2-6"/>
