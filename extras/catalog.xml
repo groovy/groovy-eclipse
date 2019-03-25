@@ -13,7 +13,7 @@
       <name>Groovy-Eclipse</name>
       <provider>the Codehaus</provider>
       <p2>
-        <repositoryUrl>http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e4.2</repositoryUrl>
+        <repositoryUrl>https://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e4.2</repositoryUrl>
         <iuId>org.codehaus.groovy.m2eclipse.feature.group</iuId>
         <lifecycleMappingIU>
           <iuId>org.codehaus.groovy.m2eclipse</iuId>
@@ -21,7 +21,7 @@
       </p2>
       <overview>
         <summary>Maven Integration for Grooovy-Eclipse</summary>
-        <url>http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven</url>
+        <url>https://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven</url>
       </overview>
     </catalogItem>  
   </catalogItems>

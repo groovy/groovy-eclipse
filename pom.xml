@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
@@ -123,17 +123,17 @@
 				<repository>
 					<id>photon</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/photon</url>
+					<url>https://download.eclipse.org/releases/photon</url>
 				</repository>
 				<repository>
 					<id>eclipse48</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.8</url>
 				</repository>
 				<repository>
 					<id>eclipse48-milestones</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.8milestones</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.8milestones</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -154,12 +154,12 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/oxygen/201712201001</url>
+					<url>https://download.eclipse.org/releases/oxygen/201712201001</url>
 				</repository>
 				<repository>
 					<id>eclipse47</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7/R-4.7.2-201711300510</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.7/R-4.7.2-201711300510</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -180,12 +180,12 @@
 				<repository>
 					<id>neon</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/neon</url>
+					<url>https://download.eclipse.org/releases/neon</url>
 				</repository>
 				<repository>
 					<id>eclipse46</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.6</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.6</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -206,12 +206,12 @@
 				<repository>
 					<id>mars</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/mars</url>
+					<url>https://download.eclipse.org/releases/mars</url>
 				</repository>
 				<repository>
 					<id>eclipse45</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.5</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.5</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -232,12 +232,12 @@
 				<repository>
 					<id>luna</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/luna</url>
+					<url>https://download.eclipse.org/releases/luna</url>
 				</repository>
 				<repository>
 					<id>eclipse44</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.4</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.4</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -258,17 +258,17 @@
 				<repository>
 					<id>kepler</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/kepler</url>
+					<url>https://download.eclipse.org/releases/kepler</url>
 				</repository>
 				<repository>
 					<id>eclipse43</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.3</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.3</url>
 				</repository>
 				<repository>
 					<id>eclipse43j8</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.3-P-builds/</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.3-P-builds/</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -289,12 +289,12 @@
 				<repository>
 					<id>kepler</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/kepler</url>
+					<url>https://download.eclipse.org/releases/kepler</url>
 				</repository>
 				<repository>
 					<id>eclipse43</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.3</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.3</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -315,12 +315,12 @@
 				<repository>
 					<id>juno</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/juno</url>
+					<url>https://download.eclipse.org/releases/juno</url>
 				</repository>
 				<repository>
 					<id>eclipse42</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.2</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.2</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -341,12 +341,12 @@
 				<repository>
 					<id>indigo</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/indigo</url>
+					<url>https://download.eclipse.org/releases/indigo</url>
 				</repository>
 				<repository>
 					<id>eclipse37</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/3.7</url>
+					<url>https://download.eclipse.org/eclipse/updates/3.7</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -444,7 +444,7 @@
 		<repository>
 			<id>springsource-maven-release</id>
 			<name>SpringSource Maven Release Repository</name>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
+			<url>https://repository.springsource.com/maven/bundles/release</url>
 		</repository>
 	</repositories>
 
@@ -453,7 +453,7 @@
 		<pluginRepository>
 			<id>springsource-maven-release</id>
 			<name>SpringSource Maven Release Repository</name>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
+			<url>https://repository.springsource.com/maven/bundles/release</url>
 		</pluginRepository>
 	</pluginRepositories>
 
