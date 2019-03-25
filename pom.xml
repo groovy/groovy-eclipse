@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
@@ -116,12 +116,12 @@
 				<repository>
 					<id>2018-09</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/2018-09</url>
+					<url>https://download.eclipse.org/releases/2018-09</url>
 				</repository>
 				<repository>
 					<id>eclipse49</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.9</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.9</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -142,12 +142,12 @@
 				<repository>
 					<id>photon</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/photon</url>
+					<url>https://download.eclipse.org/releases/photon</url>
 				</repository>
 				<repository>
 					<id>eclipse48</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.8</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -168,12 +168,12 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/oxygen</url>
+					<url>https://download.eclipse.org/releases/oxygen</url>
 				</repository>
 				<repository>
 					<id>eclipse47</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.7</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -264,7 +264,7 @@
 		<repository>
 			<id>springsource-maven-release</id>
 			<name>SpringSource Maven Release Repository</name>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
+			<url>https://repository.springsource.com/maven/bundles/release</url>
 		</repository>
 	</repositories>
 
@@ -278,7 +278,7 @@
 		<pluginRepository>
 			<id>springsource-maven-release</id>
 			<name>SpringSource Maven Release Repository</name>
-			<url>http://repository.springsource.com/maven/bundles/release</url>
+			<url>https://repository.springsource.com/maven/bundles/release</url>
 		</pluginRepository>
 	</pluginRepositories>
 
