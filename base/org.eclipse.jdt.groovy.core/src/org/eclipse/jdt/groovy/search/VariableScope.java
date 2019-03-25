@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -812,7 +812,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 // Iterator<E> --> Iterator<String>
                 generic.setLowerBound(null);
                 generic.setUpperBounds(null);
-                generic.setPlaceholder(false); // before setType to prevent mutation of resolved
+                generic.setPlaceHolder(false); // prevent mutation of resolved
                 generic.setWildcard(false);
                 generic.setResolved(true);
                 generic.setType(resolved);

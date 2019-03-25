@@ -204,6 +204,9 @@ public class GenericsType extends ASTNode {
     public void setUpperBounds(ClassNode[] bounds) {
         this.upperBounds = bounds;
     }
+    public void setPlaceHolder(boolean placeholder) {
+        this.placeholder = placeholder;
+    }
     // GRECLIPSE end
 
     /**
