@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="https://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
   <defs id="defs4">
     <linearGradient gradientUnits="userSpaceOnUse" y2="296.62561" x2="2.2143626" y1="293.91281" x1="2.2143626" id="linearGradient4754">
       <stop id="stop4748" offset="0" style="stop-color:#b6e05f;stop-opacity:1;"/>

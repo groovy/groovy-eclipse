@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" id="svg2" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<svg contentscripttype="text/ecmascript" zoomAndPan="magnify" contentstyletype="text/css" id="svg2" version="1.1" preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16" xmlns="https://www.w3.org/2000/svg">
   <defs id="defs4">
     <linearGradient gradientTransform="translate(-1.977903,-1.044194)" id="page-stroke" gradientUnits="userSpaceOnUse" x1="10.544736" y1="1038.5779" x2="10.544736" y2="1052.3228">
       <stop offset="0" style="stop-color:#b28a30;stop-opacity:1" id="page-stroke-stop0"/>
