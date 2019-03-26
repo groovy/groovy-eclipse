@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.codehaus.groovy</groupId>
@@ -53,7 +53,7 @@
 	<licenses>
 		<license>
 			<name>The Eclipse Public License</name>
-			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<url>https://www.eclipse.org/legal/epl-v10.html</url>
 		</license>
 	</licenses>
 
@@ -67,7 +67,7 @@
 	</issueManagement>
 
 	<scm>
-		<url>http://github.com/groovy/groovy-eclipse.git</url>
+		<url>https://github.com/groovy/groovy-eclipse.git</url>
 		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
 		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
 	</scm>

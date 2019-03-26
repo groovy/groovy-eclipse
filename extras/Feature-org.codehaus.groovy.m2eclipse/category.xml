@@ -14,7 +14,7 @@
          Optional Maven (M2Eclipse) integration for Groovy-Eclipse.  These features are targetting the
          1.0 version of M2Eclipse and will not install against earlier versions.  For that, you must use a
          different update site:
-         http://dist.codehaus.org/groovy/distributions/greclipse/groovy-m2eclipse/
+         https://dist.codehaus.org/groovy/distributions/greclipse/groovy-m2eclipse/
       </description>
    </category-def>
 </site>

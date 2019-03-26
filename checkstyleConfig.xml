@@ -2,7 +2,7 @@
 
 <!DOCTYPE module PUBLIC
   "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
-  "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
+  "https://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
     <property name="severity" value="info" />
@@ -503,7 +503,7 @@
         </module>
 
 
-        <!-- Whitespace checks ~ http://checkstyle.sf.net/config_whitespace.html -->
+        <!-- Whitespace checks ~ http://checkstyle.sourceforge.net/config_whitespace.html -->
         <module name="NoLineWrap">
             <message key="no.line.wrap" value="{0} statement should be on a single line" />
             <property name="tokens" value="PACKAGE_DEF,IMPORT" />
