@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -79,7 +80,6 @@ import org.eclipse.jdt.internal.codeassist.RelevanceConstants;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
-import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
@@ -405,8 +405,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         List<ICompletionProposal> proposals = new LinkedList<>();
         boolean qualified = (completionExpression.indexOf('.') > 0);
         try {
-            HashtableOfObject onDemandFound = new HashtableOfObject();
-
             next: for (int i = 0; i < n; i += 1) {
                 // does not check cancellation for every type to avoid performance loss
                 if ((i % CHECK_CANCEL_FREQUENCY) == 0) {
@@ -434,50 +432,44 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     initializeImportArrays(resolver.getScope());
                 }
 
-                if (imports != null && !qualified) {
-                    char[] fullName = CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.');
-                    for (char[][] importSpec : imports) {
-                        // check to see if this type name is imported explicitly
-                        if (CharOperation.equals(simpleTypeName, importSpec[0])) {
-                            int end = CharOperation.indexOf(_AS_, importSpec[1], true);
-                            // use qualified name if there is already something with the same simple name imported
-                            type.mustBeQualified = !CharOperation.equals(fullName, importSpec[1], 0, end > 0 ? end : importSpec[1].length);
-                            proposals.add(proposeType(type));
-                            continue next;
+                if (!qualified) {
+                    if (imports != null) {
+                        char[] fullName = CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.');
+                        for (char[][] importSpec : imports) {
+                            // check to see if this type name is imported explicitly
+                            if (CharOperation.equals(simpleTypeName, importSpec[0])) {
+                                int end = CharOperation.indexOf(_AS_, importSpec[1], true);
+                                // use qualified name if there is already something with the same simple name imported
+                                type.mustBeQualified = !CharOperation.equals(fullName, importSpec[1], 0, end > 0 ? end : importSpec[1].length);
+                                proposals.add(proposeType(type));
+                                continue next;
+                            }
+                        }
+                    }
+
+                    if (onDemandImports != null) {
+                        char[] qualifier = (enclosingTypeNames != null && enclosingTypeNames.length > 0
+                            ? CharOperation.concatWith(packageName, type.enclosingTypeNames, '.') : packageName);
+
+                        type.mustBeQualified = Stream.of(onDemandImports).noneMatch(importName -> CharOperation.equals(qualifier, importName));
+
+                        if (!type.mustBeQualified) {
+                            // check for conflicting on-demand import
+                            for (char[] importName : onDemandImports) {
+                                if (!CharOperation.equals(qualifier, importName)) {
+                                    char[] candidate = CharOperation.concat(importName, simpleTypeName, '.');
+                                    ClassNode result = resolver.resolve(String.valueOf(candidate));
+                                    if (!VariableScope.OBJECT_CLASS_NODE.equals(result)) {
+                                        type.mustBeQualified = true;
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
-                // check for star import if expression is not qualified and type name not seen already
-                if (!qualified && onDemandImports != null && !onDemandFound.containsKey(simpleTypeName)) {
-                    char[] qualifier = packageName;
-                    if (enclosingTypeNames != null && enclosingTypeNames.length > 0) {
-                        qualifier = CharOperation.concatWith(packageName, type.enclosingTypeNames, '.');
-                    }
-
-                    for (char[] importName : onDemandImports) {
-                        if (CharOperation.equals(qualifier, importName)) {
-                            onDemandFound.put(simpleTypeName, type);
-                            continue next;
-                        }
-                    }
-
-                    type.mustBeQualified = true;
-                }
                 proposals.add(proposeType(type));
-            }
-
-            char[][] keys = onDemandFound.keyTable;
-            Object[] vals = onDemandFound.valueTable;
-            for (int i = 0; i < keys.length; i += 1) {
-                if ((i % CHECK_CANCEL_FREQUENCY) == 0)
-                    checkCancel();
-                if (keys[i] != null) {
-                    AcceptedType value = (AcceptedType) vals[i];
-                    if (value != null) {
-                        proposals.add(proposeType(value));
-                    }
-                }
             }
         } finally {
             acceptedTypes = null;

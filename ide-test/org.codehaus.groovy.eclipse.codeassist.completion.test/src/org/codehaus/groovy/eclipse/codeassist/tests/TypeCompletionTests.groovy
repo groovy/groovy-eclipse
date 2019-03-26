@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
+
+import groovy.transform.NotYetImplemented
 
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -303,6 +305,89 @@ final class TypeCompletionTests extends CompletionTestSuite {
         String contents = 'class Foo {\n	public static final JFr\n}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
+    }
+
+    @Test
+    void testField8() {
+        String contents = '''\
+            class Foo {
+                String bar
+                Lis
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        proposalExists(proposals, 'List - java.util', 1)
+        proposalExists(proposals, 'List - java.awt', 1)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'List - java.util'), '''\
+            class Foo {
+                String bar
+                List
+            }
+            '''.stripIndent())
+    }
+
+    @Test
+    void testField9() {
+        String contents = '''\
+            class Foo {
+                String bar
+                Lis
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'List - java.awt'), '''\
+            |import java.awt.List
+            |
+            |class Foo {
+            |    String bar
+            |    List
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testField10() {
+        String contents = '''\
+            |import java.awt.*
+            |
+            |class Foo {
+            |    String bar
+            |    Lis
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'List - java.awt'), '''\
+            |import java.awt.*
+            |import java.awt.List
+            |
+            |class Foo {
+            |    String bar
+            |    List
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test @NotYetImplemented
+    void testField11() {
+        String contents = '''\
+            |import java.awt.*
+            |
+            |class Foo {
+            |    String bar
+            |    Lis
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Lis'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'List - java.util'), '''\
+            |import java.awt.*
+            |import java.util.List
+            |
+            |class Foo {
+            |    String bar
+            |    List
+            |}
+            |'''.stripMargin())
     }
 
     @Test
