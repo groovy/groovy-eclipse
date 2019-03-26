@@ -3,7 +3,7 @@
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v1.0
     which accompanies this distribution, and is available at
-    http://www.eclipse.org/legal/epl-v10.html
+    https://www.eclipse.org/legal/epl-v10.html
    
     Contributors:
          Tasktop Technologies - initial API and implementation
@@ -11,7 +11,7 @@
  -->
 <project name="Download files and provide provisioning for existing eclipse installatins">
 	
-	<property name="m2e-update-site" value="http://download.eclipse.org/releases/indigo"/>
+	<property name="m2e-update-site" value="https://download.eclipse.org/releases/indigo"/>
 
 	<macrodef name="install-feature" description="Install a feature into a given Eclipse">
 		<attribute name="eclipse.loc" />

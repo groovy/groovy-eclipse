@@ -228,7 +228,7 @@
 
 		<!-- fix feature patch version -->
 		<!-- Ensure that feature patch can be installed on multiple versions of Eclipse -->
-		<!-- See http://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
+		<!-- See https://aniefer.blogspot.com/2009/06/patching-features-part-2.html -->
 		<replace file="${updateSiteDir}/content.xml" summary="yes" token="${orig.jdt.feature.version.range}" value="${new.jdt.feature.version.range}" />
 
 		<echo message="Replace in file ${updateSiteDir}/content.xml attempted on tokens:" />

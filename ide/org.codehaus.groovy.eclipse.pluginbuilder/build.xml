@@ -149,7 +149,7 @@
 		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}" />
 		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}" />
 		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}" />
-		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="https://download.eclipse.org/technology/epp/updates/1.0" />
 		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}" />
 	</target>
 
