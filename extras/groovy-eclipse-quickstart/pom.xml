@@ -1,17 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.codehaus.groovy</groupId>
-  <artifactId>groovy-eclipse-quickstart</artifactId>
-  <version>2.5.2-SNAPSHOT</version>
-  <name>Archetype - groovy-eclipse-quickstart</name>
-  <description>Creates an archetype project that uses the groovy-eclipse-compiler to compile a few Groovy and Java classes.</description>
-	<url>http://groovy.codehaus.org/Eclipse+Plugin</url>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>groovy-eclipse-quickstart</artifactId>
+	<groupId>org.codehaus.groovy</groupId>
+	<version>2.9.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<name>Archetype - groovy-eclipse-quickstart</name>
+	<description>Creates project that uses the groovy-eclipse-compiler to compile a few Groovy and Java classes.</description>
+	<url>https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-Maven-plugin</url>
 
 	<parent>
 		<groupId>org.codehaus</groupId>
@@ -22,36 +19,40 @@
 	<licenses>
 		<license>
 			<name>The Eclipse Public License</name>
-			<url>http://www.eclipse.org/legal/epl-v10.html</url>
-			<distribution>repo</distribution>
-		</license> 
-	</licenses> 
+			<url>https://www.eclipse.org/legal/epl-v10.html</url>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>Pivotal Software, Inc.</name>
+		<url>https://pivotal.io</url>
+	</organization>
 
 	<developers>
 		<developer>
-			<id>werdna</id>
 			<name>Andrew Eisenberg</name>
 			<email>andrew@eisenberg.as</email>
 		</developer>
 		<developer>
-			<id>leo.herbie</id>
 			<name>Travis Schneeberger</name>
 			<email>leo.herbie@gmail.com</email>
 		</developer>
 	</developers>
+
 	<issueManagement>
-		<system>jira</system>
-		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
+		<url>https://github.com/groovy/groovy-eclipse/issues</url>
 	</issueManagement>
+
 	<scm>
-		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
-		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
-		<url>http://svn.codehaus.org/groovy/eclipse</url>
+		<url>https://github.com/groovy/groovy-eclipse.git</url>
+		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
+		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
 	</scm>
-	<organization>
-		<name>The Codehuas</name>
-		<url>http://codehaus.org</url>
-	</organization>
+
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
 	<build>
 		<extensions>

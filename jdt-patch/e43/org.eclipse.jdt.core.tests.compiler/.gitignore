@@ -1,2 +1,4 @@
-/jdtcoretestscompiler.jar
+/bin
+/target
 /test.dat
+/jdtcoretestscompiler.jar
