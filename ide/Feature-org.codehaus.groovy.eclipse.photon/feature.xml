@@ -2,7 +2,7 @@
 
 <feature id="org.codehaus.groovy.eclipse.photon"
       label="%featureName"
-      version="3.3.0.qualifier"
+      version="3.3.1.qualifier"
       provider-name="%providerName">
 
    <description url="%descriptionURL">
