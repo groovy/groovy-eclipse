@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy
 Automatic-Module-Name: org.codehaus.groovy
-Bundle-Name: Groovy Runtime
+Bundle-Name: Apache Groovy
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.0.0.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
