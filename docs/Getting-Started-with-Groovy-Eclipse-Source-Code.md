@@ -101,7 +101,7 @@ Various contributions to Eclipse UI components: Preference pages, launch configu
 
 Feature of Groovy source editor (.groovy files editor). Integration of code refactorings for Groovy language into Eclipse. (Right-click on a Groovy statement and select *Source -> Refactor*.)
 
-### org.codehaus.groovy.eclipse.codeassist.completion
+### org.codehaus.groovy.eclipse.codeassist
 
 Feature of Groovy source editor (.groovy files editor). Integration of code completions for Groovy code. (<Ctrl> + <Space> behavior for uncompleted Groovy statements.)
 
@@ -141,8 +141,8 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse
 * org.codehaus.groovy.eclipse.ant
 * org.codehaus.groovy.eclipse.astviews
-* org.codehaus.groovy.eclipse.codeassist.completion
-* org.codehaus.groovy.eclipse.codeassist.completion.test
+* org.codehaus.groovy.eclipse.codeassist
+* org.codehaus.groovy.eclipse.codeassist.test
 * org.codehaus.groovy.eclipse.codebrowsing
 * org.codehaus.groovy.eclipse.codebrowsing.test
 * org.codehaus.groovy.eclipse.compilerResolver

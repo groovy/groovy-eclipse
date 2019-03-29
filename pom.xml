@@ -69,7 +69,7 @@
 		<module>ide/org.codehaus.groovy.eclipse.core</module>
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>
 		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
-		<module>ide/org.codehaus.groovy.eclipse.codeassist.completion</module>
+		<module>ide/org.codehaus.groovy.eclipse.codeassist</module>
 		<module>ide/org.codehaus.groovy.eclipse.codebrowsing</module>
 		<module>ide/org.codehaus.groovy.eclipse.dsl</module>
 		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
@@ -87,7 +87,7 @@
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
 		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
 
-		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>

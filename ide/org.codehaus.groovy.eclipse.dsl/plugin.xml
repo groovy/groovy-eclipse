@@ -220,7 +220,7 @@
       </lookup>
    </extension>
 
-   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completionProposalProvider">
       <proposalProvider
             description="Provides Groovy proposals generated from .dsld files"
             name="Groovy DSL Proposal Provider"
@@ -231,7 +231,7 @@
       </proposalProvider>
    </extension>
 
-   <extension point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalFilter">
+   <extension point="org.codehaus.groovy.eclipse.codeassist.completionProposalFilter">
       <proposalFilter
             description="Resolves duplicate proposals introduced by a DLSD"
             name="Groovy DSL Proposal Filter"
