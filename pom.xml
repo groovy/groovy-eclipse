@@ -131,7 +131,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.11</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e1903${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1903${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -157,7 +157,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.10</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e1812${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1812${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -183,7 +183,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.9</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -209,7 +209,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.8</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e48${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e48${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -235,7 +235,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.7</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e47${dist.qualifier}'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e47${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
