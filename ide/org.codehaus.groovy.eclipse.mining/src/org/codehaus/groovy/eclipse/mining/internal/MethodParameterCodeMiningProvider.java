@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,9 +25,10 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCall;
-import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
+import org.codehaus.groovy.eclipse.codeassist.completions.MethodNodeWithNamedParams;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
@@ -60,8 +61,9 @@ public class MethodParameterCodeMiningProvider extends AbstractCodeMiningProvide
                             MethodCall methodCall = null;
                             if (node instanceof MethodCall) {
                                 methodCall = (MethodCall) node;
-                            } else if (result.scope.getEnclosingNode() instanceof MethodCall) {
+                            } else if (node instanceof ConstantExpression && result.scope.getEnclosingNode() instanceof MethodCall) {
                                 methodCall = (MethodCall) result.scope.getEnclosingNode();
+                                assert node.getText().equals(methodCall.getMethodAsString());
                             }
 
                             if (methodCall != null) {
@@ -94,8 +96,8 @@ public class MethodParameterCodeMiningProvider extends AbstractCodeMiningProvide
             // TODO: What about methods with named and positional arguments? "foo.bar(a, b, see: c)"
 
             int i = (isGroovyMethod ? 1 : 0); // skip "self" parameter
-            Parameter[] parameters = (methodNode instanceof NamedArgsMethodNode
-                ? ((NamedArgsMethodNode) methodNode).getRegularParams() : methodNode.getParameters());
+            Parameter[] parameters = (methodNode instanceof MethodNodeWithNamedParams
+                ? ((MethodNodeWithNamedParams) methodNode).getPositionalParams() : methodNode.getParameters());
             for (Expression argument : (ArgumentListExpression) methodCall.getArguments()) {
                 //if (argument instanceof MapExpression) continue; // try to skip named args
                 Parameter parameter = parameters[Math.min(i++, parameters.length - 1)];
