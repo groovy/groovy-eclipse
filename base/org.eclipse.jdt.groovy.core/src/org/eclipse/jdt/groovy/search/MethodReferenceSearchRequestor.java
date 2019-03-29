@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -142,9 +142,14 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                     } else {
                         int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
                         String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
-                        typeNames[i] = Signature.toQualifiedName(resolved[0]);
-                        if (typeNames[i].charAt(0) == '.') { // default pkg
-                            typeNames[i] = typeNames[i].substring(1);
+                        if (resolved != null) {
+                            typeNames[i] = Signature.toQualifiedName(resolved[0]);
+                            if (typeNames[i].charAt(0) == '.') { // default pkg
+                                typeNames[i] = typeNames[i].substring(1);
+                            }
+                        } else {
+                            // something unresolvable like a parameterized type
+                            typeNames[i] = String.valueOf(pattern.parameterSimpleNames[i]);
                         }
                         while (arrayCount-- > 0) {
                             typeNames[i] += "[]";
