@@ -1,11 +1,11 @@
+package ${package}
+
+import groovy.transform.NotYetImplemented
 import org.junit.Test
-import org.junit.Assert
 
-class GroovyTest {
-
-	@Test
+final class GroovyTest {
+	@Test @NotYetImplemented
 	void testMethod() {
-		GroovyMain.main null
-		Assert.assertTrue true
+		assert false
 	}
 }

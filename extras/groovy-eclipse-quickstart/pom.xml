@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>groovy-eclipse-quickstart</artifactId>
@@ -6,15 +6,9 @@
 	<version>3.4.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Archetype - groovy-eclipse-quickstart</name>
-	<description>Creates project that uses the groovy-eclipse-compiler to compile a few Groovy and Java classes.</description>
+	<name>Archetype: groovy-eclipse-quickstart</name>
+	<description>Creates project that uses the groovy-eclipse-compiler for joint compilation of Groovy and Java sources.</description>
 	<url>https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-Maven-plugin</url>
-
-	<parent>
-		<groupId>org.codehaus</groupId>
-		<artifactId>codehaus-parent</artifactId>
-		<version>4</version>
-	</parent>
 
 	<licenses>
 		<license>
@@ -30,12 +24,9 @@
 
 	<developers>
 		<developer>
-			<name>Andrew Eisenberg</name>
-			<email>andrew@eisenberg.as</email>
-		</developer>
-		<developer>
-			<name>Travis Schneeberger</name>
-			<email>leo.herbie@gmail.com</email>
+			<name>Eric Milles</name>
+			<organization>Thomson Reuters</organization>
+			<organizationUrl>https://thomsonreuters.com</organizationUrl>
 		</developer>
 	</developers>
 
@@ -48,22 +39,5 @@
 		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
 		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
 	</scm>
-
-
-	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
-	<build>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-webdav</artifactId>
-				<version>1.0-beta-2</version>
-			</extension>
-		</extensions>
-	</build>
 
 </project>

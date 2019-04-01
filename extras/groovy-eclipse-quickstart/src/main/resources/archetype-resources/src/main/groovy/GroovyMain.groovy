@@ -1,5 +1,7 @@
+package ${package}
+
 class GroovyMain {
-	static void main(String... args) {
+	static main(args) {
 		new GroovyHello().sayHello()
 	}
 }

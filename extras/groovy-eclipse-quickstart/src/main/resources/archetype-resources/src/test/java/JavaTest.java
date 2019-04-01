@@ -1,11 +1,12 @@
-import org.junit.Test;
+package ${package};
+
 import org.junit.Assert;
+import org.junit.Test;
 
-public class JavaTest {
-
+public final class JavaTest {
 	@Test
 	public void testMethod() {
-		JavaMain.main(new String[] {});
+		JavaMain.main(new String[0]);
 		Assert.assertTrue(true);
 	}
 }
