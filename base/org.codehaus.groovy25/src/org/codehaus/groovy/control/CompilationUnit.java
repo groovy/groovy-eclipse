@@ -76,7 +76,6 @@ import java.util.Map;
  * You can also add PhaseOperations to this compilation using the addPhaseOperation method.
  * This is commonly used when you want to wire a new AST Transformation into the compilation.
  */
-
 public class CompilationUnit extends ProcessingUnit {
 
     //---------------------------------------------------------------------------
@@ -242,8 +241,9 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CANONICALIZATION);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
+        /* GRECLIPSE edit -- skip output phase
         addPhaseOperation(output);
-
+        */
         addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
             public void call(SourceUnit source, GeneratorContext context,
