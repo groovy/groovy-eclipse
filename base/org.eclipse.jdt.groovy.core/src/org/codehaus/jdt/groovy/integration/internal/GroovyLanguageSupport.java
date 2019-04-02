@@ -241,6 +241,14 @@ public class GroovyLanguageSupport implements LanguageSupport {
             config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(target));
         }
 
+        if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
+            config.setSourceEncoding(compilerOptions.defaultEncoding);
+        }
+
+        if (compilerOptions.produceMethodParameters) {
+            config.setParameters(true);
+        }
+
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
             binding.setVariable("configuration", config);

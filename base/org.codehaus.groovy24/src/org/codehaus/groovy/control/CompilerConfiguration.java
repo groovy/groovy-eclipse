@@ -840,4 +840,9 @@ public class CompilerConfiguration {
     public void setBytecodePostprocessor(final BytecodeProcessor bytecodePostprocessor) {
         this.bytecodePostprocessor = bytecodePostprocessor;
     }
+
+    // GRECLIPSE add
+    public void setParameters(boolean parameters) {
+    }
+    // GRECLIPSE end
 }
