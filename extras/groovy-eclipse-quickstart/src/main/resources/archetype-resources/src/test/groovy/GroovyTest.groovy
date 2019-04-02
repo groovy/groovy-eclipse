@@ -1,7 +1,8 @@
 package ${package}
 
-import groovy.transform.NotYetImplemented
 import org.junit.Test
+
+import groovy.transform.NotYetImplemented
 
 final class GroovyTest {
 	@Test @NotYetImplemented

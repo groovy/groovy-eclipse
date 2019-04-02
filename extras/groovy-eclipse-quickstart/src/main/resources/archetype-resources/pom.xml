@@ -24,6 +24,19 @@
       <classifier>indy</classifier>
     </dependency>
     <dependency>
+      <groupId>org.codehaus.groovy</groupId>
+      <artifactId>groovy-test</artifactId>
+      <version>2.5.6</version>
+      <classifier>indy</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
@@ -40,7 +53,7 @@
         <configuration>
           <compilerId>groovy-eclipse-compiler</compilerId>
           <compilerArguments>
-            <indy/>
+            <configScript>config.groovy</configScript>
           </compilerArguments>
         </configuration>
         <dependencies>

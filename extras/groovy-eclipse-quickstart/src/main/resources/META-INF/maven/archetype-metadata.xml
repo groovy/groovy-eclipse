@@ -14,5 +14,11 @@
     <fileSet encoding="UTF-8" filtered="true" packaged="true">
       <directory>src/test/java</directory>
     </fileSet>
+    <fileSet encoding="UTF-8">
+      <directory></directory>
+      <includes>
+        <include>config.groovy</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </archetype-descriptor>
