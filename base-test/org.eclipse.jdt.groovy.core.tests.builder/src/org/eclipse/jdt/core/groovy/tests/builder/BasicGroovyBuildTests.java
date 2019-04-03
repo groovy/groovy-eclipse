@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Arrays;
@@ -607,6 +608,35 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // incrementalBuild(projectPath);
         // expectingNoProblems();
         // expectingCompiledClasses("Client");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/863
+    public void testCompileStatic_9058() throws Exception {
+        assumeTrue(isAtLeastGroovy(25));
+
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addClass(paths[1], "p", "Foo",
+            "package p;\n" +
+            "public class Foo {\n" +
+            "  @SuppressWarnings(\"rawtypes\")\n" +
+            "  public java.util.List bar() { return null; }\n" +
+            "}\n");
+
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void meth() {\n" +
+            "    List<Object[]> rows = new Foo().bar()\n" +
+            "    rows.each { row ->\n" + // should be Object[]
+            "      def col = row[0]\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n");
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
     }
 
     @Test

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,9 +30,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     @Test
     public void testCompileDynamic() {
         String[] sources = {
-            "Foo.groovy",
+            "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class Foo {\n" +
+            "class Main {\n" +
             "  int prop\n" +
             "  int computeStatic(int input) {\n" +
             "    prop + input\n" +
@@ -50,22 +50,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     @Test
     public void testCompileStatic1() {
         String[] sources = {
-            "Foo.groovy",
-            "import groovy.transform.CompileStatic\n" +
-            "@CompileStatic\n" +
-            "void method(String message) {\n" +
-            "   List<Integer> ls = new ArrayList<Integer>();\n" +
-            "   ls.add(123);\n" +
-            "   ls.add('abc');\n" +
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  List<Integer> ls = new ArrayList<Integer>()\n" +
+            "  ls.add(123)\n" +
+            "  ls.add('abc')\n" +
             "}\n",
         };
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 6)\n" +
-            "\tls.add(\'abc\');\n" +
+            "1. ERROR in Main.groovy (at line 5)\n" +
+            "\tls.add('abc')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
+            (!isAtLeastGroovy(25)
+                ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n"
+                : "Groovy:[Static type checking] - Cannot find matching method java.util.List#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
+            ) +
             "----------\n");
     }
 
@@ -77,31 +79,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     @Test
     public void testCompileStatic2() {
         String[] sources = {
-            "One.groovy",
-            "import groovy.transform.CompileStatic;\n" +
-            "\n" +
-            "import java.util.Properties;\n" +
-            "\n" +
-            "class One { \n" +
-            "   @CompileStatic\n" +
-            "   private String getPropertyValue(String propertyName, Properties props, String defaultValue) {\n" +
-            "       // First check whether we have a system property with the given name.\n" +
-            "       def value = getValueFromSystemOrBuild(propertyName, props)\n" +
-            "\n" +
-            "       // Return the BuildSettings value if there is one, otherwise\n" +
-            "       // use the default.\n" +
-            "       return value != null ? value : defaultValue \n" +
-            "   }\n" +
-            "\n" +
-            "   @CompileStatic\n" +
-            "   private getValueFromSystemOrBuild(String propertyName, Properties props) {\n" +
-            "       def value = System.getProperty(propertyName)\n" +
-            "       if (value != null) return value\n" +
-            "\n" +
-            "       // Now try the BuildSettings config.\n" +
-            "       value = props[propertyName]\n" +
-            "       return value\n" +
-            "   }\n" +
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main { \n" +
+            "  String getPropertyValue(String propertyName, Properties props, String defaultValue) {\n" +
+            "    // First check whether we have a system property with the given name.\n" +
+            "    def value = getValueFromSystemOrBuild(propertyName, props)\n" +
+            "    \n" +
+            "    // Return the BuildSettings value if there is one, otherwise use the default.\n" +
+            "    return value != null ? value : defaultValue \n" +
+            "  }\n" +
+            "  \n" +
+            "  def getValueFromSystemOrBuild(String propertyName, Properties props) {\n" +
+            "    def value = System.getProperty(propertyName)\n" +
+            "    if (value != null) return value\n" +
+            "    \n" +
+            "    // Now try the BuildSettings config.\n" +
+            "    value = props[propertyName]\n" +
+            "    return value\n" +
+            "  }\n" +
             "}\n",
         };
 
@@ -111,12 +107,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     @Test
     public void testCompileStatic3() {
         String[] sources = {
-            "Foo.groovy",
-            "import groovy.transform.CompileStatic;\n" +
-            "\n" +
-            "@CompileStatic void test() {\n" +
-            "   int littleInt = 3\n" +
-            "   Integer objectInt = littleInt\n" +
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(int primitive) {\n" +
+            "  Integer wrapper = primitive\n" +
             "}\n",
         };
 
@@ -125,6 +119,97 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic4() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  Integer i = n\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\tInteger i = n\n" +
+            "\t            ^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.Number to variable of type java.lang.Integer\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic4a() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  Object o\n" +
+            "  Integer i = (o = n)\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tInteger i = (o = n)\n" +
+            "\t            ^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.Number to variable of type java.lang.Integer\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic5() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  Object o = n\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic6() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  String s = n\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic7() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  boolean b = n\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic7a() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Number n) {\n" +
+            "  Boolean b = n\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic8() {
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = {
             "A.groovy",
@@ -147,7 +232,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic5() {
+    public void testCompileStatic9() {
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -164,7 +249,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-8337
-    public void testCompileStatic6() {
+    public void testCompileStatic10() {
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -180,7 +265,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic7() {
+    public void testCompileStatic11() {
         String[] sources = {
             "BridgeMethod.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -195,7 +280,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-8509
-    public void testCompileStatic8() {
+    public void testCompileStatic12() {
         String[] sources = {
             "p/Foo.groovy",
             "package p\n" +
@@ -217,7 +302,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic9() {
+    public void testCompileStatic13() {
         assumeTrue(isAtLeastGroovy(25));
 
         String[] sources = {
@@ -257,7 +342,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    new DynamicQuery().foo(null);\n" +
             "  }\n" +
             "  private foo(Map sumpin) {\n" +
-            "    Map foo\n" +
+            "    Map foo = [:]\n" +
             "    foo.collect{ Map.Entry it -> it.key }\n" +
             "    print 'abc';\n" +
             "  }\n" +
@@ -292,12 +377,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
             "def meth() {\n" +
-            "   List<String> second = []\n" +
-            "   List<String> artefactResources2 = []\n" +
-            "   second.addAll(artefactResources2)\n" +
-            "   println 'abc'\n" +
-            "}\n" +
-            "meth();\n",
+            "   List<String> one = []\n" +
+            "   List<String> two = []\n" +
+            "   one.addAll(two)\n" +
+            "}\n",
         };
 
         runNegativeTest(sources, "");
@@ -415,6 +498,34 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "q/ResultHandle.java",
             "package q;\n" +
             "public class ResultHandle {\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9058() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void meth() {\n" +
+            "    List<Object[]> rows = new Foo().bar()\n" +
+            "    rows.each { row ->\n" + // should be Object[]
+            "      def col = row[0]\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Foo.java",
+            "package p;\n" +
+            "public class Foo {\n" +
+            "  @SuppressWarnings(\"rawtypes\")\n" +
+            "  public java.util.List bar() { return null; }\n" +
             "}\n",
         };
 

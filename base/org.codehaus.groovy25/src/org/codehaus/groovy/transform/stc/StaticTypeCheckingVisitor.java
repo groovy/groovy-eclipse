@@ -88,6 +88,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.stmt.SwitchStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.ReturnAdder;
@@ -924,6 +925,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         types.add(resultType);
                     }
                 }
+                // GRECLIPSE add -- GROOVY-9064
+                if (!(leftExpression instanceof VariableExpression) || ((VariableExpression) leftExpression).isDynamicTyped())
+                // GRECLIPSE end
                 storeType(leftExpression, resultType);
 
                 // if right expression is a ClosureExpression, store parameter type information
@@ -2940,10 +2944,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             addError("Incorrect number of parameters. Expected " + inferred.length + " but found " + closureParams.length, expression);
                         }
                     }
-                    boolean lastArg = i == length - 1;
+                    boolean lastArg = (i == length - 1);
 
                     if (lastArg && inferredType.isArray()) {
-                        if (inferredType.getComponentType().equals(originType)) {
+                        if (/*GRECLIPSE add -- GROOVY-9058*/!closureParam.isDynamicTyped() && /*GRECLIPSE end*/inferredType.getComponentType().equals(originType)) {
                             inferredType = originType;
                         }
                     } else if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
@@ -4103,11 +4107,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         Expression leftExpression = expr.getLeftExpression();
         Expression rightExpression = expr.getRightExpression();
+
         if (op == ASSIGN || op == ASSIGNMENT_OPERATOR) {
+            /* GRECLIPSE edit
             if (leftRedirect.isArray() && implementsInterfaceOrIsSubclassOf(rightRedirect, Collection_TYPE))
                 return leftRedirect;
             if (leftRedirect.implementsInterface(Collection_TYPE) && rightRedirect.implementsInterface(Collection_TYPE)) {
-                // because of type inferrence, we must perform an additional check if the right expression
+                // because of type inference, we must perform an additional check if the right expression
                 // is an empty list expression ([]). In that case and only in that case, the inferred type
                 // will be wrong, so we will prefer the left type
                 if (rightExpression instanceof ListExpression) {
@@ -4120,12 +4126,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // ex : def foos = ['a','b','c']
                 return right;
             }
-            if (rightRedirect.isDerivedFrom(CLOSURE_TYPE) && isSAMType(leftRedirect) && rightExpression instanceof ClosureExpression) {
+            */
+            if (rightExpression instanceof ClosureExpression && rightRedirect.isDerivedFrom(CLOSURE_TYPE) && isSAMType(leftRedirect)) {
                 return inferSAMTypeGenericsInAssignment(left, findSAM(left), right, (ClosureExpression) rightExpression);
             }
 
             if (leftExpression instanceof VariableExpression) {
                 ClassNode initialType = getOriginalDeclarationType(leftExpression).redirect();
+
                 if (isPrimitiveType(right) && initialType.isDerivedFrom(Number_TYPE)) {
                     return getWrapper(right);
                 }
@@ -4134,7 +4142,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return getUnwrapper(right);
                 }
 
-                // as anything can be assigned to a String, Class or boolean, return the left type instead
+                // as anything can be assigned to a String, Class or [Bb]oolean, return the left type instead
                 if (STRING_TYPE.equals(initialType)
                         || CLASS_Type.equals(initialType)
                         || Boolean_TYPE.equals(initialType)
@@ -4142,6 +4150,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return initialType;
                 }
             }
+            // GRECLIPSE add
+            if (GeneralUtils.isOrImplements(rightRedirect, Collection_TYPE)) {
+                if (leftRedirect.isArray()) {
+                    return leftRedirect;
+                }
+                if (GeneralUtils.isOrImplements(leftRedirect, Collection_TYPE) &&
+                        rightExpression instanceof ListExpression && isEmptyCollection(rightExpression)) {
+                    return left;
+                }
+            }
+            // GRECLIPSE end
             return right;
         }
         if (isBoolIntrinsicOp(op)) {
