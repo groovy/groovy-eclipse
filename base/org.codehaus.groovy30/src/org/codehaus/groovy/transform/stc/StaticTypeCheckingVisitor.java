@@ -849,8 +849,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (lType.isUsingGenerics() && missesGenericsTypes(resultType) && isAssignment(op)) {
                 // unchecked assignment
                 // examples:
-                // List<A> list = new LinkedList()
                 // List<A> list = []
+                // List<A> list = new LinkedList()
                 // Iterable<A> list = new LinkedList()
 
                 // in that case, the inferred type of the binary expression is the type of the RHS
@@ -858,13 +858,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode completedType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
 
                 resultType = completedType;
-
             }
-            if (isArrayOp(op) &&
-                    enclosingBinaryExpression != null
+
+            if (isArrayOp(op)
+                    && !lType.isArray()
+                    && enclosingBinaryExpression != null
                     && enclosingBinaryExpression.getLeftExpression() == expression
-                    && isAssignment(enclosingBinaryExpression.getOperation().getType())
-                    && !lType.isArray()) {
+                    && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
                 // left hand side of an assignment : map['foo'] = ...
                 Expression enclosingBE_rightExpr = enclosingBinaryExpression.getRightExpression();
                 if (!(enclosingBE_rightExpr instanceof ClosureExpression)) {
@@ -878,6 +878,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     addNoMatchingMethodError(lType, "putAt", arguments, enclosingBinaryExpression);
                 }
             }
+
             boolean isEmptyDeclaration = expression instanceof DeclarationExpression && rightExpression instanceof EmptyExpression;
             if (!isEmptyDeclaration && isAssignment(op)) {
                 if (rightExpression instanceof ConstructorCallExpression) {
@@ -3960,6 +3961,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (!typeCheckingContext.ifElseForWhileAssignmentTracker.isEmpty()) {
             for (Map.Entry<VariableExpression, List<ClassNode>> entry : typeCheckingContext.ifElseForWhileAssignmentTracker.entrySet()) {
                 VariableExpression key = entry.getKey();
+                // GRECLIPSE add -- GROOVY-9064
+                if (!key.isDynamicTyped()) continue;
+                // GRECLIPSE end
                 List<ClassNode> allValues = entry.getValue();
                 // GROOVY-6099: First element of the list may be null, if no assignment was made before the branch
                 List<ClassNode> nonNullValues = new ArrayList<ClassNode>(allValues.size());
@@ -4177,7 +4181,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             VariableExpression var = (VariableExpression) exp;
             final Variable accessedVariable = var.getAccessedVariable();
             if (accessedVariable != exp && accessedVariable instanceof VariableExpression) {
-                storeType((Expression) accessedVariable, cn);
+                storeType((VariableExpression) accessedVariable, cn);
             }
             if (accessedVariable instanceof Parameter) {
                 ((Parameter) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
