@@ -739,8 +739,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (lType.isUsingGenerics() && missesGenericsTypes(resultType) && isAssignment(op)) {
                 // unchecked assignment
                 // examples:
-                // List<A> list = new LinkedList()
                 // List<A> list = []
+                // List<A> list = new LinkedList()
                 // Iterable<A> list = new LinkedList()
 
                 // in that case, the inferred type of the binary expression is the type of the RHS
@@ -748,13 +748,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode completedType = GenericsUtils.parameterizeType(lType, resultType.getPlainNodeReference());
 
                 resultType = completedType;
-
             }
-            if (isArrayOp(op) &&
-                    enclosingBinaryExpression != null
+
+            if (isArrayOp(op)
+                    && !lType.isArray()
+                    && enclosingBinaryExpression != null
                     && enclosingBinaryExpression.getLeftExpression() == expression
-                    && isAssignment(enclosingBinaryExpression.getOperation().getType())
-                    && !lType.isArray()) {
+                    && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
                 // left hand side of an assignment : map['foo'] = ...
                 Expression enclosingBE_rightExpr = enclosingBinaryExpression.getRightExpression();
                 if (!(enclosingBE_rightExpr instanceof ClosureExpression)) {
@@ -2698,20 +2698,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (i<inferred.length-1 || inferred.length==closureParams.length) {
                         inferredType = inferred[i];
                     } else { // vargs?
-                            ClassNode lastArgInferred = inferred[inferred.length-1];
-                            if (lastArgInferred.isArray()) {
-                                inferredType = lastArgInferred.getComponentType();
-                            } else {
-                                addError("Incorrect number of parameters. Expected "+inferred.length+" but found "+closureParams.length, expression);
-                            }
+                        ClassNode lastArgInferred = inferred[inferred.length-1];
+                        if (lastArgInferred.isArray()) {
+                            inferredType = lastArgInferred.getComponentType();
+                        } else {
+                            addError("Incorrect number of parameters. Expected "+inferred.length+" but found "+closureParams.length, expression);
+                        }
                     }
-                    boolean lastArg = i == length - 1;
+                    boolean lastArg = (i == length - 1);
                     if (lastArg && inferredType.isArray()) {
-                        if (inferredType.getComponentType().equals(originType)) {
+                        if (/*GRECLIPSE add -- GROOVY-9058*/!closureParam.isDynamicTyped() && /*GRECLIPSE end*/inferredType.getComponentType().equals(originType)) {
                             inferredType = originType;
                         }
                     } else if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
-                        addError("Expected parameter of type "+ inferredType.toString(false)+" but got "+originType.toString(false), closureParam.getType());
+                        addError("Expected parameter of type "+inferredType.toString(false)+" but got "+originType.toString(false), closureParam.getType());
                     }
                     typeCheckingContext.controlStructureVariables.put(closureParam, inferredType);
                 }
