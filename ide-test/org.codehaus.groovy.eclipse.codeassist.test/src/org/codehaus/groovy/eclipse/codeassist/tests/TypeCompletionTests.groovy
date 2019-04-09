@@ -346,6 +346,25 @@ final class TypeCompletionTests extends CompletionTestSuite {
             |'''.stripMargin())
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/866
+    void testField9a() {
+        String contents = '''\
+            class Foo {
+                String bar
+                List
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'List'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'List - java.awt'), '''\
+            |import java.awt.List
+            |
+            |class Foo {
+            |    String bar
+            |    List
+            |}
+            |'''.stripMargin())
+    }
+
     @Test
     void testField10() {
         String contents = '''\

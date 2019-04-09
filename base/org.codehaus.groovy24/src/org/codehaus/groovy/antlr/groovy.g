@@ -1584,7 +1584,7 @@ classField!  {Token first = LT(1);}
             if (LA(1) == IDENT) {
                 reportError(e);
                 // create a variable definition for "thing" in hopes that subsequent class members can still be parsed
-                #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
+                #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#(create(TYPE,"TYPE",first,LT(1)),#create(IDENT,"void",first,LT(1))),#create(IDENT,first.getText(),LT(1),LT(2)));
                 consumeUntil(NLS);
             } else {
                 throw e;

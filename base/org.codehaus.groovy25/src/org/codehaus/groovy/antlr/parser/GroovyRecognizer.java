@@ -6406,7 +6406,7 @@ inputState.guessing--;
                                 if (LA(1) == IDENT) {
                                 reportError(e);
                                 // create a variable definition for "thing" in hopes that subsequent class members can still be parsed
-                                classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2))));
+                                classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(create(IDENT,"void",first,LT(1))))).add(create(IDENT,first.getText(),LT(1),LT(2))));
                                 consumeUntil(NLS);
                                 } else {
                                 throw e;
