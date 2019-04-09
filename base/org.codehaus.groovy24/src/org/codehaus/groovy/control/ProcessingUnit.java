@@ -26,8 +26,6 @@ import java.security.PrivilegedAction;
 /**
  * A base class for data structures that can collect messages and errors
  * during processing.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
 public abstract class ProcessingUnit {
 
@@ -66,8 +64,8 @@ public abstract class ProcessingUnit {
         this.phase = Phases.INITIALIZATION;
         this.configuration = configuration;
         this.setClassLoader(classLoader);
-        configure((configuration == null ? new CompilerConfiguration() : configuration));
-        if (er==null) er = new ErrorCollector(getConfiguration());
+        configure(configuration != null ? configuration : CompilerConfiguration.DEFAULT);
+        if (er == null) er = new ErrorCollector(getConfiguration());
         this.errorCollector = er;
     }
 
@@ -101,11 +99,11 @@ public abstract class ProcessingUnit {
         // Classloaders should only be created inside doPrivileged block
         // This code creates a classloader, which needs permission if a security manage is installed.
         // If this code might be invoked by code that does not have security permissions, then the classloader creation needs to occur inside a doPrivileged block.
-        this.classLoader = AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
+        this.classLoader = loader != null ? loader : AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
             public GroovyClassLoader run() {
                 ClassLoader parent = Thread.currentThread().getContextClassLoader();
                 if (parent == null) parent = ProcessingUnit.class.getClassLoader();
-                return loader == null ? new GroovyClassLoader(parent, configuration) : loader;
+                return new GroovyClassLoader(parent, configuration);
             }
         });
     }

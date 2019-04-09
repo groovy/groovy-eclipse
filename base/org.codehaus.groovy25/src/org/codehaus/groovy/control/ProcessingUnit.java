@@ -64,7 +64,7 @@ public abstract class ProcessingUnit {
         this.phase = Phases.INITIALIZATION;
         this.configuration = configuration;
         this.setClassLoader(classLoader);
-        configure((configuration == null ? new CompilerConfiguration() : configuration));
+        configure(configuration != null ? configuration : CompilerConfiguration.DEFAULT);
         if (er == null) er = new ErrorCollector(getConfiguration());
         this.errorCollector = er;
     }
@@ -99,11 +99,11 @@ public abstract class ProcessingUnit {
         // Classloaders should only be created inside doPrivileged block
         // This code creates a classloader, which needs permission if a security manage is installed.
         // If this code might be invoked by code that does not have security permissions, then the classloader creation needs to occur inside a doPrivileged block.
-        this.classLoader = AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
+        this.classLoader = loader != null ? loader : AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
             public GroovyClassLoader run() {
                 ClassLoader parent = Thread.currentThread().getContextClassLoader();
                 if (parent == null) parent = ProcessingUnit.class.getClassLoader();
-                return loader == null ? new GroovyClassLoader(parent, configuration) : loader;
+                return new GroovyClassLoader(parent, configuration);
             }
         });
     }

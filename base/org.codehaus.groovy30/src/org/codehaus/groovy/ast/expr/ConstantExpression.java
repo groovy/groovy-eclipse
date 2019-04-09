@@ -25,9 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 
 /**
- * Represents a constant expression such as null, true, false
- * 
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
+ * Represents a constant expression such as null, true, false.
  */
 public class ConstantExpression extends Expression {
     // The following fields are only used internally; every occurrence of a user-defined expression of the same kind
@@ -78,7 +76,7 @@ public class ConstantExpression extends Expression {
     }
 
     public String toString() {
-        return "ConstantExpression[" + value + "]";
+        return super.toString() + "[" + value + "]";
     }
 
     public void visit(GroovyCodeVisitor visitor) {
@@ -91,13 +89,13 @@ public class ConstantExpression extends Expression {
 
     /**
      * @return the value of this constant expression
-     */    
+     */
     public Object getValue() {
         return value;
     }
 
     public String getText() {
-        return (value == null) ? "null" : value.toString();
+        return (value == null ? "null" : value.toString());
     }
 
     public String getConstantName() {

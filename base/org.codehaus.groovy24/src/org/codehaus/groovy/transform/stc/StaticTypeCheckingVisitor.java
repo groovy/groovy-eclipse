@@ -1414,6 +1414,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (getter != null) {
                         ClassNode cn = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
+                        // GRECLIPSE add
+                        storeTargetMethod(pexp, getter);
+                        // GRECLIPSE end
                         pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                         String delegationData = receiver.getData();
                         if (delegationData != null)
@@ -1446,7 +1449,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         return true;
                     } else if (getter != null && propertyNode == null) {
-                        pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, true);
+                        pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
                     }
                 }
                 foundGetterOrSetter = foundGetterOrSetter || !setters.isEmpty() || getter != null;
@@ -1478,7 +1481,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         ClassNode cn = inferReturnTypeGenerics(dgmReceiver, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
-
+                        // GRECLIPSE add
+                        storeTargetMethod(pexp, getter);
+                        // GRECLIPSE end
                         return true;
                     }
                 }
