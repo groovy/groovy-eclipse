@@ -64,10 +64,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 5)\n" +
             "\tls.add('abc')\n" +
             "\t^^^^^^^^^^^^^\n" +
-            (!isAtLeastGroovy(25)
-                ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n"
-                : "Groovy:[Static type checking] - Cannot find matching method java.util.List#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 

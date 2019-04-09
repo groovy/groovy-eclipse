@@ -19,8 +19,10 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("Waiting on GROOVY-9064")
 public final class Groovy25InferencingTests extends InferencingTestSuite {
 
     @Before

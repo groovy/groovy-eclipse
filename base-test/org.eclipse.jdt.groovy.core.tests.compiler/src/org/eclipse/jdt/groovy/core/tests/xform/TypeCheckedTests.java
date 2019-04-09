@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -71,10 +69,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\');\n" +
             "\t^^^^^^^^^^^^^\n" +
-            (!isAtLeastGroovy(25)
-                ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n"
-                : "Groovy:[Static type checking] - Cannot find matching method java.util.List#add(java.lang.String). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 

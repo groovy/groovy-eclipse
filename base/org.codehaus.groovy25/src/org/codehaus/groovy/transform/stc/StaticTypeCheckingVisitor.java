@@ -926,9 +926,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         types.add(resultType);
                     }
                 }
-                // GRECLIPSE add -- GROOVY-9064
-                if (!(leftExpression instanceof VariableExpression) || ((VariableExpression) leftExpression).isDynamicTyped())
-                // GRECLIPSE end
                 storeType(leftExpression, resultType);
 
                 // if right expression is a ClosureExpression, store parameter type information
@@ -3860,9 +3857,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (!typeCheckingContext.ifElseForWhileAssignmentTracker.isEmpty()) {
             for (Map.Entry<VariableExpression, List<ClassNode>> entry : typeCheckingContext.ifElseForWhileAssignmentTracker.entrySet()) {
                 VariableExpression key = entry.getKey();
-                // GRECLIPSE add -- GROOVY-9064
-                if (!key.isDynamicTyped()) continue;
-                // GRECLIPSE end
                 List<ClassNode> allValues = entry.getValue();
                 // GROOVY-6099: First element of the list may be null, if no assignment was made before the branch
                 List<ClassNode> nonNullValues = new ArrayList<ClassNode>(allValues.size());
