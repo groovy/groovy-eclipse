@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,6 +43,8 @@ import org.junit.Assert;
 
 public abstract class InferencingTestSuite extends SearchTestSuite {
 
+    protected static final String DEFAULT_UNIT_NAME = "Search";
+
     protected void assertType(String contents, String expectedType) {
         assertType(contents, 0, contents.length(), expectedType, false);
     }
@@ -54,7 +56,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     protected void assertTypeOneOf(String contents, int start, int end, String... expectedTypes) throws Throwable {
         boolean ok = false;
         Throwable error = null;
-        for (int i = 0; !ok && i < expectedTypes.length; i++) {
+        for (int i = 0; !ok && i < expectedTypes.length; i += 1) {
             try {
                 assertType(contents, start, end, expectedTypes[i]);
                 ok = true;
@@ -63,7 +65,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             }
         }
         if (!ok) {
-            if (error!=null) {
+            if (error != null) {
                 throw error;
             } else {
                 Assert.fail("assertTypeOneOf must be called with at least one expectedType");
@@ -84,7 +86,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     protected void assertType(String contents, int exprStart, int exprEnd, String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         assertType(unit, exprStart, exprEnd, expectedType, extraDocSnippet, forceWorkingCopy);
     }
 
@@ -175,7 +177,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
      * DSLDs).  Could change this in the future
      */
     protected void assertDeprecated(String contents, int exprStart, int exprEnd) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
         Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
         Assert.assertTrue("Declaration should be deprecated: " + requestor.result.declaration, GroovyUtils.isDeprecated(requestor.result.declaration));
@@ -210,7 +212,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
 
     protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprEnd, String expectedDeclaringType, String declarationName, DeclarationKind kind) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false, false);
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
 
         switch (kind) {
@@ -248,7 +250,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     protected void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy, boolean expectingUnknown) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
         Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
@@ -285,7 +287,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     protected void assertUnknownConfidence(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean forceWorkingCopy) {
-        GroovyCompilationUnit unit = createUnit("Unknown", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
 
         Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
@@ -302,7 +304,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
 
     protected void assertNoUnknowns(String contents) {
         List<ASTNode> unknownNodes = new ArrayList<>();
-        GroovyCompilationUnit unit = createUnit("Known", contents);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.DEBUG = true;
         visitor.visitCompilationUnit((node, result, element) -> {
