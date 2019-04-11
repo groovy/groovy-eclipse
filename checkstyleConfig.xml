@@ -235,8 +235,8 @@
         </module>
         <module name="IllegalType">
             <message key="illegal.type" value="The concrete type ''{0}'' should not be used in variable, parameter or return value declarations" />
-            <property name="format" value="^$" /><!-- disable the abstract class check -->
             <property name="ignoredMethodNames" value="" /><!-- disable the default ignores -->
+            <property name="illegalAbstractClassNameFormat" value="^$" /><!-- disable abstract class check -->
             <property name="illegalClassNames" value="java.lang.Error,java.lang.ExceptionX,java.lang.ThrowableX,
               java.util.ArrayList,java.util.LinkedList,java.util.Stack,java.util.HashSet,java.util.LinkedHashSet,java.util.TreeSet,
               java.util.HashMap,java.util.LinkedHashMap,java.util.TreeMap,java.util.WeakHashMap,java.util.concurrent.ConcurrentHashMap,
