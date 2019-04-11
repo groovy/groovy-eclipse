@@ -395,9 +395,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
         this.parent = parent;
         this.scopeNode = enclosingNode;
-        this.shared = parent != null ? parent.shared : new SharedState();
-        this.enclosingCallStackDepth = shared.enclosingCallStack.size();
-        this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope)) &&
+        this.shared = (parent != null ? parent.shared : new SharedState());
+        this.enclosingCallStackDepth = this.shared.enclosingCallStack.size();
+        this.isStaticScope = (isStatic || (!(enclosingNode instanceof ClassNode) && parent != null && parent.isStaticScope)) &&
             (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
 
         // determine if scope belongs to script body
@@ -530,6 +530,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     // Class<super of T> (static scope) or Object (Is this a Groovy bug?)
                     if (!isStatic()) {
                         superType = type.getSuperClass();
+                        if (OBJECT_CLASS_NODE.equals(superType) && GroovyUtils.isAnonymous(type)) {
+                            superType = type.getInterfaces()[0];
+                        }
                     } else { // type is Class<T>, so produce Class<super of T>
                         assert type.equals(CLASS_CLASS_NODE) && type.isUsingGenerics();
                         superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T

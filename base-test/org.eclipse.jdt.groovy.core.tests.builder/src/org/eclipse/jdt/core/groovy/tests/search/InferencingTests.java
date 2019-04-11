@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -1287,6 +1287,50 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         assertDeclType(contents, "method", "A");
+    }
+
+    @Test
+    public void testSuperClassMethod5() {
+        String contents =
+            "static void meth() {\n" +
+            "  new Number() {\n" +
+            "    int intValue() {\n" +
+            "      super.intValue()\n" + // resolve "super" from non-static scope within static scope
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "super", "java.lang.Number");
+        assertDeclType(contents, "intValue", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperClassMethod5a() {
+        String contents =
+            "static void meth() {\n" +
+            "  new Runnable() {\n" +
+            "    void run() {\n" +
+            "      super.run()\n" +
+            "      super.hashCode()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "run", "java.lang.Runnable");
+        assertExprType(contents, "super", "java.lang.Runnable");
+        assertDeclType(contents, "hashCode", "java.lang.Object");
+    }
+
+    @Test
+    public void testSuperClassMethod5b() {
+        String contents =
+            "static void meth() {\n" +
+            "  new Object() {\n" +
+            "    int hashCode() {\n" +
+            "      super.hashCode()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertDeclType(contents, "hashCode", "java.lang.Object");
+        assertExprType(contents, "super", "groovy.lang.GroovyObject");
     }
 
     @Test
