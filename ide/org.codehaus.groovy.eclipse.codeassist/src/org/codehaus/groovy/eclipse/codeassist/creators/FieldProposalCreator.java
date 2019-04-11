@@ -180,7 +180,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
     }
 
     private static Parameter[] extractParameters(Expression expr) {
-        if (expr instanceof ClosureExpression) {
+        if (expr instanceof ClosureExpression && ((ClosureExpression) expr).isParameterSpecified()) {
             return ((ClosureExpression) expr).getParameters();
         }
         return Parameter.EMPTY_ARRAY;
