@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,14 @@ public abstract class JavaConstants {
     public static int AST_LEVEL = AST.JLS10;
     static {
         try {
-            AST.class.getDeclaredField("JLS11");
-            AST_LEVEL = 11;
-        } catch (NoSuchFieldException ignore) {
+            AST.class.getDeclaredField("JLS12");
+            AST_LEVEL = 12;
+        } catch (NoSuchFieldException ignore12) {
+            try {
+                AST.class.getDeclaredField("JLS11");
+                AST_LEVEL = 11;
+            } catch (NoSuchFieldException ignore11) {
+            }
         }
     }
 }
