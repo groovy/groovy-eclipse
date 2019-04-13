@@ -1886,7 +1886,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             methodNode.setLastColumnNumber(last(ctx.nls()).getStart().getCharPositionInLine() + 1);
             methodNode.setEnd(locationSupport.findOffset(methodNode.getLastLineNumber(), methodNode.getLastColumnNumber()));
         }
-        Token rparen = ctx.formalParameters().rparen().getStart();
+        Token rparen = Optional.ofNullable(ctx.formalParameters()).map(params -> params.rparen()).orElse(ctx.rparen()).getStart();
         methodNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
         // GRECLIPSE end
 
