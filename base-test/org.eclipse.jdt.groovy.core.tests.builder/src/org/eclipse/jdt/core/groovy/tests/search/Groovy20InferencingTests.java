@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -212,6 +212,20 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "writeOnly".length(), "java.lang.Integer");
             offset = contents.lastIndexOf("writeOnly");
         assertUnknownConfidence(contents, offset, offset + "writeOnly".length(), null, false);
+    }
+
+    @Test
+    public void testCompileStatic15() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "void meth() {\n" +
+            "  java.util.concurrent.Callable<String> task = { -> '' }\n" +
+            "  def result = task.call()" +
+            "}";
+
+        int offset = contents.lastIndexOf("task");
+        assertType(contents, offset, offset + "task".length(), "java.util.concurrent.Callable<java.lang.String>");
+            offset = contents.lastIndexOf("result");
+        assertType(contents, offset, offset + "result".length(), "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression

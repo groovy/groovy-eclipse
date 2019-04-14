@@ -3863,6 +3863,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         Map<String,GenericsType> connections = new HashMap<String,GenericsType>();
         extractGenericsConnections(connections, getInferredReturnType(closureExpression),sam.getReturnType());
 
+        // GRECLIPSE add -- GROOVY-9079
+        if (closureExpression.isParameterSpecified()) {
+        // GRECLIPSE end
         // next we get the block parameter types and set the generics 
         // information just like before
         // TODO: add vargs handling
@@ -3873,6 +3876,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode fromMethod = methodParams[i].getType();
             extractGenericsConnections(connections,fromClosure,fromMethod);
         }
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
         ClassNode result = applyGenericsContext(connections, samUsage.redirect());
         return result;
     }

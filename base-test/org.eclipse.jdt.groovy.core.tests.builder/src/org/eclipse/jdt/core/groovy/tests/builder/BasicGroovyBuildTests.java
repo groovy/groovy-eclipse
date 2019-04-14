@@ -639,6 +639,23 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9079
+    public void testCompileStatic_9079() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p", "Main",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void meth() {\n" +
+            "    java.util.concurrent.Callable<String> task = { -> '' }\n" +
+            "  }\n" +
+            "}\n");
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+    }
+
     @Test
     public void testCompileStatic_ArrayArray() throws Exception {
         JDTResolver.recordInstances = true;
@@ -2194,39 +2211,46 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
         IPath[] paths = createSimpleProject("GRE566", true);
 
-        env.addClass(paths[1], "pkg", "Intface",
-            "package pkg;\n" +
-            "public interface Intface<E extends Event> {\n" +
-            "   void onApplicationEvent(E event);\n" +
-            "}\n");
-
         env.addClass(paths[1], "pkg", "Event",
             "package pkg;\n" +
-            "public class Event {}\n");
+            "public class Event {\n" +
+            "}\n");
 
         env.addClass(paths[1], "pkg", "EventImpl",
             "package pkg;\n" +
-            "public class EventImpl extends Event {}\n");
-
-        env.addClass(paths[1], "pkg", "Jaas",
-            "package pkg;\n" +
-            "public class Jaas implements Intface<EventImpl> {\n" +
-            "  public void onApplicationEvent(EventImpl ei) {}\n" +
+            "public class EventImpl extends Event {\n" +
             "}\n");
 
-        env.addGroovyClass(paths[1], "pkg", "GExtender",
+        env.addClass(paths[1], "pkg", "Face",
             "package pkg;\n" +
-            "class GExtender extends Jaas{\n" + "}\n");
+            "public interface Face<E extends Event> {\n" +
+            "  void onApplicationEvent(E event);\n" +
+            "}\n");
+
+        env.addClass(paths[1], "pkg", "Java",
+            "package pkg;\n" +
+            "public class Java implements Face<EventImpl> {\n" +
+            "  public void onApplicationEvent(EventImpl event) {\n" +
+            "  }\n" +
+            "}\n");
+
+        env.addGroovyClass(paths[1], "pkg", "Groovy",
+            "package pkg;\n" +
+            "class Groovy extends Java {\n" +
+            "}\n");
 
         incrementalBuild(paths[0]);
-        expectingCompiledClasses("pkg.Event", "pkg.EventImpl", "pkg.Intface", "pkg.Jaas", "pkg.GExtender");
+        expectingCompiledClasses("pkg.Event", "pkg.EventImpl", "pkg.Face", "pkg.Java", "pkg.Groovy");
         expectingNoProblems();
 
-        env.addGroovyClass(paths[1], "pkg", "GExtender", "package pkg\n" + "class GExtender extends Jaas{\n" + "}\n");
+        env.addGroovyClass(paths[1], "pkg", "Groovy",
+            "package pkg\n" +
+            "class Groovy extends Java {\n" +
+            "}\n");
 
         incrementalBuild(paths[0]);
+        expectingCompiledClasses("pkg.Groovy");
         expectingNoProblems();
-        expectingCompiledClasses("pkg.GExtender");
     }
 
     @Test
