@@ -1011,6 +1011,24 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 				}
 			}
 			this.methods = methods1;
+			// GROOVY add
+			// hold onto the skipped methods, groovy will want to see them
+			if (this.environment.globalOptions.buildGroovyFiles == 2) {
+				int skipped = initialTotal - this.methods.length - (iClinit == -1 ? 0 : 1);
+				if (skipped == 0) {
+					this.infraMethods = Binding.NO_METHODS;
+				} else {
+					this.infraMethods = new MethodBinding[skipped];
+					for (int i = 0, index = 0; i < initialTotal; i += 1) {
+						if (iClinit != i && (toSkip != null && toSkip[i] == -1)) {
+							// this is a skipped method
+							MethodBinding method = createMethod(iMethods[i], binaryType, sourceLevel, missingTypeNames);
+							this.infraMethods[index++] = method;
+						}
+					}
+				}
+			}
+			// GROOVY end
 			return mappedBinaryMethods;
 		}
 	} finally {
