@@ -24,7 +24,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 
 /**
- * Represents a constructor declaration
+ * Represents a constructor declaration.
  */
 public class ConstructorNode extends MethodNode {
 
@@ -34,14 +34,6 @@ public class ConstructorNode extends MethodNode {
 
     public ConstructorNode(int modifiers, Parameter[] parameters, ClassNode[] exceptions, Statement code) {
         super("<init>", modifiers, ClassHelper.VOID_TYPE, parameters, exceptions, code);
-        /* GRECLIPSE edit
-        // This variable scope is thrown out and replaced with a different one during semantic analysis.
-        VariableScope scope = new VariableScope();
-        for (int i = 0; i < parameters.length; i++) {
-            scope.putDeclaredVariable(parameters[i]);
-        }
-        this.setVariableScope(scope);
-        */
     }
 
     public boolean firstStatementIsSpecialConstructorCall() {
