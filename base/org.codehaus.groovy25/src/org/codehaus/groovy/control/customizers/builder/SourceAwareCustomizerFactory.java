@@ -84,7 +84,7 @@ public class SourceAwareCustomizerFactory extends AbstractFactory implements Pos
         if (value instanceof CompilationCustomizer) {
             data.delegate = (CompilationCustomizer) value;
         }
-        // GRECLIPSE add
+        // GRECLIPSE add -- GROOVY-9035
         else {
             data.delegate = new CompilationCustomizer(CompilePhase.FINALIZATION) {
                 @Override
