@@ -228,6 +228,26 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "result".length(), "java.lang.String");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/872
+    public void testCompileStatic16() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "void meth(ObjectInputStream ois) {\n" +
+            "  Map<String,Object> props = (Map) ois.readObject()\n" +
+            "  props.each { Map.Entry<String,Object> e ->\n" +
+            "    setProperty((String) e.key, e.value)\n" +
+            "  }\n" +
+            "  def map = [foo: 'cat', bar: 'hat']\n" +
+            "  map.each { entry ->\n" +
+            "    println entry.value\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.lastIndexOf("e.");
+        assertType(contents, offset, offset + 1, "java.util.Map$Entry<java.lang.String,java.lang.Object>");
+            offset = contents.lastIndexOf("entry");
+        assertType(contents, offset, offset + "entry".length(), "java.util.Map$Entry<java.lang.String,java.lang.String>");
+    }
+
     @Test // tests CompareToNullExpression
     public void testTypeChecked1() {
         String contents = "import groovy.transform.TypeChecked\n" +
