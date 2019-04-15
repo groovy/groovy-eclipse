@@ -956,7 +956,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode[] paramTypes = typeInfo.getV1();
                 ClosureExpression closureExpression = ((ClosureExpression) rightExpression);
                 Parameter[] closureParameters = closureExpression.getParameters();
-
+                // GRECLIPSE add -- GROOVY-9079
+                if (closureParameters == null) closureParameters = Parameter.EMPTY_ARRAY;
+                // GRECLIPSE end
                 if (paramTypes.length == closureParameters.length) {
                     for (int i = 0, n = closureParameters.length; i < n; i++) {
                         Parameter parameter = closureParameters[i];

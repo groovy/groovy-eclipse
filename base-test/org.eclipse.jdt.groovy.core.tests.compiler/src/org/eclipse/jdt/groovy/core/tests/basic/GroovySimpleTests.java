@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -5228,6 +5228,95 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "    };\n" +
             "  }\n" +
             "}\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass13() {
+        runNegativeTest(new String[] {
+            "C.groovy",
+            "class C {\n" +
+            "  int count\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  static def m() {\n" +
+            "    new LinkedList() {\n" +
+            "      @Override\n" +
+            "      def get(int i) {\n" +
+            "        count += 1\n" +
+            "        super.get(i)\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in C.groovy (at line 8)\n" +
+        "\tcount += 1\n" +
+        "\t^^^^^\n" +
+        "Groovy:Apparent variable 'count' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+        "----------\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass14() {
+        runNegativeTest(new String[] {
+            "C.groovy",
+            "class C {\n" +
+            "  static int count\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  static def m() {\n" +
+            "    new LinkedList() {\n" +
+            "      @Override\n" +
+            "      def get(int i) {\n" +
+            "        count += 1\n" +
+            "        super.get(i)\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-5961
+    public void testAnonymousInnerClass15() {
+        runNegativeTest(new String[] {
+            "Script.groovy",
+            "@SuppressWarnings('rawtypes')\n" +
+            "static def m() {\n" +
+            "  new LinkedList() {\n" +
+            "    int count\n" +
+            "    @Override\n" +
+            "    def get(int i) {\n" +
+            "      count += 1\n" + // Apparent variable 'count' was found in a static scope but doesn't refer to a local variable, static field or class.
+            "      super.get(i)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-5961
+    public void testAnonymousInnerClass16() {
+        runNegativeTest(new String[] {
+            "Abstract.groovy",
+            "abstract class Abstract {\n" +
+            "  abstract def find(key)\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  protected Map map = [:]\n" +
+            "}\n",
+
+            "Script.groovy",
+            "static def m() {\n" +
+            "  def anon = new Abstract() {\n" +
+            "    @Override\n" +
+            "    def find(key) {\n" +
+            "      map.get(key)\n" + // Apparent variable 'map' was found in a static scope but doesn't refer to a local variable, static field or class.
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
     }
 
     @Test
