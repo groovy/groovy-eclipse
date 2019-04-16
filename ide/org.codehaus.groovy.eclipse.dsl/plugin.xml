@@ -111,13 +111,6 @@
       </objectContribution>
    </extension>
 
-   <extension point="org.eclipse.ui.keywords">
-      <keyword
-            id="org.codehaus.groovy.eclipse.dsl.keywords"
-            label="dsl dsld domain descriptor groovy">
-      </keyword>
-   </extension>
-
    <extension point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences"
@@ -125,7 +118,8 @@
             id="org.codehaus.groovy.eclipse.dsl.preferences"
             name="DSLD">
          <keywordReference
-               id="org.codehaus.groovy.eclipse.dsl.keywords"/>
+               id="org.codehaus.groovy.eclipse.ui.keyword.dsld">
+         </keywordReference>
       </page>
       <page
             category="org.codehaus.groovy.eclipse.preferences.editor"
@@ -192,15 +186,16 @@
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.dsl.ui.NewDSLDWizard"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy16.png"
+            icon="platform:/plugin/org.eclipse.ui.editors/$nl$/icons/full/etool16/new_untitled_text_file.png"
             id="org.codehaus.groovy.eclipse.dsld.newDsldWizard"
             name="Groovy DSL Descriptor"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective">
          <description>
-            Create a new DSL descriptor file
+            Create a DSL descriptor file
          </description>
          <keywordReference
-               id="org.codehaus.groovy.eclipse.dsl.keywords"/>
+               id="org.codehaus.groovy.eclipse.ui.keyword.dsld">
+         </keywordReference>
       </wizard>
    </extension>
 

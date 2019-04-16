@@ -175,34 +175,39 @@
       </category>
       <wizard
             category="org.codehaus.groovy.eclipse"
-            class="org.codehaus.groovy.eclipse.wizards.NewTypeWizard"
+            class="org.codehaus.groovy.eclipse.wizards.NewProjWizard"
+            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
+            icon="$nl$/icons/wiz/newgroovyproject.png"
+            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
+            name="Groovy Project"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective"
+            project="true">
+         <description>
+            Create a Groovy project
+         </description>
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.groovy">
+         </keywordReference>
+      </wizard>
+      <wizard
+            category="org.codehaus.groovy.eclipse"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             icon="$nl$/icons/wiz/newgroovyclass.png"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"
             name="Groovy Type"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
-         <class class="org.codehaus.groovy.eclipse.wizards.NewClassWizard">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective">
+         <class class="org.codehaus.groovy.eclipse.wizards.NewTypeWizard">
             <parameter
                   name="javatype"
                   value="true">
             </parameter>
          </class>
          <description>
-            Create a new Groovy type
+            Create a Groovy type
          </description>
-      </wizard>
-      <wizard
-            category="org.codehaus.groovy.eclipse"
-            class="org.codehaus.groovy.eclipse.wizards.NewProjWizard"
-            finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
-            icon="$nl$/icons/wiz/newgroovyproject.png"
-            id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"
-            name="Groovy Project"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective"
-            project="true">
-         <description>
-            Create a new Groovy project
-         </description>
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.groovy">
+         </keywordReference>
       </wizard>
       <wizard
             category="org.codehaus.groovy.eclipse"
@@ -210,7 +215,7 @@
             icon="$nl$/icons/wiz/newgroovytestcase.png"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
             name="Groovy Test"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective,com.springsource.sts.grails.perspective">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,org.grails.ide.eclipse.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewTestWizard">
             <parameter
                   name="javatype"
@@ -218,8 +223,11 @@
             </parameter>
          </class>
          <description>
-            Create a new Groovy test class
+            Create a Groovy test class
          </description>
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.groovy">
+         </keywordReference>
       </wizard>
    </extension>
 
@@ -597,15 +605,21 @@
 
    <extension point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
+            targetID="*">
+         <hiddenToolBarItem
+               id="opengroovyprojectwizard">
+         </hiddenToolBarItem>
+      </perspectiveExtension>
+      <perspectiveExtension
             targetID="org.eclipse.jdt.ui.JavaPerspective">
          <actionSet
                id="org.codehaus.groovy.eclipse.conversion"/>
          <actionSet
                id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
          <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
          <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
@@ -616,9 +630,9 @@
          <actionSet
                id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
          <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
          <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
@@ -629,9 +643,9 @@
          <actionSet
                id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
          <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
          <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
@@ -642,9 +656,9 @@
          <actionSet
                id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
          <newWizardShortcut
-               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-         <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+         <newWizardShortcut
+               id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
          <newWizardShortcut
                id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       </perspectiveExtension>
@@ -1163,12 +1177,12 @@
 
    <extension point="org.eclipse.ui.keywords">
       <keyword
-            id="org.codehaus.groovy.eclipse.ui.keyword.editor"
-            label="groovy editor">
-      </keyword>
-      <keyword
             id="org.codehaus.groovy.eclipse.ui.keyword.compiler"
             label="groovy compiler script folder">
+      </keyword>
+      <keyword
+            id="org.codehaus.groovy.eclipse.ui.keyword.contentassist"
+            label="groovy content assist">
       </keyword>
       <keyword
             id="org.codehaus.groovy.eclipse.ui.keyword.debugger"
@@ -1176,15 +1190,19 @@
       </keyword>
       <keyword
             id="org.codehaus.groovy.eclipse.ui.keyword.dsld"
-            label="groovy dsld">
+            label="groovy dsl dsld domain descriptor">
       </keyword>
       <keyword
-            id="org.codehaus.groovy.eclipse.ui.keyword.contentassist"
-            label="groovy content assist">
+            id="org.codehaus.groovy.eclipse.ui.keyword.editor"
+            label="groovy editor">
       </keyword>
       <keyword
             id="org.codehaus.groovy.eclipse.ui.keyword.formatter"
             label="groovy formatter">
+      </keyword>
+      <keyword
+            id="org.codehaus.groovy.eclipse.ui.keyword.groovy"
+            label="groovy">
       </keyword>
    </extension>
 
