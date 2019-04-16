@@ -57,7 +57,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 
 /**
- * goes through an AST and initializes the scopes
+ * Goes through an AST and initializes the scopes.
  */
 public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
@@ -199,8 +199,17 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
+        // GRECLIPSE add -- GROOVY-5961
+        if (isAnonymous(cn)) return null;
+        // GRECLIPSE end
         return findClassMember(cn.getOuterClass(), name);
     }
+
+    // GRECLIPSE add
+    private static boolean isAnonymous(ClassNode node) {
+        return (!node.isEnum() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
+    }
+    // GRECLIPSE end
 
     // -------------------------------
     // different Variable based checks
@@ -247,6 +256,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     if (!(staticScope && !staticMember))
                         var = member;
                 }
+                // GRECLIPSE add -- GROOVY-5961
+                if (!isAnonymous(classScope))
+                // GRECLIPSE end
                 break;
             }
             scope = scope.getParent();
@@ -455,10 +467,14 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     public void visitClass(ClassNode node) {
         // AIC are already done, doing them here again will lead to wrong scopes
+        /* GRECLIPSE edit
         if (node instanceof InnerClassNode) {
             InnerClassNode in = (InnerClassNode) node;
             if (in.isAnonymous() && !in.isEnum()) return;
         }
+        */
+        if (isAnonymous(node)) return;
+        // GRECLIPSE end
 
         pushState();
 
@@ -539,6 +555,10 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState();
         InnerClassNode innerClass = (InnerClassNode) call.getType();
         innerClass.setVariableScope(currentScope);
+        // GRECLIPSE add -- GROOVY-5961
+        currentScope.setClassScope(innerClass);
+        currentScope.setInStaticContext(false);
+        // GRECLIPSE end
         for (MethodNode method : innerClass.getMethods()) {
             Parameter[] parameters = method.getParameters();
             if (parameters.length == 0) parameters = null; // null means no implicit "it"

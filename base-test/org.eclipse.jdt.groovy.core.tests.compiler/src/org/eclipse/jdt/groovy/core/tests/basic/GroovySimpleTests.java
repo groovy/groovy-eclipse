@@ -5277,8 +5277,49 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-5961
+    @Test
     public void testAnonymousInnerClass15() {
+        runNegativeTest(new String[] {
+            "C.groovy",
+            "class C {\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  static def m() {\n" +
+            "    int count = 0\n" +
+            "    new LinkedList() {\n" +
+            "      @Override\n" +
+            "      def get(int i) {\n" +
+            "        count += 1\n" +
+            "        super.get(i)\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testAnonymousInnerClass16() {
+        runNegativeTest(new String[] {
+            "C.groovy",
+            "class C {\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  static def m(int count) {\n" +
+            "    new LinkedList() {\n" +
+            "      @Override\n" +
+            "      def get(int i) {\n" +
+            "        count += 1\n" +
+            "        super.get(i)\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
+    public void testAnonymousInnerClass17() {
         runNegativeTest(new String[] {
             "Script.groovy",
             "@SuppressWarnings('rawtypes')\n" +
@@ -5296,8 +5337,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-5961
-    public void testAnonymousInnerClass16() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5961
+    public void testAnonymousInnerClass18() {
         runNegativeTest(new String[] {
             "Abstract.groovy",
             "abstract class Abstract {\n" +
