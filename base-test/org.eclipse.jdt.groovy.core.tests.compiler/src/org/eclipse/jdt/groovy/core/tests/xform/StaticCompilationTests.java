@@ -501,6 +501,54 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8873
+    public void testCompileStatic8873() {
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  String foo = 'foo'\n" +
+            "  String foom() { 'foom' }\n" +
+            "}\n" +
+            "class Bar {\n" +
+            "  String bar = 'bar'\n" +
+            "  String barm() { 'barm' }\n" +
+            "}\n" +
+            "class Baz {\n" +
+            "  String baz = 'baz'\n" +
+            "  String bazm() { 'bazm' }\n" +
+            "}\n" +
+            "String other() { 'other' }\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  new Foo().with {\n" +
+            "    assert foo == 'foo'\n" +
+            "    assert foom() == 'foom'\n" +
+            "    assert other() == 'other'\n" +
+            "    new Bar().with {\n" +
+            "      assert foo == 'foo'\n" +
+            "      assert bar == 'bar'\n" +
+            "      assert foom() == 'foom'\n" +
+            "      assert barm() == 'barm'\n" +
+            "      assert other() == 'other'\n" +
+            "      new Baz().with {\n" +
+            "        assert foo == 'foo'\n" +
+            "        assert bar == 'bar'\n" +
+            "        assert baz == 'baz'\n" +
+            "        assert foom() == 'foom'\n" +
+            "        assert barm() == 'barm'\n" +
+            "        assert bazm() == 'bazm'\n" +
+            "        assert other() == 'other'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "");
+    }
+
     @Test
     public void testCompileStatic9058() {
         assumeTrue(isAtLeastGroovy(25));
@@ -527,5 +575,271 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086a() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086b() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086c() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086d() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086e() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate outer delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086f() {
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+
+        runConformTest(sources, "outer delegate outer delegate");
     }
 }

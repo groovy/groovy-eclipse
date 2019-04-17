@@ -2900,6 +2900,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit -- GROOVY-9086
     private static boolean isTraitHelper(ClassNode node) {
         return node instanceof InnerClassNode && Traits.isTrait(node.getOuterClass());
     }
@@ -2949,6 +2950,50 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             receivers.add(new Receiver<String>(delegate.getOuterClass(), path.toString()));
         }
     }
+    */
+    protected void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, boolean implicitThis) {
+        if (!implicitThis || typeCheckingContext.delegationMetadata == null) {
+            receivers.addAll(owners);
+        } else {
+            addReceivers(receivers, owners, typeCheckingContext.delegationMetadata, "");
+        }
+    }
+
+    private static void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, DelegationMetadata dmd, String path) {
+        int strategy = dmd.getStrategy();
+        switch (strategy) {
+            case Closure.DELEGATE_ONLY:
+            case Closure.DELEGATE_FIRST:
+                addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                if (strategy == Closure.DELEGATE_FIRST) {
+                    if (dmd.getParent() == null) {
+                        receivers.addAll(owners);
+                    } else {
+                        addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                    }
+                }
+                break;
+            case Closure.OWNER_ONLY:
+            case Closure.OWNER_FIRST:
+                if (dmd.getParent() == null) {
+                    receivers.addAll(owners);
+                } else {
+                    addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                }
+                if (strategy == Closure.OWNER_FIRST) {
+                    addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                }
+                break;
+        }
+    }
+
+    private static void addDelegateReceiver(List<Receiver<String>> receivers, ClassNode delegate, String path) {
+        receivers.add(new Receiver<String>(delegate, path));
+        if (Traits.isTrait(delegate.getOuterClass())) {
+            receivers.add(new Receiver<String>(delegate.getOuterClass(), path));
+        }
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {

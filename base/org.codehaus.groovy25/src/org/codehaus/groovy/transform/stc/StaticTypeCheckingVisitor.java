@@ -1522,7 +1522,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (getter != null) {
                         ClassNode cn = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
-                        // GRECLIPSE add
+                        // GRECLIPSE add -- GROOVY-9077
                         storeTargetMethod(pexp, getter);
                         // GRECLIPSE end
                         pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
@@ -1589,7 +1589,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         ClassNode cn = inferReturnTypeGenerics(dgmReceiver, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
-                        // GRECLIPSE add
+                        // GRECLIPSE add -- GROOVY-9077
                         storeTargetMethod(pexp, getter);
                         // GRECLIPSE end
                         return true;
@@ -1753,7 +1753,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitProperty(propertyNode);
         storeWithResolve(propertyNode.getOriginType(), receiver, propertyNode.getDeclaringClass(), propertyNode.isStatic(), expressionToStoreOn);
         if (delegationData != null) {
+            /* GRECLIPSE edit -- GROOVY-9086
             delegationData = adjustData(delegationData, receiver, typeCheckingContext.delegationMetadata);
+            */
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
         return true;
@@ -3139,6 +3141,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit -- GROOVY-9086
     private static boolean isTraitHelper(ClassNode node) {
         return node instanceof InnerClassNode && Traits.isTrait(node.getOuterClass());
     }
@@ -3188,6 +3191,50 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             receivers.add(new Receiver<String>(delegate.getOuterClass(), path.toString()));
         }
     }
+    */
+    protected void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, boolean implicitThis) {
+        if (!implicitThis || typeCheckingContext.delegationMetadata == null) {
+            receivers.addAll(owners);
+        } else {
+            addReceivers(receivers, owners, typeCheckingContext.delegationMetadata, "");
+        }
+    }
+
+    private static void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, DelegationMetadata dmd, String path) {
+        int strategy = dmd.getStrategy();
+        switch (strategy) {
+            case Closure.DELEGATE_ONLY:
+            case Closure.DELEGATE_FIRST:
+                addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                if (strategy == Closure.DELEGATE_FIRST) {
+                    if (dmd.getParent() == null) {
+                        receivers.addAll(owners);
+                    } else {
+                        addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                    }
+                }
+                break;
+            case Closure.OWNER_ONLY:
+            case Closure.OWNER_FIRST:
+                if (dmd.getParent() == null) {
+                    receivers.addAll(owners);
+                } else {
+                    addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                }
+                if (strategy == Closure.OWNER_FIRST) {
+                    addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                }
+                break;
+        }
+    }
+
+    private static void addDelegateReceiver(List<Receiver<String>> receivers, ClassNode delegate, String path) {
+        receivers.add(new Receiver<String>(delegate, path));
+        if (Traits.isTrait(delegate.getOuterClass())) {
+            receivers.add(new Receiver<String>(delegate.getOuterClass(), path));
+        }
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
@@ -3412,15 +3459,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, mn.get(0), call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
 
-                            /*
-                            if (null != typeCheckingContext.getEnclosingReturnStatement() && !isNestedOrSandwichedMethodCall()) {
-                                ClassNode inferredType = infer(returnType, typeCheckingContext.getEnclosingMethod().getReturnType());
-                                if (null != inferredType) {
-                                    returnType = inferredType;
-                                }
-                            }
-                            */
-
                             storeType(call, returnType);
                             storeTargetMethod(call, directMethodCallCandidate);
                             ClassNode declaringClass = directMethodCallCandidate.getDeclaringClass();
@@ -3429,7 +3467,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             }
                             String data = chosenReceiver.getData();
                             if (data != null) {
+                                /* GRECLIPSE edit -- GROOVY-9086
                                 data = adjustData(data, chosenReceiver.getType(), typeCheckingContext.delegationMetadata);
+                                */
                                 // the method which has been chosen is supposed to be a call on delegate or owner
                                 // so we store the information so that the static compiler may reuse it
                                 call.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, data);
@@ -3488,6 +3528,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit -- GROOVY-9086
     // adjust data to handle cases like nested .with since we didn't have enough information earlier
     // TODO see if we can make the earlier detection smarter and then remove this adjustment
     private static String adjustData(String data, ClassNode type, DelegationMetadata dmd) {
@@ -3520,6 +3561,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return data;
     }
+    */
 
     /**
      * e.g. c(b(a())),      a() and b() are nested method call, but c() is not
