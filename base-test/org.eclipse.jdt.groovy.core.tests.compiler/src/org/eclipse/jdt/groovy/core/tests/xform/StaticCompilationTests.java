@@ -577,6 +577,36 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9063
+    public void testCompileStatic9063() {
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  protected String message = 'hello'\n" +
+            "\n" +
+            "  void meth() {\n" +
+            "    { ->\n" +
+            "      { ->\n" +
+            "        printClass(getClass().name)\n" +
+            "        print ':' + message.length()\n" +
+            "      }.call()\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "\n" +
+            "  static void printClass(String className) {\n" +
+            "    print className\n" +
+            "  }\n" +
+            "\n" +
+            "  static main(args) {\n" +
+            "    new Main().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "Main$_meth_closure1$_closure2:5");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9086
     public void testCompileStatic9086() {
         String[] sources = {
@@ -591,11 +621,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -629,11 +659,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -667,11 +697,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -705,11 +735,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -743,11 +773,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -781,11 +811,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
@@ -819,11 +849,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    print 'inner delegate'\n" +
             "  }\n" +
             "}\n" +
-            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C1()\n" +
             "  block.call()\n" +
             "}\n" +
-            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure<Void> block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block.call()\n" +
             "}\n" +
