@@ -549,6 +549,424 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    public void testCompileStatic9043_nonStaticInnerToPackage() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToProtected() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToPublic() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToPrivate() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    public void testCompileStatic9043_staticInnerToPackage() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToProtected() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToPublic() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToPrivate() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPackage() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToProtected() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPublic() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPrivate() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackage() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new SamePack().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class SamePack {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToProtected() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new SamePack().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class SamePack {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPublic() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new SamePack().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class SamePack {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPrivate() {
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new SamePack().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class SamePack {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 10)\n" +
+            "\tprint Main.VALUE\n" +
+            "\t      ^^^^\n" +
+            "Groovy:Access to Main#VALUE is forbidden @ line 10, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test @Ignore("IllegalAccessError: tried to access field p.Main.VALUE from class q.Sub") // GROOVY-9093
+    public void testCompileStatic9043_subToPackage() {
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.Sub().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/Sub.groovy",
+            "package q\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Sub extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Sub.groovy\n" +
+            "Groovy:Access to Main#VALUE is forbidden @ line -1, column -1.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToProtected() {
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.Sub().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/Sub.groovy",
+            "package q\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Sub extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPublic() {
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.Sub().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/Sub.groovy",
+            "package q\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Sub extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "value");
+    }
+
+    @Test @Ignore("MissingPropertyExceptionNoStack: No such property: VALUE for class: q.Sub") // GROOVY-9093
+    public void testCompileStatic9043_subToPrivate() {
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.Sub().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/Sub.groovy",
+            "package q\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Sub extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Sub.groovy\n" +
+            "Groovy:Access to Main#VALUE is forbidden @ line -1, column -1.\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic9058() {
         assumeTrue(isAtLeastGroovy(25));
