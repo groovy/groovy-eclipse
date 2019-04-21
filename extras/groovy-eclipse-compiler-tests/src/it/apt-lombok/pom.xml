@@ -10,7 +10,8 @@
   <version>1.0-SNAPSHOT</version>
 
   <properties>
-    <lombok.version>1.16.18</lombok.version>
+    <lombok.version>1.18.6</lombok.version>
+
     <maven.compiler.fork>true</maven.compiler.fork>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
@@ -47,7 +48,6 @@
           <compilerArguments>
             <javaAgentClass>lombok.launch.Agent</javaAgentClass>
           </compilerArguments>
-          <fork>true</fork>
         </configuration>
         <dependencies>
           <dependency>

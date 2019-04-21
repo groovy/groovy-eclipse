@@ -1,0 +1,23 @@
+import java.io.*;
+
+String[] expectedClasses = {
+    "com/test/LombokDataType",
+};
+
+String[] expectedTestClasses = {
+    "com/test/LombokDataTest",
+};
+
+for (String name : expectedClasses) {
+    File file = new File(basedir, "target/classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
+
+for (String name : expectedTestClasses) {
+    File file = new File(basedir, "target/test-classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
