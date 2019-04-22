@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Iterator;
@@ -1248,13 +1249,40 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAbstractCovariance_1() {
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo implements Comparable<String> {\n" +
+            "  @Override\n" +
+            "  int compareTo(String string) { this <=> string }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testAbstractCovariance_2() {
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo implements Comparable<String> {\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo implements Comparable<String> {\n" +
+        "\t      ^^^\n" +
+        "Groovy:Can't have an abstract method in a non-abstract class. The class 'Foo' must be declared abstract or the method 'int compareTo(java.lang.Object)' must be implemented.\n" +
+        "----------\n");
+    }
+
+    @Test
     public void testAbstractCovariance_GRE272() {
         runNegativeTest(new String[] {
             "A.java",
             "public class A {}",
 
             "AA.java",
-            "public class AA extends A{}",
+            "public class AA extends A {}",
 
             "I.java",
             "public interface I { A getA();}",
@@ -1274,24 +1302,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GRE272_2() {
         runNegativeTest(new String[] {
             "test/Bar.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class Bar extends BarBase {}",
 
             "test/BarBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "abstract public class BarBase {}",
 
             "test/GroovyFoo.groovy",
-            "package test;\n"+
+            "package test;\n" +
             "class GroovyFoo extends FooBase {}",
 
             "test/FooBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
-
             "test/IFoo.java",
-            "package test;\n"+
+            "package test;\n" +
             "public interface IFoo { BarBase foo();}",
         },
         "");
@@ -1301,24 +1328,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GRE272_3() {
         runNegativeTest(new String[] {
             "test/IFoo.java",
-            "package test;\n"+
+            "package test;\n" +
             "public interface IFoo { BarBase foo();}",
 
             "test/GroovyFoo.groovy",
-            "package test;\n"+
+            "package test;\n" +
             "class GroovyFoo extends FooBase {}",
 
             "test/FooBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
 
             "test/BarBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "abstract public class BarBase {}",
 
             "test/Bar.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class Bar extends BarBase {}",
         },
         "");
@@ -1328,23 +1355,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testAbstractCovariance_GRE272_4() {
         runNegativeTest(new String[] {
             "test/IFoo.java",
-            "package test;\n"+
+            "package test;\n" +
             "public interface IFoo { BarBase foo();}",
 
             "test/FooBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class FooBase implements IFoo { public Bar foo() {return null;}}",
 
             "test/BarBase.java",
-            "package test;\n"+
+            "package test;\n" +
             "abstract public class BarBase {}",
 
             "test/Bar.java",
-            "package test;\n"+
+            "package test;\n" +
             "public class Bar extends BarBase {}",
 
             "test/GroovyFoo.groovy",
-            "package test;\n"+
+            "package test;\n" +
             "class GroovyFoo extends FooBase {}",
         },
         "");
@@ -5320,6 +5347,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-5961
     public void testAnonymousInnerClass17() {
+        assumeTrue(isAtLeastGroovy(25));
+
         runNegativeTest(new String[] {
             "Script.groovy",
             "@SuppressWarnings('rawtypes')\n" +
@@ -5339,6 +5368,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-5961
     public void testAnonymousInnerClass18() {
+        assumeTrue(isAtLeastGroovy(25));
+
         runNegativeTest(new String[] {
             "Abstract.groovy",
             "abstract class Abstract {\n" +
@@ -5358,6 +5389,57 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         },
         "");
+    }
+
+    @Test
+    public void testAnonymousInnerClass19() {
+        runConformTest(new String[] {
+            "Script.groovy",
+            "print Main.bar()\n" +
+            "print ' '\n" +
+            "Main.foo = 2\n" +
+            "print Main.bar()\n",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  static foo = 1\n" +
+            "  static bar() {\n" +
+            "    def impl = new java.util.function.Supplier() {\n" +
+            "      @Override def get() {\n" +
+            "        return foo\n" +
+            "      }\n" +
+            "    }\n" +
+            "    return impl.get()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "1 2");
+    }
+
+    @Test
+    public void testAnonymousInnerClass20() {
+        runConformTest(new String[] {
+            "Script.groovy",
+            "def bar = new Bar()\n" +
+            "print bar.baz()\n",
+
+            "Types.groovy",
+            "class Foo {\n" +
+            "  static baz() {\n" +
+            "    def impl = new java.util.function.Supplier() {\n" +
+            "      @Override def get() {\n" +
+            "        return x()\n" +
+            "      }\n" +
+            "    }\n" +
+            "    return impl.get()\n" +
+            "  }\n" +
+            "  private static def x() { 'foo' }\n" +
+            "}\n" +
+            "class Bar extends Foo {\n" +
+            "  private static def x() { 'bar' }\n" +
+            "}\n",
+        },
+        "foo");
     }
 
     @Test

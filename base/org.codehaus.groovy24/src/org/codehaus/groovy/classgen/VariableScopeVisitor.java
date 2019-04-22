@@ -203,9 +203,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
-        // GRECLIPSE add -- GROOVY-5961
-        if (isAnonymous(cn)) return null;
-        // GRECLIPSE end
         return findClassMember(cn.getOuterClass(), name);
     }
 
@@ -293,9 +290,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     if (!(staticScope && !staticMember))
                         var = member;
                 }
-                // GRECLIPSE add -- GROOVY-5961
-                if (!isAnonymous(classScope))
-                // GRECLIPSE end
                 break;
             }
             scope = scope.getParent();
@@ -608,10 +602,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState();
         InnerClassNode innerClass = (InnerClassNode) call.getType();
         innerClass.setVariableScope(currentScope);
-        // GRECLIPSE add -- GROOVY-5961
-        currentScope.setClassScope(innerClass);
-        currentScope.setInStaticContext(false);
-        // GRECLIPSE end
         for (MethodNode method : innerClass.getMethods()) {
             Parameter[] parameters = method.getParameters();
             if (parameters.length == 0) parameters = null; // null means no implicit "it"

@@ -156,7 +156,10 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // if we are in a class and no variable is declared until
             // now, then we can break the loop, because we are allowed
             // to declare a variable of the same name as a class member
-            if (scope.getClassScope() != null) break;
+            // GRECLIPSE add -- GROOVY-5961
+            //if (scope.getClassScope() != null) break;
+            if (scope.getClassScope() != null && !isAnonymous(scope.getClassScope())) break;
+            // GRECLIPSE end
 
             if (scope.getDeclaredVariable(var.getName()) != null) {
                 // variable already declared
