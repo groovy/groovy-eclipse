@@ -1276,6 +1276,29 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAbstractCovariance_3() {
+        runNegativeTest(new String[] {
+            "Face1.java",
+            "@FunctionalInterface\n" +
+            "interface Face1<I, O> {\n" +
+            "  O apply(I in);\n" +
+            "}\n",
+
+            "Face2.java",
+            "interface Face2<X, Y> extends Face1<X, Y> {\n" +
+            "  Object another();\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face2<Number, String> {\n" +
+            "  @Override String apply(Number n) { '' }\n" +
+            "  @Override Object another() { null }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
     public void testAbstractCovariance_GRE272() {
         runNegativeTest(new String[] {
             "A.java",
@@ -1373,6 +1396,82 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "test/GroovyFoo.groovy",
             "package test;\n" +
             "class GroovyFoo extends FooBase {}",
+        },
+        "");
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        runNegativeTest(new String[] {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face<CharSequence> { \n" +
+            "  @Override\n" +
+            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        runNegativeTest(new String[] {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override\n" +
+            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        runNegativeTest(new String[] {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  public CharSequence process(CharSequence chars) { chars }\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059c() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        runNegativeTest(new String[] {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<String>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  public String process(String string) { string }\n" +
+            "}\n",
         },
         "");
     }

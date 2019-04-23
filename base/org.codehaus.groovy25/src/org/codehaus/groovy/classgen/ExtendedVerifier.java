@@ -50,7 +50,7 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -261,7 +261,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         ClassNode next = cNode;
         outer:
         while (next != null) {
-            Map genericsSpec = createGenericsSpec(next);
+            Map<String, ClassNode> genericsSpec = createGenericsSpec(next);
             MethodNode mn = correctToGenericsSpec(genericsSpec, method);
             if (next != cNode) {
                 ClassNode correctedNext = correctToGenericsSpecRecurse(genericsSpec, next);
@@ -269,20 +269,19 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 if (found != null) break;
             }
             List<ClassNode> ifaces = new ArrayList<ClassNode>(Arrays.asList(next.getInterfaces()));
-            Map updatedGenericsSpec = new HashMap(genericsSpec);
             while (!ifaces.isEmpty()) {
                 ClassNode origInterface = ifaces.remove(0);
                 if (!origInterface.equals(ClassHelper.OBJECT_TYPE)) {
-                    updatedGenericsSpec = createGenericsSpec(origInterface, updatedGenericsSpec);
-                    ClassNode iNode = correctToGenericsSpecRecurse(updatedGenericsSpec, origInterface);
-                    MethodNode found2 = getDeclaredMethodCorrected(updatedGenericsSpec, mn, iNode);
+                    genericsSpec = createGenericsSpec(origInterface, genericsSpec);
+                    ClassNode iNode = correctToGenericsSpecRecurse(genericsSpec, origInterface);
+                    MethodNode found2 = getDeclaredMethodCorrected(genericsSpec, mn, iNode);
                     if (found2 != null) break outer;
-                    ifaces.addAll(Arrays.asList(iNode.getInterfaces()));
+                    Collections.addAll(ifaces, iNode.getInterfaces());
                 }
             }
             ClassNode superClass = next.getUnresolvedSuperClass();
             if (superClass != null) {
-                next = correctToGenericsSpecRecurse(updatedGenericsSpec, superClass);
+                next = correctToGenericsSpecRecurse(genericsSpec, superClass);
             } else {
                 next = null;
             }
@@ -291,10 +290,10 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     private static MethodNode getDeclaredMethodCorrected(Map genericsSpec, MethodNode mn, ClassNode correctedNext) {
-        for (MethodNode orig : correctedNext.getDeclaredMethods(mn.getName())) {
-            MethodNode method = correctToGenericsSpec(genericsSpec, orig);
-            if (ParameterUtils.parametersEqual(method.getParameters(), mn.getParameters())) {
-                return method;
+        for (MethodNode declared : correctedNext.getDeclaredMethods(mn.getName())) {
+            MethodNode corrected = correctToGenericsSpec(genericsSpec, declared);
+            if (ParameterUtils.parametersEqual(corrected.getParameters(), mn.getParameters())) {
+                return corrected;
             }
         }
         return null;

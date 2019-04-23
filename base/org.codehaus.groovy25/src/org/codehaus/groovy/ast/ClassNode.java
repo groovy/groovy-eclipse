@@ -1665,9 +1665,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return transformInstances;
     }
-    
+
+    // GRECLIPSE add
+    public boolean hasMultiRedirect() {
+        return (redirect != null && redirect != redirect());
+    }
+    // GRECLIPSE end
+
     public boolean isRedirectNode() {
-        return redirect!=null;
+        return (redirect != null);
     }
 
     @Override
