@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -26,6 +25,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked1() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked\n"+
@@ -36,6 +36,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "   }\n"+
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -53,16 +54,18 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked2() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
-            "import groovy.transform.TypeChecked\n"+
-            "@TypeChecked\n"+
-            "void method(String message) {\n"+
-            "   List<Integer> ls = new ArrayList<Integer>();\n"+
-            "   ls.add(123);\n"+
-            "   ls.add('abc');\n"+
+            "import groovy.transform.TypeChecked\n" +
+            "@TypeChecked\n" +
+            "void method(String message) {\n" +
+            "   List<Integer> ls = new ArrayList<Integer>();\n" +
+            "   ls.add(123);\n" +
+            "   ls.add('abc');\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -75,6 +78,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked3() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.TypeChecked\n" +
@@ -85,12 +89,14 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testTypeChecked4() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.TypeChecked\n" +
@@ -101,26 +107,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
-    }
-
-    @Test @Ignore("VM argument not accepted on CI server")
-    public void testTypeChecked1506() {
-        String[] sources = {
-            "LoggerTest.groovy",
-            "import groovy.transform.*\n"+
-            "import groovy.util.logging.*\n"+
-            "@TypeChecked @Log\n"+
-            "class LoggerTest {\n"+
-            "  static void main(String... args) {\n"+
-            "    LoggerTest.log.info('one')\n"+
-            "    log.info('two')\n"+
-            "  }\n"+
-            "}\n",
-        };
-        vmArguments = new String[] {"-Djava.util.logging.SimpleFormatter.format=%4$s %5$s%6$s%n"};
-
-        runConformTest(sources, "", "INFO one\nINFO two");
     }
 }

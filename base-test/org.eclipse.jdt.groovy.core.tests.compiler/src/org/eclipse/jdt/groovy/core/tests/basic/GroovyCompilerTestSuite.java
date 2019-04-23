@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -134,7 +134,7 @@ public abstract class GroovyCompilerTestSuite {
                         if (groovyJar != null)
                             break;
                     }
-                    newcps[newcps.length-3] = resolve(groovyJar);
+                    newcps[newcps.length - 3] = resolve(groovyJar);
 
                     URL ivyJar = null;
                     for (String ivyVer : ivyVersions) {
@@ -142,13 +142,13 @@ public abstract class GroovyCompilerTestSuite {
                         if (ivyJar != null)
                             break;
                     }
-                    newcps[newcps.length-2] = resolve(ivyJar);
+                    newcps[newcps.length - 2] = resolve(ivyJar);
 
                     // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
                     // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
                     // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
                     // classpath for just this reason, hmm.
-                    newcps[newcps.length-1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
+                    newcps[newcps.length - 1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
                 } catch (IOException e) {
                     Assert.fail("IOException thrown " + e.getMessage());
                 }

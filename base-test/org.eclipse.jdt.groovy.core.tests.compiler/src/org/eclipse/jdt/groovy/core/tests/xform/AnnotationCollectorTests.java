@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotationCollector1() {
+        //@formatter:off
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n" +
@@ -44,12 +45,14 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "@ToString\n" +
             "@interface Alias { }",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAnnotationCollector2() {
+        //@formatter:off
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n" +
@@ -67,12 +70,14 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
             "@interface Alias { }",
         };
+        //@formatter:on
 
         runConformTest(sources, "Type(123)");
     }
 
     @Test
     public void testAnnotationCollector3() {
+        //@formatter:off
         String[] sources = {
             "Book.groovy",
             "import java.lang.reflect.*\n" +
@@ -103,6 +108,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "public @interface ISBN {\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "@NotNull()\n@Length(value=0)");
     }

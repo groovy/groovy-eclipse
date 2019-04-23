@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCategory0() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
             "use(NumberCategory) {\n" +
@@ -48,12 +49,14 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "300m");
     }
 
     @Test
     public void testCategory1() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
             "use(NumberCategory) {\n" +
@@ -77,12 +80,14 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "300m");
     }
 
     @Test
     public void testCategory2() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "assert new Plane().fly() ==\n" +
@@ -129,12 +134,14 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "    String getName() { \"James Bond's vehicle\" }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "I'm the James Bond's vehicle and I dive!");
     }
 
     @Test // not a great test, needs work
     public void testCategory_STS3822() {
+        //@formatter:off
         String[] sources = {
             "bad.groovy",
             "@Category(C.class) \n" +
@@ -145,6 +152,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "  { return \"Bad [takeI()=\" + takeI() + \"]\"; }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +

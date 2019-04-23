@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
 
     @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
     public void testSingleton1() {
+        //@formatter:off
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
@@ -39,12 +40,14 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
             "  public String field = 'abcd'\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "abcd");
     }
 
     @Test
     public void testSingleton2() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -58,12 +61,14 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
             "  public String field = 'abcd'\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "abcd");
     }
 
     @Test
     public void testSingleton3() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -81,12 +86,14 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
             "  static void run() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "ctor running abcd");
     }
 
     @Test // lazy option set in Singleton
     public void testSingleton4() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "public class Main {\n" +
@@ -104,6 +111,7 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
             "  static void run() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "running ctor abcd");
     }

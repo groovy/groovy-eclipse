@@ -29,7 +29,8 @@ public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSu
 
     @Test
     public void testDefaultAndStaticMethodInInterface() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/IExample.java",
             "package p;\n" +
             "public interface IExample {\n" +
@@ -43,12 +44,16 @@ public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSu
             "class Example implements IExample {\n" +
             "  public void testExample() {}\n" +
             "}\n",
-        });
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
     public void testFunctionalInterfaceCoercion() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
@@ -58,6 +63,9 @@ public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSu
             "    coll.removeIf { it.bar == null }\n" + // Closure should coerce to SAM type java.util.function.Predicate
             "  }\n" +
             "}\n",
-        });
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 }
