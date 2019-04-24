@@ -48,7 +48,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "2. ERROR in Foo.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                          ^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase(). Please check if the declared type is correct and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()." +
+            " Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 

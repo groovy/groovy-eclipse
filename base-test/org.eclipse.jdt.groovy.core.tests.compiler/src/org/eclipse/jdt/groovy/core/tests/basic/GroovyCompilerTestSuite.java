@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
@@ -66,10 +68,11 @@ public abstract class GroovyCompilerTestSuite {
 
     protected static final long JDK7  = ClassFileConstants.JDK1_7;
     protected static final long JDK8  = ClassFileConstants.JDK1_8;
-    protected static final long JDK9  = ClassFileConstants.JDK9  ;
-    protected static final long JDK10 = ClassFileConstants.JDK10 ;
+    protected static final long JDK9  = ClassFileConstants.JDK9;
+    protected static final long JDK10 = ClassFileConstants.JDK10;
     protected static final long JDK11 = (55L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11));
+    protected static final long JDK12 = (56L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11, JDK12));
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
@@ -148,7 +151,8 @@ public abstract class GroovyCompilerTestSuite {
                     // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
                     // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
                     // classpath for just this reason, hmm.
-                    newcps[newcps.length - 1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
+                    URL xformsJar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar");
+                    newcps[newcps.length - 1] = resolve(xformsJar);
                 } catch (IOException e) {
                     Assert.fail("IOException thrown " + e.getMessage());
                 }
@@ -193,7 +197,8 @@ public abstract class GroovyCompilerTestSuite {
 
     protected final File createScript(CharSequence name, CharSequence contents) {
         String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
-        new File(folder).mkdirs(); Util.writeToFile(contents.toString(), folder + name);
+        new File(folder).mkdirs();
+        Util.writeToFile(contents.toString(), folder + name);
         return new File(folder + name);
     }
 
@@ -335,6 +340,29 @@ public abstract class GroovyCompilerTestSuite {
             }
         }
         return null;
+    }
+
+    /**
+     * Find the named file (which should have just been compiled) and for the named method determine
+     * the ClassNode for the return type and return the name of the classnode.
+     */
+    protected static String getReturnTypeOfMethod(String filename, String methodname) {
+        ModuleNode mn = getModuleNode(filename);
+        ClassNode cn = mn.getClasses().get(0);
+        MethodNode methodNode = cn.getMethod(methodname,
+            org.codehaus.groovy.ast.Parameter.EMPTY_ARRAY);
+        ClassNode returnType = methodNode.getReturnType();
+        return returnType.getName();
+    }
+
+    protected static String stringify(FieldDeclaration decl) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(decl.name);
+        sb.append(" sourceStart>sourceEnd:" + decl.sourceStart + ">" + decl.sourceEnd);
+        sb.append(" declSourceStart>declSourceEnd:" + decl.declarationSourceStart + ">" + decl.declarationSourceEnd);
+        sb.append(" modifiersSourceStart=" + decl.modifiersSourceStart); // first char of decls modifiers
+        sb.append(" endPart1Position:" + decl.endPart1Position); // char after type decl ('int x,y' is space)
+        return sb.toString();
     }
 
     protected static String stringify(TypeReference type) {

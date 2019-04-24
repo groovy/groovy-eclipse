@@ -105,7 +105,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -134,7 +134,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -1621,5 +1621,34 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "\t ^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testConstructorAnnotations() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "class C {\n" +
+            "  @Deprecated\n" +
+            "  C() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @Deprecated C() {\n" +
+            "  }\n" +
+            "}\n"
+        );
+
+        checkDisassemblyFor("p/C.class",
+            "  @java.lang.Deprecated\n" +
+            "  public C();\n");
     }
 }

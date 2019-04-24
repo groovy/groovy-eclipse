@@ -20,7 +20,7 @@ import static org.junit.Assume.assumeTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSuite {
+public final class Java8Tests extends GroovyCompilerTestSuite {
 
     @Before
     public void setUp() {

@@ -19,12 +19,9 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import java.util.Map;
-
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -175,9 +172,12 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", two);
+        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", three);
     }
 
     @Test
@@ -197,9 +197,12 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", two);
+        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", three);
     }
 
     @Test
@@ -228,10 +231,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", stringify(findField(decl, "settwo").type));
-        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", stringify(findField(decl, "setthree").type));
-        //assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", stringify(grabField(decl, "setfour")));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        String four = stringify(findField(decl, "setfour").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", two);
+        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", three);
+        assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", four);
     }
 
     @Test
@@ -251,9 +258,12 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", two);
+        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", three);
     }
 
     @Test
@@ -273,19 +283,21 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", two);
+        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", three);
     }
 
     @Test @Ignore("support for A<X>.B<Y> has not been implemented")
     public void testGenericsPositions_6_GRE267() {
-        // multiple generified components in a reference
         //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
-            "  One<String,Integer>.Two<Boolean> whoa;\n" +
+            "  One<String,Integer>.Two<Boolean> whoa;\n" + // multiple generified components in a reference
             "  java.util.Set<? extends java.io.Serializable> settwo;\n" +
             "  java.util.Set<? super java.lang.Number> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
@@ -293,7 +305,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "One.java",
             "public class One<A,B> {\n" +
-            "  class Two<C> {\n" +
+            "  public class Two<C> {\n" +
             "  }\n" +
             "}",
         };
@@ -302,9 +314,12 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "one").type));
-        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "one").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", two);
+        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", three);
     }
 
     @Test
@@ -324,9 +339,12 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", stringify(findField(decl, "settwo").type));
-        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", two);
+        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", three);
     }
 
     @Test
@@ -510,12 +528,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in p\\StructureBase.groovy (at line 4)\n" +
             "\tpublic class StructureBase implements Structure {\n" +
             "\t             ^^^^^^^^^^^^^\n" +
-            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" +
+            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\'" +
+            " must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" +
             "----------\n" +
             "2. ERROR in p\\StructureBase.groovy (at line 4)\n" +
             "\tpublic class StructureBase implements Structure {\n" +
             "\t             ^^^^^^^^^^^^^\n" +
-            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" +
+            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\'" +
+            " must be declared abstract or the method \'void reset()\' must be implemented.\n" +
             "----------\n");
     }
 
@@ -1721,7 +1741,8 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tclass Foo implements Comparable<String> {\n" +
             "\t      ^^^\n" +
-            "Groovy:Can't have an abstract method in a non-abstract class. The class 'Foo' must be declared abstract or the method 'int compareTo(java.lang.Object)' must be implemented.\n" +
+            "Groovy:Can't have an abstract method in a non-abstract class. The class 'Foo'" +
+            " must be declared abstract or the method 'int compareTo(java.lang.Object)' must be implemented.\n" +
             "----------\n");
     }
 
@@ -1837,6 +1858,31 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testExtendingRawJavaType() {
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p;\n" +
+            "public class Foo extends Supertype {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.print(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Supertype.java",
+            "package p;\n" +
+            "class Supertype<T> extends Supertype2 { }",
+
+            "p/Supertype2.java",
+            "package p;\n" +
+            "class Supertype2<T> { }",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
@@ -2065,72 +2111,28 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
-    public void testJava7_3() {
-        assumeTrue(!isAtLeastJava(JDK7));
-
+    @Test // https://jira.spring.io/browse/STS-3930
+    public void testSts3930() {
         //@formatter:off
         String[] sources = {
-            "A.java",
-            "import java.util.*;\n" +
-            "public class A {\n" +
-            "public static void main(String[]argv) {\n" +
-            "  try {\n" +
-            "    foo();\n" +
-            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
+            "demo/GroovyDemo.groovy",
+            "package demo\n" +
+            "class GroovyDemo {\n" +
+            "  static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = this.classLoader) {\n" +
             "  }\n" +
-            "}\n" +
-            "  public static void foo() throws java.io.IOException {}\n" +
-            "}",
+            "}\n",
 
-            "B.groovy",
-            "print 'a'\n",
+            "demo/JavaDemo.java",
+            "package demo;\n" +
+            "public class JavaDemo {\n" +
+            "  public static void staticMethod() {\n" +
+            "    GroovyDemo.someMethod(JavaDemo.class);\n" +
+            "  }\n" +
+            "}\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.java (at line 6)\n" +
-            "\t} catch (java.io.IOException | IllegalStateException re) {\n" +
-            "\t         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Multi-catch parameters are not allowed for source level below 1.7\n" +
-            "----------\n");
-    }
-
-    @Test @Ignore("Spock not loaded to classpath")
-    public void testDisablingGenericsWarnings() {
-        Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
-
-        //@formatter:off
-        String[] sources = {
-            "Assertions.groovy",
-            "import spock.lang.*\n" +
-            "@Speck\n" +
-            "class Assertions {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new Assertions().comparingXandY();\n" +
-            "  }\n" +
-            "  def comparingXandY() {\n" +
-            "    def x = 1\n" +
-            "    def y = 2\n" +
-            "    \n" +
-            "    expect:\n" +
-            "    x < y    // OK\n" +
-            "    x == y   // BOOM!\n" +
-            " }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Assertions.groovy (at line 4)\n" +
-            "   public static void main(String[] argv) {\n" +
-            "   ^^\n" +
-            "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-            "----------\n",
-            options);
+        runConformTest(sources, "");
     }
 
     @Test
