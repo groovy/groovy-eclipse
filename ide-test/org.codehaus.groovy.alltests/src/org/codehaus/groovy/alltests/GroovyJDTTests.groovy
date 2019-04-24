@@ -29,6 +29,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.basic.GenericsTests,
     org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests,
     org.eclipse.jdt.groovy.core.tests.basic.ImportsTests,
+    org.eclipse.jdt.groovy.core.tests.basic.InnerClassTests,
     org.eclipse.jdt.groovy.core.tests.basic.Java8Tests,
     org.eclipse.jdt.groovy.core.tests.basic.TraitsTests,
 
