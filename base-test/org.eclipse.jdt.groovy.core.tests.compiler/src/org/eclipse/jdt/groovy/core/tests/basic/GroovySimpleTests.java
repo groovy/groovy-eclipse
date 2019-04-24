@@ -49,10 +49,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "Coroutine.groovy",
             "def iterate(n, closure) {\n" +
             "  1.upto(n) {\n" +
-            "    closure(it);\n" +
+            "    closure(it)\n" +
             "  }\n" +
             "}\n" +
-            "iterate (3) {\n" +
+            "iterate(3) {\n" +
             "  print it\n" +
             "}\n",
         };
@@ -67,18 +67,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Foo.groovy",
             "class A {\n" +
-            "    A(closure) {\n" +
-            "        closure()\n" +
-            "    }\n" +
+            "  A(Closure<?> closure) {\n" +
+            "    closure()\n" +
+            "  }\n" +
             "}\n" +
             "abc = {println 'abc'\n" +
             "}\n" +
             "new A({\n" +
-            "    abc()\n" +
-            "}) //works properly\n" +
-            "new A() {   \n" +
-            "    abc()\n" +
-            "} // throw error: unexpected token: abc at line: 13, column: 3\n",
+            "  abc()\n" +
+            "})\n" +
+            "new A() {\n" +
+            "  abc()\n" +
+            "}\n",
         };
         //@formatter:on
 
@@ -87,7 +87,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 12)\n" +
             "\tabc()\n" +
             "\t^\n" +
-            "Groovy:unexpected token: abc @ line 12, column 5.\n" +
+            "Groovy:unexpected token: abc @ line 12, column 3.\n" +
             "----------\n");
     }
 
@@ -95,18 +95,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testGreclipse719() {
         //@formatter:off
         String[] sources = {
-            "MyDomainClass.groovy",
-            "int anInt = 10;\n" +
-            "def Method[] methodArray = anInt.class.methods;\n" +
-            "println methodArray.name;",
+            "Script.groovy",
+            "int anInt = 10\n" +
+            "Method[] methodArray = anInt.class.methods\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
-            "\tdef Method[] methodArray = anInt.class.methods;\n" +
-            "\t    ^^^^^^^^\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\tMethod[] methodArray = anInt.class.methods\n" +
+            "\t^^^^^^^^\n" +
             "Groovy:unable to resolve class Method[]\n" +
             "----------\n");
     }
@@ -115,18 +114,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testGreclipse719_2() {
         //@formatter:off
         String[] sources = {
-            "MyDomainClass.groovy",
-            "int anInt = 10;\n" +
-            "def Method[][] methodMethodArray = anInt.class.methods;\n" +
-            "println methodArray.name;",
+            "Script.groovy",
+            "int anInt = 10\n" +
+            "Method[][] methodMethodArray = anInt.class.methods\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
-            "\tdef Method[][] methodMethodArray = anInt.class.methods;\n" +
-            "\t    ^^^^^^^^^^\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\tMethod[][] methodMethodArray = anInt.class.methods\n" +
+            "\t^^^^^^^^^^\n" +
             "Groovy:unable to resolve class Method[][]\n" +
             "----------\n");
     }
@@ -136,14 +134,48 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Super.groovy",
-            "class Super {" +
-            "  def static getSql() { return 'abc'; }\n" +
+            "class Super {\n" +
+            "  def static getSql() { 'sql' }\n" +
             "}\n" +
             "class Sub extends Super {\n" +
             "  def static m() {\n" +
             "    sql.charAt(0)\n" +
-            "  }" +
+            "  }\n" +
             "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testStaticProperty_GRE364() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "public class Foo { static String fubar }\n",
+
+            "Bar.java",
+            "public class Bar {\n" +
+            "  String fubar = Foo.getFubar();\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testStaticProperty_GRE364_2() {
+        //@formatter:off
+        String[] sources = {
+            "Bar.java",
+            "public class Bar {\n" +
+            "  String fubar = Foo.getFubar();\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "public class Foo { static String fubar }\n",
         };
         //@formatter:on
 
@@ -156,7 +188,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "com/foo/Bar.java",
             "package com.foo;\n" +
-            "public class Bar { \n" +
+            "public class Bar {\n" +
             "  public static void main(String[] argv) {\n" +
             "    System.out.println(\"def\");\n" +
             "  }\n" +
@@ -234,404 +266,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testUnreachable_1047() {
-        //@formatter:off
-        String[] sources = {
-            "MyException.java",
-            "class MyException extends Exception {\n" +
-            "  private static final long serialVersionUID = 1L;\n" +
-            "}",
-
-            "CanThrowException.groovy",
-            "\n" +
-            "public interface CanThrowException {\n" +
-            "  void thisCanThrowException() throws MyException\n" +
-            "}\n",
-
-            "ShouldCatchException.java",
-            "\n" +
-            "class ShouldCatchException {\n" +
-            "  private CanThrowException thing;\n" +
-            "  \n" +
-            "  public void doIt() {\n" +
-            "    try {\n" +
-            "      thing.thisCanThrowException();\n" +
-            "    } catch( MyException e ) {\n" +
-            "      System.out.println(\"Did we catch it?\");\n" +
-            "    }\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testUnreachable_1047_2() {
-        //@formatter:off
-        String[] sources = {
-            "MyException.java",
-            "class MyException extends Exception {\n" +
-            "  private static final long serialVersionUID = 1L;\n" +
-            "}",
-
-            "CanThrowException.groovy",
-            "\n" +
-            "public class CanThrowException {\n" +
-            "  public CanThrowException() throws MyException {\n" +
-            "    throw new MyException();\n" +
-            "  }\n" +
-            "}\n",
-
-            "ShouldCatchException.java",
-            "\n" +
-            "class ShouldCatchException {\n" +
-            "  \n" +
-            "  public void doIt() {\n" +
-            "    try {\n" +
-            "      new CanThrowException();\n" +
-            "    } catch( MyException e ) {\n" +
-            "      System.out.println(\"Did we catch it?\");\n" +
-            "    }\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testDuplicateClassesUnnecessaryExceptions() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "class Foo {}\n" +
-            "class Foo {}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 2)\n" +
-            "\tclass Foo {}\n" +
-            "\t^^^^^^^^^^^^\n" +
-            "Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" +
-            "----------\n" +
-            "2. ERROR in A.groovy (at line 2)\n" +
-            "\tclass Foo {}\n" +
-            "\t      ^^^\n" +
-            "The type Foo is already defined\n" +
-            "----------\n");
-    }
-
-    /**
-     * This test is looking at what happens when a valid type is compiled ahead of two problem types (problematic
-     * since they both declare the same class).  Although the first file gets through resolution OK, re-resolution
-     * is attempted because the SourceUnit isn't tagged as having succeeded that phase - the exception thrown
-     * for the real problem jumps over the tagging process.
-     */
-    @Test
-    public void testDuplicateClassesUnnecessaryExceptions_GRE796() {
-        //@formatter:off
-        String[] sources = {
-            "spring/resources.groovy",
-            "foo = {}\n",
-
-            "A.groovy",
-            "class Foo {}\n",
-
-            "Foo.groovy",
-            "class Foo {}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo {}\n" +
-            "\t ^^^^^^^^^^^\n" +
-            "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" +
-            "----------\n" +
-            "2. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo {}\n" +
-            "\t      ^^^\n" +
-            "The type Foo is already defined\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testDuplicateClassesUnnecessaryExceptions_GRE796_2() {
-        //@formatter:off
-        String[] sources = {
-            "spring/resources.groovy",
-            "foo = {}\n",
-
-            "a/Foo.groovy",
-            "package a\n" +
-            "class Foo {}\n" +
-            "class Foo {}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in a\\Foo.groovy (at line 3)\n" +
-            "\tclass Foo {}\n" +
-            "\t^^^^^^^^^^^^\n" +
-            "Groovy:Invalid duplicate class definition of class a.Foo :" +
-            " The source a" + File.separator + "Foo.groovy contains at least two definitions of the class a.Foo.\n" +
-            "----------\n" +
-            "2. ERROR in a\\Foo.groovy (at line 3)\n" +
-            "\tclass Foo {}\n" +
-            "\t      ^^^\n" +
-            "The type Foo is already defined\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testGroovyColon_GRE801() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "httpClientControl.demand.generalConnection(1..1) = {->\n" +
-            "currHttp\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
-            "\t                                                  ^\n" +
-            "Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression," +
-            " but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testStaticOuter_GRE944() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "static class A {\n" +
-            "  public static void main(String[]argv) {print 'abc';}\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testStaticOuter_GRE944_2() {
-        //@formatter:off
-        String[] sources = {
-            "B.java",
-            "public class B {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new A.C().foo();\n" +
-            "  }\n" +
-            "}\n",
-
-            "A.groovy",
-            "static class A {\n" +
-            "  static class C {\n" +
-            "  public void foo() {print 'abcd';}\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testCrashRatherThanError_GRE986() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "hello \\u\n" +
-            "class Foo {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\thello \\u\n" +
-            "\t       ^\n" +
-            "Groovy:Did not find four digit hex character code. line: 1 col:7 @ line 1, column 7.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testVarargs_GRE925() {
-        //@formatter:off
-        String[] sources = {
-            "Main.java",
-            "public class Main {\n" +
-            "  public static void main(String[] args) {}\n" +
-            "  protected void method(String[] x) {}\n" +
-            "}",
-
-            "Sub.groovy",
-            "class Sub extends Main {\n" +
-            " protected void method(String[] x) { super.method(x) }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testPrimitiveLikeTypeNames_GRE891() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.java",
-            "public class Foo {\n" +
-            "public static void main(String[] args) {\n" +
-            "  Z[][] zs = new Z().zzz();\n" +
-            "  System.out.println(\"works\");\n" +
-            "  }\n" +
-            "}",
-
-            "Z.groovy",
-            "class Z {\n" +
-            "   Z[][] zzz() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-        // return type is a single char type (not in package and not primitive)
-        assertEquals("[[LZ;", getReturnTypeOfMethod("Z.groovy", "zzz"));
-    }
-
-    @Test
-    public void testPrimitiveLikeTypeNames_GRE891_2() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.java",
-            "public class Foo {\n" +
-            "public static void main(String[] args) {\n" +
-            "  int[][] zs = new Z().zzz();\n" +
-            "  System.out.println(\"works\");\n" +
-            "  }\n" +
-            "}",
-
-            "Z.groovy",
-            "class Z {\n" +
-            "   int[][] zzz() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-        // return type is a primitive
-        assertEquals("[[I", getReturnTypeOfMethod("Z.groovy", "zzz"));
-    }
-
-    @Test
-    public void testPrimitiveLikeTypeNames_GRE891_3() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.java",
-            "public class Foo {\n" +
-            "public static void main(String[] args) {\n" +
-            "  java.lang.String[][] zs = new Z().zzz();\n" +
-            "  System.out.println(\"works\");\n" +
-            "  }\n" +
-            "}",
-
-            "Z.groovy",
-            "class Z {\n" +
-            "   java.lang.String[][] zzz() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-        // return type is a qualified java built in type
-        assertEquals("[[Ljava.lang.String;", getReturnTypeOfMethod("Z.groovy", "zzz"));
-    }
-
-    @Test
-    public void testPrimitiveLikeTypeNames_GRE891_4() {
-        //@formatter:off
-        String[] sources = {
-            "pkg/Foo.java",
-            "package pkg;\n" +
-            "public class Foo {\n" +
-            "public static void main(String[] args) {\n" +
-            "  pkg.H[][] zs = new Z().zzz();\n" +
-            "  System.out.println(\"works\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "Y.groovy",
-            "package pkg\n" +
-            "class H {}\n",
-            "Z.groovy",
-            "package pkg\n" +
-            "class Z {\n" +
-            "  H[][] zzz() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-        // return type is a single char groovy type from a package
-        assertEquals("[[Lpkg.H;", getReturnTypeOfMethod("Z.groovy", "zzz"));
-    }
-
-    @Test
-    public void testPrimitiveLikeTypeNames_GRE891_5() {
-        //@formatter:off
-        String[] sources = {
-            "pkg/Foo.java",
-            "package pkg;\n" +
-            "public class Foo {\n" +
-            "public static void main(String[] args) {\n" +
-            "  H[][] zs = new Z().zzz();\n" +
-            "  System.out.println(\"works\");\n" +
-            "  }\n" +
-            "}",
-
-            "Y.java",
-            "package pkg;\n" +
-            "class H {}\n",
-
-            "Z.groovy",
-            "package pkg;\n" +
-            "class Z {\n" +
-            "   H[][] zzz() { null }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "works");
-        // return type is a single char java type from a package
-        assertEquals("[[Lpkg.H;", getReturnTypeOfMethod("Z.groovy", "zzz"));
-    }
-
-    @Test
-    public void testRecursion_GR531() {
+    public void testCyclicReference_GR531() {
         //@formatter:off
         String[] sources = {
             "XXX.groovy",
@@ -655,7 +290,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testRecursion_GR531_2() {
+    public void testCyclicReference_GR531_2() {
         //@formatter:off
         String[] sources = {
             "XXX.groovy",
@@ -682,7 +317,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testRecursion_GR531_3() {
+    public void testCyclicReference_GR531_3() {
         //@formatter:off
         String[] sources = {
             "XXX.groovy",
@@ -721,7 +356,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testRecursion_GR531_4() {
+    public void testCyclicReference_GR531_4() {
         //@formatter:off
         String[] sources = {
             "XXX.groovy",
@@ -742,6 +377,392 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\t                      ^^^\n" +
             "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testUnreachable_1047() {
+        //@formatter:off
+        String[] sources = {
+            "MyException.java",
+            "class MyException extends Exception {\n" +
+            "  private static final long serialVersionUID = 1L;\n" +
+            "}\n",
+
+            "CanThrowException.groovy",
+            "public interface CanThrowException {\n" +
+            "  void thisCanThrowException() throws MyException\n" +
+            "}\n",
+
+            "ShouldCatchException.java",
+            "class ShouldCatchException {\n" +
+            "  private CanThrowException thing;\n" +
+            "  public void doIt() {\n" +
+            "    try {\n" +
+            "      thing.thisCanThrowException();\n" +
+            "    } catch (MyException e) {\n" +
+            "      System.out.println(\"Did we catch it?\");\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testUnreachable_1047_2() {
+        //@formatter:off
+        String[] sources = {
+            "MyException.java",
+            "class MyException extends Exception {\n" +
+            "  private static final long serialVersionUID = 1L;\n" +
+            "}\n",
+
+            "CanThrowException.groovy",
+            "public class CanThrowException {\n" +
+            "  public CanThrowException() throws MyException {\n" +
+            "    throw new MyException();\n" +
+            "  }\n" +
+            "}\n",
+
+            "ShouldCatchException.java",
+            "class ShouldCatchException {\n" +
+            "  public void doIt() {\n" +
+            "    try {\n" +
+            "      new CanThrowException();\n" +
+            "    } catch (MyException e) {\n" +
+            "      System.out.println(\"Did we catch it?\");\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testDuplicateClasses1() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "class Foo {}\n" +
+            "class Foo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 2)\n" +
+            "\tclass Foo {}\n" +
+            "\t^^^^^^^^^^^^\n" +
+            "Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" +
+            "----------\n" +
+            "2. ERROR in A.groovy (at line 2)\n" +
+            "\tclass Foo {}\n" +
+            "\t      ^^^\n" +
+            "The type Foo is already defined\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testDuplicateClasses2() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "public class X {}\n",
+
+            "p/X.java",
+            "package p;\n" +
+            "public class X {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.java (at line 2)\n" +
+            "\tpublic class X {}\n" +
+            "\t             ^\n" +
+            "The type X is already defined\n" +
+            "----------\n");
+    }
+
+    /**
+     * This test is looking at what happens when a valid type is compiled ahead of two problem types (problematic
+     * since they both declare the same class).  Although the first file gets through resolution OK, re-resolution
+     * is attempted because the SourceUnit isn't tagged as having succeeded that phase - the exception thrown
+     * for the real problem jumps over the tagging process.
+     */
+    @Test
+    public void testDuplicateClasses_GRE796() {
+        //@formatter:off
+        String[] sources = {
+            "spring/resources.groovy",
+            "foo = {}\n",
+
+            "A.groovy",
+            "class Foo {}\n",
+
+            "Foo.groovy",
+            "class Foo {}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo {}\n" +
+            "\t ^^^^^^^^^^^\n" +
+            "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" +
+            "----------\n" +
+            "2. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo {}\n" +
+            "\t      ^^^\n" +
+            "The type Foo is already defined\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testDuplicateClasses_GRE796_2() {
+        //@formatter:off
+        String[] sources = {
+            "spring/resources.groovy",
+            "foo = {}\n",
+
+            "a/Foo.groovy",
+            "package a\n" +
+            "class Foo {}\n" +
+            "class Foo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in a\\Foo.groovy (at line 3)\n" +
+            "\tclass Foo {}\n" +
+            "\t^^^^^^^^^^^^\n" +
+            "Groovy:Invalid duplicate class definition of class a.Foo :" +
+            " The source a" + File.separator + "Foo.groovy contains at least two definitions of the class a.Foo.\n" +
+            "----------\n" +
+            "2. ERROR in a\\Foo.groovy (at line 3)\n" +
+            "\tclass Foo {}\n" +
+            "\t      ^^^\n" +
+            "The type Foo is already defined\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testGroovyColon_GRE801() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "httpClientControl.demand.generalConnection(1..1) = {->\n" +
+            "  currHttp\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
+            "\t                                                  ^\n" +
+            "Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression," +
+            " but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testStaticOuter_GRE944() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "static class A {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\tstatic class A {\n" +
+            "\t             ^\n" +
+            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testStaticOuter_GRE944_2() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "static class A {\n" +
+            "  static class B {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\tstatic class A {\n" +
+            "\t             ^\n" +
+            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testIncompleteCharacterEscape_GRE986() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "hello \\u\n" +
+            "class Foo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\thello \\u\n" +
+            "\t       ^\n" +
+            "Groovy:Did not find four digit hex character code. line: 1 col:7 @ line 1, column 7.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testPrimitiveLikeTypeNames_GRE891() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.java",
+            "public class Foo {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Z[][] zs = new Z().zzz();\n" +
+            "    System.out.println(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "Z.groovy",
+            "class Z {\n" +
+            "  Z[][] zzz() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        // return type is a single char type (not in package and not primitive)
+        assertEquals("[[LZ;", getReturnTypeOfMethod("Z.groovy", "zzz"));
+    }
+
+    @Test
+    public void testPrimitiveLikeTypeNames_GRE891_2() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.java",
+            "public class Foo {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    int[][] zs = new Z().zzz();\n" +
+            "    System.out.println(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "Z.groovy",
+            "class Z {\n" +
+            "  int[][] zzz() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        // return type is a primitive
+        assertEquals("[[I", getReturnTypeOfMethod("Z.groovy", "zzz"));
+    }
+
+    @Test
+    public void testPrimitiveLikeTypeNames_GRE891_3() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.java",
+            "public class Foo {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    java.lang.String[][] zs = new Z().zzz();\n" +
+            "    System.out.println(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "Z.groovy",
+            "class Z {\n" +
+            "  java.lang.String[][] zzz() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        // return type is a qualified java built in type
+        assertEquals("[[Ljava.lang.String;", getReturnTypeOfMethod("Z.groovy", "zzz"));
+    }
+
+    @Test
+    public void testPrimitiveLikeTypeNames_GRE891_4() {
+        //@formatter:off
+        String[] sources = {
+            "pkg/Foo.java",
+            "package pkg;\n" +
+            "public class Foo {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    pkg.H[][] zs = new Z().zzz();\n" +
+            "    System.out.println(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "Y.groovy",
+            "package pkg\n" +
+            "class H {}\n",
+
+            "Z.groovy",
+            "package pkg\n" +
+            "class Z {\n" +
+            "  H[][] zzz() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        // return type is a single char groovy type from a package
+        assertEquals("[[Lpkg.H;", getReturnTypeOfMethod("Z.groovy", "zzz"));
+    }
+
+    @Test
+    public void testPrimitiveLikeTypeNames_GRE891_5() {
+        //@formatter:off
+        String[] sources = {
+            "pkg/Foo.java",
+            "package pkg;\n" +
+            "public class Foo {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    H[][] zs = new Z().zzz();\n" +
+            "    System.out.println(\"works\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "Y.java",
+            "package pkg;\n" +
+            "class H {}\n",
+
+            "Z.groovy",
+            "package pkg;\n" +
+            "class Z {\n" +
+            "  H[][] zzz() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+        // return type is a single char java type from a package
+        assertEquals("[[Lpkg.H;", getReturnTypeOfMethod("Z.groovy", "zzz"));
     }
 
     /**
@@ -772,7 +793,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             runConformTest(sources, "abc");
             assertEventCount(1, GroovyClassScope.debugListener);
             assertEvent("augment: type Foo having GroovyObject methods added", GroovyClassScope.debugListener);
-            System.err.println(GroovyClassScope.debugListener.toString());
         } finally {
             GroovyClassScope.debugListener = null;
         }
@@ -802,7 +822,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             runConformTest(sources, "abc");
             assertEventCount(1, GroovyClassScope.debugListener);
             assertEvent("augment: type Foo having GroovyObject methods added", GroovyClassScope.debugListener);
-            System.err.println(GroovyClassScope.debugListener.toString());
         } finally {
             GroovyClassScope.debugListener = null;
         }
@@ -903,6 +922,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
+
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
             "public class X {\n" +
@@ -983,7 +1003,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
+    @Test // TODO: https://issues.apache.org/jira/browse/GROOVY-8659
     public void testOverriding_FinalMethod2() {
         //@formatter:off
         String[] sources = {
@@ -1007,18 +1027,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { public void baz() {} }\n",
+            "class Bar {\n" +
+            "  public void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { private void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  private void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\tprivate void baz() {}\n" +
+            "\t             ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
             "----------\n");
     }
@@ -1028,18 +1052,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { public void baz() {} }\n",
+            "class Bar {\n" +
+            "  public void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { protected void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  protected void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { protected void baz() {}\n" +
-            "\t                                       ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\tprotected void baz() {}\n" +
+            "\t               ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
             "----------\n");
     }
@@ -1049,18 +1077,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { public void baz() {} }\n",
+            "class Bar {\n" +
+            "  public void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  @groovy.transform.PackageScope void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-            "\t                                                            ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\t@groovy.transform.PackageScope void baz() {}\n" +
+            "\t                                    ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
             "----------\n");
     }
@@ -1070,18 +1102,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { protected void baz() {} }\n",
+            "class Bar {\n" +
+            "  protected void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { private void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  private void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\tprivate void baz() {}\n" +
+            "\t             ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
             "----------\n");
     }
@@ -1091,18 +1127,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { protected void baz() {} }\n",
+            "class Bar {\n" +
+            "  protected void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  @groovy.transform.PackageScope void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-            "\t                                                            ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\t@groovy.transform.PackageScope void baz() {}\n" +
+            "\t                                    ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
             "----------\n");
     }
@@ -1112,18 +1152,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.groovy",
-            "class Bar { @groovy.transform.PackageScope void baz() {} }\n",
+            "class Bar {\n" +
+            "  @groovy.transform.PackageScope void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { private void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  private void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\tprivate void baz() {}\n" +
+            "\t             ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
             "----------\n");
     }
@@ -1133,18 +1177,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Bar.java",
-            "public class Bar { void baz() {} }\n",
+            "public class Bar {\n" +
+            "  void baz() {}\n" +
+            "}\n",
 
             "Foo.groovy",
-            "class Foo extends Bar { private void baz() {}\n }\n",
+            "class Foo extends Bar {\n" +
+            "  private void baz() {}\n" +
+            "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^^^\n" +
+            "1. ERROR in Foo.groovy (at line 2)\n" +
+            "\tprivate void baz() {}\n" +
+            "\t             ^^^^^\n" +
             "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
             "----------\n");
     }
@@ -1270,19 +1318,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "A.java",
-            "public class A {}",
+            "public class A { }",
 
             "AA.java",
-            "public class AA extends A {}",
+            "public class AA extends A { }",
 
             "I.java",
-            "public interface I { A getA();}",
+            "public interface I { A getA(); }",
 
             "Impl.java",
-            "public class Impl implements I { public AA getA() {return null;}}",
+            "public class Impl implements I { public AA getA() { return null; } }",
 
             "GImpl.groovy",
-            "class GImpl extends Impl {}",
+            "class GImpl extends Impl { }",
         };
         //@formatter:on
 
@@ -1297,23 +1345,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "test/Bar.java",
             "package test;\n" +
-            "public class Bar extends BarBase {}",
+            "public class Bar extends BarBase { }",
 
             "test/BarBase.java",
             "package test;\n" +
-            "abstract public class BarBase {}",
+            "abstract public class BarBase { }",
 
             "test/GroovyFoo.groovy",
             "package test;\n" +
-            "class GroovyFoo extends FooBase {}",
+            "class GroovyFoo extends FooBase { }",
 
             "test/FooBase.java",
             "package test;\n" +
-            "public class FooBase implements IFoo { public Bar foo() {return null;}}",
+            "public class FooBase implements IFoo { public Bar foo() { return null; } }",
 
             "test/IFoo.java",
             "package test;\n" +
-            "public interface IFoo { BarBase foo();}",
+            "public interface IFoo { BarBase foo(); }",
         };
         //@formatter:on
 
@@ -1326,23 +1374,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "test/IFoo.java",
             "package test;\n" +
-            "public interface IFoo { BarBase foo();}",
+            "public interface IFoo { BarBase foo(); }",
 
             "test/GroovyFoo.groovy",
             "package test;\n" +
-            "class GroovyFoo extends FooBase {}",
+            "class GroovyFoo extends FooBase { }",
 
             "test/FooBase.java",
             "package test;\n" +
-            "public class FooBase implements IFoo { public Bar foo() {return null;}}",
+            "public class FooBase implements IFoo { public Bar foo() { return null; } }",
 
             "test/BarBase.java",
             "package test;\n" +
-            "abstract public class BarBase {}",
+            "abstract public class BarBase { }",
 
             "test/Bar.java",
             "package test;\n" +
-            "public class Bar extends BarBase {}",
+            "public class Bar extends BarBase { }",
         };
         //@formatter:on
 
@@ -1355,23 +1403,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "test/IFoo.java",
             "package test;\n" +
-            "public interface IFoo { BarBase foo();}",
+            "public interface IFoo { BarBase foo(); }",
 
             "test/FooBase.java",
             "package test;\n" +
-            "public class FooBase implements IFoo { public Bar foo() {return null;}}",
+            "public class FooBase implements IFoo { public Bar foo() { return null; } }",
 
             "test/BarBase.java",
             "package test;\n" +
-            "abstract public class BarBase {}",
+            "abstract public class BarBase { }",
 
             "test/Bar.java",
             "package test;\n" +
-            "public class Bar extends BarBase {}",
+            "public class Bar extends BarBase { }",
 
             "test/GroovyFoo.groovy",
             "package test;\n" +
-            "class GroovyFoo extends FooBase {}",
+            "class GroovyFoo extends FooBase { }",
         };
         //@formatter:on
 
@@ -1384,19 +1432,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Voidy.groovy",
             "public class VoidReturnTestCase {\n" +
-            "\n" +
-            "  void returnSomething() { \n" +
-            "    return true && false   \n" +
+            "  void returnSomething() {\n" +
+            "    return true && false\n" +
             "  }\n" +
-            "\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Voidy.groovy (at line 4)\n" +
-            "\treturn true && false   \n" +
+            "1. ERROR in Voidy.groovy (at line 3)\n" +
+            "\treturn true && false\n" +
             "\t^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
             "----------\n");
@@ -1408,18 +1454,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Voidy.groovy",
             "public class VoidReturnTestCase {\n" +
-            "\n" +
-            "  void returnSomething() { \n" +
+            "  void returnSomething() {\n" +
             "    return true\n" +
             "  }\n" +
-            "\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Voidy.groovy (at line 4)\n" +
+            "1. ERROR in Voidy.groovy (at line 3)\n" +
             "\treturn true\n" +
             "\t^^^^^^^^^^^\n" +
             "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
@@ -1432,18 +1476,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Voidy.groovy",
             "public class VoidReturnTestCase {\n" +
-            "\n" +
-            "  void returnSomething() {\n" +
+            "  static void returnSomething() {\n" +
             "    return true\n" +
             "  }\n" +
-            "\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Voidy.groovy (at line 4)\n" +
+            "1. ERROR in Voidy.groovy (at line 3)\n" +
             "\treturn true\n" +
             "\t^^^^^^^^^^^\n" +
             "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
@@ -1468,6 +1510,68 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in Voidy.groovy (at line 3)\n" +
             "\treturn 375+26\n" +
             "\t^^^^^^^^^^^^^\n" +
+            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testIncorrectReturnType_GRE396() {
+        //@formatter:off
+        String[] sources = {
+            "TrivialBugTest.groovy",
+            "package org.sjb.sjblib.cmdline;\n" +
+            "public final class TrivialBugTest {\n" +
+            "  void func2() {\n" +
+            "    tb = new TrivialBug()\n" +
+            "  }\n" +
+            "}\n",
+
+            "TrivialBug.groovy",
+            "package org.sjb.sjblib.cmdline;\n" +
+            "public class TrivialBug {\n" +
+            "  void func() {\n" +
+            "    return 5\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
+            "\treturn 5\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testIncorrectReturnType_GRE396_2() {
+        //@formatter:off
+        String[] sources = {
+            "TrivialBug.groovy",
+            "package org.sjb.sjblib.cmdline;\n" +
+            "public class TrivialBug {\n" +
+            "  void func() {\n" +
+            "    return 5\n" +
+            "  }\n" +
+            "}\n",
+
+            "TrivialBugTest.groovy",
+            "package org.sjb.sjblib.cmdline;\n" +
+            "public final class TrivialBugTest {\n" +
+            "  void func2() {\n" +
+            "    tb = new TrivialBug()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
+            "\treturn 5\n" +
+            "\t^^^^^^^^\n" +
             "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
             "----------\n");
     }
@@ -1597,7 +1701,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "class A {\n" +
             "  String s;" +
             "  String getS(String foo) { return null; }\n" +
-            "}",
+            "}\n",
         };
         //@formatter:on
 
@@ -1660,7 +1764,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCrashingOnBadCode_GRE290() {
+    public void testBreak_GRE290() {
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
@@ -1680,22 +1784,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testNPE_GRE291() {
+    public void testContinue_GRE291() {
         //@formatter:off
         String[] sources = {
             "ContinueTestCase.groovy",
             "public class ContinueTestCase {\n" +
-            "\n" +
-            "\tpublic ContinueTestCase() {\n" +
-            "\t\tcontinue;\n" +
-            "\t}\n" +
+            "  public ContinueTestCase() {\n" +
+            "    continue;\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in ContinueTestCase.groovy (at line 4)\n" +
+            "1. ERROR in ContinueTestCase.groovy (at line 3)\n" +
             "\tcontinue;\n" +
             "\t^^^^^^^^\n" +
             "Groovy:the continue statement is only allowed inside loops\n" +
@@ -1749,17 +1852,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    // a valid script, no '.' after session2
     @Test
     public void testInvalidScripts_GRE323_1() {
         //@formatter:off
         String[] sources = {
-            "Two.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = null\n" +
             "  \n" +
             "  // Define scenarios\n" +
@@ -1776,12 +1878,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testInvalidScripts_GRE323_1b() {
         //@formatter:off
         String[] sources = {
-            "Two.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = null\n" +
             "  \n" +
             "  // Define scenarios\n" +
@@ -1794,48 +1896,38 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    // '.' added, command line gives:
-    // One.groovy: 10: expecting '}', found 'x' @ line 10, column 7.
-    //    def x
-    //        ^
     @Test
     public void testInvalidScripts_GRE323_2() {
-        // command expression syntax now allows this but it looks weird
         //@formatter:off
         String[] sources = {
-            "One.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = null\n" +
             "  \n" +
             "  // Define scenarios\n" +
-            "  def secBoardRep = session2.\n" +
+            "  def secBoardRep = session2.\n" + // trailing dot
             "  def x\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: One");
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: Foo");
     }
 
-    // removed surrounding method
-    @Test
+    @Test // removed surrounding method
     public void testInvalidScripts_GRE323_3() {
         //@formatter:off
         String[] sources = {
-            "Three.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
-            "}\n" +
+            "Foo.groovy",
+            "final session2 = null\n" +
             "\n" +
-            "  final session2 = null\n" +
-            "  \n" +
-            "  // Define scenarios\n" +
-            "  def secBoardRep = session2\n" +
-            "  def x\n",
+            "// Define scenarios\n" +
+            "def secBoardRep = session2\n" +
+            "def x\n",
         };
         //@formatter:on
 
@@ -1846,43 +1938,38 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testInvalidScripts_GRE323_3b() {
         //@formatter:off
         String[] sources = {
-            "Three.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
-            "}\n" +
+            "Foo.groovy",
+            "final session2 = null\n" +
             "\n" +
-            "  final session2 = null\n" +
-            "  \n" +
-            "  // Define scenarios\n" +
-            "  def secBoardRep = session2\n" +
-            "  def x\n",
+            "// Define scenarios\n" +
+            "def secBoardRep = session2\n" +
+            "def x\n",
         };
         //@formatter:on
 
         runConformTest(sources);
     }
 
-    // no assignment for session2
     @Test
     public void testInvalidScripts_GRE323_4() {
         //@formatter:off
         String[] sources = {
-            "Four.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = null\n" +
             "  \n" +
             "  // Define scenarios\n" +
-            "  session2.\n" +
+            "  session2.\n" + // trailing dot
             "  def x\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: Four");
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: Foo");
     }
 
     @Test
@@ -1892,53 +1979,47 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "Run.java",
             "public class Run {\n" +
             "  public static void main(String[]argv) {\n" +
-            "   try {\n" +
-            "    Four.main(null);\n" +
-            "   } catch (Throwable t) {\n" +
-            "    System.out.println(t.getMessage());\n" +
-            "   }\n" +
-            "}\n" +
-            "}",
+            "    try {\n" +
+            "      Foo.main(null);\n" +
+            "    } catch (Throwable t) {\n" +
+            "      System.out.println(t.getMessage());\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
 
-            "Four.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = null\n" +
             "  \n" +
             "  // Define scenarios\n" +
-            "  session2.\n" +
+            "  session2.\n" + // trailing dot
             "  def x\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "No such property: x for class: Four");
-        // actual exception:
-        //"[ERR]:groovy.lang.MissingPropertyException: No such property: x for class: Four\n" +
-        //"\tat org.codehaus.groovy.runtime.ScriptBytecodeAdapter.unwrap(ScriptBytecodeAdapter.java:49)\n" +
-        //"\tat org.codehaus.groovy.runtime.callsite.PogoGetPropertySite.getProperty(PogoGetPropertySite.java:49)\n" +
-        //"\tat org.codehaus.groovy.runtime.callsite.AbstractCallSite.callGroovyObjectGetProperty(AbstractCallSite.java:241)\n" +
-        //"\tat Four$_run_closure1.doCall(Four.groovy:9)\n"
+        runConformTest(sources, "No such property: x for class: Foo");
     }
 
     @Test
     public void testInvalidScripts_GRE323_5() {
         //@formatter:off
         String[] sources = {
-            "Five.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = [\"def\": { println \"DEF\" }]\n" +
             "  \n" +
             "  final x = 1\n" +
             "  // Define scenarios\n" +
-            "  session2.\n" +
+            "  session2.\n" + // trailing dot
             "  def x\n" +
             "}\n",
         };
@@ -1951,17 +2032,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testInvalidScripts_GRE323_5b() {
         //@formatter:off
         String[] sources = {
-            "Five.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = [\"def\": { println \"DEF\" }]\n" +
             "  \n" +
             "  final x = 1\n" +
             "  // Define scenarios\n" +
-            "  session2.\n" +
+            "  session2.\n" + // trailing dot
             "  def x\n" +
             "}\n",
         };
@@ -1974,12 +2055,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testInvalidScripts_GRE323_6() {
         //@formatter:off
         String[] sources = {
-            "Six.groovy",
-            "def moo(closure) {\n" +
-            "  closure();\n" +
+            "Foo.groovy",
+            "def foo(closure) {\n" +
+            "  closure()\n" +
             "}\n" +
             "\n" +
-            "moo {\n" +
+            "foo {\n" +
             "  final session2 = [\"def\": { println \"DEF\" }]\n" +
             "  \n" +
             "  final x = 1\n" +
@@ -2003,55 +2084,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\n" +
             "@SuppressWarnings(\"serial\")\n" +
             "public class EnumBooleanMap<E extends Enum<E>> extends EnumMap<E, Boolean> {\n" +
-            "\t\n" +
-            "\tpublic EnumBooleanMap(Class<E> keyType) {\n" +
-            "\t\tsuper(keyType);\n" +
-            "\t}\n" +
+            "  \n" +
+            "  public EnumBooleanMap(Class<E> keyType) {\n" +
+            "    super(keyType);\n" +
+            "  }\n" +
             "\n" +
-            "\tpublic EnumBooleanMap(EnumBooleanMap<E> m) {\n" +
-            "\t\tsuper(m);\n" +
-            "\t}\n" +
+            "  public EnumBooleanMap(EnumBooleanMap<E> m) {\n" +
+            "    super(m);\n" +
+            "  }\n" +
             "\n" +
-            "\t@Override\n" +
-            "\tpublic Boolean get(Object key) {\n" +
-            "\t\tBoolean value = super.get(key);\n" +
-            "\t\treturn value != null ? value : false;\n" +
-            "\t}\n" +
+            "  @Override\n" +
+            "  public Boolean get(Object key) {\n" +
+            "    Boolean value = super.get(key);\n" +
+            "    return value != null ? value : false;\n" +
+            "  }\n" +
             "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testStaticProperties_GRE364() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "public class Foo { static String fubar }\n",
-
-            "Bar.java",
-            "public class Bar {\n" +
-            "\t  String fubar = Foo.getFubar();\n" +
-            "\t}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testStaticProperties_GRE364_2() {
-        //@formatter:off
-        String[] sources = {
-            "Bar.java",
-            "public class Bar {\n" +
-            "  String fubar = Foo.getFubar();\n" +
-            "}\n",
-
-            "Foo.groovy",
-            "public class Foo { static String fubar }\n",
         };
         //@formatter:on
 
@@ -2072,70 +2119,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
-    public void testNotSeriousEnough_GRE396() {
-        //@formatter:off
-        String[] sources = {
-            "TrivialBugTest.groovy",
-            "package org.sjb.sjblib.cmdline;\n" +
-            "public final class TrivialBugTest {\n" +
-            "\tvoid func2() {\n" +
-            "\t\ttb = new TrivialBug()\n" +
-            "\t}\n" +
-            "}\n",
-
-            "TrivialBug.groovy",
-            "package org.sjb.sjblib.cmdline;\n" +
-            "public class TrivialBug {\n" +
-            "\tvoid func() {\n" +
-            "\t\treturn 5\n" +
-            "\t}\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
-            "\treturn 5\n" +
-            "\t^^^^^^^^\n" +
-            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testNotSeriousEnough_GRE396_2() {
-        //@formatter:off
-        String[] sources = {
-            "TrivialBug.groovy",
-            "package org.sjb.sjblib.cmdline;\n" +
-            "public class TrivialBug {\n" +
-            "\tvoid func() {\n" +
-            "\t\treturn 5\n" +
-            "\t}\n" +
-            "}\n",
-
-            "TrivialBugTest.groovy",
-            "package org.sjb.sjblib.cmdline;\n" +
-            "public final class TrivialBugTest {\n" +
-            "\tvoid func2() {\n" +
-            "\t\ttb = new TrivialBug()\n" +
-            "\t}\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in TrivialBug.groovy (at line 4)\n" +
-            "\treturn 5\n" +
-            "\t^^^^^^^^\n" +
-            "Groovy:Cannot use return statement with an expression on a method that returns void\n" +
-            "----------\n");
-    }
-
-    // The getter for 'description' implements the interface
-    @Test
+    @Test // The getter for 'description' implements the interface
     public void testImplementingAnInterfaceViaProperty() {
         //@formatter:off
         String[] sources = {
@@ -2160,8 +2144,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "success");
     }
 
-    // Referencing from a groovy to a java type where the reference is through a member, not the hierarchy
-    @Test
+    @Test // Referencing from a groovy to a java type where the reference is through a member, not the hierarchy
     public void testReferencingOtherTypesInSamePackage() {
         //@formatter:off
         String[] sources = {
@@ -2177,7 +2160,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "a/b/c/D.java",
             "package a.b.c;\n" +
             "public class D {\n" +
-            "  String getDescription() { return null;}\n" +
+            "  String getDescription() { return null; }\n" +
             "}\n",
         };
         //@formatter:on
@@ -2186,14 +2169,14 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testFailureWhilstAttemptingToReportError() {
+    public void testThisCallInMethod() {
         //@formatter:off
         String[] sources = {
             "T.groovy",
             "public class T {\n" +
-            "\tdef x () {\n" +
-            "\t\tthis \"\"\n" + // not a ctor call
-            "\t}\n" +
+            "  def x () {\n" +
+            "    this \"\"\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
@@ -2203,7 +2186,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in T.groovy (at line 3)\n" +
             "\tthis \"\"\n" +
             "\t     ^^\n" +
-            "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
+            "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 10. File: T.groovy @ line 3, column 10.\n" +
             "----------\n");
     }
 
@@ -2230,29 +2213,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testTypeClash() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p\n" +
-            "public class X {}",
-
-            "p/X.java",
-            "package p;\n" +
-            "public class X {}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.java (at line 2)\n" +
-            "\tpublic class X {}\n" +
-            "\t             ^\n" +
-            "The type X is already defined\n" +
-            "----------\n");
     }
 
     @Test
@@ -3985,7 +3945,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     // Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
     @Test
-    public void testDuplicateGroovyObjectMethods() {
+    public void testDuplicateGroovyObjectMethods1() {
         //@formatter:off
         String[] sources = {
             "p/Foo.groovy",
@@ -4044,7 +4004,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMultipleTypesInOneFile01() {
+    public void testMultipleTypesInOneFile1() {
         //@formatter:off
         String[] sources = {
             "p/Foo.groovy",
@@ -4063,7 +4023,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     // Refering to the secondary type from the primary (but internally to a method)
     @Test
-    public void testMultipleTypesInOneFile02() {
+    public void testMultipleTypesInOneFile2() {
         //@formatter:off
         String[] sources = {
             "p/Foo.groovy",
@@ -4083,7 +4043,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     // Refering to the secondary type from the primary - from a method param
     @Test
-    public void testMultipleTypesInOneFile03() {
+    public void testMultipleTypesInOneFile3() {
         //@formatter:off
         String[] sources = {
             "p/Foo.groovy",
@@ -4358,6 +4318,26 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testInvokingVarargs01_GtoJ_GRE925() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {}\n" +
+            "  protected void method(String[] x) {}\n" +
+            "}\n",
+
+            "Sub.groovy",
+            "class Sub extends Main {\n" +
+            "  protected void method(String[] x) { super.method(x) }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
     public void testInvokingVarargs02_GtoJ() {
         //@formatter:off
         String[] sources = {
@@ -4601,9 +4581,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n" +
             "  public static void foo() throws java.io.IOException {}\n" +
             "}",
-
-            "B.groovy",
-            "print 'a'\n",
         };
         //@formatter:on
 

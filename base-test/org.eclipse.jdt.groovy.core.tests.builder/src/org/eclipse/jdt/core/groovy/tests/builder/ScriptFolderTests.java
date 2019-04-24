@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.net.URL;
 
 import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.eclipse.core.resources.IFile;
@@ -136,7 +137,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     public void testSourceInProjectCompiled() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        createScriptInGroovyProject("Script", "class Script { }", false);  // creates a java file
+        createScriptInGroovyProject("Script", "class Script {}", false);  // creates a java file
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
         assertNoExists("Project/bin/Script.java");
@@ -286,7 +287,6 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertExists("ScriptFoldersProject/src3/Script3.class");
         assertExists("ScriptFoldersProject/src3/p/Script3.class");
 
-
         // other project should be the same
         assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
@@ -307,7 +307,6 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
         assertExists("ScriptFoldersProject2/src3/Script3.class");
         assertExists("ScriptFoldersProject2/src3/p/Script3.class");
-
 
         // now enable the workspace settings, add back project settings, but disable filters on the project
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
@@ -335,7 +334,6 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
         assertExists("ScriptFoldersProject/src3/Script3.class");
         assertExists("ScriptFoldersProject/src3/p/Script3.class");
-
 
         // Other project now has scripts
         // project root is a source folder, but it is not a script folder
@@ -369,7 +367,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     private static IProject createPredefinedProject(final String projectName) throws Exception {
         // copy files in project from source workspace to target workspace
-        String sourceWorkspacePath = new File(FileLocator.toFileURL(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("/")).getFile()).getAbsolutePath() + File.separator + "workspace";
+        URL bundleLocation = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("/");
+        String sourceWorkspacePath = new File(FileLocator.toFileURL(bundleLocation).getFile()).getAbsolutePath() + File.separator + "workspace";
         String targetWorkspacePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile().getCanonicalPath();
 
         // return null if source directory does not exist
@@ -380,13 +379,13 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // create project
         final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (!project.exists()) {
-            SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project "+projectName);
+            SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project " + projectName);
             ResourcesPlugin.getWorkspace().run(monitor -> project.create(monitor), spm);
             spm.waitForCompletion();
         }
 
         // ensure open
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("opening project "+projectName);
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("opening project " + projectName);
         project.open(spm);
         spm.waitForCompletion();
 
@@ -397,7 +396,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         }
         try {
             jp.setOption("org.eclipse.jdt.core.compiler.problem.missingSerialVersion", "ignore");
-        } catch (NullPointerException npe) {
+        } catch (NullPointerException ignore) {
         }
         return jp.getProject();
     }
@@ -468,7 +467,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         for (int i = 0; i < files.length; i++) {
             File sourceChild = files[i];
             String name =  sourceChild.getName();
-            if (name.equals("CVS")) continue;
+            if ("CVS".equals(name)) continue;
             File targetChild = new File(target, name);
             if (sourceChild.isDirectory()) {
                 copyDirectory(sourceChild, targetChild);
@@ -498,12 +497,12 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     private static String convertToIndependantLineDelimiter(String source) {
         if (source.indexOf('\n') == -1 && source.indexOf('\r') == -1) return source;
         StringBuffer buffer = new StringBuffer();
-        for (int i = 0, length = source.length(); i < length; i++) {
+        for (int i = 0, length = source.length(); i < length; i += 1) {
             char car = source.charAt(i);
             if (car == '\r') {
                 buffer.append('\n');
-                if (i < length-1 && source.charAt(i+1) == '\n') {
-                    i++; // skip \n after \r
+                if (i < length - 1 && source.charAt(i + 1) == '\n') {
+                    i += 1; // skip \n after \r
                 }
             } else {
                 buffer.append(car);

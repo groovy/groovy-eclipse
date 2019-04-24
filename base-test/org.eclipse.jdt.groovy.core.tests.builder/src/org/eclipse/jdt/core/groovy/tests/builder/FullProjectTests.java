@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,10 +70,12 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            //@formatter:off
             "@Singleton\n" +
             "class Foo {\n" +
             "  void mone() {}\n" +
             "}\n");
+            //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
@@ -88,6 +90,7 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            //@formatter:off
             "@Singleton\n" +
             "class Foo {\n" +
             "  @Delegate Bar b = new BarImpl();\n" +
@@ -95,6 +98,7 @@ public final class FullProjectTests extends BuilderTestSuite {
             "}\n" +
             "interface Bar { void method(); }\n" +
             "class BarImpl implements Bar { void method() {} }\n");
+            //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
@@ -110,10 +114,12 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            //@formatter:off
             "@groovy.transform.TypeChecked\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
+            //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
@@ -125,10 +131,12 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
+            //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));

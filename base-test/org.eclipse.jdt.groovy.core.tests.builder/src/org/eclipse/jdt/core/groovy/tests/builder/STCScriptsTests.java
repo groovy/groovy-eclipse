@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,24 +63,29 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
         IPath projPath = createGenericProject();
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-                "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-                "unresolvedVariable { VariableExpression var ->\n" +
-                "    if ('robot' == var.name) {\n" +
-                "        def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-                "        storeType(var, robotClass)\n" +
-                "        handled = true\n" +
-                "    }\n" +
-                "}");
+            //@formatter:off
+            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
+            "unresolvedVariable { VariableExpression var ->\n" +
+            "  if ('robot' == var.name) {\n" +
+            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
+            "    storeType(var, robotClass)\n" +
+            "    handled = true\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
         env.addGroovyClass(projPath.append("src"), "", "Robot",
-                "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
-                "void operate() {\n" +
-                "    robot.move \"left\"\n" +
-                "}");
+            //@formatter:off
+            "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "void operate() {\n" +
+            "  robot.move \"left\"\n" +
+            "}");
+            //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
         assertEquals("Should have found one problem in:\n" + Arrays.toString(problems), 1, problems.length);
-        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String). Please check if the declared type is correct and if the method exists.", problems[0].getMessage());
+        assertEquals("Groovy:[Static type checking] - Cannot find matching method Robot#move(java.lang.String)." +
+            " Please check if the declared type is correct and if the method exists.", problems[0].getMessage());
     }
 
     @Test
@@ -90,24 +95,28 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
         IPath projPath = createGenericProject();
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-                "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
-                "unresolvedVariable { VariableExpression var ->\n" +
-                "    if ('robot' == var.name) {\n" +
-                "        def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
-                "        storeType(var, robotClass)\n" +
-                "        handled = true\n" +
-                "    }\n" +
-                "}");
+            //@formatter:off
+            "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
+            "unresolvedVariable { VariableExpression var ->\n" +
+            "  if ('robot' == var.name) {\n" +
+            "    def robotClass = context.source.AST.classes.find { it.name == 'Robot' }\n" +
+            "    storeType(var, robotClass)\n" +
+            "    handled = true\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
         env.addGroovyClass(projPath.append("src"), "", "RobotScript",
-                "import groovy.transform.TypeChecked\n" +
-                "class Robot {\n" +
-                "    void move(String dist) { println \"Moved $dist\" }\n" +
-                "}\n" +
-                "robot = new Robot()\n" +
-                "@TypeChecked(extensions = 'RobotMove.groovy')\n" +
-                "void operate() {\n" +
-                "    robot.move \"left\"\n" +
-                "}");
+            //@formatter:off
+            "import groovy.transform.TypeChecked\n" +
+            "class Robot {\n" +
+            "  void move(String dist) { println \"Moved $dist\" }\n" +
+            "}\n" +
+            "robot = new Robot()\n" +
+            "@TypeChecked(extensions = 'RobotMove.groovy')\n" +
+            "void operate() {\n" +
+            "  robot.move \"left\"\n" +
+            "}");
+            //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,7 +60,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsBlock() throws Exception {
         String content = "def x = 7\n  x++\n  def y = []";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -82,7 +83,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsEmpty() throws Exception {
         String content = "";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -96,7 +98,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsOneLine() throws Exception {
         String content = "def x = 7";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -114,7 +117,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsNewLine() throws Exception {
         String content = "def x = 7\n";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -131,8 +135,9 @@ public final class LocationSupportTests {
 
     @Test
     public void testParserSourceLocationsClass() throws Exception {
-        String content = "class X {\n }";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        String content = "class X {\n}";
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -148,7 +153,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsMethod() throws Exception {
         String content = "def x() { \n\n\n\n\n\n\n}";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -166,7 +172,8 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsMethod2() throws Exception {
         String content = "def \"x   \"    () { \n\n\n\n\n\n\n}";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -177,15 +184,16 @@ public final class LocationSupportTests {
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
         assertEquals(content.indexOf("\"x   \""), (module.getMethods().get(0)).getNameStart());
-        assertEquals(content.indexOf("\"x   \"")+"\"x   \"".length() - 1, (module.getMethods().get(0)).getNameEnd());
+        assertEquals(content.indexOf("\"x   \"") + "\"x   \"".length() - 1, (module.getMethods().get(0)).getNameEnd());
         assertEquals(content.length(), ((ASTNode) module.getMethods().get(0)).getEnd());
     }
 
     @Test
     public void testParserSourceLocationsClassMethodStatement() throws Exception {
-        String content = "def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }";
+        String content = "def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n}";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -206,14 +214,15 @@ public final class LocationSupportTests {
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}".length(), ((ASTNode) module.getMethods().get(0)).getEnd());
         // use index of 1 because zero index is of Foo
         assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\n".length(), ((ASTNode) module.getClasses().get(1)).getStart());
-        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n }".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
+        assertEquals("def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n}".length(), ((ASTNode) module.getClasses().get(1)).getEnd());
     }
 
     @Test
     public void testGRECLIPSE887_ImportStatements() throws Exception {
         String content = "import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -229,14 +238,17 @@ public final class LocationSupportTests {
         assertEquals("import java.util.List\nimport java.lang.*\n".length(), module.getImport("A").getStart());
         assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A".length(), module.getImport("A").getEnd());
         assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\n".length(), module.getStarImports().get(1).getStart());
-        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*".length(), module.getStarImports().get(1).getEnd());
+        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*".length(),
+            module.getStarImports().get(1).getEnd());
 
         // now test against the compilation unit declaration
-        GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {{
-            GroovyCompilationUnitDeclaration.UnitPopulator cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
-            ReflectionUtils.setPrivateField(cup.getClass(), "unitDeclaration", cup, this);
-            ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations", new Class[] {ModuleNode.class}, cup, new Object[] {module});
-        }};
+        GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {
+            {
+                GroovyCompilationUnitDeclaration.UnitPopulator cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
+                ReflectionUtils.setPrivateField(cup.getClass(), "unitDeclaration", cup, this);
+                ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations", new Class[] {ModuleNode.class}, cup, new Object[] {module});
+            }
+        };
 
         assertEquals(module.getImport("List").getStart(), cud.imports[0].declarationSourceStart);
         assertEquals(module.getImport("List").getEnd() - 1, cud.imports[0].declarationSourceEnd);
@@ -253,7 +265,8 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "def x = 7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -271,7 +284,8 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "\n\n\ndef x = 7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -289,7 +303,8 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9*/";
         String content = escapeSequence + "\n\n\ndef /*\\u00E9*/x = /*\\u00E9*/7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content, new CompilerConfiguration(), new GroovyClassLoader(), new ErrorCollector(new CompilerConfiguration()));
+        SourceUnit sourceUnit = new SourceUnit("Foo", content,
+            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
@@ -304,8 +319,8 @@ public final class LocationSupportTests {
         // inside the assignment
         DeclarationExpression decl = (DeclarationExpression) ((ExpressionStatement) module.getStatementBlock().getStatements().get(0)).getExpression();
         assertEquals(content.indexOf('x'), decl.getLeftExpression().getStart());
-        assertEquals(content.indexOf('x')+1, decl.getLeftExpression().getEnd());
+        assertEquals(content.indexOf('x') + 1, decl.getLeftExpression().getEnd());
         assertEquals(content.indexOf('7'), decl.getRightExpression().getStart());
-        assertEquals(content.indexOf('7')+1, decl.getRightExpression().getEnd());
+        assertEquals(content.indexOf('7') + 1, decl.getRightExpression().getEnd());
     }
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -147,7 +147,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         }
 
         String endTag = "/*" + astKind + memberNumber + "e*/";
-        int len = (isParrotParser() || (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(((IMethod) decl).getFlags())) ? 0 : endTag.length());
+        int len = (isParrotParser() || (decl instanceof IMethod &&
+            decl.getNameRange().getLength() > 0 && !Flags.isAbstract(((IMethod) decl).getFlags())) ? 0 : endTag.length());
         int end = source.indexOf(endTag) + len;
         if (len == 0 && source.substring(0, end).endsWith("*/")) {
             end = source.substring(0, end).lastIndexOf("/*");
@@ -233,7 +234,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         }
 
         int bodyEnd = body.getStartPosition() + body.getLength();
-        if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 || (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
+        if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
+                (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
             bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
         } else if (body instanceof FieldDeclaration) {
             bodyEnd -= 1; // adjust for possible ';'

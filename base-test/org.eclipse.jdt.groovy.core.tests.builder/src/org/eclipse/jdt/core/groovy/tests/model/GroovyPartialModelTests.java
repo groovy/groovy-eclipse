@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,49 +44,60 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
     @Test // tests that a static field's initializer is not erased during a reconcile
     public void testStaticFieldInitializerIsNotMoved1() throws Exception {
-        findFieldInitializer("package p1\n"+
-            "public class Hello {\n"+
+        findFieldInitializer(
+            "package p1\n" +
+            "public class Hello {\n" +
             "  static aStatic = []\n" +
-            "}\n", ListExpression.class);
+            "}\n",
+            ListExpression.class);
     }
 
     @Test // tests that a static field's initializer is not erased during a reconcile
     public void testStaticFieldInitializerIsNotMoved2() throws Exception {
-        findFieldInitializer("package p1\n"+
-            "public class Hello {\n"+
+        findFieldInitializer(
+            "package p1\n" +
+            "public class Hello {\n" +
             "  static aStatic = {}\n" +
-            "}\n", ClosureExpression.class);
+            "}\n",
+            ClosureExpression.class);
     }
 
     @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
     public void testFieldInitializerIsNotMoved1() throws Exception {
-        findFieldInitializer("package p1\n"+
-            "public class Hello {\n"+
+        findFieldInitializer(
+            "package p1\n" +
+            "public class Hello {\n" +
             "  def aStatic = []\n" +
-            "}\n", ListExpression.class);
+            "}\n",
+            ListExpression.class);
     }
 
     @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
     public void testFieldInitializerIsNotMoved2() throws Exception {
-        findFieldInitializer("package p1\n"+
-            "public class Hello {\n"+
+        findFieldInitializer(
+            "package p1\n" +
+            "public class Hello {\n" +
             "  def aStatic = {}\n" +
-            "}\n", ClosureExpression.class);
+            "}\n",
+            ClosureExpression.class);
     }
 
     @Test
     public void testClosureReturner() throws Exception {
         IProject project = createSimpleGroovyProject().getProject();
-        env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2", "class C { def aaa = { 123 } }");
+        env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2",
+            //@formatter:off
+            "class C { def aaa = { 123 } }");
+            //@formatter:on
         IFile javaFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path("Project/src/p1/Hello2.groovy"));
         GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(javaFile);
         ClassNode inClass = unit.getModuleNode().getClasses().get(0);
         FieldNode field = inClass.getField("aaa");
         Expression initialExpression = field.getInitialExpression();
-        ClosureExpression cEx = (ClosureExpression)initialExpression;
+        ClosureExpression cEx = (ClosureExpression) initialExpression;
         BlockStatement bSt = (BlockStatement) cEx.getCode();
         Statement st = bSt.getStatements().get(0);
-        assertEquals("org.codehaus.groovy.ast.stmt.ReturnStatement",st.getClass().getName());
+        assertEquals("org.codehaus.groovy.ast.stmt.ReturnStatement", st.getClass().getName());
     }
 
     //--------------------------------------------------------------------------
@@ -111,7 +122,7 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
             assertUnique(expr, cons);
         }
         MethodNode clinit = inClass.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit!=null) {
+        if (clinit != null) {
             assertUnique(expr, clinit);
         }
     }
@@ -125,7 +136,7 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
     // Only checks for ClosureExpressions and ListExpressions, but we can easily add more
     private static class UniquenessVisitor extends ClassCodeVisitorSupport {
-        public UniquenessVisitor(Expression exprToCheck) {
+        UniquenessVisitor(Expression exprToCheck) {
             this.exprToCheck = exprToCheck;
         }
 
@@ -144,7 +155,8 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
         }
 
         void doCheck(Expression expr) {
-            assertFalse ("Expression appears twice.  Once in constructor and once in field initializer.\nExpr: " + expr, expr == exprToCheck);
+            assertFalse("Expression appears twice.  Once in constructor and once in field initializer.\nExpr: " +
+                expr, expr == exprToCheck);
         }
     }
 }
