@@ -30,6 +30,8 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 
+import java.util.Arrays;
+
 /**
  * Verify correct usage of generics.
  * This includes:
@@ -163,17 +165,25 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
             ClassNode cnType = cnTypes[i].getType();
             // check nested type parameters
             checkGenericsUsage(nType, nType.redirect());
+            /* GRECLIPSE edit
             // check bounds
-            // GRECLIPSE edit
-            //if (!nType.isDerivedFrom(cnType)) {
-            //    if (cnType.isInterface() && nType.implementsInterface(cnType)) continue;
-            if (!nTypes[i].isWildcard() && !nType.isDerivedFrom(cnType) &&
-                !(cnType.isInterface() && nType.implementsInterface(cnType))) {
-            // GRECLIPSE end
+            if (!nType.isDerivedFrom(cnType)) {
+                if (cnType.isInterface() && nType.implementsInterface(cnType)) continue;
                 addError("The type " + nTypes[i].getName() +
                         " is not a valid substitute for the bounded parameter <" +
                         getPrintName(cnTypes[i]) + ">", n);
             }
+            */
+            // unbounded wildcard (aka "?") is universal substitute
+            if (!(nTypes[i].isWildcard() && nTypes[i].getLowerBound() == null && nTypes[i].getUpperBounds() == null)) {
+                // check lower or upper bound(s)
+                ClassNode[] bounds = cnTypes[i].getUpperBounds();
+                boolean firstBoundValid = nType.isDerivedFrom(cnType) || (cnType.isInterface() && nType.implementsInterface(cnType));
+                if (!firstBoundValid || (bounds != null && bounds.length > 1 && !Arrays.stream(bounds).skip(1).allMatch(nType::implementsInterface))) {
+                    addError("The type " + nTypes[i].getName() + " is not a valid substitute for the bounded parameter <" + getPrintName(cnTypes[i]) + ">", nTypes[i]);
+                }
+            }
+            // GRECLIPSE end
         }
     }
 

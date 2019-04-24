@@ -1201,7 +1201,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\B.groovy (at line 2)\n" +
             "\tpublic class B extends A<String> {\n" +
-            "\t                       ^\n" +
+            "\t                         ^^^^^^\n" +
             "Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" +
             "----------\n");
     }
@@ -1641,7 +1641,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\C.groovy (at line 2)\n" +
             "\tpublic class C implements Iii<String> {\n" +
-            "\t                          ^^^\n" +
+            "\t                              ^^^^^^\n" +
             "Groovy:The type String is not a valid substitute for the bounded parameter <T extends java.lang.Number>\n" +
             "----------\n");
     }
@@ -2409,6 +2409,8 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8990
     public void testUpperBounds3() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
@@ -2468,7 +2470,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 3)\n" +
             "\tclass X extends G<W> {\n" +
-            "\t                ^\n" +
+            "\t                  ^\n" +
             "Groovy:The type W is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
@@ -2499,7 +2501,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tclass X extends G<Integer> {\n" +
-            "\t                ^\n" +
+            "\t                  ^^^^^^^\n" +
             "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
