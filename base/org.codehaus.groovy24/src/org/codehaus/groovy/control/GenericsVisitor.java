@@ -115,7 +115,8 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
             }
             */
             // unbounded wildcard (aka "?") is universal substitute
-            if (!(nTypes[i].isWildcard() && nTypes[i].getLowerBound() == null && nTypes[i].getUpperBounds() == null)) {
+            if (!(nTypes[i].isWildcard() && nTypes[i].getLowerBound() == null &&
+                    (nTypes[i].getUpperBounds() == null || nTypes[i].getUpperBounds().length == 0))) {
                 // check lower or upper bound(s)
                 ClassNode[] bounds = cnTypes[i].getUpperBounds();
                 boolean firstBoundValid = nType.isDerivedFrom(cnType) || (cnType.isInterface() && nType.implementsInterface(cnType));
