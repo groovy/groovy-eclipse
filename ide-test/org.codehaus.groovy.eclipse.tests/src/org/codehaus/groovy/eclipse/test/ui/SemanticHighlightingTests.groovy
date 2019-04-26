@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -130,6 +130,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('pi'), 2, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('PI'), 2, STATIC_VALUE),
             new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
+    }
+
+    @Test
+    void testStaticFinals3() {
+        String contents = '''\
+            class C {
+              static final VALUE = 'value'
+              static foo() {
+                VALUE
+              }
+              static class Inner {
+                void bar() {
+                  VALUE
+                }
+              }
+            }
+            class SamePack {
+              def baz = C.VALUE
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('foo')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('bar')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
     }
 
     @Test
