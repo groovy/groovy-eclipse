@@ -1551,18 +1551,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationReference.sourceStart);
                         annotations.add(annotation);
                     } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-                        Map.Entry<String, Expression> memberValuePair = memberValuePairs.entrySet().iterator().next();
-                        Expression value = memberValuePair.getValue();
-                        //if (value instanceof AnnotationConstantExpression) {
-                        //	Annotation[] containees = createAnnotations(Collections.singletonList(
-                        //		(AnnotationNode) ((AnnotationConstantExpression) value).getValue()));
-                        //	ContainerAnnotation annotation = new ContainerAnnotation(containees[0], type, scope);
-                        //	annotations.add(annotation);
-                        //} else {
-                            SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
-                            annotation.memberValue = createAnnotationMemberExpression(value);
-                            annotations.add(annotation);
-                        //}
+                        SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
+                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"));
+                        annotations.add(annotation);
                     } else {
                         NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
                         annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);

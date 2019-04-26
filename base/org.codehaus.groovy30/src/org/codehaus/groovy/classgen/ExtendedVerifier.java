@@ -157,7 +157,10 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation0(unvisited);
             String name = visited.getClassNode().getName();
-            if (visited.hasRuntimeRetention()) {
+            // GRECLIPSE edit -- GROOVY-9096
+            //if (visited.hasRuntimeRetention()) {
+            if (!visited.hasSourceRetention()) {
+            // GRECLIPSE end
                 List<AnnotationNode> seen = runtimeAnnotations.get(name);
                 if (seen == null) {
                     seen = new ArrayList<AnnotationNode>();
