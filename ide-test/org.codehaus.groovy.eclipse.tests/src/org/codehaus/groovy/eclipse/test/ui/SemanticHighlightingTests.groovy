@@ -58,6 +58,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('four'), 'four'.length(), FIELD))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/876
+    void testFields2() {
+        addGroovySource '''\
+            import groovy.transform.PackageScope
+            class Pogo {
+              @PackageScope String string
+            }
+            '''
+
+        String contents = '''\
+            class X extends Pogo {{
+                string
+                getString()
+                setString('value')
+            }}
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('getString'), 'getString'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('setString'), 'setString'.length(), UNKNOWN))
+    }
+
     @Test
     void testScriptFields() {
         String contents = '''\
