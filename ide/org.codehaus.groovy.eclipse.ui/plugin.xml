@@ -908,9 +908,9 @@
 
    <extension point="org.eclipse.jdt.ui.classpathContainerPage">
       <classpathContainerPage
-            class="org.codehaus.groovy.eclipse.ui.cpcontainer.GroovyClasspathContainerPage"
+            class="org.codehaus.groovy.eclipse.preferences.GroovyLibrariesContainerPage"
             id="GROOVY_SUPPORT"
-            name="Groovy Runtime Libraries">
+            name="Groovy Runtime Libraries"><!-- see "Java Build Path > Libraries > Add Library..." -->
       </classpathContainerPage>
    </extension>
 

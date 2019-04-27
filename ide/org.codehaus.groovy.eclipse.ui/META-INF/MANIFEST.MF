@@ -19,7 +19,6 @@ Export-Package: org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.ui,
  org.codehaus.groovy.eclipse.ui.browse,
  org.codehaus.groovy.eclipse.ui.console,
- org.codehaus.groovy.eclipse.ui.cpcontainer,
  org.codehaus.groovy.eclipse.ui.decorators,
  org.codehaus.groovy.eclipse.ui.utils,
  org.codehaus.groovy.eclipse.wizards
