@@ -656,7 +656,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             receiverType = receiverType.getOuterClass();
         }
 
-        return a.isPublic() || isSamePackage;
+        return a.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
         // GRECLIPSE end
     }
 

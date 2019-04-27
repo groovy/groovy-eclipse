@@ -340,8 +340,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "DynamicQuery.groovy",
-            "import groovy.transform.TypeChecked\n" +
-            "@TypeChecked\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
             "class DynamicQuery {\n" +
             "  public static void main(String[]argv) {\n" +
             "    new DynamicQuery().foo(null);\n" +
@@ -1030,12 +1030,44 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@CompileStatic class Main {\n" +
             "  @PackageScope static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
-            "    new SamePack().meth()\n" +
+            "    new Peer().meth()\n" +
             "  }\n" +
             "}\n" +
-            "@CompileStatic class SamePack {\n" +
+            "@CompileStatic class Peer {\n" +
             "  void meth() {\n" +
             "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "class More extends p.Main {}\n",
+
+            "p/Peer.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print q.More.VALUE\n" +
             "  }\n" +
             "}\n",
         };
@@ -1053,10 +1085,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@CompileStatic class Main {\n" +
             "  protected static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
-            "    new SamePack().meth()\n" +
+            "    new Peer().meth()\n" +
             "  }\n" +
             "}\n" +
-            "@CompileStatic class SamePack {\n" +
+            "@CompileStatic class Peer {\n" +
             "  void meth() {\n" +
             "    print Main.VALUE\n" +
             "  }\n" +
@@ -1076,10 +1108,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@CompileStatic class Main {\n" +
             "  public static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
-            "    new SamePack().meth()\n" +
+            "    new Peer().meth()\n" +
             "  }\n" +
             "}\n" +
-            "@CompileStatic class SamePack {\n" +
+            "@CompileStatic class Peer {\n" +
             "  void meth() {\n" +
             "    print Main.VALUE\n" +
             "  }\n" +
@@ -1098,11 +1130,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "import groovy.transform.*\n" +
             "@CompileStatic class Main {\n" +
             "  private static final String VALUE = 'value'\n" +
-            "  static main(args) {\n" +
-            "    new SamePack().meth()\n" +
-            "  }\n" +
             "}\n" +
-            "@CompileStatic class SamePack {\n" +
+            "@CompileStatic class Peer {\n" +
             "  void meth() {\n" +
             "    print Main.VALUE\n" +
             "  }\n" +
@@ -1112,32 +1141,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Main.groovy (at line 10)\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
             "\tprint Main.VALUE\n" +
             "\t      ^^^^\n" +
-            "Groovy:Access to Main#VALUE is forbidden @ line 10, column 11.\n" +
+            "Groovy:Access to Main#VALUE is forbidden @ line 7, column 11.\n" +
             "----------\n");
     }
 
-    @Test @Ignore("IllegalAccessError: tried to access field p.Main.VALUE from class q.Sub") // GROOVY-9093
+    @Test
     public void testCompileStatic9043_subToPackage() {
         //@formatter:off
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Main {\n" +
-            "  @PackageScope static final String VALUE = 'value'\n" +
-            "  static main(args) {\n" +
-            "    new q.Sub().meth()\n" +
-            "  }\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
             "}\n",
 
-            "q/Sub.groovy",
+            "q/More.groovy",
             "package q\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Sub extends p.Main {\n" +
-            "  void meth() {\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  static void meth() {\n" +
             "    print VALUE\n" +
             "  }\n" +
             "}\n",
@@ -1146,8 +1171,44 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Sub.groovy\n" +
-            "Groovy:Access to Main#VALUE is forbidden @ line -1, column -1.\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "p/More.groovy",
+            "package p\n" +
+            "class More extends Main {}\n",
+
+            "q/Test.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Test {\n" +
+            "  void meth() {\n" +
+            "    p.More.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\Test.groovy (at line 5)\n" +
+            "\tp.More.VALUE\n" +
+            "\t^^^^^^\n" +
+            "Groovy:Access to p.More#VALUE is forbidden @ line 5, column 5.\n" +
             "----------\n");
     }
 
@@ -1157,18 +1218,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Main {\n" +
+            "class Main {\n" +
             "  protected static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
-            "    new q.Sub().meth()\n" +
+            "    new q.More().meth()\n" +
             "  }\n" +
             "}\n",
 
-            "q/Sub.groovy",
+            "q/More.groovy",
             "package q\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Sub extends p.Main {\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
             "  void meth() {\n" +
             "    print VALUE\n" +
             "  }\n" +
@@ -1185,18 +1245,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Main {\n" +
+            "class Main {\n" +
             "  public static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
-            "    new q.Sub().meth()\n" +
+            "    new q.More().meth()\n" +
             "  }\n" +
             "}\n",
 
-            "q/Sub.groovy",
+            "q/More.groovy",
             "package q\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Sub extends p.Main {\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
             "  void meth() {\n" +
             "    print VALUE\n" +
             "  }\n" +
@@ -1207,25 +1266,21 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test @Ignore("MissingPropertyExceptionNoStack: No such property: VALUE for class: q.Sub") // GROOVY-9093
+    @Test
     public void testCompileStatic9043_subToPrivate() {
         //@formatter:off
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Main {\n" +
+            "class Main {\n" +
             "  private static final String VALUE = 'value'\n" +
-            "  static main(args) {\n" +
-            "    new q.Sub().meth()\n" +
-            "  }\n" +
             "}\n",
 
-            "q/Sub.groovy",
+            "q/More.groovy",
             "package q\n" +
-            "import groovy.transform.*\n" +
-            "@CompileStatic class Sub extends p.Main {\n" +
-            "  void meth() {\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  static void meth() {\n" +
             "    print VALUE\n" +
             "  }\n" +
             "}\n",
@@ -1234,8 +1289,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Sub.groovy\n" +
-            "Groovy:Access to Main#VALUE is forbidden @ line -1, column -1.\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
             "----------\n");
     }
 
@@ -1312,6 +1369,120 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    public void testCompileStatic9074a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void addRectangle(List<? extends Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle()) // TODO: compile-time error!\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    public void testCompileStatic9074b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void addRectangle(List<? super Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle())\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9074c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? extends Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test @Ignore
+    public void testCompileStatic9074d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? super Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-9086
