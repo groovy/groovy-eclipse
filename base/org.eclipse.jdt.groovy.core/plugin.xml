@@ -110,12 +110,7 @@
    <extension point="org.eclipse.jdt.core.compilationParticipant">
       <compilationParticipant
             class="org.codehaus.jdt.groovy.internal.compiler.ScriptFolderCompilationParticipant"
-            id="org.eclipse.jdt.groovy.core.compilationParticipant1"
-            createsProblems="false"
-            modifiesEnvironment="false">
-         <managedMarker
-               markerType="org.eclipse.jdt.groovy.core.">
-         </managedMarker>
+            id="org.eclipse.jdt.groovy.core.script.copier">
       </compilationParticipant>
    </extension>
 </plugin>
