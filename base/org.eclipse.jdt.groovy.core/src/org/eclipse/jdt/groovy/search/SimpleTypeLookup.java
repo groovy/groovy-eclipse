@@ -376,7 +376,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // assume that this is a synthetic call method for calling a closure
             resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = resolvedDeclaringType.getMethods("call").get(0);
-        } else if ("this".equals(name)) {
+        } else if ("this".equals(name) && VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
             declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
         } else {

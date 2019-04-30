@@ -515,6 +515,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     /**
      * Given a field node, checks if we are accessing or setting a public or protected field from an inner class.
      */
+    @SuppressWarnings("unused")
     private String checkOrMarkInnerFieldAccess(Expression source, FieldNode fn, boolean lhsOfAssignment, String delegationData) {
         if (fn == null || fn.isStatic()) return delegationData;
         ClassNode enclosingClassNode = typeCheckingContext.getEnclosingClassNode();
@@ -1741,7 +1742,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
+        /* GRECLIPSE edit -- GROOVY-7996, GROOVY-8978, GROOVY-9007, GROOVY-9063, et al.
         delegationData = checkOrMarkInnerFieldAccess(expressionToStoreOn, field, lhsOfAssignment, delegationData);
+        */
+        if (field != null && !field.isStatic() && !field.isPrivate() && !"delegate".equals(delegationData) &&
+                expressionToStoreOn instanceof PropertyExpression && typeCheckingContext.getEnclosingClosureStack().size() == 1) {
+            PropertyExpression pe = (PropertyExpression) expressionToStoreOn;
+            boolean ownerProperty = !("this".equals(pe.getPropertyAsString()));
+            if (ownerProperty && pe.getObjectExpression() instanceof VariableExpression) {
+                Variable accessedVariable = ((VariableExpression) pe.getObjectExpression()).getAccessedVariable();
+                Variable declaredVariable = typeCheckingContext.getEnclosingClosure().getClosureExpression().getVariableScope().getDeclaredVariable(pe.getObjectExpression().getText());
+                if (accessedVariable != null && accessedVariable == declaredVariable) ownerProperty = false;
+            }
+            if (ownerProperty) {
+                delegationData = "owner";
+                pe.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
+            }
+        }
+        // GRECLIPSE end
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }

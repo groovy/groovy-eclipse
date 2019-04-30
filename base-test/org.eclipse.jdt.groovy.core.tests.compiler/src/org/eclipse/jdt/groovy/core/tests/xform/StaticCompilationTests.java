@@ -781,6 +781,119 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8978
+    public void testCompileStatic8978() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@CompileStatic\n" +
+            "class DelegatesToMap implements Map<String,Object> {\n" +
+            "  \n" +
+            "  @Delegate protected Map<String,Object> target\n" +
+            "  \n" +
+            "  DelegatesToMap() {\n" +
+            "    target = new HashMap<>()\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "@CompileStatic\n" +
+            "class TaskConfig extends DelegatesToMap implements Cloneable {\n" +
+            "  \n" +
+            "  TaskConfig() {\n" +
+            "  }\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  TaskConfig clone() {\n" +
+            "    def copy = (TaskConfig) super.clone()\n" +
+            "    copy.target = new HashMap<>(this.target)\n" + // NPE
+            "    return copy\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "new TaskConfig().clone()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9007
+    public void testCompileStatic9007() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    public final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.n == n }\n" + // "it" must not be converted to "owner.it"
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
+    @Test @Ignore
+    public void testCompileStatic9007a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    private final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.n == n }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
+    @Test
+    public void testCompileStatic9007b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    private final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.@n == n }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9043
     public void testCompileStatic9043_nonStaticInnerToPackage() {
         //@formatter:off
@@ -1326,7 +1439,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9063
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9063
     public void testCompileStatic9063() {
         //@formatter:off
         String[] sources = {

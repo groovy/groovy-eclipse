@@ -1801,6 +1801,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
+        // GRECLIPSE add -- GROOVY-7996, GROOVY-8978, GROOVY-9007, GROOVY-9063, et al.
+        if (field != null && !field.isStatic() && !field.isPrivate() && !"delegate".equals(delegationData) &&
+                expressionToStoreOn instanceof PropertyExpression && typeCheckingContext.getEnclosingClosureStack().size() == 1) {
+            PropertyExpression pe = (PropertyExpression) expressionToStoreOn;
+            boolean ownerProperty = !("this".equals(pe.getPropertyAsString()));
+            if (ownerProperty && pe.getObjectExpression() instanceof VariableExpression) {
+                Variable accessedVariable = ((VariableExpression) pe.getObjectExpression()).getAccessedVariable();
+                Variable declaredVariable = typeCheckingContext.getEnclosingClosure().getClosureExpression().getVariableScope().getDeclaredVariable(pe.getObjectExpression().getText());
+                if (accessedVariable != null && accessedVariable == declaredVariable) ownerProperty = false;
+            }
+            if (ownerProperty) {
+                delegationData = "owner";
+                pe.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
+            }
+        }
+        // GRECLIPSE end
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
