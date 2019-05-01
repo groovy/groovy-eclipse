@@ -687,6 +687,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
         if (enclosingClosure != null) {
+            /* GRECLIPSE edit -- GROOVY-9089
             String name = vexp.getName();
             if (name.equals("owner") || name.equals("thisObject")) {
                 storeType(vexp, typeCheckingContext.getEnclosingClassNode());
@@ -698,6 +699,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeType(vexp, type);
                 return;
             }
+            */
+            switch (vexp.getName()) {
+            case "delegate":
+                DelegationMetadata md = getDelegationMetadata(enclosingClosure.getClosureExpression());
+                if (md != null) {
+                    storeType(vexp, md.getType());
+                    return;
+                }
+                // falls through
+            case "owner":
+                if (typeCheckingContext.getEnclosingClosureStack().size() > 1) {
+                    storeType(vexp, CLOSURE_TYPE);
+                    return;
+                }
+                // falls through
+            case "thisObject":
+                storeType(vexp, typeCheckingContext.getEnclosingClassNode());
+                return;
+            }
+            // GRECLIPSE end
         }
 
         if (!(accessedVariable instanceof DynamicVariable)) {
@@ -3686,7 +3707,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             owners.add(0, Receiver.<String>make(clazzGT.getType()));
         }
         if (receiver.isInterface()) {
-            // GROOVY-xxxx
             owners.add(Receiver.<String>make(OBJECT_TYPE));
         }
         addSelfTypes(receiver, owners);
@@ -3703,6 +3723,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 && ((VariableExpression) objectExpression).getName().equals("it")) {
             owners.add(Receiver.<String>make(typeCheckingContext.lastImplicitItType));
         }
+        // GRECLIPSE add -- GROOVY-9089
+        if (typeCheckingContext.delegationMetadata != null
+                && objectExpression instanceof VariableExpression
+                && ((VariableExpression) objectExpression).getName().equals("owner")
+                && /*isNested:*/typeCheckingContext.delegationMetadata.getParent() != null) {
+            owners.clear();
+            List<Receiver<String>> enclosingClass = Collections.singletonList(
+                Receiver.<String>make(typeCheckingContext.getEnclosingClassNode()));
+            addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
+        }
+        // GRECLIPSE end
         return owners;
     }
 

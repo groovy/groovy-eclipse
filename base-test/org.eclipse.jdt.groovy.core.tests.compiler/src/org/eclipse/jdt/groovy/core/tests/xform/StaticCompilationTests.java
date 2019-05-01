@@ -819,6 +819,52 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9005
+    public void testCompileStatic9005() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.concurrent.Callable\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Main extends A1 {" +
+            "  Map<String, Object> getCommands() {\n" +
+            "    Map<String, Object> commands = getMap()\n" +
+            "    commands.put('greet', new Callable<String>() {\n" +
+            "      @Override\n" +
+            "      String call() {\n" +
+            "        def string = getObj().toString()\n" +
+            "        return string\n" +
+            "      }\n" +
+            "    })\n" +
+            "    return commands\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def greeter = new Main().commands['greet']\n" +
+            "    if (greeter instanceof Callable) {\n" +
+            "      print greeter.call()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+
+            "A1.java",
+            "abstract class A1 extends A2 {\n" +
+            "  public Object getObj() {\n" +
+            "    return \"hi!\";\n" +
+            "  }\n" +
+            "}\n",
+
+            "A2.groovy",
+            "abstract class A2 {\n" +
+            "  Map<String, Object> getMap() {\n" +
+            "    [:]\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hi!");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-9007
     public void testCompileStatic9007() {
         //@formatter:off
@@ -1878,7 +1924,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate outer delegate");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9089
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9089
     public void testCompileStatic9089() {
         //@formatter:off
         String[] sources = {
@@ -1899,7 +1945,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  block()\n" +
             "}\n" +
             "@SuppressWarnings('rawtypes')\n" +
-            "void inner(@DelegatesTo(value = C2) Closure block, strategy = Closure.DELEGATE_FIRST) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block()\n" +
             "}\n" +
@@ -1939,7 +1985,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  block()\n" +
             "}\n" +
             "@SuppressWarnings('rawtypes')\n" +
-            "void inner(@DelegatesTo(value = C2) Closure block, strategy = Closure.OWNER_FIRST) {\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
             "  block.delegate = new C2()\n" +
             "  block()\n" +
             "}\n" +
