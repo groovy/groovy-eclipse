@@ -989,6 +989,9 @@ public class AsmClassGenerator extends ClassGenerator {
                                             new ClassExpression(outer),
                                             expression.getProperty()
                                     );
+                                    // GRECLIPSE add -- GROOVY-9043
+                                    pexp.getObjectExpression().setSourcePosition(objectExpression);
+                                    // GRECLIPSE end
                                     pexp.visit(controller.getAcg());
                                     return;
                                 }

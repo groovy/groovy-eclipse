@@ -871,7 +871,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class Main {" +
+            "class Main {\n" +
             "  private enum E {\n" +
             "    ONE(1), TWO(2)\n" +
             "    public final int n\n" +
@@ -890,13 +890,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "TWO");
     }
 
-    @Test @Ignore
+    @Test
     public void testCompileStatic9007a() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class Main {" +
+            "class Main {\n" +
             "  private enum E {\n" +
             "    ONE(1), TWO(2)\n" +
             "    private final int n\n" +
@@ -921,7 +921,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class Main {" +
+            "class Main {\n" +
             "  private enum E {\n" +
             "    ONE(1), TWO(2)\n" +
             "    private final int n\n" +
@@ -938,6 +938,54 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "TWO");
+    }
+
+    @Test
+    public void testCompileStatic9007or9043_enumConstToPrivate1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "enum E {\n" +
+            "  ONE, TWO\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  E.ONE.name\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tE.ONE.name\n" +
+            "\t^^^^^\n" +
+            "Groovy:Access to E#name is forbidden @ line 6, column 3.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9007or9043_enumConstToPrivate2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "enum E {\n" +
+            "  ONE, TWO\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  E.ONE.ordinal\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tE.ONE.ordinal\n" +
+            "\t^^^^^\n" +
+            "Groovy:Access to E#ordinal is forbidden @ line 6, column 3.\n" +
+            "----------\n");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-9043
