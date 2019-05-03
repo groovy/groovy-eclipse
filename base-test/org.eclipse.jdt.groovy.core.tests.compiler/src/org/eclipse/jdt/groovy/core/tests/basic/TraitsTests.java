@@ -1332,4 +1332,36 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Groovy:unable to resolve class T\n" +
             "----------\n");
     }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9031
+    public void testTraits53() {
+        //@formatter:off
+        String[] sources = {
+            "Trait9031.groovy",
+            "trait Trait9031<V> {\n" +
+            "  V value\n" +
+            "}\n",
+
+            "Class9031.groovy",
+            "class Class9031 implements Trait9031<String> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkDisassemblyFor("Class9031.class",
+            "  public bridge synthetic java.lang.Object getValue();\n");
+        checkDisassemblyFor("Class9031.class",
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
+            "    desc=\"()Ljava/lang/Object;\")\n" +
+            "  public java.lang.String getValue();\n");
+
+        checkDisassemblyFor("Class9031.class",
+            "  public bridge synthetic void setValue(java.lang.Object arg0);\n");
+        checkDisassemblyFor("Class9031.class",
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
+            "    desc=\"(Ljava/lang/Object;)V\")\n" +
+            "  public void setValue(java.lang.String " + (isAtLeastGroovy(25) ? "value" : "arg1") + ");\n");
+    }
 }
