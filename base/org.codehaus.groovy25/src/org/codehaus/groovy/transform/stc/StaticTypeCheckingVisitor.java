@@ -2989,11 +2989,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                     boolean lastArg = (i == length - 1);
+                    /* GRECLIPSE edit -- GROOVY-9058
                     if (lastArg && inferredType.isArray()) {
-                        if (/*GRECLIPSE add -- GROOVY-9058*/!closureParam.isDynamicTyped() && /*GRECLIPSE end*/inferredType.getComponentType().equals(originType)) {
+                        if (inferredType.getComponentType().equals(originType)) {
                             inferredType = originType;
                         }
-                    } else if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
+                    } else*/ if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
                         addError("Expected parameter of type " + inferredType.toString(false) + " but got " + originType.toString(false), closureParam.getType());
                     }
 
