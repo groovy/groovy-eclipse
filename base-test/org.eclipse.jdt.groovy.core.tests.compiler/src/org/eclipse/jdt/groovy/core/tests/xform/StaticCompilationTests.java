@@ -793,6 +793,52 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-8955
+    public void testCompileStatic8955() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Property {\n" +
+            "  String generator\n" +
+            "}\n" +
+            "\n" +
+            "interface PMapping<T extends Property> {\n" +
+            "  T getMappedForm()\n" +
+            "}\n" +
+            "\n" +
+            "interface PProperty {\n" +
+            "  PMapping getMapping()\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class GPEntity {\n" +
+            "  def method() {\n" +
+            "    PProperty identity = getIdentity()\n" +
+            "    String generatorType = identity.getMapping().getMappedForm().getGenerator()\n" +
+            "  }\n" +
+            "  \n" +
+            "  PProperty getIdentity() {\n" +
+            "    new PProperty() {\n" +
+            "      PMapping getMapping() {\n" +
+            "        new PMapping() {\n" +
+            "          def getMappedForm() {\n" + // replace "def" with "Property"
+            "            new Property() {\n" +
+            "              String getGenerator() { 'foo' }\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "new GPEntity().method()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8978
     public void testCompileStatic8978() {
         //@formatter:off
@@ -1022,6 +1068,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9043_nonStaticInnerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  class Inner {\n" +
+            "    void meth() { print value }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
     public void testCompileStatic9043_nonStaticInnerToProtected() {
         //@formatter:off
         String[] sources = {
@@ -1105,6 +1172,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    public void testCompileStatic9043_staticInnerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static class Inner {\n" +
+            "    void meth() {\n" +
+            "      print value\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tprint value\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:...\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic9043_staticInnerToProtected() {
         //@formatter:off
@@ -1178,6 +1274,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  @PackageScope static final String VALUE = 'value'\n" +
             "  static main(args) {\n" +
             "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static main(args) {\n" +
+            "    print new Main().value\n" +
             "  }\n" +
             "}\n",
         };
@@ -1265,6 +1379,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9043_peerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print new Main().value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackageX() {
         //@formatter:off
         String[] sources = {
             "p/Main.groovy",
@@ -1397,8 +1534,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
     public void testCompileStatic9043_subToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" + // non-static
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPackageX() {
         //@formatter:off
         String[] sources = {
             "p/Main.groovy",
@@ -1416,7 +1583,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Test {\n" +
             "  void meth() {\n" +
-            "    p.More.VALUE\n" +
+            "    p.More.VALUE\n" + // Main and More are in same package, Test is not
             "  }\n" +
             "}\n",
         };
@@ -1500,6 +1667,36 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class More extends p.Main {\n" +
             "  static void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    public void testCompileStatic9043_subToPrivate2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" + // non-static
             "    print VALUE\n" +
             "  }\n" +
             "}\n",
