@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,17 +39,17 @@ final class ASTPositionTests extends BrowsingTestSuite {
         // This approximates better what is happening in reconciling for an actual editor in workspace.
         problemRequestor = new IProblemRequestor() {
             @Override
-            public boolean isActive() {
+            boolean isActive() {
                 true
             }
             @Override
-            public void endReporting() {
+            void endReporting() {
             }
             @Override
-            public void beginReporting() {
+            void beginReporting() {
             }
             @Override
-            public void acceptProblem(IProblem problem) {
+            void acceptProblem(IProblem problem) {
                 println "problem: $problem"
             }
         }
@@ -64,32 +64,32 @@ final class ASTPositionTests extends BrowsingTestSuite {
     @Test
     void testAnnotationPositions_STS3822() {
         String contents = '''\
-            class main_test extends BaseTest {
-              @Foo(s = '%1')
-              static Object[][] P() {
-                return [
-                  [
-                    "a",
-                    "b",
-                    "c"
-                  ]
-                ]
-              }
-              @Bar(ddd = "P")
-              final void test_some_things(def a, def b, def c) {
-                method_1(a)
-                method_2(b)
-                method_3(c)
-              }
-              void setUp() {
-                XXX = [
-                  "param_1": "1",
-                  "param_2": "2"
-                ]
-                setUpBase()
-              }
-            }
-            '''.stripIndent()
+            |class main_test extends BaseTest {
+            |  @Foo(s = '%1')
+            |  static Object[][] P() {
+            |    return [
+            |      [
+            |        "a",
+            |        "b",
+            |        "c"
+            |      ]
+            |    ]
+            |  }
+            |  @Bar(ddd = "P")
+            |  final void test_some_things(def a, def b, def c) {
+            |    method_1(a)
+            |    method_2(b)
+            |    method_3(c)
+            |  }
+            |  void setUp() {
+            |    XXX = [
+            |      "param_1": "1",
+            |      "param_2": "2"
+            |    ]
+            |    setUpBase()
+            |  }
+            |}
+            |'''.stripMargin()
         CompilationUnit ast = getAST(contents)
         traverseAst(contents, ast)
     }
@@ -97,32 +97,32 @@ final class ASTPositionTests extends BrowsingTestSuite {
     @Test // This variant doesn't have a well formed array spec on method P()
     void testAnnotationPositions_STS3822_2() {
         String contents = '''\
-            class main_test extends BaseTest {
-              @Foo(s = '%1')
-              static Object[][ P() {
-                return [
-                  [
-                    "a",
-                    "b",
-                    "c"
-                  ]
-                ]
-              }
-              @Bar(ddd = "P")
-              final void test_some_things(def a, def b, def c) {
-                method_1(a)
-                method_2(b)
-                method_3(c)
-              }
-              void setUp() {
-                XXX = [
-                  "param_1": "1",
-                  "param_2": "2"
-                ]
-                setUpBase()
-              }
-            }
-            '''.stripIndent()
+            |class main_test extends BaseTest {
+            |  @Foo(s = '%1')
+            |  static Object[][ P() {
+            |    return [
+            |      [
+            |        "a",
+            |        "b",
+            |        "c"
+            |      ]
+            |    ]
+            |  }
+            |  @Bar(ddd = "P")
+            |  final void test_some_things(def a, def b, def c) {
+            |    method_1(a)
+            |    method_2(b)
+            |    method_3(c)
+            |  }
+            |  void setUp() {
+            |    XXX = [
+            |      "param_1": "1",
+            |      "param_2": "2"
+            |    ]
+            |    setUpBase()
+            |  }
+            |}
+            |'''.stripMargin()
         CompilationUnit ast = getAST(contents)
         traverseAst(contents, ast)
     }
@@ -130,11 +130,11 @@ final class ASTPositionTests extends BrowsingTestSuite {
     @Test
     void testStringArrayArgs_STS3787() {
         String contents = '''\
-            class MyMain {
-              static void main(String[] args) {
-              }
-            }
-            '''.stripIndent()
+            |class MyMain {
+            |  static void main(String[] args) {
+            |  }
+            |}
+            |'''.stripMargin()
         CompilationUnit ast = getAST(contents)
         //I wished to check the String[] node has correct source location info
         // but it does not appear in the final AST. Instead it seems to be
@@ -145,11 +145,11 @@ final class ASTPositionTests extends BrowsingTestSuite {
     @Test
     void testStringVarArg_STS3787() {
         String contents = '''\
-            class MyMain {
-              static void munching(String... args) {
-              }
-            }
-            '''.stripIndent()
+            |class MyMain {
+            |  static void munching(String... args) {
+            |  }
+            |}
+            |'''.stripMargin()
         CompilationUnit ast = getAST(contents)
         traverseAst(contents, ast)
     }
@@ -158,7 +158,7 @@ final class ASTPositionTests extends BrowsingTestSuite {
 
     private void traverseAst(String contents, CompilationUnit ast) {
         ast.accept([preVisit: { ASTNode node ->
-            println '--- ' + node.getClass()
+            println "--- ${node.class}"
             println getText(node, contents)
             println '----------------------------------------'
         }] as ASTVisitor)

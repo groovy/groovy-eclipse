@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -127,17 +127,17 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectMethodInSuperClass() {
         String contents1 = '''\
-            class PlantController {
-              def redirect(controller, action) { }
-            }
-            '''.stripIndent()
+            |class PlantController {
+            |  def redirect(controller, action) { }
+            |}
+            |'''.stripMargin()
         String contents2 = '''\
-            class Other extends PlantController {
-              def checkUser() {
-                redirect(controller: 'user', action: 'login')
-              }
-            }
-            '''.stripIndent()
+            |class Other extends PlantController {
+            |  def checkUser() {
+            |    redirect(controller: 'user', action: 'login')
+            |  }
+            |}
+            |'''.stripMargin()
 
         IJavaElement elem = assertCodeSelect([contents1, contents2], 'redirect')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'PlantController'
@@ -146,29 +146,29 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test // GRECLIPSE-1755
     void testCodeSelectMethodInSuperInterface() {
         String contents1 = '''\
-            interface SuperInterface {
-              def foo(String string);
-            }
-            '''.stripIndent()
+            |interface SuperInterface {
+            |  def foo(String string);
+            |}
+            |'''.stripMargin()
         String contents2 = '''\
-            interface SubInterface extends SuperInterface {
-              def foo(String string, int integer);
-            }
-            '''.stripIndent()
+            |interface SubInterface extends SuperInterface {
+            |  def foo(String string, int integer);
+            |}
+            |'''.stripMargin()
         String contents3 = '''\
-            class Foo implements SubInterface {
-              def foo(String string) {}
-              def foo(String string, int integer) {}
-            }
-            '''.stripIndent()
+            |class Foo implements SubInterface {
+            |  def foo(String string) {}
+            |  def foo(String string, int integer) {}
+            |}
+            |'''.stripMargin()
         String contents4 = '''\
-            class Bar {
-              def main() {
-                def bar = new Foo();
-                ((SubInterface) bar).foo("string");
-              }
-            }
-            '''.stripIndent()
+            |class Bar {
+            |  def main() {
+            |    def bar = new Foo();
+            |    ((SubInterface) bar).foo("string");
+            |  }
+            |}
+            |'''.stripMargin()
 
         IJavaElement elem = assertCodeSelect([contents1, contents2, contents3, contents4], 'foo')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'SuperInterface'
@@ -178,155 +178,174 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectScriptMethod() {
         // ensure private method is not hidden by script's run() method
         String contents = '''\
-            private String method() {
-              def local = null
-            }
-            '''.stripIndent()
+            |private String method() {
+            |  def local = null
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'method')
     }
 
     @Test
     void testCodeSelectMethodInScriptFromScript() {
         String contents = '''\
-            def x() {}
-            x()
-            '''.stripIndent()
+            |def x() {}
+            |x()
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectMethodInClassFromScript() {
         String contents = '''\
-            class Inner { def x() {} }
-            new Inner().x()
-            '''.stripIndent()
+            |class Inner { def x() {} }
+            |new Inner().x()
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectStaticMethodInClassFromScript() {
         String contents = '''\
-            class Inner { static def x() {} }
-            Inner.x()
-            '''.stripIndent()
+            |class Inner { static def x() {} }
+            |Inner.x()
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectStaticMethodInClassFromScriptMethod() {
         String contents = '''\
-            class Inner {
-              static def x() {}
-            }
-            def y() {
-              Inner.x()
-            }
-            '''.stripIndent()
+            |class Inner {
+            |  static def x() {}
+            |}
+            |def y() {
+            |  Inner.x()
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectStaticMethodFromClass1() {
         String contents = '''\
-            class Inner {
-              static def x() {}
-              def y() {
-                Inner.x()
-              }
-            }
-            '''.stripIndent()
+            |class Inner {
+            |  static def x() {}
+            |  def y() {
+            |    Inner.x()
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectStaticMethodFromClass2() {
         String contents = '''\
-            class Inner {
-              static def x() {}
-              def y() {
-                x()
-              }
-            }
-            '''.stripIndent()
+            |class Inner {
+            |  static def x() {}
+            |  def y() {
+            |    x()
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectStaticMethodFromTrait1() {
         String contents = '''\
-            trait Trait {
-              static def x() {}
-              def y() {
-                Trait.x()
-              }
-            }
-            '''.stripIndent()
+            |trait Trait {
+            |  static def x() {}
+            |  def y() {
+            |    Trait.x()
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/755
     void testCodeSelectStaticMethodFromTrait2() {
         String contents = '''\
-            trait Trait {
-              static def x() {}
-              def y() {
-                x()
-              }
-            }
-            '''.stripIndent()
+            |trait Trait {
+            |  static def x() {}
+            |  def y() {
+            |    x()
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'x')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectStaticMethodFromTrait3() {
         String contents = '''\
-            trait T {
-              static def x() {}
-            }
-            class C implements T {
-              def y() {
-                x()
-              }
-            }
-            '''.stripIndent()
+            |trait T {
+            |  static def x() {}
+            |}
+            |class C implements T {
+            |  def y() {
+            |    x()
+            |  }
+            |}
+            |'''.stripMargin()
         IJavaElement elem = assertCodeSelect([contents], 'x')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 
     @Test
     void testCodeSelectStaticMethodInOtherClass() {
-        String contents = 'class PlantController {\nstatic def redirect(controller, action)  { }\n' +
-            'def checkUser() {\nredirect(controller:\"user\",action:\"login\")\n}}\n'
-        String contents2 =
-            'class Other {\ndef doNothing() {\nPlantController.redirect(controller:\"user\",action:\"login\")\n}}'
-
+        String contents = '''\
+            |class PlantController {
+            |  static def redirect(controller, action) {
+            |  }
+            |  def checkUser() {
+            |    redirect(controller:"user", action:"login")
+            |  }
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class Other {
+            |  def doNothing() {
+            |    PlantController.redirect(controller:"user", action:"login")
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents, contents2], 'redirect')
     }
 
     @Test
     void testCodeSelectStaticMethodInOtherClass2() {
-        String contents = 'class C {\nstatic def r(controller)  { }\ndef checkUser() {\nr(List)\n}' + '}\n'
+        String contents = '''\
+            |class C {
+            |  static def r(controller) {
+            |  }
+            |  def checkUser() {
+            |    r(List)
+            |  }
+            |}
+            '''.stripMargin()
         assertCodeSelect([contents], 'List')
     }
 
     @Test
     void testCodeSelectStaticMethodInSuperClass() {
         String contents = '''\
-            class PlantController {
-              static def redirect(controller, action) {
-              }
-              static def checkUser() {
-                redirect(controller:'user', action:'login')
-              }
-            }
-            '''.stripIndent()
+            |class PlantController {
+            |  static def redirect(controller, action) {
+            |  }
+            |  static def checkUser() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
         String contents2 = '''\
-            class Other extends PlantController {
-              static def doNothing() {
-                redirect(controller:'user', action:'login')
-              }
-            }
-            '''.stripIndent()
+            |class Other extends PlantController {
+            |  static def doNothing() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents, contents2], 'redirect')
     }
 
@@ -373,11 +392,13 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectStaticMethod5() {
         String contents = '''\
-            import static java.util.Collections.singletonList
-            @groovy.transform.TypeChecked
-            class Foo { static {
-              singletonList("")
-            }}'''.stripIndent()
+            |import static java.util.Collections.singletonList
+            |@groovy.transform.TypeChecked
+            |class Foo {
+            |  static {
+            |    singletonList("")
+            |  }
+            |}'''.stripMargin()
         IJavaElement elem = assertCodeSelect([contents], 'singletonList')
         assert elem.inferredElement.returnType.toString(false) == 'java.util.List <java.lang.String>'
     }
@@ -385,12 +406,12 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectStaticMethod6() {
         String contents = '''\
-            @groovy.transform.Sortable
-            class Foo {
-              String number
-            }
-            Foo.comparatorByNumber()
-            '''.stripIndent()
+            |@groovy.transform.Sortable
+            |class Foo {
+            |  String number
+            |}
+            |Foo.comparatorByNumber()
+            |'''.stripMargin()
         IJavaElement elem = assertCodeSelect([contents], 'comparatorByNumber')
         assert elem.inferredElement.returnType.toString(false) == 'java.util.Comparator'
     }
@@ -398,11 +419,11 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectStaticMethod7() {
         String contents = '''\
-            @Singleton(property='foo')
-            class Foo {
-            }
-            Foo.getFoo()
-            '''.stripIndent()
+            |@Singleton(property='foo')
+            |class Foo {
+            |}
+            |Foo.getFoo()
+            |'''.stripMargin()
         IJavaElement elem = assertCodeSelect([contents], 'getFoo')
         assert elem.inferredElement.returnType.toString(false) == 'Foo'
     }
@@ -424,21 +445,21 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectEnumConstant() {
         String contents = '''\
-            enum Color {
-              RED, BLACK
-            }
-            enum Suit {
-              CLUBS(Color.BLACK),
-              DIAMONDS(Color.RED),
-              HEARTS(Color.RED),
-              SPADES(Color.BLACK),
-
-              final Color color
-              Suit(Color color) {
-                this.color = color
-              }
-            }
-            '''.stripIndent()
+            |enum Color {
+            |  RED, BLACK
+            |}
+            |enum Suit {
+            |  CLUBS(Color.BLACK),
+            |  DIAMONDS(Color.RED),
+            |  HEARTS(Color.RED),
+            |  SPADES(Color.BLACK),
+            |
+            |  final Color color
+            |  Suit(Color color) {
+            |    this.color = color
+            |  }
+            |}
+            |'''.stripMargin()
         // enum Suit was visited for each constant, which covered the initializer params
         assertCodeSelect(contents, new SourceRange(contents.indexOf('Color.'), 5), 'Color')
     }
@@ -446,13 +467,13 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectEnumAbstractMethod() {
         String contents = '''\
-            enum E {
-              X() {
-                def verb(noun) { }
-              }
-              abstract def verb(noun);
-            }
-            '''.stripIndent()
+            |enum E {
+            |  X() {
+            |    def verb(noun) { }
+            |  }
+            |  abstract def verb(noun);
+            |}
+            |'''.stripMargin()
         // Is cancel member handled properly?
         assertCodeSelect([contents], 'verb')
         assertCodeSelect([contents], 'noun')
@@ -461,16 +482,16 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/420
     void testCodeSelectAnonVariadicMethod() {
         String contents = '''\
-            interface LibarayFunction {
-              String compute(String... args)
-            }
-
-            def stringFunction = new LibarayFunction() {
-              @Override
-              String compute(String... args) {
-              }
-            }
-            '''.stripIndent()
+            |interface LibarayFunction {
+            |  String compute(String... args)
+            |}
+            |
+            |def stringFunction = new LibarayFunction() {
+            |  @Override
+            |  String compute(String... args) {
+            |  }
+            |}
+            |'''.stripMargin()
 
         IJavaElement elem = assertCodeSelect([contents], 'compute')
         assert elem.sourceRange.offset > 0
@@ -638,12 +659,12 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectConstuctorNamedArgs() {
         addGroovySource '''\
-            class Classy {
-              Classy(Number n, String s) {
-                ;
-              }
-            }
-            '''.stripIndent(), 'Classy', 'p'
+            |class Classy {
+            |  Classy(Number n, String s) {
+            |    ;
+            |  }
+            |}
+            |'''.stripMargin(), 'Classy', 'p'
 
         // NOTE: I don't think this is correct syntax for calling the 2-arg constructor
         IMethod method = assertConstructor('def c = new Classy(n: 0, s: "")', 'Classy')

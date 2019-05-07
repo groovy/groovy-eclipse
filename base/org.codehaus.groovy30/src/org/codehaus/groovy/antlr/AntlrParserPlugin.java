@@ -137,8 +137,6 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
- *
- * @author <a href="mailto:jstrachan@protique.com">James Strachan</a>
  */
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 

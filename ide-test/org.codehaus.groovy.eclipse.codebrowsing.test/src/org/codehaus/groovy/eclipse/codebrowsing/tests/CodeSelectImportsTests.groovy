@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType1() {
         String source = '''\
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.Pattern
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         def elem = assertCodeSelect([source], 'Pattern')
         assert elem.inferredElement instanceof ClassNode
@@ -34,10 +34,10 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType2() {
         String source = '''\
-            import java.util.regex.Matcher
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.Matcher
+            |import java.util.regex.Pattern
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         def elem = assertCodeSelect([source], 'Pattern')
         assert elem.inferredElement instanceof ClassNode
@@ -46,10 +46,10 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType3() {
         String source = '''\
-            import java.lang.Thread.State
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.lang.Thread.State
+            |import java.util.regex.Pattern
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         def elem = assertCodeSelect([source], 'State')
         assert elem.inferredElement instanceof ClassNode
@@ -58,9 +58,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType4() {
         String source = '''\
-            import java.lang.Thread.State
-            def p = ~/123/
-            '''.stripIndent()
+            |import java.lang.Thread.State
+            |def p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'Thread')
     }
@@ -68,8 +68,8 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType5() {
         String source = '''\
-            import java.lang.Thread.*
-            '''.stripIndent()
+            |import java.lang.Thread.*
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'Thread')
     }
@@ -77,8 +77,8 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType6() {
         String source = '''\
-            import java.util.Map.Entry.*
-            '''.stripIndent()
+            |import java.util.Map.Entry.*
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'Map')
         assertCodeSelect([source], 'Entry')
@@ -87,9 +87,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportPackage1() {
         String source = '''\
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.Pattern
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'regex', 'java.util.regex')
     }
@@ -97,9 +97,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportPackage2() {
         String source = '''\
-            import java.lang.Thread.State
-            def p = ~/123/
-            '''.stripIndent()
+            |import java.lang.Thread.State
+            |def p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'lang', 'java.lang')
     }
@@ -107,9 +107,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportPackage3() {
         String source = '''\
-            import java.util.regex.*
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'regex', 'java.util.regex')
     }
@@ -117,9 +117,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportPackage4() {
         String source = '''\
-            import java.lang.Thread.*
-            def p = ~/123/
-            '''.stripIndent()
+            |import java.lang.Thread.*
+            |def p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], 'lang', 'java.lang')
     }
@@ -127,9 +127,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportWildcard1() {
         String source = '''\
-            import java.util.regex.*
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], '*', null)
     }
@@ -137,9 +137,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportWildcard2() {
         String source = '''\
-            import java.util.regex.*;
-            Pattern p = ~/123/
-            '''.stripIndent()
+            |import java.util.regex.*;
+            |Pattern p = ~/123/
+            |'''.stripMargin()
 
         assertCodeSelect([source], '*', null)
     }
@@ -147,9 +147,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportWildcard3() {
         String source = '''\
-            import static java.util.regex.Pattern.*
-            def p = compile('123')
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.*
+            |def p = compile('123')
+            |'''.stripMargin()
 
         assertCodeSelect([source], '*', null)
     }
@@ -157,9 +157,9 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportWildcard4() {
         String source = '''\
-            import static java.util.regex.Pattern.*;
-            def p = compile('123')
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.*;
+            |def p = compile('123')
+            |'''.stripMargin()
 
         assertCodeSelect([source], '*', null)
     }

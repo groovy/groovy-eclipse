@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,9 +33,9 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
 
     private GroovyCompilationUnit checkRegion(String contents, GroovyCompilationUnit unit, Region initialRegion, Region expectedRegion) {
         FindSurroundingNode finder = new FindSurroundingNode(initialRegion)
-        IASTFragment result = finder.doVisitSurroundingNode(unit.getModuleNode())
-        String expect = contents.substring(expectedRegion.getOffset(), expectedRegion.getEnd())
-        String actual = contents.substring(result.getStart(), result.getEnd())
+        IASTFragment result = finder.doVisitSurroundingNode(unit.moduleNode)
+        String expect = contents.substring(expectedRegion.offset, expectedRegion.end)
+        String actual = contents.substring(result.start, result.end)
         Assert.assertEquals(expect, actual)
         return unit
     }
@@ -43,9 +43,9 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
     @Test
     void testFindSurroundingNode1() {
         String contents = '''\
-            import org.codehaus.groovy.ast.ASTNode
-            class Clazz { }
-            '''.stripIndent()
+            |import org.codehaus.groovy.ast.ASTNode
+            |class Clazz { }
+            |'''.stripMargin()
 
         Region initialRegion = new Region(contents.indexOf('A'), 0)
         Region expectedRegion = new Region(0, 'import org.codehaus.groovy.ast.ASTNode'.length())
@@ -55,9 +55,9 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
     @Test
     void testFindSurrounding2() {
         String contents = '''\
-            import java.util.List
-            class Clazz { }
-            '''.stripIndent()
+            |import java.util.List
+            |class Clazz { }
+            |'''.stripMargin()
 
         Region initialRegion = new Region(contents.indexOf('C'), 0)
         Region expectedRegion = new Region(contents.indexOf('c'), 'class Clazz { }'.length())
@@ -67,13 +67,13 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
     @Test
     void testFindSurrounding3() {
         String contents = '''\
-            import java.util.List
-            class Clazz {
-              def method() {
-                def x
-              }
-            }
-            '''.stripIndent()
+            |import java.util.List
+            |class Clazz {
+            |  def method() {
+            |    def x
+            |  }
+            |}
+            |'''.stripMargin()
 
         Region initialRegion = new Region(contents.indexOf('x'), 0)
         Region expectedRegion = new Region(contents.indexOf('x'), 'x'.length())
@@ -103,12 +103,12 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
     @Test
     void testFindSurrounding4() {
         String contents = '''\
-            if (true) {
-              def x
-            } else {
-              def y
-            }
-            '''.stripIndent()
+            |if (true) {
+            |  def x
+            |} else {
+            |  def y
+            |}
+            |'''.stripMargin()
 
         Region initialRegion = new Region(contents.indexOf('x'), 0)
         Region expectedRegion = new Region(contents.indexOf('x'), 'x'.length())
@@ -326,20 +326,20 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
     @Test
     void testFindSurrounding13() {
         String contents = '''\
-            enum E {
-              X {
-                def m() {
-                  def i = 1
-                }
-              },
-              Y {
-                def m() {
-                  def j = 2
-                }
-              };
-              abstract def m();
-            }
-            '''.stripIndent()
+            |enum E {
+            |  X {
+            |    def m() {
+            |      def i = 1
+            |    }
+            |  },
+            |  Y {
+            |    def m() {
+            |      def j = 2
+            |    }
+            |  };
+            |  abstract def m();
+            |}
+            |'''.stripMargin()
 
         Region initialRegion = new Region(contents.indexOf('i'), 0)
         Region expectedRegion = new Region(contents.indexOf('i'), 1)
