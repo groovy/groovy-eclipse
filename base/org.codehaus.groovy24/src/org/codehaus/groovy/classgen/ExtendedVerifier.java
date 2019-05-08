@@ -154,17 +154,20 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             addError("Annotations are not supported in the current runtime. " + JVM_ERROR_MESSAGE, node);
             return;
         }
-        Map<String, List<AnnotationNode>> runtimeAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
+        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation0(unvisited);
             String name = visited.getClassNode().getName();
-            if (visited.hasRuntimeRetention()) {
-                List<AnnotationNode> seen = runtimeAnnotations.get(name);
+            // GRECLIPSE edit -- GROOVY-9095
+            //if (visited.hasRuntimeRetention()) {
+            if (!visited.hasSourceRetention()) {
+            // GRECLIPSE end
+                List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
                     seen = new ArrayList<AnnotationNode>();
                 }
                 seen.add(visited);
-                runtimeAnnotations.put(name, seen);
+                nonSourceAnnotations.put(name, seen);
             }
             boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
 
@@ -177,11 +180,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             visitDeprecation(node, visited);
             visitOverride(node, visited);
         }
-        checkForDuplicateAnnotations(runtimeAnnotations);
+        checkForDuplicateAnnotations(nonSourceAnnotations);
     }
 
-    private void checkForDuplicateAnnotations(Map<String, List<AnnotationNode>> runtimeAnnotations) {
-        for (Map.Entry<String, List<AnnotationNode>> next : runtimeAnnotations.entrySet()) {
+    private void checkForDuplicateAnnotations(Map<String, List<AnnotationNode>> nonSourceAnnotations) {
+        for (Map.Entry<String, List<AnnotationNode>> next : nonSourceAnnotations.entrySet()) {
             if (next.getValue().size() > 1) {
                 String repeatableName = null;
                 AnnotationNode repeatee = next.getValue().get(0);
@@ -199,6 +202,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                         break;
                     }
                 }
+                /* GRECLIPSE edit -- GROOVY-9095
                 if (repeatableName != null) {
                     addError("Annotation @" + next.getKey() + " has RUNTIME retention and " + next.getValue().size()
                             + " occurrences. Automatic repeated annotations are not supported in this version of Groovy. " +
@@ -207,6 +211,13 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                     addError("Annotation @" + next.getKey() + " has RUNTIME retention and " + next.getValue().size()
                             + " occurrences. Duplicate annotations not allowed.", next.getValue().get(1));
                 }
+                */
+                String message = "Annotation @" + next.getKey() + " has " + (next.getValue().get(0).hasRuntimeRetention() ? "RUNTIME" : "CLASS") + " retention and " + next.getValue().size() + " occurrences.";
+                message += (repeatableName == null ? " Duplicate annotations are not allowed." :
+                    " Automatic repeated annotations are not supported in this version of Groovy." +
+                        " Consider using the explicit @" + repeatableName + " collector annotation instead.");
+                addError(message, next.getValue().get(1));
+                // GRECLIPSE end
             }
         }
     }

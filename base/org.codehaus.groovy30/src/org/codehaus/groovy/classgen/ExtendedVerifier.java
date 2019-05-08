@@ -156,20 +156,20 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             addError("Annotations are not supported in the current runtime. " + JVM_ERROR_MESSAGE, node);
             return;
         }
-        Map<String, List<AnnotationNode>> runtimeAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
+        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation0(unvisited);
             String name = visited.getClassNode().getName();
-            // GRECLIPSE edit -- GROOVY-9096
+            // GRECLIPSE edit -- GROOVY-9095
             //if (visited.hasRuntimeRetention()) {
             if (!visited.hasSourceRetention()) {
             // GRECLIPSE end
-                List<AnnotationNode> seen = runtimeAnnotations.get(name);
+                List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
                     seen = new ArrayList<AnnotationNode>();
                 }
                 seen.add(visited);
-                runtimeAnnotations.put(name, seen);
+                nonSourceAnnotations.put(name, seen);
             }
             boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
 
@@ -182,11 +182,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             visitDeprecation(node, visited);
             visitOverride(node, visited);
         }
-        checkForDuplicateAnnotations(node, runtimeAnnotations);
+        checkForDuplicateAnnotations(node, nonSourceAnnotations);
     }
 
-    private void checkForDuplicateAnnotations(AnnotatedNode node, Map<String, List<AnnotationNode>> runtimeAnnotations) {
-        for (Map.Entry<String, List<AnnotationNode>> next : runtimeAnnotations.entrySet()) {
+    private void checkForDuplicateAnnotations(AnnotatedNode node, Map<String, List<AnnotationNode>> nonSourceAnnotations) {
+        for (Map.Entry<String, List<AnnotationNode>> next : nonSourceAnnotations.entrySet()) {
             if (next.getValue().size() > 1) {
                 ClassNode repeatable = null;
                 AnnotationNode repeatee = next.getValue().get(0);
@@ -206,7 +206,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 }
                 if (repeatable != null) {
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    collector.setRuntimeRetention(true); // checked earlier
+                    // GRECLIPSE add -- GROOVY-9095
+                    //collector.setRuntimeRetention(true); // checked earlier
+                    collector.setClassRetention(repeatee.hasClassRetention());
+                    collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
+                    // GRECLIPSE end
                     List<Expression> annos = new ArrayList<Expression>();
                     for (AnnotationNode an : next.getValue()) {
                         annos.add(new AnnotationConstantExpression(an));
