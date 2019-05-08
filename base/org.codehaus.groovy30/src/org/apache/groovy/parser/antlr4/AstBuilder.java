@@ -4621,13 +4621,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         // GRECLIPSE edit
         /*return*/ configureAST(annotationNode, ctx);
-        // save the full source range of the annotation for future use
+        configureAST(annotationNode.getClassNode(), ctx.annotationName());
+
+        // save the full source range of the annotation
         long start = annotationNode.getStart(), until = annotationNode.getEnd();
         annotationNode.setNodeMetaData("source.offsets", (start << 32) | until);
-        configureAST(annotationNode.getClassNode(), ctx.annotationName());
+
         // Eclipse has different requirements for error reporting:
-        configureAST(annotationNode, ctx.annotationName());
-        annotationNode.setEnd(annotationNode.getEnd() - 1);
+        annotationNode.setEnd(annotationNode.getClassNode().getEnd());
+        annotationNode.setLastLineNumber(annotationNode.getClassNode().getLastLineNumber());
+        annotationNode.setLastColumnNumber(annotationNode.getClassNode().getLastColumnNumber());
+
         return annotationNode;
         // GRECLIPSE end
     }

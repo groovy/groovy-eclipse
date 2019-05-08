@@ -566,12 +566,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         errors.removeAll(errorsRecorded);
     }
 
-    private int getOffset(int[] lineSeparatorPositions, int line, int col) {
+    private static int getOffset(int[] lineSeparatorPositions, int line, int column) {
+        if (column < 1) column = 1;
+
         if (lineSeparatorPositions.length > (line - 2) && line > 1) {
-            return lineSeparatorPositions[line - 2] + col;
-        } else {
-            return col;
+            return (lineSeparatorPositions[line - 2] + column);
         }
+        return (column - 1);
     }
 
     //--------------------------------------------------------------------------

@@ -590,18 +590,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "import java.lang.annotation.*;\n" +
             "@Target(ElementType.METHOD)\n" +
             "@interface Anno {\n" +
-            "}",
+            "}\n",
 
-            "Bar.groovy",
-            "@Anno class Bar {}",
+            "Main.groovy",
+            "@Anno class Main {}\n",
         };
         //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Bar.groovy (at line 1)\n" +
-            "\t@Anno class Bar {}\n" +
-            "\t ^^^^\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@Anno class Main {}\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -634,36 +634,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkDisassemblyFor("p/X.class",
             "@p.Anno\n" +
             "public class p.X implements groovy.lang.GroovyObject {\n");
-    }
-
-    @Test
-    public void testMethodLevelAnnotations() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno {}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-
-        checkGCUDeclaration("X.groovy", "public static @Anno void main(String... argv) {");
-
-        checkDisassemblyFor("p/X.class",
-            "  @p.Anno\n" +
-            "  public static void main(java.lang.String... argv);\n");
     }
 
     @Test
@@ -818,7 +788,37 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testConstructorLevelAnnotations() {
+    public void testMethodLevelAnnotations() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+
+        checkGCUDeclaration("X.groovy", "public static @Anno void main(String... argv) {");
+
+        checkDisassemblyFor("p/X.class",
+            "  @p.Anno\n" +
+            "  public static void main(java.lang.String... argv);\n");
+    }
+
+    @Test
+    public void testConstructorLevelAnnotations1() {
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
@@ -846,6 +846,35 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
             "  public X(java.lang.String s);\n");
+    }
+
+    @Test
+    public void testConstructorLevelAnnotations2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "class C {\n" +
+            "  @Deprecated\n" +
+            "  C() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @Deprecated C() {\n" +
+            "  }\n" +
+            "}\n"
+        );
+
+        checkDisassemblyFor("p/C.class",
+            "  @java.lang.Deprecated\n" +
+            "  public C();\n");
     }
 
     @Test
@@ -1270,7 +1299,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1306,7 +1335,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1342,7 +1371,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1408,7 +1437,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1444,7 +1473,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1480,7 +1509,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1546,7 +1575,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1582,7 +1611,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
@@ -1618,37 +1647,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
-    }
-
-    @Test
-    public void testConstructorAnnotations() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "class C {\n" +
-            "  @Deprecated\n" +
-            "  C() {\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-
-        checkGCUDeclaration("C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  public @Deprecated C() {\n" +
-            "  }\n" +
-            "}\n"
-        );
-
-        checkDisassemblyFor("p/C.class",
-            "  @java.lang.Deprecated\n" +
-            "  public C();\n");
     }
 }

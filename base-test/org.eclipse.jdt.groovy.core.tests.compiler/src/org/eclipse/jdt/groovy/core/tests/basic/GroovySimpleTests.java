@@ -514,7 +514,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tclass Foo {}\n" +
-            "\t ^^^^^^^^^^^\n" +
+            "\t^^^^^^^^^^^^\n" +
             "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" +
             "----------\n" +
             "2. ERROR in Foo.groovy (at line 1)\n" +
@@ -568,7 +568,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
-            "\t                                                  ^\n" +
+            "\t                                                 ^\n" +
             "Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression," +
             " but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" +
             "----------\n");
@@ -628,7 +628,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\thello \\u\n" +
-            "\t       ^\n" +
+            "\t      ^\n" +
             "Groovy:Did not find four digit hex character code. line: 1 col:7 @ line 1, column 7.\n" +
             "----------\n");
     }

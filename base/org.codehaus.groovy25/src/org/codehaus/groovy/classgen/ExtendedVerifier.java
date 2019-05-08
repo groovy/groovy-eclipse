@@ -76,6 +76,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         this.source = sourceUnit;
     }
 
+    @Override
     public void visitClass(ClassNode node) {
         AnnotationConstantsVisitor acv = new AnnotationConstantsVisitor();
         acv.visitClass(node, this.source);
@@ -92,6 +93,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         node.visitContents(this);
     }
 
+    @Override
     public void visitField(FieldNode node) {
         visitAnnotations(node, AnnotationNode.FIELD_TARGET);
     }
@@ -101,25 +103,26 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         visitAnnotations(expression, AnnotationNode.LOCAL_VARIABLE_TARGET);
     }
 
+    @Override
     public void visitConstructor(ConstructorNode node) {
         visitConstructorOrMethod(node, AnnotationNode.CONSTRUCTOR_TARGET);
     }
 
+    @Override
     public void visitMethod(MethodNode node) {
         visitConstructorOrMethod(node, AnnotationNode.METHOD_TARGET);
     }
 
     private void visitConstructorOrMethod(MethodNode node, int methodTarget) {
         visitAnnotations(node, methodTarget);
-        for (int i = 0; i < node.getParameters().length; i++) {
-            Parameter parameter = node.getParameters()[i];
+        for (Parameter parameter : node.getParameters()) {
             visitAnnotations(parameter, AnnotationNode.PARAMETER_TARGET);
         }
 
         if (this.currentClass.isAnnotationDefinition() && !node.isStaticConstructor()) {
             ErrorCollector errorCollector = new ErrorCollector(this.source.getConfiguration());
             AnnotationVisitor visitor = new AnnotationVisitor(this.source, errorCollector);
-            visitor.setReportClass(currentClass);
+            visitor.setReportClass(this.currentClass);
             visitor.checkReturnType(node.getReturnType(), node);
             if (node.getParameters().length > 0) {
                 addError("Annotation members may not have parameters.", node.getParameters()[0]);
@@ -130,7 +133,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             ReturnStatement code = (ReturnStatement) node.getCode();
             if (code != null) {
                 visitor.visitExpression(node.getName(), code.getExpression(), node.getReturnType());
-                visitor.checkCircularReference(currentClass, node.getReturnType(), code.getExpression());
+                visitor.checkCircularReference(this.currentClass, node.getReturnType(), code.getExpression());
             }
             this.source.getErrorCollector().addCollectorContents(errorCollector);
         }
@@ -138,13 +141,13 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         if (code != null) {
             code.visit(this);
         }
-
     }
 
+    @Override
     public void visitProperty(PropertyNode node) {
     }
 
-    protected void visitAnnotations(AnnotatedNode node, int target) {
+    private void visitAnnotations(AnnotatedNode node, int target) {
         if (node.getAnnotations().isEmpty()) {
             return;
         }
@@ -321,20 +324,12 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
      *
      * @return true if running on a 1.5+ runtime
      */
-    protected boolean isAnnotationCompatible() {
+    private boolean isAnnotationCompatible() {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
 
+    @Override
     public void addError(String msg, ASTNode expr) {
-        // GRECLIPSE add -- use new form of error message that has an end column
-        if (expr instanceof AnnotationNode) {
-            AnnotationNode aNode = (AnnotationNode) expr;
-            this.source.getErrorCollector().addErrorAndContinue(
-                    new SyntaxErrorMessage(
-                            new PreciseSyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), aNode.getStart(), aNode.getEnd()), this.source)
-            );
-        } else
-        // GRECLIPSE end
         this.source.getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
                         new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
@@ -343,11 +338,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
 
     @Override
     protected SourceUnit getSourceUnit() {
-        return source;
+        return this.source;
     }
 
-    // TODO use it or lose it
+    /* GRECLIPSE edit
     public void visitGenericType(GenericsType genericsType) {
-
     }
+    */
 }

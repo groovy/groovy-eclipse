@@ -1590,18 +1590,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected AnnotationNode annotation(AST annotationNode) {
         annotationBeingDef = true;
-        /* GRECLIPSE edit
         AST node = annotationNode.getFirstChild();
+        /* GRECLIPSE edit
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
         configureAST(annotatedNode, annotationNode);
         */
         AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
-        configureAST(annotatedNode, annotationNode.getFirstChild());
+        configureAST(annotatedNode, annotationNode);
         // Eclipse wants this for error reporting on name range:
-        annotatedNode.setEnd(annotatedNode.getEnd() - 1);
+        setSourceEnd(annotatedNode, annotatedNode.getClassNode());
 
-        // save the full source range of the annotation for future use
+        // save the full source range of the annotation
         int start = locations.findOffset(annotationNode.getLine(), annotationNode.getColumn());
         int until = locations.findOffset(((GroovySourceAST) annotationNode).getLineLast(), ((GroovySourceAST) annotationNode).getColumnLast());
         // check for trailing whitespace
@@ -1615,8 +1615,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
         }
         annotatedNode.setNodeMetaData("source.offsets", Long.valueOf(((long) start << 32) | until)); // pack the offsets into one long integer value
-
-        AST node = annotationNode.getFirstChild();
         // GRECLIPSE end
         while (true) {
             node = node.getNextSibling();

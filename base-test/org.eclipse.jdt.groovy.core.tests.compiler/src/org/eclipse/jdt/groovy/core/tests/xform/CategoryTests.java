@@ -158,8 +158,8 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t  ^^^^^^^^\n" +
-            "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" +
+            "\t^^^^^^^^^\n" +
+            "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 1.\n" +
             "----------\n" +
             "2. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
@@ -168,18 +168,18 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "3. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t           ^^^^^^^\n" +
+            "\t          ^^^^^^^\n" +
             "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
             "----------\n" +
             "4. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
-            "\t ^^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class ScriptMixin for annotation\n" +
+            "\t^^^^^^^^^^^^\n" +
+            "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
             "----------\n" +
             "5. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t ^^^^^^^^^^^\n" +
-            "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
+            "Groovy:unable to resolve class ScriptMixin for annotation\n" +
             "----------\n" +
             "6. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
@@ -188,7 +188,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "7. ERROR in bad.groovy (at line 4)\n" +
             "\t@Override\n" +
-            "\t ^^^^^^^^\n" +
+            "\t^^^^^^^^^\n" +
             "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
             "----------\n");
     }

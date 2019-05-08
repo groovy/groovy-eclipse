@@ -446,7 +446,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tfor (i in 0..) ;\n" +
-            "\t              ^\n" +
+            "\t             ^\n" +
             "Groovy:unexpected token: ) @ line 1, column 14.\n" +
             "----------\n");
 
@@ -478,7 +478,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tfor (i in 0..<) ;\n" +
-            "\t               ^\n" +
+            "\t              ^\n" +
             "Groovy:unexpected token: ) @ line 1, column 15.\n" +
             "----------\n");
 
@@ -1164,7 +1164,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tnew\n" +
-            "\t ^\n" +
+            "\t^\n" +
             "Groovy:missing type for constructor call @ line 1, column 1.\n" +
             "----------\n");
 
@@ -1575,7 +1575,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\timport com.\n" +
-            "\t        ^\n" +
+            "\t       ^\n" +
             "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
@@ -1603,18 +1603,18 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\timport static com.\n" +
-            "\t              ^^^^\n" +
-            "Only a type can be imported. com resolves to a package\n" +
+            "\t              ^\n" +
+            "Groovy:Invalid import @ line 1, column 15.\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 1)\n" +
             "\timport static com.\n" +
-            "\t              ^^^\n" +
-            "Groovy:unable to resolve class com\n" +
+            "\t              ^^^^\n" +
+            "Only a type can be imported. com resolves to a package\n" +
             "----------\n" +
             "3. ERROR in X.groovy (at line 1)\n" +
             "\timport static com.\n" +
-            "\t               ^\n" +
-            "Groovy:Invalid import @ line 1, column 15.\n" +
+            "\t              ^^^\n" +
+            "Groovy:unable to resolve class com\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1705,7 +1705,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tclass X {int y()}\n" +
-            "\t          ^\n" +
+            "\t         ^\n" +
             "Groovy:You defined a method without body. Try adding a body, or declare it abstract. @ line 1, column 10.\n" +
             "----------\n");
 

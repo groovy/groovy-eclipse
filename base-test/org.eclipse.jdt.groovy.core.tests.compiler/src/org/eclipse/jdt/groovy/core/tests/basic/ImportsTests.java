@@ -1507,7 +1507,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
-            "\t        ^\n" +
+            "\t       ^\n" +
             "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
@@ -1597,16 +1597,17 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport static foo.Bar.\n" +
-            "\t              ^^^^^^^\n" +
-            "Groovy:unable to resolve class foo.Bar\n" +
+            "\t              ^\n" +
+            "Groovy:Invalid import @ line 1, column 15.\n" +
             "----------\n" +
             "2. ERROR in A.groovy (at line 1)\n" +
             "\timport static foo.Bar.\n" +
-            "\t               ^\n" +
-            "Groovy:Invalid import @ line 1, column 15.\n" +
+            "\t              ^^^^^^^\n" +
+            "Groovy:unable to resolve class foo.Bar\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
@@ -1636,7 +1637,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
-            "\t        ^\n" +
+            "\t       ^\n" +
             "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 
@@ -1667,7 +1668,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\timport foo.\n" +
-            "\t        ^\n" +
+            "\t       ^\n" +
             "Groovy:Invalid import @ line 1, column 8.\n" +
             "----------\n");
 

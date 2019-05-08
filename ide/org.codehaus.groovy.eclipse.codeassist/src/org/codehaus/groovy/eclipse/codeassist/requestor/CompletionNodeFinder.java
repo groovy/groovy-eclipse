@@ -266,8 +266,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     protected void visitAnnotation(AnnotationNode node) {
-        if (node.getStart() <= completionOffset && completionOffset <= node.getClassNode().getEnd()) {
-            createContext(node, declarationStack.getLast(), ContentAssistLocation.ANNOTATION);
+        if (completionOffset >= node.getClassNode().getStart() && completionOffset <= node.getClassNode().getEnd()) {
+            createContext(node.getClassNode(), node, ContentAssistLocation.ANNOTATION);
         }
         blockStack.add(node);
         super.visitAnnotation(node);
