@@ -121,34 +121,6 @@ public class GroovyUtils {
     }
 
     /**
-     * @return position of '@' (or best approximation) for specified annotation
-     */
-    public static int startOffset(AnnotationNode node) {
-        int start = -1;
-        Long offsets = node.getNodeMetaData("source.offsets");
-        if (offsets != null) {
-            start = (int) (offsets >> 32);
-        } else if (node.getEnd() > 0) {
-            start = node.getStart();
-        }
-        return start;
-    }
-
-    /**
-     * @return position of ')' (or best approximation) for specified annotation
-     */
-    public static int endOffset(AnnotationNode node) {
-        int end = -1;
-        Long offsets = node.getNodeMetaData("source.offsets");
-        if (offsets != null) {
-            end = (int) (offsets & 0xFFFFFFFF);
-        } else {
-            end = lastElement(node).getEnd() + 1;
-        }
-        return end;
-    }
-
-    /**
      * @return qualifier and type name
      */
     public static String[] splitName(ClassNode node) {

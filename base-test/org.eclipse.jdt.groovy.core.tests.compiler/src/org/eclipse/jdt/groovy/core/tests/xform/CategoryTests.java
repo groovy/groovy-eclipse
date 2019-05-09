@@ -158,7 +158,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t^^^^^^^^^\n" +
+            "\t^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 1.\n" +
             "----------\n" +
             "2. ERROR in bad.groovy (at line 1)\n" +

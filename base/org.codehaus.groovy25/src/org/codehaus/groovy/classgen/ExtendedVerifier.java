@@ -332,13 +332,14 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
 
-    @Override
+    /* GRECLIPSE edit
     public void addError(String msg, ASTNode expr) {
         this.source.getErrorCollector().addErrorAndContinue(
                 new SyntaxErrorMessage(
                         new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
         );
     }
+    */
 
     @Override
     protected SourceUnit getSourceUnit() {

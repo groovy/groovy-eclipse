@@ -196,12 +196,15 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
             if (offset != null) {
                 end = offset;
             }
-        } else if (!(node instanceof DeclarationExpression)) {
-            start = node.getStart();
-            end = node.getEnd() - 1;
-        } else {
+        } else if (node instanceof DeclarationExpression) {
             addError(msg, ((DeclarationExpression) node).getLeftExpression());
             return;
+        } else if (node instanceof AnnotationNode) {
+            start = node.getStart();
+            end = ((AnnotationNode) node).getClassNode().getEnd() - 1;
+        } else {
+            start = node.getStart();
+            end = node.getEnd() - 1;
         }
         // GRECLIPSE end
         SourceUnit source = getSourceUnit();

@@ -1544,8 +1544,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (AnnotationNode annotationNode : groovyAnnotations) {
                     ClassNode annoType = annotationNode.getClassNode();
                     TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
-                    annotationReference.sourceStart = GroovyUtils.startOffset(annotationNode);
-                    annotationReference.sourceEnd = GroovyUtils.endOffset(annotationNode) - 1;
+                    annotationReference.sourceStart = annotationNode.getStart();
+                    annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 
                     Map<String, Expression> memberValuePairs = annotationNode.getMembers();
                     if (memberValuePairs == null || memberValuePairs.isEmpty()) {

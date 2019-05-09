@@ -685,7 +685,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 } else {
                     attr = new ConstantExpression(name);
                     // this is very rough; it only works for an attribute that directly follows '('
-                    attr.setStart(node.getEnd() + 2); attr.setEnd(attr.getStart() + name.length());
+                    attr.setStart(node.getClassNode().getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
 
                     noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE,
                         node.getClassNode().redirect(), null, TypeConfidence.UNKNOWN, scope);

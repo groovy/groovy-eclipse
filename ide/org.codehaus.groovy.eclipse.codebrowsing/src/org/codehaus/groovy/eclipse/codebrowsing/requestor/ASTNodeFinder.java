@@ -116,7 +116,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         int start = node.getStart(),
             annos = node.getAnnotations().size();
         if (annos > 0)
-            start = GroovyUtils.endOffset(node.getAnnotations().get(annos - 1));
+            start = GroovyUtils.lastElement(node.getAnnotations().get(annos - 1)).getEnd() + 1;
 
         // don't check enum constant declarations, which have an implicit type (not visible in the source)
         if (start > 0 && !node.isEnum()) {
@@ -146,7 +146,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                     } else if ((n = node.getAnnotations().size()) > 0) {
                         for (int i = (n - 1); i >= 0; i -= 1) {
                             // find the rightmost annotation with end source position info
-                            int end = GroovyUtils.endOffset(node.getAnnotations().get(i));
+                            int end = GroovyUtils.lastElement(node.getAnnotations().get(i)).getEnd() + 1;
                             if (end > 0) {
                                 offset = end;
                                 break;
@@ -295,7 +295,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     @Override
     protected void visitAnnotation(AnnotationNode annotation) {
         check(annotation.getClassNode());
-        int start = annotation.getEnd() + 1;
+        int start = annotation.getClassNode().getEnd() + 1;
         for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
             String name = pair.getKey();
             Expression expr = pair.getValue();

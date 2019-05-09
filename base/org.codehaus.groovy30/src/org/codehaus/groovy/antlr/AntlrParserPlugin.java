@@ -1683,16 +1683,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         /* GRECLIPSE edit
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
-        configureAST(annotatedNode, annotationNode);
-        */
+         */
         AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
+        // GRECLIPSE end
         configureAST(annotatedNode, annotationNode);
-        // Eclipse wants this for error reporting on name range:
-        setSourceEnd(annotatedNode, annotatedNode.getClassNode());
-
-        // save the full source range of the annotation
-        int start = locations.findOffset(annotationNode.getLine(), annotationNode.getColumn());
-        int until = locations.findOffset(((GroovySourceAST) annotationNode).getLineLast(), ((GroovySourceAST) annotationNode).getColumnLast());
+        // GRECLIPSE add
+        int start = annotatedNode.getStart();
+        int until = annotatedNode.getEnd();
         // check for trailing whitespace
         if (getController() != null) {
             char[] sourceChars = getController().readSourceRange(start, until - start);
@@ -1703,7 +1700,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 }
             }
         }
-        annotatedNode.setNodeMetaData("source.offsets", Long.valueOf(((long) start << 32) | until)); // pack the offsets into one long integer value
+        annotatedNode.setEnd(until);
+        int[] row_col = locations.getRowCol(until);
+        annotatedNode.setLastLineNumber(row_col[0]);
+        annotatedNode.setLastColumnNumber(row_col[1]);
         // GRECLIPSE end
         while (true) {
             node = node.getNextSibling();
@@ -3907,7 +3907,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.getClassNode().setStart(-1);
         node.getClassNode().setEnd(-2);
         node.setStart(-1);
-        node.setEnd(-2);
+        node.setEnd(-1);
         return node;
     }
 

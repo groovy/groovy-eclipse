@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 
@@ -294,6 +295,12 @@ public class AnnotationVisitor {
     }
 
     protected void addError(String msg, ASTNode expr) {
+        // GRECLIPSE add
+        if (expr instanceof AnnotationNode) {
+            this.errorCollector.addErrorAndContinue(new SyntaxErrorMessage(
+                new PreciseSyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getStart(), ((AnnotationNode) expr).getClassNode().getEnd() - 1), this.source));
+        } else
+        // GRECLIPSE end
         this.errorCollector.addErrorAndContinue(
                 new SyntaxErrorMessage(new SyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
         );
@@ -321,5 +328,4 @@ public class AnnotationVisitor {
             checkCircularReference(searchClass, method.getReturnType(), code.getExpression());
         }
     }
-
 }
