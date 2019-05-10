@@ -338,9 +338,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // just in case buildAST is called twice
             innerClassCounter = 1;
             // GRECLIPSE end
-
             convertGroovy(ast);
-
             // GRECLIPSE add -- does it look broken (i.e. have we built a script for it containing rubbish)
             if (looksBroken(output) && output.getMethods().isEmpty() && sourceUnit.getErrorCollector().hasErrors()) {
                 output.setEncounteredUnrecoverableError(true);
@@ -369,7 +367,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
                 }
             }
-
             // GRECLIPSE add
             fixModuleNodeLocations();
             output.putNodeMetaData(LocationSupport.class, locations);
@@ -931,7 +928,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
-
         String name = identifier(node);
         node = node.getNextSibling();
 
@@ -1131,9 +1127,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         methodNode = new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node == null) {
-            // GRECLIPSE edit
-            //    throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
-            //}
+            /* GRECLIPSE edit
+                throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
+            }
+            */
                 if (getController() != null) getController().addError(new SyntaxException(
                     "You defined a method without body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
@@ -1855,7 +1852,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         }
         // GRECLIPSE end
-
         IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;
@@ -2167,9 +2163,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             }
         }
-        /* GRECLIPSE edit -- each case of expressionSwitch does this already
-        configureAST(expression, node);
-        */
+        // GRECLIPSE edit -- each case of expressionSwitch does this already
+        //configureAST(expression, node);
+        // GRECLIPSE end
         return expression;
     }
 

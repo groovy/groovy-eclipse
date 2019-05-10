@@ -41,12 +41,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
+
 public class WriterController {
-    private static final String GROOVY_LOG_CLASSGEN = "groovy.log.classgen";
-    private static final boolean LOG_CLASSGEN;
-    static {
-        LOG_CLASSGEN = Boolean.valueOf(System.getProperty(GROOVY_LOG_CLASSGEN));
-    }
+    private static final boolean LOG_CLASSGEN = getBooleanSafe("groovy.log.classgen");
     private AsmClassGenerator acg;
     private MethodVisitor methodVisitor;
     private CompileStack compileStack;
@@ -95,7 +93,7 @@ public class WriterController {
         this.outermostClass = null;
         this.internalClassName = BytecodeHelper.getClassInternalName(classNode);
 
-        bytecodeVersion = chooseBytecodeVersion(invokedynamic, config.getTargetBytecode());
+        bytecodeVersion = chooseBytecodeVersion(invokedynamic, config.isPreviewFeatures(), config.getTargetBytecode());
 
         if (invokedynamic) {
             this.invocationWriter = new InvokeDynamicWriter(this);
@@ -146,14 +144,14 @@ public class WriterController {
         return new LoggableClassVisitor(cv);
     }
 
-    private static int chooseBytecodeVersion(final boolean invokedynamic, final String targetBytecode) {
+    private static int chooseBytecodeVersion(final boolean invokedynamic, final boolean previewFeatures, final String targetBytecode) {
         Integer bytecodeVersion = CompilerConfiguration.JDK_TO_BYTECODE_VERSION_MAP.get(targetBytecode);
 
         if (invokedynamic && bytecodeVersion < Opcodes.V1_7) {
             return Opcodes.V1_7;
         } else {
             if (null != bytecodeVersion) {
-                return bytecodeVersion;
+                return previewFeatures ? bytecodeVersion | Opcodes.V_PREVIEW : bytecodeVersion;
             }
         }
 

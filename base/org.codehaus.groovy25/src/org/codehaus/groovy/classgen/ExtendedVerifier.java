@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.classgen;
 
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -26,7 +25,6 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -43,9 +41,6 @@ import org.codehaus.groovy.control.AnnotationConstantsVisitor;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.syntax.PreciseSyntaxException;
-import org.codehaus.groovy.syntax.SyntaxException;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
@@ -160,10 +155,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation0(unvisited);
             String name = visited.getClassNode().getName();
-            // GRECLIPSE edit -- GROOVY-9095
-            //if (visited.hasRuntimeRetention()) {
             if (!visited.hasSourceRetention()) {
-            // GRECLIPSE end
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
                     seen = new ArrayList<AnnotationNode>();
@@ -206,11 +198,25 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 }
                 if (repeatable != null) {
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    // GRECLIPSE add -- GROOVY-9095
-                    //collector.setRuntimeRetention(true); // checked earlier
+                    /* GRECLIPSE edit
+                    if (repeatable.isResolved()) {
+                        Class repeatableType = repeatable.getTypeClass();
+                        Retention retAnn = (Retention) repeatableType.getAnnotation(Retention.class);
+                        collector.setRuntimeRetention(retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME));
+                    } else if (repeatable.redirect() != null) {
+                        for (AnnotationNode annotationNode : repeatable.redirect().getAnnotations()) {
+                            if (!annotationNode.getClassNode().getName().equals("java.lang.annotation.Retention"))
+                                continue;
+                            String value = annotationNode.getMember("value").getText();
+                            collector.setRuntimeRetention(value.equals(RetentionPolicy.RUNTIME.name()) ||
+                                    value.equals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name()));
+                        }
+                    }
+                    */
                     collector.setClassRetention(repeatee.hasClassRetention());
                     collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
                     // GRECLIPSE end
+
                     List<Expression> annos = new ArrayList<Expression>();
                     for (AnnotationNode an : next.getValue()) {
                         annos.add(new AnnotationConstantExpression(an));

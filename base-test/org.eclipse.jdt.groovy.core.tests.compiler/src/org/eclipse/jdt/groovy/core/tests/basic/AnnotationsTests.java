@@ -749,8 +749,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput =
-            "Ljava/lang/String;\n" +
+        String expectedOutput = isAtLeastJava(25)
+            ? "  @p.Anno\n"
+            : "Ljava/lang/String;\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
     }

@@ -350,6 +350,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         // GRECLIPSE end
         constructor.setHasNoRealSourcePosition(true);
         node.addConstructor(constructor);
+        markAsGenerated(node, constructor);
     }
 
     private void addStaticMetaClassField(final ClassNode node, final String classInternalName) {
