@@ -39,8 +39,6 @@ import java.util.Map;
  * <p>
  * It's attached to MethodNodes and ClassNodes and is used to find fully qualified names of classes,
  * resolve imports, and that sort of thing.
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan </a>
  */
 public class CompileUnit {
 

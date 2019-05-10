@@ -237,6 +237,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             }
         }
         return null;
+        // GRECLIPSE end
     }
 
     // GRECLIPSE add

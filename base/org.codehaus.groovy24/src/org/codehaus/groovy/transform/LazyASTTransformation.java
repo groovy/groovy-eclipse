@@ -60,9 +60,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
 /**
  * Handles generation of code for the @Lazy annotation
- *
- * @author Alex Tkachman
- * @author Paul King
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class LazyASTTransformation extends AbstractASTTransformation {

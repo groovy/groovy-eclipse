@@ -27,14 +27,9 @@ import java.util.Map;
 
 /**
  * Represents an annotation which can be attached to interfaces, classes, methods and fields.
- *
- * @author <a href="mailto:jstrachan@protique.com">James Strachan</a>
- * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  */
 public class AnnotationNode extends ASTNode {
-    /* GRECLIPSE edit
-    public static final int TYPE_TARGET = 1;
-    */
+
     public static final int CONSTRUCTOR_TARGET = 1 << 1;
     public static final int METHOD_TARGET = 1 << 2;
     public static final int FIELD_TARGET = 1 << 3;
@@ -42,11 +37,11 @@ public class AnnotationNode extends ASTNode {
     public static final int LOCAL_VARIABLE_TARGET = 1 << 5;
     public static final int ANNOTATION_TARGET = 1 << 6;
     public static final int PACKAGE_TARGET = 1 << 7;
-    // GRECLIPSE add -- GROOVY-7151 and GROOVY-8940
+    // GRECLIPSE edit -- GROOVY-7151 and GROOVY-8940
     public static final int TYPE_TARGET = 1 | ANNOTATION_TARGET;
-    // GRECLIPSE end
     private static final int ALL_TARGETS = TYPE_TARGET | CONSTRUCTOR_TARGET | METHOD_TARGET
                 | FIELD_TARGET | PARAMETER_TARGET | LOCAL_VARIABLE_TARGET | PACKAGE_TARGET;
+    // GRECLIPSE end
 
     private final ClassNode classNode;
     private Map<String, Expression> members;

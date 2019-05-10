@@ -25,8 +25,7 @@ import org.codehaus.groovy.ast.GroovyCodeVisitor;
  * Empty expression are used in closures lists like (;). During
  * class Generation this expression should be either ignored or
  * replace with a null value.
- *   
- * @author Jochen Theodorou
+ *
  * @see org.codehaus.groovy.ast.stmt.EmptyStatement
  */
 public class EmptyExpression extends Expression {

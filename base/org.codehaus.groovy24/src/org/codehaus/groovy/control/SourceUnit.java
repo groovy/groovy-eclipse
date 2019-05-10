@@ -53,11 +53,7 @@ import java.util.List;
 /**
  * Provides an anchor for a single source unit (usually a script file)
  * as it passes through the compiler system.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  */
-
 public class SourceUnit extends ProcessingUnit {
 
     /**

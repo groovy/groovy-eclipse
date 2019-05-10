@@ -25,8 +25,6 @@ import java.lang.reflect.Field;
 
 /**
  * Represents a field (member variable)
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class FieldNode extends AnnotatedNode implements Opcodes, Variable {
 
@@ -48,7 +46,7 @@ public class FieldNode extends AnnotatedNode implements Opcodes, Variable {
     public FieldNode(String name, int modifiers, ClassNode type, ClassNode owner, Expression initialValueExpression) {
         this.name = name;
         this.modifiers = modifiers;
-        /* GRECLIPSE edit -- https://issues.apache.org/jira/browse/GROOVY-8535
+        /* GRECLIPSE edit -- GROOVY-8535
         this.type = type;
         if (this.type == ClassHelper.DYNAMIC_TYPE && initialValueExpression != null)
             this.setType(initialValueExpression.getType());

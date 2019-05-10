@@ -58,10 +58,10 @@ import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
 
 /**
- * This class is the base for any annotation alias processor. 
+ * This class is the base for any annotation alias processor.
+ *
  * @see AnnotationCollector
  * @see AnnotationCollectorTransform#visit(AnnotationNode, AnnotationNode, AnnotatedNode, SourceUnit)
- * @author <a href="mailto:blackdrag@gmx.org">Jochen "blackdrag" Theodorou</a>
  */
 public class AnnotationCollectorTransform {
 
