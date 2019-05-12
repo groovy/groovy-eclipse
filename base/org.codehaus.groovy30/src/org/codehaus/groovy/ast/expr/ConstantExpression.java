@@ -46,7 +46,7 @@ public class ConstantExpression extends Expression {
     private String constantName;
 
     public ConstantExpression(Object value) {
-        this(value,false);
+        this(value, false);
     }
 
     public ConstantExpression(Object value, boolean keepPrimitive) {

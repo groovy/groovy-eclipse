@@ -155,10 +155,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
         for (AnnotationNode unvisited : node.getAnnotations()) {
             AnnotationNode visited = visitAnnotation0(unvisited);
             String name = visited.getClassNode().getName();
-            // GRECLIPSE edit -- GROOVY-9095
-            //if (visited.hasRuntimeRetention()) {
             if (!visited.hasSourceRetention()) {
-            // GRECLIPSE end
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
                     seen = new ArrayList<AnnotationNode>();
@@ -201,8 +198,21 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 }
                 if (repeatable != null) {
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    // GRECLIPSE add -- GROOVY-9095
-                    //collector.setRuntimeRetention(true); // checked earlier
+                    /* GRECLIPSE edit -- GROOVY-9095
+                    if (repeatable.isResolved()) {
+                        Class repeatableType = repeatable.getTypeClass();
+                        Retention retAnn = (Retention) repeatableType.getAnnotation(Retention.class);
+                        collector.setRuntimeRetention(retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME));
+                    } else if (repeatable.redirect() != null) {
+                        for (AnnotationNode annotationNode : repeatable.redirect().getAnnotations()) {
+                            if (!annotationNode.getClassNode().getName().equals("java.lang.annotation.Retention"))
+                                continue;
+                            String value = annotationNode.getMember("value").getText();
+                            collector.setRuntimeRetention(value.equals(RetentionPolicy.RUNTIME.name()) ||
+                                    value.equals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name()));
+                        }
+                    }
+                    */
                     collector.setClassRetention(repeatee.hasClassRetention());
                     collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
                     // GRECLIPSE end

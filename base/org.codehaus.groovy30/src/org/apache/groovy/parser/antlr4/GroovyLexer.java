@@ -1,4 +1,4 @@
-// Generated from GroovyLexer.g4 by ANTLR 4.7
+// Generated from GroovyLexer.g4 by ANTLR 4.7.3
 package org.apache.groovy.parser.antlr4;
 
     import static org.apache.groovy.parser.antlr4.SemanticPredicates.*;
@@ -50,89 +50,100 @@ public class GroovyLexer extends AbstractLexer {
 		"DOLLAR_SLASHY_GSTRING_MODE", "GSTRING_TYPE_SELECTOR_MODE", "GSTRING_PATH_MODE"
 	};
 
-	public static final String[] ruleNames = {
-		"StringLiteral", "GStringBegin", "TdqGStringBegin", "SlashyGStringBegin", 
-		"DollarSlashyGStringBegin", "GStringEnd", "GStringPart", "GStringCharacter", 
-		"TdqGStringEnd", "TdqGStringPart", "TdqGStringCharacter", "SlashyGStringEnd", 
-		"SlashyGStringPart", "SlashyGStringCharacter", "DollarSlashyGStringEnd", 
-		"DollarSlashyGStringPart", "DollarSlashyGStringCharacter", "GStringLBrace", 
-		"GStringIdentifier", "GStringPathPart", "RollBackOne", "DqStringCharacter", 
-		"SqStringCharacter", "TdqStringCharacter", "TsqStringCharacter", "SlashyStringCharacter", 
-		"DollarSlashyStringCharacter", "AS", "DEF", "IN", "TRAIT", "THREADSAFE", 
-		"VAR", "BuiltInPrimitiveType", "ABSTRACT", "ASSERT", "BOOLEAN", "BREAK", 
-		"BYTE", "CASE", "CATCH", "CHAR", "CLASS", "CONST", "CONTINUE", "DEFAULT", 
-		"DO", "DOUBLE", "ELSE", "ENUM", "EXTENDS", "FINAL", "FINALLY", "FLOAT", 
-		"FOR", "IF", "GOTO", "IMPLEMENTS", "IMPORT", "INSTANCEOF", "INT", "INTERFACE", 
-		"LONG", "NATIVE", "NEW", "PACKAGE", "PRIVATE", "PROTECTED", "PUBLIC", 
-		"RETURN", "SHORT", "STATIC", "STRICTFP", "SUPER", "SWITCH", "SYNCHRONIZED", 
-		"THIS", "THROW", "THROWS", "TRANSIENT", "TRY", "VOID", "VOLATILE", "WHILE", 
-		"IntegerLiteral", "Zero", "DecimalIntegerLiteral", "HexIntegerLiteral", 
-		"OctalIntegerLiteral", "BinaryIntegerLiteral", "IntegerTypeSuffix", "DecimalNumeral", 
-		"Digits", "Digit", "NonZeroDigit", "DigitOrUnderscore", "Underscores", 
-		"Underscore", "HexNumeral", "HexDigits", "HexDigit", "HexDigitOrUnderscore", 
-		"OctalNumeral", "OctalDigits", "OctalDigit", "OctalDigitOrUnderscore", 
-		"BinaryNumeral", "BinaryDigits", "BinaryDigit", "BinaryDigitOrUnderscore", 
-		"FloatingPointLiteral", "DecimalFloatingPointLiteral", "ExponentPart", 
-		"ExponentIndicator", "SignedInteger", "Sign", "FloatTypeSuffix", "HexadecimalFloatingPointLiteral", 
-		"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "Dot", 
-		"BooleanLiteral", "EscapeSequence", "OctalEscape", "UnicodeEscape", "ZeroToThree", 
-		"DollarEscape", "LineEscape", "SlashEscape", "Backslash", "Slash", "Dollar", 
-		"GStringQuotationMark", "SqStringQuotationMark", "TdqStringQuotationMark", 
-		"TsqStringQuotationMark", "DollarSlashyGStringQuotationMarkBegin", "DollarSlashyGStringQuotationMarkEnd", 
-		"DollarSlashEscape", "DollarDollarEscape", "NullLiteral", "RANGE_INCLUSIVE", 
-		"RANGE_EXCLUSIVE", "SPREAD_DOT", "SAFE_DOT", "SAFE_CHAIN_DOT", "ELVIS", 
-		"METHOD_POINTER", "METHOD_REFERENCE", "REGEX_FIND", "REGEX_MATCH", "POWER", 
-		"POWER_ASSIGN", "SPACESHIP", "IDENTICAL", "NOT_IDENTICAL", "ARROW", "NOT_INSTANCEOF", 
-		"NOT_IN", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
-		"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT", "BITNOT", "QUESTION", 
-		"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", "ADD", 
-		"SUB", "MUL", "DIV", "BITAND", "BITOR", "XOR", "MOD", "ADD_ASSIGN", "SUB_ASSIGN", 
-		"MUL_ASSIGN", "DIV_ASSIGN", "AND_ASSIGN", "OR_ASSIGN", "XOR_ASSIGN", "MOD_ASSIGN", 
-		"LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", "ELVIS_ASSIGN", "CapitalizedIdentifier", 
-		"Identifier", "IdentifierInGString", "JavaLetterInGString", "JavaLetterOrDigitInGString", 
-		"JavaLetter", "JavaLetterOrDigit", "AT", "ELLIPSIS", "WS", "NL", "ML_COMMENT", 
-		"SL_COMMENT", "SH_COMMENT", "UNEXPECTED_CHAR"
-	};
+	private static String[] makeRuleNames() {
+		return new String[] {
+			"StringLiteral", "GStringBegin", "TdqGStringBegin", "SlashyGStringBegin", 
+			"DollarSlashyGStringBegin", "GStringEnd", "GStringPart", "GStringCharacter", 
+			"TdqGStringEnd", "TdqGStringPart", "TdqGStringCharacter", "SlashyGStringEnd", 
+			"SlashyGStringPart", "SlashyGStringCharacter", "DollarSlashyGStringEnd", 
+			"DollarSlashyGStringPart", "DollarSlashyGStringCharacter", "GStringLBrace", 
+			"GStringIdentifier", "GStringPathPart", "RollBackOne", "DqStringCharacter", 
+			"SqStringCharacter", "TdqStringCharacter", "TsqStringCharacter", "SlashyStringCharacter", 
+			"DollarSlashyStringCharacter", "AS", "DEF", "IN", "TRAIT", "THREADSAFE", 
+			"VAR", "BuiltInPrimitiveType", "ABSTRACT", "ASSERT", "BOOLEAN", "BREAK", 
+			"BYTE", "CASE", "CATCH", "CHAR", "CLASS", "CONST", "CONTINUE", "DEFAULT", 
+			"DO", "DOUBLE", "ELSE", "ENUM", "EXTENDS", "FINAL", "FINALLY", "FLOAT", 
+			"FOR", "IF", "GOTO", "IMPLEMENTS", "IMPORT", "INSTANCEOF", "INT", "INTERFACE", 
+			"LONG", "NATIVE", "NEW", "PACKAGE", "PRIVATE", "PROTECTED", "PUBLIC", 
+			"RETURN", "SHORT", "STATIC", "STRICTFP", "SUPER", "SWITCH", "SYNCHRONIZED", 
+			"THIS", "THROW", "THROWS", "TRANSIENT", "TRY", "VOID", "VOLATILE", "WHILE", 
+			"IntegerLiteral", "Zero", "DecimalIntegerLiteral", "HexIntegerLiteral", 
+			"OctalIntegerLiteral", "BinaryIntegerLiteral", "IntegerTypeSuffix", "DecimalNumeral", 
+			"Digits", "Digit", "NonZeroDigit", "DigitOrUnderscore", "Underscores", 
+			"Underscore", "HexNumeral", "HexDigits", "HexDigit", "HexDigitOrUnderscore", 
+			"OctalNumeral", "OctalDigits", "OctalDigit", "OctalDigitOrUnderscore", 
+			"BinaryNumeral", "BinaryDigits", "BinaryDigit", "BinaryDigitOrUnderscore", 
+			"FloatingPointLiteral", "DecimalFloatingPointLiteral", "ExponentPart", 
+			"ExponentIndicator", "SignedInteger", "Sign", "FloatTypeSuffix", "HexadecimalFloatingPointLiteral", 
+			"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "Dot", 
+			"BooleanLiteral", "EscapeSequence", "OctalEscape", "UnicodeEscape", "ZeroToThree", 
+			"DollarEscape", "LineEscape", "SlashEscape", "Backslash", "Slash", "Dollar", 
+			"GStringQuotationMark", "SqStringQuotationMark", "TdqStringQuotationMark", 
+			"TsqStringQuotationMark", "DollarSlashyGStringQuotationMarkBegin", "DollarSlashyGStringQuotationMarkEnd", 
+			"DollarSlashEscape", "DollarDollarEscape", "NullLiteral", "RANGE_INCLUSIVE", 
+			"RANGE_EXCLUSIVE", "SPREAD_DOT", "SAFE_DOT", "SAFE_CHAIN_DOT", "ELVIS", 
+			"METHOD_POINTER", "METHOD_REFERENCE", "REGEX_FIND", "REGEX_MATCH", "POWER", 
+			"POWER_ASSIGN", "SPACESHIP", "IDENTICAL", "NOT_IDENTICAL", "ARROW", "NOT_INSTANCEOF", 
+			"NOT_IN", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
+			"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT", "BITNOT", "QUESTION", 
+			"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", 
+			"ADD", "SUB", "MUL", "DIV", "BITAND", "BITOR", "XOR", "MOD", "ADD_ASSIGN", 
+			"SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN", "AND_ASSIGN", "OR_ASSIGN", 
+			"XOR_ASSIGN", "MOD_ASSIGN", "LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", 
+			"ELVIS_ASSIGN", "CapitalizedIdentifier", "Identifier", "IdentifierInGString", 
+			"JavaLetterInGString", "JavaLetterOrDigitInGString", "JavaLetter", "JavaLetterOrDigit", 
+			"AT", "ELLIPSIS", "WS", "NL", "ML_COMMENT", "SL_COMMENT", "SH_COMMENT", 
+			"UNEXPECTED_CHAR"
+		};
+	}
+	public static final String[] ruleNames = makeRuleNames();
 
-	private static final String[] _LITERAL_NAMES = {
-		null, null, null, null, null, null, null, "'as'", "'def'", "'in'", "'trait'", 
-		"'threadsafe'", "'var'", null, "'abstract'", "'assert'", "'break'", "'case'", 
-		"'catch'", "'class'", "'const'", "'continue'", "'default'", "'do'", "'else'", 
-		"'enum'", "'extends'", "'final'", "'finally'", "'for'", "'if'", "'goto'", 
-		"'implements'", "'import'", "'instanceof'", "'interface'", "'native'", 
-		"'new'", "'package'", "'private'", "'protected'", "'public'", "'return'", 
-		"'static'", "'strictfp'", "'super'", "'switch'", "'synchronized'", "'this'", 
-		"'throw'", "'throws'", "'transient'", "'try'", "'void'", "'volatile'", 
-		"'while'", null, null, null, "'null'", "'..'", "'..<'", "'*.'", "'?.'", 
-		"'??.'", "'?:'", "'.&'", "'::'", "'=~'", "'==~'", "'**'", "'**='", "'<=>'", 
-		"'==='", "'!=='", "'->'", "'!instanceof'", "'!in'", null, null, null, 
-		null, null, null, "';'", "','", null, "'='", "'>'", "'<'", "'!'", "'~'", 
-		"'?'", "':'", "'=='", "'<='", "'>='", "'!='", "'&&'", "'||'", "'++'", 
-		"'--'", "'+'", "'-'", "'*'", null, "'&'", "'|'", "'^'", "'%'", "'+='", 
-		"'-='", "'*='", "'/='", "'&='", "'|='", "'^='", "'%='", "'<<='", "'>>='", 
-		"'>>>='", "'?='", null, null, "'@'", "'...'"
-	};
-	private static final String[] _SYMBOLIC_NAMES = {
-		null, "StringLiteral", "GStringBegin", "GStringEnd", "GStringPart", "GStringPathPart", 
-		"RollBackOne", "AS", "DEF", "IN", "TRAIT", "THREADSAFE", "VAR", "BuiltInPrimitiveType", 
-		"ABSTRACT", "ASSERT", "BREAK", "CASE", "CATCH", "CLASS", "CONST", "CONTINUE", 
-		"DEFAULT", "DO", "ELSE", "ENUM", "EXTENDS", "FINAL", "FINALLY", "FOR", 
-		"IF", "GOTO", "IMPLEMENTS", "IMPORT", "INSTANCEOF", "INTERFACE", "NATIVE", 
-		"NEW", "PACKAGE", "PRIVATE", "PROTECTED", "PUBLIC", "RETURN", "STATIC", 
-		"STRICTFP", "SUPER", "SWITCH", "SYNCHRONIZED", "THIS", "THROW", "THROWS", 
-		"TRANSIENT", "TRY", "VOID", "VOLATILE", "WHILE", "IntegerLiteral", "FloatingPointLiteral", 
-		"BooleanLiteral", "NullLiteral", "RANGE_INCLUSIVE", "RANGE_EXCLUSIVE", 
-		"SPREAD_DOT", "SAFE_DOT", "SAFE_CHAIN_DOT", "ELVIS", "METHOD_POINTER", 
-		"METHOD_REFERENCE", "REGEX_FIND", "REGEX_MATCH", "POWER", "POWER_ASSIGN", 
-		"SPACESHIP", "IDENTICAL", "NOT_IDENTICAL", "ARROW", "NOT_INSTANCEOF", 
-		"NOT_IN", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
-		"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT", "BITNOT", "QUESTION", 
-		"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", "ADD", 
-		"SUB", "MUL", "DIV", "BITAND", "BITOR", "XOR", "MOD", "ADD_ASSIGN", "SUB_ASSIGN", 
-		"MUL_ASSIGN", "DIV_ASSIGN", "AND_ASSIGN", "OR_ASSIGN", "XOR_ASSIGN", "MOD_ASSIGN", 
-		"LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", "ELVIS_ASSIGN", "CapitalizedIdentifier", 
-		"Identifier", "AT", "ELLIPSIS", "WS", "NL", "SH_COMMENT", "UNEXPECTED_CHAR"
-	};
+	private static String[] makeLiteralNames() {
+		return new String[] {
+			null, null, null, null, null, null, null, "'as'", "'def'", "'in'", "'trait'", 
+			"'threadsafe'", "'var'", null, "'abstract'", "'assert'", "'break'", "'case'", 
+			"'catch'", "'class'", "'const'", "'continue'", "'default'", "'do'", "'else'", 
+			"'enum'", "'extends'", "'final'", "'finally'", "'for'", "'if'", "'goto'", 
+			"'implements'", "'import'", "'instanceof'", "'interface'", "'native'", 
+			"'new'", "'package'", "'private'", "'protected'", "'public'", "'return'", 
+			"'static'", "'strictfp'", "'super'", "'switch'", "'synchronized'", "'this'", 
+			"'throw'", "'throws'", "'transient'", "'try'", "'void'", "'volatile'", 
+			"'while'", null, null, null, "'null'", "'..'", "'..<'", "'*.'", "'?.'", 
+			"'??.'", "'?:'", "'.&'", "'::'", "'=~'", "'==~'", "'**'", "'**='", "'<=>'", 
+			"'==='", "'!=='", "'->'", "'!instanceof'", "'!in'", null, null, null, 
+			null, null, null, "';'", "','", null, "'='", "'>'", "'<'", "'!'", "'~'", 
+			"'?'", "':'", "'=='", "'<='", "'>='", "'!='", "'&&'", "'||'", "'++'", 
+			"'--'", "'+'", "'-'", "'*'", null, "'&'", "'|'", "'^'", "'%'", "'+='", 
+			"'-='", "'*='", "'/='", "'&='", "'|='", "'^='", "'%='", "'<<='", "'>>='", 
+			"'>>>='", "'?='", null, null, "'@'", "'...'"
+		};
+	}
+	private static final String[] _LITERAL_NAMES = makeLiteralNames();
+	private static String[] makeSymbolicNames() {
+		return new String[] {
+			null, "StringLiteral", "GStringBegin", "GStringEnd", "GStringPart", "GStringPathPart", 
+			"RollBackOne", "AS", "DEF", "IN", "TRAIT", "THREADSAFE", "VAR", "BuiltInPrimitiveType", 
+			"ABSTRACT", "ASSERT", "BREAK", "CASE", "CATCH", "CLASS", "CONST", "CONTINUE", 
+			"DEFAULT", "DO", "ELSE", "ENUM", "EXTENDS", "FINAL", "FINALLY", "FOR", 
+			"IF", "GOTO", "IMPLEMENTS", "IMPORT", "INSTANCEOF", "INTERFACE", "NATIVE", 
+			"NEW", "PACKAGE", "PRIVATE", "PROTECTED", "PUBLIC", "RETURN", "STATIC", 
+			"STRICTFP", "SUPER", "SWITCH", "SYNCHRONIZED", "THIS", "THROW", "THROWS", 
+			"TRANSIENT", "TRY", "VOID", "VOLATILE", "WHILE", "IntegerLiteral", "FloatingPointLiteral", 
+			"BooleanLiteral", "NullLiteral", "RANGE_INCLUSIVE", "RANGE_EXCLUSIVE", 
+			"SPREAD_DOT", "SAFE_DOT", "SAFE_CHAIN_DOT", "ELVIS", "METHOD_POINTER", 
+			"METHOD_REFERENCE", "REGEX_FIND", "REGEX_MATCH", "POWER", "POWER_ASSIGN", 
+			"SPACESHIP", "IDENTICAL", "NOT_IDENTICAL", "ARROW", "NOT_INSTANCEOF", 
+			"NOT_IN", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
+			"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT", "BITNOT", "QUESTION", 
+			"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", 
+			"ADD", "SUB", "MUL", "DIV", "BITAND", "BITOR", "XOR", "MOD", "ADD_ASSIGN", 
+			"SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN", "AND_ASSIGN", "OR_ASSIGN", 
+			"XOR_ASSIGN", "MOD_ASSIGN", "LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", 
+			"ELVIS_ASSIGN", "CapitalizedIdentifier", "Identifier", "AT", "ELLIPSIS", 
+			"WS", "NL", "SH_COMMENT", "UNEXPECTED_CHAR"
+		};
+	}
+	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
 	/**

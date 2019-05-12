@@ -19,6 +19,7 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.GroovyClassLoader;
+import groovy.transform.Internal;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -27,8 +28,8 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,8 +43,8 @@ import java.util.Map;
  */
 public class CompileUnit implements NodeMetaDataHandler {
 
-    private final List<ModuleNode> modules = new ArrayList<ModuleNode>();
-    private final Map<String, ClassNode> classes = new HashMap<String, ClassNode>();
+    private final List<ModuleNode> modules = new ArrayList<>();
+    private final Map<String, ClassNode> classes = new LinkedHashMap<>();
     // GRECLIPSE add
     private List<ClassNode> sortedClasses;
     public void setSortedClasses(List<ClassNode> sortedClasses) { this.sortedClasses = sortedClasses; }
@@ -52,9 +53,10 @@ public class CompileUnit implements NodeMetaDataHandler {
     private final CompilerConfiguration config;
     private final GroovyClassLoader classLoader;
     private final CodeSource codeSource;
-    private final Map<String, ClassNode> classesToCompile = new HashMap<String, ClassNode>();
-    private final Map<String, SourceUnit> classNameToSource = new HashMap<String, SourceUnit>();
-    private final Map<String, InnerClassNode> generatedInnerClasses = new HashMap<String, InnerClassNode>();
+    private final Map<String, ClassNode> classesToCompile = new LinkedHashMap<>();
+    private final Map<String, SourceUnit> classNameToSource = new LinkedHashMap<>();
+    private final Map<String, InnerClassNode> generatedInnerClasses = new LinkedHashMap<>();
+    private final Map<String, ConstructedOuterNestedClassNode> classesToResolve = new LinkedHashMap<>();
     private Map metaDataMap;
 
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
@@ -94,7 +96,7 @@ public class CompileUnit implements NodeMetaDataHandler {
     /**
      * @return a list of all the classes in each module in the compilation unit
      */
-    public List getClasses() {
+    public List<ClassNode> getClasses() {
         List<ClassNode> answer = new ArrayList<ClassNode>();
         for (ModuleNode module : modules) {
             answer.addAll(module.getClasses());
@@ -157,8 +159,8 @@ public class CompileUnit implements NodeMetaDataHandler {
         sortedClasses = null;
         // GRECLIPSE end
 
-        if (classesToCompile.containsKey(name)) {
-            ClassNode cn = classesToCompile.get(name);
+        ClassNode cn = classesToCompile.get(name);
+        if (null != cn) {
             cn.setRedirect(node);
             classesToCompile.remove(name);
         }
@@ -170,8 +172,9 @@ public class CompileUnit implements NodeMetaDataHandler {
      * at the end of a parse step no node should be be left.
      */
     public void addClassNodeToCompile(ClassNode node, SourceUnit location) {
-        classesToCompile.put(node.getName(), node);
-        classNameToSource.put(node.getName(), location);
+        String nodeName = node.getName();
+        classesToCompile.put(nodeName, node);
+        classNameToSource.put(nodeName, location);
     }
 
     public SourceUnit getScriptSourceLocation(String className) {
@@ -198,6 +201,23 @@ public class CompileUnit implements NodeMetaDataHandler {
         return Collections.unmodifiableMap(generatedInnerClasses);
     }
 
+    public Map<String, ClassNode> getClassesToCompile() {
+        return classesToCompile;
+    }
+
+    public Map<String, ConstructedOuterNestedClassNode> getClassesToResolve() {
+        return classesToResolve;
+    }
+
+    /**
+     * Add a constructed class node as a placeholder to resolve outer nested class further.
+     *
+     * @param cn the constructed class node
+     */
+    public void addClassNodeToResolve(ConstructedOuterNestedClassNode cn) {
+        classesToResolve.put(cn.getUnresolvedName(), cn);
+    }
+
     @Override
     public Map getMetaDataMap() {
         return metaDataMap;
@@ -206,5 +226,23 @@ public class CompileUnit implements NodeMetaDataHandler {
     @Override
     public void setMetaDataMap(Map metaDataMap) {
         this.metaDataMap = metaDataMap;
+    }
+
+    /**
+     * Represents a resolved type as a placeholder -- see GROOVY-7812
+     */
+    @Internal
+    public static class ConstructedOuterNestedClassNode extends ClassNode {
+        private final ClassNode enclosingClassNode;
+
+        public ConstructedOuterNestedClassNode(ClassNode outer, String innerClassName) {
+            super(innerClassName, ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+            this.enclosingClassNode = outer;
+            this.isPrimaryNode = false;
+        }
+
+        public ClassNode getEnclosingClassNode() {
+            return enclosingClassNode;
+        }
     }
 }

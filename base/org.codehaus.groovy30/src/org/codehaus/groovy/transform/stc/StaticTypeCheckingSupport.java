@@ -23,6 +23,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
@@ -75,6 +76,7 @@ import java.util.regex.Matcher;
 
 import static java.lang.Math.min;
 import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.Boolean_TYPE;
@@ -111,6 +113,7 @@ import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
 import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.getSuperClass;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.syntax.Types.ASSIGN;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND_EQUAL;
@@ -354,7 +357,7 @@ public abstract class StaticTypeCheckingSupport {
      *
      * @param params method parameters
      * @param args   type arguments
-     * @return -1 if arguments do not match, 0 if arguments are of the exact type and >0 when one or more argument is
+     * @return -1 if arguments do not match, 0 if arguments are of the exact type and &gt; 0 when one or more argument is
      * not of the exact type but still match
      */
     public static int allParametersAndArgumentsMatch(Parameter[] params, ClassNode[] args) {
@@ -2055,7 +2058,7 @@ public abstract class StaticTypeCheckingSupport {
         return gt;
     }
 
-    private static boolean isUnboundedWildcard(GenericsType gt) {
+    public static boolean isUnboundedWildcard(GenericsType gt) {
         if (gt.isWildcard() && gt.getLowerBound() == null) {
             ClassNode[] upperBounds = gt.getUpperBounds();
             return upperBounds == null ||
@@ -2087,6 +2090,74 @@ public abstract class StaticTypeCheckingSupport {
             if (!current.containsKey(name)) current.put(name, gt);
         }
         return current;
+    }
+
+    /**
+     * Filter methods according to visibility
+     *
+     * @param methodNodeList method nodes to filter
+     * @param enclosingClassNode the enclosing class
+     * @return filtered method nodes
+     * @since 3.0.0
+     */
+    public static List<MethodNode> filterMethodsByVisibility(List<MethodNode> methodNodeList, ClassNode enclosingClassNode) {
+        if (!asBoolean(methodNodeList)) {
+            return StaticTypeCheckingVisitor.EMPTY_METHODNODE_LIST;
+        }
+
+        List<MethodNode> result = new LinkedList<>();
+
+        boolean isEnclosingInnerClass = enclosingClassNode instanceof InnerClassNode;
+        List<ClassNode> outerClasses = enclosingClassNode.getOuterClasses();
+
+        outer:
+        for (MethodNode methodNode : methodNodeList) {
+            if (methodNode instanceof ExtensionMethodNode) {
+                result.add(methodNode);
+                continue;
+            }
+
+            ClassNode declaringClass = methodNode.getDeclaringClass();
+
+            if (isEnclosingInnerClass) {
+                for (ClassNode outerClass : outerClasses) {
+                    if (outerClass.isDerivedFrom(declaringClass)) {
+                        if (outerClass.equals(declaringClass)) {
+                            result.add(methodNode);
+                            continue outer;
+                        } else {
+                            if (methodNode.isPublic() || methodNode.isProtected()) {
+                                result.add(methodNode);
+                                continue outer;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (declaringClass instanceof InnerClassNode) {
+                if (declaringClass.getOuterClasses().contains(enclosingClassNode)) {
+                    result.add(methodNode);
+                    continue;
+                }
+            }
+
+            if (methodNode.isPrivate() && !enclosingClassNode.equals(declaringClass)) {
+                continue;
+            }
+            if (methodNode.isProtected()
+                    && !enclosingClassNode.isDerivedFrom(declaringClass)
+                    && !samePackageName(enclosingClassNode, declaringClass)) {
+                continue;
+            }
+            if (methodNode.isPackageScope() && !samePackageName(enclosingClassNode, declaringClass)) {
+                continue;
+            }
+
+            result.add(methodNode);
+        }
+
+        return result;
     }
 
     /**

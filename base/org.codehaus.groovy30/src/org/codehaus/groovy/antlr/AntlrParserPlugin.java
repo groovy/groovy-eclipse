@@ -1539,13 +1539,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode type = ClassHelper.DYNAMIC_TYPE;
         if (isType(TYPE, node)) {
             type = makeTypeWithArguments(node);
-            // GROOVY edit
+            // GRECLIPSE edit
             //if (variableParameterDef) type = type.makeArray();
             if (variableParameterDef) {
                 type = type.makeArray();
                 configureAST(type, node);
             }
-            // GROOVY end
+            // GRECLIPSE end
             node = node.getNextSibling();
         }
 
@@ -2259,9 +2259,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             }
         }
-        /* GRECLIPSE edit -- each case of expressionSwitch does this already
-        configureAST(expression, node);
-        */
+        // GRECLIPSE edit -- each case of expressionSwitch does this already
+        //configureAST(expression, node);
+        // GRECLIPSE end
         return expression;
     }
 

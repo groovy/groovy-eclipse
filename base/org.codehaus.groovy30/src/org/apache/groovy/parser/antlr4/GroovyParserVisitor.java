@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.7
+// Generated from GroovyParser.g4 by ANTLR 4.7.3
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -74,20 +74,12 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitParenPrmrAlt(@NotNull GroovyParser.ParenPrmrAltContext ctx);
 
 	/**
-	 * Visit a parse tree produced by the {@code closurePrmrAlt}
+	 * Visit a parse tree produced by the {@code closureOrLambdaExpressionPrmrAlt}
 	 * labeled alternative in {@link GroovyParser#primary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitClosurePrmrAlt(@NotNull GroovyParser.ClosurePrmrAltContext ctx);
-
-	/**
-	 * Visit a parse tree produced by the {@code lambdaPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitLambdaPrmrAlt(@NotNull GroovyParser.LambdaPrmrAltContext ctx);
+	Result visitClosureOrLambdaExpressionPrmrAlt(@NotNull GroovyParser.ClosureOrLambdaExpressionPrmrAltContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code listPrmrAlt}
@@ -155,7 +147,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code castExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -163,7 +155,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code postfixExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -171,7 +163,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code unaryNotExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -187,7 +179,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code unaryAddExprAlt}
-	 * labeled alternative in {@link GroovyParser#expression}.
+	 * labeled alternative in {@link GroovyParser#castOperandExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -892,6 +884,13 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitClosure(@NotNull GroovyParser.ClosureContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#closureOrLambdaExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitClosureOrLambdaExpression(@NotNull GroovyParser.ClosureOrLambdaExpressionContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#blockStatementsOpt}.

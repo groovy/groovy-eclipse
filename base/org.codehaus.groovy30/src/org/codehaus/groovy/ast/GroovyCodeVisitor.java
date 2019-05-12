@@ -42,6 +42,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
+import org.codehaus.groovy.ast.expr.MethodReferenceExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
@@ -77,10 +78,7 @@ import java.util.List;
 
 /**
  * An implementation of the visitor pattern for working with ASTNodes
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
-
 public interface GroovyCodeVisitor {
 
     // statements
@@ -143,6 +141,7 @@ public interface GroovyCodeVisitor {
 
     void visitClosureExpression(ClosureExpression expression);
 
+    // GRECLIPSE edit
     default void visitLambdaExpression(LambdaExpression expression) {
         visitClosureExpression(expression);
     }
@@ -164,6 +163,11 @@ public interface GroovyCodeVisitor {
     void visitFieldExpression(FieldExpression expression);
 
     void visitMethodPointerExpression(MethodPointerExpression expression);
+
+    // GRECLIPSE edit
+    default void visitMethodReferenceExpression(MethodReferenceExpression expression) {
+        visitMethodPointerExpression(expression);
+    }
 
     void visitConstantExpression(ConstantExpression expression);
 
@@ -198,7 +202,8 @@ public interface GroovyCodeVisitor {
     void visitBytecodeExpression(BytecodeExpression expression);
 
     // GRECLIPSE add
-    default void visitEmptyExpression(EmptyExpression expression) {}
+    default void visitEmptyExpression(EmptyExpression expression) {
+    }
     // GRECLIPSE end
 
     default void visitListOfExpressions(List<? extends Expression> list) {

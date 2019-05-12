@@ -91,8 +91,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClas
  * A call site writer which replaces call site caching with static calls. This means that the generated code
  * looks more like Java code than dynamic Groovy code. Best effort is made to use JVM instructions instead of
  * calls to helper methods.
- *
- * @author Cedric Champeau
  */
 public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes {
 
@@ -633,34 +631,27 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         return false;
     }
 
-    private static boolean isDirectAccessAllowed(FieldNode a, ClassNode receiver, boolean isSamePackage) {
-        ClassNode declaringClass = a.getDeclaringClass().redirect();
+    private static boolean isDirectAccessAllowed(FieldNode field, ClassNode receiver, boolean isSamePackage) {
+        ClassNode declaringClass = field.getDeclaringClass().redirect();
         ClassNode receiverType = receiver.redirect();
 
-        // first, direct access from within the class or inner class nodes
-        /* GRECLIPSE edit -- GROOVY-9043
+        // first, direct access from within the class
         if (declaringClass.equals(receiverType)) return true;
-        if (receiverType instanceof InnerClassNode) {
-            while (receiverType instanceof InnerClassNode) {
-                if (declaringClass.equals(receiverType)) return true;
-                receiverType = receiverType.getOuterClass();
-            }
-        }
+        if (field.isPrivate()) return false;
 
-        // no getter
-        return a.isPublic() || (a.isProtected() && isSamePackage);
-        */
+        // now, inner class node access to outer class fields
+        receiverType = receiverType.getOuterClass();
         while (receiverType != null) {
             if (declaringClass.equals(receiverType)) {
                 return true;
             }
-            if (a.isPrivate()) {
-                return false;
-            }
             receiverType = receiverType.getOuterClass();
         }
 
-        return a.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
+        // finally public and inherited
+        // GRECLIPSE edit -- GROOVY-9043
+        //return field.isPublic() || isSamePackage;
+        return field.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
         // GRECLIPSE end
     }
 
