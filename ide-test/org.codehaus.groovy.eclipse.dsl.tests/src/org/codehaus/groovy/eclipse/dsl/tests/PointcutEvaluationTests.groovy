@@ -377,6 +377,14 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testAnnotatedBy9b() {
+        addGroovySource('@interface Tag { boolean value(); }', 'Tag', 'a')
+        addGroovySource('@interface Tags { Tag[] value(); }', 'Tags', 'a')
+        addGroovySource('import a.*; @Tags(@Tag(true)) class Bar { def baz() {} }', 'Bar', 'foo')
+        doTestOfLastMatch('foo.Bar', 'currentType(annotatedBy("a.Tag"))', 'foo.Bar')
+    }
+
+    @Test
     void testFileExtension1() {
         doTestOfLastMatch('2', 'fileExtension("groovy")', 'src/p/TestUnit\\d+.groovy')
     }

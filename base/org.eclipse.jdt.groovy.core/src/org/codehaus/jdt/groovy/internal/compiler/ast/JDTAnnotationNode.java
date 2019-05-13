@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.IntConstant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
@@ -42,6 +43,7 @@ public class JDTAnnotationNode extends AnnotationNode {
 
     private static final char[] jlString = "Ljava/lang/String;".toCharArray();
     private static final char[] baseInt = "I".toCharArray();
+    private static final char[] baseBoolean = "Z".toCharArray();
 
     private boolean membersInitialized = false;
     private AnnotationBinding annotationBinding;
@@ -153,6 +155,8 @@ public class JDTAnnotationNode extends AnnotationNode {
             char[] sig = b.signature();
             if (CharOperation.equals(sig, baseInt)) {
                 return new ConstantExpression(((IntConstant) value).intValue());
+            } else if (CharOperation.equals(sig, baseBoolean)) {
+                return new ConstantExpression(((BooleanConstant) value).booleanValue());
             } else {
                 throw new GroovyEclipseBug("NYI for signature " + String.valueOf(sig));
             }
