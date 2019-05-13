@@ -583,6 +583,48 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testMissingAnnotationAttributeValue1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings\n" +
+            "class Main {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'value' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/886
+    public void testMissingAnnotationAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  void meth() {\n" +
+            "    @SuppressWarnings\n" +
+            "    def local = 'unused'\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\t@SuppressWarnings\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'value' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTargetMetaAnnotation() {
         //@formatter:off
         String[] sources = {

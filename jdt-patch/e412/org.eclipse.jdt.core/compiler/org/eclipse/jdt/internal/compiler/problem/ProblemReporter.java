@@ -6721,6 +6721,14 @@ public void missingTypeInMethod(ASTNode astNode, MethodBinding method) {
 			nameSourceEnd);
 }
 public void missingValueForAnnotationMember(Annotation annotation, char[] memberName) {
+	// GROOVY add
+	if (annotation.recipient instanceof SourceTypeBinding) {
+		SourceTypeBinding stb = (SourceTypeBinding) annotation.recipient;
+		if (stb.scope != null && !stb.scope.shouldReport(IProblem.MissingValueForAnnotationMember)) {
+			return;
+		}
+	}
+	// GROOVY end
 	String memberString = new String(memberName);
 	this.handle(
 		IProblem.MissingValueForAnnotationMember,

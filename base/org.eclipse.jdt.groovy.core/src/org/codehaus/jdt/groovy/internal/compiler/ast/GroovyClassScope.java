@@ -427,6 +427,7 @@ public class GroovyClassScope extends ClassScope {
         switch (problem) {
         case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
+        case IProblem.MissingValueForAnnotationMember:
         case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodMustOverrideOrImplement:
         case IProblem.MethodReducesVisibility:

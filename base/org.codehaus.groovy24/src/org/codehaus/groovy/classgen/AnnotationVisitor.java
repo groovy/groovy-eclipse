@@ -87,7 +87,7 @@ public class AnnotationVisitor {
         if (!checkIfValidEnumConstsAreUsed(node)) {
             return node;
         }
-        
+
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
             String attrName = entry.getKey();
@@ -99,7 +99,7 @@ public class AnnotationVisitor {
         VMPluginFactory.getPlugin().configureAnnotation(node);
         return this.annotation;
     }
-    
+
     private boolean checkIfValidEnumConstsAreUsed(AnnotationNode node) {
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
@@ -108,7 +108,7 @@ public class AnnotationVisitor {
         }
         return true;
     }
-    
+
     private boolean validateEnumConstant(Expression exp) {
         if (exp instanceof PropertyExpression) {
             PropertyExpression pe = (PropertyExpression) exp;
@@ -180,18 +180,18 @@ public class AnnotationVisitor {
 
     private boolean checkIfMandatoryAnnotationValuesPassed(AnnotationNode node) {
         boolean ok = true;
-        /* GRECLIPSE edit -- temp hack; can't rely on getCode()
         Map attributes = node.getMembers();
         ClassNode classNode = node.getClassNode();
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
-            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            // GRECLIPSE edit
+            //if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {
+            // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
                 ok = false;
             }
         }
-        */
         return ok;
     }
 
@@ -299,11 +299,6 @@ public class AnnotationVisitor {
         // GRECLIPSE end
     }
 
-    /**
-     * @param attrName   the name
-     * @param expression the expression
-     * @param attrType   the type
-     */
     protected void visitAnnotationExpression(String attrName, AnnotationConstantExpression expression, ClassNode attrType) {
         AnnotationNode annotationNode = (AnnotationNode) expression.getValue();
         AnnotationVisitor visitor = new AnnotationVisitor(this.source, this.errorCollector);
