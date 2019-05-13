@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
+
+import static org.eclipse.jdt.internal.compiler.codegen.ConstantPool.JavaLangStringSignature;
 
 import java.util.Map;
 
@@ -25,8 +27,9 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.impl.IntConstant;
+import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
@@ -40,11 +43,8 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
  */
 public class JDTAnnotationNode extends AnnotationNode {
 
-    private static final char[] jlString = "Ljava/lang/String;".toCharArray();
-    private static final char[] baseInt = "I".toCharArray();
-
-    private boolean membersInitialized = false;
     private AnnotationBinding annotationBinding;
+    private volatile boolean membersInitialized;
     private JDTResolver resolver;
 
     public JDTAnnotationNode(AnnotationBinding annotationBinding, JDTResolver resolver) {
@@ -77,18 +77,17 @@ public class JDTAnnotationNode extends AnnotationNode {
 
     @Override
     public boolean hasClassRetention() {
-        return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationClassRetention) == TagBits.AnnotationClassRetention;
+        return 0 != (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationClassRetention) || !(hasRuntimeRetention() || hasSourceRetention());
     }
 
     @Override
     public boolean hasRuntimeRetention() {
-        return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention;
+        return 0 != (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationRuntimeRetention);
     }
 
     @Override
     public boolean hasSourceRetention() {
-        return !hasRuntimeRetention() && !hasClassRetention() &&
-            (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
+        return 0 != (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention);
     }
 
     private void ensureMembersInitialized() {
@@ -131,8 +130,10 @@ public class JDTAnnotationNode extends AnnotationNode {
             return listExpression;
         }
 
-        if (CharOperation.equals(b.signature(), jlString)) {
-            return new ConstantExpression(((StringConstant) value).stringValue());
+        char[] sig = b.signature();
+
+        if (CharOperation.equals(sig, JavaLangStringSignature)) {
+            return new ConstantExpression(((Constant) value).stringValue());
         }
 
         if (b.isClass()) {
@@ -149,12 +150,25 @@ public class JDTAnnotationNode extends AnnotationNode {
             return new PropertyExpression(new ClassExpression(enumType), fieldName);
         }
 
-        if (b.isBaseType()) {
-            char[] sig = b.signature();
-            if (CharOperation.equals(sig, baseInt)) {
-                return new ConstantExpression(((IntConstant) value).intValue());
-            } else {
-                throw new GroovyEclipseBug("NYI for signature " + String.valueOf(sig));
+        if (b.isPrimitiveType()) {
+            assert sig.length == 1;
+            switch (sig[0]) {
+            case Signature.C_BOOLEAN:
+                return new ConstantExpression(((Constant) value).booleanValue(), true);
+            case Signature.C_BYTE:
+                return new ConstantExpression(((Constant) value).byteValue(), true);
+            case Signature.C_CHAR:
+                return new ConstantExpression(((Constant) value).charValue(), true);
+            case Signature.C_DOUBLE:
+                return new ConstantExpression(((Constant) value).doubleValue(), true);
+            case Signature.C_FLOAT:
+                return new ConstantExpression(((Constant) value).floatValue(), true);
+            case Signature.C_INT:
+                return new ConstantExpression(((Constant) value).intValue(), true);
+            case Signature.C_LONG:
+                return new ConstantExpression(((Constant) value).longValue(), true);
+            case Signature.C_SHORT:
+                return new ConstantExpression(((Constant) value).shortValue(), true);
             }
         }
 

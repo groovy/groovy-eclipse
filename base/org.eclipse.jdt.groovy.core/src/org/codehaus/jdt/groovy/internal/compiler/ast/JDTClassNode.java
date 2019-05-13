@@ -377,29 +377,27 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     initializerExpression = ((FieldDeclarationWithInitializer) fieldDecl).getGroovyInitializer();
                 }
             }
-        } else {
-            if (c instanceof StringConstant) {
-                initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
-            } else if (c instanceof BooleanConstant) {
-                initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue());
-            } else if (c instanceof IntConstant) {
-                initializerExpression = new ConstantExpression(((IntConstant) c).intValue());
-            } else if (c instanceof LongConstant) {
-                initializerExpression = new ConstantExpression(((LongConstant) c).longValue());
-            } else if (c instanceof DoubleConstant) {
-                initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue());
-            } else if (c instanceof FloatConstant) {
-                initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue());
-            } else if (c instanceof ByteConstant) {
-                initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue());
-            } else if (c instanceof CharConstant) {
-                initializerExpression = new ConstantExpression(((CharConstant) c).charValue());
-            } else if (c instanceof ShortConstant) {
-                initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
-            }
+        } else if (c instanceof BooleanConstant) {
+            initializerExpression = new ConstantExpression(((BooleanConstant) c).booleanValue());
+        } else if (c instanceof ByteConstant) {
+            initializerExpression = new ConstantExpression(((ByteConstant) c).byteValue());
+        } else if (c instanceof CharConstant) {
+            initializerExpression = new ConstantExpression(((CharConstant) c).charValue());
+        } else if (c instanceof DoubleConstant) {
+            initializerExpression = new ConstantExpression(((DoubleConstant) c).doubleValue());
+        } else if (c instanceof FloatConstant) {
+            initializerExpression = new ConstantExpression(((FloatConstant) c).floatValue());
+        } else if (c instanceof IntConstant) {
+            initializerExpression = new ConstantExpression(((IntConstant) c).intValue());
+        } else if (c instanceof LongConstant) {
+            initializerExpression = new ConstantExpression(((LongConstant) c).longValue());
+        } else if (c instanceof ShortConstant) {
+            initializerExpression = new ConstantExpression(((ShortConstant) c).shortValue());
+        } else if (c instanceof StringConstant) {
+            initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
         }
-        FieldNode fNode = new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
-        return fNode;
+
+        return new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
     }
 
     /**
