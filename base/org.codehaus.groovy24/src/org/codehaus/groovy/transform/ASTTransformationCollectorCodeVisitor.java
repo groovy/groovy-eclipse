@@ -52,10 +52,6 @@ import java.util.Set;
  * <p>
  * This visitor is only intended to be executed once, during the
  * SEMANTIC_ANALYSIS phase of compilation.
- *
- * @author Danno Ferrin (shemnon)
- * @author Roshan Dawrani (roshandawrani)
- * @author Jochen Theodorou (blackdrag)
  */
 public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSupport {
     private SourceUnit source;

@@ -21,9 +21,8 @@ package org.codehaus.groovy.tools;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.SourceUnit;
 
-public class GroovyClass
-{
-    public static final GroovyClass[] EMPTY_ARRAY = new GroovyClass[ 0 ];
+public class GroovyClass {
+    public static final GroovyClass[] EMPTY_ARRAY = {};
 
     private final String name;
     private final byte[] bytes;
@@ -31,8 +30,7 @@ public class GroovyClass
     private final ClassNode classNode;
     private final SourceUnit source;
 
-    public GroovyClass(String name, byte[] bytes, ClassNode classNode, SourceUnit source)
-    {
+    public GroovyClass(String name, byte[] bytes, ClassNode classNode, SourceUnit source) {
         this.name  = name;
         this.bytes = bytes;
         this.classNode = classNode;
@@ -48,13 +46,11 @@ public class GroovyClass
     }
     // GRECLIPSE end
 
-    public String getName()
-    {
+    public String getName() {
         return this.name;
     }
 
-    public byte[] getBytes()
-    {
+    public byte[] getBytes() {
         return this.bytes;
     }
 }

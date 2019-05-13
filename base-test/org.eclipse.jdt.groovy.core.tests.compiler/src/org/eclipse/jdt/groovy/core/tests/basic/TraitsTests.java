@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTraits() {
+        //@formatter:off
         String[] sources = {
             "T.groovy",
             "trait T {\n" +
@@ -36,6 +37,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -47,6 +49,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTraits1() {
+        //@formatter:off
         String[] sources = {
             "Test.groovy",
             "class Person implements Greetable {\n" +
@@ -65,6 +68,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String greeting() { \"Hello, ${name()}!\" }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
 
@@ -74,6 +78,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTraits1a() {
+        //@formatter:off
         String[] sources = {
             "Test.groovy",
             "class Person implements Greetable {\n" +
@@ -94,6 +99,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  String greeting() { \"Hello, ${name()}!\" }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
 
@@ -103,6 +109,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Abstract Methods
     public void testTraits2() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Greetable {\n" +
@@ -115,12 +122,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def p = new Person()\n" +
             "print p.greeting()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
     }
 
     @Test // Private Methods - positive test
     public void testTraits3() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Greeter {\n" +
@@ -137,12 +146,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def g = new GreetingMachine()\n" +
             "g.greet()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello from a private method!");
     }
 
     @Test // Private Methods - negative test
     public void testTraits4() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Greeter {\n" +
@@ -162,12 +173,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "} catch (MissingMethodException e) {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test // Meaning of this
     public void testTraits5() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Introspector {\n" +
@@ -177,12 +190,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def foo = new Foo()\n" +
             "print foo.whoAmI()",
         };
+        //@formatter:on
 
         runConformTest(sources, "class Foo");
     }
 
     @Test // Interfaces
     public void testTraits6() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "interface Named {\n" +
@@ -197,6 +212,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def p = new Person()\n" +
             "print p.greeting()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello, Bob!");
 
@@ -210,6 +226,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Properties
     public void testTraits7() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Named {\n" +
@@ -220,12 +237,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print p.name == 'Bob'\n" +
             "print p.getName()",
         };
+        //@formatter:on
 
         runConformTest(sources, "trueBob");
     }
 
     @Test // Private fields
     public void testTraits8() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Counter {\n" +
@@ -236,12 +255,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def f = new Foo()\n" +
             "print f.count()",
         };
+        //@formatter:on
 
         runConformTest(sources, "1");
     }
 
     @Test // Public fields
     public void testTraits9() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Named {\n" +
@@ -252,12 +273,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "p.Named__name = 'Bob'\n" +
             "print p.Named__name",
         };
+        //@formatter:on
 
         runConformTest(sources, "Bob");
     }
 
     @Test // Composition of Behaviors
     public void testTraits10() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait FlyingAbility {\n" +
@@ -271,12 +294,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print d.fly()\n" +
             "print d.speak()",
         };
+        //@formatter:on
 
         runConformTest(sources, "I'm flying!I'm speaking!");
     }
 
     @Test // Overriding default methods
     public void testTraits11() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait FlyingAbility {\n" +
@@ -294,12 +319,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print d.quack()\n" +
             "print d.speak()",
         };
+        //@formatter:on
 
         runConformTest(sources, "I'm flying!Quack!Quack!");
     }
 
     @Test // Simple Inheritance
     public void testTraits12() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait Named {\n" +
@@ -312,12 +339,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def p = new Person(name: 'Alice')\n" +
             "print p.introduce()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello, I am Alice");
     }
 
     @Test // Multiple Inheritance
     public void testTraits13() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Pogo implements Identified { }\n" +
@@ -334,12 +363,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait Identified implements WithId, WithName {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, "Frank Grimes");
     }
 
     @Test // Dynamic code
     public void testTraits14() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait SpeakingDuck {\n" +
@@ -353,12 +384,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def d = new Duck()\n" +
             "print d.speak()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Quack!");
     }
 
     @Test // Dynamic methods in trait
     public void testTraits15() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "trait DynamicObject {\n" +
@@ -385,12 +418,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print d.existingMethod()\n" +
             "print d.someMethod()",
         };
+        //@formatter:on
 
         runConformTest(sources, "oknullbarokSOMEMETHOD");
     }
 
     @Test // Multiple inheritance conflicts - Default conflict resolution
     public void testTraits16() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait A {\n" +
@@ -403,12 +438,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def c = new C()\n" +
             "print c.exec()",
         };
+        //@formatter:on
 
         runConformTest(sources, "B");
     }
 
     @Test // Multiple inheritance conflicts - Default conflict resolution
     public void testTraits17() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait A {\n" +
@@ -421,12 +458,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def c = new C()\n" +
             "print c.exec()",
         };
+        //@formatter:on
 
         runConformTest(sources, "A");
     }
 
     @Test // Multiple inheritance conflicts - User conflict resolution
     public void testTraits18() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait A {\n" +
@@ -441,12 +480,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def c = new C()\n" +
             "print c.exec()",
         };
+        //@formatter:on
 
         runConformTest(sources, "A");
     }
 
     @Test // Implementing a trait at runtime
     public void testTraits19() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait Extra {\n" +
@@ -459,12 +500,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print s.extra()\n" +
             "print s.doSomething()",
         };
+        //@formatter:on
 
         runConformTest(sources, "ExtraSomething");
     }
 
     @Test // Implementing multiple traits at once - negative
     public void testTraits20() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait A { String methodFromA() { 'A' } }\n" +
@@ -474,12 +517,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print c.methodFromA()\n" +
             "print c.methodFromB()",
         };
+        //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: " +
+            "No signature of method: C.methodFromA() is applicable for argument types: () values: []");
     }
 
     @Test // Implementing multiple traits at once - positive
     public void testTraits21() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait A { String methodFromA() { 'A' } }\n" +
@@ -490,12 +536,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print d.methodFromA()\n" +
             "print d.methodFromB()",
         };
+        //@formatter:on
 
         runConformTest(sources, "AB");
     }
 
     @Test // Chaining behavior
     public void testTraits22() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
@@ -510,12 +558,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def handler = new SimpleHandler()\n" +
             "handler.on('test logging', [:])",
         };
+        //@formatter:on
 
         runConformTest(sources, "Received test logging with payload [:]");
     }
 
     @Test // Chaining behavior
     public void testTraits23() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
@@ -535,12 +585,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def handler = new SimpleHandlerWithLogging()\n" +
             "handler.on('test logging', [:])",
         };
+        //@formatter:on
 
         runConformTest(sources, "Seeing test logging with payload [:]\nReceived test logging with payload [:]");
     }
 
     @Test // Chaining behavior
     public void testTraits24() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
@@ -571,12 +623,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "handler.on('foo', [:])\n" +
             "handler.on('sayHello', [:])",
         };
+        //@formatter:on
 
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nSeeing sayHello with payload [:]\nI say Hello!");
     }
 
     @Test // Chaining behavior
     public void testTraits25() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
@@ -607,12 +661,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "handler.on('foo', [:])\n" +
             "handler.on('sayHello', [:])",
         };
+        //@formatter:on
 
         runConformTest(sources, "Seeing foo with payload [:]\nReceived foo with payload [:]\nI say Hello!");
     }
 
     @Test // Chaining behavior - Semantics of super inside a trait
     public void testTraits26() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait Filtering {\n" +
@@ -626,12 +682,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "sb.append('Groovy')\n" +
             "print sb.toString()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Grvy");
     }
 
     @Test // SAM type coercion
     public void testTraits27() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait Greeter {\n" +
@@ -641,12 +699,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Greeter greeter = { 'Alice' }\n" +
             "print greeter.getName()",
         };
+        //@formatter:on
 
         runConformTest(sources, "Alice");
     }
 
     @Test // SAM type coercion
     public void testTraits28() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait Greeter {\n" +
@@ -656,12 +716,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "void greet(Greeter g) { println g.greet() }\n" +
             "greet { 'Alice' }",
         };
+        //@formatter:on
 
         runConformTest(sources, "Hello Alice");
     }
 
     @Test // Differences with Java 8 default methods
     public void testTraits29() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "class Person {\n" +
@@ -675,12 +737,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def p2 = p as Bob\n" +
             "print p2.name",
         };
+        //@formatter:on
 
         runConformTest(sources, "AliceBob");
     }
 
     @Test // Differences with mixins
     public void testTraits30() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "class A { String methodFromA() { 'A' } }\n" +
@@ -692,12 +756,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print(o instanceof A)\n" +
             "print(o instanceof B)",
         };
+        //@formatter:on
 
         runConformTest(sources, "ABtruefalse");
     }
 
     @Test // Static methods, properties and fields
     public void testTraits31() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait TestHelper {\n" +
@@ -710,12 +776,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Foo.init()\n" +
             "print Foo.TestHelper__called",
         };
+        //@formatter:on
 
         runConformTest(sources, "true");
     }
 
     @Test // Static methods, properties and fields
     public void testTraits32() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait TestHelper {\n" +
@@ -730,12 +798,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print Bar.TestHelper__called\n" +
             "print Baz.TestHelper__called",
         };
+        //@formatter:on
 
         runConformTest(sources, "truefalse");
     }
 
     @Test // Inheritance of state gotchas
     public void testTraits33() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait IntCouple {\n" +
@@ -749,12 +819,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def base = new BaseElem()\n" +
             "print base.f()",
         };
+        //@formatter:on
 
         runConformTest(sources, "3");
     }
 
     @Test // Inheritance of state gotchas
     public void testTraits34() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait IntCouple {\n" +
@@ -770,12 +842,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def elem = new Elem()\n" +
             "print elem.f()",
         };
+        //@formatter:on
 
         runConformTest(sources, "3");
     }
 
     @Test // Inheritance of state gotchas
     public void testTraits35() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait IntCouple {\n" +
@@ -791,12 +865,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def elem = new Elem()\n" +
             "print elem.f()",
         };
+        //@formatter:on
 
         runConformTest(sources, "7");
     }
 
     @Test // Limitations - Prefix and postfix operations
     public void testTraits36() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait Counting {\n" +
@@ -812,6 +888,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def c = new Counter()\n" +
             "c.inc()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -829,6 +906,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Test @Trait annotation
     public void testTraits37() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "@groovy.transform.Trait\n" +
@@ -840,12 +918,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test @Trait annotation
     public void testTraits38() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "import groovy.transform.Trait\n" +
@@ -858,12 +938,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test @Trait annotation
     public void testTraits39() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "import groovy.transform.*\n" +
@@ -876,12 +958,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Negative test for @Trait annotation
     public void testTraits40() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "@interface Trait{}\n" +
@@ -894,6 +978,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -911,6 +996,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Negative test for @Trait annotation
     public void testTraits41() {
+        //@formatter:off
         String[] sources = {
             "Trait.groovy",
             "package a\n" +
@@ -928,6 +1014,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -945,6 +1032,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Negative test for @Trait annotation
     public void testTraits42() {
+        //@formatter:off
         String[] sources = {
             "Trait.groovy",
             "package a\n" +
@@ -961,6 +1049,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -978,6 +1067,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Negative test for @Trait annotation
     public void testTraits43() {
+        //@formatter:off
         String[] sources = {
             "Trait.groovy",
             "package a\n" +
@@ -996,6 +1086,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1013,6 +1104,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Test protected method of superclass overriding by trait method - default package
     public void testTraits44() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait MyTrait {\n" +
@@ -1025,12 +1117,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test protected method of superclass overriding by trait method - the same package
     public void testTraits45() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "def myClass = new a.MyClass()\n" +
@@ -1046,12 +1140,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class MyClass extends MySuperClass implements MyTrait {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test protected method of superclass overriding by trait method - different packages
     public void testTraits46() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "def myClass = new c.MyClass()\n" +
@@ -1073,12 +1169,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "package c\n" +
             "class MyClass extends b.MySuperClass implements a.MyTrait {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test protected method of superclass overriding by trait method - different packages
     public void testTraits47() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "def myClass = new c.MyClass()\n" +
@@ -1102,12 +1200,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "import b.MySuperClass\n" +
             "class MyClass extends MySuperClass implements MyTrait {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "a");
     }
 
     @Test // Test protected method of superclass and traits method overriding by class
     public void testTraits48() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait MyTrait {\n" +
@@ -1122,12 +1222,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "c");
     }
 
     @Test // Test protected method of superclass and traits method overriding by class - negative test
     public void testTraits49() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait MyTrait {\n" +
@@ -1140,6 +1242,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1152,6 +1255,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test // Test protected method of superclass and traits method overriding by class - positive test
     public void testTraits50() {
+        //@formatter:off
         String[] sources = {
             "Sample.groovy",
             "trait MyTrait {\n" +
@@ -1166,12 +1270,14 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "def myClass = new MyClass()\n" +
             "print myClass.m()",
         };
+        //@formatter:on
 
         runConformTest(sources, "c");
     }
 
     @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-8854
     public void testTraits51() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -1198,6 +1304,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "checked audited");
     }
@@ -1206,6 +1313,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void testTraits52() {
         assumeTrue(isAtLeastGroovy(25));
 
+        //@formatter:off
         String[] sources = {
             "MyTrait.groovy",
             "class Main {\n" +
@@ -1214,6 +1322,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1222,5 +1331,37 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "\t       ^\n" +
             "Groovy:unable to resolve class T\n" +
             "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9031
+    public void testTraits53() {
+        //@formatter:off
+        String[] sources = {
+            "Trait9031.groovy",
+            "trait Trait9031<V> {\n" +
+            "  V value\n" +
+            "}\n",
+
+            "Class9031.groovy",
+            "class Class9031 implements Trait9031<String> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkDisassemblyFor("Class9031.class",
+            "  public bridge synthetic java.lang.Object getValue();\n");
+        checkDisassemblyFor("Class9031.class",
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
+            "    desc=\"()Ljava/lang/Object;\")\n" +
+            "  public java.lang.String getValue();\n");
+
+        checkDisassemblyFor("Class9031.class",
+            "  public bridge synthetic void setValue(java.lang.Object arg0);\n");
+        checkDisassemblyFor("Class9031.class",
+            "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
+            "    desc=\"(Ljava/lang/Object;)V\")\n" +
+            "  public void setValue(java.lang.String " + (isAtLeastGroovy(25) ? "value" : "arg1") + ");\n");
     }
 }

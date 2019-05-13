@@ -696,7 +696,7 @@
     <!-- Groovy language checks -->
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous '';'' should be removed" />
-        <property name="format" value="(?&lt;!License&quot;\));\s*(//|$)" />
+        <property name="format" value="^(?:\s{4})*+(?!//|[/\s]\*|\|).*?;\s*(//|$)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovySemisOptional" />
     </module>

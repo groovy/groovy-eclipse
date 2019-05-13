@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,13 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
-
-import java.util.Map;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -36,48 +34,56 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGenericField() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
             "  List<String> bar\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericArrayField() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
             "  List<String>[] bar\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericParam() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String> bar) {}\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericArrayParam() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String>[] bar) {}\n" +
             "}",
         };
+        //@formatter:on
 
         if (!isAtLeastJava(JDK7)) {
             runWarningFreeTest(sources);
@@ -94,12 +100,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGenericVaragsParam() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
             "  public void m(List<String>... bar) {}\n" +
             "}",
         };
+        //@formatter:on
 
         if (!isAtLeastJava(JDK7)) {
             runWarningFreeTest(sources);
@@ -116,6 +124,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCallingGenericConstructors() {
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
@@ -132,12 +141,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public <T> A(T t) {}\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericsPositions_GRE267_1() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -156,17 +167,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<? super Number> c;\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", stringify(findField(decl,"setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>54)? extends (43>54)Serializable>", two);
+        assertEquals("(67>69)Set<(71>84)? super (79>84)Number>", three);
     }
 
     @Test
     public void testGenericsPositions_GRE267_2() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -176,17 +192,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>", two);
+        assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>", three);
     }
 
     @Test
     public void testGenericsPositions_GRE267_3() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -205,18 +226,24 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<java.lang.Thread[][][]> c;\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", stringify(findField(decl, "settwo").type));
-        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", stringify(findField(decl, "setthree").type));
-        //assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", stringify(grabField(decl, "setfour")));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        String four = stringify(findField(decl, "setfour").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>40 ose:38)String[]>", two);
+        assertEquals("(53>55)Set<(57>66 ose:62)String[][]>", three);
+        assertEquals("(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>", four);
     }
 
     @Test
     public void testGenericsPositions_4_GRE267() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -226,17 +253,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>74)? extends (63>74)Serializable>", two);
+        assertEquals("(87>99)(87>90)java.(92>95)util.(97>99)Set<(101>114)? super (109>114)Number>", three);
     }
 
     @Test
     public void testGenericsPositions_5_GRE267() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -246,22 +278,26 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>", two);
+        assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", three);
     }
 
     @Test @Ignore("support for A<X>.B<Y> has not been implemented")
     public void testGenericsPositions_6_GRE267() {
-        // multiple generified components in a reference
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
-            "  One<String,Integer>.Two<Boolean> whoa;\n" +
+            "  One<String,Integer>.Two<Boolean> whoa;\n" + // multiple generified components in a reference
             "  java.util.Set<? extends java.io.Serializable> settwo;\n" +
             "  java.util.Set<? super java.lang.Number> setthree;\n" +
             "  public static void main(String[]argv){ print 'y' }\n" +
@@ -269,21 +305,26 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "One.java",
             "public class One<A,B> {\n" +
-            "  class Two<C> {\n" +
+            "  public class Two<C> {\n" +
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>16)?>", stringify(findField(decl, "one").type));
-        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", stringify(findField(decl, "settwo").type));
-        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "one").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>14)Set<(16>16)?>", one);
+        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", two);
+        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", three);
     }
 
     @Test
     public void testGenericsPositions_7_GRE267() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -293,17 +334,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", stringify(findField(decl, "setone").type));
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", stringify(findField(decl, "settwo").type));
-        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", stringify(findField(decl, "setthree").type));
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", two);
+        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", three);
     }
 
     @Test
     public void testGenericsPositions_8_GRE267() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -311,6 +357,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
@@ -320,6 +367,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGenericsPositions_9_GRE267() {
+        //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
@@ -327,6 +375,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
 
@@ -336,6 +385,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_1() {
+        //@formatter:off
         String[] sources = {
             "p/Field.java",
             "package test;\n" +
@@ -413,7 +463,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/StructureBaseTest.groovy",
             "package test;\n" +
-            "public class StructureBaseTest {\n" +
+            "public final class StructureBaseTest {\n" +
             "   public static void main(String[] args) {\n" +
             "        Structure str = new StructureBase(new TestStructure());\n" +
             "        str.put('test', new TestField());\n" +
@@ -471,23 +521,27 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "   }\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\StructureBase.groovy (at line 4)\n" +
             "\tpublic class StructureBase implements Structure {\n" +
             "\t             ^^^^^^^^^^^^^\n" +
-            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" +
+            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\'" +
+            " must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" +
             "----------\n" +
             "2. ERROR in p\\StructureBase.groovy (at line 4)\n" +
             "\tpublic class StructureBase implements Structure {\n" +
             "\t             ^^^^^^^^^^^^^\n" +
-            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" +
+            "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\'" +
+            " must be declared abstract or the method \'void reset()\' must be implemented.\n" +
             "----------\n");
     }
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_2() {
+        //@formatter:off
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
@@ -568,7 +622,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "p/StructureBaseTest.groovy",
             "package test;\n" +
-            "public class StructureBaseTest {\n" +
+            "public final class StructureBaseTest {\n" +
             "   public static void main(String[] args) {\n" +
             "        Structure str = new StructureBase(new TestStructure());\n" +
             "        str.put('test', new TestField());\n" +
@@ -626,12 +680,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "   }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_3() {
+        //@formatter:off
         String[] sources = {
             "Field.java",
             "public interface Field<T extends java.io.Serializable> extends Comparable<T> {\n" +
@@ -644,12 +700,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_4() {
+        //@formatter:off
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
@@ -685,7 +743,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "    str.clear()\n" +
             "  }\n" +
             "  boolean containsKey(Object arg0) {\n" +
-            "    str.containsKey(arg0)\n"+
+            "    str.containsKey(arg0)\n" +
             "  }\n" +
             "  boolean containsValue(Object arg0) {\n" +
             "    str.containsValue(arg0)\n" +
@@ -726,7 +784,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}",
 
             "StructureBaseTest.groovy",
-            "class StructureBaseTest {\n" +
+            "final class StructureBaseTest {\n" +
             "  static void main(String[] args) {\n" +
             "    Structure str = new StructureBase(new TestStructure())\n" +
             "    str.put('test', new TestField())\n" +
@@ -782,19 +840,21 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericsAndGroovyJava_GRE278_5() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "public class Main {\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    def content = new StructureBase().get('test');\n"+
-            "    print 'test';\n"+
-            "  }\n"+
+            "public class Main {\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    def content = new StructureBase().get('test');\n" +
+            "    print 'test';\n" +
+            "  }\n" +
             "}",
 
             "MyMap.java",
@@ -803,82 +863,89 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "}",
 
             "Structure.java",
-            "public interface Structure extends MyMap<String, Integer> {\n"+
+            "public interface Structure extends MyMap<String, Integer> {\n" +
             "}",
 
             "StructureBase.groovy",
-            "public class StructureBase implements Structure {\n"+
-            "   public Integer get(Object key) {\n"+
-            "       return null;\n"+
-            "   }\n"+
+            "public class StructureBase implements Structure {\n" +
+            "   public Integer get(Object key) {\n" +
+            "       return null;\n" +
+            "   }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericFields_JcallingG() {
+        //@formatter:off
         String[] sources = {
             "p/Code.java",
-            "package p;\n"+
-            "public class Code extends G<String> {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Code c = new Code();\n"+
-            "    c.setField(\"success\");\n"+
-            "    System.out.print(c.getField());\n"+
-            "  }\n"+
+            "package p;\n" +
+            "public class Code extends G<String> {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    Code c = new Code();\n" +
+            "    c.setField(\"success\");\n" +
+            "    System.out.print(c.getField());\n" +
+            "  }\n" +
             "}\n",
 
             "p/G.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "class G<T> { T field; }",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGenericFields_GcallingJ() {
+        //@formatter:off
         String[] sources = {
             "p/Code.groovy",
-            "package p;\n"+
-            "public class Code extends G<String> {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Code c = new Code();\n"+
-            "    c.field=\"success\";\n"+
-            "    System.out.print(c.field);\n"+
-            "  }\n"+
+            "package p;\n" +
+            "public class Code extends G<String> {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    Code c = new Code();\n" +
+            "    c.field=\"success\";\n" +
+            "    System.out.print(c.field);\n" +
+            "  }\n" +
             "}\n",
 
             "p/G.java",
-            "package p;\n"+
+            "package p;\n" +
             "class G<T> { public T field; }", // TODO why must this be public for the groovy code to see it?  If non public should it be instead defined as a property on the JDTClassNode rather than a field?
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGroovyPropertyAccessorsGenerics() {
+        //@formatter:off
         String[] sources = {
             "p/C.java",
             "package p;\n" +
-            "public class C {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    G o = new G();\n"+
-            "    for (Integer s: o.getB()) {\n"+
-            "      System.out.print(s);\n"+
-            "    }\n"+
-            "  }\n"+
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    G o = new G();\n" +
+            "    for (Integer s: o.getB()) {\n" +
+            "      System.out.print(s);\n" +
+            "    }\n" +
+            "  }\n" +
             "}\n",
 
             "p/G.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "public class G {\n" +
-            "  List<Integer> b = [1,2,3]\n"+
+            "  List<Integer> b = [1,2,3]\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -888,135 +955,145 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         // GroovyBug: this surfaced the problem that the generics declarations are checked before resolution is complete -
         // had to change CompilationUnit so that resolve and checkGenerics are different stages in the SEMANTIC_ANALYSIS phase
         // otherwise it depends on whether the super type is resolved before the subtype has its generic decl checked
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B();\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/A.groovy",
             "package p;\n" +
             "public class A<T> {}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGreclipse1563() {
+        //@formatter:off
         String[] sources = {
             "ab/Inter.java",
-            "package ab;\n"+
-            "public interface Inter {\n"+
-            "    public Number getItem(Object itemId);\n"+
+            "package ab;\n" +
+            "public interface Inter {\n" +
+            "    public Number getItem(Object itemId);\n" +
             "}\n",
 
             "ab/Clazz.java",
-            "package ab;\n"+
-            "public abstract class Clazz<ITEM extends Number> implements Inter {\n"+
-            "   public ITEM getItem(Object itemId) {\n"+
-            "       return null;\n"+
-            "   }\n"+
+            "package ab;\n" +
+            "public abstract class Clazz<ITEM extends Number> implements Inter {\n" +
+            "   public ITEM getItem(Object itemId) {\n" +
+            "       return null;\n" +
+            "   }\n" +
             "}\n",
 
             "ab/GClazz.groovy",
-            "package ab;\n"+
+            "package ab;\n" +
             "class GClazz extends Clazz<Number> {}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testGreclipse1563_2() {
+        //@formatter:off
         String[] sources = {
             "ab/Clazz.java",
-            "package ab;\n"+
-            "public abstract class Clazz<ITEM extends MyItem> implements Inter {\n"+
-            "   public ITEM getItem(Object itemId) {\n"+
-            "       return null;\n"+
-            "   }\n"+
+            "package ab;\n" +
+            "public abstract class Clazz<ITEM extends MyItem> implements Inter {\n" +
+            "   public ITEM getItem(Object itemId) {\n" +
+            "       return null;\n" +
+            "   }\n" +
             "}\n",
 
             "ab/Inter.java",
-            "package ab;\n"+
-            "public interface Inter {\n"+
-            "    public MyItem getItem(Object itemId);\n"+
+            "package ab;\n" +
+            "public interface Inter {\n" +
+            "    public MyItem getItem(Object itemId);\n" +
             "}\n",
 
             "ab/MyItem.java",
-            "package ab;\n"+
+            "package ab;\n" +
             "public class MyItem {}\n",
 
             "ab/GClazz.groovy",
-            "package ab;\n"+
+            "package ab;\n" +
             "class GClazz extends Clazz<MyItem> {}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
-    @Test
+    @Test // WMTW: GroovyCompilationUnit builds a correct representation of the groovy type A
     public void testExtendingGenerics_JavaExtendsGroovy() {
-        // WMTW: GroovyCompilationUnit builds a correct representation of the groovy type A
+        //@formatter:off
         String[] sources = {
             "p/B.java",
             "package p;\n" +
             "public class B extends A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B();\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/A.groovy",
             "package p;\n" +
             "public class A<T> {}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava() {
-        // WMTW: JDT ClassNode builds a correct groovy representation of the A type
+    @Test // WMTW: JDT ClassNode builds a correct groovy representation of the A type
+    public void testExtendingGenerics_GroovyExtendsJava01() {
+
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/A.java",
             "package p;\n" +
             "public class A<T> {public void set(T t) { }}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava2() {
+    public void testExtendingGenerics_GroovyExtendsJava02() {
         // test when the upper bound is not just 'Object'
         // WMTW: notice I and Impl are classes and not interfaces, because right now only the superclass stuff is set up correctly for nodes.
         // In order for no error to occur we have to override getUnresolvedSuperClass() in our JDTClassNode so that the code in
         // GenericsVisitor.checkGenericsUsage() correctly determines Impl isDerivedFrom I
         // the rule seems to be coming out that there is no redirection from JDTClassNode, they are absolute
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.java",
@@ -1029,22 +1106,24 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends I> {}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava2a() {
+    public void testExtendingGenerics_GroovyExtendsJava03() {
         // TODO create more variations around mixing types up (including generics bounds)
         // variation of above - the interface type is a java file and not a groovy file
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.java",
@@ -1057,23 +1136,25 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends I> {}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava2b() {
+    public void testExtendingGenerics_GroovyExtendsJava04() {
         // WMTW: JDTClassNode correctly initializes interfaces based on binding interfaces
         // It needs the interface set for Impl to be defined correctly so that groovy can determine Impl extends I
         // test when the upper bound is not just 'Object'
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<Impl> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.groovy", // java->groovy
@@ -1086,20 +1167,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends I> {}\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava3() {
+    public void testExtendingGenerics_GroovyExtendsJava05() {
         // GRECLIPSE-430: the declaration of B violates the 'T extends I' specification of A
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.java",
@@ -1112,185 +1195,201 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class A<T extends I> {}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\B.groovy (at line 2)\n" +
             "\tpublic class B extends A<String> {\n" +
-            "\t                       ^\n" +
+            "\t                         ^^^^^^\n" +
             "Groovy:The type String is not a valid substitute for the bounded parameter <T extends p.I>\n" +
             "----------\n");
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava4() {
+    public void testExtendingGenerics_GroovyExtendsJava06() {
         assumeTrue(!isAtLeastJava(JDK8));
 
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends java.util.ArrayList<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    B b = new B()\n"+
-            "    b.add('abc')\n"+
-            "    print b.get(0)\n"+
-            "    println 'success'\n"+
-            "  }\n"+
-            "  void print(String msg) { print msg; }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    B b = new B()\n" +
+            "    b.add('abc')\n" +
+            "    print b.get(0)\n" +
+            "    println 'success'\n" +
+            "  }\n" +
+            "  void print(String msg) { print msg; }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava5() {
+    public void testExtendingGenerics_GroovyExtendsJava07() {
         assumeTrue(!isAtLeastJava(JDK8));
 
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends java.util.ArrayList<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava5a() {
+    public void testExtendingGenerics_GroovyExtendsJava08() {
         assumeTrue(!isAtLeastJava(JDK8));
 
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends ArrayList<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava6() {
+    public void testExtendingGenerics_GroovyExtendsJava09() {
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B()\n"+
-            "    println 'success'\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B()\n" +
+            "    println 'success'\n" +
+            "  }\n" +
             "}\n",
 
             "p/A.java",
             "package p;\n" +
             "public class A<T> {public void set(T t) { }}\n",
         };
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava7() {
-        String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "public class B extends q.A<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B().set(\"abc\");\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
-            "}\n",
-
-            "q/A.java",
-            "package q;\n" +
-            "public class A<T> {public void set(T t) { }}\n",
-        };
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava8() {
-        // arrays
-        String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "public class B extends A<int[]> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B().foo([1,2,3]);\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/A.java",
-            "package p;\n" +
-            "public class A<T extends Object> {\n"+
-            "  public void foo(T t) {}\n"+
-            "}",
-        };
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava9() {
-        String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "public class B extends C {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B().foo([1,2,3]);\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/C.java",
-            "package p;\n"+
-            "public class C extends A<int[]> {}\n",
-
-            "p/A.java",
-            "package p;\n" +
-            "public class A<T extends Object> {\n"+
-            "  public void foo(T t) {}\n"+
-            "}",
-        };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava10() {
+        //@formatter:off
+        String[] sources = {
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends q.A<String> {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    new B().set(\"abc\");\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/A.java",
+            "package q;\n" +
+            "public class A<T> {public void set(T t) { }}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testExtendingGenerics_GroovyExtendsJava11() {
+        //@formatter:off
+        String[] sources = {
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends A<int[]> {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    new B().foo([1,2,3]);\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public class A<T extends Object> {\n" +
+            "  public void foo(T t) {}\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testExtendingGenerics_GroovyExtendsJava12() {
+        //@formatter:off
+        String[] sources = {
+            "p/B.groovy",
+            "package p;\n" +
+            "public class B extends C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    new B().foo([1,2,3]);\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/C.java",
+            "package p;\n" +
+            "public class C extends A<int[]> {}\n",
+
+            "p/A.java",
+            "package p;\n" +
+            "public class A<T extends Object> {\n" +
+            "  public void foo(T t) {}\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testExtendingGenerics_GroovyExtendsJava13() {
+        //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends C<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B().foo([1,2,3],\"hello\");\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B().foo([1,2,3],\"hello\");\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}",
 
             "p/C.java",
-            "package p;\n"+
+            "package p;\n" +
             "public class C<Q> extends A<int[],Q> {\n" +
             "}",
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T extends Object,R> {\n"+
-            "  public void foo(T t, R r) {}\n"+
+            "public class A<T extends Object,R> {\n" +
+            "  public void foo(T t, R r) {}\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -1301,9 +1400,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava11() {
+    public void testExtendingGenerics_GroovyExtendsJava14() {
         assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) >= 0);
 
+        //@formatter:off
         String[] sources = {
             "Groovy.groovy",
             "class Groovy {\n" +
@@ -1319,6 +1419,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -1330,7 +1431,8 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope.fixupTypeParameters(GroovyClassScope.java:559)
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava12() {
+    public void testExtendingGenerics_GroovyExtendsJava15() {
+        //@formatter:off
         String[] sources = {
             "Template.java",
             "public interface Template<S> {\n" +
@@ -1349,6 +1451,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -1357,7 +1460,8 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * https://github.com/groovy/groovy-eclipse/issues/148
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava13() {
+    public void testExtendingGenerics_GroovyExtendsJava16() {
+        //@formatter:off
         String[] sources = {
             "A.java",
             "public interface A<Q extends A<? super Q>> {\n" +
@@ -1369,6 +1473,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -1395,7 +1500,8 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at Main.main(Main.groovy:3)
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava14() {
+    public void testExtendingGenerics_GroovyExtendsJava17() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic class Main {\n" +
@@ -1424,12 +1530,14 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, "no error");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/221
-    public void testExtendingGenerics_GroovyExtendsJava15() {
+    public void testExtendingGenerics_GroovyExtendsJava18() {
+        //@formatter:off
         String[] sources = {
             "AttributeConverter.java",
             "interface AttributeConverter<X,Y> {\n" +
@@ -1446,52 +1554,57 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  String decode(Object o) { return null; }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testImplementingInterface_JavaExtendingGroovyGenericType() {
+        //@formatter:off
         String[] sources = {
             "p/C.java",
             "package p;\n" +
-            "import java.util.List;\n"+
-            "public class C extends groovy.lang.GroovyObjectSupport implements I {\n"+
-            "  public List<?> m() { return null;}\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "import java.util.List;\n" +
+            "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
+            "  public List<?> m() { return null;}\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}",
 
             "p/I.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "public interface I {\n" +
-            "  List<?> m();\n"+
+            "  List<?> m();\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testImplementingInterface_JavaGenericsIncorrectlyExtendingGroovyGenerics() {
+        //@formatter:off
         String[] sources = {
             "p/C.java",
             "package p;\n" +
-            "import java.util.List;\n"+
-            "public class C extends groovy.lang.GroovyObjectSupport implements I<String> {\n"+
-            "  public List<String> m() { return null;}\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "import java.util.List;\n" +
+            "public class C extends groovy.lang.GroovyObjectSupport implements I<String> {\n" +
+            "  public List<String> m() { return null;}\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}",
 
             "p/I.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "public interface I<T extends Number> {\n" +
-            "  List<T> m();\n"+
+            "  List<T> m();\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1504,111 +1617,293 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testImplementingInterface_GroovyGenericsIncorrectlyExtendingJavaGenerics() {
+        //@formatter:off
         String[] sources = {
             "p/C.groovy",
             "package p;\n" +
-            "public class C implements Iii<String> {\n"+
-            "  public List<String> m() { return null;}\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    System.out.println( \"success\");\n"+
-            "  }\n"+
+            "public class C implements Iii<String> {\n" +
+            "  public List<String> m() { return null;}\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println( \"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/I.groovy",
-            "package p;\n"+
-            "import java.util.List;\n"+
+            "package p;\n" +
+            "import java.util.List;\n" +
             "public interface Iii<T extends Number> {\n" +
-            "  List<T> m();\n"+
+            "  List<T> m();\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\C.groovy (at line 2)\n" +
             "\tpublic class C implements Iii<String> {\n" +
-            "\t                          ^^^\n" +
+            "\t                              ^^^^^^\n" +
             "Groovy:The type String is not a valid substitute for the bounded parameter <T extends java.lang.Number>\n" +
             "----------\n");
     }
 
     @Test
     public void testReferencingFieldsGenerics_JreferingToG() {
+        //@formatter:off
         String[] sources = {
             "p/C.java",
             "package p;\n" +
-            "public class C {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    OtherClass oClass = new OtherClass();\n"+
-            "    for (String message: oClass.messages) {\n"+
-            "      System.out.print(message);\n"+
-            "    }\n"+
-            "  }\n"+
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    OtherClass oClass = new OtherClass();\n" +
+            "    for (String message: oClass.messages) {\n" +
+            "      System.out.print(message);\n" +
+            "    }\n" +
+            "  }\n" +
             "}",
 
             "p/OtherClass.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "public class OtherClass {\n" +
-            "  public List<String> messages = new ArrayList<String>();\n"+ // auto imports of java.util
-            "  public OtherClass() {\n"+
-            "    messages.add(\"hello\");\n"+
-            "    messages.add(\" \");\n"+
-            "    messages.add(\"world\");\n"+
-            "    messages.add(\"\\n\");\n"+
-            "  }\n"+
+            "  public List<String> messages = new ArrayList<String>();\n" + // auto imports of java.util
+            "  public OtherClass() {\n" +
+            "    messages.add(\"hello\");\n" +
+            "    messages.add(\" \");\n" +
+            "    messages.add(\"world\");\n" +
+            "    messages.add(\"\\n\");\n" +
+            "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testReferencingFieldsGenerics_GreferingToJ() {
+        //@formatter:off
         String[] sources = {
             "p/C.groovy",
             "package p;\n" +
-            "public class C {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    OtherClass oClass = new OtherClass();\n"+
-            "    for (String message: oClass.messages) {\n"+
-            "      System.out.print(message);\n"+
-            "    }\n"+
-            "  }\n"+
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    OtherClass oClass = new OtherClass();\n" +
+            "    for (String message: oClass.messages) {\n" +
+            "      System.out.print(message);\n" +
+            "    }\n" +
+            "  }\n" +
             "}",
 
             "p/OtherClass.java",
-            "package p;\n"+
-            "import java.util.*;\n"+
+            "package p;\n" +
+            "import java.util.*;\n" +
             "public class OtherClass {\n" +
-            "  public List<String> messages = new ArrayList<String>();\n"+ // auto imports of java.util
-            "  public OtherClass() {\n"+
-            "    messages.add(\"hello\");\n"+
-            "    messages.add(\" \");\n"+
-            "    messages.add(\"world\");\n"+
-            "    messages.add(\"\\n\");\n"+
-            "  }\n"+
+            "  public List<String> messages = new ArrayList<String>();\n" + // auto imports of java.util
+            "  public OtherClass() {\n" +
+            "    messages.add(\"hello\");\n" +
+            "    messages.add(\" \");\n" +
+            "    messages.add(\"world\");\n" +
+            "    messages.add(\"\\n\");\n" +
+            "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
+    public void testAbstractCovariance_1() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class Foo implements Comparable<String> {\n" +
+            "  @Override\n" +
+            "  int compareTo(String string) { this <=> string }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testAbstractCovariance_2() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class Foo implements Comparable<String> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo implements Comparable<String> {\n" +
+            "\t      ^^^\n" +
+            "Groovy:Can't have an abstract method in a non-abstract class. The class 'Foo'" +
+            " must be declared abstract or the method 'int compareTo(java.lang.Object)' must be implemented.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testAbstractCovariance_3() {
+        //@formatter:off
+        String[] sources = {
+            "Face1.java",
+            "@FunctionalInterface\n" +
+            "interface Face1<I, O> {\n" +
+            "  O apply(I in);\n" +
+            "}\n",
+
+            "Face2.java",
+            "interface Face2<X, Y> extends Face1<X, Y> {\n" +
+            "  Object another();\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face2<Number, String> {\n" +
+            "  @Override String apply(Number n) { '' }\n" +
+            "  @Override Object another() { null }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face<CharSequence> { \n" +
+            "  @Override\n" +
+            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override\n" +
+            "  public <Chars extends CharSequence> Chars process(Chars chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<CharSequence>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  public CharSequence process(CharSequence chars) { chars }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
+    public void testAbstractCovariance_GROOVY9059c() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Face.Java",
+            "interface Face<T> {\n" +
+            "  <O extends T> O process(O o);\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "def impl = new Face<String>() { \n" +
+            "  @Override @SuppressWarnings('unchecked')\n" +
+            "  public String process(String string) { string }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+    }
+
+    @Test
+    public void testExtendingRawJavaType() {
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p;\n" +
+            "public class Foo extends Supertype {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.print(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Supertype.java",
+            "package p;\n" +
+            "class Supertype<T> extends Supertype2 { }",
+
+            "p/Supertype2.java",
+            "package p;\n" +
+            "class Supertype2<T> { }",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
     public void testHalfFinishedGenericsProgram() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "List myList;\n"+
-            "\n"+
-            "           def funkyMethod(Map map) {\n"+
-            "               print \"Groovy!\"\n"+
-            "       }\n"+
-            "   }\n"+
-            "\n"+
-            "class MyMap<K,V> extends Map {\n"+
-            "\n"+
+            "public class Demo {\n" +
+            "\n" +
+            "List myList;\n" +
+            "\n" +
+            "           def funkyMethod(Map map) {\n" +
+            "               print \"Groovy!\"\n" +
+            "       }\n" +
+            "   }\n" +
+            "\n" +
+            "class MyMap<K,V> extends Map {\n" +
+            "\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1636,6 +1931,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testHalfFinishedGenericsProgramWithCorrectSuppression() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
             "class Demo {\n" +
@@ -1643,25 +1939,29 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  List myList\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
             "@SuppressWarnings('rawtypes')\n" + // should suppress the warning
-            "class Demo {\n"+
-            "  List myList\n"+
+            "class Demo {\n" +
+            "  List myList\n" +
             "}",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
 
     @Test
     public void testHalfFinishedGenericsProgramWithUnnecessarySuppression() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
             "class Demo {\n" +
@@ -1669,6 +1969,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  List<String> myList\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1681,14 +1982,16 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testHalfFinishedGenericsProgramWithSuppressionValueSpeltWrong() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "@SuppressWarnings(\"unchecked2\")\n"+ // spelt wrong
-            "List<String> myList;\n"+
+            "public class Demo {\n" +
+            "\n" +
+            "@SuppressWarnings(\"unchecked2\")\n" + // spelt wrong
+            "List<String> myList;\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1701,13 +2004,15 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValues() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
-            "class Demo {\n"+
-            "  @SuppressWarnings(['rawtypes','cast'])\n"+
-            "  List list\n"+
+            "class Demo {\n" +
+            "  @SuppressWarnings(['rawtypes','cast'])\n" +
+            "  List list\n" +
             "}",
         };
+        //@formatter:on
 
         // Eclipse Oxygen (i.e. JDT Core 3.13) added warning for mixed mode
         Version v = Platform.getBundle("org.eclipse.jdt.core").getVersion();
@@ -1721,14 +2026,16 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testHalfFinishedGenericsProgramWithMultipleSuppressionValuesWithOneSpeltWrong() {
+        //@formatter:off
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "@SuppressWarnings([\"rawtypes\",\"cast2\"])\n"+
-            "List myList;\n"+
+            "public class Demo {\n" +
+            "\n" +
+            "@SuppressWarnings([\"rawtypes\",\"cast2\"])\n" +
+            "List myList;\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1743,25 +2050,27 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testJava7() {
         assumeTrue(isAtLeastJava(JDK7));
 
+        //@formatter:off
         String[] sources = {
             "A.java",
-            "import java.util.*;\n"+
-            "public class A {\n"+
-            "public static void main(String[]argv) {\n"+
-            "  List<String> ls = new ArrayList<>();"+
-            "  int i = 1_000_000;\n"+
-            "  int b = 0b110101;\n"+
-            "  try {\n"+
-            "    foo();\n"+
-            "  } catch (java.io.IOException | IllegalStateException re) {\n"+
-            "  }\n"+
-            "}\n"+
-            "  public static void foo() throws java.io.IOException {}\n"+
+            "import java.util.*;\n" +
+            "public class A {\n" +
+            "public static void main(String[]argv) {\n" +
+            "  List<String> ls = new ArrayList<>();" +
+            "  int i = 1_000_000;\n" +
+            "  int b = 0b110101;\n" +
+            "  try {\n" +
+            "    foo();\n" +
+            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
+            "  }\n" +
+            "}\n" +
+            "  public static void foo() throws java.io.IOException {}\n" +
             "}",
 
             "B.groovy",
             "print 'a'\n",
         };
+        //@formatter:on
 
         runWarningFreeTest(sources);
     }
@@ -1770,21 +2079,23 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testJava7_2() {
         assumeTrue(!isAtLeastJava(JDK7));
 
+        //@formatter:off
         String[] sources = {
             "A.java",
-            "import java.util.*;\n"+
-            "public class A {\n"+
-            "public static void main(String[]argv) {\n"+
-            "  List<String> ls = new ArrayList<>();"+
-            "  int i = 1_000_000;\n"+
-            "  int b = 0b110101;\n"+
-            "}\n"+
-            "  public static void foo() throws java.io.IOException {}\n"+
+            "import java.util.*;\n" +
+            "public class A {\n" +
+            "public static void main(String[]argv) {\n" +
+            "  List<String> ls = new ArrayList<>();" +
+            "  int i = 1_000_000;\n" +
+            "  int b = 0b110101;\n" +
+            "}\n" +
+            "  public static void foo() throws java.io.IOException {}\n" +
             "}",
 
             "B.groovy",
             "print 'a'\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1800,67 +2111,398 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
-    public void testJava7_3() {
-        assumeTrue(!isAtLeastJava(JDK7));
-
+    @Test // https://jira.spring.io/browse/STS-3930
+    public void testSts3930() {
+        //@formatter:off
         String[] sources = {
-            "A.java",
-            "import java.util.*;\n"+
-            "public class A {\n"+
-            "public static void main(String[]argv) {\n"+
-            "  try {\n"+
-            "    foo();\n"+
-            "  } catch (java.io.IOException | IllegalStateException re) {\n"+
-            "  }\n"+
-            "}\n"+
-            "  public static void foo() throws java.io.IOException {}\n"+
-            "}",
+            "demo/GroovyDemo.groovy",
+            "package demo\n" +
+            "class GroovyDemo {\n" +
+            "  static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = this.classLoader) {\n" +
+            "  }\n" +
+            "}\n",
 
-            "B.groovy",
-            "print 'a'\n",
+            "demo/JavaDemo.java",
+            "package demo;\n" +
+            "public class JavaDemo {\n" +
+            "  public static void staticMethod() {\n" +
+            "    GroovyDemo.someMethod(JavaDemo.class);\n" +
+            "  }\n" +
+            "}\n",
         };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testWildcards1() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(String.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.groovy",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? extends Number> value(); }\n",
+        };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in A.java (at line 6)\n" +
-            "\t} catch (java.io.IOException | IllegalStateException re) {\n" +
-            "\t         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Multi-catch parameters are not allowed for source level below 1.7\n" +
+            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "\t@Anno(String.class)\n" +
+            "\t      ^^^^^^^^^^^^^\n" +
+            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
             "----------\n");
     }
 
-    @Test @Ignore("Spock not loaded to classpath")
-    public void testDisablingGenericsWarnings() {
-        Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
-
+    @Test
+    public void testWildcards2() {
+        //@formatter:off
         String[] sources = {
-            "Assertions.groovy",
-            "import spock.lang.*\n" +
-            "@Speck\n" +
-            "class Assertions {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new Assertions().comparingXandY();\n" +
-            "  }\n"+
-            "  def comparingXandY() {\n" +
-            "    def x = 1\n" +
-            "    def y = 2\n" +
-            "    \n" +
-            "    expect:\n" +
-            "    x < y    // OK\n" +
-            "    x == y   // BOOM!\n" +
-            " }\n" +
-            "}",
+            "p/X.java",
+            "package p;\n" +
+            "@Anno(String.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? extends Number> value(); }\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Assertions.groovy (at line 4)\n" +
-            "   public static void main(String[] argv) {\n" +
-            "   ^^\n" +
-            "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
-            "----------\n",
-            options);
+            "1. ERROR in p\\X.java (at line 2)\n" +
+            "\t@Anno(String.class)\n" +
+            "\t      ^^^^^^^^^^^^\n" +
+            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testWildcards3() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.java",
+            "package p;\n" +
+            "@Anno(String.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.groovy",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? extends Number> value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.java (at line 2)\n" +
+            "\t@Anno(String.class)\n" +
+            "\t      ^^^^^^^^^^^^\n" +
+            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testWildcards4() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(String.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? extends Number> value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "\t@Anno(String.class)\n" +
+            "\t      ^^^^^^^^^^^^^\n" +
+            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testWildcards5() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.java",
+            "package p;\n" +
+            "@Anno(Integer.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.groovy",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? extends Number> value(); }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testWildcards6() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.java",
+            "package p;\n" +
+            "@Anno(Number.class)\n" +
+            "public class X {\n" +
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? super Integer> value(); }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testWildcards7() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(String.class)\n" +
+            "public class X {\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { Class<? super Integer> value(); }\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "\t@Anno(String.class)\n" +
+            "\t      ^^^^^^^^^^^^^\n" +
+            "Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testUpperBounds1() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    new J<Integer>().run();\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J<T extends Number & I> {\n" +
+            "  Class<T> run() { return null; }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.java (at line 4)\n" +
+            "\tnew J<Integer>().run();\n" +
+            "\t      ^^^^^^^\n" +
+            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type J<T>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testUpperBounds2() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.java",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    new G<Integer>().run();\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.java (at line 4)\n" +
+            "\tnew G<Integer>().run();\n" +
+            "\t      ^^^^^^^\n" +
+            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type G<T>\n" +
+            "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8990
+    public void testUpperBounds3() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X {\n" +
+            "  static main(args) {\n" +
+            "    new G<Integer>().run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 4)\n" +
+            "\tnew G<Integer>().run()\n" +
+            "\t      ^^^^^^^\n" +
+            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testUpperBounds4() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class W implements I {}\n" +
+            "class X extends G<W> {\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\tclass X extends G<W> {\n" +
+            "\t                  ^\n" +
+            "Groovy:The type W is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
+            "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8990
+    public void testUpperBounds5() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p\n" +
+            "class X extends G<Integer> {\n" +
+            "}\n",
+
+            "p/I.java",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+
+            "p/G.groovy",
+            "package p\n" +
+            "class G<T extends Number & I> {\n" +
+            "  Class<T> run() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "\tclass X extends G<Integer> {\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
+            "----------\n");
     }
 }

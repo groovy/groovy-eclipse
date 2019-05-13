@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -129,8 +129,10 @@ public class GroovyClassScope extends ClassScope {
         // create property accessors without resolving the types
         if (referenceContext instanceof GroovyTypeDeclaration) {
             for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
-                String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
                 int modifiers = getModifiers(property);
+                if (Flags.isPackageDefault(modifiers)) continue;
+
+                String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
 
                 createGetterMethod(name, "get" + capitalizedName, modifiers, methodBindings)
                     .ifPresent(groovyMethods::add);
@@ -195,11 +197,23 @@ public class GroovyClassScope extends ClassScope {
 
     private int getModifiers(PropertyNode property) {
         int modifiers = (property.getModifiers() & 0xF);
-        if (property.getField().getAnnotations().stream()
-                .map(anno -> anno.getClassNode().getName())
+
+        // if @PackageScope was detected by GCUD, field's modifiers will show it
+        char[] nameChars = property.getName().toCharArray();
+        for (FieldDeclaration field : referenceContext.fields) {
+            if (CharOperation.equals(field.name, nameChars)) {
+                if (Flags.isPackageDefault(field.modifiers)) {
+                    modifiers &= ~Flags.AccPublic;
+                }
+                break;
+            }
+        }
+
+        if (property.getField().getAnnotations().stream().map(anno -> anno.getClassNode().getName())
                 .anyMatch(name -> name.equals("Deprecated") || name.equals("java.lang.Deprecated"))) {
             modifiers |= Flags.AccDeprecated;
         }
+
         return modifiers;
     }
 
@@ -413,6 +427,7 @@ public class GroovyClassScope extends ClassScope {
         switch (problem) {
         case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
+        case IProblem.MissingValueForAnnotationMember:
         case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodMustOverrideOrImplement:
         case IProblem.MethodReducesVisibility:

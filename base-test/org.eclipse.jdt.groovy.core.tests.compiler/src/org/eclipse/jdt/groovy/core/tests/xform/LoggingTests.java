@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCommons() {
+        //@formatter:off
         String[] sources = {
             "CommonsExample.groovy",
             "import groovy.util.logging.*\n" +
@@ -35,12 +36,14 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testLog() {
+        //@formatter:off
         String[] sources = {
             "LogExample.groovy",
             "import groovy.util.logging.*\n" +
@@ -54,6 +57,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, ""); // TODO: Test the output produced
     }
@@ -62,6 +66,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testLog4j() {
+        //@formatter:off
         String[] sources = {
             "Log4jExample.groovy",
             "import groovy.util.logging.*\n" +
@@ -72,12 +77,14 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testLog4j2() {
+        //@formatter:off
         String[] sources = {
             "Log4j2Example.groovy",
             "import groovy.util.logging.*\n" +
@@ -88,12 +95,14 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testSlf4j() {
+        //@formatter:off
         String[] sources = {
             "Slf4jExample.groovy",
             "import groovy.util.logging.*\n" +
@@ -104,6 +113,7 @@ public final class LoggingTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }

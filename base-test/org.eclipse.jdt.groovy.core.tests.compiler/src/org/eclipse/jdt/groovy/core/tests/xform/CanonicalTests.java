@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,6 +29,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
 
     @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
     public void testCanonical1() {
+        //@formatter:off
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
@@ -43,12 +44,14 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
             "  String bar, baz\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Foo(one, two)");
     }
 
     @Test
     public void testCanonical2() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -63,12 +66,14 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
             "  String bar, baz\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Foo(one, two)");
     }
 
     @Test
     public void testCanonical3() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -84,6 +89,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
             "  String bar, baz\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Foo(one, two)");
     }
@@ -99,6 +105,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -113,6 +120,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
             "  String bar, baz\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Foo(one, two)", options);
     }

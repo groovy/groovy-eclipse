@@ -46,10 +46,6 @@ import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
- * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  */
 public class BytecodeHelper implements Opcodes {
     
@@ -90,10 +86,19 @@ public class BytecodeHelper implements Opcodes {
     }
 
     public static String getMethodDescriptor(ClassNode returnType, Parameter[] parameters) {
+        ClassNode[] parameterTypes = new ClassNode[parameters.length];
+        for (int i = 0; i < parameters.length; i++) {
+            parameterTypes[i] = parameters[i].getType();
+        }
+
+        return getMethodDescriptor(returnType, parameterTypes);
+    }
+
+    public static String getMethodDescriptor(ClassNode returnType, ClassNode[] parameterTypes) {
         StringBuilder buffer = new StringBuilder(100);
         buffer.append("(");
-        for (Parameter parameter : parameters) {
-            buffer.append(getTypeDescription(parameter.getType()));
+        for (ClassNode parameterType : parameterTypes) {
+            buffer.append(getTypeDescription(parameterType));
         }
         buffer.append(")");
         buffer.append(getTypeDescription(returnType));
@@ -230,7 +235,7 @@ public class BytecodeHelper implements Opcodes {
     }
     
     /**
-     * negate a boolean on stack. true->false, false->true
+     * Negate a boolean on stack.
      */
     public static void negateBoolean(MethodVisitor mv) {
         // code to negate the primitive boolean
@@ -258,8 +263,6 @@ public class BytecodeHelper implements Opcodes {
      * returns a name that Class.forName() can take. Notably for arrays:
      * [I, [Ljava.lang.String; etc
      * Regular object type:  java.lang.String
-     *
-     * @param name
      */
     public static String formatNameForClassLoading(String name) {
         if (name == null) {
@@ -299,8 +302,8 @@ public class BytecodeHelper implements Opcodes {
 
     private static boolean hasGenerics(Parameter[] param) {
         if (param.length == 0) return false;
-        for (int i = 0; i < param.length; i++) {
-            ClassNode type = param[i].getType();
+        for (Parameter parameter : param) {
+            ClassNode type = parameter.getType();
             if (hasGenerics(type)) return true;
         }
         return false;
@@ -341,8 +344,8 @@ public class BytecodeHelper implements Opcodes {
         if (sclass.isUsingGenerics()) return true;
         ClassNode[] interfaces = node.getInterfaces();
         if (interfaces != null) {
-            for (int i = 0; i < interfaces.length; i++) {
-                if (interfaces[i].isUsingGenerics()) return true;
+            for (ClassNode anInterface : interfaces) {
+                if (anInterface.isUsingGenerics()) return true;
             }
         }
 
@@ -357,8 +360,8 @@ public class BytecodeHelper implements Opcodes {
         GenericsType extendsPart = new GenericsType(node.getUnresolvedSuperClass(false));
         writeGenericsBounds(ret, extendsPart, true);
         ClassNode[] interfaces = node.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            GenericsType interfacePart = new GenericsType(interfaces[i]);
+        for (ClassNode anInterface : interfaces) {
+            GenericsType interfacePart = new GenericsType(anInterface);
             writeGenericsBounds(ret, interfacePart, false);
         }
         return ret.toString();
@@ -367,11 +370,11 @@ public class BytecodeHelper implements Opcodes {
     private static void getGenericsTypeSpec(StringBuilder ret, GenericsType[] genericsTypes) {
         if (genericsTypes == null) return;
         ret.append('<');
-        for (int i = 0; i < genericsTypes.length; i++) {
-            String name = genericsTypes[i].getName();
+        for (GenericsType genericsType : genericsTypes) {
+            String name = genericsType.getName();
             ret.append(name);
             ret.append(':');
-            writeGenericsBounds(ret, genericsTypes[i], true);
+            writeGenericsBounds(ret, genericsType, true);
         }
         ret.append('>');
     }
@@ -407,8 +410,8 @@ public class BytecodeHelper implements Opcodes {
     private static void writeGenericsBounds(StringBuilder ret, GenericsType type, boolean writeInterfaceMarker) {
         if (type.getUpperBounds() != null) {
             ClassNode[] bounds = type.getUpperBounds();
-            for (int i = 0; i < bounds.length; i++) {
-                writeGenericsBoundType(ret, bounds[i], writeInterfaceMarker);
+            for (ClassNode bound : bounds) {
+                writeGenericsBoundType(ret, bound, writeInterfaceMarker);
             }
         } else if (type.getLowerBound() != null) {
             writeGenericsBoundType(ret, type.getLowerBound(), writeInterfaceMarker);
@@ -420,29 +423,28 @@ public class BytecodeHelper implements Opcodes {
     private static void addSubTypes(StringBuilder ret, GenericsType[] types, String start, String end) {
         if (types == null) return;
         ret.append(start);
-        for (int i = 0; i < types.length; i++) {
-            if (types[i].getType().isArray()) {
+        for (GenericsType type : types) {
+            if (type.getType().isArray()) {
                 ret.append("[");
-                addSubTypes(ret, new GenericsType[]{new GenericsType(types[i].getType().getComponentType())}, "", "");
-            }
-            else {
-                if (types[i].isPlaceholder()) {
+                addSubTypes(ret, new GenericsType[]{new GenericsType(type.getType().getComponentType())}, "", "");
+            } else {
+                if (type.isPlaceholder()) {
                     ret.append('T');
-                    String name = types[i].getName();
+                    String name = type.getName();
                     ret.append(name);
                     ret.append(';');
-                } else if (types[i].isWildcard()) {
-                    if (types[i].getUpperBounds() != null) {
+                } else if (type.isWildcard()) {
+                    if (type.getUpperBounds() != null) {
                         ret.append('+');
-                        writeGenericsBounds(ret, types[i], false);
-                    } else if (types[i].getLowerBound() != null) {
+                        writeGenericsBounds(ret, type, false);
+                    } else if (type.getLowerBound() != null) {
                         ret.append('-');
-                        writeGenericsBounds(ret, types[i], false);
+                        writeGenericsBounds(ret, type, false);
                     } else {
                         ret.append('*');
                     }
                 } else {
-                    writeGenericsBounds(ret, types[i], false);
+                    writeGenericsBounds(ret, type, false);
                 }
             }
         }
@@ -581,7 +583,7 @@ public class BytecodeHelper implements Opcodes {
     public static boolean isSameCompilationUnit(ClassNode a, ClassNode b) {
         CompileUnit cu1 = a.getCompileUnit();
         CompileUnit cu2 = b.getCompileUnit();
-        return cu1 !=null && cu2 !=null && cu1==cu2;
+        return cu1 != null && cu1 == cu2;
     }
 
     /**
@@ -593,8 +595,8 @@ public class BytecodeHelper implements Opcodes {
     public static int hashCode(String str) {
         final char[] chars = str.toCharArray();
         int h = 0;
-        for (int i = 0; i < chars.length; i++) {
-            h = 31 * h + chars[i];
+        for (char aChar : chars) {
+            h = 31 * h + aChar;
         }
         return h;
     }

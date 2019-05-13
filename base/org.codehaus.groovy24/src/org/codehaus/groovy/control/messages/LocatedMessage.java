@@ -26,8 +26,6 @@ import java.io.PrintWriter;
 
 /**
  *  A base class for compilation messages.
- *
- *  @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
 public class LocatedMessage extends SimpleMessage
 {

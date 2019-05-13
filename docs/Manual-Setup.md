@@ -12,7 +12,7 @@ On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Inst
 
 ### Setup Groovy-Eclipse Compiler
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.4.16* button, and let Eclipse restart.
+On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.4.17* button, and let Eclipse restart.
 
 ### Install Execution Environment Descriptions
 

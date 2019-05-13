@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,58 +40,6 @@ import org.eclipse.jdt.groovy.core.util.JavaConstants;
 public class ReconcilerUtils {
 
     private ReconcilerUtils() {}
-
-    public static class SimpleWorkingCopyOwner extends WorkingCopyOwner {
-        public final Set<IProblem> problems = new LinkedHashSet<>();
-        @Override
-        public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
-            return new IProblemRequestor() {
-                @Override
-                public void acceptProblem(IProblem problem) {
-                    problems.add(problem);
-                }
-                @Override
-                public void beginReporting() {
-                }
-                @Override
-                public void endReporting() {
-                }
-                @Override
-                public boolean isActive() {
-                    return true;
-                }
-            };
-        }
-    }
-
-    public static class ReconcileResults {
-        public final Map<ICompilationUnit, Long> reconcileTimes = new LinkedHashMap<>();
-
-        public long getReconcileTime(ICompilationUnit unit) {
-            return reconcileTimes.get(unit);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder s = new StringBuilder();
-            s.append("Reconcile times for " + reconcileTimes.size() + " units\n");
-            long totaltime = 0L;
-            for (Map.Entry<ICompilationUnit, Long> entry : reconcileTimes.entrySet()) {
-                s.append(entry.getValue() + "ms " + entry.getKey().getElementName() + "\n");
-                totaltime += entry.getValue();
-            }
-            s.append("Total time spent reconciling: " + totaltime + "ms\n");
-            return s.toString();
-        }
-
-        public long getTotalTimeSpentReconciling() {
-            long totaltime = 0L;
-            for (Map.Entry<ICompilationUnit, Long> entry : reconcileTimes.entrySet()) {
-                totaltime += entry.getValue();
-            }
-            return totaltime;
-        }
-    }
 
     //--------------------------------------------------------------------------
 
@@ -159,5 +107,62 @@ public class ReconcilerUtils {
             }
         }
         return null;
+    }
+
+    //--------------------------------------------------------------------------
+
+    public static class ReconcileResults {
+        public final Map<ICompilationUnit, Long> reconcileTimes = new LinkedHashMap<>();
+
+        public long getReconcileTime(ICompilationUnit unit) {
+            return reconcileTimes.get(unit);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            s.append("Reconcile times for " + reconcileTimes.size() + " units\n");
+            long totaltime = 0L;
+            for (Map.Entry<ICompilationUnit, Long> entry : reconcileTimes.entrySet()) {
+                s.append(entry.getValue() + "ms " + entry.getKey().getElementName() + "\n");
+                totaltime += entry.getValue();
+            }
+            s.append("Total time spent reconciling: " + totaltime + "ms\n");
+            return s.toString();
+        }
+
+        public long getTotalTimeSpentReconciling() {
+            long totaltime = 0L;
+            for (Map.Entry<ICompilationUnit, Long> entry : reconcileTimes.entrySet()) {
+                totaltime += entry.getValue();
+            }
+            return totaltime;
+        }
+    }
+
+    public static class SimpleWorkingCopyOwner extends WorkingCopyOwner {
+        public final Set<IProblem> problems = new LinkedHashSet<>();
+        @Override
+        public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
+            return new IProblemRequestor() {
+                @Override
+                public void acceptProblem(IProblem problem) {
+                    problems.add(problem);
+                }
+
+                @Override
+                public void beginReporting() {
+                }
+
+                @Override
+                public void endReporting() {
+                }
+
+                @Override
+                public boolean isActive() {
+                    return true;
+                }
+            };
+        }
     }
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,13 +59,13 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectLoggerFieldInClass() {
         assertCodeSelect(['''\
-            @groovy.util.logging.Log
-            class Foo {
-              String str
-              void meth() {
-                log.info "$str msg"
-              }
-            }'''.stripIndent()
+            |@groovy.util.logging.Log
+            |class Foo {
+            |  String str
+            |  void meth() {
+            |    log.info "$str msg"
+            |  }
+            |}'''.stripMargin()
         ], 'log')
     }
 
@@ -73,15 +73,15 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     void testCodeSelectLoggerFieldInClass_staticImportConflict() {
         // first import exposes Math.log
         def elem = assertCodeSelect(['''\
-            import static java.lang.Math.*
-            import groovy.util.logging.Log
-            @Log
-            class Foo {
-              String str
-              def meth() {
-                log.info "$str msg"
-              }
-            }'''.stripIndent()
+            |import static java.lang.Math.*
+            |import groovy.util.logging.Log
+            |@Log
+            |class Foo {
+            |  String str
+            |  def meth() {
+            |    log.info "$str msg"
+            |  }
+            |}'''.stripMargin()
         ], 'log')
 
         assert elem instanceof IField
@@ -90,9 +90,9 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectScriptFieldInClass() {
         assertCodeSelect(['''\
-            import groovy.transform.Field
-            @Field String str
-            '''.stripIndent()
+            |import groovy.transform.Field
+            |@Field String str
+            |'''.stripMargin()
         ], 'str')
     }
 
@@ -179,45 +179,45 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait1() {
         def elem = assertCodeSelect(['''\
-            trait T {
-              private String f
-            }
-            class C implements T {
-              def m() {
-                T__f
-              }
-            }
-            '''.stripIndent()], 'T__f', 'f')
+            |trait T {
+            |  private String f
+            |}
+            |class C implements T {
+            |  def m() {
+            |    T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'T__f', 'f')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait2() {
         def elem = assertCodeSelect(['''\
-            trait T {
-              private static String f
-            }
-            class C implements T {
-              def m() {
-                T__f
-              }
-            }
-            '''.stripIndent()], 'T__f', 'f')
+            |trait T {
+            |  private static String f
+            |}
+            |class C implements T {
+            |  def m() {
+            |    T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'T__f', 'f')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/756
     void testCodeSelectFieldFromTrait3() {
         def elem = assertCodeSelect(['''\
-            trait T {
-              private static final String f = ""
-            }
-            class C implements T {
-              def m() {
-                T__f
-              }
-            }
-            '''.stripIndent()], 'T__f', 'f')
+            |trait T {
+            |  private static final String f = ""
+            |}
+            |class C implements T {
+            |  def m() {
+            |    T__f
+            |  }
+            |}
+            |'''.stripMargin()], 'T__f', 'f')
         assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 }

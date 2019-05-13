@@ -62,7 +62,6 @@ import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Finds the completion node for an offset and calculates the content assist context.
@@ -266,12 +265,12 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     protected void visitAnnotation(AnnotationNode node) {
-        if (node.getStart() <= completionOffset && completionOffset <= node.getClassNode().getEnd()) {
-            createContext(node, declarationStack.getLast(), ContentAssistLocation.ANNOTATION);
+        if (completionOffset >= node.getClassNode().getStart() && completionOffset <= node.getClassNode().getEnd()) {
+            createContext(node.getClassNode(), node, ContentAssistLocation.ANNOTATION);
         }
         blockStack.add(node);
         super.visitAnnotation(node);
-        int annoEnd = GroovyUtils.endOffset(node),
+        int annoEnd = node.getEnd(),
             nameEnd = node.getClassNode().getEnd();
         if (annoEnd > nameEnd) { // annotation has a body
             if (completionOffset > nameEnd && completionOffset < annoEnd) {

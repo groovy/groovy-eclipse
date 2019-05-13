@@ -31,7 +31,6 @@ import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
 /**
  * This class is used to describe generic type signatures for ClassNodes.
  *
- * @author Jochen Theodorou
  * @see ClassNode
  */
 public class GenericsType extends ASTNode {

@@ -24,11 +24,13 @@ import org.junit.runners.Suite
 
     // Basic tests
     org.eclipse.jdt.groovy.core.tests.basic.AnnotationsTests,
+    org.eclipse.jdt.groovy.core.tests.basic.EnumerationTests,
     org.eclipse.jdt.groovy.core.tests.basic.ErrorRecoveryTests,
     org.eclipse.jdt.groovy.core.tests.basic.GenericsTests,
     org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests,
-    org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8,
     org.eclipse.jdt.groovy.core.tests.basic.ImportsTests,
+    org.eclipse.jdt.groovy.core.tests.basic.InnerClassTests,
+    org.eclipse.jdt.groovy.core.tests.basic.Java8Tests,
     org.eclipse.jdt.groovy.core.tests.basic.TraitsTests,
 
     // Xform tests

@@ -33,6 +33,7 @@ public abstract class ProcessingUnit {
      * The current phase
      */
     protected int phase;
+
     /**
      * Set true if phase is finished
      */
@@ -60,13 +61,11 @@ public abstract class ProcessingUnit {
     /**
      * Initialize the ProcessingUnit to the empty state.
      */
-    public ProcessingUnit(CompilerConfiguration configuration, GroovyClassLoader classLoader, ErrorCollector er) {
+    public ProcessingUnit(final CompilerConfiguration configuration, final GroovyClassLoader classLoader, final ErrorCollector errorCollector) {
         this.phase = Phases.INITIALIZATION;
-        this.configuration = configuration;
-        this.setClassLoader(classLoader);
+        setClassLoader(classLoader);
         configure(configuration != null ? configuration : CompilerConfiguration.DEFAULT);
-        if (er == null) er = new ErrorCollector(getConfiguration());
-        this.errorCollector = er;
+        this.errorCollector = errorCollector != null ? errorCollector : new ErrorCollector(getConfiguration());
     }
 
     /**
@@ -75,7 +74,6 @@ public abstract class ProcessingUnit {
     public void configure(CompilerConfiguration configuration) {
         this.configuration = configuration;
     }
-
 
     public CompilerConfiguration getConfiguration() {
         return configuration;
@@ -96,9 +94,8 @@ public abstract class ProcessingUnit {
      * Sets the class loader for use by this ProcessingUnit.
      */
     public void setClassLoader(final GroovyClassLoader loader) {
-        // Classloaders should only be created inside doPrivileged block
-        // This code creates a classloader, which needs permission if a security manage is installed.
-        // If this code might be invoked by code that does not have security permissions, then the classloader creation needs to occur inside a doPrivileged block.
+        // Classloaders should only be created inside a doPrivileged block in case
+        // this method is invoked by code that does not have security permissions
         this.classLoader = loader != null ? loader : AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
             public GroovyClassLoader run() {
                 ClassLoader parent = Thread.currentThread().getContextClassLoader();

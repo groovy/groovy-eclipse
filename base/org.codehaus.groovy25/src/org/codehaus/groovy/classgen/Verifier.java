@@ -350,6 +350,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         // GRECLIPSE end
         constructor.setHasNoRealSourcePosition(true);
         node.addConstructor(constructor);
+        markAsGenerated(node, constructor);
     }
 
     private void addStaticMetaClassField(final ClassNode node, final String classInternalName) {
@@ -1367,13 +1368,20 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if ((overridingMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
         if (oldMethod.isPrivate()) return null;
 
+        // GRECLIPSE add -- GROOVY-9059
+        if (oldMethod.getGenericsTypes() != null)
+            genericsSpec = GenericsUtils.addMethodGenerics(oldMethod, genericsSpec);
+        // GRECLIPSE end
+
         // parameters
         boolean normalEqualParameters = equalParametersNormal(overridingMethod, oldMethod);
         boolean genericEqualParameters = equalParametersWithGenerics(overridingMethod, oldMethod, genericsSpec);
         if (!normalEqualParameters && !genericEqualParameters) return null;
 
+        /* GRECLIPSE edit -- GROOVY-9059
         //correct to method level generics for the overriding method
         genericsSpec = GenericsUtils.addMethodGenerics(overridingMethod, genericsSpec);
+        */
 
         // return type
         ClassNode mr = overridingMethod.getReturnType();

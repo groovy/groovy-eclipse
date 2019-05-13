@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,48 +33,6 @@ import org.junit.Test
  * are not in the same {@link IJavaElement} as the target node.
  */
 final class PartialVisitTests extends BrowsingTestSuite {
-
-    private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
-        private final Set<String> skippedElements = new HashSet<String>()
-
-        public PartialCodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
-            super(node, unit)
-        }
-
-        @Override
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-            VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
-            if (status == VisitStatus.CANCEL_MEMBER) {
-                assert !skippedElements.contains(getElementName(enclosingElement)) :
-                    "Element has been skipped twice, but should only have been skipped once: $enclosingElement"
-                skippedElements.add(getElementName(enclosingElement))
-            }
-            return status
-        }
-    }
-
-    private static class PartialCodeSelectHelper extends CodeSelectHelper {
-        private Set<String> skippedElements = new HashSet<String>()
-
-        @Override
-        protected CodeSelectRequestor createRequestor(ASTNode node, Region r1, Region r2, GroovyCompilationUnit unit) {
-            PartialCodeSelectRequestor partialCodeSelectRequestor = new PartialCodeSelectRequestor(node, unit)
-            skippedElements = partialCodeSelectRequestor.skippedElements
-            return partialCodeSelectRequestor
-        }
-
-        @Override
-        public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
-            skippedElements.clear()
-            return super.select(unit, start, length)
-        }
-
-        @Override
-        public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
-            skippedElements.clear()
-            return super.selectASTNode(unit, start, length)
-        }
-    }
 
     private final PartialCodeSelectHelper helper = new PartialCodeSelectHelper()
 
@@ -124,16 +82,16 @@ final class PartialVisitTests extends BrowsingTestSuite {
         assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'x', 'y', 'z', 'Inner')
     }
 
-    //
+    //--------------------------------------------------------------------------
 
     private static String getElementName(IJavaElement element) {
         if (element instanceof IMethod) {
             try {
-                String[] params = ((IMethod) element).getParameterNames()
-                return element.getElementName() + (params.length < 1 ? '()' : Arrays.toString(params).replace('[', '(').replace(']', ')'))
+                String[] params = ((IMethod) element).parameterNames
+                return element.elementName + (params.length < 1 ? '()' : Arrays.toString(params).replace('[', '(').replace(']', ')'))
             } catch (JavaModelException e) {}
         }
-        return element.getElementName()
+        return element.elementName
     }
 
     private static Region indexOf(String contents, String string) {
@@ -147,14 +105,56 @@ final class PartialVisitTests extends BrowsingTestSuite {
     private void assertCodeSelectWithSkippedNames(String contents, Region region, String expectedElementName, String... skippedElementNames) {
         GroovyCompilationUnit unit = addGroovySource(contents, 'Hello')
 
-        IJavaElement[] elems = helper.select(unit, region.getOffset(), region.getLength())
+        IJavaElement[] elems = helper.select(unit, region.offset, region.length)
         assertEquals('Should have found a single selection: ' + Arrays.toString(elems), 1, elems.length)
         assertEquals('Wrong element selected', expectedElementName, getElementName(elems[0]))
 
-        for (String skipped : skippedElementNames) {
+        for (skipped in skippedElementNames) {
             assertTrue('Element ' + skipped + ' should have been skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, helper.skippedElements.contains(skipped))
         }
 
         assertEquals('Wrong number of elements skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, skippedElementNames.length, helper.skippedElements.size())
+    }
+
+    private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
+        private final Set<String> skippedElements = new HashSet<String>()
+
+        PartialCodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
+            super(node, unit)
+        }
+
+        @Override
+        VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+            VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
+            if (status == VisitStatus.CANCEL_MEMBER) {
+                assert !skippedElements.contains(getElementName(enclosingElement)) :
+                    "Element has been skipped twice, but should only have been skipped once: $enclosingElement"
+                skippedElements.add(getElementName(enclosingElement))
+            }
+            return status
+        }
+    }
+
+    private static class PartialCodeSelectHelper extends CodeSelectHelper {
+        private Set<String> skippedElements = new HashSet<String>()
+
+        @Override
+        protected CodeSelectRequestor createRequestor(ASTNode node, Region r1, Region r2, GroovyCompilationUnit unit) {
+            PartialCodeSelectRequestor partialCodeSelectRequestor = new PartialCodeSelectRequestor(node, unit)
+            skippedElements = partialCodeSelectRequestor.skippedElements
+            return partialCodeSelectRequestor
+        }
+
+        @Override
+        public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
+            skippedElements.clear()
+            return super.select(unit, start, length)
+        }
+
+        @Override
+        ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
+            skippedElements.clear()
+            return super.selectASTNode(unit, start, length)
+        }
     }
 }

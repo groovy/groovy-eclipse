@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -434,15 +434,15 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     @Test
     void testSelectInnerType7() {
         String contents = '''\
-            @groovy.transform.TypeChecked
-            class Outer {
-              def method() { }
-              @Deprecated
-              static class Inner extends Object { }
-              @Deprecated
-              abstract static class Inert extends Number { }
-            }
-            '''.stripIndent()
+            |@groovy.transform.TypeChecked
+            |class Outer {
+            |  def method() { }
+            |  @Deprecated
+            |  static class Inner extends Object { }
+            |  @Deprecated
+            |  abstract static class Inert extends Number { }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Inert')
     }
 
@@ -842,12 +842,12 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     @Test
     void testSelectMethodCallGenericType1() {
         String contents = '''\
-            import java.util.regex.*
-            class Foo {
-              def <T> T m() { null }
-            }
-            new Foo().<Matcher>m()
-            '''.stripIndent()
+            |import java.util.regex.*
+            |class Foo {
+            |  def <T> T m() { null }
+            |}
+            |new Foo().<Matcher>m()
+            |'''.stripMargin()
         assertCodeSelect([contents], 'Matcher')
     }
 

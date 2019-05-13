@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,13 +37,15 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
         if (isGroovy) {
             env.addGroovyJars(projectPath);
             IPath path = env.addGroovyClass(root, "p1", "Hello",
-                "package p1;\n"+
-                "public class Hello {\n"+
-                "   static def main(String[] args) {\n"+
-                "      print \"Hello world\"\n"+
-                "   }\n"+
-                "}\n"
-            );
+                //@formatter:off
+                "package p1;\n" +
+                "public class Hello {\n" +
+                "   static def main(String[] args) {\n" +
+                "      print \"Hello world\"\n" +
+                "   }\n" +
+                "}\n");
+                //@formatter:on
+
             fullBuild(projectPath);
 
             return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
@@ -78,32 +80,42 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
         IPath root = createEmptyGroovyProject();
 
         env.addClass(root, "p", "Anno1.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            //@formatter:off
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno1 { Class<?> value(); }\n");
+            //@formatter:on
 
         env.addClass(root, "p", "Anno2.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            //@formatter:off
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno2 { }\n");
+            //@formatter:on
 
         env.addClass(root, "p", "Anno3.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            //@formatter:off
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno3 { String value(); }\n");
+            //@formatter:on
 
         env.addClass(root, "p", "Anno4.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            //@formatter:off
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno4 { Class<?> value1(); }\n");
+            //@formatter:on
 
         env.addClass(root, "p", "Target.java",
-            "package p;\n"+
+            //@formatter:off
+            "package p;\n" +
             "class Target { }");
+            //@formatter:on
 
         return root;
     }

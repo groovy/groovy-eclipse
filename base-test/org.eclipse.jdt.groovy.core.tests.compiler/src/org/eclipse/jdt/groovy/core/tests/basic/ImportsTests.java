@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testImports() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/First.groovy",
             "package p\n" +
             "import java.util.regex.Pattern\n" +
@@ -46,13 +47,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  Pattern getPattern() {}\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testDefaultImportsJavaIO() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/First.groovy",
             "package p\n" +
             "import java.util.regex.Pattern\n" +
@@ -62,13 +66,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  File getFile() {}\n" + // java.io.File should be picked up magically
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testDefaultImportsBigDecimal1() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Main.java",
             "package p;\n" +
             "public class Main {\n" +
@@ -82,13 +89,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Big {\n" +
             "  BigDecimal amount = 3.14\n" +
             "}\n",
-        },
-        "3.14");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3.14");
     }
 
     @Test
     public void testDefaultImportsBigDecimal2() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Big.groovy",
             "package p\n" +
             "class Big {\n" +
@@ -97,14 +107,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  BigDecimal getAmount() { return 0 }\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
-    @Test
+    @Test // this version has an import; that can make a difference...
     public void testDefaultImportsBigDecimal3() {
-        // this version has an import; that can make a difference...
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Big.groovy",
             "package p\n" +
             "import java.util.regex.Pattern\n" +
@@ -114,13 +126,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  BigDecimal getAmount() { return 0 }\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testDefaultImportsBigDecimal4() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Big.groovy",
             "package p\n" +
             "class Big {\n" +
@@ -129,13 +144,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  private static final BigDecimal FIXED_AMOUNT = BigDecimal.TEN\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testDefaultImportsBigInteger1() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Main.java",
             "package p;\n" +
             "public class Main {\n" +
@@ -149,13 +167,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Big {\n" +
             "  BigInteger amount = 10\n" +
             "}\n",
-        },
-        "10");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "10");
     }
 
     @Test
     public void testDefaultImportsBigInteger2() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Big.groovy",
             "package p\n" +
             "class Big {\n" +
@@ -164,13 +185,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  BigInteger getAmount() { return 0 }\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testDefaultImportsBigInteger3() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Big.groovy",
             "package p\n" +
             "class Big {\n" +
@@ -179,13 +203,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  private static final BigInteger FIXED_AMOUNT = BigInteger.TEN\n" +
             "}\n",
-        },
-        "success");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
     }
 
     @Test
     public void testStarImports1() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Script.groovy",
             "import foo.*\n" +
             "println new Pojo().class.name\n",
@@ -193,13 +220,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "foo/Pojo.java",
             "package foo;\n" +
             "public class Pojo {}\n",
-        },
-        "foo.Pojo");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo.Pojo");
     }
 
     @Test
     public void testStarImports2() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Script.groovy",
             "import foo.bar.*\n" +
             "println new Pojo().class.name\n",
@@ -207,13 +237,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "foo/bar/Pojo.java",
             "package foo.bar;\n" +
             "public class Pojo {}\n",
-        },
-        "foo.bar.Pojo");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo.bar.Pojo");
     }
 
     @Test
     public void testStarImports3() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Wibble.groovy",
             "import a.b.c.*\n" +
             "class Wibble {\n" +
@@ -226,13 +259,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "a/b/c/Process.java",
             "package a.b.c;\n" +
             "public class Process {}\n",
-        },
-        "class a.b.c.Process");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "class a.b.c.Process");
     }
 
     @Test // 'import static a.B.FOO'
     public void testStaticImport1() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "b/Run.groovy",
             "package b\n" +
             "import static a.B.FOO\n" +
@@ -241,8 +277,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "a/B.groovy",
             "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
 
         ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
         assertTrue(ref.isStatic());
@@ -253,7 +291,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test // 'import static a.B.*'
     public void testStaticImport2() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "b/Run.groovy",
             "package b\n" +
             "import static a.B.*\n" +
@@ -262,8 +301,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "a/B.groovy",
             "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
 
         ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
         assertTrue(ref.isStatic());
@@ -272,7 +313,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test // 'import static a.B.FOO as Wibble'
     public void testStaticImport3() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "b/Run.groovy",
             "package b\n" +
             "import static a.B.FOO as Wibble\n" +
@@ -281,8 +323,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "a/B.groovy",
             "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
 
         ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
         assertTrue(ref.isStatic());
@@ -293,7 +337,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testStaticImport4() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "a/B.groovy",
             "package a\n" +
             "interface B {\n" +
@@ -307,12 +352,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  @SuppressWarnings(C) def one() {}\n" +
             "  @SuppressWarnings(C) def two() {}\n" +
             "}",
-        });
+        };
+        //@formatter:on
+
+        runConformTest(sources);
     }
 
     @Test
     public void testStaticImports_JtoG() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Run.java",
             "package p;\n" +
             "import static p.q.r.Colour.*;\n" +
@@ -327,13 +376,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "p/q/r/Colour.groovy",
             "package p.q.r;\n" +
             "enum Colour { Red,Green,Blue; }\n",
-        },
-        "RedGreenBlue");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "RedGreenBlue");
     }
 
     @Test
     public void testStaticImports_GtoJ() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Run.groovy",
             "package p;\n" +
             "import static p.q.r.Colour.*;\n" +
@@ -348,13 +400,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "p/q/r/Colour.java",
             "package p.q.r;\n" +
             "enum Colour { Red,Green,Blue; }\n",
-        },
-        "RedGreenBlue");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "RedGreenBlue");
     }
 
     @Test
     public void testStaticImports2_GtoJ() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Run.java",
             "package p;\n" +
             "import static p.q.r.Colour.*;\n" +
@@ -371,13 +426,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    println \"${name()}\";\n" +
              "  }\n" +
              "}\n",
-        },
-        "Red");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Red");
     }
 
     @Test
     public void testImportAliasing() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import q.A as AA;\n" +
@@ -402,15 +460,18 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "public class A {\n" +
             "  public static void run() { System.out.print(\"r.A.run\");}\n" +
             "}\n",
-        },
-        "q.A.run r.A.run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "q.A.run r.A.run");
     }
 
     // Test that the alias is recognized when referenced as superclass
     // WMTW: the code Scope.getShortNameFor()
     @Test
     public void testImportAliasingGoober() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import java.util.HashMap as Goober;\n" +
@@ -419,13 +480,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    print 'q.A.run'\n" +
             "  }\n" +
             "}\n",
-        },
-        "q.A.run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "q.A.run");
     }
 
     @Test
     public void testImportAliasingStatic() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/Run.groovy",
             "package p\n" +
             "import static java.lang.Math.PI as pi\n" +
@@ -433,13 +497,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "import static java.lang.Math.cos as cosine\n" +
             "\n" +
             "print sine(pi / 6) + cosine(pi / 3)\n",
-        },
-        "1.0");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1.0");
     }
 
     @Test
     public void testImportAliasingAndOldReference() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import q.A as AA;\n" +
@@ -448,7 +515,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "  public static void main(String[] argv) {\n" +
             "    callitOne(new AA());\n" +
             "  }\n" +
-            "  public static void callitOne(A a) { }\n" + // no A imported!
+            "  public static void callitOne(A a) {}\n" + // no A imported!
             "}\n",
 
             "q/A.java",
@@ -462,18 +529,21 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "public class A {\n" +
             "  public static void run() { System.out.print(\"r.A.run\");}\n" +
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in p\\C.groovy (at line 8)\n" +
-        "\tpublic static void callitOne(A a) { }\n" +
-        "\t                             ^\n" +
-        "Groovy:unable to resolve class A\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in p\\C.groovy (at line 8)\n" +
+            "\tpublic static void callitOne(A a) {}\n" +
+            "\t                             ^\n" +
+            "Groovy:unable to resolve class A\n" +
+            "----------\n");
     }
 
     @Test
     public void testAliasing_GRE473() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "import java.util.regex.Pattern as JavaPattern\n" +
             "class Pattern {JavaPattern javaPattern}\n" +
@@ -481,31 +551,37 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "assert \"123\" ==~ p.javaPattern\n" +
             "print 'success '\n" +
             "print '['+p.class.name+']['+JavaPattern.class.name+']'\n",
-        },
-        "success [Pattern][java.util.regex.Pattern]");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success [Pattern][java.util.regex.Pattern]");
     }
 
     @Test
     public void testAliasing_GRE473_2() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "import java.util.regex.Pattern\n" +
             "class Pattern {Pattern javaPattern}\n" +
             "def p = new Pattern(javaPattern:~/\\d+/)\n" +
             "assert \"123\" ==~ p.javaPattern\n" +
             "print 'success'\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\timport java.util.regex.Pattern\n" +
-        "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
-        "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\timport java.util.regex.Pattern\n" +
+            "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
+            "----------\n");
     }
 
     @Test
     public void testImportInnerInner01() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "public class C {\n" +
@@ -525,13 +601,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n",
-        },
-        "p.Wibble.Inner.Inner2.run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "p.Wibble.Inner.Inner2.run");
     }
 
     @Test
     public void testImportInnerClass01_JavaCase() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.java",
             "package p;\n" +
             "import x.y.z.Wibble.Inner;\n" +
@@ -550,14 +629,17 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    public static void run() { System.out.print(\"q.A.run \");}\n" +
             "  }\n" +
             "}\n",
-        },
-        "q.A.run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "q.A.run");
     }
 
     // FIXASC need to look at all other kinds of import - statics/double nested static classes/etc
     @Test
     public void testImportInnerClass01_GroovyCase() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import x.y.z.Wibble.Inner\n" +
@@ -576,13 +658,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    public static void run() { System.out.print(\"q.A.run \");}\n" +
             "  }\n" +
             "}\n",
-        },
-        "q.A.run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "q.A.run");
     }
 
     @Test
     public void testImportInnerClass() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import x.y.z.Wibble.Inner /*as WibbleInner*/;\n" +
@@ -601,13 +686,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    public void run() { System.out.print(\"run\");}\n" +
             "  }\n" +
             "}\n",
-        },
-        "run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "run");
     }
 
     @Test
     public void testImportAliasingInnerClass() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/C.groovy",
             "package p;\n" +
             "import x.y.z.Wibble.Inner as WibbleInner;\n" +
@@ -625,8 +713,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    public void run() { System.out.print(\"run \");}\n" +
             "  }\n" +
             "}\n",
-        },
-        "run");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "run");
     }
 
     @Test
@@ -640,7 +730,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "configuration.addCompilationCustomizers(ic)\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -655,8 +746,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -670,7 +763,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -685,8 +779,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -700,7 +796,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -715,8 +812,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -731,7 +830,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -753,8 +853,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type2 {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -770,7 +872,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -784,8 +887,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package com.foo\n" + "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -801,7 +906,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -815,8 +921,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package com.foo\n" + "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -833,7 +941,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -854,8 +963,10 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class TypeB {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
@@ -871,7 +982,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -885,14 +997,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "package com.foo\n" + "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
-        "\tType.m()\n" +
-        "\t^^^^\n" +
-        "Groovy:Apparent variable 'Type' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
-        "----------\n",
-        options);
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+            "\tType.m()\n" +
+            "\t^^^^\n" +
+            "Groovy:Apparent variable 'Type' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "----------\n",
+            options);
     }
 
     @Test
@@ -906,7 +1020,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -921,25 +1036,27 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in com\\bar\\Runner.groovy (at line 1)\n" +
-        "\tpackage com.bar\n" +
-        "\t^\n" +
-        "Groovy:unable to resolve class com.foo.Type2\n" +
-        "----------\n" +
-        "2. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
-        "\tType.m()\n" +
-        "\t^^^^\n" +
-        "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
-        "----------\n" +
-        "----------\n" +
-        "1. ERROR in com\\foo\\Type.groovy (at line 1)\n" +
-        "\tpackage com.foo\n" +
-        "\t^\n" +
-        "Groovy:unable to resolve class com.foo.Type2\n" +
-        "----------\n",
-        options);
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in com\\bar\\Runner.groovy (at line 1)\n" +
+            "\tpackage com.bar\n" +
+            "\t^\n" +
+            "Groovy:unable to resolve class com.foo.Type2\n" +
+            "----------\n" +
+            "2. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+            "\tType.m()\n" +
+            "\t^^^^\n" +
+            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+            "----------\n" +
+            "----------\n" +
+            "1. ERROR in com\\foo\\Type.groovy (at line 1)\n" +
+            "\tpackage com.foo\n" +
+            "\t^\n" +
+            "Groovy:unable to resolve class com.foo.Type2\n" +
+            "----------\n",
+            options);
     }
 
     @Test
@@ -953,7 +1070,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -968,14 +1086,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
             "  public static void m() {}\n" +
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
-        "\tType.m()\n" +
-        "\t^^^^\n" +
-        "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
-        "----------\n",
-        options);
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+            "\tType.m()\n" +
+            "\t^^^^\n" +
+            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+            "----------\n",
+            options);
     }
 
     @Test
@@ -994,7 +1114,8 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "}\n"
         ).getAbsolutePath());
 
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
             "class Runner {\n" +
@@ -1009,13 +1130,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "class Type {\n" +
                 "  public static void m() {}\n" +
             "}\n",
-        },
-        "done", options);
+        };
+        //@formatter:on
+
+        runConformTest(sources, "done", options);
     }
 
     @Test
     public void testNonTerminalMissingImport() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "p/X.groovy",
             "package p;\n" +
             "import a.b.c.D;\n"+
@@ -1024,18 +1148,21 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "    print \"success\"\n"+
             "  }\n"+
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in p\\X.groovy (at line 2)\n" +
-        "\timport a.b.c.D;\n" +
-        "\t       ^^^^^^^\n" +
-        "Groovy:unable to resolve class a.b.c.D\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 2)\n" +
+            "\timport a.b.c.D;\n" +
+            "\t       ^^^^^^^\n" +
+            "Groovy:unable to resolve class a.b.c.D\n" +
+            "----------\n");
     }
 
     @Test
     public void testAmbiguous_GRE945_gu() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1048,13 +1175,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "Factory.groovy",
             "package bug.factory\n" +
             "class Factory { static foo() { print 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_jl() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1067,13 +1197,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "StringBuffer.groovy",
             "package bug.factory\n" +
             "class StringBuffer { static String foo() { return 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_bothFromSource() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import a.*\n" +
             "import b.*\n" +
@@ -1091,13 +1224,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "b/A.groovy",
             "package b\n" +
             "class A { static String foo() { return 'def'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_bothFromSource_2() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import b.*\n" +
             "import a.*\n" +
@@ -1115,13 +1251,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "b/A.groovy",
             "package b\n" +
             "class A { static String foo() { return 'def'}}\n",
-        },
-        "def");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "def");
     }
 
     @Test
     public void testAmbiguous_GRE945_bothFromSource_3() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import b.*\n" +
             "import a.*\n" +
@@ -1139,13 +1278,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "b/Process.groovy",
             "package b\n" +
             "class Process { static String foo() { return 'def'}}\n",
-        },
-        "def");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "def");
     }
 
     @Test
     public void testAmbiguous_GRE945_ju() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1158,13 +1300,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "List.groovy",
             "package bug.factory\n" +
             "class List { static foo() { print 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_jn() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1177,13 +1322,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "Socket.groovy",
             "package bug.factory\n" +
             "class Socket { static foo() { print 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_gl() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1196,13 +1344,16 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "Tuple.groovy",
             "package bug.factory\n" +
             "class Tuple { static foo() { print 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testAmbiguous_GRE945_ji() {
-        runConformTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Code.groovy",
             "import bug.factory.*\n" +
             "class Code {\n" +
@@ -1215,74 +1366,88 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "Serializable.groovy",
             "package bug.factory\n" +
             "class Serializable { static foo() { print 'abc'}}\n",
-        },
-        "abc");
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
     }
 
     @Test
     public void testParsingBlankPackage() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "package \n" +
             "class Name { }\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tpackage \n" +
-        "\t^\n" +
-        "Groovy:Invalid package specification @ line 1, column 0.\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tpackage \n" +
+            "\t^\n" +
+            "Groovy:Invalid package specification @ line 1, column 0.\n" +
+            "----------\n");
     }
 
     @Test
     public void testParsingBlankPackage2() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "package ;\n" +
             "class Name { }\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tpackage ;\n" +
-        "\t^\n" +
-        "Groovy:Invalid package specification @ line 1, column 0.\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tpackage ;\n" +
+            "\t^\n" +
+            "Groovy:Invalid package specification @ line 1, column 0.\n" +
+            "----------\n");
     }
 
     @Test // does the second error now get reported after the package problem
     public void testParsingBlankPackage3() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "Foo.groovy",
             "package ;\n" +
             "class Name { \n" +
             "  asdf\n" +
             "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tpackage ;\n" +
-        "\t^\n" +
-        "Groovy:Invalid package specification @ line 1, column 0.\n" +
-        "----------\n" +
-        "2. ERROR in Foo.groovy (at line 3)\n" +
-        "\tasdf\n" +
-        "\t^\n" +
-        "Groovy:unexpected token: asdf @ line 3, column 3.\n" +
-        "----------\n");
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tpackage ;\n" +
+            "\t^\n" +
+            "Groovy:Invalid package specification @ line 1, column 0.\n" +
+            "----------\n" +
+            "2. ERROR in Foo.groovy (at line 3)\n" +
+            "\tasdf\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: asdf @ line 3, column 3.\n" +
+            "----------\n");
     }
 
     @Test
     public void testParsingBlankImport_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import "
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport \n" +
-        "\t^^^^^^^\n" +
-        "Groovy:unable to resolve class ?\n" +
-        "----------\n");
+            "import ",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport \n" +
+            "\t^^^^^^^\n" +
+            "Groovy:unable to resolve class ?\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1301,16 +1466,19 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImport2_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import ;"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport ;\n" +
-        "\t^^^^^^^\n" +
-        "Groovy:unable to resolve class ?\n" +
-        "----------\n");
+            "import ;",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport ;\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:unable to resolve class ?\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1329,16 +1497,19 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingDotTerminatedImport_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import foo."
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport foo.\n" +
-        "\t        ^\n" +
-        "Groovy:Invalid import @ line 1, column 8.\n" +
-        "----------\n");
+            "import foo.",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport foo.\n" +
+            "\t       ^\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1355,16 +1526,19 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImportStatic_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import static \n"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport static \n" +
-        "\t^^^^^^^^^^^^^^\n" +
-        "Groovy:unable to resolve class ?\n" +
-        "----------\n");
+            "import static \n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport static \n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class ?\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1384,16 +1558,19 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImportStatic2_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import static ;\n"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport static ;\n" +
-        "\t^^^^^^^^^^^^^^\n" +
-        "Groovy:unable to resolve class ?\n" +
-        "----------\n");
+            "import static ;\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport static ;\n" +
+            "\t^^^^^^^^^^^^^^\n" +
+            "Groovy:unable to resolve class ?\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1413,21 +1590,25 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingDotTerminatedImportStatic_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
-            "import static foo.Bar."
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport static foo.Bar.\n" +
-        "\t              ^^^^^^^\n" +
-        "Groovy:unable to resolve class foo.Bar\n" +
-        "----------\n" +
-        "2. ERROR in A.groovy (at line 1)\n" +
-        "\timport static foo.Bar.\n" +
-        "\t               ^\n" +
-        "Groovy:Invalid import @ line 1, column 15.\n" +
-        "----------\n");
+            "import static foo.Bar.",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport static foo.Bar.\n" +
+            "\t              ^\n" +
+            "Groovy:Invalid import @ line 1, column 15.\n" +
+            "----------\n" +
+            "2. ERROR in A.groovy (at line 1)\n" +
+            "\timport static foo.Bar.\n" +
+            "\t              ^^^^^^^\n" +
+            "Groovy:unable to resolve class foo.Bar\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1444,18 +1625,21 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
             "import foo.\n" +
             "\n" +
-            "class Wibble {}\n"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport foo.\n" +
-        "\t        ^\n" +
-        "Groovy:Invalid import @ line 1, column 8.\n" +
-        "----------\n");
+            "class Wibble {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport foo.\n" +
+            "\t       ^\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1472,18 +1656,21 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
             "import foo.\n" +
             "\n" +
-            "public class Wibble {}\n"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport foo.\n" +
-        "\t        ^\n" +
-        "Groovy:Invalid import @ line 1, column 8.\n" +
-        "----------\n");
+            "public class Wibble {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport foo.\n" +
+            "\t       ^\n" +
+            "Groovy:Invalid import @ line 1, column 8.\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
@@ -1500,18 +1687,21 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImportFollowedByClassDeclaration_538() {
-        runNegativeTest(new String[] {
+        //@formatter:off
+        String[] sources = {
             "A.groovy",
             "import\n" +
             "\n" +
-            "public class Wibble {}\n"
-        },
-        "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
-        "\timport\n" +
-        "\t^^^^^^\n" +
-        "Groovy:unable to resolve class ?\n" +
-        "----------\n");
+            "public class Wibble {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\timport\n" +
+            "\t^^^^^^\n" +
+            "Groovy:unable to resolve class ?\n" +
+            "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);

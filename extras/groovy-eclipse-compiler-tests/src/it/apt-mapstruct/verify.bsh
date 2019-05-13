@@ -1,0 +1,37 @@
+import java.io.*;
+
+String[] expectedClasses = {
+    "Car",
+    "CarDTO",
+    "CarMapper",
+    "CarMapperImpl",
+};
+
+String[] expectedSources = {
+    "CarMapperImpl.java"
+};
+
+String[] expectedTestClasses = {
+    "CarMapperTests",
+};
+
+for (String name : expectedClasses) {
+    File file = new File(basedir, "target/classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
+
+for (String name : expectedSources) {
+    File file = new File(basedir, "target/generated-sources/annotations/" + name);
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
+
+for (String name : expectedTestClasses) {
+    File file = new File(basedir, "target/test-classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}

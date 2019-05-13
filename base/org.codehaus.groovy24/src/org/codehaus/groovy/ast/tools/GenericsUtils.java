@@ -57,6 +57,11 @@ public class GenericsUtils {
     public static final GenericsType[] EMPTY_GENERICS_ARRAY = GenericsType.EMPTY_ARRAY;
     public static final String JAVA_LANG_OBJECT = "java.lang.Object";
 
+    // GRECLIPSE add
+    public static void clearParameterizedTypeCache() {
+    }
+    // GRECLIPSE end
+
     /**
      * Given a parameterized type and a generic type information, aligns actual type parameters. For example, if a
      * class uses generic type <pre>&lt;T,U,V&gt;</pre> (redirectGenericTypes), is used with actual type parameters

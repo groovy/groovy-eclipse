@@ -566,12 +566,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         errors.removeAll(errorsRecorded);
     }
 
-    private int getOffset(int[] lineSeparatorPositions, int line, int col) {
+    private static int getOffset(int[] lineSeparatorPositions, int line, int column) {
+        if (column < 1) column = 1;
+
         if (lineSeparatorPositions.length > (line - 2) && line > 1) {
-            return lineSeparatorPositions[line - 2] + col;
-        } else {
-            return col;
+            return (lineSeparatorPositions[line - 2] + column);
         }
+        return (column - 1);
     }
 
     //--------------------------------------------------------------------------
@@ -1543,26 +1544,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (AnnotationNode annotationNode : groovyAnnotations) {
                     ClassNode annoType = annotationNode.getClassNode();
                     TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
-                    annotationReference.sourceStart = GroovyUtils.startOffset(annotationNode);
-                    annotationReference.sourceEnd = GroovyUtils.endOffset(annotationNode) - 1;
+                    annotationReference.sourceStart = annotationNode.getStart();
+                    annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 
                     Map<String, Expression> memberValuePairs = annotationNode.getMembers();
                     if (memberValuePairs == null || memberValuePairs.isEmpty()) {
                         MarkerAnnotation annotation = new MarkerAnnotation(annotationReference, annotationReference.sourceStart);
                         annotations.add(annotation);
                     } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
-                        Map.Entry<String, Expression> memberValuePair = memberValuePairs.entrySet().iterator().next();
-                        Expression value = memberValuePair.getValue();
-                        //if (value instanceof AnnotationConstantExpression) {
-                        //	Annotation[] containees = createAnnotations(Collections.singletonList(
-                        //		(AnnotationNode) ((AnnotationConstantExpression) value).getValue()));
-                        //	ContainerAnnotation annotation = new ContainerAnnotation(containees[0], type, scope);
-                        //	annotations.add(annotation);
-                        //} else {
-                            SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
-                            annotation.memberValue = createAnnotationMemberExpression(value);
-                            annotations.add(annotation);
-                        //}
+                        SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
+                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"));
+                        annotations.add(annotation);
                     } else {
                         NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
                         annotation.memberValuePairs = createAnnotationMemberValuePairs(memberValuePairs);

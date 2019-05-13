@@ -124,7 +124,6 @@ import java.util.Map;
 
 /**
  * Generates Java class versions of Groovy classes using ASM.
- *
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -966,6 +965,7 @@ public class AsmClassGenerator extends ClassGenerator {
                                             new ClassExpression(outer),
                                             expression.getProperty()
                                     );
+                                    pexp.getObjectExpression().setSourcePosition(objectExpression);
                                     pexp.visit(controller.getAcg());
                                     return;
                                 }

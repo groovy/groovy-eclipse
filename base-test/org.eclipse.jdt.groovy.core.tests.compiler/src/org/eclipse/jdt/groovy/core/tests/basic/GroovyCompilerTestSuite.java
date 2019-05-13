@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
@@ -66,10 +68,11 @@ public abstract class GroovyCompilerTestSuite {
 
     protected static final long JDK7  = ClassFileConstants.JDK1_7;
     protected static final long JDK8  = ClassFileConstants.JDK1_8;
-    protected static final long JDK9  = ClassFileConstants.JDK9  ;
-    protected static final long JDK10 = ClassFileConstants.JDK10 ;
+    protected static final long JDK9  = ClassFileConstants.JDK9;
+    protected static final long JDK10 = ClassFileConstants.JDK10;
     protected static final long JDK11 = (55L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11));
+    protected static final long JDK12 = (56L << 16) + ClassFileConstants.MINOR_VERSION_0;
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11, JDK12));
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
@@ -124,7 +127,7 @@ public abstract class GroovyCompilerTestSuite {
                 System.arraycopy(cps, 0, newcps, 0, cps.length);
 
                 String[] ivyVersions = {"2.5.0", "2.4.0"};
-                String[] groovyVersions = {"3.0.0-indy", "2.5.6-indy", "2.4.16"};
+                String[] groovyVersions = {"3.0.0-indy", "2.5.7-indy", "2.4.17"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
@@ -134,7 +137,7 @@ public abstract class GroovyCompilerTestSuite {
                         if (groovyJar != null)
                             break;
                     }
-                    newcps[newcps.length-3] = resolve(groovyJar);
+                    newcps[newcps.length - 3] = resolve(groovyJar);
 
                     URL ivyJar = null;
                     for (String ivyVer : ivyVersions) {
@@ -142,13 +145,14 @@ public abstract class GroovyCompilerTestSuite {
                         if (ivyJar != null)
                             break;
                     }
-                    newcps[newcps.length-2] = resolve(ivyJar);
+                    newcps[newcps.length - 2] = resolve(ivyJar);
 
                     // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
                     // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
                     // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
                     // classpath for just this reason, hmm.
-                    newcps[newcps.length-1] = resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar"));
+                    URL xformsJar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar");
+                    newcps[newcps.length - 1] = resolve(xformsJar);
                 } catch (IOException e) {
                     Assert.fail("IOException thrown " + e.getMessage());
                 }
@@ -193,7 +197,8 @@ public abstract class GroovyCompilerTestSuite {
 
     protected final File createScript(CharSequence name, CharSequence contents) {
         String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
-        new File(folder).mkdirs(); Util.writeToFile(contents.toString(), folder + name);
+        new File(folder).mkdirs();
+        Util.writeToFile(contents.toString(), folder + name);
         return new File(folder + name);
     }
 
@@ -335,6 +340,29 @@ public abstract class GroovyCompilerTestSuite {
             }
         }
         return null;
+    }
+
+    /**
+     * Find the named file (which should have just been compiled) and for the named method determine
+     * the ClassNode for the return type and return the name of the classnode.
+     */
+    protected static String getReturnTypeOfMethod(String filename, String methodname) {
+        ModuleNode mn = getModuleNode(filename);
+        ClassNode cn = mn.getClasses().get(0);
+        MethodNode methodNode = cn.getMethod(methodname,
+            org.codehaus.groovy.ast.Parameter.EMPTY_ARRAY);
+        ClassNode returnType = methodNode.getReturnType();
+        return returnType.getName();
+    }
+
+    protected static String stringify(FieldDeclaration decl) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(decl.name);
+        sb.append(" sourceStart>sourceEnd:" + decl.sourceStart + ">" + decl.sourceEnd);
+        sb.append(" declSourceStart>declSourceEnd:" + decl.declarationSourceStart + ">" + decl.declarationSourceEnd);
+        sb.append(" modifiersSourceStart=" + decl.modifiersSourceStart); // first char of decls modifiers
+        sb.append(" endPart1Position:" + decl.endPart1Position); // char after type decl ('int x,y' is space)
+        return sb.toString();
     }
 
     protected static String stringify(TypeReference type) {

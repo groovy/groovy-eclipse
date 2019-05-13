@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -161,12 +161,9 @@ public class GroovyIndentation {
                     Statement code = method.getCode();
                     Parameter lastP = ps[ps.length - 1];
 
-                    // the line start is the line that contains the opening
-                    // paren of the parameters
-                    // This is not directly in the ast, must search
-                    int maybeMethodStart = (method.getAnnotations() != null && method.getAnnotations().size() > 0) ? method
-                            .getAnnotations().get(method.getAnnotations().size() - 1).getEnd() : method.getStart();
-
+                    // the line start is the line that contains the opening paren of the parameters
+                    int maybeMethodStart = (method.getAnnotations() != null && !method.getAnnotations().isEmpty())
+                        ? method.getAnnotations().get(method.getAnnotations().size() - 1).getEnd() : method.getStart();
                     List<Token> methodTokens = tokens.getTokens(maybeMethodStart, method.getParameters()[0].getStart());
 
                     int lineStart = method.getLineNumber();

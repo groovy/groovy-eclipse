@@ -141,7 +141,7 @@ public class GenericsUtils {
     }
 
     public static Map<GenericsTypeName, GenericsType> extractPlaceholders(ClassNode cn) {
-        Map<GenericsTypeName, GenericsType> ret = new HashMap<>();
+        Map<GenericsTypeName, GenericsType> ret = new HashMap<GenericsTypeName, GenericsType>();
         extractPlaceholders(cn, ret);
         return ret;
     }
@@ -320,6 +320,10 @@ public class GenericsUtils {
     }
 
     public static MethodNode correctToGenericsSpec(Map<String, ClassNode> genericsSpec, MethodNode mn) {
+        // GRECLIPSE add -- GROOVY-9059
+        if (mn.getGenericsTypes() != null)
+            genericsSpec = addMethodGenerics(mn, genericsSpec);
+        // GRECLIPSE end
         ClassNode correctedType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
         Parameter[] origParameters = mn.getParameters();
         Parameter[] newParameters = new Parameter[origParameters.length];
@@ -356,11 +360,27 @@ public class GenericsUtils {
         if (type.isGenericsPlaceHolder() && !exclusions.contains(type.getUnresolvedName())) {
             String name = type.getGenericsTypes()[0].getName();
             type = genericsSpec.get(name);
+            /* GRECLIPSE edit -- GROOVY-9059
             if (type != null && type.isGenericsPlaceHolder() && type.getGenericsTypes() == null) {
                 ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
                 placeholder.setGenericsPlaceHolder(true);
                 type = makeClassSafeWithGenerics(type, new GenericsType(placeholder));
             }
+            */
+            if (type != null && type.isGenericsPlaceHolder()) {
+                if (type.getGenericsTypes() == null) {
+                    // correct "T -> U" (no generics)
+                    ClassNode placeholder = ClassHelper.makeWithoutCaching(type.getUnresolvedName());
+                    placeholder.setGenericsPlaceHolder(true);
+                    return makeClassSafeWithGenerics(type, new GenericsType(placeholder));
+                } else if (type.hasMultiRedirect()) {
+                    // convert "S -> T -> U" to "T -> U"
+                    type = type.asGenericsType().getUpperBounds()[0];
+                    // continue to resolve "T -> U" if "T" is a placeholder
+                    return correctToGenericsSpecRecurse(genericsSpec, type, exclusions);
+                }
+            }
+            // GRECLIPSE end
         }
         if (type == null) type = ClassHelper.OBJECT_TYPE;
         GenericsType[] oldgTypes = type.getGenericsTypes();
@@ -415,6 +435,12 @@ public class GenericsUtils {
         if (type.isGenericsPlaceHolder()) {
             String name = type.getGenericsTypes()[0].getName();
             type = genericsSpec.get(name);
+            // GRECLIPSE add -- GROOVY-9059
+            if (type != null && type.isGenericsPlaceHolder() && type.hasMultiRedirect()) {
+                type = type.asGenericsType().getUpperBounds()[0];
+                return correctToGenericsSpec(genericsSpec, type);
+            }
+            // GRECLIPSE end
         }
         if (type == null) type = ClassHelper.OBJECT_TYPE;
         return type;
@@ -475,7 +501,7 @@ public class GenericsUtils {
                     ret.put(name, type);
                 } else {
                 */
-                    ret.put(name, sgt.getType());
+                    ret.putIfAbsent(name, sgt.getType());
                 //}
                 // GRECLIPSE end
             }

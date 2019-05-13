@@ -59,7 +59,11 @@
       <compilationParticipant
             class="org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant"
             createsProblems="true"
-            id="org.codehaus.groovy.eclipse.core.compilerCheckerParticipant">
+            id="org.codehaus.groovy.eclipse.core.compiler.checker">
+      </compilationParticipant>
+      <compilationParticipant
+            class="org.codehaus.groovy.eclipse.core.compiler.CompilerCleanerParticipant"
+            id="org.codehaus.groovy.eclipse.core.compiler.cleaner">
       </compilationParticipant>
    </extension>
 

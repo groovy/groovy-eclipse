@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,6 +34,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testNamedVariant1() {
+        //@formatter:off
         String[] sources = {
             "Script.groovy",
             "import groovy.transform.*\n" +
@@ -51,12 +52,14 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "  Integer r, g, b\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Color(r:12, g:12, b:42)");
     }
 
     @Test
     public void testNamedVariant2() {
+        //@formatter:off
         String[] sources = {
             "Script.groovy",
             "import groovy.transform.*\n" +
@@ -74,12 +77,14 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "  Integer r, g, b\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Color(r:1, g:2, b:3) 0");
     }
 
     @Test
     public void testNamedVariant3() {
+        //@formatter:off
         String[] sources = {
             "Script.groovy",
             "print(new Color(g:12, b:42, r:12))",
@@ -102,6 +107,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "  public static final Color BLACK = new Color(0, 0, 0)\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "Color(r:12, g:12, b:42)");
     }

@@ -20,6 +20,8 @@ package org.codehaus.groovy.classgen;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -52,6 +54,8 @@ import org.codehaus.groovy.syntax.Types;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
@@ -156,7 +160,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // if we are in a class and no variable is declared until
             // now, then we can break the loop, because we are allowed
             // to declare a variable of the same name as a class member
-            if (scope.getClassScope() != null) break;
+            if (scope.getClassScope() != null && !isAnonymous(scope.getClassScope())) break;
 
             if (scope.getDeclaredVariable(var.getName()) != null) {
                 // variable already declared
@@ -199,17 +203,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
-        // GRECLIPSE add -- GROOVY-5961
         if (isAnonymous(cn)) return null;
-        // GRECLIPSE end
         return findClassMember(cn.getOuterClass(), name);
     }
 
-    // GRECLIPSE add
     private static boolean isAnonymous(ClassNode node) {
         return (!node.isEnum() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
     }
-    // GRECLIPSE end
 
     // -------------------------------
     // different Variable based checks
@@ -225,9 +225,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         boolean crossingStaticContext = false;
         while (true) {
             crossingStaticContext = crossingStaticContext || scope.isInStaticContext();
-            Variable var1;
-            var1 = scope.getDeclaredVariable(var.getName());
 
+            Variable var1 = scope.getDeclaredVariable(var.getName());
             if (var1 != null) {
                 var = var1;
                 break;
@@ -256,10 +255,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     if (!(staticScope && !staticMember))
                         var = member;
                 }
-                // GRECLIPSE add -- GROOVY-5961
+                // GROOVY-5961
                 if (!isAnonymous(classScope))
-                // GRECLIPSE end
-                break;
+                    break;
             }
             scope = scope.getParent();
         }
@@ -275,7 +273,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null)) {
                 scope.putReferencedClassVariable(var);
             } else {
-                //var.setClosureSharedVariable(var.isClosureSharedVariable() || inClosure);
                 scope.putReferencedLocalVariable(var);
             }
             scope = scope.getParent();
@@ -418,8 +415,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         expression.setVariableScope(currentScope);
 
         if (expression.isParameterSpecified()) {
-            Parameter[] parameters = expression.getParameters();
-            for (Parameter parameter : parameters) {
+            for (Parameter parameter : expression.getParameters()) {
                 parameter.setInStaticContext(currentScope.isInStaticContext());
                 if (parameter.hasInitialExpression()) {
                     parameter.getInitialExpression().visit(this);
@@ -467,14 +463,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     public void visitClass(ClassNode node) {
         // AIC are already done, doing them here again will lead to wrong scopes
-        /* GRECLIPSE edit
-        if (node instanceof InnerClassNode) {
-            InnerClassNode in = (InnerClassNode) node;
-            if (in.isAnonymous() && !in.isEnum()) return;
-        }
-        */
         if (isAnonymous(node)) return;
-        // GRECLIPSE end
 
         pushState();
 
@@ -491,8 +480,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     /**
-     * Setup the current class node context.
-     * @param node
+     * Sets the current class node context.
      */
     public void prepareVisit(ClassNode node) {
         currentClass = node;
@@ -504,7 +492,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         inConstructor = isConstructor;
         node.setVariableScope(currentScope);
         visitAnnotations(node);
-        
+
         // GROOVY-2156
         Parameter[] parameters = node.getParameters();
         for (Parameter parameter : parameters) {
@@ -555,10 +543,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState();
         InnerClassNode innerClass = (InnerClassNode) call.getType();
         innerClass.setVariableScope(currentScope);
-        // GRECLIPSE add -- GROOVY-5961
         currentScope.setClassScope(innerClass);
         currentScope.setInStaticContext(false);
-        // GRECLIPSE end
         for (MethodNode method : innerClass.getMethods()) {
             Parameter[] parameters = method.getParameters();
             if (parameters.length == 0) parameters = null; // null means no implicit "it"

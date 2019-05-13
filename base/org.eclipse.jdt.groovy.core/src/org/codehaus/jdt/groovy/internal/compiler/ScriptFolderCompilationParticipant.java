@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,6 @@ import java.util.TreeMap;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -38,61 +37,40 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.BuildContext;
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
-import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
-import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Compilation participant for notification when a compile completes.  Copies
- * specified script files into the output directory.
+ * Copies script files into output directories.
  */
 public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
-    private IJavaProject project;
-
-    /**
-     * We care only about Groovy projects
-     */
     @Override
-    public boolean isActive(IJavaProject project) {
-        boolean hasGroovyNature = GroovyNature.hasGroovyNature(project.getProject());
-        if (!hasGroovyNature) {
-            return false;
-        }
-        this.project = project;
-        return true;
+    public boolean isActive(IJavaProject javaProject) {
+        IProject project = javaProject.getProject();
+        return GroovyNature.hasGroovyNature(project) && ScriptFolderSelector.isEnabled(project) && LanguageSupportFactory.isGroovyLanguageSupportInstalled();
     }
 
     @Override
-    public void buildStarting(BuildContext[] compiledFiles, boolean isBatch) {
-        if (!sanityCheckBuilder(compiledFiles)) {
-            // problem happened, do not copy
-            return;
-        }
-
+    public void buildStarting(BuildContext[] files, boolean isBatch) {
+        if (files == null || files.length < 1) return;
+        IProject project = files[0].getFile().getProject();
         try {
-            IProject iproject = project.getProject();
-            if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
-                return;
-            }
+            Map<IContainer, IContainer> sourceToOutput = null;
+            ScriptFolderSelector selector = new ScriptFolderSelector(project);
 
-            ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
-            Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
-            for (BuildContext compiledFile : compiledFiles) {
-                IFile file = compiledFile.getFile();
-                if (selector.getFileKind(file) == FileKind.SCRIPT) {
-                    IPath filePath = file.getFullPath();
-                    IContainer containingSourceFolder = findContainingSourceFolder(sourceToOut, filePath);
-
-                    // if null, that means the out folder is the same as the source folder
-                    if (containingSourceFolder != null) {
-                        IPath packagePath = findPackagePath(filePath, containingSourceFolder);
-                        IContainer out = sourceToOut.get(containingSourceFolder);
-                        copyFile(file, packagePath, out);
+            for (BuildContext file : files) {
+                if (selector.getFileKind(file.getFile()) == FileKind.SCRIPT) {
+                    IPath path = file.getFile().getFullPath();
+                    if (sourceToOutput == null) sourceToOutput = createSourceToOutput(project);
+                    IContainer sourceFolder = findContainingSourceFolder(sourceToOutput, path);
+                    // if null, that means the output folder is the same as the source folder
+                    if (sourceFolder != null) {
+                        IPath packagePath = findPackagePath(path, sourceFolder);
+                        IContainer outputFolder = sourceToOutput.get(sourceFolder);
+                        copyFile(file.getFile(), packagePath, outputFolder);
                     }
                 }
             }
@@ -101,96 +79,66 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
         }
     }
 
-    /**
-     * Some simple checks that we can do to ensure that the builder is set up properly
-     */
-    private boolean sanityCheckBuilder(BuildContext[] files) {
-        // GRECLIPSE-1230 also do a check to ensure the proper compiler is being used
-        if (!LanguageSupportFactory.isGroovyLanguageSupportInstalled()) {
-            for (BuildContext buildContext : files) {
-                buildContext.recordNewProblems(createProblem(buildContext));
+    private static Map<IContainer, IContainer> createSourceToOutput(IProject project) throws JavaModelException {
+        IJavaProject javaProject = JavaCore.create(project);
+        IWorkspaceRoot root = (IWorkspaceRoot) project.getParent();
+        IClasspathEntry[] classpath = javaProject.getRawClasspath();
+
+        // determine default output folder
+        IPath defaultOutputLocation = javaProject.getOutputLocation();
+        IContainer defaultOutputFolder = (defaultOutputLocation.segmentCount() > 1 ? root.getFolder(defaultOutputLocation) : project);
+
+        Map<IContainer, IContainer> sourceToOutput = new TreeMap<>(
+            // ensure that the longest paths are looked at first so that nested source folders will be appropriately found
+            Comparator.comparingInt((IContainer c) -> c.getFullPath().segmentCount()).reversed().thenComparing((IContainer c) -> c.toString()));
+        for (IClasspathEntry entry : classpath) {
+            if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+                // determine source folder
+                IPath sourcePath = entry.getPath();
+                IContainer sourceFolder;
+                if (sourcePath.segmentCount() > 1) {
+                    sourceFolder = root.getFolder(sourcePath);
+                } else {
+                    sourceFolder = project;
+                }
+
+                // determine out folder
+                IPath outputPath = entry.getOutputLocation();
+                IContainer outputFolder;
+                if (outputPath == null) {
+                    outputFolder = defaultOutputFolder;
+                } else if (outputPath.segmentCount() > 1) {
+                    outputFolder = root.getFolder(outputPath);
+                } else {
+                    outputFolder = project;
+                }
+
+                // if the two containers are equal, that means no copying should be done
+                if (!sourceFolder.equals(outputFolder)) {
+                    sourceToOutput.put(sourceFolder, outputFolder);
+                }
             }
         }
-        // also check if this project has the JavaBuilder.
-        // note that other builders (like the ajbuilder) may implement the CompilationParticipant API
-        try {
-            ICommand[] buildSpec = project.getProject().getDescription().getBuildSpec();
-            boolean found = false;
-            for (ICommand command : buildSpec) {
-                if (command.getBuilderName().equals(JavaCore.BUILDER_ID)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                for (BuildContext buildContext : files) {
-                    buildContext.recordNewProblems(createProblem(buildContext));
-                }
-            }
-            return found;
-        } catch (CoreException e) {
-            Util.log(e);
-            return false;
-        }
-
+        return sourceToOutput;
     }
 
-    private CategorizedProblem[] createProblem(BuildContext buildContext) {
-        DefaultProblem problem = new DefaultProblem(buildContext.getFile().getFullPath().toOSString().toCharArray(),
-                "Error compiling Groovy project.  Either the Groovy-JDT patch is not installed or JavaBuilder is not being used.",
-                0, new String[0], ProblemSeverities.Error, 0, 0, 1, 0);
-        return new CategorizedProblem[] { problem };
-    }
-
-    @Override
-    public void buildFinished(IJavaProject project) {
-        /*try {
-            IProject iproject = project.getProject();
-            if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
-                return;
-            }
-
-            ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
-            Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
-            for (BuildContext compiledFile : compiledFiles) {
-                IFile file = compiledFile.getFile();
-                if (selector.getFileKind(file) == FileKind.SCRIPT) {
-                    IPath filePath = file.getFullPath();
-                    IContainer containingSourceFolder = findContainingSourceFolder(sourceToOut, filePath);
-
-                    // if null, that means the out folder is the same as the source folder
-                    if (containingSourceFolder != null) {
-                        IPath packagePath = findPackagePath(filePath, containingSourceFolder);
-                        IContainer out = sourceToOut.get(containingSourceFolder);
-                        copyFile(file, packagePath, out);
-                    }
-                }
-            }
-        } catch (CoreException e) {
-            Util.log(e, "Error in Script folder compilation participant");
-        } finally {
-            compiledFiles = null;
-        }*/
-    }
-
-    private IPath findPackagePath(IPath filePath, IContainer containingSourceFolder) {
-        IPath containerPath = containingSourceFolder.getFullPath();
-        filePath = filePath.removeFirstSegments(containerPath.segmentCount());
-        filePath = filePath.removeLastSegments(1);
-        return filePath;
-    }
-
-    private IContainer findContainingSourceFolder(Map<IContainer, IContainer> sourceToOut, IPath filePath) {
-        Set<IContainer> sourceFolders = sourceToOut.keySet();
-        for (IContainer container : sourceFolders) {
-            if (container.getFullPath().isPrefixOf(filePath)) {
-                return container;
+    private static IContainer findContainingSourceFolder(Map<IContainer, IContainer> sourceToOutput, IPath filePath) {
+        Set<IContainer> sourceFolders = sourceToOutput.keySet();
+        for (IContainer sourceFolder : sourceFolders) {
+            if (sourceFolder.getFullPath().isPrefixOf(filePath)) {
+                return sourceFolder;
             }
         }
         return null;
     }
 
-    private void copyFile(IFile file, IPath packagePath, IContainer outputFolder) throws CoreException {
+    private static IPath findPackagePath(IPath filePath, IContainer sourceFolder) {
+        filePath = filePath.removeFirstSegments(sourceFolder.getFullPath().segmentCount());
+        filePath = filePath.removeLastSegments(1);
+        return filePath;
+    }
+
+    private static void copyFile(IFile file, IPath packagePath, IContainer outputFolder) throws CoreException {
         IContainer createdFolder = createFolder(packagePath, outputFolder, true);
         IFile toFile = createdFolder.getFile(new Path(file.getName()));
         if (toFile.exists()) {
@@ -206,15 +154,17 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
     }
 
     /**
-     * Creates folder with the given path in the given output folder. This method is taken from
-     * org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.createFolder(..)
+     * Creates folder with the given path in the given output folder.
+     *
+     * @see org.eclipse.jdt.internal.core.builder.AbstractImageBuilder#createFolder(IPath, IContainer)
      */
-    private IContainer createFolder(IPath packagePath, IContainer outputFolder, boolean derived) throws CoreException {
+    private static IContainer createFolder(IPath packagePath, IContainer outputFolder, boolean derived) throws CoreException {
         if (!outputFolder.exists() && outputFolder instanceof IFolder) {
             ((IFolder) outputFolder).create(true, true, null);
         }
-        if (packagePath.isEmpty())
+        if (packagePath.isEmpty()) {
             return outputFolder;
+        }
         IFolder folder = outputFolder.getFolder(packagePath);
         folder.refreshLocal(IResource.DEPTH_ZERO, null);
         if (!folder.exists()) {
@@ -224,55 +174,5 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
             folder.refreshLocal(IResource.DEPTH_ZERO, null);
         }
         return folder;
-    }
-
-    private Map<IContainer, IContainer> generateSourceToOut(IJavaProject project) throws JavaModelException {
-        IProject p = project.getProject();
-        IWorkspaceRoot root = (IWorkspaceRoot) p.getParent();
-        IClasspathEntry[] cp = project.getRawClasspath();
-
-        // determine default out folder
-        IPath defaultOutPath = project.getOutputLocation();
-        IContainer defaultOutContainer;
-        if (defaultOutPath.segmentCount() > 1) {
-            defaultOutContainer = root.getFolder(defaultOutPath);
-        } else {
-            defaultOutContainer = p;
-        }
-
-        Map<IContainer, IContainer> sourceToOut = new TreeMap<>(
-            // ensure that the longest paths are looked at first so that nested source folders will be appropriately found
-            Comparator.comparing((IContainer c) -> c.getFullPath().segmentCount()).reversed().thenComparing((IContainer c) -> c.toString()));
-        for (IClasspathEntry cpe : cp) {
-            if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-
-                // determine source folder
-                IContainer sourceContainer;
-                IPath sourcePath = cpe.getPath();
-                if (sourcePath.segmentCount() > 1) {
-                    sourceContainer = root.getFolder(sourcePath);
-                } else {
-                    sourceContainer = p;
-                }
-
-                // determine out folder
-                IPath outPath = cpe.getOutputLocation();
-                IContainer outContainer;
-                if (outPath == null) {
-                    outContainer = defaultOutContainer;
-                } else if (outPath.segmentCount() > 1) {
-                    outContainer = root.getFolder(outPath);
-                } else {
-                    outContainer = p;
-                }
-
-                // if the two containers are equal, that means no copying should be done
-                // do not add to map
-                if (!sourceContainer.equals(outContainer)) {
-                    sourceToOut.put(sourceContainer, outContainer);
-                }
-            }
-        }
-        return sourceToOut;
     }
 }

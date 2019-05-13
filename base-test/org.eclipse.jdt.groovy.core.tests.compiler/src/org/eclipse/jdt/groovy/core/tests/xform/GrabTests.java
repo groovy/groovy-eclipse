@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGrab1() {
+        //@formatter:off
         String[] sources = {
             "Printer.groovy",
             "@Grab('joda-time:joda-time:2.10')\n" +
@@ -35,20 +36,22 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "}\n" +
             "printDate()\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     /**
-     * Improving grab, this program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file (big juicy exception)
-     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] java.lang.RuntimeException: Error grabbing
-     * Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] at sun.reflect.GeneratedConstructorAccessor48.newInstance(Unknown Source) at
-     * sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27) at java.lang.reflect.Constructor.newInstance(Constructor.java:513) at
-     * org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
+     * This program has a broken grab. Without changes we get a 'general error'
+     * recorded on the first line of the source file (big juicy exception).
+     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]
+     * java.lang.RuntimeException: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]
+     *
      * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
      */
     @Test
     public void testGrab2() {
+        //@formatter:off
         String[] sources = {
             "Grab1.groovy",
             "@Grapes([\n" +
@@ -66,6 +69,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -83,6 +87,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGrabScriptAndImports_GRE680() {
+        //@formatter:off
         String[] sources = {
             "Script.groovy",
             "import org.mortbay.jetty.Server\n" +
@@ -93,6 +98,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "def runServer(duration) { }\n" +
             "runServer(10000)\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }

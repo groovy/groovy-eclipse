@@ -92,7 +92,22 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        // GRECLIPSE edit
+        /* GRECLIPSE edit
+        if (annotations.isEmpty()) return;
+        for (AnnotationNode an : annotations) {
+            // skip built-in properties
+            if (an.isBuiltIn()) continue;
+            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+                member.getValue().visit(this);
+            }
+        }
+    }
+
+    public void visitBlockStatement(BlockStatement block) {
+        visitStatement(block);
+        super.visitBlockStatement(block);
+    }
+        */
         if (!annotations.isEmpty())
             visitAnnotations(annotations);
         // GRECLIPSE end
@@ -197,12 +212,15 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
             if (offset != null) {
                 end = offset;
             }
-        } else if (!(node instanceof DeclarationExpression)) {
-            start = node.getStart();
-            end = node.getEnd() - 1;
-        } else {
+        } else if (node instanceof DeclarationExpression) {
             addError(msg, ((DeclarationExpression) node).getLeftExpression());
             return;
+        } else if (node instanceof AnnotationNode) {
+            start = node.getStart();
+            end = ((AnnotationNode) node).getClassNode().getEnd() - 1;
+        } else {
+            start = node.getStart();
+            end = node.getEnd() - 1;
         }
         // GRECLIPSE end
         SourceUnit source = getSourceUnit();
@@ -229,10 +247,12 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         super.visitAssertStatement(statement);
     }
 
+    // GRECLIPSE move
     public void visitBlockStatement(BlockStatement block) {
         visitStatement(block);
         super.visitBlockStatement(block);
     }
+    // GRECLIPSE end
 
     public void visitBreakStatement(BreakStatement statement) {
         visitStatement(statement);

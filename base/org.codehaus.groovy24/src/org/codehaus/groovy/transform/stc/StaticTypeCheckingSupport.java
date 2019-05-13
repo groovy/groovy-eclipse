@@ -234,6 +234,18 @@ public abstract class StaticTypeCheckingSupport {
         }
     };
 
+    // GRECLIPSE add
+    public static void clearExtensionMethodCache() {
+        EXTENSION_METHOD_CACHE.lock.writeLock().lock();
+        try {
+            EXTENSION_METHOD_CACHE.origin.clear();
+            EXTENSION_METHOD_CACHE.cachedMethods = null;
+        } finally {
+            EXTENSION_METHOD_CACHE.lock.writeLock().unlock();
+        }
+    }
+    // GRECLIPSE end
+
     /**
      * Returns true for expressions of the form x[...]
      * @param expression an expression

@@ -184,7 +184,8 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClassOrInterfaceT
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClassicalForControlContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClassifiedModifiersContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClosureContext;
-import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClosurePrmrAltContext;
+import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClosureOrLambdaExpressionContext;
+import static org.apache.groovy.parser.antlr4.GroovyLangParser.ClosureOrLambdaExpressionPrmrAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CommandArgumentContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CommandExprAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CommandExpressionContext;
@@ -197,6 +198,7 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.ContinueStmtAltCo
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CreatedNameContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CreatorContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEC;
+import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEF;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEFAULT;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DimsContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DimsOptContext;
@@ -253,7 +255,6 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.LE;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.LT;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.LabeledStmtAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.LambdaBodyContext;
-import static org.apache.groovy.parser.antlr4.GroovyLangParser.LambdaPrmrAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.ListContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.ListPrmrAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.LiteralPrmrAltContext;
@@ -350,6 +351,9 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableModifiers
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableModifiersOptContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableNamesContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.WhileStmtAltContext;
+/* GRECLIPSE edit
+import static org.apache.groovy.parser.antlr4.util.PositionConfigureUtils.configureAST;
+*/
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
@@ -360,16 +364,26 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     public AstBuilder(SourceUnit sourceUnit, CompilerConfiguration compilerConfiguration) {
         this.sourceUnit = sourceUnit;
+        /* GRECLIPSE edit
+        this.compilerConfiguration = compilerConfiguration;
+        this.moduleNode = new ModuleNode(sourceUnit);
+
+        this.lexer = new GroovyLangLexer(createCharStream(sourceUnit));
+        this.parser =
+                new GroovyLangParser(
+                    new CommonTokenStream(this.lexer));
+
+        this.parser.setErrorHandler(new DescriptiveErrorStrategy(this.lexer.getInputStream()));
+        */
         this.moduleNode = new ModuleNode(sourceUnit);
         CharStream charStream = createCharStream(sourceUnit);
 
         this.lexer = new GroovyLangLexer(charStream);
         this.parser = new GroovyLangParser(new CommonTokenStream(this.lexer));
         this.parser.setErrorHandler(new DescriptiveErrorStrategy(charStream));
-
+        // GRECLIPSE end
         this.tryWithResourcesASTTransformation = new TryWithResourcesASTTransformation(this);
         this.groovydocManager = new GroovydocManager(compilerConfiguration);
-
         // GRECLIPSE add
         try (BufferedReader reader = new BufferedReader(sourceUnit.getSource().getReader())) {
             // TODO: Can this be done without boxing/unboxing offsets or juggling temp arrays?
@@ -2802,8 +2816,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             // e.g. 1(), 1.1(), ((int) 1 / 2)(1, 2), {a, b -> a + b }(1, 2), m()()
             return configureAST(createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
-        } else if (asBoolean(ctx.closure())) {
-            ClosureExpression closureExpression = this.visitClosure(ctx.closure());
+        } else if (asBoolean(ctx.closureOrLambdaExpression())) {
+            ClosureExpression closureExpression = this.visitClosureOrLambdaExpression(ctx.closureOrLambdaExpression());
 
             if (baseExpr instanceof MethodCallExpression) {
                 MethodCallExpression methodCallExpression = (MethodCallExpression) baseExpr;
@@ -3544,13 +3558,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     @Override
-    public ClosureExpression visitClosurePrmrAlt(ClosurePrmrAltContext ctx) {
-        return configureAST(this.visitClosure(ctx.closure()), ctx);
-    }
-
-    @Override
-    public ClosureExpression visitLambdaPrmrAlt(LambdaPrmrAltContext ctx) {
-        return configureAST(this.visitStandardLambdaExpression(ctx.standardLambdaExpression()), ctx);
+    public ClosureExpression visitClosureOrLambdaExpressionPrmrAlt(ClosureOrLambdaExpressionPrmrAltContext ctx) {
+        return configureAST(this.visitClosureOrLambdaExpression(ctx.closureOrLambdaExpression()), ctx);
     }
 
     @Override
@@ -4013,7 +4022,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 .map(e -> {
                     Expression expression = this.visitGstringValue(e);
 
-                    if (expression instanceof ClosureExpression && !asBoolean(e.closure().ARROW())) {
+                    if (expression instanceof ClosureExpression && !hasArrow(e)) {
                         List<Statement> statementList = ((BlockStatement) ((ClosureExpression) expression).getCode()).getStatements();
 
                         if (statementList.stream().noneMatch(DefaultGroovyMethods::asBoolean)) {
@@ -4045,6 +4054,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         return configureAST(new GStringExpression(verbatimText.toString(), stringLiteralList, values), ctx);
+    }
+
+    private boolean hasArrow(GstringValueContext e) {
+        return asBoolean(e.closure().ARROW());
     }
 
     private String parseGStringEnd(GstringContext ctx, String beginQuotation) {
@@ -4554,6 +4567,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     @Override
+    public ClosureExpression visitClosureOrLambdaExpression(ClosureOrLambdaExpressionContext ctx) {
+        // GROOVY-8991: Difference in behaviour with closure and lambda
+        if (asBoolean(ctx.closure())) {
+            return configureAST(this.visitClosure(ctx.closure()), ctx);
+        } else if (asBoolean(ctx.standardLambdaExpression())) {
+            return configureAST(this.visitStandardLambdaExpression(ctx.standardLambdaExpression()), ctx);
+        }
+
+        // should never reach here
+        throw createParsingFailedException("The node is not expected here" + ctx.getText(), ctx);
+    }
+
+    @Override
     public BlockStatement visitBlockStatementsOpt(BlockStatementsOptContext ctx) {
         if (asBoolean(ctx.blockStatements())) {
             return configureAST(this.visitBlockStatements(ctx.blockStatements()), ctx);
@@ -4618,18 +4644,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         List<Tuple2<String, Expression>> annotationElementValues = this.visitElementValues(ctx.elementValues());
 
         annotationElementValues.forEach(e -> annotationNode.addMember(e.getV1(), e.getV2()));
-
-        // GRECLIPSE edit
-        /*return*/ configureAST(annotationNode, ctx);
-        // save the full source range of the annotation for future use
-        long start = annotationNode.getStart(), until = annotationNode.getEnd();
-        annotationNode.setNodeMetaData("source.offsets", (start << 32) | until);
+        // GRECLIPSE add
         configureAST(annotationNode.getClassNode(), ctx.annotationName());
-        // Eclipse has different requirements for error reporting:
-        configureAST(annotationNode, ctx.annotationName());
-        annotationNode.setEnd(annotationNode.getEnd() - 1);
-        return annotationNode;
         // GRECLIPSE end
+        return configureAST(annotationNode, ctx);
     }
 
     @Override
@@ -5208,6 +5226,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         parser.addErrorListener(this.createANTLRErrorListener());
     }
 
+    // GRECLIPSE edit
     private /*static*/ class DeclarationListStatement extends Statement {
         private final List<ExpressionStatement> declarationStatements;
 
@@ -5248,6 +5267,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private final ModuleNode moduleNode;
     private final SourceUnit sourceUnit;
+    /* GRECLIPSE edit
+    private final CompilerConfiguration compilerConfiguration;
+    */
     private final GroovyLangLexer lexer;
     private final GroovyLangParser parser;
     private final TryWithResourcesASTTransformation tryWithResourcesASTTransformation;
@@ -5300,6 +5322,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
     private static final Set<String> PRIMITIVE_TYPE_SET = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("boolean", "char", "byte", "short", "int", "long", "float", "double")));
+    /* GRECLIPSE edit
+    private static final Logger LOGGER = Logger.getLogger(AstBuilder.class.getName());
+    */
 
     private static final String INSIDE_PARENTHESES_LEVEL = "_INSIDE_PARENTHESES_LEVEL";
 

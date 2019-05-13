@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import groovy.lang.Closure;
+import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -54,6 +55,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -374,7 +376,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // assume that this is a synthetic call method for calling a closure
             resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = resolvedDeclaringType.getMethods("call").get(0);
-        } else if ("this".equals(name)) {
+        } else if ("this".equals(name) && VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
             declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
         } else {
@@ -410,7 +412,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 } else if (declaration instanceof MethodNode) {
                     MethodNode method = (MethodNode) declaration;
-                    if (isStaticObjectExpression && !method.isStatic()) {
+                    if (isStaticObjectExpression && !method.isStatic() && !isStaticReferenceToInstanceMethod(scope)) {
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (Flags.isPrivate(method.getModifiers()) && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
@@ -932,6 +934,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // TODO: Test for "Type.super.name" expressions for traits?
         Expression expr = getObjectExpression(scope);
         return (expr instanceof VariableExpression && ((VariableExpression) expr).isSuperExpression());
+    }
+
+    protected static boolean isStaticReferenceToInstanceMethod(final VariableScope scope) {
+        if (scope.getEnclosingNode() instanceof MethodPointerExpression && scope.getCurrentNode() instanceof ConstantExpression) {
+            // "Type.&instanceMethod" and "Type::instanceMethod" are supported starting in Groovy 3
+            int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0], 10);
+            return (majorVersion >= 3);
+        }
+        return false;
     }
 
     protected static boolean isCompatible(final AnnotatedNode declaration, final boolean isStaticExpression) {

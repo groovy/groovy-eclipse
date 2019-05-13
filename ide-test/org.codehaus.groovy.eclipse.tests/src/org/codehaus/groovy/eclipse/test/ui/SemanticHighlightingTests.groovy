@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
 import static org.junit.Assume.assumeTrue
@@ -56,6 +57,29 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('four'), 'four'.length(), FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/876
+    void testFields2() {
+        addGroovySource '''\
+            import groovy.transform.PackageScope
+            class Pogo {
+              @PackageScope String string
+            }
+            '''
+
+        String contents = '''\
+            class X extends Pogo {{
+                string
+                getString()
+                setString('value')
+            }}
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), FIELD),
+            new HighlightedTypedPosition(contents.indexOf('getString'), 'getString'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('setString'), 'setString'.length(), UNKNOWN))
     }
 
     @Test
@@ -130,6 +154,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('pi'), 2, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('PI'), 2, STATIC_VALUE),
             new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
+    }
+
+    @Test
+    void testStaticFinals3() {
+        String contents = '''\
+            class C {
+              static final VALUE = 'value'
+              static foo() {
+                VALUE
+              }
+              static class Inner {
+                void bar() {
+                  VALUE
+                }
+              }
+            }
+            class SamePack {
+              def baz = C.VALUE
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('foo')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('bar')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
     }
 
     @Test
@@ -2270,6 +2323,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('s.&'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
+    }
+
+    @Test
+    void testMethodPointer3() {
+        String contents = '''\
+            String.&toLowerCase
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
+    }
+
+    @Test
+    void testMethodReference() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            String::toLowerCase
+            Integer::toHexString
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('toHexString'), 'toHexString'.length(), STATIC_CALL))
     }
 
     @Test

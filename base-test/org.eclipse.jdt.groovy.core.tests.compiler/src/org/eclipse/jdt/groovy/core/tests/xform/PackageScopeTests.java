@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,6 +35,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope1() {
+        //@formatter:off
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n" +
@@ -61,12 +62,14 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  @groovy.transform.PackageScope String field2 = 'abcd';\n" + // adjust the visibility of property
             "}\n",
         };
+        //@formatter:on
 
-        runConformTest(sources, "20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation)
+        runConformTest(sources, "20"); // 0x2 = private, 0x0 = default (so field2 has had private vis removed by annotation)
     }
 
     @Test
     public void testPackageScope2() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -74,6 +77,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  @PackageScope Object field\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -83,6 +87,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope3() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -91,6 +96,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object field\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -100,6 +106,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope3a() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -109,6 +116,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object field\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -118,6 +126,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope3b() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -127,6 +136,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object field\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -136,6 +146,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope4() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -143,6 +154,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  @PackageScope Object method() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -152,6 +164,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope5() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -160,6 +173,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object method() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -169,6 +183,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope5a() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -178,6 +193,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object method() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -187,6 +203,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope5b() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -196,6 +213,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object method() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -205,6 +223,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testPackageScope6() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.*\n" +
@@ -214,6 +233,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  Object method() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -223,6 +243,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test // @PackageScope only applies to synthetic public members
     public void testPackageScope7() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.PackageScope(groovy.transform.PackageScopeTarget.FIELDS)\n" +
@@ -233,6 +254,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  protected Object field4\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -248,6 +270,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test // @PackageScope only applies to synthetic public members
     public void testPackageScope8() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.PackageScope(groovy.transform.PackageScopeTarget.METHODS)\n" +
@@ -258,6 +281,7 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
             "  protected Object method4() {}\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
 
@@ -273,12 +297,14 @@ public final class PackageScopeTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8940
     public void testPackageScope9() {
+        //@formatter:off
         String[] sources = {
             "Tag.groovy",
             "@groovy.transform.PackageScope\n" +
             "@interface Tag {\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }

@@ -47,16 +47,6 @@ import java.lang.reflect.Modifier;
 
 /**
  * This class provides an AST Transformation to add a log field to a class.
- *
- * @author Guillaume Laforge
- * @author Jochen Theodorou
- * @author Dinko Srkoc
- * @author Hamlet D'Arcy
- * @author Raffaele Cigni
- * @author Alberto Vilches Raton
- * @author Tomasz Bujok
- * @author Martin Ghados
- * @author Matthias Cullmann
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class LogASTTransformation extends AbstractASTTransformation implements CompilationUnitAware {

@@ -576,6 +576,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
         if (enclosingClosure != null) {
+            /* GRECLIPSE edit -- GROOVY-9089
             String name = vexp.getName();
             if (name.equals("owner") || name.equals("thisObject")) {
                 storeType(vexp, typeCheckingContext.getEnclosingClassNode());
@@ -587,6 +588,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeType(vexp, type);
                 return;
             }
+            */
+            switch (vexp.getName()) {
+            case "delegate":
+                DelegationMetadata md = getDelegationMetadata(enclosingClosure.getClosureExpression());
+                if (md != null) {
+                    storeType(vexp, md.getType());
+                    return;
+                }
+                // falls through
+            case "owner":
+                if (typeCheckingContext.getEnclosingClosureStack().size() > 1) {
+                    storeType(vexp, CLOSURE_TYPE);
+                    return;
+                }
+                // falls through
+            case "thisObject":
+                storeType(vexp, typeCheckingContext.getEnclosingClassNode());
+                return;
+            }
+            // GRECLIPSE end
         }
 
         if (!(vexp.getAccessedVariable() instanceof DynamicVariable)) {
@@ -1414,7 +1435,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (getter != null) {
                         ClassNode cn = inferReturnTypeGenerics(current, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
-                        // GRECLIPSE add
+                        // GRECLIPSE add -- GROOVY-9077
                         storeTargetMethod(pexp, getter);
                         // GRECLIPSE end
                         pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
@@ -1481,7 +1502,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                         ClassNode cn = inferReturnTypeGenerics(dgmReceiver, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
-                        // GRECLIPSE add
+                        // GRECLIPSE add -- GROOVY-9077
                         storeTargetMethod(pexp, getter);
                         // GRECLIPSE end
                         return true;
@@ -2711,13 +2732,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                     boolean lastArg = (i == length - 1);
+                    /* GRECLIPSE edit -- GROOVY-9058
                     if (lastArg && inferredType.isArray()) {
-                        if (/*GRECLIPSE add -- GROOVY-9058*/!closureParam.isDynamicTyped() && /*GRECLIPSE end*/inferredType.getComponentType().equals(originType)) {
+                        if (inferredType.getComponentType().equals(originType)) {
                             inferredType = originType;
                         }
-                    } else if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
+                    } else*/ if (!typeCheckMethodArgumentWithGenerics(originType, inferredType, lastArg)) {
                         addError("Expected parameter of type "+inferredType.toString(false)+" but got "+originType.toString(false), closureParam.getType());
                     }
+
                     typeCheckingContext.controlStructureVariables.put(closureParam, inferredType);
                 }
             }
@@ -2900,6 +2923,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    /* GRECLIPSE edit -- GROOVY-9086
     private static boolean isTraitHelper(ClassNode node) {
         return node instanceof InnerClassNode && Traits.isTrait(node.getOuterClass());
     }
@@ -2949,6 +2973,50 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             receivers.add(new Receiver<String>(delegate.getOuterClass(), path.toString()));
         }
     }
+    */
+    protected void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, boolean implicitThis) {
+        if (!implicitThis || typeCheckingContext.delegationMetadata == null) {
+            receivers.addAll(owners);
+        } else {
+            addReceivers(receivers, owners, typeCheckingContext.delegationMetadata, "");
+        }
+    }
+
+    private static void addReceivers(List<Receiver<String>> receivers, Collection<Receiver<String>> owners, DelegationMetadata dmd, String path) {
+        int strategy = dmd.getStrategy();
+        switch (strategy) {
+            case Closure.DELEGATE_ONLY:
+            case Closure.DELEGATE_FIRST:
+                addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                if (strategy == Closure.DELEGATE_FIRST) {
+                    if (dmd.getParent() == null) {
+                        receivers.addAll(owners);
+                    } else {
+                        addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                    }
+                }
+                break;
+            case Closure.OWNER_ONLY:
+            case Closure.OWNER_FIRST:
+                if (dmd.getParent() == null) {
+                    receivers.addAll(owners);
+                } else {
+                    addReceivers(receivers, owners, dmd.getParent(), path + "owner.");
+                }
+                if (strategy == Closure.OWNER_FIRST) {
+                    addDelegateReceiver(receivers, dmd.getType(), path + "delegate");
+                }
+                break;
+        }
+    }
+
+    private static void addDelegateReceiver(List<Receiver<String>> receivers, ClassNode delegate, String path) {
+        receivers.add(new Receiver<String>(delegate, path));
+        if (Traits.isTrait(delegate.getOuterClass())) {
+            receivers.add(new Receiver<String>(delegate.getOuterClass(), path));
+        }
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
@@ -3328,7 +3396,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             owners.add(0,Receiver.<String>make(clazzGT.getType()));
         }
         if (receiver.isInterface()) {
-            // GROOVY-xxxx
             owners.add(Receiver.<String>make(OBJECT_TYPE));
         }
         addSelfTypes(receiver, owners);
@@ -3345,6 +3412,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 && ((VariableExpression) objectExpression).getName().equals("it")) {
             owners.add(Receiver.<String>make(typeCheckingContext.lastImplicitItType));
         }
+        // GRECLIPSE add -- GROOVY-9089
+        if (typeCheckingContext.delegationMetadata != null
+                && objectExpression instanceof VariableExpression
+                && ((VariableExpression) objectExpression).getName().equals("owner")
+                && /*isNested:*/typeCheckingContext.delegationMetadata.getParent() != null) {
+            owners.clear();
+            List<Receiver<String>> enclosingClass = Collections.singletonList(
+                Receiver.<String>make(typeCheckingContext.getEnclosingClassNode()));
+            addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
+        }
+        // GRECLIPSE end
         return owners;
     }
 

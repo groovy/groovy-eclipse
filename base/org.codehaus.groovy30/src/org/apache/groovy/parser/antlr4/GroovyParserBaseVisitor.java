@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.7
+// Generated from GroovyParser.g4 by ANTLR 4.7.3
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -80,15 +80,7 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitClosurePrmrAlt(@NotNull GroovyParser.ClosurePrmrAltContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public Result visitLambdaPrmrAlt(@NotNull GroovyParser.LambdaPrmrAltContext ctx) { return visitChildren(ctx); }
+	@Override public Result visitClosureOrLambdaExpressionPrmrAlt(@NotNull GroovyParser.ClosureOrLambdaExpressionPrmrAltContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -953,6 +945,14 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public Result visitClosure(@NotNull GroovyParser.ClosureContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public Result visitClosureOrLambdaExpression(@NotNull GroovyParser.ClosureOrLambdaExpressionContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

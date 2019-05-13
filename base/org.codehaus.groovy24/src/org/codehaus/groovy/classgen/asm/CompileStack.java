@@ -67,13 +67,8 @@ import java.util.Map;
  *
  *
  * @see org.codehaus.groovy.classgen.AsmClassGenerator
- * @author Jochen Theodorou
  */
 public class CompileStack implements Opcodes {
-    /**
-     * TODO: remove optimization of this.foo -> this.@foo
-     *
-     */
 
     // state flag
     private boolean clear=true;
@@ -104,8 +99,6 @@ public class CompileStack implements Opcodes {
     private LinkedList<BlockRecorder> visitedBlocks = new LinkedList<BlockRecorder>();
 
     private Label thisStartLabel, thisEndLabel;
-
-//    private MethodVisitor mv;
 
     // helper to handle different stack based variables
     private final LinkedList stateStack = new LinkedList();

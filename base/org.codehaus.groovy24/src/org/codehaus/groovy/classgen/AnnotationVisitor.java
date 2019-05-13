@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 
@@ -86,7 +87,7 @@ public class AnnotationVisitor {
         if (!checkIfValidEnumConstsAreUsed(node)) {
             return node;
         }
-        
+
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
             String attrName = entry.getKey();
@@ -98,7 +99,7 @@ public class AnnotationVisitor {
         VMPluginFactory.getPlugin().configureAnnotation(node);
         return this.annotation;
     }
-    
+
     private boolean checkIfValidEnumConstsAreUsed(AnnotationNode node) {
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
@@ -107,7 +108,7 @@ public class AnnotationVisitor {
         }
         return true;
     }
-    
+
     private boolean validateEnumConstant(Expression exp) {
         if (exp instanceof PropertyExpression) {
             PropertyExpression pe = (PropertyExpression) exp;
@@ -179,18 +180,18 @@ public class AnnotationVisitor {
 
     private boolean checkIfMandatoryAnnotationValuesPassed(AnnotationNode node) {
         boolean ok = true;
-        /* GRECLIPSE edit -- temp hack; can't rely on getCode()
         Map attributes = node.getMembers();
         ClassNode classNode = node.getClassNode();
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
-            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            // GRECLIPSE edit
+            //if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+            if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {
+            // GRECLIPSE end
                 addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
                 ok = false;
             }
         }
-        */
         return ok;
     }
 
@@ -201,7 +202,10 @@ public class AnnotationVisitor {
         // if it is an error, we have to test it at another place. But size==0 is
         // an error, because it means that no such attribute exists.
         if (methods.isEmpty()) {
+            // GRECLIPSE edit
+            //addError("'" + attrName + "'is not part of the annotation " + classNode, node);
             addError("'" + attrName + "'is not part of the annotation " + classNode.getNameWithoutPackage(), node);
+            // GRECLIPSE end
             return ClassHelper.OBJECT_TYPE;
         }
         MethodNode method = (MethodNode) methods.get(0);
@@ -295,11 +299,6 @@ public class AnnotationVisitor {
         // GRECLIPSE end
     }
 
-    /**
-     * @param attrName   the name
-     * @param expression the expression
-     * @param attrType   the type
-     */
     protected void visitAnnotationExpression(String attrName, AnnotationConstantExpression expression, ClassNode attrType) {
         AnnotationNode annotationNode = (AnnotationNode) expression.getValue();
         AnnotationVisitor visitor = new AnnotationVisitor(this.source, this.errorCollector);
@@ -339,6 +338,12 @@ public class AnnotationVisitor {
     }
 
     protected void addError(String msg, ASTNode expr) {
+        // GRECLIPSE add
+        if (expr instanceof AnnotationNode) {
+            this.errorCollector.addErrorAndContinue(new SyntaxErrorMessage(
+                new PreciseSyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getStart(), ((AnnotationNode) expr).getClassNode().getEnd() - 1), this.source));
+        } else
+        // GRECLIPSE end
         this.errorCollector.addErrorAndContinue(
                 new SyntaxErrorMessage(new SyntaxException(msg + " in @" + this.reportClass.getName() + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
         );
@@ -366,5 +371,4 @@ public class AnnotationVisitor {
             checkCircularReference(searchClass, method.getReturnType(), code.getExpression());
         }
     }
-
 }

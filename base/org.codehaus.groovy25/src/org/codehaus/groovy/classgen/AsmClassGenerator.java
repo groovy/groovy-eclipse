@@ -219,7 +219,7 @@ public class AsmClassGenerator extends ClassGenerator {
             Object min = classNode.getNodeMetaData(MINIMUM_BYTECODE_VERSION);
             if (min instanceof Integer) {
                 int minVersion = (int) min;
-                if (bytecodeVersion < minVersion) {
+                if ((bytecodeVersion ^ Opcodes.V_PREVIEW) < minVersion) {
                     bytecodeVersion = minVersion;
                 }
             }
@@ -989,6 +989,9 @@ public class AsmClassGenerator extends ClassGenerator {
                                             new ClassExpression(outer),
                                             expression.getProperty()
                                     );
+                                    // GRECLIPSE add -- GROOVY-9043
+                                    pexp.getObjectExpression().setSourcePosition(objectExpression);
+                                    // GRECLIPSE end
                                     pexp.visit(controller.getAcg());
                                     return;
                                 }
@@ -1623,7 +1626,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (!(expr instanceof SpreadExpression)) {
                 normalArguments.add(expr);
             } else {
-                spreadIndexes.add(new ConstantExpression(Integer.valueOf(i - spreadExpressions.size()),true));
+                spreadIndexes.add(new ConstantExpression(i - spreadExpressions.size(),true));
                 spreadExpressions.add(((SpreadExpression) expr).getExpression());
             }
         }

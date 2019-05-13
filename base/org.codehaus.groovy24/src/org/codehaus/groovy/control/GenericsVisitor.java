@@ -25,10 +25,10 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 
+import java.util.Arrays;
+
 /**
- * class used to verify correct usage of generics in 
- * class header (class and superclass declaration) 
- * @author Jochen Theodorou
+ * Verify correct usage of generics.
  */
 public class GenericsVisitor extends ClassCodeVisitorSupport {
     private SourceUnit source;
@@ -106,19 +106,28 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
         for (int i=0; i<nTypes.length; i++) {
             ClassNode nType = nTypes[i].getType();
             ClassNode cnType = cnTypes[i].getType();
-            // GRECLIPSE edit
-            //if (!nType.isDerivedFrom(cnType)) {
-            //    if (cnType.isInterface() && nType.implementsInterface(cnType)) continue;
-            if (!nTypes[i].isWildcard() && !nType.isDerivedFrom(cnType) &&
-                !(cnType.isInterface() && nType.implementsInterface(cnType))) {
-            // GRECLIPSE end
+            /* GRECLIPSE edit
+            if (!nType.isDerivedFrom(cnType)) {
+                if (cnType.isInterface() && nType.implementsInterface(cnType)) continue;
                 addError("The type "+nTypes[i].getName()+
                          " is not a valid substitute for the bounded parameter <"+
                          getPrintName(cnTypes[i])+">",n);
             }
+            */
+            // unbounded wildcard (aka "?") is universal substitute
+            if (!(nTypes[i].isWildcard() && nTypes[i].getLowerBound() == null &&
+                    (nTypes[i].getUpperBounds() == null || nTypes[i].getUpperBounds().length == 0))) {
+                // check lower or upper bound(s)
+                ClassNode[] bounds = cnTypes[i].getUpperBounds();
+                boolean firstBoundValid = nType.isDerivedFrom(cnType) || (cnType.isInterface() && nType.implementsInterface(cnType));
+                if (!firstBoundValid || (bounds != null && bounds.length > 1 && !Arrays.stream(bounds).skip(1).allMatch(nType::implementsInterface))) {
+                    addError("The type " + nTypes[i].getName() + " is not a valid substitute for the bounded parameter <" + getPrintName(cnTypes[i]) + ">", nTypes[i]);
+                }
+            }
+            // GRECLIPSE end
         }
     }
-    
+
     private static String getPrintName(GenericsType gt) {
         String ret = gt.getName();
         ClassNode[] upperBounds = gt.getUpperBounds();
@@ -133,9 +142,8 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
             ret += " super "+getPrintName(lowerBound);
         }
         return ret;
-
     }
-    
+
     private static String getPrintName(ClassNode cn) {
         String ret = cn.getName();
         GenericsType[] gts = cn.getGenericsTypes();

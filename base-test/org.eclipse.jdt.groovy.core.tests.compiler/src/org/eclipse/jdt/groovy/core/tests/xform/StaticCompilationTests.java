@@ -29,6 +29,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileDynamic() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -43,12 +44,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic1() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -58,6 +61,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  ls.add('abc')\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -75,6 +79,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
      */
     @Test
     public void testCompileStatic2() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -97,12 +102,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic3() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -110,12 +117,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Integer wrapper = primitive\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic4() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -123,6 +132,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Integer i = n\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -135,6 +145,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic4a() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -143,6 +154,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Integer i = (o = n)\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -155,6 +167,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic5() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -162,12 +175,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Object o = n\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic6() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -175,12 +190,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  String s = n\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic7() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -188,12 +205,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  boolean b = n\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic7a() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -201,13 +220,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Boolean b = n\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
-    @Test
+    @Test // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
     public void testCompileStatic8() {
-        // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "class A {\n" +
@@ -224,12 +244,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic9() {
+        //@formatter:off
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -241,12 +263,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test // GROOVY-8337
     public void testCompileStatic10() {
+        //@formatter:off
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -257,12 +281,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic11() {
+        //@formatter:off
         String[] sources = {
             "BridgeMethod.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -272,28 +298,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  return 1\n" +
             "}\n",
         };
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test // GROOVY-8509
-    public void testCompileStatic12() {
-        String[] sources = {
-            "p/Foo.groovy",
-            "package p\n" +
-            "class Foo {\n" +
-            "  protected void m() {}\n" +
-            "}\n",
-
-            "p/Bar.groovy",
-            "package p\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "class Bar {\n" +
-            "  void testM(Foo f) {\n" +
-            "    f.m()\n" +
-            "  }\n" +
-            "}\n",
-        };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
@@ -302,6 +307,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic13() {
         assumeTrue(isAtLeastGroovy(25));
 
+        //@formatter:off
         String[] sources = {
             "q/Foo.groovy",
             "package q\n" +
@@ -318,6 +324,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -330,10 +337,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1505() {
+        //@formatter:off
         String[] sources = {
             "DynamicQuery.groovy",
-            "import groovy.transform.TypeChecked\n" +
-            "@TypeChecked\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
             "class DynamicQuery {\n" +
             "  public static void main(String[]argv) {\n" +
             "    new DynamicQuery().foo(null);\n" +
@@ -345,31 +353,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "abc");
     }
 
-    @Test @Ignore("VM argument not accepted on CI server")
-    public void testCompileStatic1506() {
-        String[] sources = {
-            "LoggerTest.groovy",
-            "import groovy.transform.*\n" +
-            "import groovy.util.logging.*\n" +
-            "@CompileStatic @Log\n" +
-            "class LoggerTest {\n" +
-            "  static void main(String... args) {\n" +
-            "    LoggerTest.log.info('one')\n" +
-            "    log.info('two')\n" +
-            "  }\n" +
-            "}\n",
-        };
-        vmArguments = new String[] {"-Djava.util.logging.SimpleFormatter.format=%4$s %5$s%6$s%n"};
-
-        runConformTest(sources, "", "INFO one\nINFO two");
-    }
-
     @Test
     public void testCompileStatic1511() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -379,12 +370,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "   one.addAll(two)\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic1514() {
+        //@formatter:off
         String[] sources = {
             "C.groovy",
             "@SuppressWarnings('rawtypes')\n" +
@@ -395,12 +388,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic1515() {
+        //@formatter:off
         String[] sources = {
             "C.groovy",
             "import groovy.transform.CompileStatic;\n" +
@@ -415,12 +410,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic1521() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -428,12 +425,228 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  enum Status { ON, OFF }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    public void testCompileStatic7687() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class Foo {\n" +
+            "    public List<Bar> bars = [new Bar()]\n" +
+            "  }\n" +
+            "  static class Bar {\n" +
+            "    String message\n" +
+            "  }\n" +
+            "  void interactions(@DelegatesTo.Target Foo foo, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "    block.resolveStrategy = Closure.DELEGATE_FIRST\n" +
+            "    block.delegate = foo\n" +
+            "    block()\n" +
+            "  }\n" +
+            "  void execute(Foo foo) {\n" +
+            "    interactions(foo) {\n" +
+            "      bars.each { bar ->\n" + // ClassCastException
+            "        bar.message = 'hello world'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def foo = new Foo()\n" +
+            "    new Main().execute(foo)\n" +
+            "    print foo.bars*.message\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[hello world]");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    public void testCompileStatic7687a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class Foo {\n" +
+            "    public List<Bar> bars = [new Bar()]\n" +
+            "  }\n" +
+            "  static class Bar {\n" +
+            "    String message\n" +
+            "  }\n" +
+            "  void interactions(@DelegatesTo.Target Foo foo, @DelegatesTo(strategy=Closure.OWNER_FIRST) Closure block) {\n" +
+            "    block.resolveStrategy = Closure.OWNER_FIRST\n" +
+            "    block.delegate = foo\n" +
+            "    block()\n" +
+            "  }\n" +
+            "  void execute(Foo foo) {\n" +
+            "    interactions(foo) {\n" +
+            "      bars.each { bar ->\n" + // ClassCastException
+            "        bar.message = 'hello world'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def foo = new Foo()\n" +
+            "    new Main().execute(foo)\n" +
+            "    print foo.bars*.message\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[hello world]");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    public void testCompileStatic7687b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class Foo {\n" +
+            "    public List<String> messages = ['hello world']\n" +
+            "  }\n" +
+            "  void interactions(@DelegatesTo.Target Foo foo, @DelegatesTo Closure block) {\n" +
+            "    block.delegate = foo\n" +
+            "    block()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Main().interactions(new Foo()) {\n" +
+            "      messages.each { message ->\n" + // ClassCastException
+            "        print message\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7996
+    public void testCompileStatic7996() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new Bar().doStuff()\n",
+
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
+            "  }\n" +
+            "  def build(Closure block) {\n" +
+            "    return this.with(block)\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  protected List bars = []\n" +
+            "  boolean doStuff() {\n" +
+            "    new Foo().build {\n" +
+            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic7996a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new Bar().doStuff()\n",
+
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
+            "  }\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "    return this.with(block)\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  protected List bars = []\n" +
+            "  boolean doStuff() {\n" +
+            "    new Foo().build {\n" +
+            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic7996b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new Bar().doStuff()\n",
+
+            "Foo.groovy",
+            "class Foo {" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
+            "  }\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.OWNER_FIRST) Closure block) {\n" +
+            "    block.delegate = this\n" +
+            "    return block.call()\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  protected List bars = []\n" +
+            "  boolean doStuff() {\n" +
+            "    new Foo().build {\n" +
+            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
     @Test
     public void testCompileStatic8342() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -446,12 +659,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic8638() {
+        //@formatter:off
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -473,12 +688,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  Map<K, Collection<V>> asMap();\n" +
             "}\n",
         };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic8509() {
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p\n" +
+            "class Foo {\n" +
+            "  protected void m() {}\n" +
+            "}\n",
+
+            "p/Bar.groovy",
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  void testM(Foo f) {\n" +
+            "    f.m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic8839() {
+        //@formatter:off
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
@@ -497,14 +738,983 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "public class ResultHandle {\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8873
+    public void testCompileStatic8873() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  String foo = 'foo'\n" +
+            "  String foom() { 'foom' }\n" +
+            "}\n" +
+            "class Bar {\n" +
+            "  String bar = 'bar'\n" +
+            "  String barm() { 'barm' }\n" +
+            "}\n" +
+            "class Baz {\n" +
+            "  String baz = 'baz'\n" +
+            "  String bazm() { 'bazm' }\n" +
+            "}\n" +
+            "String other() { 'other' }\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  new Foo().with {\n" +
+            "    assert foo == 'foo'\n" +
+            "    assert foom() == 'foom'\n" +
+            "    assert other() == 'other'\n" +
+            "    new Bar().with {\n" +
+            "      assert foo == 'foo'\n" +
+            "      assert bar == 'bar'\n" +
+            "      assert foom() == 'foom'\n" +
+            "      assert barm() == 'barm'\n" +
+            "      assert other() == 'other'\n" +
+            "      new Baz().with {\n" +
+            "        assert foo == 'foo'\n" +
+            "        assert bar == 'bar'\n" +
+            "        assert baz == 'baz'\n" +
+            "        assert foom() == 'foom'\n" +
+            "        assert barm() == 'barm'\n" +
+            "        assert bazm() == 'bazm'\n" +
+            "        assert other() == 'other'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-8955
+    public void testCompileStatic8955() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Property {\n" +
+            "  String generator\n" +
+            "}\n" +
+            "\n" +
+            "interface PMapping<T extends Property> {\n" +
+            "  T getMappedForm()\n" +
+            "}\n" +
+            "\n" +
+            "interface PProperty {\n" +
+            "  PMapping getMapping()\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class GPEntity {\n" +
+            "  def method() {\n" +
+            "    PProperty identity = getIdentity()\n" +
+            "    String generatorType = identity.getMapping().getMappedForm().getGenerator()\n" +
+            "  }\n" +
+            "  \n" +
+            "  PProperty getIdentity() {\n" +
+            "    new PProperty() {\n" +
+            "      PMapping getMapping() {\n" +
+            "        new PMapping() {\n" +
+            "          def getMappedForm() {\n" + // replace "def" with "Property"
+            "            new Property() {\n" +
+            "              String getGenerator() { 'foo' }\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "new GPEntity().method()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8978
+    public void testCompileStatic8978() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@CompileStatic\n" +
+            "class DelegatesToMap implements Map<String,Object> {\n" +
+            "  \n" +
+            "  @Delegate protected Map<String,Object> target\n" +
+            "  \n" +
+            "  DelegatesToMap() {\n" +
+            "    target = new HashMap<>()\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "@CompileStatic\n" +
+            "class TaskConfig extends DelegatesToMap implements Cloneable {\n" +
+            "  \n" +
+            "  TaskConfig() {\n" +
+            "  }\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  TaskConfig clone() {\n" +
+            "    def copy = (TaskConfig) super.clone()\n" +
+            "    copy.target = new HashMap<>(this.target)\n" + // NPE
+            "    return copy\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "new TaskConfig().clone()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9005
+    public void testCompileStatic9005() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.util.concurrent.Callable\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Main extends A1 {" +
+            "  Map<String, Object> getCommands() {\n" +
+            "    Map<String, Object> commands = getMap()\n" +
+            "    commands.put('greet', new Callable<String>() {\n" +
+            "      @Override\n" +
+            "      String call() {\n" +
+            "        def string = getObj().toString()\n" +
+            "        return string\n" +
+            "      }\n" +
+            "    })\n" +
+            "    return commands\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def greeter = new Main().commands['greet']\n" +
+            "    if (greeter instanceof Callable) {\n" +
+            "      print greeter.call()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+
+            "A1.java",
+            "abstract class A1 extends A2 {\n" +
+            "  public Object getObj() {\n" +
+            "    return \"hi!\";\n" +
+            "  }\n" +
+            "}\n",
+
+            "A2.groovy",
+            "abstract class A2 {\n" +
+            "  Map<String, Object> getMap() {\n" +
+            "    [:]\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hi!");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9007
+    public void testCompileStatic9007() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    public final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.n == n }\n" + // "it" must not be converted to "owner.it"
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
+    @Test
+    public void testCompileStatic9007a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    private final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.n == n }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
+    @Test
+    public void testCompileStatic9007b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private enum E {\n" +
+            "    ONE(1), TWO(2)\n" +
+            "    private final int n\n" +
+            "    E(int n) { this.n = n }\n" +
+            "    static E valueOf(int n) {\n" +
+            "      values().find { it.@n == n }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print E.valueOf(2)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "TWO");
+    }
+
+    @Test
+    public void testCompileStatic9007or9043_enumConstToPrivate1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "enum E {\n" +
+            "  ONE, TWO\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  E.ONE.name\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tE.ONE.name\n" +
+            "\t^^^^^\n" +
+            "Groovy:Access to E#name is forbidden @ line 6, column 3.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9007or9043_enumConstToPrivate2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "enum E {\n" +
+            "  ONE, TWO\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  E.ONE.ordinal\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tE.ONE.ordinal\n" +
+            "\t^^^^^\n" +
+            "Groovy:Access to E#ordinal is forbidden @ line 6, column 3.\n" +
+            "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    public void testCompileStatic9043_nonStaticInnerToPackage() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  class Inner {\n" +
+            "    void meth() { print value }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToProtected() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToPublic() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_nonStaticInnerToPrivate() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner(new Main()).meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    public void testCompileStatic9043_staticInnerToPackage() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    public void testCompileStatic9043_staticInnerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static class Inner {\n" +
+            "    void meth() {\n" +
+            "      print value\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 6)\n" +
+            "\tprint value\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:...\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToProtected() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToPublic() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_staticInnerToPrivate() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static class Inner {\n" +
+            "    void meth() { print VALUE }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new Inner().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPackage() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static main(args) {\n" +
+            "    print new Main().value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToProtected() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPublic() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_selfToPrivate() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackage() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  @PackageScope String value = 'value'\n" + // instance field
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print new Main().value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPackageX() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "class Main {\n" +
+            "  @PackageScope static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "class More extends p.Main {}\n",
+
+            "p/Peer.groovy",
+            "package p\n" +
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print q.More.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToProtected() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPublic() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new Peer().meth()\n" +
+            "  }\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_peerToPrivate() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.*\n" +
+            "@CompileStatic class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "}\n" +
+            "@CompileStatic class Peer {\n" +
+            "  void meth() {\n" +
+            "    print Main.VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 7)\n" +
+            "\tprint Main.VALUE\n" +
+            "\t      ^^^^\n" +
+            "Groovy:Access to Main#VALUE is forbidden @ line 7, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPackage() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  static void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    public void testCompileStatic9043_subToPackage2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" + // non-static
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPackageX() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  @groovy.transform.PackageScope static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "p/More.groovy",
+            "package p\n" +
+            "class More extends Main {}\n",
+
+            "q/Test.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Test {\n" +
+            "  void meth() {\n" +
+            "    p.More.VALUE\n" + // Main and More are in same package, Test is not
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\Test.groovy (at line 5)\n" +
+            "\tp.More.VALUE\n" +
+            "\t^^^^^^\n" +
+            "Groovy:Access to p.More#VALUE is forbidden @ line 5, column 5.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToProtected() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  protected static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.More().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPublic() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  public static final String VALUE = 'value'\n" +
+            "  static main(args) {\n" +
+            "    new q.More().meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testCompileStatic9043_subToPrivate() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  static void meth() {\n" +
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    public void testCompileStatic9043_subToPrivate2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  private static final String VALUE = 'value'\n" +
+            "}\n",
+
+            "q/More.groovy",
+            "package q\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class More extends p.Main {\n" +
+            "  void meth() {\n" + // non-static
+            "    print VALUE\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in q\\More.groovy (at line 5)\n" +
+            "\tprint VALUE\n" +
+            "\t      ^^^^^\n" +
+            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic9058() {
-        assumeTrue(isAtLeastGroovy(25));
-
+        //@formatter:off
         String[] sources = {
             "p/Main.groovy",
             "package p\n" +
@@ -525,7 +1735,527 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  public java.util.List bar() { return null; }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9063
+    public void testCompileStatic9063() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  protected String message = 'hello'\n" +
+            "  \n" +
+            "  void meth() {\n" +
+            "    { ->\n" +
+            "      { ->\n" +
+            "        print message.length()\n" +
+            "      }.call()\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  \n" +
+            "  static main(args) {\n" +
+            "    new Main().meth()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "5");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    public void testCompileStatic9074() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private static Collection<?> c = new ArrayList<String>()\n" +
+            "  static main(args) {\n" +
+            "    c.add(new Object())\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    public void testCompileStatic9074a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void addRectangle(List<? extends Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle()) // TODO: compile-time error!\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    public void testCompileStatic9074b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import java.awt.Canvas\n" +
+            "abstract class Shape {\n" +
+            "  abstract void draw(Canvas c)\n" +
+            "}\n" +
+            "class Circle extends Shape {\n" +
+            "  private int x, y, radius\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "class Rectangle extends Shape {\n" +
+            "  private int x, y, width, height\n" +
+            "  @Override void draw(Canvas c) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void addRectangle(List<? super Shape> shapes) {\n" +
+            "  shapes.add(0, new Rectangle())\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9074c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? extends Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test @Ignore
+    public void testCompileStatic9074d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Factory {\n" +
+            "  public <T> T make(Class<T> type, ... args) {}\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Factory fact, Rule rule) {\n" +
+            "  Type bean = fact.make(rule.type)\n" +
+            "}\n",
+
+            "Rule.java",
+            "public class Rule {\n" +
+            "  public Class<? super Type> getType() {\n" +
+            "    return null;\n" +
+            "  }\n" +
+            "}\n",
+
+            "Type.java",
+            "public interface Type {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m1() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m2() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      m1()\n" +
+            "      print ' '\n" +
+            "      m2()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086d() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate inner delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086e() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate outer delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    public void testCompileStatic9086f() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "void outer(@DelegatesTo(value = C1, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block.call()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    m()\n" +
+            "    print ' '\n" +
+            "    inner {\n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate outer delegate");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9089
+    public void testCompileStatic9089() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void outer(@DelegatesTo(value = C1) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block()\n" +
+            "}\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      owner.m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "outer delegate");
+    }
+
+    @Test
+    public void testCompileStatic9089a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C1 {\n" +
+            "  void m() {\n" +
+            "    print 'outer delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "class C2 {\n" +
+            "  void m() {\n" +
+            "    print 'inner delegate'\n" +
+            "  }\n" +
+            "}\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void outer(@DelegatesTo(value = C1) Closure block) {\n" +
+            "  block.delegate = new C1()\n" +
+            "  block()\n" +
+            "}\n" +
+            "@SuppressWarnings('rawtypes')\n" +
+            "void inner(@DelegatesTo(value = C2, strategy = Closure.OWNER_FIRST) Closure block) {\n" +
+            "  block.delegate = new C2()\n" +
+            "  block()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  outer {\n" +
+            "    inner {\n" +
+            "      delegate.m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "inner delegate");
     }
 }

@@ -136,8 +136,6 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
- *
- * @author <a href="mailto:jstrachan@protique.com">James Strachan</a>
  */
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 
@@ -1132,9 +1130,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         methodNode = new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node == null) {
-            // GRECLIPSE edit
-            //    throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
-            //}
+            /* GRECLIPSE edit
+                throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
+            }
+            */
                 if (getController() != null) getController().addError(new SyntaxException(
                     "You defined a method without body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
@@ -1578,20 +1577,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected AnnotationNode annotation(AST annotationNode) {
-        /* GRECLIPSE edit
         AST node = annotationNode.getFirstChild();
+        /* GRECLIPSE edit
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
-        configureAST(annotatedNode, annotationNode);
-        */
+         */
         AnnotationNode annotatedNode = new AnnotationNode(makeType(annotationNode));
-        configureAST(annotatedNode, annotationNode.getFirstChild());
-        // Eclipse wants this for error reporting on name range:
-        annotatedNode.setEnd(annotatedNode.getEnd() - 1);
-
-        // save the full source range of the annotation for future use
-        int start = locations.findOffset(annotationNode.getLine(), annotationNode.getColumn());
-        int until = locations.findOffset(((GroovySourceAST) annotationNode).getLineLast(), ((GroovySourceAST) annotationNode).getColumnLast());
+        // GRECLIPSE end
+        configureAST(annotatedNode, annotationNode);
+        // GRECLIPSE add
+        int start = annotatedNode.getStart();
+        int until = annotatedNode.getEnd();
         // check for trailing whitespace
         if (getController() != null) {
             char[] sourceChars = getController().readSourceRange(start, until - start);
@@ -1602,9 +1598,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 }
             }
         }
-        annotatedNode.setNodeMetaData("source.offsets", Long.valueOf(((long) start << 32) | until)); // pack the offsets into one long integer value
-
-        AST node = annotationNode.getFirstChild();
+        annotatedNode.setEnd(until);
+        int[] row_col = locations.getRowCol(until);
+        annotatedNode.setLastLineNumber(row_col[0]);
+        annotatedNode.setLastColumnNumber(row_col[1]);
         // GRECLIPSE end
         while (true) {
             node = node.getNextSibling();
@@ -1622,7 +1619,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         return annotatedNode;
     }
-
 
     // Statements
     //-------------------------------------------------------------------------
@@ -2132,7 +2128,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return whileStatement;
     }
 
-
     // Expressions
     //-------------------------------------------------------------------------
 
@@ -2160,9 +2155,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             }
         }
-        /* GRECLIPSE edit -- each case of expressionSwitch does this already
-        configureAST(expression, node);
-        */
+        // GRECLIPSE edit -- each case of expressionSwitch does this already
+        //configureAST(expression, node);
+        // GRECLIPSE end
         return expression;
     }
 
@@ -3784,7 +3779,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.getClassNode().setStart(-1);
         node.getClassNode().setEnd(-2);
         node.setStart(-1);
-        node.setEnd(-2);
+        node.setEnd(-1);
         return node;
     }
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,13 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGroovyAnnotation() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "@interface A {}",
@@ -30,12 +30,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "B.groovy",
             "@A class B {}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test // GRECLIPSE-697
     public void testInlineDeclaration() {
+        //@formatter:off
         String[] sources = {
             "A.groovy",
             "@B\n" +
@@ -46,6 +48,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "   String value() default \"\"\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, "abc");
 
@@ -61,9 +64,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
-    @Test
+    @Test // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
     public void testLongLiteral() {
-        // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
+        //@formatter:off
         String[] sources = {
             "Min.java",
             "import java.lang.annotation.*;\n" +
@@ -78,12 +81,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  Integer index\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testBigIntegerLiteral() {
+        //@formatter:off
         String[] sources = {
             "Min.java",
             "import java.lang.annotation.*;\n" +
@@ -98,8 +103,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  Integer index\n" +
             "}",
         };
+        //@formatter:on
 
-        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -111,6 +117,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testBigDecimalLiteral() {
+        //@formatter:off
         String[] sources = {
             "Min.java",
             "import java.lang.annotation.*;\n" +
@@ -125,8 +132,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  BigDecimal index\n" +
             "}",
         };
+        //@formatter:on
 
-        // there should not be an error from the Java model -- org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -138,6 +146,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testClassAnnotationValue1() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -152,12 +161,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testClassAnnotationValue2() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -172,12 +183,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testClassAnnotationValue3() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -194,12 +207,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testClosureAnnotationValue() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -214,12 +229,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test // GRECLIPSE-629
     public void testConstAnnotationValue() {
+        //@formatter:off
         String[] sources = {
             "Const.java",
             "public class Const {\n" +
@@ -238,12 +255,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  String value()\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources, CompilerOptions.versionToJdkLevel(System.getProperty("java.version")) < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
     }
 
     @Test // GRECLIPSE-830
     public void testDoubleAttributeWithBigDecimalValue() {
+        //@formatter:off
         String[] sources = {
             "AnnotationDouble.groovy",
             "import java.lang.annotation.*\n" +
@@ -255,13 +274,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
 
             "AnnotationDoubleTest.groovy",
-            "class AnnotationDoubleTest {\n" +
+            "final class AnnotationDoubleTest {\n" +
             "  class FooWithAnnotation {\n" +
             "    @AnnotationDouble(value='test', width=1.0) double value\n" +
             "  }\n" +
             "  def test = new AnnotationDoubleTest()\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -276,6 +296,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     public void testLocalAnnotationConstant1() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -285,6 +306,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
@@ -293,6 +315,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     public void testLocalAnnotationConstant2() {
         // there was an error because the variable expression VALUE was not recognized as constant
         // see ResolveVisitor.transformInlineConstants(Expression)
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "class Main {\n" +
@@ -302,12 +325,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testLocalAnnotationConstant3() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@SuppressWarnings(Main.VALUE)\n" +
@@ -315,12 +340,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  public static final String VALUE = 'nls'\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testLocalAnnotationConstant3a() {
+        //@formatter:off
         String[] sources = {
             "Main.groovy",
             "@SuppressWarnings(VALUE)\n" +
@@ -328,6 +355,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  public static final String VALUE = 'nls'\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in Main.groovy (at line 1)\n" +
@@ -339,6 +367,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testLocalAnnotationClassLiteral() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -353,12 +382,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  static class Inner {}\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testLocalAnnotationClassLiteral2() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -373,6 +404,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  static class Inner {}\n" +
             "}",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in Main.groovy (at line 1)\n" +
@@ -389,6 +421,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testImportedAnnotationConstant1() {
+        //@formatter:off
         String[] sources = {
             "p/I.java",
             "package p;\n" +
@@ -404,12 +437,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testImportedAnnotationConstant2() {
+        //@formatter:off
         String[] sources = {
             "p/I.java",
             "package p;\n" +
@@ -425,12 +460,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAliasedAnnotationConstant1() {
+        //@formatter:off
         String[] sources = {
             "p/I.java",
             "package p;\n" +
@@ -446,12 +483,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAliasedAnnotationConstant2() {
+        //@formatter:off
         String[] sources = {
             "p/I.java",
             "package p;\n" +
@@ -467,12 +506,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAliasedAnnotationClassLiteral1() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -487,12 +528,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAliasedAnnotationClassLiteral2() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -508,12 +551,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
     public void testAliasedAnnotationClassLiteral3() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -532,34 +577,80 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "class Main {\n" +
             "}",
         };
+        //@formatter:on
 
         runConformTest(sources);
     }
 
     @Test
+    public void testMissingAnnotationAttributeValue1() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings\n" +
+            "class Main {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'value' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/886
+    public void testMissingAnnotationAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  void meth() {\n" +
+            "    @SuppressWarnings\n" +
+            "    def local = 'unused'\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 3)\n" +
+            "\t@SuppressWarnings\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:No explicit/default value found for annotation attribute 'value' in @java.lang.SuppressWarnings\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testTargetMetaAnnotation() {
+        //@formatter:off
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
             "@Target(ElementType.METHOD)\n" +
             "@interface Anno {\n" +
-            "}",
+            "}\n",
 
-            "Bar.groovy",
-            "@Anno class Bar {}",
+            "Main.groovy",
+            "@Anno class Main {}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Bar.groovy (at line 1)\n" +
-            "\t@Anno class Bar {}\n" +
-            "\t ^^^^\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@Anno class Main {}\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test
     public void testTypeLevelAnnotations() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -576,6 +667,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -587,35 +679,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMethodLevelAnnotations() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  @Anno\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno {}\n",
-        };
-
-        runConformTest(sources, "success");
-
-        checkGCUDeclaration("X.groovy", "public static @Anno void main(String... argv) {");
-
-        checkDisassemblyFor("p/X.class",
-            "  @p.Anno\n" +
-            "  public static void main(java.lang.String... argv);\n");
-    }
-
-    @Test
     public void testFieldLevelAnnotations() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -633,6 +698,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -645,6 +711,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testFieldLevelAnnotations_classRetention() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -662,6 +729,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -673,6 +741,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testFieldLevelAnnotations_sourceRetention() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -690,6 +759,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.SOURCE)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -701,6 +771,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testFieldLevelAnnotations_defaultRetention() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -716,17 +787,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
-        String expectedOutput =
-            "Ljava/lang/String;\n" +
+        String expectedOutput = isAtLeastJava(25)
+            ? "  @p.Anno\n"
+            : "Ljava/lang/String;\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
 
     @Test
     public void testFieldLevelAnnotations_delegate() {
+        //@formatter:off
         String[] sources = {
             "Bar.groovy",
             "class Bar {\n" +
@@ -744,6 +818,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources);
 
@@ -756,7 +831,38 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testConstructorLevelAnnotations() {
+    public void testMethodLevelAnnotations() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @Anno\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno {}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+
+        checkGCUDeclaration("X.groovy", "public static @Anno void main(String... argv) {");
+
+        checkDisassemblyFor("p/X.class",
+            "  @p.Anno\n" +
+            "  public static void main(java.lang.String... argv);\n");
+    }
+
+    @Test
+    public void testConstructorLevelAnnotations1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -774,6 +880,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -785,7 +892,37 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testConstructorLevelAnnotations2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "class C {\n" +
+            "  @Deprecated\n" +
+            "  C() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public @Deprecated C() {\n" +
+            "  }\n" +
+            "}\n"
+        );
+
+        checkDisassemblyFor("p/C.class",
+            "  @java.lang.Deprecated\n" +
+            "  public C();\n");
+    }
+
+    @Test
     public void testAnnotations04_defaultParamMethods() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -803,6 +940,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -813,6 +951,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeLevelAnnotations_SingleMember1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -834,6 +973,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -842,6 +982,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeLevelAnnotations_SingleMember2() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -863,6 +1004,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -871,6 +1013,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testMethodLevelAnnotations_SingleMember1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -892,6 +1035,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -900,6 +1044,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testMethodLevelAnnotations_SingleMember2() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -921,6 +1066,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -929,6 +1075,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testFieldLevelAnnotations_SingleMember1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -950,6 +1097,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -958,6 +1106,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeLevelAnnotations_SelfReferential1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -972,12 +1121,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { String value(); }\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testTypeLevelAnnotations_SelfReferential2() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -992,12 +1143,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { String value(); }\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/619
     public void testTypeLevelAnnotations_SelfReferential3() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1012,12 +1165,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { String value(); }\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources, "");
     }
 
     @Test
     public void testAnnotations_singleMemberAnnotationField1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1039,6 +1194,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Target {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
 
@@ -1047,6 +1203,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotations_singleMemberAnnotationFailure1() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1064,6 +1221,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1081,6 +1239,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotations_singleMemberAnnotationFailure2() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1090,6 +1249,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
@@ -1123,6 +1283,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test // All types in groovy with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType01() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1145,12 +1306,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
     }
 
     @Test // All groovy but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType02() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1173,18 +1336,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // All groovy but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType03() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1207,18 +1372,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // All groovy but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType04() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1241,18 +1408,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // Two types in groovy, one in java with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType05() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1275,12 +1444,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
     }
 
     @Test // 2 groovy, 1 java but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType06() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1303,18 +1474,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // 2 groovy, 1 java but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType07() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1337,18 +1510,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // 2 groovy, 1 java but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType08() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1371,18 +1546,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // 1 groovy, 2 java with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType09() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1405,12 +1582,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runConformTest(sources, "success");
     }
 
     @Test // 1 groovy, 2 java but annotation can only be put on METHOD - that is violated by class X
     public void testAnnotationsTargetType10() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1433,18 +1612,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // 1 groovy, 2 java but annotation can only be put on FIELD - that is violated by class X
     public void testAnnotationsTargetType11() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1467,18 +1648,20 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
             "----------\n");
     }
 
     @Test // 1 groovy, 2 java but annotation can only be put on FIELD or METHOD - that is violated by class X
     public void testAnnotationsTargetType12() {
+        //@formatter:off
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1501,358 +1684,14 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "class Foo {}",
         };
+        //@formatter:on
 
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(p.Foo.class)\n" +
-            "\t ^^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Annotation @p.Anno is not allowed on element TYPE\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards01() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "@Anno(String.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.groovy",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? extends Number> value(); }\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
-            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards02() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "@Anno(String.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s) {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? extends Number> value(); }\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.java (at line 2)\n" +
-            "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^\n" +
-            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards03() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "@Anno(String.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s) {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.groovy",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? extends Number> value(); }\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.java (at line 2)\n" +
-            "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^\n" +
-            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards04() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "@Anno(String.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s) {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? extends Number> value(); }\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
-            "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards05() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "@Anno(Integer.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s) {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.groovy",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? extends Number> value(); }\n",
-        };
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testWildcards06() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "@Anno(Number.class)\n" +
-            "public class X {\n" +
-            "  public void foo(String s) {}\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? super Integer> value(); }\n",
-        };
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testWildcards07() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "@Anno(String.class)\n" +
-            "public class X {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/Anno.java",
-            "package p;\n" +
-            "import java.lang.annotation.*;\n" +
-            "@Retention(RetentionPolicy.RUNTIME)\n" +
-            "@interface Anno { Class<? super Integer> value(); }\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
-            "Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards08() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public static void main(String[] args) {\n" +
-            "    new J<Integer>().run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "public interface I {\n" +
-            "}\n",
-
-            "p/J.java",
-            "package p;\n" +
-            "public class J<T extends Number & I> {\n" +
-            "  Class<T> run() { return null; }\n" +
-            "}\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.java (at line 4)\n" +
-            "\tnew J<Integer>().run();\n" +
-            "\t      ^^^^^^^\n" +
-            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type J<T>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards09() {
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public static void main(String[] args) {\n" +
-            "    new G<Integer>().run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "public interface I {\n" +
-            "}\n",
-
-            "p/G.groovy",
-            "package p\n" +
-            "class G<T extends Number & I> {\n" +
-            "  Class<T> run() {}\n" +
-            "}\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.java (at line 4)\n" +
-            "\tnew G<Integer>().run();\n" +
-            "\t      ^^^^^^^\n" +
-            "Bound mismatch: The type Integer is not a valid substitute for the bounded parameter <T extends Number & I> of the type G<T>\n" +
-            "----------\n");
-    }
-
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8990")
-    public void testWildcards10() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p\n" +
-            "class X {\n" +
-            "  static main(args) {\n" +
-            "    new G<Integer>().run()\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "public interface I {\n" +
-            "}\n",
-
-            "p/G.groovy",
-            "package p\n" +
-            "class G<T extends Number & I> {\n" +
-            "  Class<T> run() {}\n" +
-            "}\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 4)\n" +
-            "\tnew G<Integer>().run()\n" +
-            "\t      ^^^^^^^\n" +
-            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testWildcards11() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p\n" +
-            "class W implements I {}\n" +
-            "class X extends G<W> {\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "public interface I {\n" +
-            "}\n",
-
-            "p/G.groovy",
-            "package p\n" +
-            "class G<T extends Number & I> {\n" +
-            "  Class<T> run() {}\n" +
-            "}\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 3)\n" +
-            "\tclass X extends G<W> {\n" +
-            "\t                ^\n" +
-            "Groovy:The type W is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
-            "----------\n");
-    }
-
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8990")
-    public void testWildcards12() {
-        String[] sources = {
-            "p/X.groovy",
-            "package p\n" +
-            "class X extends G<Integer> {\n" +
-            "}\n",
-
-            "p/I.java",
-            "package p;\n" +
-            "public interface I {\n" +
-            "}\n",
-
-            "p/G.groovy",
-            "package p\n" +
-            "class G<T extends Number & I> {\n" +
-            "  Class<T> run() {}\n" +
-            "}\n",
-        };
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\X.groovy (at line 2)\n" +
-            "\tclass X extends G<Integer> {\n" +
-            "\t                ^\n" +
-            "Groovy:The type Integer is not a valid substitute for the bounded parameter <T extends java.lang.Number & p.I>\n" +
             "----------\n");
     }
 }

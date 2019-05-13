@@ -66,7 +66,6 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +78,7 @@ import java.util.Set;
 
 import static org.codehaus.groovy.ast.CompileUnit.ConstructedOuterNestedClassNode;
 import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
+import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
 
@@ -363,12 +363,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolveToOuterNested(type)) return;
         // GRECLIPSE edit
         //addError("unable to resolve class " + type.getName() + " " + msg, node);
-        String fullMsg = "unable to resolve class " + type.toString(false) + msg;
-        if (type.getEnd() > 0) {
-            addError(fullMsg, type);
-        } else {
-            addError(fullMsg, node);
-        }
+        addError("unable to resolve class " + type.toString(false) + msg, type.getEnd() > 0 ? type : node);
         // GRECLIPSE end
     }
 
@@ -586,7 +581,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         String qualName = type.getName();
         int dotIndex = qualName.indexOf('.'), dollarIndex = qualName.indexOf('$');
         String firstComponent = (dotIndex == -1 && dollarIndex == -1 ? qualName : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex)));
-        if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
+        if (existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
         // GRECLIPSE end
         if (resolveFromCompileUnit(val)) {
             type.setRedirect(val);
@@ -1347,17 +1342,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected Expression transformClosureExpression(ClosureExpression ce) {
         boolean oldInClosure = inClosure;
         inClosure = true;
-        Parameter[] paras = ce.getParameters();
-        if (paras != null) {
-            for (Parameter para : paras) {
-                ClassNode t = para.getType();
-                resolveOrFail(t, ce);
-                visitAnnotations(para);
-                if (para.hasInitialExpression()) {
-                    para.setInitialExpression(transform(para.getInitialExpression()));
-                }
-                visitAnnotations(para);
+        for (Parameter para : getParametersSafe(ce)) {
+            ClassNode t = para.getType();
+            resolveOrFail(t, ce);
+            visitAnnotations(para);
+            if (para.hasInitialExpression()) {
+                para.setInitialExpression(transform(para.getInitialExpression()));
             }
+            visitAnnotations(para);
         }
 
         Statement code = ce.getCode();
@@ -1447,7 +1439,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
         if (annotations.isEmpty()) return;
-        //Map<String, AnnotationNode> tmpAnnotations = new HashMap<String, AnnotationNode>();
+        /* GRECLIPSE edit
+        Map<String, AnnotationNode> tmpAnnotations = new HashMap<String, AnnotationNode>();
+        */
         ClassNode annType;
         for (AnnotationNode an : annotations) {
             // skip built-in properties
@@ -1463,12 +1457,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(adjusted);
                 checkAnnotationMemberValue(adjusted);
             }
-            /* GRECLIPSE edit -- can't do this
+            /* GRECLIPSE edit -- redundant check
             if (annType.isResolved()) {
                 Class annTypeClass = annType.getTypeClass();
                 Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
-                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME) && !isRepeatable(annTypeClass)) {
-                    // remember runtime/non-repeatable annos (auto collecting of Repeatable annotations is handled elsewhere)
+                if (retAnn != null && !retAnn.value().equals(RetentionPolicy.SOURCE) && !isRepeatable(annTypeClass)) {
+                    // remember non-source/non-repeatable annos (auto collecting of Repeatable annotations is handled elsewhere)
                     AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
                     if (anyPrevAnnNode != null) {
                         addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
@@ -1479,7 +1473,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private boolean isRepeatable(Class annTypeClass) {
         Annotation[] annTypeAnnotations = annTypeClass.getAnnotations();
         for (Annotation annTypeAnnotation : annTypeAnnotations) {
@@ -1489,6 +1483,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return false;
     }
+    */
 
     // resolve constant-looking expressions statically (do here as they get transformed away later)
     private static Expression transformInlineConstants(final Expression exp) {
@@ -1797,7 +1792,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         upperBoundsToResolve.add(new Tuple2<>(upperBound, classNode));
                     }
 
-                    if (upperBound.isUsingGenerics()) {
+                    if (upperBound != null && upperBound.isUsingGenerics()) {
                         upperBoundsWithGenerics.add(new Tuple2<>(upperBound, type));
                     }
                 }

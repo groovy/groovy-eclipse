@@ -23,7 +23,6 @@ import org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory;
 
 /**
  * A factory of parser plugin instances
- *
  */
 public abstract class ParserPluginFactory {
 
