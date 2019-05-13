@@ -338,8 +338,8 @@ class GrapeIvy implements GrapeEngine {
                         // GRECLIPSE add
                         } finally {
                             closeQuietly(is)
-                        }
                         // GRECLIPSE end
+                        }
 
                         Map<CachedClass, List<MetaMethod>> metaMethods = new HashMap<CachedClass, List<MetaMethod>>()
                         mcRegistry.registerExtensionModuleFromProperties(props, loader, metaMethods)
@@ -361,8 +361,8 @@ class GrapeIvy implements GrapeEngine {
                 // GRECLIPSE add
                 } finally {
                     closeQuietly(jar)
-                }
                 // GRECLIPSE end
+                }
             }
         }
     }
@@ -404,8 +404,8 @@ class GrapeIvy implements GrapeEngine {
                 // GRECLIPSE add
                 } finally {
                     closeQuietly(is)
-                }
                 // GRECLIPSE end
+                }
             }
             // TODO: remove in a future release (replaced by GroovyRunnerRegistry)
             providerConfig = 'org.codehaus.groovy.plugins.Runners'
@@ -423,8 +423,8 @@ class GrapeIvy implements GrapeEngine {
                 // GRECLIPSE add
                 } finally {
                     closeQuietly(is)
-                }
                 // GRECLIPSE end
+                }
             }
             // GroovyRunners are loaded per ClassLoader using a ServiceLoader so here
             // it only needs to be indicated that the service provider file was found
@@ -437,8 +437,8 @@ class GrapeIvy implements GrapeEngine {
         // GRECLIPSE add
         } finally {
             closeQuietly(zf)
-        }
         // GRECLIPSE end
+        }
         services
     }
 

@@ -117,8 +117,14 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
 
     @Override
     public Groovydoc getGroovydoc() {
+        /* GRECLIPSE edit
+        Groovydoc groovydoc = this.<Groovydoc>getNodeMetaData(DOC_COMMENT);
+
+        return null == groovydoc ? Groovydoc.EMPTY_GROOVYDOC : groovydoc;
+        */
         Groovydoc groovydoc = getNodeMetaData(DOC_COMMENT);
         return (groovydoc != null ? groovydoc : Groovydoc.EMPTY_GROOVYDOC);
+        // GRECLIPSE end
     }
 
     @Override

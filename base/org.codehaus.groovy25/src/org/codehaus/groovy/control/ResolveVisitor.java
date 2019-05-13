@@ -66,7 +66,6 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -364,12 +363,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolveToOuterNested(type)) return;
         // GRECLIPSE edit
         //addError("unable to resolve class " + type.getName() + " " + msg, node);
-        String fullMsg = "unable to resolve class " + type.toString(false) + msg;
-        if (type.getEnd() > 0) {
-            addError(fullMsg, type);
-        } else {
-            addError(fullMsg, node);
-        }
+        addError("unable to resolve class " + type.toString(false) + msg, type.getEnd() > 0 ? type : node);
         // GRECLIPSE end
     }
 
@@ -587,7 +581,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         String qualName = type.getName();
         int dotIndex = qualName.indexOf('.'), dollarIndex = qualName.indexOf('$');
         String firstComponent = (dotIndex == -1 && dollarIndex == -1 ? qualName : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex)));
-        if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
+        if (existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
         // GRECLIPSE end
         if (resolveFromCompileUnit(val)) {
             type.setRedirect(val);
@@ -1445,7 +1439,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
         if (annotations.isEmpty()) return;
-        //Map<String, AnnotationNode> tmpAnnotations = new HashMap<String, AnnotationNode>();
+        /* GRECLIPSE edit
+        Map<String, AnnotationNode> tmpAnnotations = new HashMap<String, AnnotationNode>();
+        */
         ClassNode annType;
         for (AnnotationNode an : annotations) {
             // skip built-in properties
@@ -1461,7 +1457,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(adjusted);
                 checkAnnotationMemberValue(adjusted);
             }
-            /* GRECLIPSE edit -- can't do this
+            /* GRECLIPSE edit -- redundant check
             if (annType.isResolved()) {
                 Class annTypeClass = annType.getTypeClass();
                 Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
@@ -1477,7 +1473,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private boolean isRepeatable(Class annTypeClass) {
         Annotation[] annTypeAnnotations = annTypeClass.getAnnotations();
         for (Annotation annTypeAnnotation : annTypeAnnotations) {
@@ -1487,6 +1483,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return false;
     }
+    */
 
     // resolve constant-looking expressions statically (do here as they get transformed away later)
     private static Expression transformInlineConstants(final Expression exp) {

@@ -351,6 +351,9 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableModifiers
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableModifiersOptContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableNamesContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.WhileStmtAltContext;
+/* GRECLIPSE edit
+import static org.apache.groovy.parser.antlr4.util.PositionConfigureUtils.configureAST;
+*/
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
@@ -361,16 +364,26 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     public AstBuilder(SourceUnit sourceUnit, CompilerConfiguration compilerConfiguration) {
         this.sourceUnit = sourceUnit;
+        /* GRECLIPSE edit
+        this.compilerConfiguration = compilerConfiguration;
+        this.moduleNode = new ModuleNode(sourceUnit);
+
+        this.lexer = new GroovyLangLexer(createCharStream(sourceUnit));
+        this.parser =
+                new GroovyLangParser(
+                    new CommonTokenStream(this.lexer));
+
+        this.parser.setErrorHandler(new DescriptiveErrorStrategy(this.lexer.getInputStream()));
+        */
         this.moduleNode = new ModuleNode(sourceUnit);
         CharStream charStream = createCharStream(sourceUnit);
 
         this.lexer = new GroovyLangLexer(charStream);
         this.parser = new GroovyLangParser(new CommonTokenStream(this.lexer));
         this.parser.setErrorHandler(new DescriptiveErrorStrategy(charStream));
-
+        // GRECLIPSE end
         this.tryWithResourcesASTTransformation = new TryWithResourcesASTTransformation(this);
         this.groovydocManager = new GroovydocManager(compilerConfiguration);
-
         // GRECLIPSE add
         try (BufferedReader reader = new BufferedReader(sourceUnit.getSource().getReader())) {
             // TODO: Can this be done without boxing/unboxing offsets or juggling temp arrays?
@@ -5213,6 +5226,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         parser.addErrorListener(this.createANTLRErrorListener());
     }
 
+    // GRECLIPSE edit
     private /*static*/ class DeclarationListStatement extends Statement {
         private final List<ExpressionStatement> declarationStatements;
 
@@ -5253,6 +5267,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private final ModuleNode moduleNode;
     private final SourceUnit sourceUnit;
+    /* GRECLIPSE edit
+    private final CompilerConfiguration compilerConfiguration;
+    */
     private final GroovyLangLexer lexer;
     private final GroovyLangParser parser;
     private final TryWithResourcesASTTransformation tryWithResourcesASTTransformation;
@@ -5305,6 +5322,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
     private static final Set<String> PRIMITIVE_TYPE_SET = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("boolean", "char", "byte", "short", "int", "long", "float", "double")));
+    /* GRECLIPSE edit
+    private static final Logger LOGGER = Logger.getLogger(AstBuilder.class.getName());
+    */
 
     private static final String INSIDE_PARENTHESES_LEVEL = "_INSIDE_PARENTHESES_LEVEL";
 

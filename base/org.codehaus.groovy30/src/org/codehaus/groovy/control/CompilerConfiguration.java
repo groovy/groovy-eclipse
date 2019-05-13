@@ -53,10 +53,10 @@ public class CompilerConfiguration {
     /** This (<code>"groovydoc"</code>) is the Optimization Option value for enabling attaching groovydoc as AST node metadata. */
     public static final String GROOVYDOC = "groovydoc";
 
-    /** This (<code>"runtimeGroovydoc"</code>) is the Optimization Option value for enabling attaching {@link groovy.lang.Groovydoc} annotation*/
+    /** This (<code>"runtimeGroovydoc"</code>) is the Optimization Option value for enabling attaching {@link groovy.lang.Groovydoc} annotation. */
     public static final String RUNTIME_GROOVYDOC = "runtimeGroovydoc";
 
-    /** This (<code>"memStub"</code>) is the Optimization Option value for enabling generating stubs in memory*/
+    /** This (<code>"memStub"</code>) is the Joint Compilation Option value for enabling generating stubs in memory. */
     public static final String MEM_STUB = "memStub";
 
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. **/
@@ -110,10 +110,19 @@ public class CompilerConfiguration {
             JDK13, Opcodes.V13
     );
 
-    /** An array of the valid targetBytecode values **/
-    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[0]);
+    /* GRECLIPSE edit
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    public static final int ASM_API_VERSION = Opcodes.ASM7;
+    /** An array of the valid targetBytecode values ** /
+    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(EMPTY_STRING_ARRAY);
+    */
+    /** The valid targetBytecode values. */
+    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
+    // GRECLIPSE end
+
+    /* GRECLIPSE edit
+    private static final String GROOVY_ANTLR4_OPT = "groovy.antlr4";
+    */
 
     /**
      * The default source encoding
@@ -378,6 +387,19 @@ public class CompilerConfiguration {
     private BytecodeProcessor bytecodePostprocessor;
 
     /**
+     * defines if antlr2 parser should be used or the antlr4 one if
+     * no factory is set yet
+     *
+     * The antlr4 parser Parrot is enabled by default
+     *
+     */
+    /* GRECLIPSE edit
+    private ParserVersion parserVersion = ParserVersion.V_4;
+
+    public static final int ASM_API_VERSION = Opcodes.ASM7;
+    */
+
+    /**
      * Sets the compiler flags/settings to default values.
      *
      * The following system properties are referenced when setting the configuration:
@@ -434,6 +456,19 @@ public class CompilerConfiguration {
 
         jointCompilationOptions = new HashMap<>(4);
         handleJointCompilationOption(jointCompilationOptions, MEM_STUB, "groovy.generate.stub.in.memory");
+
+        /* GRECLIPSE edit
+        try {
+            String groovyAntlr4Opt = getSystemPropertySafe(GROOVY_ANTLR4_OPT);
+
+            this.parserVersion =
+                    null == groovyAntlr4Opt || Boolean.valueOf(groovyAntlr4Opt)
+                            ? ParserVersion.V_4
+                            : ParserVersion.V_2;
+        } catch (Exception e) {
+            // IGNORE
+        }
+        */
     }
 
     private void handleOptimizationOption(Map<String, Boolean> options, String optionName, String sysOptionName) {
@@ -495,6 +530,9 @@ public class CompilerConfiguration {
         }
         setJointCompilationOptions(jointCompilationOptions);
         setPluginFactory(configuration.getPluginFactory());
+        /* GRECLIPSE edit
+        setParserVersion(configuration.getParserVersion());
+        */
         setDisabledGlobalASTTransformations(configuration.getDisabledGlobalASTTransformations());
         setScriptExtensions(new LinkedHashSet<String>(configuration.getScriptExtensions()));
         setOptimizationOptions(new HashMap<String, Boolean>(configuration.getOptimizationOptions()));
@@ -1088,6 +1126,16 @@ public class CompilerConfiguration {
         this.bytecodePostprocessor = bytecodePostprocessor;
     }
 
+    /* GRECLIPSE edit
+    public ParserVersion getParserVersion() {
+        return this.parserVersion;
+    }
+
+    public void setParserVersion(ParserVersion parserVersion) {
+        this.parserVersion = parserVersion;
+    }
+    */
+
     /**
      * Checks if invoke dynamic is enabled.
      */
@@ -1117,6 +1165,6 @@ public class CompilerConfiguration {
      */
     public boolean isMemStubEnabled() {
         Object memStubEnabled = getJointCompilationOptions().get(MEM_STUB);
-        return Optional.ofNullable(memStubEnabled).map("true"::equals).orElse(Boolean.FALSE).booleanValue();
+        return Optional.ofNullable(memStubEnabled).map(value -> "true".equals(value.toString())).orElse(Boolean.FALSE).booleanValue();
     }
 }

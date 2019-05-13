@@ -208,15 +208,17 @@ public interface GroovyCodeVisitor {
 
     default void visitListOfExpressions(List<? extends Expression> list) {
         if (list == null) return;
+        /* GRECLIPSE edit
         for (Expression expression : list) {
-            // GRECLIPSE edit
-            //if (expression instanceof SpreadExpression) {
-            //    Expression spread = ((SpreadExpression) expression).getExpression();
-            //    spread.visit(this);
-            //} else {
+            if (expression instanceof SpreadExpression) {
+                Expression spread = ((SpreadExpression) expression).getExpression();
+                spread.visit(this);
+            } else {
                 expression.visit(this);
-            //}
-            // GRECLIPSE end
+            }
         }
+        */
+        list.forEach(expr -> expr.visit(this));
+        // GRECLIPSE end
     }
 }

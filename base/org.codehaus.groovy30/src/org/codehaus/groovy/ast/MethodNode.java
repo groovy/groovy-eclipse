@@ -200,7 +200,10 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     }
 
     public String toString() {
+        // GRECLIPSE edit
+        //return super.toString() + "[" + getDeclaringClass().getName() + "#" + getTypeDescriptor() + "]";
         return super.toString() + "[" + getTypeDescriptor() + " from " + ClassNodeUtils.formatTypeName(getDeclaringClass()) + "]";
+        // GRECLIPSE end
     }
 
     public void setReturnType(ClassNode returnType) {

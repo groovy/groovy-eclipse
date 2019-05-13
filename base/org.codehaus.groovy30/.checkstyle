@@ -61,7 +61,6 @@
         <file-match-pattern match-pattern="groovy/control/ResolveVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/SourceUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/StaticImportVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/control/StaticVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/messages/LocatedMessage.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/tools/GroovyClass.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/AnnotationCollectorTransform.java" include-pattern="false" />
