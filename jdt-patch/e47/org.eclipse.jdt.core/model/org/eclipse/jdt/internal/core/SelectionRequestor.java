@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
@@ -622,6 +624,31 @@ protected void acceptSourceMethod(
 				addElement(method);
 			}
 		}
+		// GROOVY add -- check for bean property match
+		if (this.elementIndex < 0 && uniqueKey != null &&
+				LanguageSupportFactory.isInterestingProject(type.getJavaProject().getProject()) &&
+				LanguageSupportFactory.isInterestingSourceFile(type.getCompilationUnit().getElementName())) {
+
+			if (name.matches("(?:get|set|is).*") && parameterTypeNames.length == (selector[0] == 's' ? 1 : 0)) {
+				String prop = java.beans.Introspector.decapitalize(name.substring(selector[0] == 'i' ? 2 : 3));
+				for (IField field : type.getFields()) {
+					if (field.getElementName().equals(prop) && Flags.isPrivate(field.getFlags())) {
+						String key = String.valueOf(uniqueKey).replace(name + '(', prop + ')');
+						if (selector[0] == 's') key = key.substring(0, key.lastIndexOf(')'));
+						else key = key.replace("))", ")"); //$NON-NLS-1$ //$NON-NLS-2$
+
+						ResolvedSourceField property = new ResolvedSourceField(
+							(JavaElement) type,
+							prop,
+							key);
+						property.occurrenceCount = 1;
+						addElement(property);
+						break;
+					}
+				}
+			}
+		}
+		// GROOVY end
 	} catch (JavaModelException e) {
 		return;
 	}

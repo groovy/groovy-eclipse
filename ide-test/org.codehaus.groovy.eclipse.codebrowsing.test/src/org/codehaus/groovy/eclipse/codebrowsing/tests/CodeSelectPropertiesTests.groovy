@@ -193,6 +193,118 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'getXxx', 'xxx')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/888
+    void testGetter1() {
+        addGroovySource('''\
+            |class Pogo {
+            |  String string
+            |}
+            |'''.stripMargin())
+
+        def unit = addJavaSource('''\
+            |class Main {
+            |  void meth() {
+            |    new Pogo().getString()
+            |  }
+            |}
+            |'''.stripMargin())
+        prepareForCodeSelect(unit)
+
+        String target = 'getString'
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
+
+        //
+        def elements = unit.codeSelect(offset, length)
+
+        assert elements.length == 1
+        assert elements[0].exists()
+        assert elements[0].elementName == 'string'
+    }
+
+    @Test
+    void testGetter1a() {
+        addGroovySource('''\
+            |class Pogo {
+            |  private String string
+            |}
+            |'''.stripMargin())
+
+        def unit = addJavaSource('''\
+            |class Main {
+            |  void meth() {
+            |    new Pogo().getString()
+            |  }
+            |}
+            |'''.stripMargin())
+        prepareForCodeSelect(unit)
+
+        String target = 'getString'
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
+
+        //
+        def elements = unit.codeSelect(offset, length)
+
+        assert elements.length == 0
+    }
+
+    @Test
+    void testGetter1b() {
+        addGroovySource('''\
+            |class Pogo {
+            |  String string
+            |}
+            |'''.stripMargin())
+
+        def unit = addJavaSource('''\
+            |class Main {
+            |  void meth() {
+            |    new Pogo().getValue()
+            |  }
+            |}
+            |'''.stripMargin())
+        prepareForCodeSelect(unit)
+
+        String target = 'getValue'
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
+
+        //
+        def elements = unit.codeSelect(offset, length)
+
+        assert elements.length == 0
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/888
+    void testSetter1() {
+        addGroovySource('''\
+            |class Pogo {
+            |  String string
+            |}
+            |'''.stripMargin())
+
+        def unit = addJavaSource('''\
+            |class Main {
+            |  void meth() {
+            |    new Pogo().setString("")
+            |  }
+            |}
+            |'''.stripMargin())
+        prepareForCodeSelect(unit)
+
+        String target = 'setString'
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
+
+        //
+        def elements = unit.codeSelect(offset, length)
+
+        assert elements.length == 1
+        assert elements[0].exists()
+        assert elements[0].elementName == 'string'
+    }
+
     @Test // GRECLIPSE-1162
     void testIsGetter1() {
         String contents = '''\
@@ -202,6 +314,35 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
             |new C().isXxx()
             |'''.stripMargin()
         assertCodeSelect([contents], 'isXxx', 'xxx')
+    }
+
+    @Test
+    void testIsGetter2() {
+        addGroovySource('''\
+            |class Pogo {
+            |  boolean value
+            |}
+            |'''.stripMargin())
+
+        def unit = addJavaSource('''\
+            |class Main {
+            |  void meth() {
+            |    new Pogo().isValue()
+            |  }
+            |}
+            |'''.stripMargin())
+        prepareForCodeSelect(unit)
+
+        String target = 'isValue'
+        int offset = unit.source.lastIndexOf(target), length = target.length()
+        assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
+
+        //
+        def elements = unit.codeSelect(offset, length)
+
+        assert elements.length == 1
+        assert elements[0].exists()
+        assert elements[0].elementName == 'value'
     }
 
     @Test
