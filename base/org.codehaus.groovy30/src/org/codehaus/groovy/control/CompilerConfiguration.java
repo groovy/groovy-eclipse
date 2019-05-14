@@ -133,7 +133,7 @@ public class CompilerConfiguration {
      *  A convenience for getting a default configuration.  Do not modify it!
      *  See {@link #CompilerConfiguration(Properties)} for an example on how to
      *  make a suitable copy to modify.  But if you're really starting from a
-     *  default context, then you probably just want <code>new CompilerConfiguration()</code>. 
+     *  default context, then you probably just want <code>new CompilerConfiguration()</code>.
      */
     public static final CompilerConfiguration DEFAULT = new CompilerConfiguration() {
         @Override
@@ -232,6 +232,11 @@ public class CompilerConfiguration {
         }
 
         @Override
+        public void setPreviewFeatures(boolean previewFeatures) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void setRecompileGroovySource(boolean recompile) {
             throw new UnsupportedOperationException();
         }
@@ -281,7 +286,6 @@ public class CompilerConfiguration {
             throw new UnsupportedOperationException();
         }
     };
-
 
     /**
      * See {@link WarningMessage} for levels.
@@ -407,7 +411,7 @@ public class CompilerConfiguration {
      * <blockquote>
      * <table summary="Groovy Compiler Configuration Properties">
      *   <tr><th>Property Key</th><th>Related Property Getter</th></tr>
-     *   <tr><td><code>groovy.antlr4</code></td><td>{@link #getParserVersion}</td></tr>
+     *   <tr><td><code>groovy.antlr4</code></td><td>{@link #getPluginFactory}</td></tr>
      *   <tr><td><code>groovy.source.encoding</code> (defaulting to <code>file.encoding</code>)</td><td>{@link #getSourceEncoding}</td></tr>
      *   <tr><td><code>groovy.target.bytecode</code></td><td>{@link #getTargetBytecode}</td></tr>
      *   <tr><td><code>groovy.target.directory</code></td><td>{@link #getTargetDirectory}</td></tr>

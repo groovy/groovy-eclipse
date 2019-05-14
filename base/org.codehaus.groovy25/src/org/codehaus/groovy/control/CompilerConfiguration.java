@@ -135,7 +135,7 @@ public class CompilerConfiguration {
 
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return null;
+            return Collections.unmodifiableMap(super.getJointCompilationOptions());
         }
 
         @Override
@@ -214,6 +214,11 @@ public class CompilerConfiguration {
         }
 
         @Override
+        public void setPreviewFeatures(boolean previewFeatures) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void setRecompileGroovySource(boolean recompile) {
             throw new UnsupportedOperationException();
         }
@@ -263,7 +268,6 @@ public class CompilerConfiguration {
             throw new UnsupportedOperationException();
         }
     };
-
 
     /**
      * See {@link WarningMessage} for levels.
@@ -918,7 +922,7 @@ public class CompilerConfiguration {
     }
 
     private void setTargetBytecodeIfValid(String version) {
-        if (JDK_TO_BYTECODE_VERSION_MAP.keySet().contains(version)) {
+        if (JDK_TO_BYTECODE_VERSION_MAP.containsKey(version)) {
             this.targetBytecode = version;
         }
     }
@@ -1052,7 +1056,7 @@ public class CompilerConfiguration {
      * Checks if invoke dynamic is enabled.
      */
     public boolean isIndyEnabled() {
-        Boolean indyEnabled = this.getOptimizationOptions().get(INVOKEDYNAMIC);
+        Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
         return Optional.ofNullable(indyEnabled).orElse(Boolean.FALSE).booleanValue();
     }
 }
