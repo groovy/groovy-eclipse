@@ -63,7 +63,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private int foo;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void bar() {\n" +
             "  }\n" +
@@ -222,7 +222,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private int err;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -284,7 +284,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void bar() {\n" +
             "    int err;\n" +
@@ -520,7 +520,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object y() {\n" +
             "  }\n" +
@@ -551,7 +551,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object y() {\n" +
             "  }\n" +
@@ -582,7 +582,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object y() {\n" +
             "  }\n" +
@@ -613,7 +613,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object y() {\n" +
             "  }\n" +
@@ -644,7 +644,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object y() {\n" +
             "    java.lang.Object range;\n" +
@@ -765,7 +765,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package foo;\n" +
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void foo() {\n" +
             "  }\n" +
@@ -798,7 +798,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package foo;\n" +
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void foo() {\n" +
             "  }\n" +
@@ -831,7 +831,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package foo;\n" +
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void foo() {\n" +
             "  }\n" +
@@ -864,7 +864,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private java.lang.Object x;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object m() {\n" +
             "  }\n" +
@@ -999,7 +999,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package foo;\n" +
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void foo() {\n" +
             "    java.lang.Object blah;\n" +
@@ -1037,7 +1037,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "package foo;\n" +
             "import java.io.Serializable;\n" +
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void foo() {\n" +
             "    java.lang.Object blah;\n" +
@@ -1068,7 +1068,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public int y() {\n" +
             "  }\n" +
@@ -1105,7 +1105,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void m() {\n" +
             "  }\n" +
@@ -1142,7 +1142,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void m() {\n" +
             "    java.lang.Object a;\n" +
@@ -1239,7 +1239,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void m() {\n" +
             "    java.lang.Object leppard;\n" +
@@ -1271,7 +1271,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +
             "    java.lang.Object a;\n" +
@@ -1306,7 +1306,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private java.lang.Object x;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1428,7 +1428,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public java.lang.Object getNumber() {\n" +
             "  }\n" +
@@ -1462,7 +1462,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private int intField;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1489,7 +1489,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
         // check it made it through the parse though
@@ -1520,7 +1520,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
         // check it made it through the parse though
@@ -1551,7 +1551,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
         // check it made it through the parse though
@@ -1581,7 +1581,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1619,7 +1619,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1711,7 +1711,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public int y() {\n" +
             "  }\n" +
@@ -1737,7 +1737,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public int y() {\n" +
             "  }\n" +
@@ -1772,7 +1772,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1802,7 +1802,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  private int someProperty;\n" +
-            "  public X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public void someMethod() {\n" +
             "  }\n" +
