@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Test;
 
@@ -791,7 +793,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = isAtLeastJava(25)
+        String expectedOutput = isAtLeastGroovy(25)
             ? "  @p.Anno\n"
             : "Ljava/lang/String;\n" +
             "  private java.lang.String s;\n";

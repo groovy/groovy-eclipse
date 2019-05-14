@@ -196,7 +196,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
      * @see ModuleNode createStatementsClass().
      */
     public void setIsScriptBody() {
-        setNodeMetaData(SCRIPT_BODY_METHOD_KEY, true);
+        setNodeMetaData(SCRIPT_BODY_METHOD_KEY, Boolean.TRUE);
     }
 
     public String toString() {

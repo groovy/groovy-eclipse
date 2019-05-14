@@ -343,7 +343,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (!node.getDeclaredConstructors().isEmpty()) return;
 
         BlockStatement empty = new BlockStatement();
-        // GRECLIPSE edit -- We don't want source locations for synthetic default constructors
+        // GRECLIPSE edit -- no source positions for synthetic default constructors
         //empty.setSourcePosition(node);
         ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
         //constructor.setSourcePosition(node);

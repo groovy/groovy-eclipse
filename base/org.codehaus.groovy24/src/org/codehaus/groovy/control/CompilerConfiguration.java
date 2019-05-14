@@ -43,21 +43,21 @@ public class CompilerConfiguration {
     /** This (<code>"indy"</code>) is the Optimization Option value for enabling <code>invokedynamic</code> compilation. */
     public static final String INVOKEDYNAMIC = "indy";
 
-    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. **/
+    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. */
     public static final String JDK4 = "1.4";
-    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. **/
+    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. */
     public static final String JDK5 = "1.5";
-    /** This (<code>"1.6"</code>) is the value for targetBytecode to compile for a JDK 1.6. **/
+    /** This (<code>"1.6"</code>) is the value for targetBytecode to compile for a JDK 1.6. */
     public static final String JDK6 = "1.6";
-    /** This (<code>"1.7"</code>) is the value for targetBytecode to compile for a JDK 1.7. **/
+    /** This (<code>"1.7"</code>) is the value for targetBytecode to compile for a JDK 1.7. */
     public static final String JDK7 = "1.7";
-    /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. **/
+    /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. */
     public static final String JDK8 = "1.8";
 
-    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5 or later JVM. **/
+    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5 or later JVM. */
     public static final String POST_JDK5 = JDK5;
 
-    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. **/
+    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. */
     public static final String PRE_JDK5 = JDK4;
 
     // GRECLIPSE private->public
@@ -75,7 +75,7 @@ public class CompilerConfiguration {
      *  A convenience for getting a default configuration.  Do not modify it!
      *  See {@link #CompilerConfiguration(Properties)} for an example on how to
      *  make a suitable copy to modify.  But if you're really starting from a
-     *  default context, then you probably just want <code>new CompilerConfiguration()</code>. 
+     *  default context, then you probably just want <code>new CompilerConfiguration()</code>.
      */
     public static final CompilerConfiguration DEFAULT = new CompilerConfiguration();
 

@@ -92,9 +92,23 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        // GRECLIPSE edit
-        if (!annotations.isEmpty())
-            visitAnnotations(annotations);
+        if (annotations.isEmpty()) return;
+        /* GRECLIPSE edit
+        for (AnnotationNode an : annotations) {
+            // skip built-in properties
+            if (an.isBuiltIn()) continue;
+            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+                member.getValue().visit(this);
+            }
+        }
+    }
+
+    public void visitBlockStatement(BlockStatement block) {
+        visitStatement(block);
+        super.visitBlockStatement(block);
+    }
+        */
+        visitAnnotations(annotations);
         // GRECLIPSE end
     }
 
@@ -232,10 +246,12 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         super.visitAssertStatement(statement);
     }
 
+    // GRECLIPSE move
     public void visitBlockStatement(BlockStatement block) {
         visitStatement(block);
         super.visitBlockStatement(block);
     }
+    // GRECLIPSE end
 
     public void visitBreakStatement(BreakStatement statement) {
         visitStatement(statement);

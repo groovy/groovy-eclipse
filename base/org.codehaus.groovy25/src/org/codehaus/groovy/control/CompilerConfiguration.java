@@ -50,25 +50,25 @@ public class CompilerConfiguration {
     /** This (<code>"indy"</code>) is the Optimization Option value for enabling <code>invokedynamic</code> compilation. */
     public static final String INVOKEDYNAMIC = "indy";
 
-    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. **/
+    /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. */
     public static final String JDK4 = "1.4";
-    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. **/
+    /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. */
     public static final String JDK5 = "1.5";
-    /** This (<code>"1.6"</code>) is the value for targetBytecode to compile for a JDK 1.6. **/
+    /** This (<code>"1.6"</code>) is the value for targetBytecode to compile for a JDK 1.6. */
     public static final String JDK6 = "1.6";
-    /** This (<code>"1.7"</code>) is the value for targetBytecode to compile for a JDK 1.7. **/
+    /** This (<code>"1.7"</code>) is the value for targetBytecode to compile for a JDK 1.7. */
     public static final String JDK7 = "1.7";
-    /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. **/
+    /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. */
     public static final String JDK8 = "1.8";
-    /** This (<code>"9"</code>) is the value for targetBytecode to compile for a JDK 9. **/
+    /** This (<code>"9"</code>) is the value for targetBytecode to compile for a JDK 9. */
     public static final String JDK9 = "9";
-    /** This (<code>"10"</code>) is the value for targetBytecode to compile for a JDK 10. **/
+    /** This (<code>"10"</code>) is the value for targetBytecode to compile for a JDK 10. */
     public static final String JDK10 = "10";
-    /** This (<code>"11"</code>) is the value for targetBytecode to compile for a JDK 11. **/
+    /** This (<code>"11"</code>) is the value for targetBytecode to compile for a JDK 11. */
     public static final String JDK11 = "11";
-    /** This (<code>"12"</code>) is the value for targetBytecode to compile for a JDK 12. **/
+    /** This (<code>"12"</code>) is the value for targetBytecode to compile for a JDK 12. */
     public static final String JDK12 = "12";
-    /** This (<code>"13"</code>) is the value for targetBytecode to compile for a JDK 13. **/
+    /** This (<code>"13"</code>) is the value for targetBytecode to compile for a JDK 13. */
     public static final String JDK13 = "13";
 
     /**
@@ -101,10 +101,19 @@ public class CompilerConfiguration {
             JDK13, Opcodes.V13
     );
 
-    /** An array of the valid targetBytecode values **/
-    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[0]);
+    /* GRECLIPSE edit
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    public static final int ASM_API_VERSION = Opcodes.ASM7;
+    /** An array of the valid targetBytecode values * /
+    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(EMPTY_STRING_ARRAY);
+    */
+    /** The valid targetBytecode values. */
+    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
+
+    /* GRECLIPSE edit
+    @Deprecated
+    public static final String CURRENT_JVM_VERSION = getMinBytecodeVersion();
+    */
 
     /**
      * The default source encoding
@@ -371,6 +380,10 @@ public class CompilerConfiguration {
     private Set<String> disabledGlobalASTTransformations;
 
     private BytecodeProcessor bytecodePostprocessor;
+
+    /* GRECLIPSE edit
+    public static final int ASM_API_VERSION = Opcodes.ASM7;
+    */
 
     /**
      * Sets the compiler flags/settings to default values.

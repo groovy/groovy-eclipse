@@ -92,8 +92,8 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        /* GRECLIPSE edit
         if (annotations.isEmpty()) return;
+        /* GRECLIPSE edit
         for (AnnotationNode an : annotations) {
             // skip built-in properties
             if (an.isBuiltIn()) continue;
@@ -108,8 +108,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         super.visitBlockStatement(block);
     }
         */
-        if (!annotations.isEmpty())
-            visitAnnotations(annotations);
+        visitAnnotations(annotations);
         // GRECLIPSE end
     }
 
