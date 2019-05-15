@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -150,6 +150,34 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "    this.xxx = value\n" +
             "  }\n" +
             "}\n");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/891
+    public void testFieldReferencesInClass6() throws Exception {
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "class Pogo {\n" +
+            "  boolean flag\n" +
+            "  Pogo(Pogo that) {\n" +
+            "    this.flag = that.flag\n" +
+            "  }\n" +
+            "  void setFlag(boolean value) {\n" +
+            "    flag = value\n" +
+            "  }\n" +
+            "}\n";
+
+        GroovyCompilationUnit unit = createUnit("Pogo", contents);
+        IField field = findType("Pogo", unit).getField("flag");
+
+        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
+        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
+            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
+        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+
+        assertEquals("Should have found 3 matches, but found:\n" + searchRequestor.printMatches(), 3, searchRequestor.getMatches().size());
+        assertLocation(searchRequestor.getMatch(0), contents.indexOf("this.flag") + "this.".length(), "flag".length());
+        assertLocation(searchRequestor.getMatch(1), contents.indexOf("that.flag") + "that.".length(), "flag".length());
+        assertLocation(searchRequestor.getMatch(2), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test

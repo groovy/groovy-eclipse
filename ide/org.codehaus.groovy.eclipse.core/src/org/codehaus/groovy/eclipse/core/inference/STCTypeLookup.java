@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
@@ -77,10 +78,11 @@ public class STCTypeLookup implements ITypeLookup {
                         declaration = (ClassNode) inferredType;
                     } else {
                         Variable accessedVariable = vexp.getAccessedVariable();
-                        if (accessedVariable instanceof ASTNode) {
-                            declaration = (ASTNode) accessedVariable;
-                            if (inferredType instanceof ClassNode &&
-                                    VariableScope.isPlainClosure((ClassNode) inferredType)) {
+                        if (accessedVariable instanceof AnnotatedNode) {
+                            declaration = (AnnotatedNode) accessedVariable;
+                            declaringType = ((AnnotatedNode) declaration).getDeclaringClass();
+
+                            if (VariableScope.isPlainClosure((ClassNode) inferredType)) {
                                 VariableInfo info = scope.lookupName(accessedVariable.getName());
                                 if (info != null && VariableScope.isParameterizedClosure(info.type)) {
                                     inferredType = info.type; // Closure --> Closure<String>

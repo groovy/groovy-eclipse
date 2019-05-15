@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -167,18 +167,10 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
-        if (shouldAlwaysBeAccurate()) {
+        if (shouldAlwaysBeAccurate() || (isCompleteMatch && confidence.isAtLeast(TypeConfidence.INFERRED))) {
             return SearchMatch.A_ACCURATE;
         }
-        if (!isCompleteMatch) {
-            return SearchMatch.A_INACCURATE;
-        }
-        switch (confidence) {
-        case EXACT:
-            return SearchMatch.A_ACCURATE;
-        default:
-            return SearchMatch.A_INACCURATE;
-        }
+        return SearchMatch.A_INACCURATE;
     }
 
     /**
