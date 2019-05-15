@@ -354,7 +354,7 @@
             pattern="org\.codehaus\.groovy\.(m2)?eclipse.*"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.13/@workingSets.3"/>
+            excludedWorkingSet="//@setupTasks.21/@workingSets.3"/>
       </predicate>
     </workingSet>
     <workingSet
