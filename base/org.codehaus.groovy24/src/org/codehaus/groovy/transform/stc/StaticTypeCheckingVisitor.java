@@ -1503,7 +1503,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         ClassNode cn = inferReturnTypeGenerics(dgmReceiver, getter, ArgumentListExpression.EMPTY_ARGUMENTS);
                         storeInferredTypeForPropertyExpression(pexp, cn);
                         // GRECLIPSE add -- GROOVY-9077
-                        storeTargetMethod(pexp, getter);
+                        if (readMode) storeTargetMethod(pexp, getter);
                         // GRECLIPSE end
                         return true;
                     }
