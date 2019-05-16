@@ -526,7 +526,10 @@ public class CompilerOptions {
 	public boolean emulateJavacBug8031744 = true;
 
 	/** Not directly configurable, derived from other options by LookupEnvironment.usesNullTypeAnnotations() */
-	public Boolean useNullTypeAnnotations = null;
+	public Boolean useNullTypeAnnotations;
+
+	/** Master flag to enabled/disable all preview features */
+	public boolean enablePreviewFeatures;
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
