@@ -262,7 +262,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
         return null; // aka "${workspace_loc:project_name}"
     }
 
-    private String generateClasspath(IJavaProject javaProject) {
+    protected String generateClasspath(IJavaProject javaProject) {
         SortedSet<String> sourceEntries = new TreeSet<>();
         SortedSet<String> binEntries = new TreeSet<>();
         addClasspathEntriesForProject(javaProject, sourceEntries, binEntries);
@@ -386,7 +386,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
      * @param classUnderTest The name of the class (without package) that is being tested.
      * @return Returns a launch configuration for the class under test with the passed properties.
      */
-    private ILaunchConfigurationWorkingCopy findOrCreateLaunchConfig(Map<String, String> configProperties, String simpleMainTypeName) throws CoreException {
+    protected ILaunchConfigurationWorkingCopy findOrCreateLaunchConfig(Map<String, String> configProperties, String simpleMainTypeName) throws CoreException {
         String projectName = configProperties.get(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME);
         ILaunchConfiguration config = findConfiguration(projectName, configProperties.get(GROOVY_TYPE_TO_RUN));
         return (config != null ? config.getWorkingCopy() : createLaunchConfig(configProperties, simpleMainTypeName));

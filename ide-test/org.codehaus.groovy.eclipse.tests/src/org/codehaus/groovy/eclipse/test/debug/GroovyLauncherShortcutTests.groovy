@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -94,7 +94,7 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
                 ['P4', 'bin2'],
             ]
             String expected_classpath = '"' + entries.collect { String proj, String path ->
-                '${workspace_loc:' + File.separator + proj + '}' + File.separator + path
+                '${workspace_loc:' + proj + '}' + File.separator + path
             }.join(File.pathSeparator) + '"'
 
             Assert.assertEquals(expected_classpath, classpath)
@@ -125,11 +125,11 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
             String classpath = new GroovyScriptLaunchShortcut().generateClasspath(p1.javaProject)
 
             String expected_classpath = '"' +
-                '${workspace_loc:' + File.separator + 'P1a}' + File.separator + 'empty.jar' + File.pathSeparator +
-                '${workspace_loc:' + File.separator + 'P1a}' + File.separator + 'src' + File.pathSeparator +
-                '${workspace_loc:' + File.separator + 'P2a}' + File.separator + 'empty2.jar' + File.pathSeparator +
+                '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar' + File.pathSeparator +
+                '${workspace_loc:' + 'P1a}' + File.separator + 'src' + File.pathSeparator +
+                '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar' + File.pathSeparator +
                 runtimeJarPath.toPortableString().replace('/' as char, File.separatorChar) + File.pathSeparator +
-                '${workspace_loc:' + File.separator + 'P1a}' + File.separator + 'bin' +
+                '${workspace_loc:' + 'P1a}' + File.separator + 'bin' +
                 '"'
 
             Assert.assertEquals(expected_classpath, classpath)
@@ -262,11 +262,6 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
         SimpleProgressMonitor spm = new SimpleProgressMonitor('Launcher test workspace build')
         ResourcesPlugin.workspace.build(IncrementalProjectBuilder.FULL_BUILD, spm)
         spm.waitForCompletion()
-
-        /*String problems = testProject.getProblems()
-        if (problems != null) {
-            Assert.fail('Compile problems:\n' + problems)
-        }*/
 
         def runner = new Runnable() {
             @Override
