@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.test.debug
+package org.codehaus.groovy.eclipse.test.launch
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut
@@ -31,8 +31,10 @@ import org.eclipse.debug.core.model.IStreamMonitor
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
 import org.junit.Assert
@@ -40,7 +42,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
-final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
+final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
@@ -77,7 +79,7 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
             p1.addProjectReference(p3.javaProject)
             p1.addProjectReference(p2.javaProject)
 
-            String classpath = new GroovyScriptLaunchShortcut().generateClasspath(p1.javaProject)
+            def classpath = buildScriptClasspath(p1.javaProject)
 
             def entries = [
                 ['P1', 'src'],
@@ -93,9 +95,9 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
                 ['P4', 'bin'],
                 ['P4', 'bin2'],
             ]
-            String expected_classpath = '"' + entries.collect { String proj, String path ->
+            String expected_classpath = entries.collect { String proj, String path ->
                 '${workspace_loc:' + proj + '}' + File.separator + path
-            }.join(File.pathSeparator) + '"'
+            }.join(File.pathSeparator)
 
             Assert.assertEquals(expected_classpath, classpath)
         } finally {
@@ -122,15 +124,14 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
             f2.create(new ByteArrayInputStream(new byte[0]), false, null)
             p1.addExternalLibrary(f2.fullPath)
 
-            String classpath = new GroovyScriptLaunchShortcut().generateClasspath(p1.javaProject)
+            String classpath = buildScriptClasspath(p1.javaProject)
 
-            String expected_classpath = '"' +
+            String expected_classpath =
                 '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar' + File.pathSeparator +
                 '${workspace_loc:' + 'P1a}' + File.separator + 'src' + File.pathSeparator +
                 '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar' + File.pathSeparator +
                 runtimeJarPath.toPortableString().replace('/' as char, File.separatorChar) + File.pathSeparator +
-                '${workspace_loc:' + 'P1a}' + File.separator + 'bin' +
-                '"'
+                '${workspace_loc:' + 'P1a}' + File.separator + 'bin'
 
             Assert.assertEquals(expected_classpath, classpath)
         } finally {
@@ -230,10 +231,16 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
     void testScriptLaunch10() {
         TestProject otherProject = new TestProject('OtherProject')
         try {
-            otherProject.createJavaTypeAndPackage('pack', 'Other.java', 'public class Other { public String foo() { return "hi!"; } }')
+            otherProject.createJavaTypeAndPackage('pack', 'Other.java', '''\
+                |class Other {
+                |  String foo() {
+                |    return "hi!";
+                |  }
+                |}
+                |'''.stripMargin())
             addProjectReference(otherProject.javaProject)
 
-            def unit = addGroovySource('print new pack.Other().foo()', 'Launch')
+            def unit = addGroovySource('print new pack.Other().foo()', 'Launch', 'pack')
             def type = unit.getType('Launch')
             launchScriptAndAssertExitValue(type)
         } finally {
@@ -244,19 +251,25 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
     @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
     void testScriptLaunch11() {
         def unit = addGroovySource('''\
-            @Grapes([
-              @GrabConfig(systemClassLoader=true),
-              @Grab('mysql:mysql-connector-java:5.1.6')
-            ])
-            def xxx
-
-            println "Why won't this run?"
-            '''.stripIndent(), 'Launch')
+            |@Grapes([
+            |  @GrabConfig(systemClassLoader=true),
+            |  @Grab('mysql:mysql-connector-java:5.1.6')
+            |])
+            |def xxx
+            |
+            |println "Why won't this run?"
+            |'''.stripMargin(), 'Launch')
         def type = unit.getType('Launch')
         launchScriptAndAssertExitValue(type)
     }
 
-    //
+    //--------------------------------------------------------------------------
+
+    private String buildScriptClasspath(IJavaProject javaProject) {
+        Map properties = new GroovyScriptLaunchShortcut().createLaunchProperties(null, javaProject)
+        def arguments = properties.get(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS)
+        def classpath = (arguments =~ /--classpath "(.*?)" /)[0][1]
+    }
 
     private void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds = 20) {
         SimpleProgressMonitor spm = new SimpleProgressMonitor('Launcher test workspace build')

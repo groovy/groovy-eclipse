@@ -38,7 +38,7 @@
    <extension point="org.eclipse.jdt.groovy.core.typeLookup"
          id="testLookup">
       <lookup
-            lookup="org.codehaus.groovy.eclipse.tests.TestTypeLookup">
+            lookup="org.codehaus.groovy.eclipse.test.TestTypeLookup">
          <appliesTo
                projectNature="org.codehaus.groovy.eclipse.tests.testNature1">
          </appliesTo>
@@ -49,7 +49,7 @@
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
       <consoleLineTracker
-            class="org.codehaus.groovy.eclipse.test.debug.ConsoleLineTracker"
+            class="org.codehaus.groovy.eclipse.test.launch.ConsoleLineTracker"
             processType="java"
             id="org.eclipse.jdt.debug.tests.ConsoleLineTracker">
       </consoleLineTracker>

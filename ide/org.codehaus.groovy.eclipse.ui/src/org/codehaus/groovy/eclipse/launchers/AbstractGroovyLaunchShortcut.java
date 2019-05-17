@@ -262,7 +262,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
         return null; // aka "${workspace_loc:project_name}"
     }
 
-    protected String generateClasspath(IJavaProject javaProject) {
+    private String generateClasspath(IJavaProject javaProject) {
         SortedSet<String> sourceEntries = new TreeSet<>();
         SortedSet<String> binEntries = new TreeSet<>();
         addClasspathEntriesForProject(javaProject, sourceEntries, binEntries);

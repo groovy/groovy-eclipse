@@ -9,6 +9,7 @@ Export-Package: org.codehaus.groovy.eclipse.test,
  org.codehaus.groovy.eclipse.test.adapters,
  org.codehaus.groovy.eclipse.test.core.util,
  org.codehaus.groovy.eclipse.test.debug,
+ org.codehaus.groovy.eclipse.test.launch,
  org.codehaus.groovy.eclipse.test.search,
  org.codehaus.groovy.eclipse.test.ui,
  org.codehaus.groovy.eclipse.test.wizards

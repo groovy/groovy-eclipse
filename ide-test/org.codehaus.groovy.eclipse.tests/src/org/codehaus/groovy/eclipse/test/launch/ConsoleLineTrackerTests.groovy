@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.test.debug
+package org.codehaus.groovy.eclipse.test.launch
 
 import groovy.transform.PackageScope
 
@@ -38,9 +38,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Tests that breakpoint locations are as expected.
- */
 final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
 
     GroovyConsoleLineTracker lineTracker
@@ -61,7 +58,7 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         String contents = 'ahdhjkfsfds'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNull('Should not have found any hyperlinks', console.getLastLink())
+        Assert.assertNull('Should not have found any hyperlinks', console.lastLink)
     }
 
     @Test
@@ -70,11 +67,11 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         String contents = 'at f.Bar.run(Bar.groovy:2)'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
-        FileLink link = (FileLink) console.getLastLink()
-        IFile file = ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
+        Assert.assertNotNull('Should have found a hyperlink', console.lastLink)
+        FileLink link = (FileLink) console.lastLink
+        IFile file = ReflectionUtils.getPrivateField(FileLink, 'fFile', link)
         Assert.assertTrue('File should exist', file.isAccessible())
-        Assert.assertEquals('File name is wrong', 'Bar.groovy', file.getName())
+        Assert.assertEquals('File name is wrong', 'Bar.groovy', file.name)
     }
 
     @Test
@@ -84,16 +81,16 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         String contents = 'at f.Baz.run(Baz.groovy:2)'
         doc.set(contents)
         lineTracker.lineAppended(new Region(0, contents.length()))
-        Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
-        FileLink link = (FileLink) console.getLastLink()
-        Object file = ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
+        Assert.assertNotNull('Should have found a hyperlink', console.lastLink)
+        FileLink link = (FileLink) console.lastLink
+        Object file = ReflectionUtils.getPrivateField(FileLink, 'fFile', link)
         Assert.assertNull('File should be null since the selection is ambiguous', file)
 
-        IFile[] files = ReflectionUtils.getPrivateField(AmbiguousFileLink.class, 'files', link)
+        IFile[] files = ReflectionUtils.getPrivateField(AmbiguousFileLink, 'files', link)
 
         Assert.assertEquals('Should have found 2 files', 2, files.length)
-        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[0].getName())
-        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[1].getName())
+        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[0].name)
+        Assert.assertEquals('File name is wrong', 'Baz.groovy', files[1].name)
     }
 }
 
