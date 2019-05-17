@@ -32,19 +32,19 @@
 
    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
+            class="org.codehaus.groovy.eclipse.launchers.LaunchConfigurationTabGroup"
             description="Launch an interactive Groovy Console"
             id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration">
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
+            class="org.codehaus.groovy.eclipse.launchers.LaunchConfigurationTabGroup"
             description="Launch a Groovy Script"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
+            class="org.codehaus.groovy.eclipse.launchers.LaunchConfigurationTabGroup"
             description="Launch an interactive Groovy Shell"
             id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration">
