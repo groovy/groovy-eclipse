@@ -20,9 +20,10 @@ import java.util.List;
 
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationTabGroupViewer;
+import org.eclipse.debug.internal.ui.launchConfigurations.LaunchConfigurationsDialog;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTabGroup;
 import org.eclipse.debug.ui.CommonTab;
-import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.debug.ui.EnvironmentTab;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
@@ -39,7 +40,17 @@ public class LaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabG
 
     @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
-        ILaunchConfiguration configuration = DebugUITools.getLaunchConfiguration(dialog);
+        //ILaunchConfiguration configuration = DebugUITools.getLaunchConfiguration(dialog); // available in Eclipse IDE 4.8
+        ILaunchConfiguration configuration = null;
+        if (dialog instanceof LaunchConfigurationsDialog) {
+            LaunchConfigurationTabGroupViewer tabViewer = ((LaunchConfigurationsDialog) dialog).getTabViewer();
+            if (tabViewer != null) {
+                Object input = tabViewer.getInput();
+                if (input instanceof ILaunchConfiguration) {
+                    configuration = (ILaunchConfiguration) input;
+                }
+            }
+        }
         boolean isModularConfiguration = configuration != null && JavaRuntime.isModularConfiguration(configuration);
 
         List<ILaunchConfigurationTab> tabs = new ArrayList<>();
