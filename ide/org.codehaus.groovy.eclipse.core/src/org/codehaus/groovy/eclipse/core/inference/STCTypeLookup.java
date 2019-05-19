@@ -72,6 +72,7 @@ public class STCTypeLookup implements ITypeLookup {
                     declaration = expr.getType();
                 } else if (expr instanceof FieldExpression) {
                     declaration = ((FieldExpression) expr).getField();
+                    assert ((FieldNode) declaration).getDeclaringClass().equals(declaringType);
                 } else if (expr instanceof VariableExpression) {
                     VariableExpression vexp = (VariableExpression) expr;
                     if (vexp.isThisExpression() || vexp.isSuperExpression()) {
