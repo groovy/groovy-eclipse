@@ -3005,4 +3005,31 @@ public final class InferencingTests extends InferencingTestSuite {
         MethodNode m = assertDeclaration(contents, offset, offset + 3, "Foo", "setBar", DeclarationKind.METHOD);
         Assert.assertEquals("Expected 'setBar(Date)' but was 'setBar(int)'", "java.util.Date", m.getParameters()[0].getType().toString(false));
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/892
+    public void testMethodOverloadsArgumentMatching7() {
+        createJavaUnit("Face",
+            "interface Face {\n" +
+            "  setValue(String key, int val);\n" +
+            "  setValue(String key, long val);\n" +
+            "  setValue(String key, double val);\n" +
+            "  setValue(String key, boolean val);\n" +
+            "}\n");
+        createJavaUnit("Keys",
+            "interface Keys {\n" +
+            "  String ONE = \"one\";\n" +
+            "  String TWO = \"two\";\n" +
+            "}\n");
+
+        String contents =
+            "void meth(Face face) {\n" +
+            "  face.with {\n" +
+            "    setValue(Keys.ONE, false)\n" +
+            "  }\n" +
+            "}\n" +
+            "}";
+        int offset = contents.indexOf("setValue");
+        MethodNode m = assertDeclaration(contents, offset, offset + "setValue".length(), "Face", "setValue", DeclarationKind.METHOD);
+        Assert.assertEquals("Expected 'setValue(String,boolean)'", "boolean", m.getParameters()[1].getType().toString(false));
+    }
 }

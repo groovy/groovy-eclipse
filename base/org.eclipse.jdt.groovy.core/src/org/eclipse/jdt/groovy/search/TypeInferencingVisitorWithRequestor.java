@@ -2070,12 +2070,13 @@ assert primaryExprType != null && dependentExprType != null;
                     List<ClassNode> types = new ArrayList<>(expressions.size());
                     for (Expression expression : expressions) {
                         ClassNode exprType = expression.getType();
-                        /*if (expression instanceof ClosureExpression) {
-                            types.add(VariableScope.CLOSURE_CLASS_NODE);
-                        } else if (expression instanceof MapExpression) {
+                        /*if (expression instanceof MapExpression) {
                             types.add(VariableScope.MAP_CLASS_NODE);
                         } else if (expression instanceof ListExpression) {
                             types.add(VariableScope.LIST_CLASS_NODE);
+                        } else if (expression instanceof ClosureExpression ||
+                                expression instanceof MethodPointerExpression) {
+                            types.add(VariableScope.CLOSURE_CLASS_NODE);
                         } else*/ if (expression instanceof ClassExpression) {
                             types.add(VariableScope.newClassClassNode(exprType));
                         } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
@@ -2094,12 +2095,16 @@ assert primaryExprType != null && dependentExprType != null;
                             scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
 
                             TypeLookupResult tlr;
-                            if (!(expression instanceof MethodCallExpression)) {
-                                tlr = lookupExpressionType(expression, null, false, scopes.getLast());
-                            } else {
+                            if (expression instanceof PropertyExpression) {
+                                PropertyExpression path = (PropertyExpression) expression;
+                                tlr = lookupExpressionType(path.getObjectExpression(), null, false, scopes.getLast());
+                                tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                            } else if (expression instanceof MethodCallExpression) {
                                 MethodCallExpression call = (MethodCallExpression) expression;
                                 tlr = lookupExpressionType(call.getObjectExpression(), null, false, scopes.getLast());
-                                tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression, scopes.getLast());
+                                tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                            } else {
+                                tlr = lookupExpressionType(expression, null, false, scopes.getLast());
                             }
 
                             types.add(tlr.type);
