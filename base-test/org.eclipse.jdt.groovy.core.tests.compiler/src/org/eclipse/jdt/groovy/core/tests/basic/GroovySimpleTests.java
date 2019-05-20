@@ -899,7 +899,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  public @groovy.transform.Generated X() {\n" +
+            "  public X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -926,7 +926,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  public @groovy.transform.Generated X() {\n" +
+            "  public X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -3602,7 +3602,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
-            "  public @groovy.transform.Generated G() {\n" +
+            "  public G() {\n" +
             "  }\n" +
             "  public void m(String s, Integer i) {\n" +
             "  }\n" +
@@ -3653,7 +3653,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
-            "  public @groovy.transform.Generated G() {\n" +
+            "  public G() {\n" +
             "  }\n" +
             "  public void m(String s, Integer i, String j, String k, float f, String l) {\n" +
             "  }\n" +

@@ -108,10 +108,10 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class X {\n" +
             "  public class Inner {\n" +
-            "    public @groovy.transform.Generated Inner() {\n" +
+            "    public Inner() {\n" +
             "    }\n" +
             "  }\n" +
-            "  public @groovy.transform.Generated X() {\n" +
+            "  public X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -277,7 +277,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public void run() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -313,7 +313,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public void run() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -344,7 +344,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public java.lang.Object foo(int bar) {\n" +
             "    new Runnable() {\n" +
@@ -384,7 +384,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public java.lang.Object foo(int bar, int baz) {\n" +
             "    new Runnable() {\n" +
@@ -510,7 +510,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  <clinit>() {\n" +
             "    java.lang.Object foo;\n" +
@@ -548,7 +548,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +
@@ -594,7 +594,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    public String bar() {\n" +
             "    }\n" +
             "  };\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -638,7 +638,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -681,7 +681,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static C newC(int one, String two, Runnable three) {\n" +
             "  }\n" +
@@ -735,7 +735,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  public void run() {\n" +
             "  }\n" +
             "};\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static C newC() {\n" +
             "  }\n" +
@@ -773,7 +773,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
-            "  public @groovy.transform.Generated A() {\n" +
+            "  public A() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "    C cee;\n" +

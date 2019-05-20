@@ -9,7 +9,6 @@
         <!-- Exclude files imported from Groovy -->
         <file-match-pattern match-pattern="grape/GrabAnnotationTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="grape/GrapeIvy.groovy" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/Generated.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/antlr/AntlrParserPlugin.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/antlr/SourceBuffer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/antlr/UnicodeEscapingReader.java" include-pattern="false" />
