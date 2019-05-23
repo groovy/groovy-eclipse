@@ -1105,7 +1105,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
 
         if (classNode == null || !classNode.isAnnotationDefinition()) {
-
             assertNodeType(PARAMETERS, node);
             parameters = parameters(node);
             if (parameters == null) parameters = Parameter.EMPTY_ARRAY;
@@ -1145,6 +1144,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // GRECLIPSE add
             }
             // GRECLIPSE end
+        /* GRECLIPSE edit -- GROOVY-9141
         } else if (node != null && classNode.isAnnotationDefinition()) {
             code = statement(node);
             hasAnnotationDefault = true;
@@ -1153,6 +1153,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 throw new ASTRuntimeException(methodDef, "Abstract methods do not define a body.");
             }
         }
+        */
+        } else if (node != null) {
+            if (classNode != null && classNode.isAnnotationDefinition()) {
+                code = statement(node);
+                hasAnnotationDefault = true;
+            } else {
+                throw new ASTRuntimeException(methodDef, "Abstract methods do not define a body.");
+            }
+        }
+        // GRECLIPSE end
         methodNode.setCode(code);
         methodNode.addAnnotations(annotations);
         methodNode.setGenericsTypes(generics);

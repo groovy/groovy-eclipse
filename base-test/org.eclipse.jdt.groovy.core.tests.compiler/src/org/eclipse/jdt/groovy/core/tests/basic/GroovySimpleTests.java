@@ -1314,6 +1314,48 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAbstractMethodWithBody1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract def meth() {\n" +
+            "  println 42\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 1)\n" +
+            "\tabstract def meth() {\n" +
+            "\t^\n" +
+            "Groovy:Abstract methods do not define a body. at line: 1 column: 1. File: Script.groovy @ line 1, column 1.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testAbstractMethodWithBody2() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  abstract def meth() {\n" +
+            "    println 42\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 2)\n" +
+            "\tabstract def meth() {\n" +
+            "\t^\n" +
+            "Groovy:Abstract methods do not define a body. at line: 2 column: 3. File: Main.groovy @ line 2, column 3.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testAbstractCovariance_GRE272() {
         //@formatter:off
         String[] sources = {
