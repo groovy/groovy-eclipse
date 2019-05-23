@@ -1402,14 +1402,25 @@ enumConstantsStart
 enumConstants
     :
         enumConstant
-        (    options {generateAmbigWarnings=false;} :
-            (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
-        |   nls! COMMA!
+        // GRECLIPSE edit -- GROOVY-4438
+        //(    options {generateAmbigWarnings=false;} :
+        //    (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
+        //|   nls! COMMA!
+        //    (
+        //        (nls annotationsOpt IDENT) => nls! enumConstant
+        //    |
+        //        (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
+        //    )
+        (
+            (nls (SEMI! | RCURLY | typeDeclarationStart | classField)) => { break; }
+        |
+            nls! COMMA!
             (
-                (nls annotationsOpt IDENT) => nls! enumConstant
+                (nls (SEMI! | RCURLY | typeDeclarationStart | classField)) => { break; }
             |
-                (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
+                (nls annotationsOpt IDENT) => nls! enumConstant
             )
+        // GRECLIPSE end
         )*
     ;
 

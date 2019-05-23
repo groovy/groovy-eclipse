@@ -225,14 +225,14 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test // GROOVY-4219
-    public void testGRE637() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-4219
+    public void testEnum4219() {
         //@formatter:off
         String[] sources = {
             "de/brazzy/nikki/Texts.java",
             "package de.brazzy.nikki;\n" +
             "\n" +
-            "public final class Texts { \n" +
+            "public final class Texts {\n" +
             "  public static class Image {\n" +
             "    public static final String ORDERED_BY_FILENAME = \"image.sortedby.filename\";\n" +
             "    public static final String ORDERED_BY_TIME = \"image.sortedby.time\";\n" +
@@ -242,7 +242,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "de/brazzy/nikki/model/Image.groovy",
             "package de.brazzy.nikki.model\n" +
             "\n" +
-            "class Image implements Serializable{\n" +
+            "class Image implements Serializable {\n" +
             "  def fileName\n" +
             "  def time\n" +
             "}\n",
@@ -254,20 +254,39 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "import de.brazzy.nikki.model.Image\n" +
             "\n" +
             "enum ImageSortField {\n" +
-            "    FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n" +
-            "    TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n" +
-            "\n" +
-            "    def field\n" +
-            "    def name\n" +
-            "\n" +
-            "    public String toString(){\n" +
-            "        name\n" +
-            "    }\n" +
+            "  FILENAME(field: Image.metaClass.fileName, name: Texts.Image.ORDERED_BY_FILENAME),\n" +
+            "  TIME(field: Image.metaClass.time, name: Texts.Image.ORDERED_BY_TIME)\n" +
+            "  \n" +
+            "  def field\n" +
+            "  def name\n" +
+            "  \n" +
+            "  public String toString(){\n" +
+            "    name\n" +
+            "  }\n" +
             "}\n",
         };
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-4438
+    public void testEnum4438() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "enum Outer {\n" +
+            "  A,\n" +
+            "  B\n" +
+            "  enum Inner {\n" +
+            "    X,\n" +
+            "    Y\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test
