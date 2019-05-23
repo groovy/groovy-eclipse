@@ -356,6 +356,10 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     }
 
     public void tryBlockRecovery(RecognitionException e, Token first, int start) throws RecognitionException, TokenStreamException {
+        if (first.getType() != LCURLY) {
+            throw e;
+        }
+
         int end = mark();
         // rewind to the first token on the same line as opening '{' (aka first)
         rewind(start);

@@ -1744,6 +1744,27 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/895
+    public void testParsingRecovery_MissingCurly3() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "do\n" +
+            "println 123\n" +
+            "println 456\n" +
+            "while (false)\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 1)\n" +
+            "\tdo\nprintln 123\n" +
+            "\t  ^\n" +
+            "Groovy:expecting '{', found '<newline>' @ line 1, column 3.\n" +
+            "----------\n");
+    }
+
     @Test
     public void testParsingRecovery_ParameterCompletion() {
         //@formatter:off
