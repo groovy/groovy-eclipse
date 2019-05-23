@@ -3336,6 +3336,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8311
+    public void testGroovy8831() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "def greet(args) {\n" +
+            "  [args.name, args.age]\n" +
+            "}\n" +
+            "def name = 'age'\n" +
+            "assert greet(name: 'Frank Grimes', (name): 42) == ['Frank Grimes', 42]\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
     @Test
     public void testExtendingGroovyObjects_clinit() {
