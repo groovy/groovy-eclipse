@@ -78,6 +78,33 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testEnums4() {
+        //@formatter:off
+        String[] sources = {
+            "Cards.groovy",
+            "enum Color {\n" +
+            "  RED,\n" +
+            "  BLACK\n" +
+            "}\n" +
+            "enum Suit {\n" +
+            "  CLUBS(Color.BLACK),\n" +
+            "  DIAMONDS(Color.RED),\n" +
+            "  HEARTS(Color.RED),\n" +
+            "  SPADES(Color.BLACK),\n" +
+            "  \n" +
+            "  final Color color\n" +
+            "  Suit(Color color) {\n" +
+            "    this.color = color\n" +
+            "  }\n" +
+            "}\n" +
+            "print \"${Suit.SPADES.name()} are ${Suit.SPADES.color}\"\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "SPADES are BLACK");
+    }
+
+    @Test
+    public void testEnums5() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -119,7 +146,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums5() {
+    public void testEnums6() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
