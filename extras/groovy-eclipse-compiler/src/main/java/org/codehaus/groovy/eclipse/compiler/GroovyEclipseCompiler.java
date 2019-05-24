@@ -282,18 +282,20 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         String release = config.getReleaseVersion();
         if (isNotBlank(release)) {
             args.put("--release", release.trim());
-        }
-        String source = config.getSourceVersion();
-        if (isNotBlank(source)) {
-            args.put("-source", source.trim());
-        } else if (isBlank(release)) {
-            args.put("-source", "1.5");
-        }
-        String target = config.getTargetVersion();
-        if (isNotBlank(target)) {
-            args.put("-target", target.trim());
-        } else if (isBlank(release)) {
-            args.put("-target", "1.5");
+            getLogger().info(String.format("Compiling for Java %s release.", release ));
+        } else {
+          String source = config.getSourceVersion();
+          if (isNotBlank(source)) {
+              args.put("-source", source.trim());
+          } else if (isBlank(release)) {
+              args.put("-source", "1.5");
+          }
+          String target = config.getTargetVersion();
+          if (isNotBlank(target)) {
+              args.put("-target", target.trim());
+          } else if (isBlank(release)) {
+              args.put("-target", "1.5");
+          }
         }
 
         if (config.isShowDeprecation()) {
