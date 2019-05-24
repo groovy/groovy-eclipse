@@ -4230,55 +4230,45 @@ public class NegativeTypeAnnotationTest extends AbstractRegressionTest {
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
 			"	Y y1 = (@Marker Z) null;\n" +
-			"	       ^^^^^^^^^^^^^^^^\n" +
-			"Z cannot be resolved to a type\n" +
-			"----------\n" +
-			"2. ERROR in X.java (at line 3)\n" +
-			"	Y y1 = (@Marker Z) null;\n" +
 			"	                ^\n" +
 			"Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 4)\n" +
+			"2. ERROR in X.java (at line 4)\n" +
 			"	Y y2 = new @Marker Z();\n" +
 			"	                   ^\n" +
 			"Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"4. ERROR in X.java (at line 5)\n" +
-			"	Y[] y3 = (@Marker Z[]) null;\n" +
-			"	         ^^^^^^^^^^^^^^^^^^\n" +
-			"Z cannot be resolved to a type\n" +
-			"----------\n" +
-			"5. ERROR in X.java (at line 5)\n" +
+			"3. ERROR in X.java (at line 5)\n" +
 			"	Y[] y3 = (@Marker Z[]) null;\n" +
 			"	                  ^\n" +
 			"Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"6. ERROR in X.java (at line 6)\n" +
+			"4. ERROR in X.java (at line 6)\n" +
 			"	Y[] y4 = new @Marker Z[0];\n" +
 			"	                     ^\n" +
 			"Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"7. ERROR in X.java (at line 7)\n" +
+			"5. ERROR in X.java (at line 7)\n" +
 			"	Y[] y5 = (@Marker Y.Z) null;\n" +
 			"	                  ^^^\n" +
 			"Y.Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"8. ERROR in X.java (at line 8)\n" +
+			"6. ERROR in X.java (at line 8)\n" +
 			"	Y[] y6 = new @Marker Y.  Z();\n" +
 			"	                     ^^^^^\n" +
 			"Y.Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"9. ERROR in X.java (at line 9)\n" +
+			"7. ERROR in X.java (at line 9)\n" +
 			"	Y[] y7 = (@Marker Y.Z[]) null;\n" +
 			"	                  ^^^\n" +
 			"Y.Z cannot be resolved to a type\n" +
 			"----------\n" +
-			"10. ERROR in X.java (at line 10)\n" +
+			"8. ERROR in X.java (at line 10)\n" +
 			"	Y[] y8 = new @Marker Y[0].  Z;\n" +
 			"	                            ^\n" +
 			"Z cannot be resolved or is not a field\n" +
 			"----------\n" +
-			"11. ERROR in X.java (at line 11)\n" +
+			"9. ERROR in X.java (at line 11)\n" +
 			"	Y[] y9 = new @Marker Y.  Z[0];\n" +
 			"	                     ^^^^^\n" +
 			"Y.Z cannot be resolved to a type\n" +

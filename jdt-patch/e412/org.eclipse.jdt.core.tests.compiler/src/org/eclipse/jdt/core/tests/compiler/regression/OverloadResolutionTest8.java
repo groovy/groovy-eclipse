@@ -1584,8 +1584,9 @@ public void test4008712p() {
 			"X is a raw type. References to generic type X<T> should be parameterized\n" + 
 			"----------\n");
 }
-public void test4008712q() {
-	this.runConformTest(
+public void test4008712q_raw() {
+	Runner runner = new Runner();
+	runner.testFiles =
 			new String[] {
 				"X.java",
 				"interface I {\n" +
@@ -1610,11 +1611,59 @@ public void test4008712q() {
 				"		goo(new X()::foo);\n" +
 				"	}\n" +
 				"}\n",
+			};
+	runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in X.java (at line 20)\n" + 
+			"	goo(new X()::foo);\n" + 
+			"	^^^\n" + 
+			"The method goo(I) is ambiguous for the type X<T>\n" + 
+			"----------\n" + 
+			"2. WARNING in X.java (at line 20)\n" + 
+			"	goo(new X()::foo);\n" + 
+			"	    ^^^^^^^^^^^^\n" + 
+			"Type safety: The method foo(Object) belongs to the raw type Y. References to generic type Y<T> should be parameterized\n" + 
+			"----------\n" + 
+			"3. WARNING in X.java (at line 20)\n" + 
+			"	goo(new X()::foo);\n" + 
+			"	        ^\n" + 
+			"X is a raw type. References to generic type X<T> should be parameterized\n" + 
+			"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.JavacCompilesIncorrectSource;
+	runner.runNegativeTest();
+}
+public void test4008712q_diamond() {
+	this.runConformTest(
+			new String[] {
+				"X.java",
+				"interface I {\n" +
+				"	void foo(String x);\n" +
+				"}\n" +
+				"interface J {\n" +
+				"	String foo(String x);\n" +
+				"}\n" +
+				"class Y<T> {\n" +
+				"	public T foo(T x) {\n" +
+				"		 return null;\n" +
+				"	}\n" +
+				"}\n" +
+				"public class X<T> extends Y<String> {\n" +
+				"	static void goo(I i) {\n" +
+				"		System.out.println(\"foo(I)\");\n" +
+				"	}\n" +
+				"	static void goo(J j) {\n" +
+				"		System.out.println(\"foo(J)\");\n" +
+				"	}\n" +
+				"	public static void main(String[] args) { \n" +
+				"		goo(new X<>()::foo);\n" +
+				"	}\n" +
+				"}\n",
 			},
-			"foo(I)");
+			"foo(J)");
 }
 public void test4008712r() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 			new String[] {
 				"X.java",
 				"interface I {\n" +
@@ -1639,8 +1688,16 @@ public void test4008712r() {
 				"		goo(new X[0]::clone);\n" +
 				"	}\n" +
 				"}\n",
-			},
-			"foo(I)");
+			};
+	runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in X.java (at line 20)\n" + 
+			"	goo(new X[0]::clone);\n" + 
+			"	^^^\n" + 
+			"The method goo(I) is ambiguous for the type X<T>\n" + 
+			"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.JavacCompilesIncorrectSource;
+	runner.runNegativeTest();
 }
 public void test4008712s() {
 	this.runConformTest(

@@ -326,6 +326,25 @@ public void test14() throws Exception {
 		"        [pc: 17, line: 5]\n";
 	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "LineNumberBug$Inner.class", "LineNumberBug$Inner", expectedOutput);	
 }
+public void testBug546362() throws Exception {
+	runConformTest(new String[] {
+		"Schema.java",
+		"import java.util.HashMap;\n" + 
+		"\n" + 
+		"public class Schema {\n" + 
+		"    public Integer[] getElements(HashMap<String, Integer> map) {\n" + 
+		"        return map.entrySet().toArray(new Integer[0]);\n" + 
+		"    }\n" + 
+		"}\n" + 
+		""
+	});
+	String expectedOutput =
+			"  Inner classes:\n" + 
+			"    [inner class info: #41 java/util/Map$Entry, outer class info: #43 java/util/Map\n" + 
+			"     inner name: #45 Entry, accessflags: 1545 public abstract static]\n" + 
+			"";
+	checkDisassembledClassFile(OUTPUT_DIR + File.separator + "Schema.class", "X", expectedOutput);
+}
 public static Class testClass() {
 	return InnerEmulationTest_1_5.class;
 }

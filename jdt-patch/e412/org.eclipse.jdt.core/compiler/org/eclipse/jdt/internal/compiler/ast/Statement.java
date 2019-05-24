@@ -499,7 +499,6 @@ public ExpressionContext getExpressionContext() {
  */
 protected MethodBinding findConstructorBinding(BlockScope scope, Invocation site, ReferenceBinding receiverType, TypeBinding[] argumentTypes) {
 	MethodBinding ctorBinding = scope.getConstructor(receiverType, argumentTypes, site);
-	resolvePolyExpressionArguments(site, ctorBinding, argumentTypes, scope);
-	return ctorBinding;
+	return resolvePolyExpressionArguments(site, ctorBinding, argumentTypes, scope);
 }
 }

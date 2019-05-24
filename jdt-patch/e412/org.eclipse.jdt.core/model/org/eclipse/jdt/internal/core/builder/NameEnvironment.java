@@ -128,7 +128,7 @@ private void computeClasspathLocations(
 	}
 	IModuleDescription projectModule = javaProject.getModuleDescription();
 
-	String patchedModuleName = ModuleEntryProcessor.pushPatchToFront(classpathEntries);
+	String patchedModuleName = ModuleEntryProcessor.pushPatchToFront(classpathEntries, javaProject);
 	IModule patchedModule = null;
 
 	nextEntry : for (int i = 0, l = classpathEntries.length; i < l; i++) {

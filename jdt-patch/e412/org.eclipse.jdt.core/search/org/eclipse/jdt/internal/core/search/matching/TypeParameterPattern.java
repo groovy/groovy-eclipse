@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
@@ -87,7 +88,14 @@ public class TypeParameterPattern extends JavaSearchPattern {
 	    if (root.isArchive()) {
  	    	IType type = (IType) this.typeParameter.getAncestor(IJavaElement.TYPE);
     	    relativePath = (type.getFullyQualifiedName('$')).replace('.', '/') + SuffixConstants.SUFFIX_STRING_class;
-	        documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+    	    IModuleDescription md = root.getModuleDescription();
+            if(md != null) {
+            	String module = md.getElementName();
+            	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR 
+            			+ module + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+            } else {
+            	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+            }
 	    } else {
 			IPath path = this.typeParameter.getPath();
 	        documentPath = path.toString();

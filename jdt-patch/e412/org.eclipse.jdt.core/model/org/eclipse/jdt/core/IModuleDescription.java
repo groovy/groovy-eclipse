@@ -54,7 +54,27 @@ public interface IModuleDescription extends IMember, IAnnotatable {
 	 * @since 3.18
 	 */
 	String[] getUsedServiceNames() throws JavaModelException;
-	
+
+	/**
+	 * Get names of exported packages.
+	 *
+	 * @param targetModule filter the result to include only packages exported to the given module, unless {@code null}.
+	 * @return a non-null array of exported package names
+	 * @throws JavaModelException
+	 * @since 3.18
+	 */
+	String[] getExportedPackageNames(IModuleDescription targetModule) throws JavaModelException;
+
+	/**
+	 * Get names of opened packages.
+	 *
+	 * @param targetModule filter the result to include only packages opened to the given module, unless {@code null}.
+	 * @return a non-null array of opened package names
+	 * @throws JavaModelException
+	 * @since 3.18
+	 */
+	String[] getOpenedPackageNames(IModuleDescription targetModule) throws JavaModelException;
+
 	/**
 	 * 
 	 * @return true if automatic module, else false

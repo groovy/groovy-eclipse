@@ -104,6 +104,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(invocation, invocation.arguments());
 
 				// Invocation Applicability Inference: 18.5.1 & Invocation Type Inference: 18.5.2
+				InferenceContext18 innerCtx = null;
 				try {
 					Expression[] arguments = invocation.arguments();
 					TypeBinding[] argumentTypes = arguments == null ? Binding.NO_PARAMETERS : new TypeBinding[arguments.length];
@@ -111,7 +112,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 						argumentTypes[i] = arguments[i].resolvedType;
 					if (previousMethod instanceof ParameterizedGenericMethodBinding) {
 						// find the previous inner inference context to see what inference kind this invocation needs:
-						InferenceContext18 innerCtx = invocation.getInferenceContext((ParameterizedGenericMethodBinding) previousMethod);
+						innerCtx = invocation.getInferenceContext((ParameterizedGenericMethodBinding) previousMethod);
 						if (innerCtx == null) { 
 							/* No inference context -> the method was likely manufactured by Scope.findExactMethod -> assume it wasn't really poly after all.
 							   -> proceed as for non-poly expressions.
@@ -137,7 +138,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 						return FALSE;
 					return null; // already incorporated
 				} finally {
-					inferenceContext.resumeSuspendedInference(prevInvocation);
+					inferenceContext.resumeSuspendedInference(prevInvocation, innerCtx);
 				}
 			} else if (this.left instanceof ConditionalExpression) {
 				ConditionalExpression conditional = (ConditionalExpression) this.left;
@@ -156,6 +157,8 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			} else if (this.left instanceof LambdaExpression) {
 				LambdaExpression lambda = (LambdaExpression) this.left;
 				BlockScope scope = lambda.enclosingScope;
+				if (this.right instanceof InferenceVariable)
+					return TRUE; // assume inner inference will handle the fine print
 				if (!this.right.isFunctionalInterface(scope))
 					return FALSE;
 				
@@ -231,7 +234,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			try {
 				return inferenceContext.inferFunctionalInterfaceParameterization(lambda, scope, targetTypeWithWildCards);
 			} finally {
-				inferenceContext.resumeSuspendedInference(previous);
+				inferenceContext.resumeSuspendedInference(previous, null);
 			}
 		}
 	}
@@ -312,8 +315,9 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, reference.createPseudoExpressions(argumentTypes));
 
 				// Invocation Applicability Inference: 18.5.1 & Invocation Type Inference: 18.5.2
+				InferenceContext18 innerContext = null;
 				try {
-					InferenceContext18 innerContext = reference.getInferenceContext((ParameterizedMethodBinding) compileTimeDecl);
+					innerContext = reference.getInferenceContext((ParameterizedMethodBinding) compileTimeDecl);
 					int innerInferenceKind = determineInferenceKind(compileTimeDecl, argumentTypes, innerContext);
 					inferInvocationApplicability(inferenceContext, original, argumentTypes, original.isConstructor()/*mimic a diamond?*/, innerInferenceKind);
 					if (!inferenceContext.computeB3(reference, r, original))
@@ -322,7 +326,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				} catch (InferenceFailureException e) {
 					return FALSE;
 				} finally {
-					inferenceContext.resumeSuspendedInference(prevInvocation);
+					inferenceContext.resumeSuspendedInference(prevInvocation, innerContext);
 				}
 			}
 			TypeBinding rPrime = compileTimeDecl.isConstructor() ? compileTimeDecl.declaringClass : compileTimeDecl.returnType.capture(inferenceContext.scope, reference.sourceStart(), reference.sourceEnd());

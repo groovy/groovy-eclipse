@@ -35,6 +35,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,6 +94,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
+import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 import org.eclipse.jdt.internal.core.search.indexing.BinaryIndexer;
 import org.eclipse.jdt.internal.core.util.Messages;
@@ -2228,6 +2230,8 @@ protected void runJavac(
 						File.separator + compiler.rawVersion); // need to change output directory per javac version
 				if (shouldFlushOutputDirectory) {
 					Util.delete(javacOutputDirectory);
+				} else {
+					deleteSourceFiles(javacOutputDirectory);
 				}
 				javacOutputDirectory.mkdirs();
 				// write test files
@@ -2346,6 +2350,17 @@ protected void runJavac(
 			handleMismatch(compiler, testName, testFiles, expectedCompilerLog, expectedOutputString,
 					expectedErrorString, compilerLog, output, err, excuse, mismatch);
 		}
+	}
+}
+private void deleteSourceFiles(File directory) {
+	try {
+		Files.walk(directory.toPath())
+			.filter(f -> f.endsWith(SuffixConstants.SUFFIX_STRING_java))
+			.map(java.nio.file.Path::toFile)
+			.filter(File::isFile)
+			.forEach(File::delete);
+	} catch (IOException e) {
+		e.printStackTrace();
 	}
 }
 private boolean errorStringMatch(String expectedErrorStringStart, String actualError) {

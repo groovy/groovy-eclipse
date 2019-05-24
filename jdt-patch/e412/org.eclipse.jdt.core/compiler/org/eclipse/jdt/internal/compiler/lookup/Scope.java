@@ -4907,14 +4907,14 @@ public abstract class Scope {
 				TypeBinding param = parameters[lastIndex]; // is an ArrayBinding by definition
 				TypeBinding arg = arguments[lastIndex];
 				if (TypeBinding.notEquals(param, arg)) {
-					level = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods);
+					level = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method);
 					if (level == NOT_COMPATIBLE) {
 						// expect X[], is it called with X
 						param = ((ArrayBinding) param).elementsType();
 						if (tiebreakingVarargsMethods) {
 							arg = ((ArrayBinding) arg).elementsType();
 						}
-						if (parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods) == NOT_COMPATIBLE)
+						if (parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method) == NOT_COMPATIBLE)
 							return NOT_COMPATIBLE;
 						level = VARARGS_COMPATIBLE; // varargs support needed
 					}
@@ -4924,7 +4924,7 @@ public abstract class Scope {
 					TypeBinding param = ((ArrayBinding) parameters[lastIndex]).elementsType();
 					for (int i = lastIndex; i < argLength; i++) {
 						TypeBinding arg = (tiebreakingVarargsMethods && (i == (argLength - 1))) ? ((ArrayBinding)arguments[i]).elementsType() : arguments[i];
-						if (TypeBinding.notEquals(param, arg) && parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods) == NOT_COMPATIBLE)
+						if (TypeBinding.notEquals(param, arg) && parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method) == NOT_COMPATIBLE)
 							return NOT_COMPATIBLE;
 					}
 				}  else if (lastIndex != argLength) { // can call foo(int i, X ... x) with foo(1) but NOT foo();
@@ -4940,7 +4940,7 @@ public abstract class Scope {
 			TypeBinding param = parameters[i];
 			TypeBinding arg = (tiebreakingVarargsMethods && (i == (argLength - 1))) ? ((ArrayBinding)arguments[i]).elementsType() : arguments[i];
 			if (TypeBinding.notEquals(arg,param)) {
-				int newLevel = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods);
+				int newLevel = parameterCompatibilityLevel(arg, param, env, tiebreakingVarargsMethods, method);
 				if (newLevel == NOT_COMPATIBLE)
 					return NOT_COMPATIBLE;
 				if (newLevel > level)
@@ -4969,12 +4969,16 @@ public abstract class Scope {
 		return NOT_COMPATIBLE;
 	}
 	
-	private int parameterCompatibilityLevel(TypeBinding arg, TypeBinding param, LookupEnvironment env, boolean tieBreakingVarargsMethods) {
+	private int parameterCompatibilityLevel(TypeBinding arg, TypeBinding param, LookupEnvironment env, boolean tieBreakingVarargsMethods, MethodBinding method) {
 		// only called if env.options.sourceLevel >= ClassFileConstants.JDK1_5
 		if (arg == null || param == null)
 			return NOT_COMPATIBLE;
-		if (arg.isCompatibleWith(param, this))
+		if (arg instanceof PolyTypeBinding && !((PolyTypeBinding) arg).expression.isPertinentToApplicability(param, method)) {
+			if (arg.isPotentiallyCompatibleWith(param, this))
+				return COMPATIBLE;
+		} else if (arg.isCompatibleWith(param, this)) {
 			return COMPATIBLE;
+		}
 		if (tieBreakingVarargsMethods && (this.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_7 || !CompilerOptions.tolerateIllegalAmbiguousVarargsInvocation)) {
 			/* 15.12.2.5 Choosing the Most Specific Method, ... One variable arity member method named m is more specific than
 			   another variable arity member method of the same name if either ... Only subtypes relationship should be used.

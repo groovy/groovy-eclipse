@@ -108,14 +108,14 @@ public interface JavadocTagConstants {
 	public static final int TAG_LITERAL_VALUE = 19;
 	public static final int TAG_DOC_ROOT_VALUE = 20;
 	public static final int TAG_SYSTEM_PROPERTY_VALUE=21;
-	public static final int TAG_USES_VALUE=21;
-	public static final int TAG_PROVIDES_VALUE=22;
-	public static final int TAG_HIDDEN_VALUE = 23;
-	public static final int TAG_INDEX_VALUE = 24;
-	public static final int TAG_SUMMARY_VALUE = 25;
-	public static final int TAG_API_NOTE_VALUE = 26;
-	public static final int TAG_IMPL_SPEC_VALUE = 27;
-	public static final int TAG_IMPL_NOTE_VALUE = 28;
+	public static final int TAG_USES_VALUE=22;
+	public static final int TAG_PROVIDES_VALUE=23;
+	public static final int TAG_HIDDEN_VALUE = 24;
+	public static final int TAG_INDEX_VALUE = 25;
+	public static final int TAG_SUMMARY_VALUE = 26;
+	public static final int TAG_API_NOTE_VALUE = 27;
+	public static final int TAG_IMPL_SPEC_VALUE = 28;
+	public static final int TAG_IMPL_NOTE_VALUE = 29;
 	public static final int TAG_OTHERS_VALUE = 100;
 	// Tag names array
 	public static final char[][] TAG_NAMES = {
@@ -253,10 +253,10 @@ public interface JavadocTagConstants {
 		TAG_TYPE_INLINE,	// TAG_CODE_VALUE = 18;
 		TAG_TYPE_INLINE,	// TAG_LITERAL_VALUE = 19;
 		TAG_TYPE_INLINE,	// TAG_DOC_ROOT_VALUE = 20;
-		TAG_TYPE_INLINE,    // TAG_DOC_ROOT_VALUE = 21
-		TAG_TYPE_BLOCK,		// TAG_HIDDEN_VALUE = 22;
+		TAG_TYPE_INLINE,    // TAG_DOC_SYSTEM_PROPERTY = 21
+		TAG_TYPE_BLOCK,		// TAG_USES_VALUE = 22;
 		TAG_TYPE_BLOCK,		// TAG_PROVIDES_VALUE = 23;
-		TAG_TYPE_BLOCK,		// TAG_USES_VALUE = 24;
+		TAG_TYPE_BLOCK,		// TAG_HIDDEN_VALUE = 24;
 		TAG_TYPE_INLINE,	// TAG_INDEX_VALUE = 25;
 		TAG_TYPE_INLINE,	// TAG_SUMMARY_VALUE = 26;
 		TAG_TYPE_BLOCK,		// TAG_API_NOTE = 27;

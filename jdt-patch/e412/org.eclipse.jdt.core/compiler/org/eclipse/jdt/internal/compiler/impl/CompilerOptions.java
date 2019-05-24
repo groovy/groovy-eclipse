@@ -206,6 +206,9 @@ public class CompilerOptions {
 	public static final String OPTION_EnablePreviews = "org.eclipse.jdt.core.compiler.problem.enablePreviewFeatures"; //$NON-NLS-1$
 	public static final String OPTION_ReportPreviewFeatures = "org.eclipse.jdt.core.compiler.problem.reportPreviewFeatures"; //$NON-NLS-1$
 
+	// Internally used option to allow debug framework compile evaluation snippets in context of modules, see bug 543604
+	public static final String OPTION_JdtDebugCompileMode = "org.eclipse.jdt.internal.debug.compile.mode"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
@@ -546,6 +549,9 @@ public class CompilerOptions {
 
 	/** Master flag to enabled/disable all preview features */
 	public boolean enablePreviewFeatures;
+
+	/** Enable a less restrictive compile mode for JDT debug. */
+	public boolean enableJdtDebugCompileMode;
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -1584,6 +1590,8 @@ public class CompilerOptions {
 
 		this.complainOnUninternedIdentityComparison = false;
 		this.enablePreviewFeatures = false;
+
+		this.enableJdtDebugCompileMode = false;
 	}
 
 	public void set(Map<String, String> optionsMap) {
@@ -2095,17 +2103,6 @@ public class CompilerOptions {
 				this.complainOnUninternedIdentityComparison = false;
 			}
 		}
-		if ((optionValue = optionsMap.get(OPTION_EnablePreviews)) != null) {
-			if (ENABLED.equals(optionValue)) {
-				this.enablePreviewFeatures = true;
-				if (this.targetJDK != 0)
-					this.targetJDK |= ClassFileConstants.MINOR_VERSION_PREVIEW;
-			} else if (DISABLED.equals(optionValue)) {
-				this.enablePreviewFeatures = false;
-			}
-		}
-		if ((optionValue = optionsMap.get(OPTION_ReportPreviewFeatures)) != null) 
-			updateSeverity(PreviewFeatureUsed, optionValue);
 		// GROOVY add
 		if ((optionValue = optionsMap.get(OPTIONG_BuildGroovyFiles)) != null) {
 			if (ENABLED.equals(optionValue)) {
@@ -2132,6 +2129,25 @@ public class CompilerOptions {
 			this.groovyExcludeGlobalASTScan = optionValue;
 		}
 		// GROOVY end
+		if ((optionValue = optionsMap.get(OPTION_EnablePreviews)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.enablePreviewFeatures = true;
+				if (this.targetJDK != 0)
+					this.targetJDK |= ClassFileConstants.MINOR_VERSION_PREVIEW;
+			} else if (DISABLED.equals(optionValue)) {
+				this.enablePreviewFeatures = false;
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_ReportPreviewFeatures)) != null) 
+			updateSeverity(PreviewFeatureUsed, optionValue);
+
+		if ((optionValue = optionsMap.get(OPTION_JdtDebugCompileMode)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.enableJdtDebugCompileMode = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.enableJdtDebugCompileMode = false;
+			}
+		}
 	}
 
 	private String[] stringToNameList(String optionValue) {

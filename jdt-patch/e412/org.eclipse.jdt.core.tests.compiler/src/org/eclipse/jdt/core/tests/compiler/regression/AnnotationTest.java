@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -25,8 +25,9 @@
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
- *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contributions for
  *                              bug 542520 - [JUnit 5] Warning The method xxx from the type X is never used locally is shown when using MethodSource
+ *                              bug 546084 - Using Junit 5s MethodSource leads to ClassCastException
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -12115,5 +12116,91 @@ public void testBug542520d() throws Exception {
 		"The method getIntegers(int) from the type ExampleTest is never used locally\n" + 
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=546084 - Using Junit 5s MethodSource leads to
+// ClassCastException - string concatenation, i.e. BinaryExpression in @MethodSource annotation
+public void testBug546084a() throws Exception {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	runner.testFiles =
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 private final String TEST_METHOD_PREFIX = \"get\";\n" +
+			"	 @MethodSource(TEST_METHOD_PREFIX + \"Integers\")\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers() {\n" +
+			"		return Arrays.asList(0, 5, 1);\n" +
+			"	}\n" +
+			"}\n",
+		};
+	runner.runConformTest();
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=546084 - Using Junit 5s MethodSource leads to
+// ClassCastException - non string value, e.g. ClassLiteralAccess in @MethodSource annotation
+public void testBug546084b() throws Exception {
+	this.runNegativeTest(
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @MethodSource(Object.class)\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers(int i) {\n" +
+			"		return Arrays.asList(0, 5, 1);\n" +
+			"	}\n" +
+			"}\n",
+		},
+		"----------\n" +
+		"1. ERROR in ExampleTest.java (at line 6)\n" +
+		"	@MethodSource(Object.class)\n" +
+		"	              ^^^^^^^^^^^^\n" +
+		"Type mismatch: cannot convert from Class<Object> to String[]\n" +
+		"----------\n" +
+		"2. WARNING in ExampleTest.java (at line 9)\n" +
+		"	private static List<Integer> getIntegers(int i) {\n" +
+		"	                             ^^^^^^^^^^^^^^^^^^\n" +
+		"The method getIntegers(int) from the type ExampleTest is never used locally\n" +
+		"----------\n");
+}
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=546084 - Using Junit 5s MethodSource leads to
+//ClassCastException - array of string values, e.g. ArrayInitializer in @MethodSource annotation
+public void testBug546084c() throws Exception {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.ERROR);
+	runner.testFiles =
+		new String[] {
+			JUNIT_METHODSOURCE_NAME,
+			JUNIT_METHODSOURCE_CONTENT,
+			"ExampleTest.java",
+			"import java.util.Arrays;\n" +
+			"import java.util.List;\n" +
+			"import org.junit.jupiter.params.provider.MethodSource;\n" +
+			"public class ExampleTest {\n" +
+			"\n" +
+			"	 @MethodSource({ \"getIntegers\" })\n" +
+			"	 void testIntegers(Integer integer) {}\n" +
+			"	 \n" +
+			"	 private static List<Integer> getIntegers() {\n" + 
+			"		return Arrays.asList(0, 5, 1);\n" + 
+			"	}\n" +
+			"}\n",
+		};
+	runner.runConformTest();
 }
 }

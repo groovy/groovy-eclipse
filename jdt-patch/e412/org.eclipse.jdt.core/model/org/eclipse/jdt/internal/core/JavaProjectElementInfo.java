@@ -364,7 +364,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 			}
 			cache.allPkgFragmentsCache = allPkgFragmentsCache;
 		}
-		return new NameLookup(cache.allPkgFragmentRootsCache, cache.allPkgFragmentsCache, workingCopies, cache.rootToResolvedEntries);
+		return new NameLookup(project, cache.allPkgFragmentRootsCache, cache.allPkgFragmentsCache, workingCopies, cache.rootToResolvedEntries);
 	}
 
 	/*

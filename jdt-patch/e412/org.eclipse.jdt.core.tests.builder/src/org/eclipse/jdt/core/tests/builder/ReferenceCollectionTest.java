@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2019 Sebastian Zarnekow and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -9,7 +9,7 @@
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
- *     IBM Corporation - initial API and implementation
+ *     Sebastian Zarnekow - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
@@ -77,8 +77,7 @@ public class ReferenceCollectionTest extends BuilderTests {
 		}
 	}
 
-	// Disabled due bug 545491 comment 15
-	public void XtestInternQualifiedNamesSorts_01() {
+	public void testInternQualifiedNamesSorts_01() {
 		char[][][] qualifiedNames = new char[][][] {
 			CharOperation.splitOn('.', "java.lang.RuntimeException".toCharArray()),
 			CharOperation.splitOn('.', "a.a.a".toCharArray()),
@@ -97,8 +96,7 @@ public class ReferenceCollectionTest extends BuilderTests {
 				toStringArray(internQualifiedNames));
 	}
 
-	// Disabled due bug 545491 comment 15
-	public void XtestInternQualifiedNamesSorts_02() {
+	public void testInternQualifiedNamesSorts_02() {
 		char[][][] qualifiedNames = new char[][][] {
 			CharOperation.splitOn('.', "java.lang.RuntimeException".toCharArray()),
 			CharOperation.splitOn('.', "a.a.a".toCharArray()),
@@ -124,8 +122,7 @@ public class ReferenceCollectionTest extends BuilderTests {
 				toStringArray(internQualifiedNames));
 	}
 
-	// Disabled due bug 545491 comment 15
-	public void XtestInternSimpleNamesSorts_01() {
+	public void testInternSimpleNamesSorts_01() {
 		char[][] simpleNames = new char[][] {
 			"Throwable".toCharArray(),
 			"aaa".toCharArray(),
@@ -142,8 +139,7 @@ public class ReferenceCollectionTest extends BuilderTests {
 				toStringArray(internSimpleNames));
 	}
 
-	// Disabled due bug 545491 comment 15
-	public void XtestInternSimpleNamesSorts_02() {
+	public void testInternSimpleNamesSorts_02() {
 		char[][] simpleNames = new char[][] {
 			"aaa".toCharArray(),
 			"bbb".toCharArray(),
@@ -291,8 +287,7 @@ public class ReferenceCollectionTest extends BuilderTests {
 		assertFalse(other.includes(refColl.getQualifiedNameReferences(), refColl.getSimpleNameReferences(), refColl.getRootReferences()));
 	}
 
-	// Disabled due bug 545491 comment 15
-	public void XtestAddDependencies() {
+	public void testAddDependencies() {
 		TestableReferenceCollection refColl = new TestableReferenceCollection(null, null, null);
 
 		String[] array = new String[] {"a.b.c.D"};

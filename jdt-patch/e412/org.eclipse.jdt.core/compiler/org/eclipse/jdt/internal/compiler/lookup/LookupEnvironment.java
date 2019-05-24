@@ -390,11 +390,13 @@ private NameEnvironmentAnswer[] askForTypeFromModules(ModuleBinding clientModule
 		for (int i = 0; i < otherModules.length; i++) {
 			NameEnvironmentAnswer answer = oracle.apply(otherModules[i]);
 			if (answer != null) {
-				char[] nameFromAnswer = answer.moduleName();
-				if (nameFromAnswer == null || CharOperation.equals(nameFromAnswer, otherModules[i].moduleName)) {
-					answer.moduleBinding = otherModules[i];
-				} else {
-					answer.moduleBinding = getModule(nameFromAnswer);
+				if (answer.moduleBinding == null) {
+					char[] nameFromAnswer = answer.moduleName();
+					if (CharOperation.equals(nameFromAnswer, otherModules[i].moduleName)) {
+						answer.moduleBinding = otherModules[i];
+					} else {
+						answer.moduleBinding = getModule(nameFromAnswer);
+					}
 				}
 				answers[i] = answer;
 				found = true;
@@ -1577,8 +1579,7 @@ private void initializeUsesNullTypeAnnotation() {
 	this.mayTolerateMissingType = true;
 	try {
 		nullable = this.nullableAnnotation != null ? this.nullableAnnotation.getAnnotationType()
-				: getType(this.getNullableAnnotationName(), this.UnNamedModule); // FIXME(SHMOD) module for null
-																					// annotations??
+				: getType(this.getNullableAnnotationName(), this.UnNamedModule); // FIXME(SHMOD) module for null annotations??
 		nonNull = this.nonNullAnnotation != null ? this.nonNullAnnotation.getAnnotationType()
 				: getType(this.getNonNullAnnotationName(), this.UnNamedModule);
 	} finally {
@@ -1767,7 +1768,8 @@ private ReferenceBinding getTypeFromCompoundName(char[][] compoundName, boolean 
 			}
 			packageBinding.addType(binding);
 		}
-	} else if (binding == TheNotFoundType) {
+	}
+	if (binding == TheNotFoundType) {
 		// report the missing class file first
 		if (!wasMissingType) {
 			/* Since missing types have been already been complained against while producing binaries, there is no class path 
@@ -2149,6 +2151,7 @@ public void reset() {
 		this.root.reset();
 		return;
 	}
+	this.stepCompleted = 0;
 	this.knownModules = new HashtableOfModule();
 	this.UnNamedModule = new ModuleBinding.UnNamedModule(this);
 	this.module = this.UnNamedModule;

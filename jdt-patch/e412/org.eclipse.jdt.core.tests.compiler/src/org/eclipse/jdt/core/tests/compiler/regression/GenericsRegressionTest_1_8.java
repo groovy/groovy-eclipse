@@ -9628,4 +9628,282 @@ public void testBug508834_comment0() {
 				"----------\n";
 		runner.runNegativeTest();
 	}
+	public void testBug512156_3() {
+		runConformTest(
+			new String[] {
+				"TestFor3TypeParameters.java",
+				"import java.util.Objects;\n" + 
+				"import java.util.stream.Stream;\n" + 
+				"import java.util.stream.StreamSupport;\n" + 
+				"\n" + 
+				"/**\n" + 
+				" * For comprehension for 3 iterables. Adapted from the http://javaslang.io library to help finding JDT performance bottlenecks.\n" + 
+				" *\n" + 
+				" */\n" + 
+				"public class TestFor3TypeParameters {\n" + 
+				"\n" + 
+				"    public interface Function3<T1, T2, T3, R> {\n" + 
+				"        R apply(T1 t1, T2 t2, T3 t3);\n" + 
+				"    }    \n" + 
+				"    \n" + 
+				"    public static class For3<T1, T2, T3> {\n" + 
+				"\n" + 
+				"        private final Iterable<T1> ts1;\n" + 
+				"        private final Iterable<T2> ts2;\n" + 
+				"        private final Iterable<T3> ts3;\n" + 
+				"\n" + 
+				"        private For3(Iterable<T1> ts1, Iterable<T2> ts2, Iterable<T3> ts3) {\n" + 
+				"            this.ts1 = ts1;\n" + 
+				"            this.ts2 = ts2;\n" + 
+				"            this.ts3 = ts3;\n" + 
+				"        }\n" + 
+				"\n" + 
+				"        /**\n" + 
+				"         * Yields a result for elements of the cross product of the underlying Iterables.\n" + 
+				"         *\n" + 
+				"         * @param f\n" + 
+				"         *            a function that maps an element of the cross product to a result\n" + 
+				"         * @param <R>\n" + 
+				"         *            type of the resulting {@code Iterator} elements\n" + 
+				"         * @return an {@code Iterator} of mapped results\n" + 
+				"         */\n" + 
+				"        public <R> Stream<R> yield(\n" + 
+				"                Function3<? super T1, ? super T2, ? super T3, ? extends R> f) {\n" + 
+				"            Objects.requireNonNull(f, \"f is null\");\n" + 
+				"            return this.stream(ts1)\n" + 
+				"                .flatMap(t1 ->\n" + 
+				"                    stream(ts2).flatMap(t2 -> \n" + 
+				"                        stream(ts3).map(t3 ->\n" + 
+				"                            f.apply(t1, t2, t3)\n" + 
+				"                        )\n" + 
+				"                    )\n" + 
+				"                );\n" + 
+				"        }\n" + 
+				"\n" + 
+				"        private <T> Stream<T> stream(Iterable<T> iterable) {\n" + 
+				"            return StreamSupport.stream(iterable.spliterator(), false);\n" + 
+				"        }\n" + 
+				"\n" + 
+				"    }\n" + 
+				"}\n"
+			});
+	}
+	public void testBug512156_10() {
+		runConformTest(
+			new String[] {
+				"Test10.java",
+				"import java.util.Objects;\n" + 
+				"import java.util.stream.Stream;\n" + 
+				"import java.util.stream.StreamSupport;\n" + 
+				"\n" + 
+				"/**\n" + 
+				" * For comprehension for 10 iterables. Adapted from the http://javaslang.io library to help finding JDT performance bottlenecks.\n" + 
+				" *\n" + 
+				" */\n" + 
+				"public class Test10 {\n" + 
+				"\n" + 
+				"    public interface Function10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> {\n" + 
+				"        R apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10);\n" + 
+				"    }    \n" + 
+				"    \n" + 
+				"    public static class For10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> {\n" + 
+				"\n" + 
+				"        private final Iterable<T1> ts1;\n" + 
+				"        private final Iterable<T2> ts2;\n" + 
+				"        private final Iterable<T3> ts3;\n" + 
+				"        private final Iterable<T4> ts4;\n" + 
+				"        private final Iterable<T5> ts5;\n" + 
+				"        private final Iterable<T6> ts6;\n" + 
+				"        private final Iterable<T7> ts7;\n" + 
+				"        private final Iterable<T8> ts8;\n" + 
+				"        private final Iterable<T9> ts9;\n" + 
+				"        private final Iterable<T10> ts10;\n" + 
+				"\n" + 
+				"        private For10(Iterable<T1> ts1, Iterable<T2> ts2, Iterable<T3> ts3, Iterable<T4> ts4, Iterable<T5> ts5, Iterable<T6> ts6,\n" + 
+				"                Iterable<T7> ts7, Iterable<T8> ts8, Iterable<T9> ts9, Iterable<T10> ts10) {\n" + 
+				"            this.ts1 = ts1;\n" + 
+				"            this.ts2 = ts2;\n" + 
+				"            this.ts3 = ts3;\n" + 
+				"            this.ts4 = ts4;\n" + 
+				"            this.ts5 = ts5;\n" + 
+				"            this.ts6 = ts6;\n" + 
+				"            this.ts7 = ts7;\n" + 
+				"            this.ts8 = ts8;\n" + 
+				"            this.ts9 = ts9;\n" + 
+				"            this.ts10 = ts10;\n" + 
+				"        }\n" + 
+				"\n" + 
+				"        /**\n" + 
+				"         * Yields a result for elements of the cross product of the underlying Iterables.\n" + 
+				"         *\n" + 
+				"         * @param f\n" + 
+				"         *            a function that maps an element of the cross product to a result\n" + 
+				"         * @param <R>\n" + 
+				"         *            type of the resulting {@code Iterator} elements\n" + 
+				"         * @return an {@code Iterator} of mapped results\n" + 
+				"         */\n" + 
+				"        public <R> Stream<R> yield(\n" + 
+				"                Function10<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? extends R> f) {\n" + 
+				"            Objects.requireNonNull(f, \"f is null\");\n" + 
+				"            return this.stream(ts1)\n" + 
+				"                .flatMap(t1 ->\n" + 
+				"                    stream(ts2).flatMap(t2 -> \n" + 
+				"                        stream(ts3).flatMap(t3 -> \n" + 
+				"                            stream(ts4).flatMap(t4 -> \n" + 
+				"                                stream(ts5).flatMap(t5 -> \n" + 
+				"                                    stream(ts6).flatMap(t6 -> \n" + 
+				"                                        stream(ts7).flatMap(t7 -> \n" + 
+				"                                            stream(ts8).flatMap(t8 ->\n" + 
+				"                                            	stream(ts9).flatMap(t9 ->\n" + 
+				"                                            		stream(ts10).map(t10 -> /**/\n" + 
+				"                                                		f.apply(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10)\n" + 
+				"                                                	)\n" + 
+				"                                                )\n" + 
+				"                                            )\n" + 
+				"                                        )\n" + 
+				"                                    )\n" + 
+				"                                )\n" + 
+				"                            )\n" + 
+				"                        )\n" + 
+				"                    )\n" + 
+				"                );\n" + 
+				"        }\n" + 
+				"\n" + 
+				"        private <T> Stream<T> stream(Iterable<T> iterable) {\n" + 
+				"            return StreamSupport.stream(iterable.spliterator(), false);\n" + 
+				"        }\n" + 
+				"\n" + 
+				"    }\n" + 
+				"}\n"
+			});
+	}
+	public void testBug547061() {
+		runConformTest(
+			new String[] {
+				"test2/Problematic.java",
+				"package test2;\n" + 
+				"\n" + 
+				"import java.io.IOException;\n" + 
+				"import java.util.Collections;\n" + 
+				"import java.util.Set;\n" + 
+				"import java.util.function.Consumer;\n" + 
+				"\n" + 
+				"public class Problematic {\n" + 
+				"\n" + 
+				"	@FunctionalInterface\n" + 
+				"	private interface ThrowingConsumer<T, E extends Throwable> {\n" + 
+				"		void accept(T t) throws E;\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	private class FileAsset {\n" + 
+				"		public FileAsset move(String path) throws IOException {\n" + 
+				"			System.out.println(path);\n" + 
+				"			return null;\n" + 
+				"		}\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	static <T, E extends Exception> void process(Consumer<Consumer<T>> code, ThrowingConsumer<T, E> throwingConsumer)\n" + 
+				"			throws E {\n" + 
+				"		code.accept(t -> {\n" + 
+				"			try {\n" + 
+				"				throwingConsumer.accept(t);\n" + 
+				"			} catch (Exception e) {\n" + 
+				"				e.printStackTrace();\n" + 
+				"			}\n" + 
+				"		});\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	public void execute(String path) throws IOException {\n" + 
+				"		Set<FileAsset> set = Collections.singleton(new FileAsset());\n" + 
+				"		process(set::forEach, (asset) -> {\n" + 
+				"			process(set::forEach, (asset2) -> {\n" + 
+				"				asset2.move(path);\n" + 
+				"			});\n" + 
+				"		});\n" + 
+				"\n" + 
+				"	}\n" + 
+				"}\n"
+			});
+	}
+	public void testBug545420() {
+		runConformTest(
+			new String[] {
+				"Main.java",
+				"public class Main {\n" + 
+				"	public static void main(String[] args) {  \n" + 
+				"		System.out.println(new Main().getDetailCellCssFactory().getReturn());\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	public FIReturnType getDetailCellCssFactory() {\n" + 
+				"		\n" + 
+				"		return 	method1(()-> {\n" + 
+				"					return  () ->{\n" + 
+				"							return \"something\";\n" + 
+				"					};\n" + 
+				"			});\n" + 
+				"	}\n" + 
+				"	\n" + 
+				"	public <X> X method1(FIWithGenerics<X> init) {\n" + 
+				"		return init.init();		\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"interface FIReturnType {\n" + 
+				"	String getReturn();\n" + 
+				"}\n" + 
+				"interface FIWithGenerics<X> {\n" + 
+				"	 X init();\n" + 
+				"}\n"
+			});
+	}
+	public void testBug525822() {
+		runNegativeTest(
+			new String[] {
+				"ECJTest.java",
+				"import java.util.*;\n" + 
+				"import java.util.function.*;\n" + 
+				"\n" + 
+				"public class ECJTest {\n" + 
+				"\n" + 
+				"	static {\n" + 
+				"		final List<String> list = new ArrayList<>();\n" + 
+				"		accept(list::add);\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	static void accept(Consumer<String> yay) {};\n" + 
+				"	static void accept(BiConsumer<String, String> nooo) {};\n" + 
+				"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in ECJTest.java (at line 8)\n" + 
+			"	accept(list::add);\n" + 
+			"	^^^^^^\n" + 
+			"The method accept(Consumer<String>) is ambiguous for the type ECJTest\n" + 
+			"----------\n");
+	}
+	public void testBug502327() {
+		runConformTest(
+			new String[] {
+				"Bug.java",
+				"public class Bug {\n" + 
+				"\n" + 
+				"  public void execute() {\n" + 
+				"    foo(bar(new ExampleType()));\n" + 
+				"  }\n" + 
+				"\n" + 
+				"  public <VC> void foo(ClassB<VC> a) {}\n" + 
+				"\n" + 
+				"  public <T> ClassC<T> bar(T t) {\n" + 
+				"    return null;\n" + 
+				"  }\n" + 
+				"\n" + 
+				"  public class ClassC<T> extends ClassB<ClassC<T>.NestedClassC> {\n" + 
+				"    public class NestedClassC {}\n" + 
+				"  }\n" + 
+				"\n" + 
+				"  public abstract static class ClassB<VC> {}\n" + 
+				"\n" + 
+				"  public class ExampleType {}\n" + 
+				"}\n"
+			});
+	}
 }

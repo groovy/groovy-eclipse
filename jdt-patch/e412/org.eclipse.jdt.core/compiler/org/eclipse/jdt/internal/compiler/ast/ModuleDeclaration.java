@@ -29,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -332,8 +333,13 @@ public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 	{
 		for (PackageBinding pack : requiredModule.getExports()) {
 			Set<ModuleBinding> mods = pack2mods.get(String.valueOf(pack.readableName()));
-			if (mods != null && mods.size() > 1)
-				skope.problemReporter().conflictingPackagesFromModules(pack, mods, requiresStat.sourceStart, requiresStat.sourceEnd);
+			if (mods != null && mods.size() > 1) {
+				CompilerOptions compilerOptions = skope.compilerOptions();
+				boolean inJdtDebugCompileMode = compilerOptions.enableJdtDebugCompileMode;
+				if (!inJdtDebugCompileMode) {
+					skope.problemReporter().conflictingPackagesFromModules(pack, mods, requiresStat.sourceStart, requiresStat.sourceEnd);
+				}
+			}
 		}
 	}
 

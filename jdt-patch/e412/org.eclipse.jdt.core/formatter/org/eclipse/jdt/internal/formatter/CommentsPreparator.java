@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2018 Mateusz Matela and others.
+ * Copyright (c) 2014, 2019 Mateusz Matela and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -630,7 +630,7 @@ public class CommentsPreparator extends ASTVisitor {
 
 			List<Token> tagTokens = new ArrayList<>();
 			tagTokens.add(this.ctm.get(startIndex));
-			if (!PARAM_TAGS.contains(tagName)) {
+			if (!PARAM_TAGS.contains(tagName) || startIndex == endIndex) {
 				tagTokens.add(null);
 			}
 			for (int i = startIndex + 1; i <= endIndex; i++) {

@@ -15,6 +15,7 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.ModuleUpdater;
 
 /** 
@@ -34,23 +36,22 @@ class ModuleEntryProcessor {
 	// ------------- patch-module: ---------------
 
 	/**
-	 * Establish that an entry with <code>patch-module</code> appears at position 0, if any.
+	 * Establish that an entry with <code>patch-module</code> appears at position 0, if any and if it affects this project or its source folder(s).
 	 * This ensures that in the first iteration we find the patchedModule (see e.g., collectModuleEntries()),
 	 * which later can be combined into each src-entry (see {@link #combinePatchIntoModuleEntry(ClasspathLocation, IModule, Map)}).
 	 * @see IClasspathAttribute#PATCH_MODULE
 	 */
-	static String pushPatchToFront(IClasspathEntry[] classpathEntries) {
-		String patchedModule = null;
+	static String pushPatchToFront(IClasspathEntry[] classpathEntries, JavaProject javaProject) {
 		for (int i = 0; i < classpathEntries.length; i++) {
 			IClasspathEntry entry = classpathEntries[i];
-			patchedModule = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.PATCH_MODULE);
-			if (patchedModule != null) {
+			List<String> patchedModules = javaProject.getPatchedModules(entry);
+			if (patchedModules.size() == 1) {
 				if (i > 0) {
 					IClasspathEntry tmp = classpathEntries[0];
 					classpathEntries[0] = entry;
 					classpathEntries[i] = tmp;
 				}
-				return patchedModule;
+				return patchedModules.get(0);
 			}
 		}
 		return null;

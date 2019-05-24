@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2017 IBM Corporation and others.
+ * Copyright (c) 2013, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -67,6 +67,7 @@ public abstract class FunctionalExpression extends Expression {
 	public boolean shouldCaptureInstance = false; // Whether the expression needs access to instance data of enclosing type
 	protected static IErrorHandlingPolicy silentErrorHandlingPolicy = DefaultErrorHandlingPolicies.ignoreAllProblems();
 	private boolean hasReportedSamProblem = false;
+	public boolean hasDescripterProblem;
 	public boolean isSerializable;
 	public int ordinal;
 
@@ -303,6 +304,7 @@ public abstract class FunctionalExpression extends Expression {
 			status = false;
 		if (!inspector.visible(this.expectedType))
 			status = false;
+		this.hasDescripterProblem |= !status;
 		return status;
 	}
 

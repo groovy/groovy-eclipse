@@ -547,7 +547,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 					}
 				}
 			}
-			resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
+			this.binding = resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
 		} else {
 			if (this.anonymousType != null) {
 				constructorBinding = getAnonymousConstructorBinding((ReferenceBinding) receiverType, scope);

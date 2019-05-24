@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -383,4 +383,17 @@ public interface IMethodBinding extends IBinding {
 	 * @since 3.1
 	 */
 	public boolean overrides(IMethodBinding method);
+	
+
+	/**
+	 * Returns a list of variable bindings representing the synthetic outer
+	 * local variables. Returns an empty array for non-lambda expressions or if 
+	 * this method does not have any synthetic parameters.
+	 * 
+	 * @return a (possibly empty) list of variable bindings for the synthetic
+	 * outer locals of this method if this is a lambda expression, else an empty array.
+	 * @since 3.18
+	 */
+	public IVariableBinding[] getSyntheticOuterLocals();
+
 }

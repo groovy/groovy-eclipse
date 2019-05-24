@@ -111,6 +111,7 @@ public final class Messages extends NLS {
 	public static String build_inconsistentClassFile;
 	public static String build_inconsistentProject;
 	public static String build_incompleteClassPath;
+	public static String build_errorOnModuleDirective;
 	public static String build_missingSourceFile;
 	public static String build_prereqProjectHasClasspathProblems;
 	public static String build_prereqProjectMustBeRebuilt;

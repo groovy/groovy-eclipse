@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -203,6 +204,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 
 		if (cache == null) {
 			try {
+				HashMap<String,IModule> newCache = new HashMap<>();
 				org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(this.file,
 						new org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor<Path>() {
 
@@ -221,7 +223,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 					@Override
 					public FileVisitResult visitModule(Path p, String name) throws IOException {
 						try {
-							ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name));
+							ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name), newCache);
 							ClasspathJrt.this.moduleNamesCache.add(name);
 						} catch (ClassFormatException e) {
 							e.printStackTrace();
@@ -229,6 +231,12 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 				}, JRTUtil.NOTIFY_MODULES);
+
+				synchronized(ModulesCache) {
+					if (ModulesCache.get(this.file.getPath()) == null) {
+						ModulesCache.put(this.file.getPath(), Collections.unmodifiableMap(newCache));
+					}
+				}
 			} catch (IOException e) {
 				// TODO: Java 9 Should report better
 			}
@@ -236,20 +244,16 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			this.moduleNamesCache.addAll(cache.keySet());
 		}
 	}
-	void acceptModule(ClassFileReader reader) {
+	void acceptModule(ClassFileReader reader, Map<String, IModule> cache) {
 		if (reader != null) {
 			IModule moduleDecl = reader.getModuleDeclaration();
 			if (moduleDecl != null) {
-				Map<String, IModule> cache = ModulesCache.get(this.file.getPath());
-				if (cache == null) {
-					ModulesCache.put(this.file.getPath(), cache = new HashMap<String,IModule>());
-				}
 				cache.put(String.valueOf(moduleDecl.name()), moduleDecl);
 			}
 		}
-		
 	}
-	void acceptModule(byte[] content) {
+
+	void acceptModule(byte[] content, Map<String, IModule> cache) {
 		if (content == null) 
 			return;
 		ClassFileReader reader = null;
@@ -259,7 +263,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			e.printStackTrace();
 		}
 		if (reader != null) {
-			acceptModule(reader);
+			acceptModule(reader, cache);
 		}
 	}
 	

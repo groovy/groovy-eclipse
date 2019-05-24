@@ -4671,9 +4671,7 @@ public void test441929() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=437781, [1.8][compiler] Eclipse accepts code rejected by javac because of ambiguous method reference
 public void test437781() {
-	this.runConformTest(
-		false,
-		EclipseHasABug.EclipseBug510528,
+	this.runNegativeTest(
 		new String[] {
 			"X.java",
 			"import java.util.function.Consumer;\n" +
@@ -4691,7 +4689,17 @@ public void test437781() {
 			"	}	\n" +
 			"}\n"
 		},
-		"Consumer");
+		"----------\n" + 
+		"1. ERROR in X.java (at line 5)\n" + 
+		"	new X().visit( System.out::println );\n" + 
+		"	        ^^^^^\n" + 
+		"The method visit(Function<Integer,Boolean>) is ambiguous for the type X\n" + 
+		"----------\n" + 
+		"2. ERROR in X.java (at line 5)\n" + 
+		"	new X().visit( System.out::println );\n" + 
+		"	               ^^^^^^^^^^^^^^^^^^^\n" + 
+		"The type of println(Object) from the type PrintStream is void, this is incompatible with the descriptor\'s return type: Boolean\n" + 
+		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=443889, [1.8][compiler] Lambdas get compiled to duplicate methods
 public void test443889() {

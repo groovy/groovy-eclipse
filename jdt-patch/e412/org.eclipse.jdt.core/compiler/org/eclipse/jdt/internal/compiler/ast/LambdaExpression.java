@@ -868,44 +868,61 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		}
 		return true;
 	}
-	
+
+	private enum CompatibilityResult { COMPATIBLE, INCOMPATIBLE, REPORTED }
+
+	public boolean reportShapeError(TypeBinding targetType, Scope skope) {
+		return internalIsCompatibleWith(targetType, skope, true) == CompatibilityResult.REPORTED;
+	}
+
 	@Override
 	public boolean isCompatibleWith(TypeBinding targetType, final Scope skope) {
+		return internalIsCompatibleWith(targetType, skope, false) == CompatibilityResult.COMPATIBLE;
+	}
+	CompatibilityResult internalIsCompatibleWith(TypeBinding targetType, Scope skope, boolean reportShapeProblem) {
 		
 		if (!super.isPertinentToApplicability(targetType, null))
-			return true;
+			return CompatibilityResult.COMPATIBLE;
 		
 		LambdaExpression copy = null;
 		try {
 			copy = cachedResolvedCopy(targetType, argumentsTypeElided(), false, null); // if argument types are elided, we don't care for result expressions against *this* target, any valid target is OK.
 		} catch (CopyFailureException cfe) {
 			if (this.assistNode)
-				return true; // can't type check result expressions, just say yes.
-			return !isPertinentToApplicability(targetType, null); // don't expect to hit this ever.
+				return CompatibilityResult.COMPATIBLE; // can't type check result expressions, just say yes.
+			return isPertinentToApplicability(targetType, null) ? CompatibilityResult.INCOMPATIBLE : CompatibilityResult.COMPATIBLE; // don't expect to hit this ever.
 		}
 		if (copy == null)
-			return false;
+			return CompatibilityResult.INCOMPATIBLE;
 		
 		// copy here is potentially compatible with the target type and has its shape fully computed: i.e value/void compatibility is determined and result expressions have been gathered.
 		targetType = findGroundTargetType(this.enclosingScope, targetType, targetType, argumentsTypeElided());
 		MethodBinding sam = targetType.getSingleAbstractMethod(this.enclosingScope, true);
 		if (sam == null || sam.problemId() == ProblemReasons.NoSuchSingleAbstractMethod) {
-			return false;
+			return CompatibilityResult.INCOMPATIBLE;
 		}
 		if (sam.returnType.id == TypeIds.T_void) {
-			if (!copy.voidCompatible)
-				return false;
+			if (!copy.voidCompatible) {
+				return CompatibilityResult.INCOMPATIBLE;
+			}
 		} else {
-			if (!copy.valueCompatible)
-				return false;
+			if (!copy.valueCompatible) {
+				if (reportShapeProblem) {
+					skope.problemReporter().missingValueFromLambda(this, sam.returnType);
+					return CompatibilityResult.REPORTED;
+				}
+				return CompatibilityResult.INCOMPATIBLE;
+			}
 		}
+		if (reportShapeProblem)
+			return CompatibilityResult.COMPATIBLE; // enough seen
 
 		if (!isPertinentToApplicability(targetType, null))
-			return true;
+			return CompatibilityResult.COMPATIBLE;
 
 		// catch up on one check deferred via skipKosherCheck=true (only if pertinent for applicability)
 		if (!kosherDescriptor(this.enclosingScope, sam, false))
-			return false;
+			return CompatibilityResult.INCOMPATIBLE;
 
 		Expression [] returnExpressions = copy.resultExpressions;
 		for (int i = 0, length = returnExpressions.length; i < length; i++) {
@@ -913,10 +930,10 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					&& this.enclosingScope.parameterCompatibilityLevel(returnExpressions[i].resolvedType, sam.returnType) == Scope.NOT_COMPATIBLE) {
 				if (!returnExpressions[i].isConstantValueOfTypeAssignableToType(returnExpressions[i].resolvedType, sam.returnType))
 					if (sam.returnType.id != TypeIds.T_void || this.body instanceof Block)
-						return false;
+						return CompatibilityResult.INCOMPATIBLE;
 			}
 		}
-		return true;
+		return CompatibilityResult.COMPATIBLE;
 	}
 	
 	class CopyFailureException extends RuntimeException {

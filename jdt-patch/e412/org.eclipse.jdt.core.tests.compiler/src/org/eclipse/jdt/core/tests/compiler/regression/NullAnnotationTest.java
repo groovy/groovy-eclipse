@@ -41,7 +41,7 @@ public NullAnnotationTest(String name) {
 // Static initializer to specify tests subset using TESTS_* static variables
 // All specified tests which do not belong to the class are skipped...
 static {
-//		TESTS_NAMES = new String[] { "test_default_nullness_003a" };
+//		TESTS_NAMES = new String[] { "testBug545715" };
 //		TESTS_NUMBERS = new int[] { 561 };
 //		TESTS_RANGE = new int[] { 1, 2049 };
 }
@@ -10582,5 +10582,28 @@ public void testBug542707_006() {
 			"Potential null pointer access: The variable day may be null at this location\n" + 
 			"----------\n";
 	runner.runNegativeTest();
+}
+public void testBug545715() {
+	if (this.complianceLevel < ClassFileConstants.JDK12) return; // switch expression
+	Map<String, String>  customOptions = getCompilerOptions();
+	customOptions.put(JavaCore.COMPILER_PB_ENABLE_PREVIEW_FEATURES, JavaCore.ENABLED);
+	customOptions.put(CompilerOptions.OPTION_ReportPreviewFeatures, CompilerOptions.IGNORE);
+	runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n"+
+			"    void f() {\n"+
+			"        loop: while(true) {\n"+
+			"            break loop;\n"+
+			"        }\n"+
+			"    }\n"+
+			"    public static void main(String[] args) {\n"+
+			"        new X().f();\n"+
+			"    }\n"+
+			"}\n"
+		},
+	    "",
+	    customOptions,
+	    new String[] {"--enable-preview"});
 }
 }

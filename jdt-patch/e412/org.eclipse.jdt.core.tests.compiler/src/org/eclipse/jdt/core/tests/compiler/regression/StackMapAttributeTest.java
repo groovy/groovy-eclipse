@@ -8614,4 +8614,121 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				assertEquals("Wrong contents", expectedOutput, actualOutput);
 			}
 	}
+	public void testBug5409021() throws Exception {
+		this.runConformTest(
+				new String[] {
+					"X.java",
+					"public class X {\n" + 
+					"\n" + 
+					"	public static void main(String[] args) {\n" + 
+					"		X error = new X();\n" + 
+					"		error.reproduce(\"hello\");\n" + 
+					"		System.out.println(\"DONE\");\n" + 
+					"	}\n" + 
+					"	\n" + 
+					"	public Object reproduce(Object param) throws RuntimeException {\n" + 
+					"		Object local;\n" + 
+					"		try {\n" + 
+					"			return param; \n" + 
+					"		} \n" + 
+					"		catch (RuntimeException e) {\n" + 
+					"			return null;\n" + 
+					"		} \n" + 
+					"		finally {\n" + 
+					"			if (param != null) {\n" + 
+					"				System.out.println(\"FINALLY\");\n" + 
+					"			}\n" + 
+					"			local = null;\n" + 
+					"		}\n" + 
+					"	}\n" + 
+					"}\n" + 
+					"",
+				},
+				"FINALLY\n" + 
+				"DONE");
+
+			ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+			byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(new File(OUTPUT_DIR + File.separator  +"X.class"));
+			String actualOutput =
+				disassembler.disassemble(
+					classFileBytes,
+					"\n",
+					ClassFileBytesDisassembler.DETAILED);
+			String expectedOutput =
+					"  // Stack: 2, Locals: 6\n" + 
+					"  public java.lang.Object reproduce(java.lang.Object param) throws java.lang.RuntimeException;\n" + 
+					"     0  aload_1 [param]\n" + 
+					"     1  astore 5\n" + 
+					"     3  aload_1 [param]\n" + 
+					"     4  ifnull 15\n" + 
+					"     7  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
+					"    10  ldc <String \"FINALLY\"> [43]\n" + 
+					"    12  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
+					"    15  aconst_null\n" + 
+					"    16  astore_2 [local]\n" + 
+					"    17  aload 5\n" + 
+					"    19  areturn\n" + 
+					"    20  astore_3 [e]\n" + 
+					"    21  aload_1 [param]\n" + 
+					"    22  ifnull 33\n" + 
+					"    25  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
+					"    28  ldc <String \"FINALLY\"> [43]\n" + 
+					"    30  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
+					"    33  aconst_null\n" + 
+					"    34  astore_2 [local]\n" + 
+					"    35  aconst_null\n" + 
+					"    36  areturn\n" + 
+					"    37  astore 4\n" + 
+					"    39  aload_1 [param]\n" + 
+					"    40  ifnull 51\n" + 
+					"    43  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
+					"    46  ldc <String \"FINALLY\"> [43]\n" + 
+					"    48  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
+					"    51  aconst_null\n" + 
+					"    52  astore_2 [local]\n" + 
+					"    53  aload 4\n" + 
+					"    55  athrow\n" + 
+					"      Exception Table:\n" + 
+					"        [pc: 0, pc: 3] -> 20 when : java.lang.RuntimeException\n" + 
+					"        [pc: 0, pc: 3] -> 37 when : any\n" + 
+					"        [pc: 20, pc: 21] -> 37 when : any\n" + 
+					"      Line numbers:\n" + 
+					"        [pc: 0, line: 12]\n" + 
+					"        [pc: 3, line: 18]\n" + 
+					"        [pc: 7, line: 19]\n" + 
+					"        [pc: 15, line: 21]\n" + 
+					"        [pc: 17, line: 12]\n" + 
+					"        [pc: 20, line: 14]\n" + 
+					"        [pc: 21, line: 18]\n" + 
+					"        [pc: 25, line: 19]\n" + 
+					"        [pc: 33, line: 21]\n" + 
+					"        [pc: 35, line: 15]\n" + 
+					"        [pc: 37, line: 17]\n" + 
+					"        [pc: 39, line: 18]\n" + 
+					"        [pc: 43, line: 19]\n" + 
+					"        [pc: 51, line: 21]\n" + 
+					"        [pc: 53, line: 22]\n" + 
+					"      Local variable table:\n" + 
+					"        [pc: 0, pc: 56] local: this index: 0 type: X\n" + 
+					"        [pc: 0, pc: 56] local: param index: 1 type: java.lang.Object\n" + 
+					"        [pc: 17, pc: 20] local: local index: 2 type: java.lang.Object\n" + 
+					"        [pc: 35, pc: 37] local: local index: 2 type: java.lang.Object\n" + 
+					"        [pc: 53, pc: 56] local: local index: 2 type: java.lang.Object\n" + 
+					"        [pc: 21, pc: 37] local: e index: 3 type: java.lang.RuntimeException\n" + 
+					"      Stack map table: number of frames 5\n" + 
+					"        [pc: 15, full, stack: {}, locals: {X, java.lang.Object, _, _, _, java.lang.Object}]\n" + 
+					"        [pc: 20, full, stack: {java.lang.RuntimeException}, locals: {X, java.lang.Object}]\n" + 
+					"        [pc: 33, full, stack: {}, locals: {X, java.lang.Object, _, java.lang.RuntimeException}]\n" + 
+					"        [pc: 37, full, stack: {java.lang.Throwable}, locals: {X, java.lang.Object}]\n" + 
+					"        [pc: 51, full, stack: {}, locals: {X, java.lang.Object, _, _, java.lang.Throwable}]\n" + 
+					"}";
+
+			int index = actualOutput.indexOf(expectedOutput);
+			if (index == -1 || expectedOutput.length() == 0) {
+				System.out.println(Util.displayString(actualOutput, 2));
+			}
+			if (index == -1) {
+				assertEquals("Wrong contents", expectedOutput, actualOutput);
+			}
+	}
 }

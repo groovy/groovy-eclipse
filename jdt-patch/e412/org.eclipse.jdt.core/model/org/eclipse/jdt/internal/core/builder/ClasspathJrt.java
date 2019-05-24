@@ -322,6 +322,9 @@ protected Collection<String> selectModules(Set<String> keySet, Collection<String
 
 protected void addRequired(String mod, Set<String> allModules) {
 	IModule iMod = getModule(mod.toCharArray());
+	if(iMod == null) {
+		return;
+	}
 	for (IModuleReference requiredRef : iMod.requires()) {
 		IModule reqMod = getModule(requiredRef.name());
 		if (reqMod != null) {

@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +92,8 @@ public class ClasspathJep247 extends ClasspathJrt {
 			}
 			if (content != null) {
 				reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
-				return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), null);
+				char[] modName = moduleName != null ? moduleName.toCharArray() : null;
+				return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName), modName);
 			}
 		} catch(ClassFormatException e) {
 			// Continue
@@ -143,6 +145,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 		Map<String, IModule> cache = ModulesCache.get(this.modulePath);
 		if (cache == null) {
 			try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(modPath)) {
+				HashMap<String,IModule> newCache = new HashMap<>();
 				for (final java.nio.file.Path subdir: stream) {
 						Files.walkFileTree(subdir, new FileVisitor<java.nio.file.Path>() {
 
@@ -159,7 +162,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 									content = JRTUtil.safeReadBytes(f);
 									if (content == null)
 										return FileVisitResult.CONTINUE;
-									ClasspathJep247.this.acceptModule(content);
+									ClasspathJep247.this.acceptModule(content, newCache);
 									ClasspathJep247.this.moduleNamesCache.add(JRTUtil.sanitizedFileName(f));
 								}
 								return FileVisitResult.CONTINUE;
@@ -176,6 +179,11 @@ public class ClasspathJep247 extends ClasspathJrt {
 							}
 						});
 				}
+				synchronized(ModulesCache) {
+					if (ModulesCache.get(this.modulePath) == null) {
+						ModulesCache.put(this.modulePath, Collections.unmodifiableMap(newCache));
+					}
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -184,19 +192,15 @@ public class ClasspathJep247 extends ClasspathJrt {
 		}
 	}
 	@Override
-	void acceptModule(ClassFileReader reader) {
+	void acceptModule(ClassFileReader reader, Map<String, IModule> cache) {
 		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
 		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
-			super.acceptModule(reader);
+			super.acceptModule(reader, cache);
 			return;
 		}
 		if (reader != null) {
 			IModule moduleDecl = reader.getModuleDeclaration();
 			if (moduleDecl != null) {
-				Map<String, IModule> cache = ModulesCache.get(this.modulePath);
-				if (cache == null) {
-					ModulesCache.put(this.modulePath, cache = new HashMap<String,IModule>());
-				}
 				cache.put(String.valueOf(moduleDecl.name()), moduleDecl);
 			}
 		}

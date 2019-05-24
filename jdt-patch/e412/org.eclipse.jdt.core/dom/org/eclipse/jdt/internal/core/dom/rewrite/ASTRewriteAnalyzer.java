@@ -22,6 +22,7 @@ import java.util.Stack;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.TargetSourceRangeComputer;
 import org.eclipse.jdt.core.dom.rewrite.TargetSourceRangeComputer.SourceRange;
@@ -1130,7 +1131,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 			return buf.toString();
 		}
 
-		private ASTNode getNode(int nodeIndex) {
+		protected ASTNode getNode(int nodeIndex) {
 			ASTNode elem= (ASTNode) this.list[nodeIndex].getOriginalValue();
 			if (elem == null) {
 				elem= (ASTNode) this.list[nodeIndex].getNewValue();
@@ -3546,9 +3547,61 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		return false;
 	}
 
+	class SwitchListLabeledRuleRewriter extends SwitchListRewriter {
+
+		public SwitchListLabeledRuleRewriter(int initialIndent) {
+			super(initialIndent);
+		}
+		
+		@Override
+		protected String getSeparatorString(int nodeIndex, int nextNodeIndex) {
+		    boolean isSwitchLabelRule = isSwitchLabeledRule(nodeIndex, nextNodeIndex);
+		    String spaceDelim = JavaCore.INSERT.equals(ASTRewriteAnalyzer.this.options.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ARROW_IN_SWITCH_CASE))? " ":""; //$NON-NLS-1$ //$NON-NLS-2$
+		    String lineDelim = isSwitchLabelRule ? spaceDelim : getLineDelimiter();
+		    
+			StringBuffer buf= new StringBuffer(lineDelim);
+			buf.append(createIndentString(getNodeIndent(nextNodeIndex)));
+			return buf.toString();
+		}
+		
+		@Override
+		protected int getNodeIndent(int nodeIndex) {
+			int indent= getInitialIndent();
+			if (this.indentSwitchStatementsCompareToCases) {
+				RewriteEvent event = this.list[nodeIndex];
+				int changeKind = event.getChangeKind();
+				ASTNode node;
+				if (changeKind == RewriteEvent.INSERTED || changeKind == RewriteEvent.REPLACED) {
+					node= (ASTNode)event.getNewValue();
+				} else {
+					node= (ASTNode)event.getOriginalValue();
+				}
+				if (node.getNodeType() != ASTNode.SWITCH_CASE) {
+					ASTNode prevNode = getNode(nodeIndex -1);
+					if (prevNode.getNodeType() == ASTNode.SWITCH_CASE && ((SwitchCase)prevNode).isSwitchLabeledRule()) {
+						return 0;
+					} else {
+						indent++;
+					}
+				}
+			}
+			return indent;
+		}
+		
+		private boolean isSwitchLabeledRule(int nodeIndex, int nextNodeIndex) {
+			ASTNode curr= getNode(nodeIndex);
+			ASTNode next= getNode(nodeIndex +1);
+			int currKind= curr.getNodeType();
+		    if (currKind == ASTNode.SWITCH_CASE && next instanceof Statement &&   ((SwitchCase)curr).isSwitchLabeledRule()) {
+					return true;
+			}
+		    return false;
+		}
+	}
+	
 	class SwitchListRewriter extends ParagraphListRewriter {
 
-		private boolean indentSwitchStatementsCompareToCases;
+		protected boolean indentSwitchStatementsCompareToCases;
 
 		public SwitchListRewriter(int initialIndent) {
 			super(initialIndent, 0);
@@ -3657,7 +3710,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 					insertIndent++;
 				}
 				
-				ParagraphListRewriter listRewriter= new SwitchListRewriter(insertIndent);
+				ParagraphListRewriter listRewriter= new SwitchListLabeledRuleRewriter(insertIndent);
 				StringBuffer leadString= new StringBuffer();
 				leadString.append(getLineDelimiter());
 				leadString.append(createIndentString(insertIndent));
@@ -3687,8 +3740,12 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 				if (DefaultCodeFormatterConstants.TRUE.equals(this.options.get(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_SWITCH))) {
 					insertIndent++;
 				}
-				
-				ParagraphListRewriter listRewriter= new SwitchListRewriter(insertIndent);
+				ParagraphListRewriter listRewriter;
+				if (node.getAST().apiLevel() >= JLS12_INTERNAL) {
+					listRewriter= new SwitchListLabeledRuleRewriter(insertIndent);
+				} else {
+					listRewriter= new SwitchListRewriter(insertIndent);
+				}
 				StringBuffer leadString= new StringBuffer();
 				leadString.append(getLineDelimiter());
 				leadString.append(createIndentString(insertIndent));

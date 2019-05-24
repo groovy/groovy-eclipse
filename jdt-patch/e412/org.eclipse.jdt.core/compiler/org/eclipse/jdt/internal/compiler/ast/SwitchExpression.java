@@ -152,15 +152,19 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 				break;
 			}
 		}
-		if (lastNonCaseStmt != null && !lastNonCaseStmt.doesNotCompleteNormally()) {
-			blockScope.problemReporter().switchExpressionLastStatementCompletesNormally(lastNonCaseStmt);				
+		if (lastNonCaseStmt != null) {
+			if (!lastNonCaseStmt.doesNotCompleteNormally())
+				blockScope.problemReporter().switchExpressionLastStatementCompletesNormally(lastNonCaseStmt);
+			else if (lastNonCaseStmt instanceof ContinueStatement || lastNonCaseStmt instanceof ReturnStatement) {
+				blockScope.problemReporter().switchExpressionIllegalLastStatement(lastNonCaseStmt);
+			}
 		}
 		if (firstTrailingCaseStmt != null) {
 			blockScope.problemReporter().switchExpressionTrailingSwitchLabels(firstTrailingCaseStmt);				
 		}
 	}
 	@Override
-	protected boolean checkNullDefaultFlow() { // JLS 12 16.1.8 
+	protected boolean needToCheckFlowInAbsenceOfDefaultBranch() { // JLS 12 16.1.8 
 		return !this.switchLabeledRules;
 	}
 	@Override

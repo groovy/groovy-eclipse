@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.dom.MethodBinding.LambdaMethod;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
@@ -69,6 +70,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.lookup.SyntheticArgumentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
@@ -894,6 +896,14 @@ class DefaultBindingResolver extends BindingResolver {
 		return null;
 	}
 
+	private IVariableBinding[] getSyntheticOuterLocalVariables(org.eclipse.jdt.internal.compiler.ast.LambdaExpression lambdaExpression) {
+		IVariableBinding[] syntheticOuterLocals = new IVariableBinding[lambdaExpression.outerLocalVariables.length];
+		int i  = 0;
+		for (SyntheticArgumentBinding sab : lambdaExpression.outerLocalVariables) {
+			syntheticOuterLocals[i++] = getVariableBinding(sab);
+		}
+		return syntheticOuterLocals;
+	}
 	@Override
 	synchronized IMethodBinding resolveMethod(LambdaExpression lambda) {
 		Object oldNode = this.newAstToOldAst.get(lambda);
@@ -907,6 +917,9 @@ class DefaultBindingResolver extends BindingResolver {
 			}
 			if (methodBinding == null) {
 				return null;
+			}
+			if (methodBinding instanceof LambdaMethod) {
+				((LambdaMethod) methodBinding).setSyntheticOuterLocals(getSyntheticOuterLocalVariables(lambdaExpression));
 			}
 			this.bindingsToAstNodes.put(methodBinding, lambda);
 			String key = methodBinding.getKey();

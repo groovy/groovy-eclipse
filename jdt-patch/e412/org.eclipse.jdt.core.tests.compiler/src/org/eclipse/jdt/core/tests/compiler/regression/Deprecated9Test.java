@@ -960,6 +960,53 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 			"CMissing cannot be resolved to a type\n" + 
 			"----------\n");
 	}
+	public void testBug542795() throws Exception {
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.ERROR);
+		runner.testFiles = new String[] {
+			"test/ReaderWarningView.java",
+			"package test;\n" +
+			"@java.lang.Deprecated\n" +
+			"public class ReaderWarningView {}\n",
+			"Test.java",
+			"public class Test implements test.Screen.Component {}\n",
+			"test/Screen.java",
+			"package test;\n" +
+			"@interface Annot{ Class<?> value(); }\n" +
+			"@Annot(test.Screen.Component.class)\n" +
+			"@java.lang.Deprecated\n" +
+			"public final class Screen {\n" +
+			"	@java.lang.Deprecated\n" +
+			"	public interface Component extends test.ReaderWarningView.Component {\n" +
+			"	}\n" +
+			"}\n",
+		};
+		runner.expectedCompilerLog =
+				"----------\n" + 
+				"1. ERROR in Test.java (at line 1)\n" + 
+				"	public class Test implements test.Screen.Component {}\n" + 
+				"	             ^^^^\n" + 
+				"The hierarchy of the type Test is inconsistent\n" + 
+				"----------\n" + 
+				"2. ERROR in Test.java (at line 1)\n" + 
+				"	public class Test implements test.Screen.Component {}\n" + 
+				"	                                  ^^^^^^\n" + 
+				"The type Screen is deprecated\n" + 
+				"----------\n" + 
+				"3. ERROR in Test.java (at line 1)\n" + 
+				"	public class Test implements test.Screen.Component {}\n" + 
+				"	                                         ^^^^^^^^^\n" + 
+				"The type Screen.Component is deprecated\n" + 
+				"----------\n" + 
+				"----------\n" + 
+				"1. ERROR in test\\Screen.java (at line 7)\n" + 
+				"	public interface Component extends test.ReaderWarningView.Component {\n" + 
+				"	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"test.ReaderWarningView.Component cannot be resolved to a type\n" + 
+				"----------\n";
+		runner.runNegativeTest();
+	}
 	public static Class<?> testClass() {
 		return Deprecated9Test.class;
 	}

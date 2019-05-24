@@ -13,6 +13,8 @@
  *     Stephan Herrmann - Contribution for
  *								Bug 440477 - [null] Infrastructure for feeding external annotations into compilation
  *     Karsten Thoms - Bug 532505
+ *     Sebastian Zarnekow - Contribution for
+ *								Bug 545491 - Poor performance of ReferenceCollection with many source files
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
@@ -387,8 +389,11 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	for (int i = 0; i < length; i++)
 		newState.recordLocatorForType(in.readUTF(), internedTypeLocators[in.readInt()]);
 
-	char[][] internedRootNames = ReferenceCollection.internSimpleNames(readNames(in), false);
-	char[][] internedSimpleNames = ReferenceCollection.internSimpleNames(readNames(in), false);
+	/*
+	 * Here we read global arrays of names for the entire project - do not mess up the ordering while interning
+	 */
+	char[][] internedRootNames = ReferenceCollection.internSimpleNames(readNames(in), false /* keep well known */, false /* do not sort */);
+	char[][] internedSimpleNames = ReferenceCollection.internSimpleNames(readNames(in), false /* keep well known */, false /* do not sort */);
 	char[][][] internedQualifiedNames = new char[length = in.readInt()][][];
 	for (int i = 0; i < length; i++) {
 		int qLength = in.readInt();
@@ -397,7 +402,7 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 			qName[j] = internedSimpleNames[in.readInt()];
 		internedQualifiedNames[i] = qName;
 	}
-	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames, false);
+	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames, false /* drop well known */, false /* do not sort */);
 
 	newState.references = new SimpleLookupTable(length = in.readInt());
 	for (int i = 0; i < length; i++) {

@@ -22,8 +22,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -44,9 +42,6 @@ public class JavaIndex {
 	static final int CURRENT_VERSION = Nd.version(1, 49);
 	static final int MAX_SUPPORTED_VERSION = Nd.version(1, 49);
 	static final int MIN_SUPPORTED_VERSION = Nd.version(1, 49);
-
-	public static final String ENABLE_NEW_JAVA_INDEX = "enableNewJavaIndex"; //$NON-NLS-1$
-	public static final boolean ENABLE_NEW_JAVA_INDEX_DEFAULT = false;
 
 	// Fields for the search header
 	public static final FieldSearchIndex<NdResourceFile> FILES;
@@ -223,13 +218,11 @@ public class JavaIndex {
 		return next.getPath();
 	}
 
+	/**
+	 * @return always return {@code false} see bug 544898. New index is disabled now. 
+	 */
 	public static boolean isEnabled() {
-		IPreferencesService preferenceService = Platform.getPreferencesService();
-		if (preferenceService == null) {
-			return true;
-		}
-		return preferenceService.getBoolean(JavaCore.PLUGIN_ID, ENABLE_NEW_JAVA_INDEX, ENABLE_NEW_JAVA_INDEX_DEFAULT,
-				null);
+		return false;
 	}
 
 	public static Nd createNd(File databaseFile, ChunkCache chunkCache) {

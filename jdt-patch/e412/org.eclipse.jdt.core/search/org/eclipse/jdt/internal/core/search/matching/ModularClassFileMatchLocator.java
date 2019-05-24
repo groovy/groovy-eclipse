@@ -99,9 +99,14 @@ public class ModularClassFileMatchLocator implements IIndexConstants {
 				return;
 		}
 		ModulePattern modulePattern  = (ModulePattern) pattern;
+		if (!modulePattern.findReferences) {
+			return;
+		}
 		matchModuleReferences(locator, modulePattern, this.binaryModule.exports());
 		matchModuleReferences(locator, modulePattern, this.binaryModule.opens());
-		matchModuleReferences(locator, modulePattern, this.module.getAllRequiredModules());
+		if (this.module != null) {
+			matchModuleReferences(locator, modulePattern, this.module.getAllRequiredModules());
+		}
 	}
 	private void matchModuleReference(MatchLocator locator, ModulePattern modulePattern,
 			char[][] modules, boolean isTarget) throws CoreException {

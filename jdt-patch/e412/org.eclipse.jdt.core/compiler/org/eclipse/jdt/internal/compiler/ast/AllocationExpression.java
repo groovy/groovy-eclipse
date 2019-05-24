@@ -486,7 +486,7 @@ public TypeBinding resolveType(BlockScope scope) {
 				return this.resolvedType = null;
 			}
 		}
-		resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
+		this.binding = resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
 	} else {
 		this.binding = findConstructorBinding(scope, this, (ReferenceBinding) this.resolvedType, this.argumentTypes);
 	}

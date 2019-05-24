@@ -48,6 +48,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -677,11 +678,13 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	 * @param method the method produced by lookup (possibly involving type inference).
 	 * @param argumentTypes the argument types as collected from first resolving the invocation arguments and as used for the method lookup.
 	 * @param scope scope for resolution.
+	 * @return either the original method or a problem method
 	 */
-	public static void resolvePolyExpressionArguments(Invocation invocation, MethodBinding method, TypeBinding[] argumentTypes, BlockScope scope) {
+	public static MethodBinding resolvePolyExpressionArguments(Invocation invocation, MethodBinding method, TypeBinding[] argumentTypes, BlockScope scope) {
 		MethodBinding candidateMethod = method.isValidBinding() ? method : method instanceof ProblemMethodBinding ? ((ProblemMethodBinding) method).closestMatch : null;
 		if (candidateMethod == null)
-			return;
+			return method;
+		ProblemMethodBinding problemMethod = null;
 		boolean variableArity = candidateMethod.isVarargs();
 		final TypeBinding[] parameters = candidateMethod.parameters;
 		Expression[] arguments = invocation.arguments();
@@ -704,8 +707,20 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 					boolean skipKosherCheck = method.problemId() == ProblemReasons.Ambiguous;
 					updatedArgumentType = lambda.resolveType(scope, skipKosherCheck);
 					// additional checks, because LE.resolveType may return a valid binding even in the presence of structural errors
-					if (!lambda.isCompatibleWith(parameterType, scope) || lambda.hasErrors())
+					if (lambda.hasErrors() || lambda.hasDescripterProblem) {
 						continue;
+					}
+					if (!lambda.isCompatibleWith(parameterType, scope)) {
+						if (method.isValidBinding() && problemMethod == null) {
+							TypeBinding[] originalArguments = Arrays.copyOf(argumentTypes, argumentTypes.length);
+							if (lambda.reportShapeError(parameterType, scope)) {
+								problemMethod = new ProblemMethodBinding(candidateMethod, method.selector, originalArguments, ProblemReasons.ErrorAlreadyReported);
+							} else {
+								problemMethod = new ProblemMethodBinding(candidateMethod, method.selector, originalArguments, ProblemReasons.NotFound);
+							}
+						}
+						continue;
+					}
 					// avoid that preliminary local type bindings escape beyond this point:
 					lambda.updateLocalTypesInMethod(candidateMethod);
 				} else {
@@ -723,6 +738,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			if (ic18 != null)
 				ic18.flushBoundOutbox(); // overload resolution is done, now perform the push of bounds from inner to outer
 		}
+		if (problemMethod != null)
+			return problemMethod;
+		return method;
 	}
 
 	public static void resolveAnnotations(BlockScope scope, Annotation[] sourceAnnotations, Binding recipient) {

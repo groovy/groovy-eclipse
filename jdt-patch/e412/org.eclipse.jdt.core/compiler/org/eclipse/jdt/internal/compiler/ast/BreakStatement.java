@@ -50,7 +50,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		return flowInfo; // pretend it did not break since no actual target
 	}
 
-	if (this.switchExpression != null && this.expression != null) {
+	if ((this.isImplicit || this.switchExpression != null) && this.expression != null) {
 		flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo);
 		this.expression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 		if (flowInfo.reachMode() == FlowInfo.REACHABLE && currentScope.compilerOptions().isAnnotationBasedNullAnalysisEnabled)

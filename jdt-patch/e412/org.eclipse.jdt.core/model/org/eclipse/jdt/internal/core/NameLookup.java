@@ -227,11 +227,14 @@ public class NameLookup implements SuffixConstants {
 	public long timeSpentInSeekTypesInSourcePackage = 0;
 	public long timeSpentInSeekTypesInBinaryPackage = 0;
 
+	private JavaProject rootProject;
+
 	public NameLookup(
-			IPackageFragmentRoot[] packageFragmentRoots,
+			JavaProject rootProject, IPackageFragmentRoot[] packageFragmentRoots,
 			HashtableOfArrayToObject packageFragments,
 			ICompilationUnit[] workingCopies,
 			Map rootToResolvedEntries) {
+		this.rootProject = rootProject;
 		long start = -1;
 		if (VERBOSE) {
 			Util.verbose(" BUILDING NameLoopkup");  //$NON-NLS-1$
@@ -795,7 +798,7 @@ public class NameLookup implements SuffixConstants {
 					}
 				}
 				Answer answer = new Answer(type, accessRestriction, entry,
-										getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get));
+										getModuleDescription(this.rootProject, root, this.rootToModule, this.rootToResolvedEntries::get));
 				if (!answer.ignoreIfBetter()) {
 					if (answer.isBetter(suggestedAnswer))
 						return answer;
@@ -872,10 +875,20 @@ public class NameLookup implements SuffixConstants {
 	}
 
 	/** Internal utility, which is able to answer explicit and automatic modules. */
-	static IModuleDescription getModuleDescription(IPackageFragmentRoot root, Map<IPackageFragmentRoot,IModuleDescription> cache, Function<IPackageFragmentRoot,IClasspathEntry> rootToEntry) {
+	static IModuleDescription getModuleDescription(JavaProject project, IPackageFragmentRoot root, Map<IPackageFragmentRoot,IModuleDescription> cache, Function<IPackageFragmentRoot,IClasspathEntry> rootToEntry) {
 		IModuleDescription module = cache.get(root);
 		if (module != null)
 			return module != NO_MODULE ? module : null;
+		if (!Objects.equals(project, root.getJavaProject())) {
+			IClasspathEntry classpathEntry2 = rootToEntry.apply(root);
+			if (classpathEntry2 instanceof ClasspathEntry) {
+				if (!((ClasspathEntry) classpathEntry2).isModular()) {
+					// not on the module path and not a local source folder
+					cache.put(root, NO_MODULE);
+					return null;
+				}
+			}
+		}
 		try {
 			if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
 				module = root.getJavaProject().getModuleDescription(); // from any root in this project
@@ -903,7 +916,7 @@ public class NameLookup implements SuffixConstants {
 	}
 
 	public IModule getModuleDescriptionInfo(PackageFragmentRoot root) {
-		IModuleDescription desc = getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get);
+		IModuleDescription desc = getModuleDescription(this.rootProject, root, this.rootToModule, this.rootToResolvedEntries::get);
 		if (desc != null) {
 			return getModuleDescriptionInfo(desc);
 		}
@@ -1284,7 +1297,7 @@ public class NameLookup implements SuffixConstants {
 					continue;
 				}
 			}
-			module = getModuleDescription(root, this.rootToModule, this.rootToResolvedEntries::get);
+			module = getModuleDescription(this.rootProject, root, this.rootToModule, this.rootToResolvedEntries::get);
 			if (module != null && prefixMatcher.matches(name, module.getElementName().toCharArray(), false)) {
 				requestor.acceptModule(module);
 			}

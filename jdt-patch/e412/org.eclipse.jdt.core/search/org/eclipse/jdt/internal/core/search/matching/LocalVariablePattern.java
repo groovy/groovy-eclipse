@@ -42,7 +42,14 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
     if (root.isArchive()) {
         IType type = (IType)this.localVariable.getAncestor(IJavaElement.TYPE);
         relativePath = (type.getFullyQualifiedName('$')).replace('.', '/') + SuffixConstants.SUFFIX_STRING_class;
-        documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+        IModuleDescription md = root.getModuleDescription();
+        if(md != null) {
+        	String module = md.getElementName();
+				documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR 
+						+ module + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+        } else {
+        	documentPath = root.getPath() + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + relativePath;
+        }
     } else {
 		IPath path = this.localVariable.getPath();
         documentPath = path.toString();

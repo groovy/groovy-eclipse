@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -23,6 +23,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -3725,8 +3726,9 @@ public class JavaProject
 		if (module != null)
 			return module;
 		for(IClasspathEntry entry : getRawClasspath()) {
-			String mainModule = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.PATCH_MODULE);
-			if (mainModule != null) {
+			List<String> patchedModules = getPatchedModules(entry);
+			if (patchedModules.size() == 1) { // > 1 is malformed, 0 means not affecting this project
+				String mainModule = patchedModules.get(0);
 				switch (entry.getEntryKind()) {
 					case IClasspathEntry.CPE_PROJECT:
 						IJavaProject referencedProject = getJavaModel().getJavaProject(entry.getPath().toString());
@@ -3745,6 +3747,32 @@ public class JavaProject
 			}
 		}
 		return null;
+	}
+
+	public List<String> getPatchedModules(IClasspathEntry cpEntry) {
+		String patchModules = ClasspathEntry.getExtraAttribute(cpEntry, IClasspathAttribute.PATCH_MODULE);
+		if (patchModules != null) {
+			List<String> result = new ArrayList<>();
+			IPath prjPath = getPath();
+			for (String patchModule : patchModules.split("::")) { //$NON-NLS-1$
+				int equalsIdx = patchModule.indexOf('=');
+				if (equalsIdx != -1) {
+					if (equalsIdx < patchModule.length()-1) { // otherwise malformed?
+						String locations = patchModule.substring(equalsIdx + 1);
+						for (String location : locations.split(File.pathSeparator)) {
+							if (prjPath.isPrefixOf(new Path(location))) {
+								result.add(patchModule.substring(0, equalsIdx));
+								break;
+							}
+						}
+					}
+				} else {
+					result.add(patchModule); // old format not specifying a location
+				}
+			}
+			return result;
+		}
+		return Collections.emptyList();
 	}
 
 	public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
@@ -3776,10 +3804,8 @@ public class JavaProject
 		if (module != null)
 			return false;
 		for(IClasspathEntry entry : getRawClasspath()) {
-			String mainModule = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.PATCH_MODULE);
-			if (mainModule != null)
+			if (!getPatchedModules(entry).isEmpty())
 				return false;
-
 		}
 		return true;
 	}

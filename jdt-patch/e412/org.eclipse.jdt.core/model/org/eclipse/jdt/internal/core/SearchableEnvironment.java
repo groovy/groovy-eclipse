@@ -993,7 +993,7 @@ private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, I
 			this.rootToModule = new HashMap<>();
 		}
 		for (IPackageFragmentRoot root : roots) {
-			IModuleDescription moduleDescription = NameLookup.getModuleDescription(root, this.rootToModule, this.nameLookup.rootToResolvedEntries::get);
+			IModuleDescription moduleDescription = NameLookup.getModuleDescription(this.project, root, this.rootToModule, this.nameLookup.rootToResolvedEntries::get);
 			if (moduleDescription != null)
 				return moduleDescription;
 		}

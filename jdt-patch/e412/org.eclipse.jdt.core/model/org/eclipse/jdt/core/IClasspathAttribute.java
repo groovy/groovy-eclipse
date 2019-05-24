@@ -136,6 +136,7 @@ public interface IClasspathAttribute {
 	 * {@code --add-exports} command line option: {@code <source-module>/<package>=<target-module>(,<target-module>)*}.
 	 * Multiple such options are packed as a ':' separated list into a single classpath attribute.
 	 * The given exports will be added at compile time.</p>
+	 *
 	 * <p>Classpath entries with this attribute should also have a {@link #MODULE} attribute
 	 * with value <code>"true"</code>.</p>
 	 * 
@@ -144,10 +145,26 @@ public interface IClasspathAttribute {
 	String ADD_EXPORTS = "add-exports"; //$NON-NLS-1$
 
 	/**
+	 * Constant for the name of the add-opens attribute.
+	 * 
+	 * <p>The value of this attribute must adhere to the syntax of <code>javac's</code>
+	 * {@code --add-opens} command line option: {@code <source-module>/<package>=<target-module>(,<target-module>)*}.
+	 * Multiple such options are packed as a ':' separated list into a single classpath attribute.
+	 * The given opens will be added at launch time.</p>
+	 *
+	 * <p>Classpath entries with this attribute should also have a {@link #MODULE} attribute
+	 * with value <code>"true"</code>.</p>
+	 * 
+	 * @since 3.18
+	 */
+	String ADD_OPENS = "add-opens"; //$NON-NLS-1$
+
+	/**
 	 * Constant for the name of the add-reads attribute.
 	 * 
 	 * <p>The value of this attribute must adhere to the syntax of <code>javac's</code>
 	 * {@code --add-reads} command line option: {@code <source-module>=<target-module>}.
+	 * Multiple such options are packed as a ':' separated list into a single classpath attribute.
 	 * The given reads edge will be added at compile time.</p>
 	 * 
 	 * @since 3.14
@@ -156,10 +173,28 @@ public interface IClasspathAttribute {
 
 	/**
 	 * Constant for the name of the patch-module attribute.
-	 * 
-	 * <p>The value of this attribute must be the name of a module defined in the
-	 * classpath entry, to which this attribute is attached.</p>
-	 * 
+	 *
+	 * <p>The value of this attribute must adhere to the syntax of <code>javac's</code>
+	 * {@code --patch-module} command line option: {@code <module>=<file>(<pathsep><file>)*}.
+	 * All compilation units found in the locations specified as {@code <file>}
+	 * will be associated with the module specified using its name.</p>
+	 *
+	 * <p>The specified module must be defined by the container, library or project
+	 * referenced by the current classpath entry.</p>
+	 *
+	 * <p>Each {@code <file>} location is the workspace path of either a Java project,
+	 * or a source folder. Specifying a Java project is a shorthand for listing
+	 * all source folders of that project.</p>
+	 *
+	 * <p>The attribute value can be further shortened to just the module name, in which
+	 * case the {@code file} locations will be assumed as all source folders of the
+	 * current Java project. This short format is still understood to maintain compatibility
+	 * with versions prior to 3.18, but it is discouraged moving forward.</p>
+	 *
+	 * <p>If this attributes is attached to a multi-module container, multiple
+	 * attribute values of the format defined above are concatenated into one attribute,
+	 * using {@code "::"} as the separator.</p>
+	 *
 	 * <p>This attribute is supported for classpath entries of kind
 	 * {@link IClasspathEntry#CPE_CONTAINER}, {@link IClasspathEntry#CPE_LIBRARY}
 	 * and {@link IClasspathEntry#CPE_PROJECT}.

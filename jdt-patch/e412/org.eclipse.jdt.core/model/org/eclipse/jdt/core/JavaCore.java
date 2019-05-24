@@ -5757,6 +5757,8 @@ public final class JavaCore extends Plugin {
 		IndexManager manager = JavaModelManager.getIndexManager();
 		manager.deleteIndexFiles(subMonitor.split(1));
 		manager.reset();
+		// New index is disabled, see bug 544898.
+		// However we keep this call here to cleanup the possibly existing database
 		Indexer.getInstance().rebuildIndex(subMonitor.split(95));
 		updateLegacyIndex(subMonitor.split(4));
 	}
@@ -6351,6 +6353,7 @@ public final class JavaCore extends Plugin {
 		super.start(context);
 		JavaModelManager.registerDebugOptionsListener(context);
 		JavaModelManager.getJavaModelManager().startup();
-		Indexer.getInstance().rescanAll();
+		// New index is disabled, see bug 544898
+		// Indexer.getInstance().rescanAll();
 	}
 }

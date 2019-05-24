@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,6 +160,7 @@ public class InferenceContext18 {
 	public List<ConstraintFormula> constraintsWithUncheckedConversion;
 	public boolean usesUncheckedConversion;
 	public InferenceContext18 outerContext;
+	private Set<InferenceContext18> seenInnerContexts;
 	Scope scope;
 	LookupEnvironment environment;
 	ReferenceBinding object; // java.lang.Object
@@ -1617,18 +1619,24 @@ public class InferenceContext18 {
 		this.usesUncheckedConversion = innerCtx.usesUncheckedConversion;
 	}
 
-	public void resumeSuspendedInference(SuspendedInferenceRecord record) {
+	public void resumeSuspendedInference(SuspendedInferenceRecord record, InferenceContext18 innerContext) {
 		// merge inference variables:
+		boolean firstTime = collectInnerContext(innerContext);
 		if (this.inferenceVariables == null) { // no new ones, assume we aborted prematurely
 			this.inferenceVariables = record.inferenceVariables;
+		} else if(!firstTime) {
+			// Use a set to eliminate duplicates.
+			final Set<InferenceVariable> uniqueVariables = new LinkedHashSet<>();
+			uniqueVariables.addAll(Arrays.asList(record.inferenceVariables));
+			uniqueVariables.addAll(Arrays.asList(this.inferenceVariables));
+			this.inferenceVariables = uniqueVariables.toArray(new InferenceVariable[uniqueVariables.size()]);
 		} else {
 			int l1 = this.inferenceVariables.length;
 			int l2 = record.inferenceVariables.length;
-			// move to back, add previous to front:
 			System.arraycopy(this.inferenceVariables, 0, this.inferenceVariables=new InferenceVariable[l1+l2], l2, l1);
 			System.arraycopy(record.inferenceVariables, 0, this.inferenceVariables, 0, l2);
 		}
-
+		
 		// replace invocation site & arguments:
 		this.currentInvocation = record.site;
 		this.invocationArguments = record.invocationArguments;
@@ -1636,6 +1644,16 @@ public class InferenceContext18 {
 		this.usesUncheckedConversion = record.usesUncheckedConversion;
 	}
 
+	private boolean collectInnerContext(final InferenceContext18 innerContext) {
+		if(innerContext == null) {
+			return false;
+		}
+		if(this.seenInnerContexts == null) {
+			this.seenInnerContexts = new HashSet<>();
+		}
+		return this.seenInnerContexts.add(innerContext);
+	}
+	
 	private Substitution getResultSubstitution(final BoundSet result) {
 		return new Substitution() {
 			@Override

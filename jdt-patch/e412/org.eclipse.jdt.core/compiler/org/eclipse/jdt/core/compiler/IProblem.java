@@ -1876,6 +1876,10 @@ void setSourceStart(int sourceStart);
 	/** @since 3.10 */
 	int IllegalTypeArgumentsInRawConstructorReference = TypeRelated + 1003;
 
+	// more on lambdas:
+	/** @since 3.18 */
+	int MissingValueFromLambda = Internal + 1004;
+
 	// default methods:
 	/** @since 3.10 */
 	int IllegalModifierForInterfaceMethod18 = MethodRelated + 1050;
@@ -1951,6 +1955,8 @@ void setSourceStart(int sourceStart);
 	int InvalidServiceImplType = ModuleRelated + 1317;
 	/** @since 3.14 */
 	int IllegalModifierForModule = ModuleRelated + 1318;
+	/** @since 3.18 */
+	int UndefinedModuleAddReads = ModuleRelated + 1319;
 
 	/** @since 3.14 */
 	int DuplicateResource = Internal + 1251;
@@ -2106,4 +2112,6 @@ void setSourceStart(int sourceStart);
 	int SwitchExpressionBreakMissingValue = Internal + 1610;
 	/** @since 3.18 */
 	int SwitchExpressionMissingEnumConstantCase = Internal + 1611;
+	/** @since 3.18 */
+	int SwitchExpressionIllegalLastStatement = Internal + 1612;
 	}

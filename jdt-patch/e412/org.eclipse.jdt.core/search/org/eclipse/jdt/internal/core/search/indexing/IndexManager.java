@@ -58,8 +58,6 @@ import org.eclipse.jdt.internal.core.index.DiskIndex;
 import org.eclipse.jdt.internal.core.index.FileIndexLocation;
 import org.eclipse.jdt.internal.core.index.Index;
 import org.eclipse.jdt.internal.core.index.IndexLocation;
-import org.eclipse.jdt.internal.core.nd.indexer.Indexer;
-import org.eclipse.jdt.internal.core.nd.java.JavaIndex;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.PatternSearchJob;
 import org.eclipse.jdt.internal.core.search.processing.IJob;
@@ -77,9 +75,9 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	private SimpleLookupTable indexes = new SimpleLookupTable();
 
 	/**
-	 * The new indexer
+	 * The new indexer is disabled, see bug 544898
 	 */
-	private Indexer indexer = Indexer.getInstance();
+//	private Indexer indexer = Indexer.getInstance();
 
 	/* need to save ? */
 	private boolean needToSave = false;
@@ -257,7 +255,8 @@ private void deleteIndexFiles(SimpleSet pathsToKeep, IProgressMonitor monitor) {
  * Creates an empty index at the given location, for the given container path, if none exist.
  */
 public synchronized void ensureIndexExists(IndexLocation indexLocation, IPath containerPath) {
-	this.indexer.makeWorkspacePathDirty(containerPath);
+	// New index is disabled, see bug 544898
+    // this.indexer.makeWorkspacePathDirty(containerPath);
 	SimpleLookupTable states = getIndexStates();
 	Object state = states.get(indexLocation);
 	if (state == null) {
@@ -572,7 +571,8 @@ public void indexResolvedDocument(SearchDocument searchDocument, SearchParticipa
  * Note: the actual operation is performed in background
  */
 public void indexAll(IProject project) {
-	this.indexer.makeDirty(project);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeDirty(project);
 	if (JavaCore.getPlugin() == null) return;
 
 	try {
@@ -622,7 +622,8 @@ private boolean isJrt(String fileName) {
  * Note: the actual operation is performed in background
  */
 public void indexLibrary(IPath path, IProject requestingProject, URL indexURL, final boolean updateIndex) {
-	this.indexer.makeWorkspacePathDirty(path);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(path);
 	// requestingProject is no longer used to cancel jobs but leave it here just in case
 	IndexLocation indexFile = null;
 	boolean forceIndexUpdate = false;
@@ -678,7 +679,8 @@ synchronized boolean addIndex(IPath containerPath, IndexLocation indexFile) {
  */
 public void indexSourceFolder(JavaProject javaProject, IPath sourceFolder, char[][] inclusionPatterns, char[][] exclusionPatterns) {
 	IProject project = javaProject.getProject();
-	this.indexer.makeWorkspacePathDirty(sourceFolder);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(sourceFolder);
 	if (this.jobEnd > this.jobStart) {
 		// skip it if a job to index the project is already in the queue
 		IndexRequest request = new IndexAllProject(project, this);
@@ -741,7 +743,8 @@ private void rebuildIndex(IndexLocation indexLocation, IPath containerPath) {
 	rebuildIndex(indexLocation, containerPath, false);
 }
 private void rebuildIndex(IndexLocation indexLocation, IPath containerPath, final boolean updateIndex) {
-	this.indexer.makeWorkspacePathDirty(containerPath);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(containerPath);
 	Object target = JavaModel.getTarget(containerPath, true);
 	if (target == null) return;
 
@@ -800,7 +803,8 @@ public synchronized Index recreateIndex(IPath containerPath) {
  * Note: the actual operation is performed in background
  */
 public void remove(String containerRelativePath, IPath indexedContainer){
-	this.indexer.makeWorkspacePathDirty(indexedContainer);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(indexedContainer);
 	request(new RemoveFromIndex(containerRelativePath, indexedContainer, this));
 }
 /**
@@ -810,7 +814,8 @@ public void remove(String containerRelativePath, IPath indexedContainer){
 public synchronized void removeIndex(IPath containerPath) {
 	if (VERBOSE || DEBUG)
 		Util.verbose("removing index " + containerPath); //$NON-NLS-1$
-	this.indexer.makeWorkspacePathDirty(containerPath);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(containerPath);
 	IndexLocation indexLocation = computeIndexLocation(containerPath);
 	Index index = getIndex(indexLocation);
 	File indexFile = null;
@@ -840,7 +845,8 @@ public synchronized void removeIndex(IPath containerPath) {
 public synchronized void removeIndexPath(IPath path) {
 	if (VERBOSE || DEBUG)
 		Util.verbose("removing index path " + path); //$NON-NLS-1$
-	this.indexer.makeWorkspacePathDirty(path);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(path);
 	Object[] keyTable = this.indexes.keyTable;
 	Object[] valueTable = this.indexes.valueTable;
 	IndexLocation[] locations = null;
@@ -887,7 +893,8 @@ public synchronized void removeIndexPath(IPath path) {
  * Removes all indexes whose paths start with (or are equal to) the given path.
  */
 public synchronized void removeIndexFamily(IPath path) {
-	this.indexer.makeWorkspacePathDirty(path);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(path);
 	// only finds cached index files... shutdown removes all non-cached index files
 	ArrayList toRemove = null;
 	Object[] containerPaths = this.indexLocations.keyTable;
@@ -908,7 +915,8 @@ public synchronized void removeIndexFamily(IPath path) {
  * Remove the content of the given source folder from the index.
  */
 public void removeSourceFolderFromIndex(JavaProject javaProject, IPath sourceFolder, char[][] inclusionPatterns, char[][] exclusionPatterns) {
-	this.indexer.makeWorkspacePathDirty(sourceFolder);
+	// New index is disabled, see bug 544898
+	// this.indexer.makeWorkspacePathDirty(sourceFolder);
 	IProject project = javaProject.getProject();
 	if (this.jobEnd > this.jobStart) {
 		// skip it if a job to index the project is already in the queue
@@ -1051,10 +1059,11 @@ public void saveIndexes() {
 	this.needToSave = !allSaved;
 }
 public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath container, final IndexLocation indexLocation, final SearchParticipant searchParticipant) {
-	IPath targetLocation = JavaIndex.getLocationForPath(new Path(searchDocument.getPath()));
-	if (targetLocation != null) {
-		this.indexer.makeDirty(targetLocation);
-	}
+	// New index is disabled, see bug 544898
+//	IPath targetLocation = JavaIndex.getLocationForPath(new Path(searchDocument.getPath()));
+//	if (targetLocation != null) {
+//		 this.indexer.makeDirty(targetLocation);
+//	}
 	request(new IndexRequest(container, this) {
 		@Override
 		public boolean execute(IProgressMonitor progressMonitor) {

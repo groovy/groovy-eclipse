@@ -113,11 +113,23 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 			} else {
 				return; // unknown target
 			}
-			this.focusPath =
-				zipFileName
-					+ JAR_FILE_ENTRY_SEPARATOR
-					+ type.getFullyQualifiedName().replace('.', '/')
-					+ SUFFIX_STRING_class;
+			IModuleDescription md = root.getModuleDescription();
+			if(md != null) {
+				String module = md.getElementName();
+				this.focusPath =
+						zipFileName
+						+ JAR_FILE_ENTRY_SEPARATOR
+						+ module
+						+ JAR_FILE_ENTRY_SEPARATOR
+						+ type.getFullyQualifiedName().replace('.', '/')
+						+ SUFFIX_STRING_class;
+			} else {
+				this.focusPath =
+					zipFileName
+						+ JAR_FILE_ENTRY_SEPARATOR
+						+ type.getFullyQualifiedName().replace('.', '/')
+						+ SUFFIX_STRING_class;
+			}
 		} else {
 			this.focusPath = type.getPath().toString();
 		}
@@ -169,12 +181,24 @@ public class HierarchyScope extends AbstractSearchScope implements SuffixConstan
 				} else {
 					continue; // unknown target
 				}
-				String resourcePath =
-					zipFileName
+				String resourcePath;
+				IModuleDescription md = root.getModuleDescription();
+				if(md != null) {
+					String module = md.getElementName();
+					resourcePath =
+							zipFileName
+							+ JAR_FILE_ENTRY_SEPARATOR
+							+ module
+							+ JAR_FILE_ENTRY_SEPARATOR
+							+ type.getFullyQualifiedName().replace('.', '/')
+							+ SUFFIX_STRING_class;
+				} else {
+					resourcePath =
+						zipFileName
 						+ JAR_FILE_ENTRY_SEPARATOR
 						+ type.getFullyQualifiedName().replace('.', '/')
 						+ SUFFIX_STRING_class;
-
+				}
 				this.resourcePaths.add(resourcePath);
 				paths.put(jarPath, type);
 			} else {

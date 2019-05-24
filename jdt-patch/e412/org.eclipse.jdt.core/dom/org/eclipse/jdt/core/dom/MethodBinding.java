@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -40,6 +40,7 @@ class MethodBinding implements IMethodBinding {
 		Modifier.ABSTRACT | Modifier.STATIC | Modifier.FINAL | Modifier.SYNCHRONIZED | Modifier.NATIVE |
 		Modifier.STRICTFP | Modifier.DEFAULT;
 	private static final ITypeBinding[] NO_TYPE_BINDINGS = new ITypeBinding[0];
+	static final IVariableBinding[] NO_VARIABLE_BINDINGS = new IVariableBinding[0];
 	protected org.eclipse.jdt.internal.compiler.lookup.MethodBinding binding;
 	protected BindingResolver resolver;
 	private volatile ITypeBinding[] parameterTypes;
@@ -515,6 +516,7 @@ class MethodBinding implements IMethodBinding {
 
 		private MethodBinding implementation;
 		private IBinding declaringMember;
+		private IVariableBinding[] syntheticOuterLocalVariables;
 
 		public LambdaMethod(DefaultBindingResolver resolver,
 							org.eclipse.jdt.internal.compiler.lookup.MethodBinding lambdaDescriptor,
@@ -571,5 +573,22 @@ class MethodBinding implements IMethodBinding {
 		public String toString() {
 			return super.toString().replace("public abstract ", "public ");  //$NON-NLS-1$//$NON-NLS-2$
 		}
+
+		@Override
+		public IVariableBinding[] getSyntheticOuterLocals() {
+			if (this.syntheticOuterLocalVariables != null) {
+				return this.syntheticOuterLocalVariables;
+			}
+			return NO_VARIABLE_BINDINGS;
+		}
+
+		public  void setSyntheticOuterLocals(IVariableBinding[] syntheticOuterLocalVariables) {
+			this.syntheticOuterLocalVariables = syntheticOuterLocalVariables;
+		}
+	}
+
+	@Override
+	public IVariableBinding[] getSyntheticOuterLocals() {
+		return NO_VARIABLE_BINDINGS;
 	}
 }

@@ -112,7 +112,7 @@ public class SwitchStatement extends Expression {
 	protected void completeNormallyCheck(BlockScope blockScope) {
 		// do nothing
 	}
-	protected boolean checkNullDefaultFlow() {
+	protected boolean needToCheckFlowInAbsenceOfDefaultBranch() {
 		return true;
 	}
 	@Override
@@ -178,7 +178,7 @@ public class SwitchStatement extends Expression {
 				this.synthetic = sourceTypeBinding.addSyntheticMethodForSwitchEnum(resolvedTypeBinding, this);
 			}
 			// if no default case, then record it may jump over the block directly to the end
-			if (this.defaultCase == null && checkNullDefaultFlow()) {
+			if (this.defaultCase == null && needToCheckFlowInAbsenceOfDefaultBranch()) {
 				// only retain the potential initializations
 				flowInfo.addPotentialInitializationsFrom(caseInits.mergedWith(switchContext.initsOnBreak));
 				this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(flowInfo);
@@ -691,8 +691,10 @@ public class SwitchStatement extends Expression {
 					this.constMapping = new int[this.nConstants];
 				}
 				int counter = 0;
+				int caseCounter = 0;
 				for (int i = 0; i < length; i++) {
 					Constant[] constantsList;
+					int[] caseIndex = new int[this.nConstants];
 					final Statement statement = this.statements[i];
 					if (!(statement instanceof CaseStatement))  {
 						statement.resolve(this.scope);
@@ -707,26 +709,26 @@ public class SwitchStatement extends Expression {
 								//----check for duplicate case statement------------
 								for (int j = 0; j < counter; j++) {
 									if (this.constants[j] == key) {
-										reportDuplicateCase((CaseStatement) statement, this.cases[j], length);
+										reportDuplicateCase((CaseStatement) statement, this.cases[caseIndex[j]], length);
 									}
 								}
 								this.constants[counter] = key;
-								this.constMapping[counter] = counter;
-								counter++;
 							} else {
 								String key = con.stringValue();
 								//----check for duplicate case statement------------
 								for (int j = 0; j < counter; j++) {
 									if (this.stringConstants[j].equals(key)) {
-										reportDuplicateCase((CaseStatement) statement, this.cases[j], length);
+										reportDuplicateCase((CaseStatement) statement, this.cases[caseIndex[j]], length);
 									}
 								}
 								this.stringConstants[counter] = key;
-								this.constMapping[counter] = counter;
-								counter++;
 							}
+							this.constMapping[counter] = counter;
+							caseIndex[counter] = caseCounter;
+							counter++;
 						}
 					}
+					caseCounter++;
 				}
 				if (length != counter) { // resize constants array
 					if (!isStringSwitch) {
@@ -810,10 +812,12 @@ public class SwitchStatement extends Expression {
 	private void reportDuplicateCase(final CaseStatement duplicate, final CaseStatement original, int length) {
 		if (this.duplicateCaseStatements == null) {
 			this.scope.problemReporter().duplicateCase(original);
-			this.scope.problemReporter().duplicateCase(duplicate);
+			if (duplicate != original) 
+				this.scope.problemReporter().duplicateCase(duplicate);
 			this.duplicateCaseStatements = new CaseStatement[length];
 			this.duplicateCaseStatements[this.duplicateCaseStatementsCounter++] = original;
-			this.duplicateCaseStatements[this.duplicateCaseStatementsCounter++] = duplicate;
+			if (duplicate != original) 
+				this.duplicateCaseStatements[this.duplicateCaseStatementsCounter++] = duplicate;
 		} else {
 			boolean found = false;
 			searchReportedDuplicate: for (int k = 2; k < this.duplicateCaseStatementsCounter; k++) {

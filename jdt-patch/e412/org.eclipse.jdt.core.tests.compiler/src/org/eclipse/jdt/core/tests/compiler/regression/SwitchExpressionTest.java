@@ -699,10 +699,10 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 		};
 
 		String expectedProblemLog =
-						"----------\n" + 
-						"1. ERROR in X.java (at line 7)\n" + 
-						"	case SUNDAY : System.out.println(Day.SUNDAY);\n" + 
-						"	^^^^^^^^^^^\n" + 
+				"----------\n" + 
+						"1. ERROR in X.java (at line 4)\n" + 
+						"	case SATURDAY, SUNDAY: \n" + 
+						"	^^^^^^^^^^^^^^^^^^^^^\n" + 
 						"Duplicate case\n" + 
 						"----------\n" + 
 						"2. ERROR in X.java (at line 7)\n" + 
@@ -748,9 +748,9 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 						"	        ^^^\n" + 
 						"The enum constant MONDAY needs a corresponding case label in this enum switch on Day\n" + 
 						"----------\n" + 
-						"2. ERROR in X.java (at line 7)\n" + 
-						"	case SUNDAY, SATURDAY : \n" + 
-						"	^^^^^^^^^^^^^^^^^^^^^\n" + 
+						"2. ERROR in X.java (at line 4)\n" + 
+						"	case SATURDAY, SUNDAY: \n" + 
+						"	^^^^^^^^^^^^^^^^^^^^^\n" +
 						"Duplicate case\n" + 
 						"----------\n" + 
 						"3. ERROR in X.java (at line 7)\n" + 
@@ -1154,8 +1154,8 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 		};
 		String expectedProblemLog =
 				"----------\n" + 
-				"1. ERROR in X.java (at line 8)\n" + 
-				"	case 3, 4: \n" + 
+				"1. ERROR in X.java (at line 6)\n" + 
+				"	case 1, 3: \n" + 
 				"	^^^^^^^^^\n" + 
 				"Duplicate case\n" + 
 				"----------\n" + 
@@ -1195,8 +1195,8 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 		};
 		String expectedProblemLog =
 				"----------\n" + 
-				"1. ERROR in X.java (at line 8)\n" + 
-				"	case \"b\", \"c\": \n" + 
+				"1. ERROR in X.java (at line 6)\n" + 
+				"	case \"a\", \"b\": \n" + 
 				"	^^^^^^^^^^^^^\n" + 
 				"Duplicate case\n" + 
 				"----------\n" + 
@@ -2362,7 +2362,7 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 			new String[] { "--enable-preview"},
 			options);
 	}
-	public void _testBug545915_01() {
+	public void testBug545715_01() {
 		runConformTest(
 			new String[] {
 				"X.java",
@@ -2407,5 +2407,133 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 		"5",
 		null,
 		new String[] {"--enable-preview"});
+	}
+	public void testBug545983_01() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"\n"+
+				"public class X {\n"+
+				"\n"+
+				"	@SuppressWarnings(\"preview\")\n"+
+				"	public static int foo() {\n"+
+				"	for (int i = 0; i < 1; ++i) {\n"+
+				"			int k = switch (i) {\n"+
+				"				case 0:\n"+
+				"					break 1;\n"+
+				"				default:\n"+
+				"					continue;\n"+
+				"			};\n"+
+				"			System.out.println(k);\n"+
+				"		}\n"+
+				"		return 1;\n"+
+				"	}\n"+
+				"	public static void main(String[] args) {\n"+
+				"		X.foo();\n"+
+				"	}\n"+
+				"}\n",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 11)\n" + 
+			"	continue;\n" + 
+			"	^^^^^^^^^\n" + 
+			"'continue' or 'return' cannot be the last statement in a Switch expression case body\n" + 
+			"----------\n");
+	}
+	public void testBug545983_02() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"\n"+
+				"public class X {\n"+
+				"\n"+
+				"	@SuppressWarnings(\"preview\")\n"+
+				"	public static int foo() {\n"+
+				"	for (int i = 0; i < 1; ++i) {\n"+
+				"			int k = switch (i) {\n"+
+				"				case 0:\n"+
+				"					break 1;\n"+
+				"				default:\n"+
+				"					return 2;\n"+
+				"			};\n"+
+				"			System.out.println(k);\n"+
+				"		}\n"+
+				"		return 1;\n"+
+				"	}\n"+
+				"	public static void main(String[] args) {\n"+
+				"		X.foo();\n"+
+				"	}\n"+
+				"}\n",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 11)\n" + 
+			"	return 2;\n" + 
+			"	^^^^^^^^^\n" + 
+			"'continue' or 'return' cannot be the last statement in a Switch expression case body\n" + 
+			"----------\n");
+	}
+	public void testBug547125_01() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" + 
+				"	void foo(Day day) {\n" + 
+				"		switch (day) {\n" + 
+				"		case SATURDAY, SUNDAY, SUNDAY:\n" + 
+				"			System.out.println(\"Weekend\");\n" + 
+				"		case MONDAY:\n" + 
+				"			System.out.println(\"Weekday\");\n" +
+				"		default: \n" + 
+				"		}\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"\n" + 
+				"enum Day {\n" + 
+				"	MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY;\n" + 
+				"}",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 4)\n" + 
+			"	case SATURDAY, SUNDAY, SUNDAY:\n" + 
+			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Duplicate case\n" + 
+			"----------\n");
+	}
+	public void testBug547125_02() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" + 
+				"	void foo(Day day) {\n" + 
+				"		switch (day) {\n" + 
+				"		case SATURDAY, SUNDAY, MONDAY:\n" + 
+				"			System.out.println(\"Weekend\");\n" + 
+				"		case MONDAY, SUNDAY:\n" + 
+				"			System.out.println(\"Weekday\");\n" +
+				"		default: \n" + 
+				"		}\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"\n" + 
+				"enum Day {\n" + 
+				"	MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY;\n" + 
+				"}",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 4)\n" + 
+			"	case SATURDAY, SUNDAY, MONDAY:\n" + 
+			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Duplicate case\n" + 
+			"----------\n" + 
+			"2. ERROR in X.java (at line 6)\n" + 
+			"	case MONDAY, SUNDAY:\n" + 
+			"	^^^^^^^^^^^^^^^^^^^\n" + 
+			"Duplicate case\n" + 
+			"----------\n" + 
+			"3. ERROR in X.java (at line 6)\n" + 
+			"	case MONDAY, SUNDAY:\n" + 
+			"	^^^^^^^^^^^^^^^^^^^\n" + 
+			"Duplicate case\n" + 
+			"----------\n");
 	}
 }

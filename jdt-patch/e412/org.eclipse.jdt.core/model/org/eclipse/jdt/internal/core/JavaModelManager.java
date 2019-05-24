@@ -5419,8 +5419,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					| IResourceChangeEvent.PRE_DELETE
 					| IResourceChangeEvent.PRE_CLOSE
 					| IResourceChangeEvent.PRE_REFRESH);
-
-			Indexer.getInstance().addListener(this.deltaState);
+			
+			// New index is disabled, see bug 544898
+			// Indexer.getInstance().addListener(this.deltaState);
 
 			// listen to resource changes affecting external annotations
 			ExternalAnnotationTracker.start(workspace);

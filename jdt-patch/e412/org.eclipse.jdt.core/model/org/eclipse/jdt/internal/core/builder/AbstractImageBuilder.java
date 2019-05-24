@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -724,11 +724,16 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 		// but at the start of the next problem we should reset it to the source file's resource
 		IResource resource = sourceFile.resource;
 		
-		// handle missing classfile situation
+		// handle buildpath problems (missing classfile, unresolved add-reads...)
+		String buildPathProblemMessage = null;
 		if (id == IProblem.IsClassPathCorrect) {
-			String missingClassfileName = problem.getArguments()[0];
+			buildPathProblemMessage = Messages.bind(Messages.build_incompleteClassPath, problem.getArguments()[0]);
+		} else if (id == IProblem.UndefinedModuleAddReads) {
+			buildPathProblemMessage = Messages.bind(Messages.build_errorOnModuleDirective, problem.getMessage());
+		}
+		if (buildPathProblemMessage != null) {
 			if (JavaBuilder.DEBUG)
-				System.out.println(Messages.bind(Messages.build_incompleteClassPath, missingClassfileName));
+				System.out.println(buildPathProblemMessage);
 			boolean isInvalidClasspathError = JavaCore.ERROR.equals(this.javaBuilder.javaProject.getOption(JavaCore.CORE_INCOMPLETE_CLASSPATH, true));
 			// insert extra classpath problem, and make it the only problem for this project (optional)
 			if (isInvalidClasspathError && JavaCore.ABORT.equals(this.javaBuilder.javaProject.getOption(JavaCore.CORE_JAVA_BUILD_INVALID_CLASSPATH, true))) {
@@ -739,7 +744,7 @@ protected void storeProblemsFor(SourceFile sourceFile, CategorizedProblem[] prob
 			marker.setAttributes(
 				new String[] {IMarker.MESSAGE, IMarker.SEVERITY, IJavaModelMarker.CATEGORY_ID, IMarker.SOURCE_ID},
 				new Object[] {
-					Messages.bind(Messages.build_incompleteClassPath, missingClassfileName),
+					buildPathProblemMessage,
 					Integer.valueOf(isInvalidClasspathError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING),
 					Integer.valueOf(CategorizedProblem.CAT_BUILDPATH),
 					JavaBuilder.SOURCE_ID

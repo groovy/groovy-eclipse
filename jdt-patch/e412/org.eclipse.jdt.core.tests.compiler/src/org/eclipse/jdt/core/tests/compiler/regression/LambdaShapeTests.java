@@ -571,8 +571,8 @@ public void test016() {
 		"----------\n" + 
 		"1. ERROR in X.java (at line 8)\n" + 
 		"	goo((x) -> {while (FALSE) throw new Exception();});\n" + 
-		"	^^^\n" + 
-		"The method goo(I) in the type X is not applicable for the arguments ((<no type> x) -> {})\n" + 
+		"	    ^^^^^^\n" + 
+		"This lambda expression must return a result of type String\n" + 
 		"----------\n");
 }
 public void test017() {
@@ -977,8 +977,8 @@ public void test029() {
 		"----------\n" + 
 		"1. ERROR in X.java (at line 8)\n" + 
 		"	goo((x) -> {\n" + 
-		"	^^^\n" + 
-		"The method goo(I) in the type X is not applicable for the arguments ((<no type> x) -> {})\n" + 
+		"	    ^^^^^^\n" + 
+		"This lambda expression must return a result of type String\n" + 
 		"----------\n");
 }
 public void test030() {

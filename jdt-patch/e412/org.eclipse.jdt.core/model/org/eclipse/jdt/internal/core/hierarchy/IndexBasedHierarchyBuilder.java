@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
@@ -427,7 +428,15 @@ protected IBinaryType createInfoFromClassFileInJar(Openable classFile) {
 	IPath path = root.getPath();
 	// take the OS path for external jars, and the forward slash path for internal jars
 	String rootPath = path.getDevice() == null ? path.toString() : path.toOSString();
-	String documentPath = rootPath + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + filePath;
+	IModuleDescription md = root.getModuleDescription();
+	String documentPath;
+	if(md != null) {
+		String module = md.getElementName();
+		documentPath = rootPath + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR
+				+ module + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + filePath;
+	} else {
+		documentPath = rootPath + IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR + filePath;
+	}
 	IBinaryType binaryType = (IBinaryType)this.binariesFromIndexMatches.get(documentPath);
 	if (binaryType != null) {
 		this.infoToHandle.put(binaryType, classFile);

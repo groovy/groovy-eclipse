@@ -159,31 +159,13 @@ public StackMapFrameCodeStream(ClassFile givenClassFile) {
 @Override
 public void addDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 	// Required to fix 1PR0XVS: LFRE:WINNT - Compiler: variable table for method appears incorrect
-	loop: for (int i = 0; i < this.visibleLocalsCount; i++) {
+	for (int i = 0; i < this.visibleLocalsCount; i++) {
 		LocalVariableBinding localBinding = this.visibleLocals[i];
 		if (localBinding != null) {
 			// Check if the local is definitely assigned
 			boolean isDefinitelyAssigned = isDefinitelyAssigned(scope, initStateIndex, localBinding);
 			if (!isDefinitelyAssigned) {
-				if (this.stateIndexes != null) {
-					for (int j = 0, max = this.stateIndexesCounter; j < max; j++) {
-						if (isDefinitelyAssigned(scope, this.stateIndexes[j], localBinding)) {
-							if ((localBinding.initializationCount == 0) || (localBinding.initializationPCs[((localBinding.initializationCount - 1) << 1) + 1] != -1)) {
-								/* There are two cases:
-								 * 1) there is no initialization interval opened ==> add an opened interval
-								 * 2) there is already some initialization intervals but the last one is closed ==> add an opened interval
-								 * An opened interval means that the value at localBinding.initializationPCs[localBinding.initializationCount - 1][1]
-								 * is equals to -1.
-								 * initializationPCs is a collection of pairs of int:
-								 * 	first value is the startPC and second value is the endPC. -1 one for the last value means that the interval
-								 * 	is not closed yet.
-								 */
-								localBinding.recordInitializationStartPC(this.position);
-							}
-							continue loop;
-						}
-					}
-				}
+				continue;
 			} else {
 				if ((localBinding.initializationCount == 0) || (localBinding.initializationPCs[((localBinding.initializationCount - 1) << 1) + 1] != -1)) {
 					/* There are two cases:

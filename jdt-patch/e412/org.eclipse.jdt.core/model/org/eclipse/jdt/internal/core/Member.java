@@ -329,6 +329,7 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 						break;
 					case ITerminalSymbols.TokenNameCOMMENT_LINE :
 					case ITerminalSymbols.TokenNameCOMMENT_BLOCK :
+					case ITerminalSymbols.TokenNameCOMMA:
 						terminal= scanner.getNextToken();
 						continue loop;
 					default :

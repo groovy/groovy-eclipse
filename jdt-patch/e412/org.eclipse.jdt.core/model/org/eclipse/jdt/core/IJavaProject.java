@@ -615,7 +615,8 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * project is said to represent a module if any of its source package 
 	 * fragment roots (see {@link IPackageFragmentRoot#K_SOURCE}) contains a 
 	 * valid Java module descriptor, or if one of its classpath entries
-	 * has a valid {@link IClasspathAttribute#PATCH_MODULE} attribute.
+	 * has a valid {@link IClasspathAttribute#PATCH_MODULE} attribute
+	 * affecting the current project.
 	 * In the latter case the corresponding module description of the
 	 * location referenced by that classpath entry is returned.
 	 * 

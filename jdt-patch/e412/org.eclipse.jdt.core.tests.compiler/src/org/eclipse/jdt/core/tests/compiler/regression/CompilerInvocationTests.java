@@ -808,6 +808,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("MissingTypeInLambda", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("MissingTypeInMethod", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("MissingValueForAnnotationMember", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("MissingValueFromLambda", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("MultiCatchNotBelow17", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("MultipleFunctionalInterfaces", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("StaticInterfaceMethodNotBelow18", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
@@ -1041,6 +1042,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("UndefinedLabel", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("UndefinedMethod", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("UndefinedModule", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
+		expectedProblemAttributes.put("UndefinedModuleAddReads", new ProblemAttributes(CategorizedProblem.CAT_BUILDPATH));
 		expectedProblemAttributes.put("UndefinedName", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("UndefinedType", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("UndefinedTypeVariable", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
@@ -1163,6 +1165,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("SwitchExpressionsNoResultExpression", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("SwitchExpressionSwitchLabeledBlockCompletesNormally", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("SwitchExpressionLastStatementCompletesNormally", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
+		expectedProblemAttributes.put("SwitchExpressionIllegalLastStatement", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("SwitchExpressionTrailingSwitchLabels", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
 		expectedProblemAttributes.put("switchMixedCase", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("SwitchExpressionMissingDefaultCase", new ProblemAttributes(CategorizedProblem.CAT_INTERNAL));
@@ -1753,6 +1756,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("MissingTypeInLambda", SKIP);
 		expectedProblemAttributes.put("MissingTypeInMethod", SKIP);
 		expectedProblemAttributes.put("MissingValueForAnnotationMember", SKIP);
+		expectedProblemAttributes.put("MissingValueFromLambda", SKIP);
 		expectedProblemAttributes.put("MultiCatchNotBelow17", SKIP);
 		expectedProblemAttributes.put("MultipleFunctionalInterfaces", SKIP);
 		expectedProblemAttributes.put("StaticInterfaceMethodNotBelow18", SKIP);
@@ -1986,6 +1990,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("UndefinedLabel", SKIP);
 		expectedProblemAttributes.put("UndefinedMethod", SKIP);
 		expectedProblemAttributes.put("UndefinedModule", SKIP);
+		expectedProblemAttributes.put("UndefinedModuleAddReads", SKIP);
 		expectedProblemAttributes.put("UndefinedName", SKIP);
 		expectedProblemAttributes.put("UndefinedType", SKIP);
 		expectedProblemAttributes.put("UndefinedTypeVariable", SKIP);
@@ -2108,6 +2113,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("SwitchExpressionsNoResultExpression",SKIP);
 		expectedProblemAttributes.put("SwitchExpressionSwitchLabeledBlockCompletesNormally",SKIP);
 		expectedProblemAttributes.put("SwitchExpressionLastStatementCompletesNormally",SKIP);
+		expectedProblemAttributes.put("SwitchExpressionIllegalLastStatement",SKIP);
 		expectedProblemAttributes.put("SwitchExpressionTrailingSwitchLabels",SKIP);
 		expectedProblemAttributes.put("switchMixedCase", SKIP);
 		expectedProblemAttributes.put("SwitchExpressionMissingDefaultCase",SKIP);

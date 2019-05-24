@@ -15,8 +15,10 @@ package org.eclipse.jdt.core.provisional;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.JrtPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 
 /**
@@ -60,5 +62,18 @@ public class JavaModelAccess {
 			default:
 				throw new IllegalArgumentException("Illegal kind of java element: "+element.getElementType()); //$NON-NLS-1$
 		}
+	}
+
+	/**
+	 * Answer whether the given module is a system module.
+	 * <p><em>This provisional API may likely be changed into a direct method {@code IModuleDescription.isSystemModule()}.</em></p>
+	 * 
+	 * @param module the module being queried about
+	 * @return {@code true} iff the module is defined in the system library (also known as JRE).
+	 * @since 3.18
+	 */
+	public static boolean isSystemModule(IModuleDescription module) {
+		IPackageFragmentRoot pfr = (IPackageFragmentRoot) module.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+		return pfr instanceof JrtPackageFragmentRoot;
 	}
 }

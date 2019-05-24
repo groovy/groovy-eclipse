@@ -15,11 +15,13 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
@@ -79,6 +81,38 @@ public interface AbstractModule extends IModuleDescription {
 
 	default IModule getModuleInfo() throws JavaModelException {
 		return (IModule) getElementInfo();
+	}
+	@Override
+	default String[] getExportedPackageNames(IModuleDescription targetModule) throws JavaModelException {
+		IModule info = getModuleInfo();
+		if (info != null) {
+			List<String> result = new ArrayList<>();
+			for (IPackageExport packageExport : info.exports()) {
+				if (targetModule == null || !packageExport.isQualified()
+						|| CharOperation.containsEqual(packageExport.targets(), targetModule.getElementName().toCharArray()))
+				{
+					result.add(new String(packageExport.name()));
+				}
+			}
+			return result.toArray(new String[result.size()]);
+		}
+		return new String[0];
+	}
+	@Override
+	default String[] getOpenedPackageNames(IModuleDescription targetModule) throws JavaModelException {
+		IModule info = getModuleInfo();
+		if (info != null) {
+			List<String> result = new ArrayList<>();
+			for (IPackageExport packageOpen : info.opens()) {
+				if (targetModule == null || !packageOpen.isQualified()
+						|| CharOperation.containsEqual(packageOpen.targets(), targetModule.getElementName().toCharArray()))
+				{
+					result.add(new String(packageOpen.name()));
+				}
+			}
+			return result.toArray(new String[result.size()]);
+		}
+		return new String[0];
 	}
 	default IModuleReference[] getRequiredModules() throws JavaModelException {
 		return getModuleInfo().requires();

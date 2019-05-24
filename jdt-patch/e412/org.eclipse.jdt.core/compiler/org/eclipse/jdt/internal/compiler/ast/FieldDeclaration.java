@@ -290,8 +290,8 @@ public void resolve(MethodScope initializationScope) {
 						CastExpression.checkNeedForAssignedCast(initializationScope, fieldType, (CastExpression) this.initialization);
 					}
 				} else {
-					if ((fieldType.tagBits & TagBits.HasMissingType) == 0) {
-						// if problem already got signaled on type, do not report secondary problem
+					if (((fieldType.tagBits | initializationType.tagBits) & TagBits.HasMissingType) == 0) {
+						// if problem already got signaled on either type, do not report secondary problem
 						initializationScope.problemReporter().typeMismatchError(initializationType, fieldType, this.initialization, null);
 					}
 				}

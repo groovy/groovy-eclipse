@@ -206,7 +206,7 @@ public final class TagElement extends ASTNode implements IDocElement {
 	 * @since 3.18
 	 */
 	public static final String TAG_USES = "@uses"; //$NON-NLS-1$
-	
+
 	/**
 	 * Standard inline doc tag name (value {@value}).
 	 */
@@ -216,6 +216,24 @@ public final class TagElement extends ASTNode implements IDocElement {
 	 * Standard doc tag name (value {@value}).
 	 */
 	public static final String TAG_VERSION = "@version"; //$NON-NLS-1$
+
+	/**
+	 * Javadoc tag name (value {@value}).
+	 * @since 3.18
+	 */
+	public static final String TAG_API_NOTE = "@apiNote"; //$NON-NLS-1$
+
+	/**
+	 * Javadoc tag name (value {@value}).
+	 * @since 3.18
+	 */
+	public static final String TAG_IMPL_SPEC = "@implSpec"; //$NON-NLS-1$
+
+	/**
+	 * Javadoc tag name (value {@value}).
+	 * @since 3.18
+	 */
+	public static final String TAG_IMPL_NOTE = "@implNote"; //$NON-NLS-1$
 
 	/**
 	 * The tag name, or null if none; defaults to null.
