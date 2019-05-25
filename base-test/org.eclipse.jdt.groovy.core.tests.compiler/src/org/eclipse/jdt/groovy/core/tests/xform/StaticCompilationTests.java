@@ -2258,4 +2258,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "inner delegate");
     }
+
+    @Test
+    public void testCompileStatic9136() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  public String field = 'foo'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  def doIt(Foo foo) {\n" +
+            "    'baz'.with {\n" +
+            "      print foo.field\n" + // Access to Foo#foo is forbidden at line: -1, column: -1
+            "      return 'bar'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "def bar = new Bar()\n" +
+            "print bar.doIt(new Foo())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
 }

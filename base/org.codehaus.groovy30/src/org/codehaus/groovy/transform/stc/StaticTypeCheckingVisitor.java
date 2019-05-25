@@ -106,7 +106,6 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.StaticTypesTransformation;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -204,6 +203,7 @@ import static org.codehaus.groovy.syntax.Types.ASSIGNMENT_OPERATOR;
 import static org.codehaus.groovy.syntax.Types.COMPARE_EQUAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_IN;
+import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_INSTANCEOF;
 import static org.codehaus.groovy.syntax.Types.COMPARE_TO;
 import static org.codehaus.groovy.syntax.Types.DIVIDE;
 import static org.codehaus.groovy.syntax.Types.DIVIDE_EQUAL;
@@ -270,7 +270,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCh
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.CLOSURE_ARGUMENTS;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.CONSTRUCTED_LAMBDA_EXPRESSION;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE;
-//import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_INSTANCEOF;
 
 /**
  * The main class code visitor responsible for static type checking. It will perform various inspections like checking
@@ -528,19 +527,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     /**
      * Checks valid cases for accessing a field from an inner class.
      */
-    private String checkOrMarkInnerPropertyOwnerAccess(Expression source, FieldNode fn, boolean lhsOfAssignment, String delegationData) {
-        if (fn == null || fn.isStatic() || fn.isPrivate() || "delegate".equals(delegationData)) return delegationData;
-        if (source instanceof PropertyExpression && typeCheckingContext.getEnclosingClosureStack().size() == 1) {
-            PropertyExpression pe = (PropertyExpression) source;
-            boolean ownerProperty = !("this".equals(pe.getPropertyAsString()));
-            if (ownerProperty && pe.getObjectExpression() instanceof VariableExpression) {
-                Variable accessedVariable = ((VariableExpression) pe.getObjectExpression()).getAccessedVariable();
-                Variable declaredVariable = typeCheckingContext.getEnclosingClosure().getClosureExpression().getVariableScope().getDeclaredVariable(pe.getObjectExpression().getText());
-                if (accessedVariable != null && accessedVariable == declaredVariable) ownerProperty = false;
-            }
-            if (ownerProperty) {
+    private String checkOrMarkInnerPropertyOwnerAccess(PropertyExpression source, boolean lhsOfAssignment, String delegationData) {
+        // check for reference to method, closure, for loop, try with, or catch block parameter from a non-nested closure
+        if (typeCheckingContext.getEnclosingClosureStack().size() == 1 && !"this".equals(source.getPropertyAsString())) {
+            if (!(source.getObjectExpression() instanceof VariableExpression &&
+                    ((VariableExpression) source.getObjectExpression()).getAccessedVariable() instanceof Parameter)) {
                 delegationData = "owner";
-                pe.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
+                source.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
             }
         }
         return delegationData;
@@ -1850,7 +1843,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (visitor != null) visitor.visitField(field);
         storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
-        delegationData = checkOrMarkInnerPropertyOwnerAccess(expressionToStoreOn, field, lhsOfAssignment, delegationData);
+        if (field != null && !field.isStatic() && !field.isPrivate() && !"delegate".equals(delegationData)) {
+            delegationData = checkOrMarkInnerPropertyOwnerAccess(expressionToStoreOn, lhsOfAssignment, delegationData);
+        }
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
         }
@@ -3992,7 +3987,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         BinaryExpression instanceOfExpression = (BinaryExpression) expression;
         int op = instanceOfExpression.getOperation().getType();
-        if (op != Types.KEYWORD_INSTANCEOF) {
+        if (op != KEYWORD_INSTANCEOF) {
             return null;
         }
         if (notReturningBlock(ifElse.getIfBlock())) {
@@ -4023,7 +4018,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         BinaryExpression instanceOfExpression = (BinaryExpression) conditionExpression;
         int op = instanceOfExpression.getOperation().getType();
-        if (op != Types.COMPARE_NOT_INSTANCEOF) {
+        if (op != COMPARE_NOT_INSTANCEOF) {
             return null;
         }
         if (notReturningBlock(ifElse.getIfBlock())) {
