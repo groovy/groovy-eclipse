@@ -124,6 +124,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -269,7 +270,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCh
  */
 public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
-    private static final boolean DEBUG_GENERATED_CODE = Boolean.valueOf(System.getProperty("groovy.stc.debug", "false"));
+    private static final boolean DEBUG_GENERATED_CODE = Boolean.getBoolean("groovy.stc.debug");
     private static final AtomicLong UNIQUE_LONG = new AtomicLong();
 
     protected static final Object ERROR_COLLECTOR = ErrorCollector.class;
@@ -1493,6 +1494,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 FieldNode field = current.getDeclaredField(propertyName);
                 field = allowStaticAccessToMember(field, staticOnly);
+                /* GRECLIPSE edit -- GROOVY-9127
                 if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode))
                     return true;
 
@@ -1502,6 +1504,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 if (storeField(field, isThisExpression, pexp, receiver.getType(), visitor, receiver.getData(), !readMode))
                     return true;
+                */
+                if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode)) {
+                    pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                    return true;
+                }
+
+                boolean isThisExpression = objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()
+                        && (objectExpressionType.equals(current) || (objectExpressionType.isDerivedFrom(current) && hasAccessToField(field, objectExpressionType)));
+
+                if (storeField(field, isThisExpression, pexp, receiver.getType(), visitor, receiver.getData(), !readMode)) {
+                    pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                    return true;
+                }
+                // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
                 getter = allowStaticAccessToMember(getter, staticOnly);
@@ -1563,8 +1579,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 foundGetterOrSetter = foundGetterOrSetter || !setters.isEmpty() || getter != null;
 
                 if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
-
                 if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
+
                 // if the property expression is an attribute expression (o.@attr), then
                 // we stop now, otherwise we must check the parent class
                 if (/*!isAttributeExpression && */current.getSuperClass() != null) {
@@ -1616,6 +1632,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return foundGetterOrSetter;
     }
+
+    // GRECLIPSE add
+    private static boolean hasAccessToField(FieldNode field, ClassNode objectExpressionType) {
+        if (field != null) {
+            if (field.isPublic() || field.isProtected()) {
+                return true;
+            }
+            if (!field.isPrivate() && Objects.equals(objectExpressionType.getPackageName(), field.getDeclaringClass().getPackageName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // GRECLIPSE end
 
     private MethodNode findGetter(ClassNode current, String name, boolean searchOuterClasses) {
         MethodNode getterMethod = current.getGetterMethod(name);

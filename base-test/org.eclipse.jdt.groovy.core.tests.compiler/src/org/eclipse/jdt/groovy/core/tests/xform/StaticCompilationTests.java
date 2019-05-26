@@ -2260,6 +2260,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9127() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  protected String field = 'foo'\n" +
+            "  String getField() {\n" +
+            "    return field\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar extends Foo {\n" +
+            "  void changeField() {\n" +
+            "    this.field = 'baz'\n" + // [Static type checking] - Cannot set read-only property: field
+            "  }\n" +
+            "  @Override\n" +
+            "  String getField() {\n" +
+            "    return 'bar'\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "def bar = new Bar()\n" +
+            "bar.changeField()\n" +
+            "println bar.field\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "bar");
+    }
+
+    @Test
     public void testCompileStatic9136() {
         //@formatter:off
         String[] sources = {
