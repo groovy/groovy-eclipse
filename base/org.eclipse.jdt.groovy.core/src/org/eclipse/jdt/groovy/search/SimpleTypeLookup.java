@@ -278,7 +278,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             List<ConstructorNode> declaredConstructors = resolvedDeclaringType.getDeclaredConstructors();
             if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
-                if (callTypes.size() > 1) {
+                if (callTypes != null && callTypes.size() > 1) {
                     // non-static inner types may have extra argument for enclosing type
                     if (callTypes.get(0).equals(resolvedDeclaringType.getOuterClass()) && !Flags.isStatic(resolvedDeclaringType.getModifiers())) {
                         callTypes.remove(0);
@@ -287,7 +287,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
                 List<ConstructorNode> looseMatches = new ArrayList<>();
                 for (ConstructorNode ctor : declaredConstructors) {
-                    if (callTypes.size() == ctor.getParameters().length) {
+                    if (callTypes != null && callTypes.size() == ctor.getParameters().length) {
                         if (Boolean.TRUE.equals(isTypeCompatible(callTypes, ctor.getParameters()))) {
                             return new TypeLookupResult(nodeType, resolvedDeclaringType, ctor, confidence, scope);
                         }
