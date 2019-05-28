@@ -1407,13 +1407,23 @@ enumConstants
     :
         enumConstant
         (    options {generateAmbigWarnings=false;} :
-            (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
+        /* GRECLIPSE edit -- GROOVY-4438
+            (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop * / }
         |   nls! COMMA!
             (
                 (nls annotationsOpt IDENT) => nls! enumConstant
             |
-                (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
+                (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop * / }
             )
+        */
+            (nls (SEMI! | (COMMA! nls)? RCURLY | declarationStart | constructorStart)) => {break;}
+        |
+            nls! COMMA! (
+                (nls annotationsOpt IDENT) => nls! enumConstant
+            |
+                (nls classField) => {break;}
+            )
+        // GRECLIPSE end
         )*
     ;
 

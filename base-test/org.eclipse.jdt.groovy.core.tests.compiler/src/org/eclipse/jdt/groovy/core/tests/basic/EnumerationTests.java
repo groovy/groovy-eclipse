@@ -15,8 +15,10 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
@@ -33,13 +35,9 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     public void testEnums1() {
         //@formatter:off
         String[] sources = {
-            "p/Foo.groovy",
-            "package p;\n" +
-            "class Foo {\n" +
-            "  static main(args) {\n" +
-            "    print E.F\n" +
-            "  }\n" +
-            "}\n",
+            "Script.groovy",
+            "import p.E\n" +
+            "print E.F\n",
 
             "p/E.java",
             "package p;\n" +
@@ -54,6 +52,10 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     public void testEnums2() {
         //@formatter:off
         String[] sources = {
+            "Script.groovy",
+            "import p.E\n" +
+            "println E.values()\n",
+
             "p/E.groovy",
             "package p\n" +
             "enum E {\n" +
@@ -61,23 +63,69 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runConformTest(sources, "[]");
     }
 
     @Test
     public void testEnums3() {
         //@formatter:off
         String[] sources = {
+            "Script.groovy",
+            "println Color.values()\n",
+
             "Color.groovy",
             "enum Color { R, G, B }\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runConformTest(sources, "[R, G, B]");
     }
 
     @Test
     public void testEnums4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE, PORTRAIT\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    name().toLowerCase().capitalize()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnums5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println NonFinal.values()\n",
+
+            "NonFinal.groovy",
+            "enum NonFinal {\n" +
+            "  One(1), Two(2)\n" +
+            "  Object value\n" + // different parsing without leading keyword
+            "  NonFinal(value) {\n" +
+            "    this.value = value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[One, Two]");
+    }
+
+    @Test
+    public void testEnums6() {
         //@formatter:off
         String[] sources = {
             "Cards.groovy",
@@ -104,7 +152,64 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums5() {
+    public void testEnums7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Whatever {\n" +
+            "  ONE(1), TWO(2)\n\n" +
+            "  Whatever(value) {\n" +
+            "    _value = value\n" +
+            "  }\n\n" +
+            "  private final int _value\n" +
+            "}\n" +
+            "print Whatever.ONE.@_value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testEnums8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Whatever {\n" +
+            "  @Deprecated ONE(1), TWO(2)\n\n" +
+            "  Whatever(value) {\n" +
+            "    _value = value\n" +
+            "  }\n\n" +
+            "  private final int _value\n" +
+            "}\n" +
+            "print Whatever.TWO.ordinal()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testEnums8a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Whatever {\n" +
+            "  ONE(1), @Deprecated TWO(2)\n\n" +
+            "  Whatever(value) {\n" +
+            "    _value = value\n" +
+            "  }\n\n" +
+            "  private final int _value\n" +
+            "}\n" +
+            "print Whatever.TWO.ordinal()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testEnums9() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -146,7 +251,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums6() {
+    public void testEnums10() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -299,6 +404,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-4438
     public void testEnum4438() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
@@ -367,21 +474,20 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "TestEnum.groovy",
             "enum TestEnum {\n" +
-            "\n" +
-            "VALUE1(1, 'foo'),\n" +
-            "VALUE2(2)\n" +
-            "\n" +
-            "private final int _value\n" +
-            "private final String _description\n" +
-            "\n" +
-            "private TestEnum(int value, String description = null) {\n" +
-            "   _value = value\n" +
-            "   _description = description\n" +
-            "}\n" +
-            "\n" +
-            "String getDescription() { _description }\n" +
-            "\n" +
-            "int getValue() { _value }\n" +
+            "  VALUE1(1, 'foo'),\n" +
+            "  VALUE2(2)\n" +
+            "  \n" +
+            "  private final int _value\n" +
+            "  private final String _description\n" +
+            "  \n" +
+            "  private TestEnum(int value, String description = null) {\n" +
+            "    _value = value\n" +
+            "    _description = description\n" +
+            "  }\n" +
+            "  \n" +
+            "  String getDescription() { _description }\n" +
+            "  \n" +
+            "  int getValue() { _value }\n" +
             "}\n",
         };
         //@formatter:on
