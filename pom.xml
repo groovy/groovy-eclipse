@@ -219,12 +219,12 @@
 				<repository>
 					<id>photon</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/releases/photon</url>
+					<url>http://download.eclipse.org/releases/photon</url>
 				</repository>
 				<repository>
 					<id>eclipse48</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.8</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -245,12 +245,12 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/releases/oxygen</url>
+					<url>http://download.eclipse.org/releases/oxygen</url>
 				</repository>
 				<repository>
 					<id>eclipse47</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.7</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.7</url>
 				</repository>
 			</repositories>
 			<modules>
