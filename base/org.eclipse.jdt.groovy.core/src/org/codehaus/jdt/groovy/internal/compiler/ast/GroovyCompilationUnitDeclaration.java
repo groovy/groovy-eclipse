@@ -161,8 +161,8 @@ import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * A subtype of JDT CompilationUnitDeclaration that represents a groovy source file. It overrides methods as appropriate, delegating
- * to the groovy infrastructure.
+ * Represents a Groovy source. It overrides methods as appropriate, delegating
+ * to the Groovy infrastructure.
  */
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 

@@ -649,7 +649,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         }
 
         // finally public and inherited
-        // GRECLIPSE edit -- GROOVY-9043
+        // GRECLIPSE edit -- GROOVY-9043, et al.
         //return field.isPublic() || isSamePackage;
         return field.isPublic() || samePackages(receiver.getPackageName(), declaringClass.getPackageName());
         // GRECLIPSE end
