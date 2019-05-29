@@ -2877,8 +2877,13 @@ class ASTConverter {
 		if (this.resolveBindings) {
 			this.recordNodes(literal, expression);
 		}
+		/* GRECLIPSE edit
 		literal.internalSetEscapedValue(new String(this.compilationUnitSource, sourceStart, length));
 		literal.setSourceRange(expression.sourceStart, expression.sourceEnd - expression.sourceStart + 1);
+		*/
+		literal.internalSetEscapedValue(expression.toString());
+		literal.setSourceRange(sourceStart, length);
+		// GROOVY end
 		return literal;
 	}
 
