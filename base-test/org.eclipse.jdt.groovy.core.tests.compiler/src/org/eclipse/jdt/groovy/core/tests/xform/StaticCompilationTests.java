@@ -718,6 +718,168 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8609() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A<T extends List<E>, E extends Map<String, Integer>> {\n" + // upper bound with generics
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<HashMap<String, Integer>>()\n" +
+            "    def record = new HashMap<String, Integer>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic8609a() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A<T extends List<E>, E extends Map> {\n" + // upper bound without generics
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<HashMap<String, Integer>>()\n" +
+            "    def record = new HashMap<String, Integer>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic8609b() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A<T extends List<E>, E> {\n" + // no upper bound
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<HashMap<String, Integer>>()\n" +
+            "    def record = new HashMap<String, Integer>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testCompileStatic8609c() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "public class A<T extends List<E>, E extends Map<String, Integer>> {\n" + // upper bound with generics
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<TreeMap<String, Integer>>()\n" +
+            "    def record = new TreeMap<String, Integer>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" + // TreeMap argument, HashMap parameter
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 11)\n" +
+            "\tassert record.is(a.getFirstRecord(list))\n" +
+            "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <TreeMap>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic8609d() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A<T extends List<E>, E extends Map<String, Integer>> {\n" +
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<HashMap<String, Long>>()\n" +
+            "    def record = new HashMap<String, Long>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" + // Long argument, Integer parameter
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 11)\n" +
+            "\tassert record.is(a.getFirstRecord(list))\n" +
+            "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <HashMap>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic8609e() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A<T extends List<E>, E extends Map<String, Integer>> {\n" +
+            "  E getFirstRecord(T recordList) {\n" +
+            "    return recordList.get(0)\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def list = new ArrayList<HashMap<StringBuffer, Integer>>()\n" +
+            "    def record = new HashMap<StringBuffer, Integer>()\n" +
+            "    list.add(record)\n" +
+            "    def a = new A<ArrayList<HashMap<String, Integer>>, HashMap<String, Integer>>()\n" +
+            "    assert record.is(a.getFirstRecord(list))\n" + // StringBuffer argument, String parameter
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 11)\n" +
+            "\tassert record.is(a.getFirstRecord(list))\n" +
+            "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <HashMap>] \n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic8839() {
         //@formatter:off
         String[] sources = {
