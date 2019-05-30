@@ -2479,4 +2479,19 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "foobar");
     }
+
+    @Test
+    public void testCompileStatic9153() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void meth() {\n" +
+            "  File temp = File.createTempDir()\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }

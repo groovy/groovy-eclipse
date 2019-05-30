@@ -20,9 +20,12 @@ package org.codehaus.groovy.ast.expr;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
+
+import java.util.Map;
 
 /**
  * Represents a constant expression such as null, true, false.
@@ -123,7 +126,7 @@ public class ConstantExpression extends Expression {
     }
 }
 
-// GROOVY add
+// GRECLIPSE add
 class StaticConstantExpression extends ConstantExpression {
 
     public StaticConstantExpression(Object value) {
@@ -157,17 +160,12 @@ class StaticConstantExpression extends ConstantExpression {
     }
 
     @Override
-    public void setNodeMetaData(Object k, Object v) {
+    public void setMetaDataMap(Map meta) {
         throw new GroovyBugError("Attempt to change static constant expression: " + getText());
     }
 
     @Override
-    public Object putNodeMetaData(Object k, Object v) {
-        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
-    }
-
-    @Override
-    public void setSourcePosition(ASTNode n) {
+    public void setSourcePosition(ASTNode node) {
         throw new GroovyBugError("Attempt to change static constant expression: " + getText());
     }
 
@@ -184,6 +182,21 @@ class StaticConstantExpression extends ConstantExpression {
     // AnnotatedNode overrides:
 
     @Override
+    public void addAnnotation(AnnotationNode node) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setDeclaringClass(ClassNode node) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setHasNoRealSourcePosition(boolean b) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
     public void setNameStart(int i) {
         throw new GroovyBugError("Attempt to change static constant expression: " + getText());
     }
@@ -194,32 +207,24 @@ class StaticConstantExpression extends ConstantExpression {
     }
 
     @Override
-    public void setDeclaringClass(ClassNode cn) {
-        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
-    }
-
-    @Override
-    public void setHasNoRealSourcePosition(boolean b) {
-        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
-    }
-
-    @Override
     public void setSynthetic(boolean b) {
         throw new GroovyBugError("Attempt to change static constant expression: " + getText());
     }
 
     // ConstantExpression overrides:
 
-    public void setType(ClassNode t) {
-        if (getType() == ClassHelper.DYNAMIC_TYPE) {
-            super.setType(t);
+    @Override
+    public void setConstantName(String name) {
+        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
+    }
+
+    @Override
+    public void setType(ClassNode type) {
+        if (!isNullExpression() && getType() == ClassHelper.DYNAMIC_TYPE) {
+            super.setType(type); // allow one-time initialization
         } else {
             throw new GroovyBugError("Attempt to change static constant expression: " + getText());
         }
     }
-
-    public void setConstantName(String constantName) {
-        throw new GroovyBugError("Attempt to change static constant expression: " + getText());
-    }
 }
-// GROOVY end
+// GRECLIPSE end
