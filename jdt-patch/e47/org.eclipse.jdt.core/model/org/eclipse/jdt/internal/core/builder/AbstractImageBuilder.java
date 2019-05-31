@@ -281,17 +281,18 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
 }
 
 protected void cleanUp() {
+	// GROOVY add
+	if (this.compiler != null && this.compiler.parser != null) {
+		this.compiler.parser.reset();
+	}
+	if (this.nameEnvironment != null)
+	// GROOVY end
 	this.nameEnvironment.cleanup();
 
 	this.javaBuilder = null;
 	this.nameEnvironment = null;
 	this.sourceLocations = null;
 	this.notifier = null;
-	// GROOVY add
-	if (this.compiler != null && this.compiler.parser != null) {
-		this.compiler.parser.reset();
-	}
-	// GROOVY end
 	this.compiler = null;
 	this.workQueue = null;
 	this.problemSourceFiles = null;
