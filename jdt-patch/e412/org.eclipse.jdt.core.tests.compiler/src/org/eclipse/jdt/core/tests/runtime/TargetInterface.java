@@ -69,6 +69,7 @@ public void connect(ServerSocket server, int timeout) {
 				this.socket.setTcpNoDelay(true);
 				break;
 			} catch (IOException e) {
+				e.printStackTrace();
 			}
 			if (this.socket == null) {
 				try {
@@ -88,6 +89,7 @@ public void disconnect() {
 		try {
 			this.socket.close();
 		} catch (IOException e) {
+			e.printStackTrace();
 			// Already closed. Nothing more to do
 		}
 		this.socket = null;
@@ -141,7 +143,7 @@ public Result getResult() {
 /**
  * Returns whether this interface is connected to the target.
  */
-boolean isConnected() {
+public boolean isConnected() {
 	return this.socket != null;
 }
 /**
@@ -156,6 +158,7 @@ public void sendClasses(boolean mustRun, ClassFile[] classes) throws TargetExcep
 				try {
 					Util.writeToDisk(true, "d:\\eval\\snippets", className, classes[0]);
 				} catch(IOException e) {
+					e.printStackTrace();
 				}
 			} else {
 				String dirName;
@@ -167,6 +170,7 @@ public void sendClasses(boolean mustRun, ClassFile[] classes) throws TargetExcep
 				try {
 					Util.writeToDisk(true, dirName, className, classes[i]);
 				} catch(IOException e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -187,6 +191,7 @@ public void sendClasses(boolean mustRun, ClassFile[] classes) throws TargetExcep
 				out.write(classDefinition);
 			}
 		} catch (IOException e) {
+			e.printStackTrace();
 			// The socket has likely been closed on the other end. So the code snippet runner has stopped.
 			disconnect();
 		}
