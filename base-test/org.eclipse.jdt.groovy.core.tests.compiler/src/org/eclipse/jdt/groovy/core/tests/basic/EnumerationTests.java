@@ -27,6 +27,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class EnumerationTests extends GroovyCompilerTestSuite {
@@ -82,7 +83,97 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnums3a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Color.values()\n",
+
+            "Color.groovy",
+            "enum Color { R, G, B; }\n", // semicolon
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[R, G, B]");
+    }
+
+    @Test
+    public void testEnums3b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Color.values()\n",
+
+            "Color.groovy",
+            "enum Color { R, G, B, }\n", // trailing comma
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[R, G, B]");
+    }
+
+    @Test
     public void testEnums4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  /** comment */" +
+            "  LANDSCAPE,\n" +
+            "  /** comment */" +
+            "  PORTRAIT\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[LANDSCAPE, PORTRAIT]");
+    }
+
+    @Test
+    public void testEnums4a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  /** comment */" +
+            "  LANDSCAPE,\n" +
+            "  /** comment */" +
+            "  PORTRAIT;\n" + // semicolon
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[LANDSCAPE, PORTRAIT]");
+    }
+
+    @Test
+    public void testEnums4b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  /** comment */" +
+            "  LANDSCAPE,\n" +
+            "  /** comment */" +
+            "  PORTRAIT,\n" + // trailing comma
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[LANDSCAPE, PORTRAIT]");
+    }
+
+    @Test
+    public void testEnums5() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -104,7 +195,51 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums5() {
+    public void testEnums5a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE, PORTRAIT;\n" + // semicolon
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    name().toLowerCase().capitalize()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test @Ignore("not supported by either parser")
+    public void testEnums5b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE, PORTRAIT,\n" + // trailing comma
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    name().toLowerCase().capitalize()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnums6() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -125,7 +260,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums6() {
+    public void testEnums7() {
         //@formatter:off
         String[] sources = {
             "Cards.groovy",
@@ -152,7 +287,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums7() {
+    public void testEnums8() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -171,7 +306,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums8() {
+    public void testEnums9() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -190,7 +325,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums8a() {
+    public void testEnums10() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -209,7 +344,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums9() {
+    public void testEnums11() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -251,7 +386,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums10() {
+    public void testEnums12() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off

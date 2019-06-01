@@ -1416,12 +1416,12 @@ enumConstants
                 (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop * / }
             )
         */
-            (nls (SEMI! | (COMMA! nls)? RCURLY | declarationStart | constructorStart)) => {break;}
+            (nls (SEMI! | RCURLY | declarationStart | constructorStart)) => {break;}
         |
             nls! COMMA! (
                 (nls annotationsOpt IDENT) => nls! enumConstant
             |
-                (nls classField) => {break;}
+                (nls (RCURLY | classField)) => {break;}
             )
         // GRECLIPSE end
         )*

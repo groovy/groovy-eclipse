@@ -6810,10 +6810,10 @@ inputState.guessing--;
         {
         _loop163:
         do {
-            boolean synPredMatched157 = false;
+            boolean synPredMatched156 = false;
             if (((_tokenSet_65.member(LA(1))) && (_tokenSet_66.member(LA(2))))) {
-                int _m157 = mark();
-                synPredMatched157 = true;
+                int _m156 = mark();
+                synPredMatched156 = true;
                 inputState.guessing++;
                 try {
                     {
@@ -6825,27 +6825,8 @@ inputState.guessing--;
                         match(SEMI);
                         break;
                     }
-                    case COMMA:
                     case RCURLY:
                     {
-                        {
-                        switch ( LA(1)) {
-                        case COMMA:
-                        {
-                            match(COMMA);
-                            nls();
-                            break;
-                        }
-                        case RCURLY:
-                        {
-                            break;
-                        }
-                        default:
-                        {
-                            throw new NoViableAltException(LT(1), getFilename());
-                        }
-                        }
-                        }
                         match(RCURLY);
                         break;
                     }
@@ -6864,12 +6845,12 @@ inputState.guessing--;
                     }
                 }
                 catch (RecognitionException pe) {
-                    synPredMatched157 = false;
+                    synPredMatched156 = false;
                 }
-                rewind(_m157);
+                rewind(_m156);
 inputState.guessing--;
             }
-            if ( synPredMatched157 ) {
+            if ( synPredMatched156 ) {
                 if ( inputState.guessing==0 ) {
                     break;
                 }
@@ -6878,10 +6859,10 @@ inputState.guessing--;
                 nls();
                 match(COMMA);
                 {
-                boolean synPredMatched160 = false;
+                boolean synPredMatched159 = false;
                 if (((_tokenSet_69.member(LA(1))) && (_tokenSet_58.member(LA(2))))) {
-                    int _m160 = mark();
-                    synPredMatched160 = true;
+                    int _m159 = mark();
+                    synPredMatched159 = true;
                     inputState.guessing++;
                     try {
                         {
@@ -6891,12 +6872,12 @@ inputState.guessing--;
                         }
                     }
                     catch (RecognitionException pe) {
-                        synPredMatched160 = false;
+                        synPredMatched159 = false;
                     }
-                    rewind(_m160);
+                    rewind(_m159);
 inputState.guessing--;
                 }
-                if ( synPredMatched160 ) {
+                if ( synPredMatched159 ) {
                     nls();
                     enumConstant();
                     astFactory.addASTChild(currentAST, returnAST);
@@ -6910,7 +6891,52 @@ inputState.guessing--;
                         try {
                             {
                             nls();
-                            classField();
+                            {
+                            switch ( LA(1)) {
+                            case RCURLY:
+                            {
+                                match(RCURLY);
+                                break;
+                            }
+                            case FINAL:
+                            case ABSTRACT:
+                            case STRICTFP:
+                            case LITERAL_static:
+                            case LITERAL_def:
+                            case IDENT:
+                            case LITERAL_class:
+                            case LITERAL_interface:
+                            case LITERAL_enum:
+                            case LITERAL_trait:
+                            case AT:
+                            case LITERAL_void:
+                            case LITERAL_boolean:
+                            case LITERAL_byte:
+                            case LITERAL_char:
+                            case LITERAL_short:
+                            case LITERAL_int:
+                            case LITERAL_float:
+                            case LITERAL_long:
+                            case LITERAL_double:
+                            case LITERAL_private:
+                            case LITERAL_public:
+                            case LITERAL_protected:
+                            case LITERAL_transient:
+                            case LITERAL_native:
+                            case LITERAL_threadsafe:
+                            case LITERAL_synchronized:
+                            case LITERAL_volatile:
+                            case LCURLY:
+                            {
+                                classField();
+                                break;
+                            }
+                            default:
+                            {
+                                throw new NoViableAltException(LT(1), getFilename());
+                            }
+                            }
+                            }
                             }
                         }
                         catch (RecognitionException pe) {
