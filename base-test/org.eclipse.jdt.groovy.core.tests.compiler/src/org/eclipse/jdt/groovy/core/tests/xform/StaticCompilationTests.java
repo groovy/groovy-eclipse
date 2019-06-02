@@ -719,6 +719,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -743,6 +745,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609a() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -767,6 +771,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609b() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -791,6 +797,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609c() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -821,6 +829,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609d() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -851,6 +861,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609e() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "A.groovy",
