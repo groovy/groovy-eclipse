@@ -183,12 +183,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     private boolean isScript; // see buildCompilationUnitScope
 
     public GroovyCompilationUnitDeclaration(
-            ProblemReporter problemReporter,
-            CompilationResult compilationResult,
-            int sourceLength,
-            CompilationUnit compilationUnit,
-            SourceUnit groovySourceUnit,
-            CompilerOptions compilerOptions) {
+            ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength,
+            CompilationUnit compilationUnit, SourceUnit groovySourceUnit, CompilerOptions compilerOptions) {
         super(problemReporter, compilationResult, sourceLength);
         this.compilationUnit = compilationUnit;
         this.groovySourceUnit = groovySourceUnit;
@@ -667,7 +663,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             }
                         }
                         for (TaskEntry taskEntry : allTasksInComment) {
-                            this.problemReporter.referenceContext = this;
+                            problemReporter.referenceContext = this;
                             if (DEBUG_TASK_TAGS) {
                                 log("Adding task " + taskEntry.toString());
                             }
@@ -1332,9 +1328,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // add default constructor if no other constructors exist (and not trait/interface/anonymous)
             if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                /*constructorDecl.annotations = new Annotation[] {
-                    new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(groovy.transform.Generated.class)), -1)
-                };*/
+                try {
+                    constructorDecl.annotations = new Annotation[] {
+                        // TODO: Groovy 2.5+: Replace 'Class.forName("groovy.transform.Generated")' with 'groovy.transform.Generated.class'.
+                        new MarkerAnnotation(createTypeReferenceForClassNode(ClassHelper.make(Class.forName("groovy.transform.Generated"))), -1),
+                    };
+                } catch (ClassNotFoundException ignore) {
+                }
                 LinkedList<Statement> initializerStatements = (LinkedList<Statement>) classNode.getObjectInitializerStatements();
                 if (initializerStatements.isEmpty()) {
                     constructorDecl.bits |= ASTNode.IsDefaultConstructor;

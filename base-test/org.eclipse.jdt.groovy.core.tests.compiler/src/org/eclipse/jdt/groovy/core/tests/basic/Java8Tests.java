@@ -101,7 +101,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Annos({@Anno(\"one\"), @Anno(\"two\")}) class Main {\n" +
-            "  public Main() {\n" +
+            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
             "  }\n" +
             "}\n");
 
@@ -141,7 +141,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Anno(\"one\") @Anno(\"two\") class Main {\n" +
-            "  public Main() {\n" +
+            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
             "  }\n" +
             "}\n");
 

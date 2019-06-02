@@ -56,7 +56,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public @B class A {\n" +
-            "  public A() {\n" +
+            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
             "  }\n" +
             "  public static void main(String... argv) {\n" +
             "  }\n" +
@@ -827,7 +827,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("Other.groovy",
             "public class Other {\n" +
             "  public @Anno Date me;\n" +
-            "  public Other() {\n" +
+            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Other() {\n" +
             "  }\n" +
             "}\n");
     }
