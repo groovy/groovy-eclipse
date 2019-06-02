@@ -1436,6 +1436,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                                 message,
                         overridingMethod);
             }
+            // GRECLIPSE add -- GROOVY-8955
+            if (overridingMethod.isDynamicReturnType() && normalEqualParameters) {
+                overridingMethod.setReturnType(cleanType(omr));
+                return null;
+            }
+            // GRECLIPSE end
         }
 
         // if we reach this point we have at least one parameter or return type, that
