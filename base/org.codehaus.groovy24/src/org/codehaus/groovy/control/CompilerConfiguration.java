@@ -25,12 +25,14 @@ import org.codehaus.groovy.control.messages.WarningMessage;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -77,7 +79,125 @@ public class CompilerConfiguration {
      *  make a suitable copy to modify.  But if you're really starting from a
      *  default context, then you probably just want <code>new CompilerConfiguration()</code>.
      */
-    public static final CompilerConfiguration DEFAULT = new CompilerConfiguration();
+    public static final CompilerConfiguration DEFAULT = new CompilerConfiguration() {
+        @Override
+        public List<String> getClasspath() {
+            return Optional.ofNullable(super.getClasspath()).map(Collections::unmodifiableList).orElse(null);
+        }
+        @Override
+        public List<CompilationCustomizer> getCompilationCustomizers() {
+            return Collections.unmodifiableList(super.getCompilationCustomizers());
+        }
+        @Override
+        public Set<String> getDisabledGlobalASTTransformations() {
+            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
+        }
+        @Override
+        public Map<String, Object> getJointCompilationOptions() {
+            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
+        }
+        @Override
+        public Map<String, Boolean> getOptimizationOptions() {
+            return Optional.ofNullable(super.getOptimizationOptions()).map(Collections::unmodifiableMap).orElse(null);
+        }
+        @Override
+        public Set<String> getScriptExtensions() {
+            return Optional.ofNullable(super.getScriptExtensions()).map(Collections::unmodifiableSet).orElse(null);
+        }
+
+        @Override
+        public void setBytecodePostprocessor(BytecodeProcessor bytecodePostprocessor) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setClasspath(String classpath) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setClasspathList(List<String> parts) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public CompilerConfiguration addCompilationCustomizers(CompilationCustomizer... customizers) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setDebug(boolean debug) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setDefaultScriptExtension(String defaultScriptExtension) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setDisabledGlobalASTTransformations(Set<String> disabledGlobalASTTransformations) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setJointCompilationOptions(Map<String, Object> options) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setMinimumRecompilationInterval(int time) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setOptimizationOptions(Map<String, Boolean> options) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setOutput(PrintWriter output) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setParameters(boolean parameters) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setPluginFactory(ParserPluginFactory pluginFactory) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setRecompileGroovySource(boolean recompile) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setScriptBaseClass(String scriptBaseClass) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setScriptExtensions(Set<String> scriptExtensions) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setSourceEncoding(String encoding) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setTargetBytecode(String version) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setTargetDirectory(File directory) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setTargetDirectory(String directory) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setTolerance(int tolerance) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setVerbose(boolean verbose) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public void setWarningLevel(int level) {
+            throw new UnsupportedOperationException();
+        }
+    };
 
     /**
      * See {@link WarningMessage} for levels.
@@ -179,42 +299,49 @@ public class CompilerConfiguration {
         //
         // Set in safe defaults
 
-        setWarningLevel(WarningMessage.LIKELY_ERRORS);
-        setOutput(null);
-        setTargetDirectory((File) null);
-        setClasspath("");
-        setVerbose(false);
-        setDebug(false);
-        setTolerance(10);
-        setScriptBaseClass(null);
-        setRecompileGroovySource(false);
-        setMinimumRecompilationInterval(100);
-        // Target bytecode
+        //setWarningLevel(WarningMessage.LIKELY_ERRORS);
+        warningLevel = WarningMessage.LIKELY_ERRORS;
+        //setOutput(null);
+        //setTargetDirectory((File) null);
+        //setClasspath("");
+        classpath = new LinkedList<>();
+        //setVerbose(false);
+        //setDebug(false);
+        //setTolerance(10);
+        tolerance = 10;
+        //setScriptBaseClass(null);
+        //setRecompileGroovySource(false);
+        //setMinimumRecompilationInterval(100);
+        minimumRecompilationInterval = 100;
+
         String targetByteCode = null;
         try {
-            targetByteCode = System.getProperty("groovy.target.bytecode", targetByteCode);
+            targetByteCode = System.getProperty("groovy.target.bytecode");
         } catch (Exception e) {
             // IGNORE
         }
-        if(targetByteCode != null) {
-            setTargetBytecode(targetByteCode);
+        if (targetByteCode != null) {
+            //setTargetBytecode(targetByteCode);
+            this.targetBytecode = targetByteCode;
         } else {
-            setTargetBytecode(getMinBytecodeVersion());
+            //setTargetBytecode(getMinBytecodeVersion());
+            this.targetBytecode = getMinBytecodeVersion();
         }
+
         String tmpDefaultScriptExtension = null;
         try {
             tmpDefaultScriptExtension = System.getProperty("groovy.default.scriptExtension");
         } catch (Exception e) {
             // IGNORE
         }
-        if(tmpDefaultScriptExtension != null) {
-            setDefaultScriptExtension(tmpDefaultScriptExtension);
+        if (tmpDefaultScriptExtension != null) {
+            //setDefaultScriptExtension(tmpDefaultScriptExtension);
+            this.defaultScriptExtension = tmpDefaultScriptExtension;
         } else {
-            setDefaultScriptExtension(".groovy");
+            //setDefaultScriptExtension(".groovy");
+            this.defaultScriptExtension = ".groovy";
         }
 
-        //
-        // Source file encoding
         String encoding = null;
         try {
             encoding = System.getProperty("file.encoding", DEFAULT_SOURCE_ENCODING);
@@ -226,18 +353,21 @@ public class CompilerConfiguration {
         } catch (Exception e) {
             // IGNORE
         }
-        setSourceEncoding(encoding);
+        //setSourceEncoding(encoding);
+        this.sourceEncoding = encoding != null ? encoding : DEFAULT_SOURCE_ENCODING;
 
         try {
-            setOutput(new PrintWriter(System.err));
+            //setOutput(new PrintWriter(System.err));
+            output = new PrintWriter(System.err);
         } catch (Exception e) {
-            // IGNORE
+            output = new PrintWriter(NullWriter.DEFAULT);
         }
 
         try {
             String target = System.getProperty("groovy.target.directory");
-            if (target != null) {
+            if (target != null && !target.isEmpty()) {
                 setTargetDirectory(target);
+                targetDirectory = new File(target);
             }
         } catch (Exception e) {
             // IGNORE
@@ -249,14 +379,15 @@ public class CompilerConfiguration {
         } catch (Exception e) {
             // IGNORE
         }
-        if (DEFAULT!=null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(INVOKEDYNAMIC))) {
+        if (DEFAULT != null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(INVOKEDYNAMIC))) {
             indy = true;
         }
-        Map options = new HashMap<String,Boolean>(3);
+        Map options = new HashMap<>(3);
         if (indy) {
             options.put(INVOKEDYNAMIC, Boolean.TRUE);
         }
-        setOptimizationOptions(options);
+        //setOptimizationOptions(options);
+        optimizationOptions = options;
     }
 
     /**
@@ -798,7 +929,7 @@ public class CompilerConfiguration {
      */
     public CompilerConfiguration addCompilationCustomizers(CompilationCustomizer... customizers) {
         if (customizers==null) throw new IllegalArgumentException("provided customizers list must not be null");
-        compilationCustomizers.addAll(Arrays.asList(customizers));
+        Collections.addAll(compilationCustomizers, customizers);
         return this;
     }
 
