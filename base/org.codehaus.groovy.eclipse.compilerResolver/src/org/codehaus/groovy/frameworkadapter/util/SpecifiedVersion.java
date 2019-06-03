@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.frameworkadapter.util;
+
+import java.util.Objects;
 
 import org.osgi.framework.Version;
 
@@ -40,7 +42,7 @@ public enum SpecifiedVersion {
     SpecifiedVersion(int majorVersion, int minorVersion, String versionName) {
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
-        this.versionName = versionName;
+        this.versionName = Objects.requireNonNull(versionName);
     }
 
     public String toVersionString() {
@@ -48,11 +50,12 @@ public enum SpecifiedVersion {
     }
 
     public String toReadableVersionString() {
-        if (this == UNSPECIFIED) {
+        switch (this) {
+        case UNSPECIFIED:
             return "unspecified";
-        } else if (this == DONT_CARE) {
+        case DONT_CARE:
             return "I don't care";
-        } else {
+        default:
             return majorVersion + "." + minorVersion;
         }
     }
@@ -60,8 +63,7 @@ public enum SpecifiedVersion {
     /**
      * Generates a {@link SpecifiedVersion} from a name of a groovy jar.
      *
-     * @param jarName the name of a jar
-     * @return the {@link SpecifiedVersion} if known. Will return {@link UNSPECIFIED} if not known
+     * @return the {@link SpecifiedVersion} if known or {@link UNSPECIFIED}.
      */
     public static SpecifiedVersion parseVersion(String jarName) {
         boolean groovyStart = jarName.startsWith("groovy-");
@@ -87,6 +89,8 @@ public enum SpecifiedVersion {
                             return _17;
                         case 8:
                             return _18;
+                        case 9:
+                            return _19;
                         }
                         break;
                     case 2:
@@ -113,8 +117,7 @@ public enum SpecifiedVersion {
                             return _30;
                         }
                     }
-                } catch (NumberFormatException e) {
-                    // can ignore just return unspecified
+                } catch (NumberFormatException ignore) {
                 }
             }
         }
@@ -122,54 +125,59 @@ public enum SpecifiedVersion {
     }
 
     public static SpecifiedVersion findVersionFromString(String compilerLevel) {
-        if (compilerLevel == null) {
-            return UNSPECIFIED;
-        }
-        if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
-            return _16;
-        }
-        if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
-            return _17;
-        }
-        if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
-            return _18;
-        }
-        if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
-            return _19;
-        }
-        if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
-            return _20;
-        }
-        if ("21".equals(compilerLevel) || "2.1".equals(compilerLevel)) {
-            return _21;
-        }
-        if ("22".equals(compilerLevel) || "2.2".equals(compilerLevel)) {
-            return _22;
-        }
-        if ("23".equals(compilerLevel) || "2.3".equals(compilerLevel)) {
-            return _23;
-        }
-        if ("24".equals(compilerLevel) || "2.4".equals(compilerLevel)) {
-            return _24;
-        }
-        if ("25".equals(compilerLevel) || "2.5".equals(compilerLevel)) {
-            return _25;
-        }
-        if ("26".equals(compilerLevel) || "2.6".equals(compilerLevel)) {
-            return _26;
-        }
-        if ("30".equals(compilerLevel) || "3.0".equals(compilerLevel)) {
-            return _30;
-        }
-        if ("0".equals(compilerLevel)) {
-            return UNSPECIFIED;
-        }
-        if ("-1".equals(compilerLevel)) {
-            return DONT_CARE;
+        if (compilerLevel != null) {
+            switch (compilerLevel) {
+            case "-1":
+                return DONT_CARE;
+
+            case "16":
+            case "1.6":
+                return _16;
+
+            case "17":
+            case "1.7":
+                return _17;
+
+            case "18":
+            case "1.8":
+                return _18;
+
+            case "19":
+            case "1.9":
+                return _19;
+
+            case "20":
+            case "2.0":
+                return _20;
+
+            case "21":
+            case "2.1":
+                return _21;
+
+            case "22":
+            case "2.2":
+                return _22;
+
+            case "23":
+            case "2.3":
+                return _23;
+
+            case "24":
+            case "2.4":
+                return _24;
+
+            case "25":
+            case "2.5":
+                return _25;
+
+            case "30":
+            case "3.0":
+                return _30;
+            }
         }
 
-        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + "\n" +
-            "Must be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30 or 3.0");
+        System.out.println("Invalid Groovy compiler level: " + compilerLevel +
+            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26, 2.6, 30 or 3.0");
 
         return UNSPECIFIED;
     }
@@ -184,6 +192,8 @@ public enum SpecifiedVersion {
                 return _17;
             case 8:
                 return _18;
+            case 9:
+                return _19;
             }
             break;
         case 2:
