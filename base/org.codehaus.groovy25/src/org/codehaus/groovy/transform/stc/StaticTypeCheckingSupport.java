@@ -57,6 +57,7 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,6 +68,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -155,12 +157,12 @@ import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_EQUAL;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED_EQUAL;
+
 /**
  * Static support methods for {@link StaticTypeCheckingVisitor}.
  */
 public abstract class StaticTypeCheckingSupport {
-    protected static final ClassNode
-            Collection_TYPE = makeWithoutCaching(Collection.class);
+    protected static final ClassNode Collection_TYPE = makeWithoutCaching(Collection.class);
     protected static final ClassNode Deprecated_TYPE = makeWithoutCaching(Deprecated.class);
     protected static final ClassNode Matcher_TYPE = makeWithoutCaching(Matcher.class);
     protected static final ClassNode ArrayList_TYPE = makeWithoutCaching(ArrayList.class);
@@ -1193,7 +1195,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     private static Parameter[] makeRawTypes(Parameter[] params, Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {
-
+        /* GRECLIPSE edit -- GROOVY-9074
         Parameter[] newParam = new Parameter[params.length];
         for (int i = 0; i < params.length; i++) {
             Parameter oldP = params[i];
@@ -1203,6 +1205,16 @@ public abstract class StaticTypeCheckingSupport {
             newParam[i] = newP;
         }
         return newParam;
+        */
+        return Arrays.stream(params).map(param -> {
+            String name = param.getType().getUnresolvedName();
+            Optional<GenericsType> value = genericsPlaceholderAndTypeMap.entrySet().stream()
+                .filter(e -> e.getKey().getName().equals(name)).findFirst().map(e -> e.getValue());
+            ClassNode type = value.map(GenericsType::getType).orElseGet(() -> makeRawType(param.getType()));
+
+            return new Parameter(type, param.getName());
+        }).toArray(Parameter[]::new);
+        // GRECLIPSE end
     }
 
     private static ClassNode makeRawType(final ClassNode receiver) {

@@ -823,7 +823,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <TreeMap>] \n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <TreeMap>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -855,7 +855,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <HashMap>] \n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <HashMap>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -887,7 +887,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 11)\n" +
             "\tassert record.is(a.getFirstRecord(list))\n" +
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call A <ArrayList, HashMap>#getFirstRecord(T) with arguments [java.util.ArrayList <HashMap>] \n" +
+            "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <HashMap>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -1989,7 +1989,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9074
     public void testCompileStatic9074b() {
         //@formatter:off
         String[] sources = {

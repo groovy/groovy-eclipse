@@ -19,6 +19,7 @@
 
 package org.codehaus.groovy.transform.stc;
 
+import org.apache.groovy.util.Maps;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -58,6 +59,7 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -68,6 +70,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -160,55 +163,46 @@ import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_EQUAL;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED_EQUAL;
+
 /**
  * Static support methods for {@link StaticTypeCheckingVisitor}.
  */
 public abstract class StaticTypeCheckingSupport {
-    protected static final ClassNode
-            Collection_TYPE = makeWithoutCaching(Collection.class);
+    protected static final ClassNode Collection_TYPE = makeWithoutCaching(Collection.class);
     protected static final ClassNode Deprecated_TYPE = makeWithoutCaching(Deprecated.class);
     protected static final ClassNode Matcher_TYPE = makeWithoutCaching(Matcher.class);
     protected static final ClassNode ArrayList_TYPE = makeWithoutCaching(ArrayList.class);
     protected static final ExtensionMethodCache EXTENSION_METHOD_CACHE = new ExtensionMethodCache();
-    protected static final Map<ClassNode, Integer> NUMBER_TYPES = Collections.unmodifiableMap(
-            new HashMap<ClassNode, Integer>() {
-                private static final long serialVersionUID = 8841951852732042766L;
 
-                {
-                    put(byte_TYPE, 0);
-                    put(Byte_TYPE, 0);
-                    put(short_TYPE, 1);
-                    put(Short_TYPE, 1);
-                    put(int_TYPE, 2);
-                    put(Integer_TYPE, 2);
-                    put(Long_TYPE, 3);
-                    put(long_TYPE, 3);
-                    put(float_TYPE, 4);
-                    put(Float_TYPE, 4);
-                    put(double_TYPE, 5);
-                    put(Double_TYPE, 5);
-                }
-            });
+    protected static final Map<ClassNode, Integer> NUMBER_TYPES = Maps.of(
+        byte_TYPE,    0,
+        Byte_TYPE,    0,
+        short_TYPE,   1,
+        Short_TYPE,   1,
+        int_TYPE,     2,
+        Integer_TYPE, 2,
+        Long_TYPE,    3,
+        long_TYPE,    3,
+        float_TYPE,   4,
+        Float_TYPE,   4,
+        double_TYPE,  5,
+        Double_TYPE,  5
+    );
 
-    protected static final Map<String, Integer> NUMBER_OPS = Collections.unmodifiableMap(
-            new HashMap<String, Integer>() {
-                private static final long serialVersionUID = 6951856193525808411L;
-
-                {
-                    put("plus", PLUS);
-                    put("minus", MINUS);
-                    put("multiply", MULTIPLY);
-                    put("div", DIVIDE);
-                    put("or", BITWISE_OR);
-                    put("and", BITWISE_AND);
-                    put("xor", BITWISE_XOR);
-                    put("mod", MOD);
-                    put("intdiv", INTDIV);
-                    put("leftShift", LEFT_SHIFT);
-                    put("rightShift", RIGHT_SHIFT);
-                    put("rightShiftUnsigned", RIGHT_SHIFT_UNSIGNED);
-                }
-            });
+    protected static final Map<String, Integer> NUMBER_OPS = Maps.of(
+        "plus",       PLUS,
+        "minus",      MINUS,
+        "multiply",   MULTIPLY,
+        "div",        DIVIDE,
+        "or",         BITWISE_OR,
+        "and",        BITWISE_AND,
+        "xor",        BITWISE_XOR,
+        "mod",        MOD,
+        "intdiv",     INTDIV,
+        "leftShift",  LEFT_SHIFT,
+        "rightShift", RIGHT_SHIFT,
+        "rightShiftUnsigned", RIGHT_SHIFT_UNSIGNED
+    );
 
     protected static final ClassNode GSTRING_STRING_CLASSNODE = WideningCategories.lowestUpperBound(
             STRING_TYPE,
@@ -1201,7 +1195,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     private static Parameter[] makeRawTypes(Parameter[] params, Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {
-
+        /* GRECLIPSE edit -- GROOVY-9074
         Parameter[] newParam = new Parameter[params.length];
         for (int i = 0; i < params.length; i++) {
             Parameter oldP = params[i];
@@ -1211,6 +1205,16 @@ public abstract class StaticTypeCheckingSupport {
             newParam[i] = newP;
         }
         return newParam;
+        */
+        return Arrays.stream(params).map(param -> {
+            String name = param.getType().getUnresolvedName();
+            Optional<GenericsType> value = genericsPlaceholderAndTypeMap.entrySet().stream()
+                .filter(e -> e.getKey().getName().equals(name)).findFirst().map(e -> e.getValue());
+            ClassNode type = value.map(GenericsType::getType).orElseGet(() -> makeRawType(param.getType()));
+
+            return new Parameter(type, param.getName());
+        }).toArray(Parameter[]::new);
+        // GRECLIPSE end
     }
 
     private static ClassNode makeRawType(final ClassNode receiver) {
