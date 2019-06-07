@@ -505,6 +505,12 @@ public class EvaluationTest extends AbstractCompilerTest implements StopableTest
 		this.env = evalSetUp.env;
 	}
 
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		assertNotNull("Evaluation context is null, probably VM connection error", this.context);
+	}
+
 	/**
 	 * Installs all the variables and check that the number of installed variables is the given number.
 	 */

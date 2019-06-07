@@ -87,6 +87,8 @@ public class EvaluationSetup extends CompilerTestSetup {
 				
 				assertTrue("Failed to connect VM server", this.target.isConnected());
 
+				System.out.println(getName() + ": connected to target");
+
 				// Create name environment
 				this.env = new FileSystem(Util.getJavaClassLibs(), new String[0], null);
 			} catch (IOException e1) {

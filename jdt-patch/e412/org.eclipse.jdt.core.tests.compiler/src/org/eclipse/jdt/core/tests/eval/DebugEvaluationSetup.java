@@ -13,6 +13,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.eval;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -57,19 +59,22 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 					launcher.setDebugPort(debugPort);
 					this.launchedVM = launcher.launch();
 				} catch (TargetException e) {
-					throw new Error(e.getMessage());
+					e.printStackTrace();
+					throw new Error(e.getMessage(), e);
 				}
 	
 				// Thread that read the stout of the VM so that the VM doesn't block
 				try {
 					startReader("VM's stdout reader", this.launchedVM.getInputStream(), System.out);
 				} catch (TargetException e) {
+					e.printStackTrace();
 				}
 	
 				// Thread that read the sterr of the VM so that the VM doesn't block
 				try {
 					startReader("VM's sterr reader", this.launchedVM.getErrorStream(), System.err);
 				} catch (TargetException e) {
+					e.printStackTrace();
 				}
 	
 				// Start JDI connection (try 10 times)
@@ -77,8 +82,10 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 					try {
 						VirtualMachineManager manager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
 						List connectors = manager.attachingConnectors();
-						if (connectors.size() == 0)
+						if (connectors.size() == 0) {
+							System.err.println(getName() + ": could not get attachingConnectors() from VM");
 							break;
+						}
 						AttachingConnector connector = (AttachingConnector)connectors.get(0);
 						Map args = connector.defaultArguments();
 						Connector.Argument argument = (Connector.Argument)args.get("port");
@@ -91,27 +98,22 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 						}
 						argument = (Connector.Argument)args.get("timeout");
 						if (argument != null) {
-							argument.setValue("10000");
+							argument.setValue("20000");
 						}
 						this.vm = connector.attach(args);
-	
+						System.out.println(getName() + ": connected to VM using port " + debugPort);
+						
 						// workaround pb with some VMs
 						this.vm.resume();
 	
 						break;
-					} catch (IllegalConnectorArgumentsException e) {
+					} catch (IllegalConnectorArgumentsException | IOException e) {
 						e.printStackTrace();
 						try {
-							System.out.println("Could not contact the VM at " + launcher.getTargetAddress() + ":" + debugPort + ". Retrying...");
+							System.out.println(getName() + ": could not contact the VM at " + launcher.getTargetAddress() + ":" + debugPort + ". Retrying...");
 							Thread.sleep(100);
 						} catch (InterruptedException e2) {
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-						try {
-							System.out.println("Could not contact the VM at " + launcher.getTargetAddress() + ":" + debugPort + ". Retrying...");
-							Thread.sleep(100);
-						} catch (InterruptedException e2) {
+							e2.printStackTrace();
 						}
 					}
 				}
@@ -128,8 +130,8 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 										System.out.print((char)read);
 								} while (read != -1);
 							}
-						} catch (TargetException e) {
-						} catch (IOException e) {
+						} catch (TargetException | IOException e) {
+							e.printStackTrace();
 						}
 	
 						// Shut it down
@@ -142,15 +144,17 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 								try {
 									Thread.sleep(retry * 100);
 								} catch (InterruptedException e) {
+									e.printStackTrace();
 								}
 							}
 							if (this.launchedVM.isRunning()) {
 								this.launchedVM.shutDown();
 							}
 						} catch (TargetException e) {
+							e.printStackTrace();
 						}
 					}
-					System.err.println("Could not contact the VM");
+					System.err.println(getName() + ": could not contact the VM");
 					return;
 				}
 	
@@ -159,12 +163,19 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 	
 				// Create target
 				this.target = new TargetInterface();
-				this.target.connect(evalServer, 30000); // allow 30s max to connect (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=188127)
+				
+				// allow 30s max to connect (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=188127)
+				// Increased to 60 s for https://bugs.eclipse.org/bugs/show_bug.cgi?id=547417
+				this.target.connect(evalServer, 60000); 
 	
+				assertTrue(getName() + ": failed to connect VM server", this.target.isConnected());
+				
+				System.out.println(getName() + ": connected to target using port " + debugPort);
+				
 				// Create name environment
 				this.env = new FileSystem(Util.getJavaClassLibs(), new String[0], null);
 			} catch (IOException e1) {
-				throw new Error("Failed to open socket", e1);
+				throw new Error(getName() + ": Failed to open socket", e1);
 			}
 		}
 		super.setUp();

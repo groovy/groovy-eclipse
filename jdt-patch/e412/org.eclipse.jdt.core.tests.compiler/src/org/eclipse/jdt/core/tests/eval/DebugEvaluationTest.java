@@ -175,10 +175,15 @@ public class DebugEvaluationTest extends EvaluationTest {
 	}
 	public void initialize(CompilerTestSetup setUp) {
 		super.initialize(setUp);
-		if (setUp instanceof DebugEvaluationSetup) {
-			this.jdiVM = ((DebugEvaluationSetup)setUp).vm;
-		}
+		this.jdiVM = ((DebugEvaluationSetup)setUp).vm;
 	}
+
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		assertNotNull("VM is null, probably VM connection error", this.jdiVM);
+	}
+
 	public void removeTempClass(String className) {
 		resetEnv(); // needed to reinitialize the caches
 		Util.delete(SOURCE_DIRECTORY + File.separator + className + ".java");
