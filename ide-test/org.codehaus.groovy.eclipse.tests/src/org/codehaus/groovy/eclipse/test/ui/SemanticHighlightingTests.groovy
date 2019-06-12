@@ -185,6 +185,34 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/905
+    void testCtors() {
+        String contents = '''\
+            import groovy.transform.PackageScope
+            class Example {
+              Example() {}
+              public Example(a) {}
+              private Example(b, c) {}
+              protected Example(d, e, f) {}
+              @PackageScope Example(... geez) {}
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Example('), 7, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('public Example') + 'public '.length(), 7, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('private Example') + 'private '.length(), 7, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('protected Example') + 'protected '.length(), 7, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('@PackageScope Example') + '@PackageScope '.length(), 7, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('a)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('b,'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('c)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('d,'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('e,'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('f)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('geez'), 4, PARAMETER))
+    }
+
     @Test
     void testMethods() {
         String contents = '''\
