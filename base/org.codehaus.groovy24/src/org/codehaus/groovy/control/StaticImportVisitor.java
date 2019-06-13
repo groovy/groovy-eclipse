@@ -495,7 +495,10 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (expression != null) return expression;
             expression = findStaticPropertyAccessorGivenArgs(importNode.getType(), getPropNameForAccessor(importNode.getFieldName()), args);
             if (expression != null) {
-                return new StaticMethodCallExpression(importNode.getType(), importNode.getFieldName(), args);
+                // GRECLIPSE edit
+                //return new StaticMethodCallExpression(importNode.getType(), importNode.getFieldName(), args);
+                return newStaticMethodCallX(importNode.getType(), importNode.getFieldName(), args);
+                // GRECLIPSE end
             }
         }
         // look for one of these:
@@ -509,7 +512,10 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 if (expression != null) return expression;
                 expression = findStaticPropertyAccessorGivenArgs(importNode.getType(), importNode.getFieldName(), args);
                 if (expression != null) {
-                    return new StaticMethodCallExpression(importNode.getType(), prefix(name) + capitalize(importNode.getFieldName()), args);
+                    // GRECLIPSE edit
+                    //return new StaticMethodCallExpression(importNode.getType(), prefix(name) + capitalize(importNode.getFieldName()), args);
+                    return newStaticMethodCallX(importNode.getType(), prefix(name) + capitalize(importNode.getFieldName()), args);
+                    // GRECLIPSE end
                 }
             }
         }
@@ -527,7 +533,10 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 if (expression != null) return expression;
                 expression = findStaticPropertyAccessorGivenArgs(starImportType, getPropNameForAccessor(name), args);
                 if (expression != null) {
-                    return new StaticMethodCallExpression(starImportType, name, args);
+                    // GRECLIPSE edit
+                    //return new StaticMethodCallExpression(starImportType, name, args);
+                    return newStaticMethodCallX(starImportType, name, args);
+                    // GRECLIPSE end
                 }
             }
         }
@@ -567,9 +576,15 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         if (accessor == null && hasStaticProperty(staticImportType, propName)) {
             // args will be replaced
             if (inLeftExpression)
-                accessor = new StaticMethodCallExpression(staticImportType, accessorName, ArgumentListExpression.EMPTY_ARGUMENTS);
+                // GRECLIPSE edit
+                //accessor = new StaticMethodCallExpression(staticImportType, accessorName, ArgumentListExpression.EMPTY_ARGUMENTS);
+                accessor = newStaticMethodCallX(staticImportType, accessorName, ArgumentListExpression.EMPTY_ARGUMENTS);
+                // GRECLIPSE end
             else
-                accessor = new PropertyExpression(new ClassExpression(staticImportType), propName);
+                // GRECLIPSE edit
+                //accessor = new PropertyExpression(new ClassExpression(staticImportType), propName);
+                accessor = newStaticPropertyX(staticImportType, propName);
+                // GRECLIPSE end
         }
         return accessor;
     }
@@ -600,7 +615,10 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         if (staticImportType.isPrimaryClassNode() || staticImportType.isResolved()) {
             FieldNode field = getField(staticImportType, fieldName);
             if (field != null && field.isStatic())
-                return new PropertyExpression(new ClassExpression(staticImportType), fieldName);
+                // GRECLIPSE edit
+                //return new PropertyExpression(new ClassExpression(staticImportType), fieldName);
+                return newStaticPropertyX(staticImportType, fieldName);
+                // GRECLIPSE end
         }
         return null;
     }
@@ -626,11 +644,24 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private static Expression findStaticMethod(ClassNode staticImportType, String methodName, Expression args) {
         if (staticImportType.isPrimaryClassNode() || staticImportType.isResolved()) {
             if (staticImportType.hasPossibleStaticMethod(methodName, args)) {
-                return new StaticMethodCallExpression(staticImportType, methodName, args);
+                // GRECLIPSE edit
+                //return new StaticMethodCallExpression(staticImportType, methodName, args);
+                return newStaticMethodCallX(staticImportType, methodName, args);
+                // GRECLIPSE end
             }
         }
         return null;
     }
+
+    // GRECLIPSE add
+    private static PropertyExpression newStaticPropertyX(ClassNode type, String name) {
+        return new PropertyExpression(new ClassExpression(type.getPlainNodeReference()), name);
+    }
+
+    private static StaticMethodCallExpression newStaticMethodCallX(ClassNode type, String name, Expression args) {
+        return new StaticMethodCallExpression(type.getPlainNodeReference(), name, args);
+    }
+    // GRECLIPSE end
 
     protected SourceUnit getSourceUnit() {
         return source;
