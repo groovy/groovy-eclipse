@@ -1457,13 +1457,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         ClassNode type = ClassHelper.DYNAMIC_TYPE;
         if (isType(TYPE, node)) {
             type = makeTypeWithArguments(node);
-            // GROOVY edit
+            // GRECLIPSE edit
             //if (variableParameterDef) type = type.makeArray();
             if (variableParameterDef) {
                 type = type.makeArray();
                 configureAST(type, node);
             }
-            // GROOVY end
+            // GRECLIPSE end
             node = node.getNextSibling();
         }
 
@@ -3611,6 +3611,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE edit -- retain generics
                 //answer = makeType(node).makeArray();
                 answer = makeTypeWithArguments(node).makeArray();
+                configureAST(answer, node);
+                if (getController() != null) {
+                    // check for trailing whitespace
+                    GroovySourceAST root = (GroovySourceAST) node;
+                    int start = locations.findOffset(root.getLine(), root.getColumn());
+                    int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
+                    char[] sourceChars = getController().readSourceRange(start, until - start);
+                    if (sourceChars != null) {
+                        int idx = (sourceChars.length - 1), off = until;
+                        while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
+                            idx -= 1; off -= 1;
+                        }
+                        if (off < until) {
+                            int[] row_col = locations.getRowCol(off);
+                            answer.setEnd(off);
+                            answer.setLastLineNumber(row_col[0]);
+                            answer.setLastColumnNumber(row_col[1]);
+                        }
+                    }
+                }
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
@@ -3620,27 +3640,19 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     newAnswer.setRedirect(answer);
                     answer = newAnswer;
                 }
-            }
-            // GRECLIPSE add
-            if (getController() != null) {
-                // check for trailing whitespace
-                GroovySourceAST root = (GroovySourceAST) node;
-                int start = locations.findOffset(root.getLine(), root.getColumn());
-                int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
-                char[] sourceChars = getController().readSourceRange(start, until - start);
-                if (sourceChars != null) {
-                    int idx = (sourceChars.length - 1), off = until;
-                    while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
-                        idx -= 1; off -= 1;
-                    }
-                    if (off < until) {
-                        int[] row_col = locations.getRowCol(off);
-                        root.setLineLast(row_col[0]); root.setColumnLast(row_col[1]);
-                    }
+                // GRECLIPSE add
+                configureAST(answer, node);
+                if (isType(DOT, node)) { // exclude generics from end position
+                    GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+                    answer.setLastLineNumber(type.getLineLast());
+                    answer.setLastColumnNumber(type.getColumnLast());
+                    answer.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
                 }
+                // GRECLIPSE end
             }
-            // GRECLIPSE end
+            /* GRECLIPSE edit
             configureAST(answer, node);
+            */
         }
         return answer;
     }
