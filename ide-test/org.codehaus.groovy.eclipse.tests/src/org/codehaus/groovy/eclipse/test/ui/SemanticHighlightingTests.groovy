@@ -42,6 +42,42 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testArrays() {
+        String contents = '''\
+            def strings = new String[42]
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('42'), 2, NUMBER))
+    }
+
+    @Test
+    void testArrays2() {
+        String contents = '''\
+            String[] strings = [] as String[]
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS))
+    }
+
+    @Test
+    void testArrays3() {
+        String contents = '''\
+            java.lang.String[] strings = (String[]) null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS))
+    }
+
+    @Test
     void testFields() {
         String contents = '''\
             class X {
@@ -53,10 +89,15 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('one'), 'one'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('four'), 'four'.length(), FIELD))
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Collection'), 10, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('four'), 4, FIELD))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/876
@@ -77,9 +118,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('getString'), 'getString'.length(), UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('setString'), 'setString'.length(), UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('getString'), 9, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('setString'), 9, UNKNOWN))
     }
 
     @Test
@@ -90,6 +133,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('List'), 4, INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('list'), 4, FIELD),
@@ -106,10 +150,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('one'), 'one'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), FIELD),
-            new HighlightedTypedPosition(contents.indexOf('1234'), '1234'.length(), NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), FIELD))
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('1234'), 4, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD))
     }
 
     @Test
@@ -123,6 +170,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('FOO'), 3, STATIC_FIELD),
             new HighlightedTypedPosition(contents.indexOf('FOO;'), 3, STATIC_FIELD),
@@ -139,7 +187,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         // Math is a class, ObjectStreamConstants is an interface
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Math'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('PI'), 2, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('ObjectStreamConstants'), 'ObjectStreamConstants'.length(), INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('STREAM_MAGIC'), 'STREAM_MAGIC'.length(), STATIC_VALUE))
     }
 
@@ -176,12 +226,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('VALUE'), 5, STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('foo'), 3, STATIC_METHOD),
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('foo')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('Inner'), 5, CLASS),
             new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('bar')), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('SamePack'), 8, CLASS),
             new HighlightedTypedPosition(contents.indexOf('baz'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('VALUE', contents.indexOf('baz')), 5, STATIC_VALUE))
     }
 
@@ -199,6 +253,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Example'), 7, CLASS),
             new HighlightedTypedPosition(contents.indexOf('Example('), 7, CTOR),
             new HighlightedTypedPosition(contents.indexOf('public Example') + 'public '.length(), 7, CTOR),
             new HighlightedTypedPosition(contents.indexOf('private Example') + 'private '.length(), 7, CTOR),
@@ -227,6 +282,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('a('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('b('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('c('), 1, METHOD),
@@ -248,6 +304,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getClass'), 'getClass'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('getSimpleName'), 'getSimpleName'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.indexOf('getCanonicalName'), 'getCanonicalName'.length(), METHOD_CALL))
@@ -264,11 +323,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('pat'), 3, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('matcher("'), 'matcher'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('Pattern.'), 'Pattern'.length(), CLASS),
+            new HighlightedTypedPosition(contents.indexOf('matcher('), 'matcher'.length(), UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('Pattern', contents.indexOf('""')), 'Pattern'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('matcher(\''), 'matcher'.length(), UNKNOWN),
-            new HighlightedTypedPosition(contents.lastIndexOf('matcher('), 'matcher'.length(), UNKNOWN))
+            new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Pattern', contents.indexOf('pat')), 'Pattern'.length(), CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('pat'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('matcher'), 'matcher'.length(), UNKNOWN))
     }
 
     @Test
@@ -280,8 +342,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('FOO'), 'FOO'.length(), STATIC_METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('FOO'), 'FOO'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('FOO'), 3, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('FOO'), 3, STATIC_CALL))
     }
 
     @Test
@@ -296,9 +359,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('y ='), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('z ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Collections'), 'Collections'.length(), CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('emptyMap'), 'emptyMap'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('z ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('Collections'), 'Collections'.length(), CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('emptySet'), 'emptySet'.length(), STATIC_CALL))
     }
 
@@ -314,6 +380,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('singletonList'), 'singletonList'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('singletonList'), 'singletonList'.length(), STATIC_CALL))
@@ -324,7 +391,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '''\
             import static java.lang.Integer.valueOf
             @groovy.transform.CompileStatic
-            class C {
+            class X {
               String number
               int getN() {
                 valueOf(number) // needs sloc; see MethodCallExpression.setSourcePosition
@@ -333,6 +400,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getN'), 'getN'.length(), METHOD),
             new HighlightedTypedPosition(contents.indexOf('number'), 'number'.length(), FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('number'), 'number'.length(), FIELD),
@@ -377,7 +446,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('f(List'), 1, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('List a'), 4, INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('a,'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('List b'), 4, INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('b '), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('f(int'), 1, STATIC_METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('a,'), 1, PARAMETER),
@@ -395,8 +466,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('ManagementFactory.r'), 'ManagementFactory'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('runtimeMXBean'), 'runtimeMXBean'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.indexOf('inputArguments'), 'inputArguments'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('ManagementFactory.g'), 'ManagementFactory'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('getRuntimeMXBean'), 'getRuntimeMXBean'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
     }
@@ -415,6 +488,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = 'Foo.value'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
             new HighlightedTypedPosition(contents.indexOf('value'), 5, STATIC_CALL))
     }
 
@@ -433,6 +507,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
             new HighlightedTypedPosition(contents.indexOf('value'), 5, STATIC_CALL))
     }
 
@@ -445,19 +520,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         String contents = '''\
             class Foo {
-              def meth(Baz b) {
+              def fun(Baz b) {
                 b.one + b.two
               }
             }
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('b)'),   1, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('b.o'),  1, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('b.t'),  1, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('one'),  3, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('two'),  3, METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('fun'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Baz'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('b) '), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('b.o'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('b.t'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, METHOD_CALL))
     }
 
     @Test
@@ -476,6 +553,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getFoo'), 6, METHOD),
             new HighlightedTypedPosition(contents.indexOf('isBar' ), 5, METHOD),
             new HighlightedTypedPosition(contents.indexOf('setBaz'), 6, METHOD),
@@ -502,6 +581,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getFoo'), 6, STATIC_METHOD),
             new HighlightedTypedPosition(contents.indexOf('isBar' ), 5, STATIC_METHOD),
             new HighlightedTypedPosition(contents.indexOf('setBaz'), 6, STATIC_METHOD),
@@ -527,6 +608,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '(["one", "two"] as String[]).first()'
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('first'), 5, GROOVY_CALL))
     }
 
@@ -547,25 +629,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
             new HighlightedTypedPosition(contents.indexOf('Foo()'), 3, CTOR),
             new HighlightedTypedPosition(contents.indexOf('m() {'), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('getAt'), 5, GROOVY_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('getAt'), 5, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('println'), 7, GROOVY_CALL))
-    }
-
-    @Test
-    void testUseCategoryMethods() {
-        String contents = '''\
-            use(groovy.time.TimeCategory) {
-              new Date().getDaylightSavingsOffset()
-            }
-            '''.stripIndent()
-
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('use'), 3, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 'getDaylightSavingsOffset'.length(), GROOVY_CALL))
     }
 
     @Test
@@ -595,12 +664,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('setThreadLocalProperty'), 'setThreadLocalProperty'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Class'), 5, CLASS),
             new HighlightedTypedPosition(contents.indexOf('target'), 6, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('setter'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Reflections'), 'Reflections'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('findMethod'), 'findMethod'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.indexOf('target,'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Reflections'), 'Reflections'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('invokeMethod'), 'invokeMethod'.length(), STATIC_CALL), // not DGM
             new HighlightedTypedPosition(contents.lastIndexOf('setter'), 6, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('target'), 6, VARIABLE),
@@ -625,9 +701,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('one'), 3, METHOD),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('two'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('three'), 5, METHOD),
@@ -650,7 +728,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('loop'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('n)'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('x ->'), 1, PARAMETER),
@@ -688,10 +767,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('firstName'), 'firstName'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('lastName'), 'lastName'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('p'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 'Person'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CTOR_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY),
@@ -711,13 +793,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('firstName'), 'firstName'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('lastName'), 'lastName'.length(), FIELD),
             new HighlightedTypedPosition(contents.indexOf('Person', contents.indexOf('lastName')), 'Person'.length(), CTOR),
             new HighlightedTypedPosition(contents.indexOf('Person', contents.indexOf('() {}')), 'Person'.length(), CTOR),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('m)'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('p ='), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 'Person'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Person'), 6, CTOR_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('firstName'), 'firstName'.length(), MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('lastName'), 'lastName'.length(), MAP_KEY))
     }
@@ -730,6 +816,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Collections'), 'Collections'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('singletonMap'), 'singletonMap'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY),
             new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), MAP_KEY))
@@ -759,9 +846,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
-            new HighlightedTypedPosition(contents.indexOf('fld'),     3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('var'),     3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('fld'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('fld'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
     }
@@ -778,9 +868,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR),
-            new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
     }
@@ -796,13 +888,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('one'),     3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('two'),     3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('c ='),     1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'),   1, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('c.'),      1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('c ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('c.'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('c.'),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('c.'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('two'), 3, FIELD))
     }
 
@@ -825,17 +920,23 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('zero'),     4, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('z ='),      1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('zero }'),   4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('B'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('setZero'), 7, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('(String') + 1, 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('zero'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('z ='), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('zero }'), 4, PARAMETER),
 
-            new HighlightedTypedPosition(contents.indexOf('x'),        1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('b'),        1, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'),    1, CTOR),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'),    1, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('b'),    1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('B'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('b'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'), 1, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
     }
 
@@ -860,17 +961,23 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('z'),        1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('setZero'),  7, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('zero'),     4, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('z ='),      1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('zero }'),   4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('B'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('setZero'), 7, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('(String') + 1, 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('zero'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('z ='), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('zero }'), 4, PARAMETER),
 
-            new HighlightedTypedPosition(contents.indexOf('x'),        1, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('b'),        1, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('C'),    1, CTOR),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'),    1, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('b'),    1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('C {'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('B'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('b'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('b'), 1, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('zero'), 4, METHOD_CALL))
     }
 
@@ -891,9 +998,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('except'), 'except'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('specific'), 'specific'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('specific'), 'specific'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('except'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('specific'), 8, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('specific'), 8, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('unspecified'), 'unspecified'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('unspecified'), 'unspecified'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL),
@@ -919,10 +1028,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('m()'),    1, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('ex)'),    2, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('ex in'),  2, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('ex //'),  2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m()'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('ex)'), 2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ex in'), 2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('RuntimeException'), 16, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('ex //'), 2, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('ex'), 2, VARIABLE))
     }
 
@@ -1026,8 +1138,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x : '),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('loop'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x : '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
@@ -1045,6 +1159,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'),     1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
@@ -1065,7 +1180,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('loop'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
@@ -1088,11 +1204,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('x ins'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('x // '), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
+            new HighlightedTypedPosition(contents.indexOf('X'),      1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('loop'),   4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('x ins'),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x // '),  1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'),  1, VARIABLE))
     }
 
     @Test
@@ -1291,12 +1409,15 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
             //new HighlightedTypedPosition(contents.indexOf('super'), 5, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('X(S'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('s)'), 1, PARAMETER),
             //new HighlightedTypedPosition(contents.indexOf('this'), 4, CTOR_CALL),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL))
     }
 
@@ -1316,13 +1437,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
             new HighlightedTypedPosition(contents.indexOf('bar'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD),
             new HighlightedTypedPosition(contents.indexOf('y ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('Y()'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Y()'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('why'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('Y'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('Y'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, FIELD),
@@ -1345,12 +1472,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
             new HighlightedTypedPosition(contents.indexOf('X(S'), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('s)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('X)'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('X x1'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x1'), 2, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('x2'), 2, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('X()'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('X x2'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('x2'), 2, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, CTOR_CALL))
     }
 
@@ -1360,6 +1494,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('d'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('Date'), 4, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('new'), 3, CTOR_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('123L'), 4, NUMBER))
     }
@@ -1383,18 +1518,25 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
             new HighlightedTypedPosition(contents.indexOf('ONE'), 3, STATIC_VALUE), // OK?
-            new HighlightedTypedPosition(contents.indexOf('TWO'), 3, STATIC_VALUE), // OK?
             new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('TWO'), 3, STATIC_VALUE), // OK?
+            new HighlightedTypedPosition(contents.indexOf('Math'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('PI'), 2, STATIC_VALUE),
             new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('.val') + 1, 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('= val') + 2, 3, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('X('), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('Number val,'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('val,'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('alt)'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('Number'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('alt'), 3, FIELD))
     }
 
@@ -1414,6 +1556,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
             new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
     }
 
@@ -1437,14 +1580,18 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
             // ensure static $INIT call from line 4 does not result in any highlighting
-            new HighlightedTypedPosition(contents.indexOf('ONE'     ), 3, STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('1'       ), 1, NUMBER      ),
-            new HighlightedTypedPosition(contents.indexOf('meth'    ), 4, METHOD      ),
-            new HighlightedTypedPosition(contents.indexOf('param'   ), 5, PARAMETER   ),
-            new HighlightedTypedPosition(contents.indexOf('X('      ), 1, CTOR        ),
-            new HighlightedTypedPosition(contents.indexOf('val'     ), 3, PARAMETER   ),
-            new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD      ))
+            new HighlightedTypedPosition(contents.indexOf('ONE'), 3, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('ONE'), 3, ENUMERATION), // okay?
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('X('), 1, CTOR),
+            new HighlightedTypedPosition(contents.lastIndexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD))
     }
 
     @Test
@@ -1462,7 +1609,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('module'), 'module'.length(), TAG_KEY),
             new HighlightedTypedPosition(contents.lastIndexOf('value'), 'value'.length(), TAG_KEY),
-            new HighlightedTypedPosition(contents.indexOf('extensions'), 'extensions'.length(), TAG_KEY))
+            new HighlightedTypedPosition(contents.indexOf('extensions'), 'extensions'.length(), TAG_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS))
     }
 
     @Test @Ignore("failing on CI server")
@@ -1495,9 +1643,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD))
     }
 
     @Test
@@ -1518,9 +1669,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 'VALUE'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('VALUE'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD))
     }
 
     @Test
@@ -1542,9 +1694,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('RAW'), 'RAW'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('TYPES'), 'TYPES'.length(), STATIC_VALUE),
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), METHOD))
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('RAW'), 3, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('TYPES'), 5, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD))
     }
 
     @Test
@@ -1560,6 +1713,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, FIELD),
             new HighlightedTypedPosition(contents.indexOf('x('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('j)'), 1, PARAMETER),
@@ -1585,6 +1739,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, FIELD),
             new HighlightedTypedPosition(contents.indexOf('x('), 1, METHOD),
             new HighlightedTypedPosition(contents.indexOf('j)'), 1, PARAMETER),
@@ -1629,11 +1784,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = '''\
             import static java.net.URLEncoder.encode
             @groovy.transform.CompileStatic
-            class SC {
+            class X {
               def url = "/${encode('head','UTF-8')}/tail"
             }
             '''.stripIndent()
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
             new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
@@ -1808,6 +1964,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, DEPRECATED),
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, DEPRECATED))
@@ -1837,6 +1994,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         String contents = 'import other.Java\nJava.CONST'
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('Java'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('CONST'), 'CONST'.length(), DEPRECATED))
     }
 
@@ -2096,13 +2254,15 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('use'),                      3, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('Date'),                     4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('use'), 3, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('TimeCategory'), 12, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getDaylightSavingsOffset'), 24, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1'),                        1, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('minute'),                   6, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('from'),                     4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('now'),                      3, METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('minute'), 6, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('from'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('now'), 3, METHOD_CALL))
     }
 
     @Test
@@ -2121,11 +2281,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Foo'),     3, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('val'),     3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('length'),  6, METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL))
     }
 
     @Test
@@ -2142,15 +2303,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
     }
 
     @Test
@@ -2168,15 +2331,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
     }
 
     @Test
@@ -2194,15 +2359,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Date'),    4, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),    4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
             new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'),    4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'),   5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'),    4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'),   5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
     }
 
     @Test
@@ -2221,11 +2388,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('getReadOnly'), 11, METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('X'),        1, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),         4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('val'),      3, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('readOnly'),     8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('readOnly'), 8, METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('readOnly'), 8, UNKNOWN))
     }
 
@@ -2245,12 +2414,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('setWriteOnly'), 12, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('value'),         5, PARAMETER),
-            new HighlightedTypedPosition(contents.lastIndexOf('X'),         1, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('with'),          4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('val'),       3, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('writeOnly'),     9, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('writeOnly'), 9, UNKNOWN),
             new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))
     }
 
@@ -2264,7 +2435,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('x'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Collection'), 10, INTERFACE),
             new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, FIELD))
     }
@@ -2290,8 +2464,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('id'), 2, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('thing'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Directory'), 9, CLASS),
             new HighlightedTypedPosition(contents.indexOf('lookup'), 6, STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('id'), 2, FIELD))
     }
@@ -2317,10 +2495,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('B'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
             new HighlightedTypedPosition(contents.indexOf('map'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('key'), 3, MAP_KEY),
             new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('B(String '), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('B('), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('field)'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, PARAMETER))
     }
@@ -2335,8 +2517,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('y'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('length'), 'length'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('random'), 'random'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Math'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('random'), 6, STATIC_CALL))
     }
 
     @Test
@@ -2360,6 +2543,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), isAtLeastGroovy(30) ? METHOD_CALL : UNKNOWN))
     }
 
@@ -2373,7 +2557,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
             new HighlightedTypedPosition(contents.indexOf('toHexString'), 'toHexString'.length(), STATIC_CALL))
     }
 
@@ -2382,19 +2568,26 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         // overloads with generics caused confusion in TypeInferencingVisitor
         String contents = '''\
             class X {
-                def findSomething(String string, Set<CharSequence> strings) {
-                }
-                protected def findSomething(Map<String, ? extends Object> inputs) {
-                }
+              def findSomething(String string, Set<CharSequence> strings) {
+              }
+              protected def findSomething(Map<String, ? extends Object> inputs) {
+              }
             }
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('findSomething'), 'findSomething'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('strings'), 'strings'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Set'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('CharSequence'), 'CharSequence'.length(), INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('findSomething'), 'findSomething'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('inputs'), 'inputs'.length(), PARAMETER))
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('inputs'), 6, PARAMETER))
     }
 
     @Test
@@ -2418,21 +2611,27 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         int m3 = contents.indexOf('meth', m2 + 4)
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(m1, 'meth'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('one'), 'one'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('two'), 'two'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('three'), 'three'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('var'), 'var'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('three', contents.indexOf('var')), 'three'.length(), PARAMETER),
-            new HighlightedTypedPosition(m2, 'meth'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('one', m2), 'one'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('two', m2), 'two'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('var', m2), 'var'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('two', contents.indexOf('var', m2)), 'two'.length(), PARAMETER),
-            new HighlightedTypedPosition(m3, 'meth'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('one', m3), 'one'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('var', m3), 'var'.length(), VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('one', contents.indexOf('var', m3)), 'one'.length(), PARAMETER))
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(m1, 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('three'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('three', contents.indexOf('var')), 5, PARAMETER),
+            new HighlightedTypedPosition(m2, 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String', m2), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one', m2), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Object', m2), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('two', m2), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var', m2), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('two', contents.indexOf('var', m2)), 3, PARAMETER),
+            new HighlightedTypedPosition(m3, 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String', m3), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one', m3), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('var', m3), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('one', contents.indexOf('var', m3)), 3, PARAMETER))
     }
 
     @Test
@@ -2452,12 +2651,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), STATIC_METHOD),
-            new HighlightedTypedPosition(contents.indexOf('string'), 'string'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('println'), 'println'.length(), GROOVY_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('method'), 'method'.length(), STATIC_METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('regex'), 'regex'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.lastIndexOf('println'), 'println'.length(), GROOVY_CALL))
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('println'), 7, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('method'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Pattern'), 7, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('regex'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('println'), 7, GROOVY_CALL))
     }
 
     @Test
@@ -2473,7 +2676,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('objectMethod'), 'objectMethod'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param)'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('param;'), 5, PARAMETER))
     }
@@ -2491,9 +2696,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('staticMethod'), 'staticMethod'.length(), STATIC_METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('param)'), 'param'.length(), PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('param +'), 5, PARAMETER))
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, PARAMETER))
     }
 
     @Test
@@ -2517,13 +2724,17 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('method1'), 'method1'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param1'), 'param1'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('method2'), 'method2'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object', contents.indexOf('method2')), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param2'), 'param2'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('method3'), 'method2'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object', contents.indexOf('method3')), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param3'), 'param3'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE))
     }
@@ -2577,10 +2788,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('objectMethod'), 'objectMethod'.length(), METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param'), 'param'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('staticMethod'), 'staticMethod'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('param'), 'param'.length(), PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE))
     }
@@ -2601,25 +2815,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('objectMethod'), 'objectMethod'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('param'), 'param'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('i;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('staticMethod'), 'staticMethod'.length(), STATIC_METHOD),
-            new HighlightedTypedPosition(contents.lastIndexOf('param'), 'param'.length(), PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('j;'), 1, VARIABLE))
     }
 
     @Test
     void testSpockStyleMethods() {
         // make sure these retain string highlighting
-        assertHighlighting('class X { def "test case name"() {} }')
-        assertHighlighting('class X { def \'test case name\'() {} }')
-        assertHighlighting('class X { def """test case name"""() {} }')
-        assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }')
+        assertHighlighting('class X { def "test case name"() {} }', new HighlightedTypedPosition(6, 1, CLASS))
+        assertHighlighting('class X { def \'test case name\'() {} }', new HighlightedTypedPosition(6, 1, CLASS))
+        assertHighlighting('class X { def """test case name"""() {} }', new HighlightedTypedPosition(6, 1, CLASS))
+        assertHighlighting('class X { def \'\'\'test case name\'\'\'() {} }', new HighlightedTypedPosition(6, 1, CLASS))
     }
 
     @Test
-    void testLocalType1() {
+    void testLocalType() {
         addGroovySource '''\
             interface I<T> extends Serializable {
               T bar()
@@ -2636,11 +2853,92 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Whatever'), 8, CLASS),
             new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
-            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('123'), 3, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('I'), 1, CTOR_CALL),
-            new HighlightedTypedPosition(contents.indexOf('serialVersionUID'), 'serialVersionUID'.length(), STATIC_VALUE))
+            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('serialVersionUID'), 'serialVersionUID'.length(), STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('123'), 3, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD))
+    }
+
+    @Test
+    void testGenericType() {
+        String contents = '''\
+            interface I<T> {
+              T bar()
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('I'), 1, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, PLACEHOLDER),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD))
+    }
+
+    @Test
+    void testGenericType2() {
+        String contents = '''\
+            Class<? extends List<? extends CharSequence>> clazz
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Class'), 5, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('List'), 4, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('CharSequence'), 12, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('clazz'), 5, VARIABLE))
+    }
+
+    @Test
+    void testQualifiedType1() {
+        addGroovySource '''\
+            class C {
+              enum E {
+                ITEM
+              }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def item = C.E.ITEM
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('E'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('ITEM'), 4, STATIC_VALUE))
+    }
+
+    @Test
+    void testQualifiedType2() {
+        String contents = '''\
+            Map.Entry<String, Object> entry
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Entry'), 5, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('entry'), 5, VARIABLE))
+    }
+
+    @Test
+    void testQualifiedType3() {
+        String contents = '''\
+            java.util.Map.Entry<String, Object> entry
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Map'), 3, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Entry'), 5, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('entry'), 5, VARIABLE))
     }
 
     @Test
@@ -2656,12 +2954,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Whatever'), 8, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('getProperty'), 11, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('Math'), 4, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
     }
 
@@ -2677,9 +2979,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Whatever'), 8, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('String', contents.indexOf('field')), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('property'), 8, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('String', contents.indexOf('property')), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String', contents.indexOf('method')), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('field') + 5, 1, STRING),
@@ -2709,9 +3016,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('A'), 1, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('main'), 4, STATIC_METHOD),
             new HighlightedTypedPosition(contents.indexOf('args'), 4, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, METHOD_CALL))
     }
 

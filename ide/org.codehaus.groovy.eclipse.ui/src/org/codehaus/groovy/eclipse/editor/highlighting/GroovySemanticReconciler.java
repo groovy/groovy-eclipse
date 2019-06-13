@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,16 +62,25 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String COMMENT_HIGHLIGHT_PREFERENCE            = "java_single_line_comment";
     private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String RESERVED_HIGHLIGHT_PREFERENCE           = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR.replaceFirst("\\.color$", "");
+    private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.deprecatedMember";
+
     private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
     private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
-    private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.annotationElementReference";
-    private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.deprecatedMember";
+    private static final String ATTRIBUTE_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.annotationElementReference";
     private static final String OBJECT_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.field";
     private static final String STATIC_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticField";
     private static final String STATIC_VALUE_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticFinalField";
     private static final String OBJECT_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.method";
     private static final String STATIC_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.staticMethodInvocation";
     private static final String METHOD_DECLARATION_HIGHLIGHT_PREFERENCE = "semanticHighlighting.methodDeclarationName";
+
+    private static final String CLASS_HIGHLIGHT_PREFERENCE              = "semanticHighlighting.class";
+    private static final String ABSTRACT_CLASS_HIGHLIGHT_PREFERENCE     = "semanticHighlighting.abstractClass";
+    private static final String INTERFACE_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.interface";
+    private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR.replaceFirst("\\.color$", "");
+    private static final String ENUMERATION_HIGHLIGHT_PREFERENCE        = "semanticHighlighting.enum";
+    private static final String PLACEHOLDER_HIGHLIGHT_PREFERENCE        = "semanticHighlighting.typeParameter";
+    private static final String TRAIT_HIGHLIGHT_PREFERENCE              = GROOVY_HIGHLIGHT_PREFERENCE;
 
     // these types have package-private visibility
     private static Method GET_HIGHLIGHTING = null;
@@ -124,28 +133,45 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object groovyMethodUseHighlighting;
     private Object staticMethodUseHighlighting;
 
+    private Object classHighlighting;
+    private Object traitHighlighting;
+    private Object interfaceHighlighting;
+    private Object annotationHighlighting;
+    private Object enumerationHighlighting;
+    private Object placeholderHighlighting;
+    private Object abstractClassHighlighting;
+
     public GroovySemanticReconciler() {
         // TODO: Reload colors and styles when preferences are changed.
         IPreferenceStore prefs = PreferenceConstants.getPreferenceStore();
 
-        Color groovyColor      = loadColorFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE);
-        Color numberColor      = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
-        Color stringColor      = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
-        Color tagKeyColor      = loadColorFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
-        Color commentColor     = loadColorFrom(prefs, COMMENT_HIGHLIGHT_PREFERENCE);
-        Color keywordColor     = loadColorFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE);
-        Color reservedColor    = loadColorFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE);
-        Color variableColor    = loadColorFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE);
-        Color parameterColor   = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
-        Color objectFieldColor = loadColorFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
-        Color staticFieldColor = loadColorFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
-        Color staticValueColor = loadColorFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
-        Color staticCallColor  = loadColorFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE);
-        Color methodCallColor  = loadColorFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE);
-        Color methodDeclColor  = loadColorFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE);
+        Color groovyColor        = loadColorFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE);
+        Color numberColor        = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
+        Color stringColor        = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
+        Color tagKeyColor        = loadColorFrom(prefs, ATTRIBUTE_HIGHLIGHT_PREFERENCE);
+        Color commentColor       = loadColorFrom(prefs, COMMENT_HIGHLIGHT_PREFERENCE);
+        Color keywordColor       = loadColorFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE);
+        Color reservedColor      = loadColorFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE);
+
+        Color variableColor      = loadColorFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE);
+        Color parameterColor     = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
+        Color objectFieldColor   = loadColorFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticFieldColor   = loadColorFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticValueColor   = loadColorFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
+        Color staticCallColor    = loadColorFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodCallColor    = loadColorFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodDeclColor    = loadColorFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE);
+
+        Color classColor         = loadColorFrom(prefs, CLASS_HIGHLIGHT_PREFERENCE);
+        Color traitColor         = loadColorFrom(prefs, TRAIT_HIGHLIGHT_PREFERENCE);
+        Color interfaceColor     = loadColorFrom(prefs, INTERFACE_HIGHLIGHT_PREFERENCE);
+        Color annotationColor    = loadColorFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
+        Color enumerationColor   = loadColorFrom(prefs, ENUMERATION_HIGHLIGHT_PREFERENCE);
+        Color placeholderColor   = loadColorFrom(prefs, PLACEHOLDER_HIGHLIGHT_PREFERENCE);
+        Color abstractClassColor = loadColorFrom(prefs, ABSTRACT_CLASS_HIGHLIGHT_PREFERENCE);
 
         mapKeyHighlighting = newHighlightingStyle(stringColor);
-        tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
+        tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ATTRIBUTE_HIGHLIGHT_PREFERENCE));
         stringRefHighlighting = newHighlightingStyle(stringColor, loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
         numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
         regexpRefHighlighting = newHighlightingStyle(stringColor, loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE) | SWT.ITALIC);
@@ -166,6 +192,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         methodUseHighlighting = newHighlightingStyle(methodCallColor, loadStyleFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE));
         groovyMethodUseHighlighting = newHighlightingStyle(groovyColor, loadStyleFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE));
         staticMethodUseHighlighting = newHighlightingStyle(staticCallColor, loadStyleFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
+
+        classHighlighting = newHighlightingStyle(classColor, loadStyleFrom(prefs, CLASS_HIGHLIGHT_PREFERENCE));
+        traitHighlighting = newHighlightingStyle(traitColor, loadStyleFrom(prefs, TRAIT_HIGHLIGHT_PREFERENCE));
+        interfaceHighlighting = newHighlightingStyle(interfaceColor, loadStyleFrom(prefs, INTERFACE_HIGHLIGHT_PREFERENCE));
+        annotationHighlighting = newHighlightingStyle(annotationColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
+        enumerationHighlighting = newHighlightingStyle(enumerationColor, loadStyleFrom(prefs, ENUMERATION_HIGHLIGHT_PREFERENCE));
+        placeholderHighlighting = newHighlightingStyle(placeholderColor, loadStyleFrom(prefs, PLACEHOLDER_HIGHLIGHT_PREFERENCE));
+        abstractClassHighlighting = abstractClassColor == null ? classHighlighting : newHighlightingStyle(abstractClassColor, loadStyleFrom(prefs, ABSTRACT_CLASS_HIGHLIGHT_PREFERENCE));
     }
 
     protected static Color loadColorFrom(IPreferenceStore prefs, String which) {
@@ -388,6 +422,27 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             break;
         case STATIC_CALL:
             style = staticMethodUseHighlighting;
+            break;
+        case CLASS:
+            style = classHighlighting;
+            break;
+        case TRAIT:
+            style = traitHighlighting;
+            break;
+        case INTERFACE:
+            style = interfaceHighlighting;
+            break;
+        case ANNOTATION:
+            style = annotationHighlighting;
+            break;
+        case ENUMERATION:
+            style = enumerationHighlighting;
+            break;
+        case PLACEHOLDER:
+            style = placeholderHighlighting;
+            break;
+        case ABSTRACT_CLASS:
+            style = abstractClassHighlighting;
             break;
         }
         //return new HighlightedPosition(pos.offset, pos.length, style, this);

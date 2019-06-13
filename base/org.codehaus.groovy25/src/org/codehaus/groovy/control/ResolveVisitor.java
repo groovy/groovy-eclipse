@@ -1128,8 +1128,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (className != null) {
             ClassNode type = ClassHelper.make(className);
             if (resolve(type)) {
-                Expression ret =  new ClassExpression(type);
-                ret.setSourcePosition(pe);
+                Expression ret = new ClassExpression(type);
+                // GRECLIPSE edit
+                type.setNameStart2(property.getStart());
+                //ret.setSourcePosition(pe);
+                // GRECLIPSE end
                 return ret;
             }
         }
@@ -1142,7 +1145,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (resolve(type, false, false, false)) {
                     if (classNode == ce.getType() || isVisibleNestedClass(type, ce.getType())) {
                         Expression ret = new ClassExpression(type);
-                        ret.setSourcePosition(pe); // GRECLIPSE ce->pe
+                        // GRECLIPSE edit
+                        type.setNameStart2(property.getStart());
+                        //ret.setSourcePosition(pe);
+                        // GRECLIPSE end
                         return ret;
                     }
                 }
@@ -1211,14 +1217,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         visitAnnotations(ve);
         Variable v = ve.getAccessedVariable();
         
-        if(!(v instanceof DynamicVariable) && !checkingVariableTypeInDeclaration) {
+        if (!(v instanceof DynamicVariable) && !checkingVariableTypeInDeclaration) {
             /*
              *  GROOVY-4009: when a normal variable is simply being used, there is no need to try to 
              *  resolve its type. Variable type resolve should proceed only if the variable is being declared. 
              */
             return ve;
         }
-        if (v instanceof DynamicVariable){
+        if (v instanceof DynamicVariable) {
             String name = ve.getName();
             ClassNode t = ClassHelper.make(name);
             // asking isResolved here allows to check if a primitive
@@ -1234,7 +1240,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                   t = new LowerCaseClass(name);
                 }
                 isClass = resolve(t);
-                if(!isClass) {
+                if (!isClass) {
                     isClass = resolveToNestedOfCurrentClassAndSuperClasses(t);
                 }
             }
@@ -1247,7 +1253,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     if (scope.removeReferencedClassVariable(ve.getName()) == null) break;
                 }
                 ClassExpression ce = new ClassExpression(t);
-                ce.setSourcePosition(ve);
+                // GRECLIPSE edit
+                //ce.setSourcePosition(ve);
+                // GRECLIPSE end
                 return ce;
             }
         }

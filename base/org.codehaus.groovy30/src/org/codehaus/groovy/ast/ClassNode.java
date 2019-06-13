@@ -165,18 +165,18 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected List<InnerClassNode> innerClasses;
 
     // GRECLIPSE add
-    private int bitflags = 0x0000;
-    private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
+    private int bits;
+    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
 
     public boolean hasInconsistentHierarchy() {
-        return ((redirect().bitflags) & BIT_INCONSISTENT_HIERARCHY) != 0;
+        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
     }
 
     public void setHasInconsistentHierarchy(boolean b) {
         if (b) {
-            redirect().bitflags |= BIT_INCONSISTENT_HIERARCHY;
+            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
         } else {
-            redirect().bitflags &= ~BIT_INCONSISTENT_HIERARCHY;
+            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
         }
     }
     // GRECLIPSE end
@@ -385,24 +385,20 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * @param name       is the full name of the class
-     * @param modifiers  the modifiers,
-     * @param superClass the base class name - use "java.lang.Object" if no direct
-     *                   base class
-     * @see org.objectweb.asm.Opcodes
+     * @param name       the fully-qualified name of the class
+     * @param modifiers  the modifiers; see {@link groovyjarjarasm.asm.Opcodes}
+     * @param superClass the base class; use "java.lang.Object" if no direct base class
      */
     public ClassNode(String name, int modifiers, ClassNode superClass) {
         this(name, modifiers, superClass, EMPTY_ARRAY, MixinNode.EMPTY_ARRAY);
     }
 
     /**
-     * @param name       is the full name of the class
-     * @param modifiers  the modifiers,
-     * @param superClass the base class name - use "java.lang.Object" if no direct
-     *                   base class
-     * @param interfaces the interfaces for this class
-     * @param mixins     the mixins for this class
-     * @see org.objectweb.asm.Opcodes
+     * @param name       the fully-qualified name of the class
+     * @param modifiers  the modifiers; see {@link groovyjarjarasm.asm.Opcodes}
+     * @param superClass the base class; use "java.lang.Object" if no direct base class
+     * @param interfaces the interfaces for the class
+     * @param mixins     the mixins for the class
      */
     public ClassNode(String name, int modifiers, ClassNode superClass, ClassNode[] interfaces, MixinNode[] mixins) {
         this.name = name;
@@ -1705,6 +1701,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public boolean mightHaveInners() {
         return (hasClass() ? true : getInnerClasses().hasNext());
     }
+
+    /**
+     * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
+     */
+    public int getNameStart2() {
+        return nameStart > 0 ? nameStart : getStart();
+    }
+    public void setNameStart2(int offset) {
+        nameStart = offset;
+    }
+    private int nameStart;
     // GRECLIPSE end
 
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {

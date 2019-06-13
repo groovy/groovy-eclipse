@@ -3675,7 +3675,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 ) {
             ClassNode bound = null;
             bound = makeTypeWithArguments(boundsNode);
+            /* GRECLIPSE edit -- exclude generics
             configureAST(bound, boundsNode);
+            */
             bounds.add(bound);
         }
         if (bounds.isEmpty()) return null;
@@ -3731,7 +3733,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
-                answer = ClassHelper.make(qualifiedName(node));
+                // GRECLIPSE edit
+                //answer = ClassHelper.make(qualifiedName(node));
+                answer = makeClassNode(qualifiedName(node));
+                // GRECLIPSE end
                 if (answer.isUsingGenerics()) {
                     ClassNode newAnswer = ClassHelper.makeWithoutCaching(answer.getName());
                     newAnswer.setRedirect(answer);
@@ -3743,6 +3748,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
                     answer.setLastLineNumber(type.getLineLast());
                     answer.setLastColumnNumber(type.getColumnLast());
+                    answer.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
                     answer.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
                 }
                 // GRECLIPSE end
@@ -3936,7 +3942,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
-        if (node instanceof ImmutableClassNode) {
+        if (node instanceof ImmutableClassNode && !node.isPrimitive()) {
             ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
             wrapper.setRedirect(node);
             node = wrapper;

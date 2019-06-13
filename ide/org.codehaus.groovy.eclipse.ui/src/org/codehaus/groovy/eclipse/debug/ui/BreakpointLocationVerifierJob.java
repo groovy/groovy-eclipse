@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -109,11 +109,11 @@ public class BreakpointLocationVerifierJob extends Job {
             ModuleNode module = Adapters.adapt(fEditorPart, ModuleNode.class);
             if (module != null) {
                 ASTNode found = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
-                if (found instanceof ClassNode && ((ClassNode) found).getNameStart() > 0) {
+                if (found instanceof ClassNode && ((ClassNode) found).getNameEnd() > 0) {
                     createNewClassBreakpoint((ClassNode) found, module.getNodeMetaData(LocationSupport.class));
-                } else if (found instanceof FieldNode && ((FieldNode) found).getNameStart() > 0) {
+                } else if (found instanceof FieldNode && ((FieldNode) found).getNameEnd() > 0) {
                     createNewFieldBreakpoint((FieldNode) found, module.getNodeMetaData(LocationSupport.class));
-                } else if (found instanceof MethodNode && ((MethodNode) found).getNameStart() > 0) {
+                } else if (found instanceof MethodNode && ((MethodNode) found).getNameEnd() > 0) {
                     createNewMethodBreakpoint((MethodNode) found, module.getNodeMetaData(LocationSupport.class));
                 } else if (found != null) {
                     createNewLineBreakpoint(found);

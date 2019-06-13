@@ -1668,6 +1668,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public boolean mightHaveInners() {
         return (hasClass() ? true : getInnerClasses().hasNext());
     }
+
+    /**
+     * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
+     */
+    public int getNameStart2() {
+        return nameStart > 0 ? nameStart : getStart();
+    }
+    public void setNameStart2(int offset) {
+        nameStart = offset;
+    }
+    private int nameStart;
     // GRECLIPSE end
 
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {

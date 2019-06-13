@@ -69,7 +69,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         case ANNOTATION:
         case CONSTRUCTOR:
             replacementStart = context.completionNode.getStart();
-            if (context.completionNode instanceof ClassNode && ((ClassNode) context.completionNode).getNameStart() > 0) {
+            if (context.completionNode instanceof ClassNode && ((ClassNode) context.completionNode).getNameEnd() > 0) {
                 replacementStart = ((ClassNode) context.completionNode).getNameStart();
             }
             break;

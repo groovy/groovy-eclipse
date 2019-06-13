@@ -792,7 +792,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
-        if (node instanceof ImmutableClassNode) {
+        if (node instanceof ImmutableClassNode && !node.isPrimitive()) {
             ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
             wrapper.setRedirect(node);
             node = wrapper;
@@ -4763,11 +4763,20 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private ClassNode createClassNode(GroovyParserRuleContext ctx) {
-        ClassNode result = ClassHelper.make(ctx.getText());
+        // GRECLIPSE edit
+        //ClassNode result = ClassHelper.make(ctx.getText());
+        ClassNode result = makeClassNode(ctx.getText());
+        // GRECLIPSE end
 
         if (!isTrue(ctx, IS_INSIDE_INSTANCEOF_EXPR)) { // type in the "instanceof" expression should not have proxy to redirect to it
             result = this.proxyClassNode(result);
         }
+
+        // GRECLIPSE add
+        if (ctx.getStart() != ctx.getStop()) {
+            result.setNameStart2(locationSupport.findOffset(ctx.getStop().getLine(), ctx.getStop().getCharPositionInLine() + 1));
+        }
+        // GRECLIPSE end
 
         return configureAST(result, ctx);
     }

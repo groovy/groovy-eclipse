@@ -19,6 +19,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -26,7 +27,6 @@ import java.util.regex.PatternSyntaxException;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -46,7 +46,9 @@ import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -126,6 +128,17 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 }
             }
 
+        } else if (node instanceof ClassNode) {
+            // visit "Map" of "Map.Entry" separately
+            if (((ClassNode) node).getNameEnd() < 1) {
+                checkOuterClass((ClassNode) node, outer -> {
+                    acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
+                });
+            }
+            if (!(enclosingElement instanceof IImportDeclaration || ((ClassNode) node).isScriptBody())) {
+                pos = handleClassReference((ClassNode) node);
+            }
+
         } else if (result.declaration instanceof FieldNode) {
             pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
 
@@ -202,7 +215,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             }
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
-            if (!type.matches("ClassNode|(Class|Binary|ArgumentList|Closure(List)?|Property|List|Map)Expression"))
+            if (!type.matches("(Class|Binary|ArgumentList|Closure(List)?|Property|List|Map)Expression"))
                 System.err.println("found: " + type);
         }
 
@@ -211,23 +224,59 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             typedPositions.add(pos);
         }
 
-        if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() < 1) {
+        return VisitStatus.CONTINUE;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private void checkOuterClass(ClassNode node, Consumer<ClassNode> todo) {
+        ClassNode outer = node.getOuterClass();
+        if (outer != null) {
             int start = node.getStart(), until = node.getEnd();
-            node = ((ClassNode) node).getOuterClass();
-            if (node != null && until < unitLength()) {
+            if (until < unitLength()) {
                 until = CharOperation.lastIndexOf('.', contents, start, until);
                 if (until > start) {
-                    ClassNode outer = ClassHelper.makeWithoutCaching(((ClassNode) node).getName());
-                    outer.setRedirect((ClassNode) node);
-                    outer.setStart(start);
-                    outer.setEnd(until);
+                    outer = outer.getPlainNodeReference();
+                    outer.setStart(start); outer.setEnd(until);
+                    start = CharOperation.lastIndexOf('.', contents, start, until);
+                    if (start > 0) {
+                        outer.setNameStart2(start + 1);
+                    }
 
-                    acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
+                    todo.accept(outer);
                 }
             }
         }
+    }
 
-        return VisitStatus.CONTINUE;
+    private HighlightedTypedPosition handleClassReference(ClassNode node) {
+        int offset, length;
+        if (node.getNameEnd() > 0) {
+            offset = node.getNameStart();
+            length = node.getNameEnd() - offset + 1;
+        } else if (node.getStart() > 0 &&
+            node.getStart() < unitLength() &&
+            contents[node.getStart() - 1] == '@') {
+            return null; // GroovyTagScanner does annotations
+        } else {
+            offset = node.getNameStart2();
+            length = node.getEnd() - offset;
+        }
+
+        HighlightKind kind;
+        if (node.isEnum()) {
+            kind = HighlightKind.ENUMERATION;
+        } else if (node.isGenericsPlaceHolder()) {
+            kind = HighlightKind.PLACEHOLDER;
+        } else if (node.isAnnotationDefinition()) {
+            kind = HighlightKind.ANNOTATION;
+        } else if (node.isInterface()/* <-- must follow isAnnotationDefinition() */) {
+            kind = Traits.isTrait(node) ? HighlightKind.TRAIT : HighlightKind.INTERFACE;
+        } else {
+            kind = node.isAbstract() ? HighlightKind.ABSTRACT_CLASS : HighlightKind.CLASS;
+        }
+
+        return new HighlightedTypedPosition(offset, length, kind);
     }
 
     // field and property declarations and references are handled the same
@@ -245,7 +294,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         if (node == decl) {
             // declaration offsets include the type and init
             offset = node.getNameStart();
-            length = node.getNameEnd() - node.getNameStart() + 1;
+            length = node.getNameEnd() - offset + 1;
         } else {
             offset = node.getStart();
             length = node.getLength();
@@ -281,7 +330,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         int offset = node.getNameStart(),
-            length = node.getNameEnd() - node.getNameStart() + 1;
+            length = node.getNameEnd() - offset + 1;
 
         // special case: string literal method names
         if (kind != HighlightKind.CTOR && length > node.getName().length()) {
@@ -306,14 +355,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         int offset = expr.getNameStart(),
-            length = expr.getNameEnd() - expr.getNameStart() + 1;
+            length = expr.getNameEnd() - offset + 1;
 
         return new HighlightedTypedPosition(offset, length, HighlightKind.CTOR_CALL);
     }
 
     private HighlightedTypedPosition handleMethodReference(StaticMethodCallExpression expr) {
         int offset = expr.getNameStart(),
-            length = expr.getNameEnd() - expr.getNameStart() + 1;
+            length = expr.getNameEnd() - offset + 1;
 
         return new HighlightedTypedPosition(offset, length, HighlightKind.STATIC_CALL);
     }
@@ -344,7 +393,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             length = expr.getLength();
         } else {
             offset = expr.getNameStart();
-            length = expr.getNameEnd() - expr.getNameStart() + 1;
+            length = expr.getNameEnd() - offset + 1;
         }
 
         return new HighlightedTypedPosition(offset, length, kind);
