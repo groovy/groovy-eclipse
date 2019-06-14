@@ -245,7 +245,12 @@
 				<repository>
 					<id>oxygen</id>
 					<layout>p2</layout>
+					<url>https://download.eclipse.org/technology/epp/packages/oxygen/</url>
+					<!--
+					     20190613 - this composite has http links inside, I'm inlining one of those
+						links (with http>https) to see if it works.
 					<url>https://download.eclipse.org/releases/oxygen</url>
+					-->
 				</repository>
 				<repository>
 					<id>eclipse47</id>
