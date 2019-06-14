@@ -216,10 +216,15 @@
 		<profile>
 			<id>e48</id>
 			<repositories>
-				<repository>
-					<id>photon</id>
-					<layout>p2</layout>
+				<repository> <id>photon</id> <layout>p2</layout>
+					<!--
+					     20190614 - replacing https composite with https links from inside composite 
 					<url>https://download.eclipse.org/releases/photon</url>
+					-->
+					<url>https://download.eclipse.org/technology/epp/packages/photon/</url>
+				</repository>
+				<repository> <id>photon2</id> <layout>p2</layout>
+					<url>https://download.eclipse.org/releases/photon/201806271001</url>
 				</repository>
 				<repository>
 					<id>eclipse48</id>
@@ -244,7 +249,7 @@
 			<repositories>
 				<repository> <id>oxygen</id> <layout>p2</layout>
 					<!--
-					     20190613 - Original link was:
+					     20190614 - Original link was:
 					<url>https://download.eclipse.org/releases/oxygen</url>
 					     this composite has http links inside, I'm inlining those
 					     links (with http>https) to see if it works (see sites oxygen2>4)
