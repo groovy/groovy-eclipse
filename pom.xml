@@ -242,15 +242,23 @@
 		<profile>
 			<id>e47</id>
 			<repositories>
-				<repository>
-					<id>oxygen</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/technology/epp/packages/oxygen/</url>
+				<repository> <id>oxygen</id> <layout>p2</layout>
 					<!--
-					     20190613 - this composite has http links inside, I'm inlining one of those
-						links (with http>https) to see if it works.
+					     20190613 - Original link was:
 					<url>https://download.eclipse.org/releases/oxygen</url>
+					     this composite has http links inside, I'm inlining those
+					     links (with http>https) to see if it works (see sites oxygen2>4)
 					-->
+					<url>https://download.eclipse.org/technology/epp/packages/oxygen/</url>
+				</repository>
+				<repository> <id>oxygen2</id> <layout>p2</layout>
+					<url>https://download.eclipse.org/releases/oxygen/201804111000</url>
+				</repository>
+				<repository> <id>oxygen3</id> <layout>p2</layout>
+					<url>https://download.eclipse.org/releases/oxygen/201803211000</url>
+				</repository>
+				<repository> <id>oxygen4</id> <layout>p2</layout>
+					<url>https://download.eclipse.org/releases/oxygen/201712201001</url>
 				</repository>
 				<repository>
 					<id>eclipse47</id>
