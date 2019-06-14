@@ -113,9 +113,20 @@
 			<id>e4.12</id>
 			<repositories>
 				<repository>
-					<id>2019-06</id>
-					<layout>p2</layout>
+					<id>2019-06</id> <layout>p2</layout>
+					<!-- 20190614 - replace composite links with https links from inside it.
 					<url>https://download.eclipse.org/releases/2019-06</url>
+					-->
+					<url> https://download.eclipse.org/technology/epp/packages/2019-06</url>
+				</repository>
+				<repository> <id>2019-06b</id> <layout>p2</layout>
+					<url> https://download.eclipse.org/releases/2019-06/201906071000</url>
+				</repository>
+				<repository> <id>2019-06c</id> <layout>p2</layout>
+					<url> https://download.eclipse.org/releases/2019-06/201905311000</url>
+				</repository>
+				<repository> <id>2019-06d</id> <layout>p2</layout>
+					<url> https://download.eclipse.org/releases/2019-06/201905101000</url>
 				</repository>
 				<repository>
 					<id>eclipse</id>
