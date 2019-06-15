@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -40,11 +41,12 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
 
     protected static Position getPosition(ASTNode node) {
         int offset, length;
-        if (node instanceof FieldNode || node instanceof MethodNode || node instanceof PropertyNode ||
-                (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) || node instanceof StaticMethodCallExpression) {
-            AnnotatedNode n = (AnnotatedNode) node;
-            offset = n.getNameStart();
-            length = n.getNameEnd() - offset + 1;
+        if ((node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) ||
+                node instanceof FieldNode || node instanceof MethodNode || node instanceof PropertyNode ||
+                node instanceof ConstructorCallExpression || node instanceof StaticMethodCallExpression) {
+            AnnotatedNode an = (AnnotatedNode) node;
+            offset = an.getNameStart();
+            length = an.getNameEnd() - offset + 1;
         } else if (node instanceof Parameter) {
             Parameter p = (Parameter) node;
             offset = p.getNameStart();

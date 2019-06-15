@@ -2063,12 +2063,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             import static foo.Bar.method;
             '''.stripIndent()
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar;'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.*'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.FIELD'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.method'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 'FIELD'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar;'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.*'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.F'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.m'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
     }
 
     @Test
@@ -2087,7 +2087,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             import foo.Bar.Baz.*;
             '''.stripIndent()
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar'), 'Bar'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, DEPRECATED))
     }
 
     @Test
@@ -2109,12 +2109,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             import static foo.Bar.Baz.method;
             '''.stripIndent()
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.*'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.FIELD'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.method'), 'Bar'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('FIELD'), 'FIELD'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.indexOf('method'), 'method'.length(), DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz;'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.*'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.F'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('FIELD'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar.Baz.m'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, DEPRECATED))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/907
+    void testDeprecated10() {
+        addJavaSource('''\
+            public class Foo {
+              @Deprecated Foo() {}
+            }
+            ''')
+
+        String contents = '''\
+            class Bar extends Foo {
+              @Deprecated Bar() { super() }
+              Bar(def something) { this() }
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Bar()'), 3, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('super'), 5, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('Bar'), 3, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('something'), 9, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('this'), 4, DEPRECATED))
     }
 
     @Test
