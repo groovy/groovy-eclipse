@@ -767,8 +767,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this('))
-        proposalExists(proposals, 'Foo(Dictionary d)', 1)
         proposalExists(proposals, 'Foo(Entry e)', 0)
+        proposalExists(proposals, 'Foo(Map d)', 1)
     }
 
     @Test

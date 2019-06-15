@@ -2860,12 +2860,100 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testAliasType() {
+        String contents = '''\
+            import java.util.Map as Table
+            class C {
+              def meth(key = 'x', value = 'y', Table table) {
+                return table.getOrDefault(key, value)
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Table', contents.indexOf('C')), 5, INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('table'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('table'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('getOrDefault'), 'getOrDefault'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('value'), 5, PARAMETER))
+    }
+
+    @Test
+    void testAliasType2() {
+        addGroovySource '''\
+            enum BadlyNamed {
+            }
+            ''', 'BadlyNamed', 'foo'
+
+        String contents = '''\
+            import foo.BadlyNamed as Field
+            class C {
+              void meth(value = null, Field... fields) {
+                println value
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Field', contents.indexOf('C')), 5, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('fields'), 6, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('println'), 7, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('value'), 5, PARAMETER))
+    }
+
+    @Test
+    void testAliasType3() {
+        addGroovySource '''\
+            class Bar {
+              enum Inner {
+                ONE, TWO
+              }
+            }
+            ''', 'Bar', 'foo'
+
+        String contents = '''\
+            import foo.Bar as Outer
+            class C {
+              def meth(int idx = -1, obj = null, Outer.Inner inner) {
+                if (idx > 0) {
+                    inner
+                } else {
+                    obj
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('idx'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('-1'), 2, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('Outer', contents.indexOf('null')), 5, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Inner'), 5, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('inner'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('idx'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('inner'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('obj'), 3, PARAMETER))
+    }
+
+    @Test
     void testLocalType() {
         addGroovySource '''\
             interface I<T> extends Serializable {
               T bar()
             }
-            '''.stripIndent()
+            '''
 
         String contents = '''\
             class Whatever {

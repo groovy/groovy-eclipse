@@ -1753,7 +1753,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * The name of the  node is expected to be like 'java.lang.String[][]'.
          * Primitives should be handled by the other create method (sig like '[[I').
          */
-        private TypeReference createTypeReferenceForArrayNameTrailingBrackets(ClassNode node, int start, int until) {
+        private TypeReference createTypeReferenceForArrayNameTrailingBrackets(ClassNode node, int sourceStart, int sourceEnd) {
             String name = node.getName();
             int dim = 0;
             int pos = name.length() - 2;
@@ -1765,22 +1765,34 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 componentType = componentType.getComponentType();
             }
             if (componentType.isPrimitive()) {
-                Integer ii = charToTypeId.get(name.charAt(dim));
-                if (ii == null) {
-                    throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
+                Integer typeId = charToTypeId.get(name.charAt(dim));
+                if (typeId == null) {
+                    throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
-                    TypeReference baseTypeReference = TypeReference.baseTypeReference(ii, dim);
-                    baseTypeReference.sourceStart = start;
-                    baseTypeReference.sourceEnd = start + componentType.getName().length();
+                    TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    baseTypeReference.sourceStart = sourceStart;
+                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
                     return baseTypeReference;
                 }
             }
-            if (dim == 0) {
-                throw new IllegalStateException("Array classnode with dimensions 0?? node:" + node.getName());
+            assert dim > 0 : "array ClassNode with no dimensions: " + name;
+
+            char[] typeName = name.substring(0, pos + 2).toCharArray();
+
+            if (unitDeclaration.imports != null) {
+                char[][] compoundName = CharOperation.splitOn('.', typeName);
+                for (ImportReference importReference : unitDeclaration.imports) {
+                    if (isAliasForType(importReference, compoundName[0])) {
+                        typeName = CharOperation.concatWith(importReference.getImportName(), '.');
+                        //if (compoundName.length > 1) {
+                        //    typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
+                        //}
+                        break;
+                    }
+                }
             }
-            // array component is something like La.b.c; ... or sometimes just [[Z (where Z is a type, not primitive)
-            String arrayComponentTypename = name.substring(0, pos + 2);
-            return createTypeReferenceForArrayName(arrayComponentTypename, componentType, dim, start, until);
+
+            return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
         }
 
         /**
@@ -1788,7 +1800,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Format will be '[[I' or '[[Ljava.lang.String;'.  This latter form is
          * really not right but Groovy can produce it so we need to cope with it.
          */
-        private TypeReference createTypeReferenceForArrayNameLeadingBrackets(ClassNode node, int start, int until) {
+        private TypeReference createTypeReferenceForArrayNameLeadingBrackets(ClassNode node, int sourceStart, int sourceEnd) {
             String name = node.getName();
             int dim = 0;
             ClassNode componentType = node;
@@ -1797,42 +1809,58 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 componentType = componentType.getComponentType();
             }
             if (componentType.isPrimitive()) {
-                Integer ii = charToTypeId.get(name.charAt(dim));
-                if (ii == null) {
-                    throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
+                Integer typeId = charToTypeId.get(name.charAt(dim));
+                if (typeId == null) {
+                    throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
                 } else {
-                    TypeReference baseTypeReference = TypeReference.baseTypeReference(ii, dim);
-                    baseTypeReference.sourceStart = start;
-                    baseTypeReference.sourceEnd = start + componentType.getName().length();
+                    TypeReference baseTypeReference = TypeReference.baseTypeReference(typeId, dim);
+                    baseTypeReference.sourceStart = sourceStart;
+                    baseTypeReference.sourceEnd = sourceStart + componentType.getName().length();
                     return baseTypeReference;
                 }
             } else {
-                String arrayComponentTypename = name.substring(dim);
-                if (arrayComponentTypename.charAt(arrayComponentTypename.length() - 1) == ';') {
-                    arrayComponentTypename = name.substring(dim + 1, name.length() - 1); // chop off '['s 'L' and ';'
+                name = name.substring(dim);
+                if (name.charAt(name.length() - 1) == ';') {
+                    name = name.substring(1, name.length() - 1); // chop off 'L' and ';'
                 }
-                return createTypeReferenceForArrayName(arrayComponentTypename, componentType, dim, start, until);
+
+                char[] typeName = name.toCharArray();
+
+                if (unitDeclaration.imports != null) {
+                    char[][] compoundName = CharOperation.splitOn('.', typeName);
+                    for (ImportReference importReference : unitDeclaration.imports) {
+                        if (isAliasForType(importReference, compoundName[0])) {
+                            typeName = CharOperation.concatWith(importReference.getImportName(), '.');
+                            //if (compoundName.length > 1) {
+                            //    typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
+                            //}
+                            break;
+                        }
+                    }
+                }
+
+                return createTypeReferenceForArrayName(typeName, componentType, dim, sourceStart, sourceEnd);
             }
         }
 
-        private TypeReference createTypeReferenceForArrayName(String typeName, ClassNode typeNode, int dim, int start, int until) {
+        private TypeReference createTypeReferenceForArrayName(char[] typeName, ClassNode typeNode, int dim, int sourceStart, int sourceEnd) {
             if (!typeNode.isUsingGenerics()) {
-                if (typeName.indexOf('.') < 0) {
+                if (CharOperation.indexOf('.', typeName) < 0) {
                     // For a single array reference, for example 'String[]' start will be 'S' and end will be the char after ']'. When the
                     // ArrayTypeReference is built we need these positions for the result: sourceStart - the 'S'; sourceEnd - the ']';
                     // originalSourceEnd - the 'g'
-                    ArrayTypeReference atr = new ArrayTypeReference(typeName.toCharArray(), dim, toPos(start, until - 1));
-                    atr.originalSourceEnd = atr.sourceStart + typeName.length() - 1;
-                    return atr;
+                    ArrayTypeReference tr = new ArrayTypeReference(typeName, dim, toPos(sourceStart, sourceEnd - 1));
+                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    return tr;
                 } else {
                     // For a qualified array reference, for example 'java.lang.Number[][]' start will be 'j' and end will be the char after ']'.
                     // When the ArrayQualifiedTypeReference is built we need these positions for the result: sourceStart - the 'j'; sourceEnd - the
                     // final ']'; the positions computed for the reference components would be j..a l..g and N..r
-                    char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
-                    ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dim,
-                        positionsFor(compoundName, start, (until == -2 ? -2 : until - dim * 2)));
-                    aqtr.sourceEnd = until == -2 ? -2 : until - 1;
-                    return aqtr;
+                    char[][] compoundName = CharOperation.splitOn('.', typeName);
+                    ArrayQualifiedTypeReference tr = new ArrayQualifiedTypeReference(compoundName, dim,
+                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
+                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    return tr;
                 }
             } else {
                 GenericsType[] generics = typeNode.getGenericsTypes();
@@ -1841,18 +1869,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     typeArgs[i] = createTypeReferenceForGenerics(generics[i]);
                 }
 
-                if (typeName.indexOf('.') < 0) {
-                    ParameterizedSingleTypeReference pstr = new ParameterizedSingleTypeReference(typeName.toCharArray(), typeArgs, dim, toPos(start, until - 1));
-                    pstr.originalSourceEnd = pstr.sourceStart + typeName.length() - 1; // TODO: Should this include generics?
-                    return pstr;
+                if (CharOperation.indexOf('.', typeName) < 0) {
+                    ParameterizedSingleTypeReference tr = new ParameterizedSingleTypeReference(typeName, typeArgs, dim, toPos(sourceStart, sourceEnd - 1));
+                    tr.originalSourceEnd = typeNode.getEnd() - 1;
+                    return tr;
                 } else {
-                    char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
+                    char[][] compoundName = CharOperation.splitOn('.', typeName);
                     TypeReference[][] compoundArgs = new TypeReference[compoundName.length][];
                     compoundArgs[compoundName.length - 1] = typeArgs;
-                    ParameterizedQualifiedTypeReference pqtr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim,
-                        positionsFor(compoundName, start, (until == -2 ? -2 : until - dim * 2)));
-                    pqtr.sourceEnd = until == -2 ? -2 : until - 1;
-                    return pqtr;
+                    ParameterizedQualifiedTypeReference tr = new ParameterizedQualifiedTypeReference(compoundName, compoundArgs, dim,
+                        positionsFor(compoundName, sourceStart, (sourceEnd == -2 ? -2 : sourceEnd - dim * 2)));
+                    tr.sourceEnd = sourceEnd == -2 ? -2 : sourceEnd - 1;
+                    return tr;
                 }
             }
         }
@@ -1877,7 +1905,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (namePartsArr.length == 1) {
                 ref = new SingleTypeReference(namePartsArr[0], poss[0]);
             } else { // should not happen
-                ref = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get("void"), 0);
+                ref = TypeReference.baseTypeReference(TypeIds.T_void, 0);
             }
             return ref;
         }
@@ -1898,7 +1926,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return createTypeReferenceForClassNode(classNode, startOffset(classNode), endOffset(classNode));
         }
 
-        private TypeReference createTypeReferenceForClassNode(ClassNode classNode, int start, int end) {
+        private TypeReference createTypeReferenceForClassNode(ClassNode classNode, int sourceStart, int sourceEnd) {
             List<TypeReference> typeArguments = null;
 
             // need to distinguish between raw usage of a type 'List' and generics usage 'List<T>'
@@ -1908,8 +1936,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (classNode.isUsingGenerics()) {
                 GenericsType[] genericsInfo = classNode.getGenericsTypes();
                 if (genericsInfo != null) {
-                    for (int g = 0; g < genericsInfo.length; g++) {
-                        TypeReference tr = createTypeReferenceForGenerics(genericsInfo[g]);
+                    for (GenericsType gt : genericsInfo) {
+                        TypeReference tr = createTypeReferenceForGenerics(gt);
                         if (tr != null) {
                             if (typeArguments == null) {
                                 typeArguments = new ArrayList<>();
@@ -1924,51 +1952,64 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (name.length() == 1 && name.charAt(0) == '?') {
                 TypeReference tr = new Wildcard(Wildcard.UNBOUND);
-                tr.sourceStart = start;
-                tr.sourceEnd = end;
+                tr.sourceStart = sourceStart;
+                tr.sourceEnd = sourceEnd;
                 return tr;
             }
 
-            int arrayLoc = name.indexOf("[");
+            int arrayLoc = name.indexOf('[');
             if (arrayLoc == 0) {
-                return createTypeReferenceForArrayNameLeadingBrackets(classNode, start, end);
+                return createTypeReferenceForArrayNameLeadingBrackets(classNode, sourceStart, sourceEnd);
             } else if (arrayLoc > 0) {
-                return createTypeReferenceForArrayNameTrailingBrackets(classNode, start, end);
+                return createTypeReferenceForArrayNameTrailingBrackets(classNode, sourceStart, sourceEnd);
             }
 
             if (nameToPrimitiveTypeId.containsKey(name)) {
                 TypeReference tr = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get(name), 0);
-                tr.sourceStart = start;
-                tr.sourceEnd = end;
+                tr.sourceStart = sourceStart;
+                tr.sourceEnd = sourceEnd;
                 return tr;
             }
 
-            if (name.indexOf(".") == -1) {
+            char[] typeName = name.toCharArray();
+            char[][] compoundName = CharOperation.splitOn('.', typeName);
+
+            if (unitDeclaration.imports != null) {
+                for (ImportReference importReference : unitDeclaration.imports) {
+                    if (isAliasForType(importReference, compoundName[0])) {
+                        if (compoundName.length == 1) {
+                            compoundName = importReference.getImportName();
+                        } else {
+                            //compoundName = CharOperation.arrayConcat(importReference.getImportName(), CharOperation.subarray(compoundName, 1, -1));
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (compoundName.length == 1) {
                 if (typeArguments == null) {
-                    TypeReference tr = verify(new SingleTypeReference(name.toCharArray(), toPos(start, end - 1)));
+                    TypeReference tr = verify(new SingleTypeReference(typeName, toPos(sourceStart, sourceEnd - 1)));
                     if (!checkGenerics) {
                         tr.bits |= ASTNode.IgnoreRawTypeCheck;
                     }
                     return tr;
                 } else {
-                    // FIXASC determine when array dimension used in this case, is it 'A<T[]> or some silliness?
-                    long l = toPos(start, end - 1);
-                    return new ParameterizedSingleTypeReference(name.toCharArray(),
-                            typeArguments.toArray(new TypeReference[typeArguments.size()]), 0, l);
+                    TypeReference[] typeRefs = typeArguments.toArray(new TypeReference[typeArguments.size()]);
+                    return new ParameterizedSingleTypeReference(typeName, typeRefs, 0, toPos(sourceStart, sourceEnd - 1));
                 }
             } else {
-                char[][] compoundName = CharOperation.splitOn('.', name.toCharArray());
                 if (typeArguments == null) {
-                    TypeReference tr = new QualifiedTypeReference(compoundName, positionsFor(compoundName, start, end));
+                    TypeReference tr = new QualifiedTypeReference(compoundName, positionsFor(compoundName, sourceStart, sourceEnd));
                     if (!checkGenerics) {
                         tr.bits |= ASTNode.IgnoreRawTypeCheck;
                     }
                     return tr;
                 } else {
-                    // FIXASC support individual parameterization of component references A<String>.B<Wibble>
-                    TypeReference[][] typeReferences = new TypeReference[compoundName.length][];
-                    typeReferences[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-                    return new ParameterizedQualifiedTypeReference(compoundName, typeReferences, 0, positionsFor(compoundName, start, end));
+                    // TODO: Support individual component parameterization: A<String>.B<Wibble>
+                    TypeReference[][] typeRefs = new TypeReference[compoundName.length][];
+                    typeRefs[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
+                    return new ParameterizedQualifiedTypeReference(compoundName, typeRefs, 0, positionsFor(compoundName, sourceStart, sourceEnd));
                 }
             }
         }
@@ -2260,7 +2301,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return modifiers;
         }
 
-        private boolean hasPackageScopeXform(AnnotatedNode node, final PackageScopeTarget type) {
+        private boolean hasPackageScopeXform(AnnotatedNode node, PackageScopeTarget type) {
             boolean member = (!(node instanceof ClassNode) && type != PackageScopeTarget.CLASS);
             for (AnnotationNode anno : node.getAnnotations()) {
                 if (isType("groovy.transform.PackageScope", anno.getClassNode().getName())) {
@@ -2297,6 +2338,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             if (member) { // check for @PackageScope(XXX) on class
                 return hasPackageScopeXform(node.getDeclaringClass(), type);
+            }
+            return false;
+        }
+
+        private boolean isAliasForType(ImportReference importReference, char[] typeName) {
+            if (importReference instanceof AliasImportReference && !importReference.isStatic()) {
+                return CharOperation.equals(importReference.getSimpleName(), typeName);
             }
             return false;
         }
