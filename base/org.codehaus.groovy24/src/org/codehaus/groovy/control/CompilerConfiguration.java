@@ -973,7 +973,9 @@ public class CompilerConfiguration {
     }
 
     // GRECLIPSE add
-    public void setParameters(boolean parameters) {
+    public void setParameters(boolean value) {
+    }
+    public void setPreviewFeatures(boolean value) {
     }
     // GRECLIPSE end
 }
