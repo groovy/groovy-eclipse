@@ -45,16 +45,14 @@ import java.util.Objects;
  * </ul>
  */
 public class ASTNode {
-
+    // GRECLIPSE add
+    private int _start, _until;
+    // GRECLIPSE end
     private int lineNumber = -1;
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
     private ListHashMap metaDataMap = null;
-    // GRECLIPSE add
-    private int start = 0;
-    private int end = 0;
-    // GRECLIPSE end
 
     public void visit(GroovyCodeVisitor visitor) {
         throw new RuntimeException("No visit() method implemented for class: " + getClass().getName());
@@ -98,19 +96,19 @@ public class ASTNode {
 
     // GRECLIPSE add
     public int getStart() {
-        return start;
+        return _start;
     }
-    public void setStart(int start) {
-        this.start = start;
+    public void setStart(int offset) {
+        _start = Math.max(offset, -1);
     }
     public int getEnd() {
-        return end;
+        return _until;
     }
-    public void setEnd(int end) {
-        this.end = end;
+    public void setEnd(int offset) {
+        _until = Math.max(offset, -2);
     }
     public int getLength() {
-        return end >= 0 && start >= 0 ? end - start : -1;
+        return (_until >= _start ? _until - _start : -1);
     }
     // GRECLIPSE end
 
@@ -123,16 +121,15 @@ public class ASTNode {
      * @param node - the node used to configure the position information
      */
     public void setSourcePosition(ASTNode node) {
+        this.lineNumber = node.getLineNumber();
         this.columnNumber = node.getColumnNumber();
         this.lastLineNumber = node.getLastLineNumber();
         this.lastColumnNumber = node.getLastColumnNumber();
-        this.lineNumber = node.getLineNumber();
         // GRECLIPSE add
-        this.start = node.getStart();
-        this.end = node.getEnd();
+        this._start = node.getStart(); this._until = node.getEnd();
         // GRECLIPSE end
     }
-    
+
     /**
      * Gets the node meta data. 
      * 
