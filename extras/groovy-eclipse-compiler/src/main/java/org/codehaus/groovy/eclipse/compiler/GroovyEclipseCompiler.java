@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -282,19 +282,17 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         String release = config.getReleaseVersion();
         if (isNotBlank(release)) {
             args.put("--release", release.trim());
+        } else {
+            String source = config.getSourceVersion();
+            if (isNotBlank(source)) {
+                args.put("-source", source.trim());
+            }
+            String target = config.getTargetVersion();
+            if (isNotBlank(target)) {
+                args.put("-target", target.trim());
+            }
         }
-        String source = config.getSourceVersion();
-        if (isNotBlank(source)) {
-            args.put("-source", source.trim());
-        } else if (isBlank(release)) {
-            args.put("-source", "1.5");
-        }
-        String target = config.getTargetVersion();
-        if (isNotBlank(target)) {
-            args.put("-target", target.trim());
-        } else if (isBlank(release)) {
-            args.put("-target", "1.5");
-        }
+        // TODO: Maven 3.7.1: <multiReleaseOutput>
 
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
@@ -477,6 +475,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * \tpublic abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
      * \t                      ^^^^^^^^^^^^^^^^^^^^</pre>
      * But there will also be messages contributed from annotation processors that will look non-normal.
+     *
+     * @param msgText eclipse compiler message (see above)
+     * @param showWarning unused parameter
+     * @param force produce {@link CompilerMessage} even if parsing fails
+     * @return parsed message and severity
      */
     private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
         Matcher m = Pattern.compile("^\\d+\\. (ERROR|WARNING|INFO) in (.+?) \\(at line (\\d+)\\)").matcher(msgText);
@@ -519,7 +522,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * put args into a temp file to be referenced using the @ option in javac
      * command line
      *
+     * @param args command file lines (slashes will be normalized)
+     * @param outputDirectory parent directory of command file
      * @return the temporary file wth the arguments
+     * @throws IOException if create fails
      */
     private File createFileWithArguments(String[] args, String outputDirectory) throws IOException {
         File tempFile;
