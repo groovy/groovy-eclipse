@@ -18,9 +18,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>1.3.0</tycho-version>
+		<tycho-version>1.4.0</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs-extras/index.html -->
-		<tycho-extras-version>1.3.0</tycho-extras-version>
+		<tycho-extras-version>1.4.0</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
@@ -112,21 +112,26 @@
 		<profile>
 			<id>e4.12</id>
 			<repositories>
-				<repository>
-					<id>2019-06</id> <layout>p2</layout>
-					<!-- 20190614 - replace composite links with https links from inside it.
+				<!-- replace composite link with https links from it -->
+				<!--repository>
+					<id>2019-06</id>
+					<layout>p2</layout>
 					<url>https://download.eclipse.org/releases/2019-06</url>
-					-->
-					<url> https://download.eclipse.org/technology/epp/packages/2019-06</url>
+				</repository-->
+				<repository>
+					<id>201906071000</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/releases/2019-06/201906071000</url>
 				</repository>
-				<repository> <id>2019-06b</id> <layout>p2</layout>
-					<url> https://download.eclipse.org/releases/2019-06/201906071000</url>
+				<repository>
+					<id>201905311000</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/releases/2019-06/201905311000</url>
 				</repository>
-				<repository> <id>2019-06c</id> <layout>p2</layout>
-					<url> https://download.eclipse.org/releases/2019-06/201905311000</url>
-				</repository>
-				<repository> <id>2019-06d</id> <layout>p2</layout>
-					<url> https://download.eclipse.org/releases/2019-06/201905101000</url>
+				<repository>
+					<id>201905101000</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/releases/2019-06/201905101000</url>
 				</repository>
 				<repository>
 					<id>eclipse</id>
