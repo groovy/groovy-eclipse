@@ -106,7 +106,7 @@
 								<requireMavenVersion>
 									<version>[3.0.0,)</version>
 								</requireMavenVersion>
-								<!-- TODO: maven-compiler-plugin [3.6.2,) -->
+								<!-- TODO: maven-compiler-plugin [3.6.2,) or tycho-compiler-plugin [1.?.0,) <https://bugs.eclipse.org/bugs/show_bug.cgi?id=548409> -->
 							</rules>
 						</configuration>
 					</execution>
