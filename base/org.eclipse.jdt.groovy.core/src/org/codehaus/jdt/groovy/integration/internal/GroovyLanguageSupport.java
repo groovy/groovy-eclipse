@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -111,6 +112,14 @@ import org.eclipse.jdt.internal.core.util.Util;
  * that can handle either Groovy or Java.
  */
 public class GroovyLanguageSupport implements LanguageSupport {
+
+    private static final CompilerConfiguration CONFIG_SCRIPT_CONFIG = new CompilerConfiguration();
+    static {
+        CONFIG_SCRIPT_CONFIG.addCompilationCustomizers(new ImportCustomizer().addStaticStars(
+            "org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder"));
+        CONFIG_SCRIPT_CONFIG.setDisabledGlobalASTTransformations(new HashSet<>(Arrays.asList(
+            "org.codehaus.groovy.ast.builder.AstBuilderTransformation", "groovy.grape.GrabAnnotationTransformation")));
+    }
 
     @Override
     public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
@@ -251,16 +260,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
             binding.setVariable("configuration", config);
-
-            CompilerConfiguration configuratorConfig = new CompilerConfiguration();
-            org.osgi.framework.Version v = GroovyUtils.getGroovyVersion();
-            if ((v.getMajor() == 2 && v.getMinor() >= 1) || v.getMajor() > 2) {
-                ImportCustomizer customizer = new ImportCustomizer().addStaticStars(
-                    "org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
-                configuratorConfig.addCompilationCustomizers(customizer);
-            }
-
-            GroovyShell shell = new GroovyShell(binding, configuratorConfig);
+            GroovyShell shell = new GroovyShell(binding, CONFIG_SCRIPT_CONFIG);
             try {
                 File configScript = new File(compilerOptions.groovyCompilerConfigScript);
                 if (!configScript.isAbsolute() && compilerOptions.groovyProjectName != null) {
