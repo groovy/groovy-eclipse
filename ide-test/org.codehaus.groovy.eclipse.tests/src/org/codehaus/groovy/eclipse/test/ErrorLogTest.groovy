@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,11 @@
 package org.codehaus.groovy.eclipse.test
 
 import static org.junit.Assert.fail
-import static org.junit.Assume.assumeTrue
 
 import org.eclipse.core.runtime.IStatus
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.ui.internal.views.log.AbstractEntry
 import org.eclipse.ui.internal.views.log.LogView
 import org.junit.Test
-import org.osgi.framework.Version
 
 /**
  * Verifies that there are no spurious errors or warnings in the log on startup.
@@ -39,12 +36,10 @@ final class ErrorLogTest {
 
     @Test
     void testNoWarningsOnStartup() {
-        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion('3.8')) >= 0)
-
         LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
         Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { logEntry ->
             return (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
-                !(KNOWN_MSGS.any { logEntry.message =~ it }) && logEntry.pluginId != 'org.eclipse.compare.win32'
+                !(KNOWN_MSGS.any { logEntry.message =~ it }) && !(logEntry.pluginId =~ /\.win32$/)
         }
 
         if (errorsAndWarnings) {
