@@ -1,0 +1,27 @@
+import java.io.*;
+
+String[] expectedClasses = {
+    "Pojo",
+};
+
+String[] expectedTestClasses = {
+    "PojoTest",
+};
+
+for (String name : expectedClasses) {
+    File file = new File(basedir, "target/classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
+
+for (String name : expectedTestClasses) {
+    File file = new File(basedir, "target/test-classes/" + name + ".class");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+    file = new File(basedir, "target/surefire-reports/" + name + ".txt");
+    if (!file.isFile()) {
+        throw new FileNotFoundException("Could not find expected file: " + file);
+    }
+}
