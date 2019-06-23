@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.DEPRECATED;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
+import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -40,8 +41,10 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
+import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightings;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
+import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.Position;
@@ -58,28 +61,28 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private static final String GROOVY_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR.replaceFirst("\\.color$", "");
     private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
-    private static final String NUMBER_HIGHLIGHT_PREFERENCE             = "semanticHighlighting.number";
-    private static final String COMMENT_HIGHLIGHT_PREFERENCE            = "java_single_line_comment";
+    private static final String NUMBER_HIGHLIGHT_PREFERENCE             = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.NUMBER;
+    private static final String COMMENT_HIGHLIGHT_PREFERENCE            = IJavaColorConstants.JAVA_SINGLE_LINE_COMMENT;
     private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String RESERVED_HIGHLIGHT_PREFERENCE           = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR.replaceFirst("\\.color$", "");
-    private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.deprecatedMember";
+    private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.DEPRECATED_MEMBER;
 
-    private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
-    private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
-    private static final String ATTRIBUTE_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.annotationElementReference";
-    private static final String OBJECT_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.field";
-    private static final String STATIC_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticField";
-    private static final String STATIC_VALUE_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticFinalField";
-    private static final String OBJECT_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.method";
-    private static final String STATIC_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.staticMethodInvocation";
-    private static final String METHOD_DECLARATION_HIGHLIGHT_PREFERENCE = "semanticHighlighting.methodDeclarationName";
+    private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.LOCAL_VARIABLE;
+    private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.PARAMETER_VARIABLE;
+    private static final String ATTRIBUTE_HIGHLIGHT_PREFERENCE          = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.ANNOTATION_ELEMENT_REFERENCE;
+    private static final String OBJECT_FIELD_HIGHLIGHT_PREFERENCE       = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.FIELD;
+    private static final String STATIC_FIELD_HIGHLIGHT_PREFERENCE       = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.STATIC_FIELD;
+    private static final String STATIC_VALUE_HIGHLIGHT_PREFERENCE       = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.STATIC_FINAL_FIELD;
+    private static final String OBJECT_METHOD_HIGHLIGHT_PREFERENCE      = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.METHOD;
+    private static final String STATIC_METHOD_HIGHLIGHT_PREFERENCE      = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.STATIC_METHOD_INVOCATION;
+    private static final String METHOD_DECLARATION_HIGHLIGHT_PREFERENCE = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.METHOD_DECLARATION;
 
-    private static final String CLASS_HIGHLIGHT_PREFERENCE              = "semanticHighlighting.class";
-    private static final String ABSTRACT_CLASS_HIGHLIGHT_PREFERENCE     = "semanticHighlighting.abstractClass";
-    private static final String INTERFACE_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.interface";
+    private static final String CLASS_HIGHLIGHT_PREFERENCE              = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.CLASS;
+    private static final String ABSTRACT_CLASS_HIGHLIGHT_PREFERENCE     = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.ABSTRACT_CLASS;
+    private static final String INTERFACE_HIGHLIGHT_PREFERENCE          = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.INTERFACE;
     private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR.replaceFirst("\\.color$", "");
-    private static final String ENUMERATION_HIGHLIGHT_PREFERENCE        = "semanticHighlighting.enum";
-    private static final String PLACEHOLDER_HIGHLIGHT_PREFERENCE        = "semanticHighlighting.typeParameter";
+    private static final String ENUMERATION_HIGHLIGHT_PREFERENCE        = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.ENUM;
+    private static final String PLACEHOLDER_HIGHLIGHT_PREFERENCE        = EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + SemanticHighlightings.TYPE_VARIABLE;
     private static final String TRAIT_HIGHLIGHT_PREFERENCE              = GROOVY_HIGHLIGHT_PREFERENCE;
 
     // these types have package-private visibility
@@ -128,10 +131,10 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object staticFieldHighlighting;
     private Object staticValueHighlighting;
 
-    private Object methodDefHighlighting;
     private Object methodUseHighlighting;
     private Object groovyMethodUseHighlighting;
     private Object staticMethodUseHighlighting;
+    private Object methodDeclarationHighlighting;
 
     private Object classHighlighting;
     private Object traitHighlighting;
@@ -178,20 +181,20 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         commentRefHighlighting = newHighlightingStyle(commentColor);
         keywordRefHighlighting = newHighlightingStyle(keywordColor, loadStyleFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE));
         reservedRefHighlighting = newHighlightingStyle(reservedColor, loadStyleFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE));
-        deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
-        undefinedRefHighlighting = newHighlightingStyle(null, TextAttribute.UNDERLINE);
+        deprecatedRefHighlighting = newHighlightingStyle(loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
+        undefinedRefHighlighting = newHighlightingStyle(TextAttribute.UNDERLINE);
 
         localHighlighting = newHighlightingStyle(variableColor, loadStyleFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE));
-        paramHighlighting = newHighlightingStyle(parameterColor, loadStyleFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE));
+        paramHighlighting = parameterColor == null ? localHighlighting : newHighlightingStyle(parameterColor, loadStyleFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE));
 
         objectFieldHighlighting = newHighlightingStyle(objectFieldColor, loadStyleFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE));
-        staticFieldHighlighting = newHighlightingStyle(staticFieldColor, loadStyleFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE));
-        staticValueHighlighting = newHighlightingStyle(staticValueColor, loadStyleFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE));
+        staticFieldHighlighting = staticFieldColor == null ? objectFieldHighlighting : newHighlightingStyle(staticFieldColor, loadStyleFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE));
+        staticValueHighlighting = staticValueColor == null ? staticFieldHighlighting : newHighlightingStyle(staticValueColor, loadStyleFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE));
 
-        methodDefHighlighting = newHighlightingStyle(methodDeclColor, loadStyleFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE));
         methodUseHighlighting = newHighlightingStyle(methodCallColor, loadStyleFrom(prefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE));
-        groovyMethodUseHighlighting = newHighlightingStyle(groovyColor, loadStyleFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE));
-        staticMethodUseHighlighting = newHighlightingStyle(staticCallColor, loadStyleFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
+        groovyMethodUseHighlighting = groovyColor == null ? methodUseHighlighting : newHighlightingStyle(groovyColor, loadStyleFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE));
+        staticMethodUseHighlighting = staticCallColor == null ? methodUseHighlighting : newHighlightingStyle(staticCallColor, loadStyleFrom(prefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
+        methodDeclarationHighlighting = methodDeclColor == null ? methodUseHighlighting : newHighlightingStyle(methodDeclColor, loadStyleFrom(prefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE));
 
         classHighlighting = newHighlightingStyle(classColor, loadStyleFrom(prefs, CLASS_HIGHLIGHT_PREFERENCE));
         traitHighlighting = newHighlightingStyle(traitColor, loadStyleFrom(prefs, TRAIT_HIGHLIGHT_PREFERENCE));
@@ -236,9 +239,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color), Boolean.TRUE);
     }
 
+    protected Object newHighlightingStyle(int style) {
+        //return new HighlightingStyle(new TextAttribute(color), true);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(null, null, style), Boolean.TRUE);
+    }
+
     protected Object newHighlightingStyle(Color color, int style) {
         //return new HighlightingStyle(new TextAttribute(color, null, style), true);
-        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), Boolean.TRUE);
+        return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), color == null ? Boolean.FALSE : Boolean.TRUE);
     }
 
     protected void setHighlightingStyle(Position pos, Object val) {
@@ -411,7 +419,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         case CTOR:
         case METHOD:
         case STATIC_METHOD:
-            style = methodDefHighlighting;
+            style = methodDeclarationHighlighting;
             break;
         case CTOR_CALL:
         case METHOD_CALL:
