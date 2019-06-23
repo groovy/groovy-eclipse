@@ -1701,6 +1701,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testAnnoElems6() {
+        addGroovySource '''\
+            @interface Bar {
+              String one() default '1'
+              String two() default '2'
+            }
+            @interface Bars {
+              Bar[] value()
+            }
+            '''.stripIndent(), 'Bar', 'foo'
+
+        String contents = '''\
+            import foo.Bar
+            import foo.Bars
+            class C {
+              @Bars([@Bar(one='x'), @Bar(one = 'y', two = 'z')])
+              def method() {
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, TAG_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('two'), 3, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD))
+    }
+
+    @Test
     void testGString1() {
         String contents = '''\
             class X {

@@ -669,29 +669,33 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             // visit attribute values
             super.visitAnnotation(node);
             // visit attribute labels
-            for (String name : node.getMembers().keySet()) {
-                MethodNode meth = type.getMethod(name, NO_PARAMETERS);
-                ASTNode attr;
-                if (meth != null) {
-                    attr = meth; // no Groovy AST node exists for name
-                    noLookup = new TypeLookupResult(meth.getReturnType(), type.redirect(), meth, TypeConfidence.EXACT, scope);
-                } else {
-                    attr = new ConstantExpression(name);
-                    // this is very rough; it only works for an attribute that directly follows '('
-                    attr.setStart(type.getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
-
-                    noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type.redirect(), null, TypeConfidence.UNKNOWN, scope);
-                }
-                noLookup.enclosingAnnotation = node; // set context for requestor
-                status = notifyRequestor(attr, requestor, noLookup);
-                if (status != VisitStatus.CONTINUE) break;
-            }
+            visitAnnotationKeys(node);
             break;
         case CANCEL_BRANCH:
             return;
         case CANCEL_MEMBER:
         case STOP_VISIT:
             throw new VisitCompleted(status);
+        }
+    }
+
+    private void visitAnnotationKeys(AnnotationNode node) {
+        ClassNode type = node.getClassNode();
+        VariableScope scope = scopes.getLast();
+        for (String name : node.getMembers().keySet()) {
+            MethodNode meth = type.getMethod(name, NO_PARAMETERS);
+            ASTNode attr; TypeLookupResult noLookup;
+            if (meth != null) {
+                attr = meth; // no Groovy AST node exists for name
+                noLookup = new TypeLookupResult(meth.getReturnType(), type.redirect(), meth, TypeConfidence.EXACT, scope);
+            } else {
+                attr = new ConstantExpression(name);
+                // this is very rough; it only works for an attribute that directly follows '('
+                attr.setStart(type.getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
+                noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type.redirect(), null, TypeConfidence.UNKNOWN, scope);
+            }
+            noLookup.enclosingAnnotation = node; // set context for requestor
+            if (notifyRequestor(attr, requestor, noLookup) != VisitStatus.CONTINUE) break;
         }
     }
 
@@ -947,7 +951,11 @@ assert primaryExprType != null && dependentExprType != null;
     @Override
     public void visitConstantExpression(ConstantExpression node) {
         if (node instanceof AnnotationConstantExpression) {
+            // visit annotation label
             visitClassReference(node.getType());
+            // visit attribute labels
+            visitAnnotationKeys((AnnotationNode) node.getValue());
+            // visit attribute values (in AnnotationConstantExpression#visit)
         }
         scopes.getLast().setCurrentNode(node);
         handleSimpleExpression(node, () -> {
