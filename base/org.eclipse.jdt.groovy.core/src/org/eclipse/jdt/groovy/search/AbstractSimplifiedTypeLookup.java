@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,12 +23,8 @@ import java.util.Objects;
 import groovy.lang.Closure;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
@@ -155,36 +151,6 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 currentExpression = null; isStatic = null;
             }
         }
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public final TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         return null;
     }
 

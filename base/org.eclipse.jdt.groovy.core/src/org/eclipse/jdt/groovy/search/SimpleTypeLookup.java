@@ -32,7 +32,6 @@ import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -95,12 +94,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     @Override
     public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
         return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final AnnotationNode node, final VariableScope scope) {
-        ClassNode baseType = node.getClassNode();
-        return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     @Override

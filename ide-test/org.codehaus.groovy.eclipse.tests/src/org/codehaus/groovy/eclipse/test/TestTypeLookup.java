@@ -15,15 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -41,40 +36,5 @@ public class TestTypeLookup implements ITypeLookup {
             VariableScope.VOID_CLASS_NODE,
             VariableScope.STRING_CLASS_NODE.getMethod("toString", Parameter.EMPTY_ARRAY),
             TypeConfidence.LOOSELY_INFERRED, scope);
-    }
-
-    @Override
-    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-        // do nothing
     }
 }

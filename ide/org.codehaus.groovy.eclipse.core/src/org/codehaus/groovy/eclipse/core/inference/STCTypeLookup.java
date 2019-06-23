@@ -22,13 +22,10 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -42,7 +39,6 @@ import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -53,10 +49,6 @@ public class STCTypeLookup implements ITypeLookup {
 
     // enabled for Groovy 2.0 or greater
     private static final boolean isEnabled = (CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2);
-
-    @Override
-    public void initialize(final GroovyCompilationUnit unit, final VariableScope topLevelScope) {
-    }
 
     @Override
     public TypeLookupResult lookupType(final Expression expr, final VariableScope scope, final ClassNode objectExpressionType) {
@@ -151,26 +143,6 @@ public class STCTypeLookup implements ITypeLookup {
                 return new TypeLookupResult((ClassNode) inferredType, node.getDeclaringClass(), node, TypeConfidence.INFERRED, scope);
             }
         }
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final AnnotationNode node, final VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final ImportNode node, final VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final ClassNode node, final VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final Parameter node, final VariableScope scope) {
         return null;
     }
 

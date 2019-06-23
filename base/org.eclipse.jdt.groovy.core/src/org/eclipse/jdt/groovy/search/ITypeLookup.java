@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -32,6 +31,15 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 public interface ITypeLookup {
 
     /**
+     * Performs initialization for this lookup. Primary use is to add proper default variables in the variable scope.
+     *
+     * @param unit
+     * @param topLevelScope
+     */
+    default void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
+    }
+
+    /**
      * Determine the type for an expression node.
      *
      * @param node the AST Node to determine the type for
@@ -44,13 +52,27 @@ public interface ITypeLookup {
     TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType);
 
     /**
+     * Determine the type for a class node. Implementors should return null
+     * unless the type returned should be different from the type passed in.
+     *
+     * @param node the AST Node to determine the type for
+     * @param scope the variable scope available at this location
+     * @return the type for the node and confidence in that type, or null if cannot determine
+     */
+    default TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
+        return null;
+    }
+
+    /**
      * Determine the type for a field node.
      *
      * @param node the AST Node to determine the type for
      * @param scope the variable scope at this location
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(FieldNode node, VariableScope scope);
+    default TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
+        return null;
+    }
 
     /**
      * Determine the type for a method node.
@@ -59,50 +81,29 @@ public interface ITypeLookup {
      * @param scope the variable scope available at this location
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(MethodNode node, VariableScope scope);
+    default TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
+        return null;
+    }
 
     /**
-     * Determine the type for an annotation node.
+     * Determine the type for an import node.
      *
      * @param node the AST Node to determine the type for
      * @param scope the variable scope available at this location
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(AnnotationNode node, VariableScope scope);
+    default TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
+        return null;
+    }
 
     /**
-     * Determine the type for an expression node.
+     * Determine the type for a parameter node.
      *
      * @param node the AST Node to determine the type for
      * @param scope the variable scope available at this location
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(ImportNode node, VariableScope scope);
-
-    /**
-     * Determine the type for a class node. Implementors should return null unless the type returned should be different from the
-     * type passed in.
-     *
-     * @param node the AST Node to determine the type for
-     * @param scope the variable scope available at this location
-     * @return the type for the node and confidence in that type, or null if cannot determine
-     */
-    TypeLookupResult lookupType(ClassNode node, VariableScope scope);
-
-    /**
-     * Determine the type for a Parameter node.
-     *
-     * @param node the AST Node to determine the type for
-     * @param scope the variable scope available at this location
-     * @return the type for the node and confidence in that type, or null if cannot determine
-     */
-    TypeLookupResult lookupType(Parameter node, VariableScope scope);
-
-    /**
-     * A hook to perform any initialization for this lookup. Primary use is to add proper default variables in the variable scope
-     *
-     * @param unit
-     * @param topLevelScope
-     */
-    void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope);
+    default TypeLookupResult lookupType(Parameter node, VariableScope scope) {
+        return null;
+    }
 }

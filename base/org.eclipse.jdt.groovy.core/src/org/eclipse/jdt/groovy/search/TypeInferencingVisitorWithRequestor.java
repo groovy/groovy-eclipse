@@ -658,42 +658,29 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitAnnotation(AnnotationNode node) {
-        TypeLookupResult result = null;
-        VariableScope scope = scopes.getLast();
-        for (ITypeLookup lookup : lookups) {
-            TypeLookupResult candidate = lookup.lookupType(node, scope);
-            if (candidate != null) {
-                if (result == null || result.confidence.isLessThan(candidate.confidence)) {
-                    result = candidate;
-                }
-                if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
-                    break;
-                }
-            }
-        }
-        VisitStatus status = notifyRequestor(node, requestor, result);
+        ClassNode type = node.getClassNode(); VariableScope scope = scopes.getLast();
+        TypeLookupResult noLookup = new TypeLookupResult(type, type, type, TypeConfidence.EXACT, scope);
 
+        VisitStatus status = notifyRequestor(node, requestor, noLookup);
         switch (status) {
         case CONTINUE:
             // visit annotation label
-            visitClassReference(node.getClassNode());
+            visitClassReference(type);
             // visit attribute values
             super.visitAnnotation(node);
             // visit attribute labels
             for (String name : node.getMembers().keySet()) {
-                MethodNode meth = node.getClassNode().getMethod(name, NO_PARAMETERS);
-                ASTNode attr; TypeLookupResult noLookup;
+                MethodNode meth = type.getMethod(name, NO_PARAMETERS);
+                ASTNode attr;
                 if (meth != null) {
                     attr = meth; // no Groovy AST node exists for name
-                    noLookup = new TypeLookupResult(meth.getReturnType(),
-                        node.getClassNode().redirect(), meth, TypeConfidence.EXACT, scope);
+                    noLookup = new TypeLookupResult(meth.getReturnType(), type.redirect(), meth, TypeConfidence.EXACT, scope);
                 } else {
                     attr = new ConstantExpression(name);
                     // this is very rough; it only works for an attribute that directly follows '('
-                    attr.setStart(node.getClassNode().getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
+                    attr.setStart(type.getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
 
-                    noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE,
-                        node.getClassNode().redirect(), null, TypeConfidence.UNKNOWN, scope);
+                    noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type.redirect(), null, TypeConfidence.UNKNOWN, scope);
                 }
                 noLookup.enclosingAnnotation = node; // set context for requestor
                 status = notifyRequestor(attr, requestor, noLookup);

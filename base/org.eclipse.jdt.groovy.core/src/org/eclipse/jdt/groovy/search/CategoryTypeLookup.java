@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -31,7 +28,6 @@ import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.reflection.ParameterTypes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
@@ -199,42 +195,5 @@ public class CategoryTypeLookup implements ITypeLookup {
         } catch (Throwable t) {
             return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
         }
-    }
-
-    //--------------------------------------------------------------------------
-
-    @Override
-    public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
-        return null;
-    }
-
-    @Override
-    public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-        // do nothing
     }
 }
