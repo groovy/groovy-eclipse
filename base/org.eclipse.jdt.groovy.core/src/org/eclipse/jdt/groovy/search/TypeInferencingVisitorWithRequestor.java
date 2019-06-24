@@ -1429,17 +1429,26 @@ assert primaryExprType != null && dependentExprType != null;
             visitMethodOverrides(type);
         }
 
-        MethodNode meth; // if return type depends on any Closure argument return types, deal with that now
-        if (t.declaration instanceof MethodNode && (meth = (MethodNode) t.declaration).getGenericsTypes() != null &&
-                Arrays.stream(meth.getParameters()).anyMatch(p -> p.getType().equals(VariableScope.CLOSURE_CLASS_NODE))) {
-            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
-            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
-            try {
-                boolean isStatic = (node.getObjectExpression() instanceof ClassExpression);
-                returnType = lookupExpressionType(node.getMethod(), objExprType, isStatic, scope).type;
-            } finally {
-                scope.setMethodCallArgumentTypes(null);
-                scope.setMethodCallGenericsTypes(null);
+        if (t.declaration instanceof MethodNode) {
+            MethodNode meth = (MethodNode) t.declaration;
+            // if return type depends on any Closure argument return types, deal with that
+            if (meth.getGenericsTypes() != null && Arrays.stream(meth.getParameters())
+                    .anyMatch(p -> p.getType().equals(VariableScope.CLOSURE_CLASS_NODE))) {
+                scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
+                scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
+                try {
+                    boolean isStatic = (node.getObjectExpression() instanceof ClassExpression);
+                    returnType = lookupExpressionType(node.getMethod(), objExprType, isStatic, scope).type;
+                } finally {
+                    scope.setMethodCallArgumentTypes(null);
+                    scope.setMethodCallGenericsTypes(null);
+                }
+            } else if (t.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
+                switch (meth.getName()) {
+                case "record":
+                case "realizeNas":
+                    returnType = primaryTypeStack.removeLast();
+                }
             }
         }
 
@@ -2374,7 +2383,44 @@ assert primaryExprType != null && dependentExprType != null;
                     result[0] = (expr == statement.getExpression());
                 }
             });
-            return result[0];
+            if (result[0]) return true;
+        }
+        return isSpockValueRecorderArgument(expr);
+    }
+
+    /**
+     * Spock rewrites the "expect" statements from <code>foo.bar == baz</code> to:
+     * <pre>
+     * org.spockframework.runtime.SpockRuntime.verifyCondition(
+     *   $spock_errorCollector,
+     *   $spock_valueRecorder.reset(),
+     *   foo == bar.baz, 14, 5, null,
+     *   $spock_valueRecorder.record(
+     *     $spock_valueRecorder.startRecordingValue(3),
+     *     (
+     *       $spock_valueRecorder.record(
+     *         $spock_valueRecorder.startRecordingValue(1),
+     *         $spock_valueRecorder.record(
+     *           $spock_valueRecorder.startRecordingValue(0), foo).bar
+     *       ) == $spock_valueRecorder.record($spock_valueRecorder.startRecordingValue(2), baz)
+     *     )
+     *   )
+     * )
+     * </pre>
+     *
+     * ValueRecorder.record is defined as: <code>public Object record(int index, Object value)</code>.
+     * So, we want to save the inferred type of the last argument so it can be used as the return type.
+     */
+    private boolean isSpockValueRecorderArgument(Expression expr) {
+        VariableScope.CallAndType cat = scopes.getLast().getEnclosingMethodCallExpression();
+        if (cat != null && cat.declaration instanceof MethodNode && cat.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
+            ArgumentListExpression args = (ArgumentListExpression) cat.call.getArguments();
+            MethodNode meth = (MethodNode) cat.declaration;
+            switch (meth.getName()) {
+            case "record":
+            case "realizeNas":
+                return expr == DefaultGroovyMethods.last(args.getExpressions());
+            }
         }
         return false;
     }

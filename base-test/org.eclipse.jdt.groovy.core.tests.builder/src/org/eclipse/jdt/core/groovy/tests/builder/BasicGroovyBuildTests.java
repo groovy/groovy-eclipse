@@ -1998,21 +1998,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
 
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "MyTest",
             //@formatter:off
-            "import org.junit.runner.RunWith\n" +
-            "import spock.lang.Specification\n" +
-            "\n" +
-            "final class MyTest extends Specification {\n" +
-            "  def aField\n" +
-            "  def aMethod() {\n" +
-            "    expect:\n" +
-            "    println 'hello'\n" +
+            "final class MyTest extends spock.lang.Specification {\n" +
+            "  def prop\n" +
+            "  def meth() {\n" +
+            "   expect:\n" +
+            "    'hello' != 'world'\n" +
             "  }\n" +
-            "  static void main(String[] argv) {\n" +
+            "  static main(args) {\n" +
             "    print 'success'\n" +
             "  }\n" +
             "}\n");
@@ -2034,35 +2031,27 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
 
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",
             //@formatter:off
-            "import spock.lang.Specification\n" +
-            "\n" +
-            "class FoobarSpec extends Specification {\n" +
-            "  \n" +
-            "  Foobar barbar\n" +
-            "   \n" +
-            "    def example() {\n" +
-            "      when: \n" +
-            "        def foobar = new Foobar()\n" +
-            "        \n" +
-            "        then:\n" +
-            "        foobar.baz == 42\n" +
-            "   }\n" +
+            "class FoobarSpec extends spock.lang.Specification {\n" +
+            "  private Foobar field\n" +
+            "  def example() {\n" +
+            "   when: \n" +
+            "    def foobar = new Foobar()\n" +
             "    \n" +
+            "   then:\n" +
+            "    foobar.baz == 42\n" +
+            "  }\n" +
             "}");
             //@formatter:on
 
         env.addGroovyClass(paths[1], "", "Foobar",
             //@formatter:off
             "class Foobar {\n" +
-            "\n" +
-            "def baz = 42\n" +
-            "//def quux = 36\n" +
-            "\n" +
+            "  def baz = 42\n" +
             "}\n");
             //@formatter:on
 
@@ -2077,10 +2066,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "", "Foobar",
             //@formatter:off
             "class Foobar {\n" +
-            "\n" +
-            "def baz = 42\n" +
-            "def quux = 36\n" +
-            "\n" +
+            "  def baz = 42\n" +
+            "  def xyz = 36\n" +
             "}\n");
             //@formatter:on
 
@@ -2106,34 +2093,27 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
 
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.2-groovy-2.4.jar");
+        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
         env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",
             //@formatter:off
-            "import spock.lang.Specification\n" +
-            "\n" +
-            "class FoobarSpec extends Specification {\n" +
-            "  \n" +
-            "  Foobar foob\n" +
-            "    def example() {\n" +
-            "      when: \n" +
-            "        def foobar = new Foobar()\n" +
-            "        \n" +
-            "        then:\n" +
-            "        foobar.baz == 42\n" +
-            "   }\n" +
+            "class FoobarSpec extends spock.lang.Specification {\n" +
+            "  private Foobar field\n" +
+            "  def example() {\n" +
+            "   given: \n" +
+            "    def foobar = new Foobar()\n" +
             "    \n" +
+            "   expect:\n" +
+            "    foobar.baz == 42\n" +
+            "  }\n" +
             "}");
             //@formatter:on
 
         env.addGroovyClass(paths[1], "", "Foobar",
             //@formatter:off
             "class Foobar {\n" +
-            "\n" +
-            "def baz = 42\n" +
-            "//def quux = 36\n" +
-            "\n" +
+            "  def baz = 42\n" +
             "}\n");
             //@formatter:on
 
@@ -2144,10 +2124,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "", "Foobar",
             //@formatter:off
             "class Foobar {\n" +
-            "\n" +
-            "def baz = 42\n" +
-            "def quux = 36\n" +
-            "\n" +
+            "  def baz = 42\n" +
+            "  def xyz = 36\n" +
             "}\n");
             //@formatter:on
 
