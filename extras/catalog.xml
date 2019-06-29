@@ -17,7 +17,7 @@
         <lifecycleMappingIU>
           <iuId>org.codehaus.groovy.m2eclipse</iuId>
         </lifecycleMappingIU>
-        <repositoryUrl>https://dist.springsource.org/snapshot/GRECLIPSE/e4.7</repositoryUrl>
+        <repositoryUrl>https://dist.springsource.org/snapshot/GRECLIPSE/e4.8</repositoryUrl>
       </p2>
       <overview>
         <summary>Maven Integration for Grooovy-Eclipse</summary>

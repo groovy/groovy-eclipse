@@ -2,13 +2,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-	<version>3.4.0-SNAPSHOT</version>
+	<version>3.5.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
-		mvn clean verify -Pe47
-		mvn clean deploy -Pe47 -Pmilestone -Ddist.qualifier=-M1
-		mvn clean deploy -Pe47 -Prelease
+		mvn clean verify -Pe48
+		mvn clean deploy -Pe48 -Pmilestone -Ddist.qualifier=-M1
+		mvn clean deploy -Pe48 -Prelease
 
 		Running 'deploy' requires s3 accessKey and secretKey to be provided in a
 		properties file. The properties file must be specified via env variable
@@ -216,14 +216,10 @@
 		<profile>
 			<id>e48</id>
 			<repositories>
-				<repository> <id>photon</id> <layout>p2</layout>
-					<!--
-					     20190614 - replacing https composite with https links from inside composite 
-					<url>https://download.eclipse.org/releases/photon</url>
-					-->
-					<url>https://download.eclipse.org/technology/epp/packages/photon/</url>
-				</repository>
-				<repository> <id>photon2</id> <layout>p2</layout>
+				<repository>
+					<id>photon</id>
+					<layout>p2</layout>
+					<!--url>https://download.eclipse.org/releases/photon</url-->
 					<url>https://download.eclipse.org/releases/photon/201806271001</url>
 				</repository>
 				<repository>
@@ -241,45 +237,6 @@
 			<properties>
 				<dist.target>e4.8</dist.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e48${dist.qualifier}'</greclipse.build.qualifier>
-			</properties>
-		</profile>
-
-		<profile>
-			<id>e47</id>
-			<repositories>
-				<repository> <id>oxygen</id> <layout>p2</layout>
-					<!--
-					     20190614 - Original link was:
-					<url>https://download.eclipse.org/releases/oxygen</url>
-					     this composite has http links inside, I'm inlining those
-					     links (with http>https) to see if it works (see sites oxygen2>4)
-					-->
-					<url>https://download.eclipse.org/technology/epp/packages/oxygen/</url>
-				</repository>
-				<repository> <id>oxygen2</id> <layout>p2</layout>
-					<url>https://download.eclipse.org/releases/oxygen/201804111000</url>
-				</repository>
-				<repository> <id>oxygen3</id> <layout>p2</layout>
-					<url>https://download.eclipse.org/releases/oxygen/201803211000</url>
-				</repository>
-				<repository> <id>oxygen4</id> <layout>p2</layout>
-					<url>https://download.eclipse.org/releases/oxygen/201712201001</url>
-				</repository>
-				<repository>
-					<id>eclipse47</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.7</url>
-				</repository>
-			</repositories>
-			<modules>
-				<module>jdt-patch/e47/org.eclipse.jdt.core</module>
-				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.builder</module>
-				<module>jdt-patch/e47/org.eclipse.jdt.core.tests.compiler</module>
-				<module>jdt-patch/e47/Feature-org.codehaus.groovy.jdt.patch</module>
-			</modules>
-			<properties>
-				<dist.target>e4.7</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e47${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -345,7 +302,7 @@
 			<id>release</id>
 			<properties>
 				<dist.type>release</dist.type>
-				<dist.version>3.4.0</dist.version>
+				<dist.version>3.5.0</dist.version>
 				<dist.qualifier>-RELEASE</dist.qualifier>
 				<!-- use the below for 'practice' builds, comment out to do the 'real' build -->
 				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
