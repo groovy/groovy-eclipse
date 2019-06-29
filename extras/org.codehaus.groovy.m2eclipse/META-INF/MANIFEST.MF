@@ -3,9 +3,9 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.m2eclipse;singleton:=true
 Bundle-Name: Groovy m2e integration
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.4.0.qualifier
+Bundle-Version: 3.4.1.qualifier
 Import-Package: org.eclipse.ui.preferences
-Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="3.4.0",
+Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="[3.4.0,3.5.0)",
  org.eclipse.m2e.jdt,
  org.eclipse.m2e.core,
  org.eclipse.m2e.maven.runtime

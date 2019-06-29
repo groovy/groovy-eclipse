@@ -12,7 +12,7 @@
 		<relativePath>../../pom.xml</relativePath>
 		<groupId>org.codehaus.groovy.eclipse</groupId>
 		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-		<version>3.4.0-SNAPSHOT</version>
+		<version>3.4.1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.codehaus.groovy.eclipse</groupId>
@@ -33,7 +33,7 @@
 	</pluginRepositories>
 
 	<properties>
-		<dist.version>3.4.0</dist.version>
+		<dist.version>3.4.1</dist.version>
 		<dist.bucket>dist.springsource.org</dist.bucket>
 		<!-- before doing it 'for real' you can try the path with '-test' in it.
 			This will upload and do everything as if a real release, but in a 'GRECLIPSE-test' directory.

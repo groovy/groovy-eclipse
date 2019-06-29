@@ -7,7 +7,7 @@
 
 	<artifactId>groovy-eclipse-maven-tests</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>3.4.0-SNAPSHOT</version>
+	<version>3.4.1-SNAPSHOT</version>
 
 	<properties>
 		<!--
@@ -64,7 +64,7 @@
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-compiler</artifactId>
-						<version>3.4.0-SNAPSHOT</version>
+						<version>3.4.1-SNAPSHOT</version>
 					</dependency>
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
