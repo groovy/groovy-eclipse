@@ -28,21 +28,19 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ColorFieldEditor;
-import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.dialogs.PreferenceLinkArea;
 import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
+import org.osgi.framework.Version;
 
 /**
  * This class represents a preference page that is contributed to the
@@ -59,6 +57,11 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
     public GroovyEditorPreferencesPage() {
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
+    }
+
+    @Override
+    protected String getPageId() {
+        return "org.codehaus.groovy.eclipse.preferences.editor";
     }
 
     /**
@@ -99,8 +102,20 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
                 tuple -> copyColorAndStyle(tuple, store, IJavaColorConstants.JAVA_KEYWORD));
             copyColorAndStyle(returnEditor, store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
         }));
+        GridDataFactory.swtDefaults().align(SWT.LEFT, SWT.TOP).indent(0, IDialogConstants.VERTICAL_MARGIN).span(2, 1).applyTo(javaColorButton);
 
         // Semantic Highlighting
+        createSemanticHighlightingEditors(parent);
+
+        // Code Minings -- available since JDT UI 3.16
+        if (JavaPlugin.getDefault().getBundle().getVersion().compareTo(new Version(3, 16, 0)) >= 0) {
+            createPreferencePageLink(parent,
+                "org.eclipse.jdt.ui.preferences.JavaEditorCodeMiningPreferencePage",
+                Messages.getString("GroovyEditorPreferencesPage.InheritedJavaMiningsDescription"));
+        }
+    }
+
+    private void createSemanticHighlightingEditors(Composite parent) {
         Group group = new Group(parent, SWT.SHADOW_NONE);
         group.setFont(group.getParent().getFont());
         group.setLayout(new GridLayout());
@@ -112,21 +127,19 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
         addField(new BooleanFieldEditor(
             PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
             Messages.getString("GroovyEditorPreferencesPage.SemanticHighlightingToggle"), panel));
+
         addField(new BooleanFieldEditor(
             PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS,
             Messages.getString("GroovyEditorPreferencesPage.DollarSlashyHighlightingToggle"), panel));
 
-        @SuppressWarnings("unused")
-        PreferenceLinkArea area = new PreferenceLinkArea(panel, SWT.WRAP,
+        createPreferencePageLink(panel,
             "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
-            "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"),
-            (IWorkbenchPreferenceContainer) getContainer(), null);
+            Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"));
+    }
 
-        // Code Minings
-        area = new PreferenceLinkArea(parent, SWT.WRAP,
-            "org.eclipse.jdt.ui.preferences.JavaEditorCodeMiningPreferencePage",
-            "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaMiningsDescription"),
-            (IWorkbenchPreferenceContainer) getContainer(), null);
+    private void createPreferencePageLink(Composite parent, String pageId, String linkText) {
+        PreferenceLinkArea area = new PreferenceLinkArea(parent, SWT.WRAP, pageId, linkText, (IWorkbenchPreferenceContainer) getContainer(), null);
+        GridDataFactory.swtDefaults().indent(0, IDialogConstants.VERTICAL_MARGIN).span(2, 1).applyTo(area.getControl());
     }
 
     private Tuple2<ColorFieldEditor, BooleanFieldEditor2> createColorEditor(Composite parent, String preference, String nls) {
@@ -138,7 +151,6 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
                 BooleanFieldEditor.SEPARATE_LABEL, parent)
         );
 
-        addField(new SpacerFieldEditor(parent));
         addField(editors.getFirst());
         addField(editors.getSecond());
 
@@ -155,11 +167,6 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
     }
 
     @Override
-    protected String getPageId() {
-        return "org.codehaus.groovy.eclipse.preferences.editor";
-    }
-
-    @Override
     public boolean performOk() {
         boolean success = super.performOk();
         if (success) {
@@ -168,49 +175,5 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
             colorManager.initialize();
         }
         return success;
-    }
-
-    private static class SpacerFieldEditor extends FieldEditor {
-
-        private Label spacer;
-
-        private SpacerFieldEditor(Composite parent) {
-            spacer = new Label(parent, SWT.NONE);
-            GridData gd = new GridData();
-            spacer.setLayoutData(gd);
-        }
-
-        @Override
-        protected void adjustForNumColumns(int numColumns) {
-            ((GridData) spacer.getLayoutData()).horizontalSpan = numColumns;
-        }
-
-        @Override
-        protected void doFillIntoGrid(Composite parent, int numColumns) {
-            GridData gd = new GridData();
-            gd.horizontalSpan = numColumns;
-            spacer.setLayoutData(gd);
-        }
-
-        @Override
-        protected void doLoad() {
-        }
-
-        @Override
-        protected void doLoadDefault() {
-        }
-
-        @Override
-        protected void doStore() {
-        }
-
-        @Override
-        public int getNumberOfControls() {
-            return 0;
-        }
-
-        @Override
-        public void store() {
-        }
     }
 }
