@@ -99,14 +99,13 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
                 tuple -> copyColorAndStyle(tuple, store, IJavaColorConstants.JAVA_KEYWORD));
             copyColorAndStyle(returnEditor, store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
         }));
-        GridDataFactory.swtDefaults().indent(0, IDialogConstants.VERTICAL_MARGIN).applyTo(javaColorButton);
 
         // Semantic Highlighting
         Group group = new Group(parent, SWT.SHADOW_NONE);
         group.setFont(group.getParent().getFont());
         group.setLayout(new GridLayout());
         group.setText(Messages.getString("GroovyEditorPreferencesPage.SemanticHighlightingPrefs"));
-        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).indent(0, 7).span(2, 1).applyTo(group);
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).indent(0, IDialogConstants.VERTICAL_MARGIN).span(2, 1).applyTo(group);
 
         Composite panel = new Composite(group, SWT.NONE);
 
@@ -123,6 +122,7 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
             "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"),
             (IWorkbenchPreferenceContainer) getContainer(), null);
 
+        // Code Minings
         area = new PreferenceLinkArea(parent, SWT.WRAP,
             "org.eclipse.jdt.ui.preferences.JavaEditorCodeMiningPreferencePage",
             "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaMiningsDescription"),
