@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -90,12 +90,23 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
         Tuple2<ColorFieldEditor, BooleanFieldEditor2> returnEditor = createColorEditor(parent,
             PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, "GroovyEditorPreferencesPage.Return_color");
 
+        // Copy Java Preferences
+        Button javaColorButton = new Button(parent, SWT.BUTTON1);
+        javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
+        javaColorButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(event -> {
+            IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
+            Arrays.asList(primitivesEditor, keywordEditor, assertEditor).forEach(
+                tuple -> copyColorAndStyle(tuple, store, IJavaColorConstants.JAVA_KEYWORD));
+            copyColorAndStyle(returnEditor, store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
+        }));
+        GridDataFactory.swtDefaults().indent(0, IDialogConstants.VERTICAL_MARGIN).applyTo(javaColorButton);
+
         // Semantic Highlighting
         Group group = new Group(parent, SWT.SHADOW_NONE);
         group.setFont(group.getParent().getFont());
         group.setLayout(new GridLayout());
         group.setText(Messages.getString("GroovyEditorPreferencesPage.SemanticHighlightingPrefs"));
-        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).span(2, 1).applyTo(group);
+        GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).indent(0, 7).span(2, 1).applyTo(group);
 
         Composite panel = new Composite(group, SWT.NONE);
 
@@ -112,16 +123,10 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
             "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"),
             (IWorkbenchPreferenceContainer) getContainer(), null);
 
-        // Copy Java Preferences
-        Button javaColorButton = new Button(parent, SWT.BUTTON1);
-        javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
-        javaColorButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(event -> {
-            IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
-            Arrays.asList(primitivesEditor, keywordEditor, assertEditor).forEach(
-                tuple -> copyColorAndStyle(tuple, store, IJavaColorConstants.JAVA_KEYWORD));
-            copyColorAndStyle(returnEditor, store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
-        }));
-        GridDataFactory.swtDefaults().indent(0, IDialogConstants.VERTICAL_MARGIN).applyTo(javaColorButton);
+        area = new PreferenceLinkArea(parent, SWT.WRAP,
+            "org.eclipse.jdt.ui.preferences.JavaEditorCodeMiningPreferencePage",
+            "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaMiningsDescription"),
+            (IWorkbenchPreferenceContainer) getContainer(), null);
     }
 
     private Tuple2<ColorFieldEditor, BooleanFieldEditor2> createColorEditor(Composite parent, String preference, String nls) {
