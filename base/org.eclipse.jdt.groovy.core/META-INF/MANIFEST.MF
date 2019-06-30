@@ -5,8 +5,11 @@ Bundle-Name: Groovy-Eclipse integration
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.5.0.qualifier
 Bundle-ClassPath: nlcl.jar, .
-Export-Package: org.codehaus.jdt.groovy.integration.internal;x-internal:=true,
- org.codehaus.jdt.groovy.internal.compiler.ast,
+Export-Package: org.codehaus.jdt.groovy.ast,
+ org.codehaus.jdt.groovy.control;x-internal:=true,
+ org.codehaus.jdt.groovy.core.dom;x-internal:=true,
+ org.codehaus.jdt.groovy.integration.internal;x-internal:=true,
+ org.codehaus.jdt.groovy.internal.compiler.ast;x-internal:=true,
  org.codehaus.jdt.groovy.model,
  org.eclipse.jdt.groovy.core,
  org.eclipse.jdt.groovy.core.util,

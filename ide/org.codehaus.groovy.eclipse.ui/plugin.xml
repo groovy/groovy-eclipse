@@ -168,6 +168,65 @@
       </participant>
    </extension>
 
+   <extension point="org.eclipse.ui.workbench.texteditor.codeMiningProviders">
+      <codeMiningProvider
+            class="org.codehaus.groovy.eclipse.editor.mining.MethodParameterCodeMiningProvider"
+            id="org.codehaus.groovy.eclipse.mining.method_parameter">
+         <enabledWhen>
+            <and>
+               <test property="org.eclipse.jdt.ui.hasPreference"
+                  value="editor_codemining_enabled" forcePluginActivation="true" />
+               <test property="org.eclipse.jdt.ui.hasPreference"
+                  value="java.codemining.parameterNames" forcePluginActivation="true" />
+               <with variable="editor">
+                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor" />
+               </with>
+               <with variable="editorInput">
+                  <or>
+                     <adapt type="org.eclipse.core.resources.IFile">
+                        <test property="org.eclipse.core.resources.contentTypeId"
+                              value="org.eclipse.jdt.groovy.core.groovySource" />
+                     </adapt>
+                     <!--adapt type="org.eclipse.jdt.core.IClassFile">
+                        <instanceof value="org.eclipse.jdt.core.IClassFile" />
+                     </adapt-->
+                  </or>
+               </with>
+            </and>
+         </enabledWhen>
+      </codeMiningProvider>
+      <codeMiningProvider
+            class="org.eclipse.jdt.internal.ui.javaeditor.codemining.JavaElementCodeMiningProvider"
+            id="org.eclipse.jdt.ui.codemining.javaelement">
+         <enabledWhen>
+            <and>
+               <test property="org.eclipse.jdt.ui.hasPreference"
+                  value="editor_codemining_enabled" forcePluginActivation="true" />
+               <or>
+                  <test property="org.eclipse.jdt.ui.hasPreference"
+                     value="java.codemining.references" forcePluginActivation="true" />
+                  <test property="org.eclipse.jdt.ui.hasPreference"
+                     value="java.codemining.implementations" forcePluginActivation="true" />
+               </or>
+               <with variable="editor">
+                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor" />
+               </with>
+               <with variable="editorInput">
+                  <or>
+                     <adapt type="org.eclipse.core.resources.IFile">
+                        <test property="org.eclipse.core.resources.contentTypeId"
+                           value="org.eclipse.jdt.groovy.core.groovySource" />
+                     </adapt>
+	                 <!--adapt type="org.eclipse.jdt.core.IClassFile">
+                        <instanceof value="org.eclipse.jdt.core.IClassFile" />
+                     </adapt-->
+                  </or>
+               </with>
+            </and>
+         </enabledWhen>
+      </codeMiningProvider>
+   </extension>
+
    <extension point="org.eclipse.ui.newWizards">
       <category
             id="org.codehaus.groovy.eclipse"

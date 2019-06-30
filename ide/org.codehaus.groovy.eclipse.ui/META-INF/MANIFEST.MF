@@ -41,6 +41,7 @@ Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.5.0",
  org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
+ org.eclipse.ui.workbench,
  org.eclipse.ui.workbench.texteditor;visibility:=reexport
 Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui,org.codehaus.groovy.eclipse.ui.decorators"
 Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin

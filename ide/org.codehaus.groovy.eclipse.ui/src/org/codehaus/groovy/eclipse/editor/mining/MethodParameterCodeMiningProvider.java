@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.mining.internal;
+package org.codehaus.groovy.eclipse.editor.mining;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
@@ -28,7 +28,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCall;
-import org.codehaus.groovy.eclipse.codeassist.completions.MethodNodeWithNamedParams;
+import org.codehaus.jdt.groovy.ast.MethodNodeWithNamedParams;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
