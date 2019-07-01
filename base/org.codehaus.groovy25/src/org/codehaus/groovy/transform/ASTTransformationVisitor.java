@@ -61,7 +61,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -267,9 +266,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
     private static void doAddGlobalTransforms(ASTTransformationsContext context, boolean isFirstScan) {
         final CompilationUnit compilationUnit = context.getCompilationUnit();
-        // GRECLIPSE add
-        ensureGlobalTransformsAllowedInReconcileInitialized();
-        // GRECLIPSE end
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
         Map<String, URL> transformNames = new LinkedHashMap<String, URL>();
         try {
@@ -314,7 +310,10 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                                 null,
                                                 null);
                                     }
-                                } else /*GRECLIPSE add*/if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className))/*GRECLIPSE end*/{
+                                } else {
+                                    // GRECLIPSE add
+                                    if (compilationUnit.allowTransforms)
+                                    // GRECLIPSE end
                                     transformNames.put(className, service);
                                 }
                             }
@@ -378,20 +377,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
         return false;
-    }
-
-    private static Set<String> globalTransformsAllowedInReconcile = null;
-
-    private static void ensureGlobalTransformsAllowedInReconcileInitialized() {
-        if (globalTransformsAllowedInReconcile == null) {
-            globalTransformsAllowedInReconcile = new TreeSet<>();
-            globalTransformsAllowedInReconcile.add("groovy.grape.GrabAnnotationTransformation");
-            String transformNames = System.getProperty("greclipse.globalTransformsInReconcile", "");
-            for (String transformName : transformNames.split(",")) {
-                globalTransformsAllowedInReconcile.add(transformName.trim());
-            }
-            globalTransformsAllowedInReconcile.remove("");
-        }
     }
     // GRECLIPSE end
 

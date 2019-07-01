@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -99,13 +99,13 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
     public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit compilationUnit, boolean fullParse, IProgressMonitor progressMonitor) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
             // ASSUMPTIONS:
-            // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
-            // 2) parsing is for the entire CU (ie- from character 0, to compilationUnit.getContents().length)
-            // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
+            // 1) parsing is for the entire CU (ie- from character 0, to compilationUnit.getContents().length)
+            // 2) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
 
+            boolean disableGlobalXforms = !fullParse || optimizeStringLiterals;
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one.
             // FIXASC ought to reuse to ensure types end up in same groovy CU
-            GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, false, true);
+            GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, !disableGlobalXforms, true);
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
             GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
 

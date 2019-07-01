@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,10 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -114,6 +116,17 @@ public class GroovyParser {
         this.unitFactory = () -> {
             CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
             GroovyClassLoader[] classLoaders = loaderFactory.getGroovyClassLoaders(compilerConfiguration);
+            // https://github.com/groovy/groovy-eclipse/issues/814
+            if (allowTransforms && isReconcile) {
+                // disable Spock transform until inferencing supports it
+                Set<String> xforms = new HashSet<>();
+                xforms.add("org.spockframework.compiler.SpockTransform");
+                Optional.ofNullable(
+                    compilerConfiguration.getDisabledGlobalASTTransformations()
+                ).ifPresent(xforms::addAll);
+                compilerConfiguration.setDisabledGlobalASTTransformations(xforms);
+            }
+
             CompilationUnit unit = new CompilationUnit(
                 compilerConfiguration,
                 null, // CodeSource

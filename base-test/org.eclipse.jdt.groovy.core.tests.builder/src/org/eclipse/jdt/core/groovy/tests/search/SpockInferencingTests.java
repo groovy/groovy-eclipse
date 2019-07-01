@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class SpockInferencingTests extends InferencingTestSuite {
@@ -127,7 +128,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
         assertType(source, offset, offset + 3, "java.lang.Integer");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/812
+    @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/812
     public void testDataTableChecks() {
         String source =
             //@formatter:off
