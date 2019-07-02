@@ -174,25 +174,22 @@
             id="org.codehaus.groovy.eclipse.mining.elementReferences">
          <enabledWhen>
             <and>
-               <test property="org.eclipse.jdt.ui.hasPreference"
-                  value="editor_codemining_enabled" forcePluginActivation="true" />
+               <test property="org.eclipse.jdt.ui.hasPreference" value="editor_codemining_enabled"/>
                <or>
-                  <test property="org.eclipse.jdt.ui.hasPreference"
-                     value="java.codemining.references" forcePluginActivation="true" />
-                  <test property="org.eclipse.jdt.ui.hasPreference"
-                     value="java.codemining.implementations" forcePluginActivation="true" />
+                  <test property="org.eclipse.jdt.ui.hasPreference" value="java.codemining.references"/>
+                  <test property="org.eclipse.jdt.ui.hasPreference" value="java.codemining.implementations"/>
                </or>
                <with variable="editor">
-                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor" />
+                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor"/>
                </with>
                <with variable="editorInput">
                   <or>
                      <adapt type="org.eclipse.core.resources.IFile">
                         <test property="org.eclipse.core.resources.contentTypeId"
-                           value="org.eclipse.jdt.groovy.core.groovySource" />
+                           value="org.eclipse.jdt.groovy.core.groovySource"/>
                      </adapt>
 	                 <!--adapt type="org.eclipse.jdt.core.IClassFile">
-                        <instanceof value="org.eclipse.jdt.core.IClassFile" />
+                        <instanceof value="org.eclipse.jdt.core.IClassFile"/>
                      </adapt-->
                   </or>
                </with>
@@ -204,21 +201,19 @@
             id="org.codehaus.groovy.eclipse.mining.methodParameters">
          <enabledWhen>
             <and>
-               <test property="org.eclipse.jdt.ui.hasPreference"
-                  value="editor_codemining_enabled" forcePluginActivation="true" />
-               <test property="org.eclipse.jdt.ui.hasPreference"
-                  value="java.codemining.parameterNames" forcePluginActivation="true" />
+               <test property="org.eclipse.jdt.ui.hasPreference" value="editor_codemining_enabled"/>
+               <test property="org.eclipse.jdt.ui.hasPreference" value="java.codemining.parameterNames"/>
                <with variable="editor">
-                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor" />
+                  <instanceof value="org.codehaus.groovy.eclipse.editor.GroovyEditor"/>
                </with>
                <with variable="editorInput">
                   <or>
                      <adapt type="org.eclipse.core.resources.IFile">
                         <test property="org.eclipse.core.resources.contentTypeId"
-                              value="org.eclipse.jdt.groovy.core.groovySource" />
+                              value="org.eclipse.jdt.groovy.core.groovySource"/>
                      </adapt>
                      <!--adapt type="org.eclipse.jdt.core.IClassFile">
-                        <instanceof value="org.eclipse.jdt.core.IClassFile" />
+                        <instanceof value="org.eclipse.jdt.core.IClassFile"/>
                      </adapt-->
                   </or>
                </with>
@@ -942,17 +937,6 @@
       </consoleLineTracker>
    </extension>
 
-   <!-- TODO: Remove in some future release -->
-   <extension point="org.eclipse.core.expressions.propertyTesters">
-      <propertyTester
-            class="org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester"
-            id="org.codehaus.groovy.eclipse.ui.groovyResourcePropertyTester"
-            namespace="org.codehaus.groovy.eclipse.ui"
-            properties="isTest,hasMain,isScript"
-            type="org.eclipse.core.runtime.IAdaptable">
-      </propertyTester>
-   </extension>
-
    <extension point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer">
@@ -1004,14 +988,14 @@
             priority="high">
          <triggerPoints>
             <or>
-               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit" />
-               <instanceof value="org.eclipse.core.resources.IFile" />
+               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
+               <instanceof value="org.eclipse.core.resources.IFile"/>
              </or>
          </triggerPoints>
          <possibleChildren>
             <or>
-               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit" />
-               <instanceof value="org.eclipse.core.resources.IFile" />
+               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
+               <instanceof value="org.eclipse.core.resources.IFile"/>
             </or>
          </possibleChildren>
          <override
@@ -1024,7 +1008,7 @@
    <extension point="org.eclipse.ui.navigator.viewer">
       <viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
          <includes>
-            <contentExtension pattern="org.codehaus.groovy.eclipse.ui.groovyContent" />
+            <contentExtension pattern="org.codehaus.groovy.eclipse.ui.groovyContent"/>
          </includes>
       </viewerContentBinding>
    </extension>
