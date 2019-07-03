@@ -198,6 +198,10 @@ public class GroovyClassScope extends ClassScope {
     private int getModifiers(PropertyNode property) {
         int modifiers = (property.getModifiers() & 0xF);
 
+        if (property.getType().isUsingGenerics()) {
+            modifiers |= ExtraCompilerModifiers.AccGenericSignature;
+        }
+
         // if @PackageScope was detected by GCUD, field's modifiers will show it
         char[] nameChars = property.getName().toCharArray();
         for (FieldDeclaration field : referenceContext.fields) {
