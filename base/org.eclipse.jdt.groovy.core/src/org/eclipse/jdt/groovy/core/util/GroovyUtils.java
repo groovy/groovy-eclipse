@@ -198,29 +198,33 @@ public class GroovyUtils {
      * @see org.eclipse.jdt.core.Signature
      */
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
-        StringBuilder builder = new StringBuilder(getTypeSignatureWithoutGenerics(node, qualified, resolved));
+        String signature = getTypeSignatureWithoutGenerics(node, qualified, resolved);
 
         if (getBaseType(node).isUsingGenerics() && !getBaseType(node).isGenericsPlaceHolder()) {
             GenericsType[] generics = getGenericsTypes(node);
             if (generics.length > 0) {
+                StringBuilder builder = new StringBuilder(signature);
+
                 builder.setCharAt(builder.length() - 1, Signature.C_GENERIC_START);
-                for (GenericsType gen : generics) {
-                    if (gen.isPlaceholder() || !gen.isWildcard()) {
+                for (GenericsType gt : generics) {
+                    if (gt.isPlaceholder() || !gt.isWildcard()) {
                         // TODO: Can lower bound or upper bounds exist in this case?
-                        builder.append(getTypeSignature(gen.getType(), qualified, resolved));
-                    } else if (gen.getLowerBound() != null) {
-                        builder.append(Signature.C_SUPER).append(getTypeSignature(gen.getLowerBound(), qualified, resolved));
-                    } else if (gen.getUpperBounds() != null && gen.getUpperBounds().length > 0) { // TODO: handle more than one
-                        builder.append(Signature.C_EXTENDS).append(getTypeSignature(gen.getUpperBounds()[0], qualified, resolved));
+                        builder.append(getTypeSignature(gt.getType(), qualified, resolved));
+                    } else if (gt.getLowerBound() != null) {
+                        builder.append(Signature.C_SUPER).append(getTypeSignature(gt.getLowerBound(), qualified, resolved));
+                    } else if (gt.getUpperBounds() != null && gt.getUpperBounds().length == 1) {
+                        builder.append(Signature.C_EXTENDS).append(getTypeSignature(gt.getUpperBounds()[0], qualified, resolved));
                     } else {
                         builder.append(Signature.C_STAR);
                     }
                 }
                 builder.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
+
+                return builder.toString();
             }
         }
 
-        return builder.toString();
+        return signature;
     }
 
     public static String getTypeSignatureWithoutGenerics(ClassNode node, boolean qualified, boolean resolved) {
@@ -244,7 +248,8 @@ public class GroovyUtils {
 
         final int pos = builder.length();
         builder.append(Signature.createTypeSignature(name, resolved));
-        if (resolved && node.isGenericsPlaceHolder()) builder.setCharAt(pos, 'T');
+        if (resolved && node.isGenericsPlaceHolder())
+            builder.setCharAt(pos, Signature.C_TYPE_VARIABLE);
 
         return builder.toString();
     }

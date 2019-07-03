@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,8 +62,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
@@ -620,14 +618,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private void appendUniqueKeyForField(StringBuilder sb, FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
         appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
-        sb.append('.').append(node.getName()).append(')');
+        sb.append(Signature.C_DOT).append(node.getName()).append(')');
         appendUniqueKeyForResolvedClass(sb, resolvedType);
     }
 
     private void appendUniqueKeyForMethod(StringBuilder sb, MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
-        // TODO: This method does not handle capture types like Java does; example for Plain.class.newInstance():
-        // LPlain;&Ljava/lang/Class<!Ljava/lang/Class;{0}+LPlain;152;>;.newInstance()!+LPlain;|Ljava/lang/InstantiationException;|Ljava/lang/IllegalAccessException;
-
         // declaring type
         appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
 
@@ -645,8 +640,21 @@ public class CodeSelectRequestor implements ITypeRequestor {
         GenericsType[] generics = GroovyUtils.getGenericsTypes(node);
         if (generics.length > 0) {
             sb.append(Signature.C_GENERIC_START);
+            // see org.eclipse.jdt.core.Signature#createTypeParameterSignature(char[],char[][])
             for (GenericsType gt : generics) {
-                appendUniqueKeyForGenericsType(sb, gt);
+                ClassNode lower = gt.getLowerBound();
+                ClassNode[] upper = gt.getUpperBounds();
+
+                sb.append(gt.getName());
+                sb.append(Signature.C_COLON);
+                if (lower != null) {
+                    appendUniqueKeyForResolvedClass(sb, lower);
+                } else if (upper != null && upper.length > 0) {
+                    for (int i = 0; i < upper.length; i += 1) {
+                        if (i > 0) sb.append(Signature.C_COLON);
+                        appendUniqueKeyForResolvedClass(sb, upper[i]);
+                    }
+                }
             }
             sb.append(Signature.C_GENERIC_END);
         }
@@ -662,7 +670,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         sb.append(Signature.C_PARAM_END);
 
         // return type
-        appendUniqueKeyForClass(sb, node.getReturnType(), resolvedDeclaringType);
+        appendUniqueKeyForClass(sb, node.getOriginal().getReturnType(), resolvedDeclaringType);
 
         // generic type resolution
         if (generics.length > 0) {
@@ -689,8 +697,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private void appendUniqueKeyForGeneratedAccessor(StringBuilder sb, MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
         appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
-        sb.append('.').append(actualField.getElementName()).append(')');
-        ClassNode typeOfField = node.getName().startsWith("set")  && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType() : resolvedType;
+        sb.append(Signature.C_DOT).append(actualField.getElementName()).append(')');
+        ClassNode typeOfField = node.getName().startsWith("set") && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType() : resolvedType;
         appendUniqueKeyForResolvedClass(sb, typeOfField);
     }
 
@@ -707,24 +715,39 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     private void appendUniqueKeyForResolvedClass(StringBuilder sb, ClassNode resolvedType) {
-        String signature = GroovyUtils.getTypeSignature(resolvedType, true, true);
+        String signature = GroovyUtils.getTypeSignatureWithoutGenerics(resolvedType, true, true).replace('.', '/');
 
-        sb.append(signature.replace('.', '/'));
-    }
+        sb.append(signature);
 
-    private void appendUniqueKeyForGenericsType(StringBuilder sb, GenericsType gt) {
-        String[] bounds = CharOperation.NO_STRINGS;
-        if (gt.getLowerBound() != null) {
-            ClassNode lb = gt.getLowerBound();
-            bounds = (String[]) ArrayUtils.add(bounds, GroovyUtils.getTypeSignature(lb, true, true));
-        } else if (gt.getUpperBounds() != null) {
-            for (ClassNode ub : gt.getUpperBounds()) {
-                bounds = (String[]) ArrayUtils.add(bounds, GroovyUtils.getTypeSignature(ub, true, true));
+        ClassNode baseType = GroovyUtils.getBaseType(resolvedType);
+        if (baseType.isUsingGenerics() && !baseType.isGenericsPlaceHolder()) {
+            GenericsType[] generics = baseType.getGenericsTypes();
+            if (generics != null && generics.length > 0) {
+                sb.setCharAt(sb.length() - 1, Signature.C_GENERIC_START);
+
+                for (int i = 0, n = generics.length; i < n; i += 1) {
+                    GenericsType gt = generics[i];
+                    if (gt.isPlaceholder() || !gt.isWildcard()) {
+                        appendUniqueKeyForResolvedClass(sb, gt.getType());
+                    } else {
+                        // see org.eclipse.jdt.core.BindingKey#createWildcardTypeBindingKey(String,char,String,int)
+                        sb.append(signature).append('{').append(i).append('}');
+
+                        if (gt.getLowerBound() != null) {
+                            sb.append(Signature.C_SUPER);
+                            appendUniqueKeyForResolvedClass(sb, gt.getLowerBound());
+                        } else if (gt.getUpperBounds() != null && gt.getUpperBounds().length == 1) {
+                            sb.append(Signature.C_EXTENDS);
+                            appendUniqueKeyForResolvedClass(sb, gt.getUpperBounds()[0]);
+                        } else {
+                            sb.append(Signature.C_STAR);
+                        }
+                    }
+                }
+
+                sb.append(Signature.C_GENERIC_END).append(Signature.C_NAME_END);
             }
         }
-        String signature = Signature.createTypeParameterSignature(gt.getName(), bounds);
-
-        sb.append(signature.replace('.', '/'));
     }
 
     private IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
