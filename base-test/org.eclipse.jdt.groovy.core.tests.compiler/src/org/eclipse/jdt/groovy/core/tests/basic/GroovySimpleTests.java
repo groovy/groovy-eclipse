@@ -91,6 +91,26 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
+    @Test // GROOVY-3831
+    public void testClosureConstructorArgument() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  URI[] uris\n" +
+            "  Foo(URI[] uris) {\n" +
+            "    this.uris = uris\n" +
+            "  }\n" +
+            "  Foo(List<String> uris) {\n" +
+            "    this(uris.collect { URI.create(it) } as URI[])\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
     @Test
     public void testGreclipse719() {
         //@formatter:off
@@ -2703,6 +2723,31 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources);
+    }
+
+    @Test
+    public void testImplementingInterface6() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.text.*\n" +
+            "interface DateTimeFormatConstants {\n" +
+            "  SimpleDateFormat AM_PM_TIME_FORMAT = new SimpleDateFormat('h:mma', new Locale('en_US'))\n" +
+            "  SimpleDateFormat MILITARY_TIME_FORMAT = new SimpleDateFormat('HH:mm')\n" +
+            "}\n" +
+            "interface DateTimeFormatConstants2 extends DateTimeFormatConstants {\n" +
+            "}\n" +
+            "class DateTimeUtils implements DateTimeFormatConstants2 {\n" +
+            "  static String convertMilitaryTimeToAmPm(String militaryTime) {\n" +
+            "    Date date = MILITARY_TIME_FORMAT.parse(militaryTime)\n" +
+            "    return AM_PM_TIME_FORMAT.format(date).toLowerCase()\n" +
+            "  }\n" +
+            "}\n" +
+            "print DateTimeUtils.convertMilitaryTimeToAmPm('20:30')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "8:30pm");
     }
 
     // WMTW: Groovy compilation unit scope adds the extra default import for java.util so List can be seen
