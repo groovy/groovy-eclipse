@@ -814,7 +814,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "1. ERROR in C.groovy (at line 8)\n" +
             "\tcount += 1\n" +
             "\t^^^^^\n" +
-            "Groovy:Apparent variable 'count' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable 'count' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
             "----------\n");
     }
 
@@ -1098,5 +1098,331 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis1() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "  }\n" +
+            "  Outer(Inner inner) {\n" +
+            "  }\n" +
+            "  Outer() {\n" +
+            "    this(new Inner())\n" + // "new Inner()" has implicit 'this' parameter
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "java.lang.VerifyError: Bad type on operand stack\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis1a() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "  }\n" +
+            "  Outer(Inner inner = new Inner()) {\n" + // "new Inner()" has implicit 'this' parameter
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Outer.groovy (at line 1)\n" +
+            "\tclass Outer {\n" +
+            "\t^\n" +
+            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis2() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = bar()) {\n" +
+            "  }\n" +
+            "  def bar() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = bar()) {\n" +
+            "\t  ^^^^\n" +
+            "Groovy:Can't access instance method 'bar' for a constructor parameter default value\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis2a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = this.bar()) {\n" +
+            "  }\n" +
+            "  def bar() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.bar()) {\n" +
+            "\t  ^^^^\n" +
+            "Groovy:Can't access instance method 'bar' for a constructor parameter default value\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis2b() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = this.&bar) {\n" +
+            "  }\n" +
+            "  def bar() {}\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.&bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n" +
+            "2. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.&bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:cannot reference this inside of this ((java.lang.Object) this.&bar)(....) before supertype constructor has been called\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis3() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = bar) {\n" +
+            "  }\n" +
+            "  def bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = bar) {\n" +
+            "\t        ^^^\n" +
+            "Groovy:Apparent variable 'bar' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis3a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = this.bar) {\n" +
+            "  }\n" +
+            "  def bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n" +
+            "2. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:cannot reference this inside of this ((java.lang.Object) this.bar)(....) before supertype constructor has been called\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testReferenceToUninitializedThis3b() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  C(foo = this.@bar) {\n" +
+            "  }\n" +
+            "  private def bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.@bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n" +
+            "2. ERROR in C.groovy (at line 2)\n" +
+            "\tC(foo = this.@bar) {\n" +
+            "\t        ^^^^\n" +
+            "Groovy:cannot reference this inside of this ((java.lang.Object) this.bar)(....) before supertype constructor has been called\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassConstructor1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  String str\n" +
+            "  Super(String s) { str = s }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" + // required?
+            "class Outer {\n" +
+            "  String a\n" +
+            "  private class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(getA())\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().str }\n" +
+            "}\n" +
+            "def o = new Outer(a:'ok')\n" +
+            "print o.test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassConstructor1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  String str\n" +
+            "  Super(String s) { str = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  String a\n" +
+            "  private class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(Outer.this.getA())\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().str }\n" +
+            "}\n" +
+            "def o = new Outer(a:'ok')\n" +
+            "print o.test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassConstructor2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  String str\n" +
+            "  Super(String s) { str = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  String a\n" +
+            "  private class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(a)\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().str }\n" +
+            "}\n" +
+            "def o = new Outer(a:'ok')\n" +
+            "print o.test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 9)\n" +
+            "\tsuper(a)\n" +
+            "\t      ^\n" +
+            "Groovy:Apparent variable 'a' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassConstructor2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  String str\n" +
+            "  Super(String s) { str = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  String a\n" +
+            "  private class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(Outer.this.a)\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().str }\n" +
+            "}\n" +
+            "def o = new Outer(a:'ok')\n" +
+            "print o.test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
+    }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassConstructor3() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Super {\n" +
+            "  String str\n" +
+            "  Super(String s) { str = s }\n" +
+            "}\n" +
+            "class Outer {\n" +
+            "  static final String OUTER_CONSTANT = 'ok'\n" +
+            "  private class Inner extends Super {\n" +
+            "    Inner() {\n" +
+            "      super(OUTER_CONSTANT)\n" + // here
+            "    }\n" +
+            "  }\n" +
+            "  String test() { new Inner().str }\n" +
+            "}\n" +
+            "print new Outer().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "ok");
     }
 }

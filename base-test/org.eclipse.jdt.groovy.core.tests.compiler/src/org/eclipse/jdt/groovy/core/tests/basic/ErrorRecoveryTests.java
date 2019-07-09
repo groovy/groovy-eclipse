@@ -1650,7 +1650,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 8)\n" +
             "\tSet s = []\n" +
             "\t    ^\n" +
-            "Groovy:Apparent variable 's' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable 's' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");

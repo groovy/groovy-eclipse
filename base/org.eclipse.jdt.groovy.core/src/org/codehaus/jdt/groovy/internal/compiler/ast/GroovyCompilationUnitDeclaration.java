@@ -436,6 +436,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         return null;
     }
 
+    private static String prepareMessage(String message) {
+        int i = 0;
+        while (i < message.length() && Character.isWhitespace(message.charAt(i))) {
+            i += 1;
+        }
+
+        // FIXASC Prefixed to indicate where it came from...
+        message = "Groovy:" + message.substring(i).split("\n")[0];
+
+        if (message.endsWith(" Possible causes:")) {
+            message = message.substring(0, message.length() - 17);
+        }
+        return message;
+    }
+
     // here be dragons
     private void recordProblems(List<?> errors) {
         // FIXASC look at this error situation (described below), surely we need to do it?
@@ -448,8 +463,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         // the list of those to process.
 
         List<Message> errorsRecorded = new ArrayList<>();
-        // FIXASC poor way to get the errors attached to the files
-        // FIXASC does groovy ever produce warnings? How are they treated here?
+        // FIXASC Poor way to get the errors attached to the files.
+        // FIXASC Does groovy ever produce warnings? How are they treated here?
         for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
             Message message = (Message) iterator.next();
             SyntaxException syntaxException = null;
@@ -474,29 +489,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (message instanceof SimpleMessage) {
                 SimpleMessage simpleMessage = (SimpleMessage) message;
                 sev |= ProblemSeverities.Error;
-                String simpleText = simpleMessage.getMessage();
-                if (simpleText.length() > 1 && simpleText.charAt(0) == '\n') {
-                    simpleText = simpleText.substring(1);
-                }
-                msg = "Groovy:" + simpleText;
-                if (msg.indexOf("\n") != -1) {
-                    msg = msg.substring(0, msg.indexOf("\n"));
-                }
+                msg = prepareMessage(simpleMessage.getMessage());
             }
             if (message instanceof SyntaxErrorMessage) {
-                SyntaxErrorMessage errorMessage = (SyntaxErrorMessage) message;
+                SyntaxErrorMessage errorMessage = ((SyntaxErrorMessage) message);
                 syntaxException = errorMessage.getCause();
                 sev |= ProblemSeverities.Error;
-                // FIXASC in the short term, prefixed groovy to indicate
-                // where it came from
-                String actualMessage = syntaxException.getMessage();
-                if (actualMessage.length() > 1 && actualMessage.charAt(0) == '\n') {
-                    actualMessage = actualMessage.substring(1);
-                }
-                msg = "Groovy:" + actualMessage;
-                if (msg.indexOf("\n") != -1) {
-                    msg = msg.substring(0, msg.indexOf("\n"));
-                }
+                msg = prepareMessage(syntaxException.getMessage());
                 line = syntaxException.getLine();
                 scol = errorMessage.getCause().getStartColumn();
                 ecol = errorMessage.getCause().getEndColumn() - 1;
@@ -508,16 +507,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 sev |= ProblemSeverities.Error;
                 if (em.getCause() instanceof RuntimeParserException) {
                     RuntimeParserException rpe = (RuntimeParserException) em.getCause();
-                    sev |= ProblemSeverities.Error;
-                    msg = "Groovy:" + rpe.getMessage();
-                    if (msg.indexOf("\n") != -1) {
-                        msg = msg.substring(0, msg.indexOf("\n"));
-                    }
-                    ModuleNode errorModuleNode = rpe.getModule();
-                    ModuleNode thisModuleNode = this.getModuleNode();
-                    if (!errorModuleNode.equals(thisModuleNode)) {
+                    if (!rpe.getModule().equals(this.getModuleNode())) {
                         continue;
                     }
+                    msg = prepareMessage(rpe.getMessage());
+
                     soffset = rpe.getNode().getStart();
                     eoffset = rpe.getNode().getEnd() - 1;
                     // need to work out the line again as it may be wrong
@@ -535,7 +529,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // need to work out the line again as it may be wrong
                 line = 0;
                 while (line < compilationResult.lineSeparatorPositions.length &&
-                    compilationResult.lineSeparatorPositions[line] < soffset) {
+                        compilationResult.lineSeparatorPositions[line] < soffset) {
                     line += 1;
                 }
                 line += 1; // from an array index to a real 'line number'

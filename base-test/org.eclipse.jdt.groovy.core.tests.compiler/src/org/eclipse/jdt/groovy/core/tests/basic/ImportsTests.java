@@ -1004,7 +1004,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
-            "Groovy:Apparent variable 'Type' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable 'Type' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
             "----------\n",
             options);
     }
@@ -1048,7 +1048,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "2. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
-            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class.\n" +
             "----------\n" +
             "----------\n" +
             "1. ERROR in com\\foo\\Type.groovy (at line 1)\n" +
@@ -1093,7 +1093,7 @@ public final class ImportsTests extends GroovyCompilerTestSuite {
             "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
             "\tType.m()\n" +
             "\t^^^^\n" +
-            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class.\n" +
             "----------\n",
             options);
     }

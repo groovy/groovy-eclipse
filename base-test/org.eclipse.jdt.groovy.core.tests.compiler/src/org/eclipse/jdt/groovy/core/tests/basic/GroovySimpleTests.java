@@ -2231,28 +2231,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testThisCallInMethod() {
-        //@formatter:off
-        String[] sources = {
-            "T.groovy",
-            "public class T {\n" +
-            "  def x () {\n" +
-            "    this \"\"\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            isParrotParser() ? "" : "----------\n" +
-            "1. ERROR in T.groovy (at line 3)\n" +
-            "\tthis \"\"\n" +
-            "\t     ^^\n" +
-            "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 10. File: T.groovy @ line 3, column 10.\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testProtectedType() {
         //@formatter:off
         String[] sources = {
@@ -2790,49 +2768,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testFieldPositioning1() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  List aList;\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. WARNING in p\\C.groovy (at line 3)\n" +
-            "\tList aList;\n" +
-            "\t^^^^\n" +
-            "List is a raw type. References to generic type List<E> should be parameterized\n" +
-            "----------\n");
-    }
-
-    // FIXASC poor positional error for invalid field name - this test needs sorting out
-    @Test
-    public void testFieldPositioning2() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  List<String> class;\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in p\\C.groovy (at line 3)\n" +
-            "\tList<String> class;\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: List @ line 3, column 3.\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testImplementingInterface_JavaExtendingGroovyAndImplementingMethod_ArrayReferenceReturnType() {
         //@formatter:off
         String[] sources = {
@@ -3322,6 +3257,56 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testSuperCallWithStaticMethod() {
+        //@formatter:off
+        String[] sources = {
+            "AandC.groovy",
+            "abstract class A {\n" +
+            "  protected A(String foo) {\n" +
+            "    this.foo = foo\n" +
+            "  }\n" +
+            "  String foo\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  C() {\n" +
+            "    super(bar('baz'))\n" +
+            "  }\n" +
+            "  private static String bar(baz) {\n" +
+            "    return 'foobar'\n" +
+            "  }\n" +
+            "  private static String bar() {\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().foo\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
+
+    @Test
+    public void testThisCallInMethod() {
+        //@formatter:off
+        String[] sources = {
+            "T.groovy",
+            "public class T {\n" +
+            "  def x () {\n" +
+            "    this \"\"\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            isParrotParser() ? "" : "----------\n" +
+            "1. ERROR in T.groovy (at line 3)\n" +
+            "\tthis \"\"\n" +
+            "\t     ^^\n" +
+            "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 10. File: T.groovy @ line 3, column 10.\n" +
+            "----------\n");
     }
 
     @Test
@@ -4583,6 +4568,49 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\t/*b*/ Stack plates2;\n" +
             "\t      ^^^^^\n" +
             "Stack is a raw type. References to generic type Stack<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testFieldPositions1() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  List aList;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in p\\C.groovy (at line 3)\n" +
+            "\tList aList;\n" +
+            "\t^^^^\n" +
+            "List is a raw type. References to generic type List<E> should be parameterized\n" +
+            "----------\n");
+    }
+
+    // FIXASC poor positional error for invalid field name - this test needs sorting out
+    @Test
+    public void testFieldPositions2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  List<String> class;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\C.groovy (at line 3)\n" +
+            "\tList<String> class;\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: List @ line 3, column 3.\n" +
             "----------\n");
     }
 

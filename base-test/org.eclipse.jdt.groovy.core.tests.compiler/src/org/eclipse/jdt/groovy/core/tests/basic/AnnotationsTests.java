@@ -1268,7 +1268,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "3. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@SuppressWarnings(DoesNot.EXIST)\n" +
             "\t                  ^^^^^^^\n" +
-            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
             "----------\n" +
             "4. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@SuppressWarnings(DoesNot.EXIST)\n" +
