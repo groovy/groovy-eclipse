@@ -199,7 +199,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
 
     protected Expression transformVariableExpression(VariableExpression ve) {
         Variable v = ve.getAccessedVariable();
-        if (v != null && v instanceof DynamicVariable) {
+        if (v instanceof DynamicVariable) {
             Expression result = findStaticFieldOrPropAccessorImportFromModule(v.getName());
             if (result != null) {
                 setSourcePosition(result, ve);
@@ -209,6 +209,17 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 return result;
             }
         }
+        // GRECLIPSE add -- GROOVY-8819
+        else if (v instanceof FieldNode && inSpecialConstructorCall) {
+            FieldNode fn = (FieldNode) v;
+            ClassNode declaringClass = fn.getDeclaringClass();
+            if (fn.isStatic() && currentClass.isDerivedFrom(declaringClass)) {
+                Expression result = new PropertyExpression(new ClassExpression(declaringClass), v.getName());
+                setSourcePosition(result, ve);
+                return result;
+            }
+        }
+        // GRECLIPSE end
         return ve;
     }
 

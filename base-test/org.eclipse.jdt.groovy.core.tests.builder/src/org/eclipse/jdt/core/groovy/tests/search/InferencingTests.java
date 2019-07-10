@@ -1194,6 +1194,79 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSuperFieldReference4() {
+        String contents =
+            "public interface Constants {\n" +
+            "  int FIRST = 1;\n" +
+            "}\n" +
+            "class UsesConstants implements Constants {\n" +
+            "  def x() {\n" +
+            "    FIRST\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "FIRST", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSuperFieldReference5() {
+        createJavaUnit("foo", "Bar",
+            "package foo;\n" +
+            "public class Bar {\n" +
+            "  public static final int CONST = 42;\n" +
+            "}\n");
+
+        String contents =
+            "class Baz extends foo.Bar {\n" +
+            "  Baz() {\n" +
+            "    this(CONST)\n" +
+            "  }\n" +
+            "  Baz(int num) {\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "CONST", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSuperFieldReference5a() {
+        createJavaUnit("foo", "Bar",
+            "package foo;\n" +
+            "public class Bar {\n" +
+            "  public static final int CONST = 42;\n" +
+            "  public Bar(int num) {\n" +
+            "  }\n" +
+            "}\n");
+
+        String contents =
+            "class Baz extends foo.Bar {\n" +
+            "  Baz() {\n" +
+            "    super(CONST)\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "CONST", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSuperFieldReference5b() {
+        createJavaUnit("foo", "Bar",
+            "package foo;\n" +
+            "public class Bar {\n" +
+            "  public static final int CONST = 42;\n" +
+            "  public Bar(int num) {\n" +
+            "  }\n" +
+            "}\n");
+
+        String contents =
+            "class Baz extends foo.Bar {\n" +
+            "  Baz(int num) {\n" +
+            "    super(select(num, CONST))\n" +
+            "  }\n" +
+            "  private static int select(int one, int two) {\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "CONST", "java.lang.Integer");
+    }
+
+    @Test
     public void testSuperClassMethod1() {
         String contents =
             "class A {\n" +
@@ -1692,22 +1765,6 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + 1, "A");
             offset = contents.lastIndexOf("p");
         assertDeclaringType(contents, offset, offset + 1, "A");
-    }
-
-    @Test
-    public void testConstantFromSuper() {
-        String contents =
-            "public interface Constants {\n" +
-            "  int FIRST = 9;\n" +
-            "}\n" +
-            "class UsesConstants implements Constants {\n" +
-            "  def x() {\n" +
-            "    FIRST\n" +
-            "  }\n" +
-            "}";
-        int start = contents.lastIndexOf("FIRST");
-        int end = start + "FIRST".length();
-        assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test
