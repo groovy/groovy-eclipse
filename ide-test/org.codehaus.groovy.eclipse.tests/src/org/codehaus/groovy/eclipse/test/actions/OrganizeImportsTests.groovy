@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -838,8 +838,53 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/923
     void testInnerClass5() {
+        //@formatter:off
+        createGroovyType 'foo', 'Bar', '''
+            class Bar {
+              static class Baz {
+              }
+            }
+            '''
+        String originalContents = '''\
+            import foo.Bar
+            import foo.Bar.Baz
+            Bar.Baz baz = null
+            '''
+        String expectedContents = '''\
+            import foo.Bar
+            Bar.Baz baz = null
+            '''
+        //@formatter:on
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testInnerClass5a() {
+        //@formatter:off
+        createGroovyType 'foo', 'Bar', '''
+            class Bar {
+              static class Baz {
+              }
+            }
+            '''
+        String originalContents = '''\
+            import foo.Bar
+            import foo.Bar.Baz
+            foo.Bar.Baz baz = null
+            '''
+        String expectedContents = '''\
+            foo.Bar.Baz baz = null
+            '''
+        //@formatter:on
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testInnerClass6() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -851,7 +896,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass5a() {
+    void testInnerClass6a() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -863,7 +908,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass5b() {
+    void testInnerClass6b() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -875,7 +920,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass5c() {
+    void testInnerClass6c() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''

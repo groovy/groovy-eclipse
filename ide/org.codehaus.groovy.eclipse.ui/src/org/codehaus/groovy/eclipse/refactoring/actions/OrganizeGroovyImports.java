@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import groovy.transform.Field;
@@ -684,37 +685,55 @@ public class OrganizeGroovyImports {
                 visitTypeParameters(generics, name);
             }
 
-            if (!node.isResolved() && !current.getModule().getClasses().contains(node.redirect())) {
-                // aliases come through as unresolved types
-                if (ALIASED_IMPORT.matcher(name).find()) {
-                    doNotRemoveImport(name);
-                    return;
+            Matcher m = ALIASED_IMPORT.matcher(name);
+            if (m.find()) {
+                int i = name.indexOf('$', m.end());
+                if (i > 0) {
+                    // 'java.util.Map$Entry as Alias$Entry' -> 'java.util.Map as Alias'
+                    name = name.replaceAll(Pattern.quote(name.substring(i)) + "(?= |$)", "");
                 }
+                doNotRemoveImport(name.replace('$', '.'));
+                return;
+            }
+
+            if (!node.isResolved() && !current.getModule().getClasses().contains(node.redirect())) {
                 String[] parts = name.split("\\.");
                 if (Character.isUpperCase(name.charAt(0))) {
-                    name = parts[0]; // Map.Entry -> Map
+                    name = parts[0]; // 'Map.Entry' -> 'Map'
                 } else if (length < name.length()) {
                     // name range too small to include the full name
                     doNotRemoveImport(name); // keep import
-                    name = ArrayUtils.lastElement(parts); // foo.Bar -> Bar
+                    name = ArrayUtils.lastElement(parts); // 'foo.Bar' -> 'Bar'
                 }
                 if (!missingTypes.containsKey(name)) {
                     SourceRange range = new SourceRange(node.getStart(), node.getEnd() - node.getStart());
                     missingTypes.put(name, new UnresolvedTypeData(name, isAnnotation, range));
                 }
-            } else if (length < name.length()) {
-                // We don't know exactly what the text is. We just know how it
-                // resolves. This can be a problem if an inner class. We don't
-                // really know what is in the text and we don't really know what
-                // is the import. So, just ensure that none are slated for removal.
-                String partialName = name.replace('$', '.');
-                doNotRemoveImport(partialName);
-                int innerIndex = name.length();
-                while ((innerIndex = name.lastIndexOf('$', innerIndex - 1)) > -1) {
-                    // 'java.util.Map.Entry' -> 'java.util.Map' as well as
-                    // 'java.util.Map.Entry as Foo.Entry' -> 'java.util.Map as Foo'
-                    partialName = name.replaceAll(Pattern.quote(name.substring(innerIndex)) + "(?:\\b|$)", "").replace('$', '.');
-                    doNotRemoveImport(partialName);
+            } else if (length > 0 && length < name.length()) {
+                char[] chars = current.getModule().getContext().readSourceRange(start, length);
+                if (chars != null) {
+                    int i = 0;
+                    while (i < chars.length && Character.isJavaIdentifierPart(chars[i])) {
+                        i += 1;
+                    }
+                    m = Pattern.compile("(?:\\A|\\$|\\.)" + String.valueOf(chars, 0, i) + "(?=\\$|$)").matcher(name);
+                    if (m.find()) {
+                        // 'java.util.Map$Entry' -> 'java.util.Map'
+                        String partialName = name.substring(0, m.end()).replace('$', '.');
+                        doNotRemoveImport(partialName);
+                    }
+                } else {
+                    // We don't know exactly what the text is. We just know how
+                    // it resolves. This can be a problem if an inner class. We
+                    // don't really know what is in the text nor what the import
+                    // is, so just ensure that none are slated for removal.
+                    String partialName = name.replace('$', '.');
+                    int end = name.length();
+                    do {
+                        // 'java.util.Map.Entry' -> 'java.util.Map'
+                        partialName = partialName.substring(0, end);
+                        doNotRemoveImport(partialName);
+                    } while ((end = partialName.lastIndexOf('.')) > -1);
                 }
             } else if (length > name.length()) {
                 GroovyPlugin.getDefault().logError(String.format(
