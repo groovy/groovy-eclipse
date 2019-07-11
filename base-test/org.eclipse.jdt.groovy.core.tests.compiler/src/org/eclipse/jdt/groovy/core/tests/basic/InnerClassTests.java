@@ -1034,6 +1034,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "  static main(args) {\n" +
             "    this.newInstance()\n" +
             "  }\n" +
+            // default argument with anon. inner initializer:
             "  Main(Runnable action = new Runnable() {\n" +
             "      @Override void run() {\n" +
             "        print 'works'\n" +
@@ -1101,6 +1102,46 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    action.run()\n" +
             "  }\n" +
             "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/924
+    public void testAnonymousInnerClass24() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            // default argument with anon. inner initializer:
+            "void meth(Runnable action = new Runnable() {\n" +
+            "  @Override void run() {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}) {\n" +
+            "  action.run()\n" +
+            "}\n" +
+            "meth()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test @Ignore
+    public void testAnonymousInnerClass24a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            // default argument with anon. inner initializer:
+            "static void meth(Runnable action = new Runnable() {\n" +
+            "  @Override void run() {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}) {\n" +
+            "  action.run()\n" +
+            "}\n" +
+            "meth()\n",
         };
         //@formatter:on
 

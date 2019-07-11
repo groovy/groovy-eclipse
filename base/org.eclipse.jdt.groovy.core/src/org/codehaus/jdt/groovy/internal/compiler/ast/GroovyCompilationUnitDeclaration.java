@@ -1396,7 +1396,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 if (anonymousLocations != null && constructorNode.getCode() != null) {
-                    constructorNode.getCode().visit(new AnonInnerFinder(constructorDecl));
+                    new AnonInnerFinder(constructorDecl).visitMethodNode(constructorNode);
                 }
             }
         }
@@ -1447,7 +1447,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     if (anonymousLocations != null && methodNode.getCode() != null) {
-                        methodNode.getCode().visit(new AnonInnerFinder(methodDecl));
+                        new AnonInnerFinder(methodDecl).visitMethodNode(methodNode);
                     }
                 }
             }
@@ -2706,6 +2706,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 this.enclosingDecl = enclosingDecl;
             }
             private final Object enclosingDecl;
+
+            public void visitMethodNode(MethodNode node) {
+                node.getCode().visit(this);
+                if (node.hasDefaultValue()) {
+                    Arrays.stream(node.getParameters())
+                        .filter(Parameter::hasInitialExpression)
+                        .forEach(p -> p.getInitialExpression().visit(this));
+                }
+                // TODO: Visit annotations of method and parameters?
+            }
 
             @Override
             public void visitConstructorCallExpression(ConstructorCallExpression call) {
