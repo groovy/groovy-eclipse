@@ -60,6 +60,13 @@ final class CodeSelectStaticImportsTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testCodeSelectOnStaticImport3b() {
+        String one = 'class Other {\n  public static int FOO\n}'
+        String two = 'import static Other.FOO as BAR\nBAR'
+        assertCodeSelect([one, two], 'BAR', 'FOO')
+    }
+
+    @Test
     void testCodeSelectOnStaticImport4() {
         String one = 'class Other {\n  public static int FOO\n static boolean BAR() { } }'
         String two = 'import static Other.BAR\nBAR'

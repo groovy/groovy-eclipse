@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InnerClassTests extends GroovyCompilerTestSuite {
@@ -998,6 +999,114 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    public void testAnonymousInnerClass21() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance()\n" +
+            "  }\n" +
+            "  Main() {\n" +
+            "    this(new Runnable() {\n" +
+            "      @Override void run() {\n" +
+            "        print 'works'\n" +
+            "      }\n" +
+            "    })\n" +
+            "  }\n" +
+            "  Main(Runnable action) {\n" +
+            "    action.run()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9168
+    public void testAnonymousInnerClass22() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance()\n" +
+            "  }\n" +
+            "  Main(Runnable action = new Runnable() {\n" +
+            "      @Override void run() {\n" +
+            "        print 'works'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ) {\n" +
+            "    action.run()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    public void testAnonymousInnerClass23() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance()\n" +
+            "  }\n" +
+            "  static String getResult() {\n" +
+            "    'works'\n" +
+            "  }\n" +
+            "  Main() {\n" +
+            "    this(new Runnable() {\n" +
+            "      @Override void run() {\n" +
+            "        print getResult()\n" + // should be able to access static member of enclosing type
+            "      }\n" +
+            "    })\n" +
+            "  }\n" +
+            "  Main(Runnable action) {\n" +
+            "    action.run()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    public void testAnonymousInnerClass23a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance()\n" +
+            "  }\n" +
+            "  static String getResult() {\n" +
+            "    'works'\n" +
+            "  }\n" +
+            "  Main() {\n" +
+            "    this(new Runnable() {\n" +
+            "      @Override void run() {\n" +
+            "        print result\n" + // should be able to access static member of enclosing type
+            "      }\n" +
+            "    })\n" +
+            "  }\n" +
+            "  Main(Runnable action) {\n" +
+            "    action.run()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off
@@ -1100,7 +1209,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "success");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
     public void testReferenceToUninitializedThis1() {
         //@formatter:off
         String[] sources = {

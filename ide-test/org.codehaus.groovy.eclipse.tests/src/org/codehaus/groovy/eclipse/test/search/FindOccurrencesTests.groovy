@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,7 +54,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         }
     }
 
-    private String printOccurrences(array, int length) {
+    private static String printOccurrences(array, int length) {
         StringBuilder sb = new StringBuilder()
         for (int i = 0; i < length; i += 1) {
             sb.append(array[i]).append('\n')
@@ -66,64 +66,76 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFindLocalOccurrences1() {
+        //@formatter:off
         String contents = '''\
             def x
             x
             '''.stripIndent()
+        //@formatter:on
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
 
     @Test
     void testFindLocalOccurrences2() {
+        //@formatter:off
         String contents = '''\
             def x(x) {
               x
             }
             '''.stripIndent()
+        //@formatter:on
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('(x') + 1, 1, contents.lastIndexOf('x'), 1)
     }
 
     @Test
     void testFindLocalOccurrences3() {
+        //@formatter:off
         String contents = '''\
             nuthin
             def x(int x) {
             x
             }
             '''.stripIndent()
+        //@formatter:on
         int afterParen = contents.indexOf('(')
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('x', afterParen), 1, contents.lastIndexOf('x'), 1)
     }
 
     @Test // looking for the method declaration, not the parameter
     void testFindLocalOccurrences4() {
+        //@formatter:off
         String contents = '''\
             nuthin
             def x(int x) {
               x
             }
             '''.stripIndent()
+        //@formatter:on
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1)
     }
 
     @Test
     void testFindForLoopOccurrences() {
+        //@formatter:off
         String contents = '''\
             for (x in []) {
               x
             }
             '''.stripIndent()
+        //@formatter:on
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
 
     @Test @NotYetImplemented // Not working now; see GROOVY-4620 and GRECLIPSE-951
     void testFindPrimitive() {
+        //@formatter:off
         String contents = '''\
             int x(int y) {
               int z
             }
             int a
             '''.stripIndent()
+        //@formatter:on
 
         int length = 'int'.length()
         int first  = contents.indexOf('int')
@@ -135,6 +147,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFindProperty() {
+        //@formatter:off
         String contents = '''\
             class X {
               def foo
@@ -142,6 +155,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             new X().foo
             new X().foo()
             '''.stripIndent()
+        //@formatter:on
 
         int length = 'foo'.length()
         int first  = contents.indexOf('foo')
@@ -152,6 +166,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFindField() {
+        //@formatter:off
         String contents = '''\
             class X {
               public def foo
@@ -159,6 +174,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             new X().foo
             new X().foo()
             '''.stripIndent()
+        //@formatter:on
 
         int length = 'foo'.length()
         int first  = contents.indexOf('foo')
@@ -169,16 +185,18 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFindGStringOccurrences1() {
+        //@formatter:off
         String contents = '''\
-            def xxx
-            xxx "$xxx"
-            "$xxx"
-            "${xxx}"
-            "xxx"
-            'xxx'
-            '$xxx'
-            '${xxx}'
-            '''.stripIndent()
+            |def xxx
+            |xxx "$xxx"
+            |"$xxx"
+            |"${xxx}"
+            |"xxx"
+            |'xxx'
+            |'$xxx'
+            |'${xxx}'
+            |'''.stripMargin()
+        //@formatter:on
 
         int length = 'xxx'.length()
         int decl   = contents.indexOf('xxx')
@@ -191,16 +209,18 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFindGStringOccurrences2() {
+        //@formatter:off
         String contents = '''\
-            def i
-            i "$i"
-            "$i"
-            "${i}"
-            "i"
-            'i'
-            '$i'
-            '${i}'
-            '''.stripIndent()
+            |def i
+            |i "$i"
+            |"$i"
+            |"${i}"
+            |"i"
+            |'i'
+            |'$i'
+            |'${i}'
+            |'''.stripMargin()
+        //@formatter:on
 
         int length = 'i'.length()
         int decl   = contents.indexOf('i')
@@ -213,6 +233,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1031
     void testFindStaticMethods1() {
+        //@formatter:off
         String contents = '''\
             class Static {
               static staticMethod()  { staticMethod() }
@@ -227,6 +248,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
+        //@formatter:on
 
         def target = 'staticMethod'
         int length = target.length()
@@ -244,6 +266,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1031
     void testFindStaticMethods2() {
+        //@formatter:off
         String contents = '''\
             class Static {
               static staticMethod(nuthin)  { }
@@ -256,6 +279,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               }
             }
             '''.stripIndent()
+        //@formatter:on
 
         def target = 'staticMethod'
         int length = target.length()
@@ -270,6 +294,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1023
     void testInnerClass() {
+        //@formatter:off
         String contents = '''\
             class Other2 {
               class Inner { }
@@ -277,6 +302,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               Inner g
             }
             '''.stripIndent()
+        //@formatter:on
 
         String className = 'Inner'
         int len = className.length()
@@ -289,6 +315,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1023; try different starting point
     void testInnerClass2() {
+        //@formatter:off
         String contents = '''\
             class Other2 {
               class Inner { }
@@ -296,6 +323,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               Inner g
             }
             '''.stripIndent()
+        //@formatter:on
 
         String className = 'Inner'
         int len = className.length()
@@ -308,6 +336,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1023; try different starting point
     void testInnerClass3() {
+        //@formatter:off
         String contents = '''\
             class Other2 {
               class Inner { }
@@ -315,6 +344,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               Inner g
             }
             '''.stripIndent()
+        //@formatter:on
 
         String className = 'Inner'
         int len = className.length()
@@ -327,6 +357,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1023; inner class in other file
     void testInnerClass4() {
+        //@formatter:off
         addGroovySource '''\
             class Other {
               class Inner { }
@@ -334,10 +365,11 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             '''.stripIndent(), 'Other'
 
         String contents = '''\
-            import Other.Inner
-            Other.Inner f
-            Inner g
-            '''.stripIndent()
+            |import Other.Inner
+            |Other.Inner f
+            |Inner g
+            |'''.stripMargin()
+        //@formatter:on
 
         String className = 'Inner'
         int len = className.length()
@@ -350,11 +382,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testGenerics1() {
+        //@formatter:off
         String contents = '''\
-            import javax.swing.text.html.HTML
-            Map<HTML, ? extends HTML> h
-            HTML i
-            '''.stripIndent()
+            |import javax.swing.text.html.HTML
+            |Map<HTML, ? extends HTML> h
+            |HTML i
+            |'''.stripMargin()
+        //@formatter:on
 
         String name = 'HTML'
         int length = name.length()
@@ -368,11 +402,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // different starting point
     void testGenerics2() {
+        //@formatter:off
         String contents = '''\
-            import javax.swing.text.html.HTML
-            Map<HTML, ? extends HTML> h
-            HTML i
-            '''.stripIndent()
+            |import javax.swing.text.html.HTML
+            |Map<HTML, ? extends HTML> h
+            |HTML i
+            |'''.stripMargin()
+        //@formatter:on
 
         String name = 'HTML'
         int length = name.length()
@@ -385,11 +421,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // different starting point
     void testGenerics3() {
+        //@formatter:off
         String contents = '''\
-            import javax.swing.text.html.HTML
-            Map<HTML, ? extends HTML> h
-            HTML i
-            '''.stripIndent()
+            |import javax.swing.text.html.HTML
+            |Map<HTML, ? extends HTML> h
+            |HTML i
+            |'''.stripMargin()
+        //@formatter:on
 
         String name = 'HTML'
         int length = name.length()
@@ -402,11 +440,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1219
     void testAnnotationOnImport() {
+        //@formatter:off
         String contents = '''\
-            @Deprecated
-            import javax.swing.text.html.HTML
-            Deprecated
-            '''.stripIndent()
+            |@Deprecated
+            |import javax.swing.text.html.HTML
+            |Deprecated
+            |'''.stripMargin()
+        //@formatter:on
 
         String name = 'Deprecated'
         int len = name.length()
@@ -452,91 +492,109 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testOverloaded1() {
-        String contents =
-            'class LotsOfMethods { \n' +
-            '  def meth() { }\n' +
-            '  def meth(int a) { }\n' +
-            '  def meth(String a, LotsOfMethods b) { }\n' +
-            '}\n' +
-            'new LotsOfMethods().meth(1)\n' +
-            'new LotsOfMethods().meth(\"\", null)\n' +
-            'new LotsOfMethods().meth()'
+        //@formatter:off
+        String contents = '''\
+            class LotsOfMethods {
+              def meth() { }
+              def meth(int a) { }
+              def meth(String a, LotsOfMethods b) { }
+            }
+            new LotsOfMethods().meth(1)
+            new LotsOfMethods().meth('', null)
+            new LotsOfMethods().meth()
+            '''.stripIndent()
+        //@formatter:on
         int start = contents.indexOf('meth()')
         doTest(contents, start, 4, start, 4, contents.lastIndexOf('meth()'), 4)
     }
 
     @Test
     void testOverloaded2() {
-        String contents =
-            'class LotsOfMethods { \n' +
-            '  def meth() { }\n' +
-            '  def meth(int a) { }\n' +
-            '  def meth(String a, LotsOfMethods b) { }\n' +
-            '}\n' +
-            'new LotsOfMethods().meth()\n' +
-            'new LotsOfMethods().meth(\"\", null)\n' +
-            'new LotsOfMethods().meth(1)\n'
+        //@formatter:off
+        String contents = '''\
+            class LotsOfMethods {
+              def meth() { }
+              def meth(int a) { }
+              def meth(String a, LotsOfMethods b) { }
+            }
+            new LotsOfMethods().meth()
+            new LotsOfMethods().meth('', null)
+            new LotsOfMethods().meth(1)
+            '''.stripIndent()
+        //@formatter:on
         int start = contents.indexOf('meth(int')
         doTest(contents, start, 4, start, 4, contents.indexOf('meth(1)'), 4)
     }
 
     @Test
     void testOverloaded3() {
-        String contents =
-            'class LotsOfMethods { \n' +
-            '  def meth() { }\n' +
-            '  def meth(int a) { }\n' +
-            '  def meth(String a, LotsOfMethods b) { }\n' +
-            '}\n' +
-            'new LotsOfMethods().meth(1)\n' +
-            'new LotsOfMethods().meth()\n' +
-            'new LotsOfMethods().meth(\"\", null)\n'
+        //@formatter:off
+        String contents = '''\
+            class LotsOfMethods {
+              def meth() { }
+              def meth(int a) { }
+              def meth(String a, LotsOfMethods b) { }
+            }
+            new LotsOfMethods().meth(1)
+            new LotsOfMethods().meth()
+            new LotsOfMethods().meth('', null)
+            '''.stripIndent()
+        //@formatter:on
         int start = contents.indexOf('meth(S')
         doTest(contents, start, 4, start, 4, contents.lastIndexOf('meth'), 4)
     }
 
     @Test // GRECLIPSE-1573
     void testOverloaded4() {
-        String contents =
-            'class LotsOfMethods { \n' +
-            '  def meth() { }\n' +
-            '  def meth(int a) { }\n' +
-            '  def meth(String a) { }\n' +
-            '}\n' +
-            'new LotsOfMethods().meth(1)\n' +
-            'new LotsOfMethods().meth()\n' +
-            'new LotsOfMethods().meth(\"\")\n'
+        //@formatter:off
+        String contents = '''\
+            class LotsOfMethods {
+              def meth() { }
+              def meth(int a) { }
+              def meth(String a) { }
+            }
+            new LotsOfMethods().meth(1)
+            new LotsOfMethods().meth()
+            new LotsOfMethods().meth('')
+            '''.stripIndent()
+        //@formatter:on
         int start = contents.lastIndexOf('meth')
         doTest(contents, start, 4, contents.indexOf('meth(S'), 4, start, 4)
     }
 
     @Test
     void testOverloaded5() {
-        String contents =
-            'class LotsOfMethods { \n' +
-            '  def meth() { }\n' +
-            '  def meth(int a) { }\n' +
-            '  def meth(String a) { }\n' +
-            '}\n' +
-            'new LotsOfMethods().meth(1)\n' +
-            'new LotsOfMethods().meth()\n' +
-            'new LotsOfMethods().meth(null)\n'
+        //@formatter:off
+        String contents = '''\
+            class LotsOfMethods {
+              def meth() { }
+              def meth(int a) { }
+              def meth(String a) { }
+            }
+            new LotsOfMethods().meth(1)
+            new LotsOfMethods().meth()
+            new LotsOfMethods().meth(null)
+            '''.stripIndent()
+        //@formatter:on
         int start = contents.lastIndexOf('meth')
         doTest(contents, start, 4, contents.indexOf('meth(S'), 4, start, 4)
     }
 
     @Test
     void testDefaultParameters1() {
-        String contents =
-            'class Default {\n' +
-            '  def meth(int a, b = 1, c = 2) { }\n' +
-          //'  def meth(String a) { }\n' +
-            '}\n' +
-            'new Default().meth(1)\n' +
-            'new Default().meth(1, 2)\n' +
-            'new Default().meth(1, 2, 3)\n' +
-            'new Default().meth(1, 2, 3, 4)\n' +
-            'new Default().meth'
+        //@formatter:off
+        String contents = '''\
+            class Default {
+              def meth(int a, b = 1, c = 2) { }
+            }
+            new Default().meth(1)
+            new Default().meth(1, 2)
+            new Default().meth(1, 2, 3)
+            new Default().meth(1, 2, 3, 4)
+            new Default().meth
+            '''.stripIndent()
+        //@formatter:on
+
         // test the first method declaration
         // should match on all
         int start = contents.indexOf('meth')
@@ -554,16 +612,20 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters1a() {
-        String contents =
-            'class Default {\n' +
-            '  def meth(int a, b = 1, c = 2) { }\n' +
-            '  def meth(String a) { }\n' +
-            '}\n' +
-            'new Default().meth(1)\n' +
-            'new Default().meth(1, 2)\n' +
-            'new Default().meth(1, 2, 3)\n' +
-            'new Default().meth(1, 2, 3, 4)\n' +
-            'new Default().meth'
+        //@formatter:off
+        String contents = '''\
+            class Default {
+              def meth(int a, b = 1, c = 2) { }
+              def meth(String a) { }
+            }
+            new Default().meth(1)
+            new Default().meth(1, 2)
+            new Default().meth(1, 2, 3)
+            new Default().meth(1, 2, 3, 4)
+            new Default().meth
+            '''.stripIndent()
+        //@formatter:on
+
         // test the first method declaration
         // should match on all
         int start = contents.indexOf('meth')
@@ -581,16 +643,20 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters2() {
-        String contents =
-            'class Default {\n' +
-            '  def meth(int a, b = 1, c = 2) { }\n' +
-            '  def meth(String a) { }\n' +
-            '}\n' +
-            'new Default().meth(1)\n' +
-            'new Default().meth(1, 2)\n' +
-            'new Default().meth(1, 2, 3)\n' +
-            'new Default().meth(1, 2, 3, 4)\n' +
-            'new Default().meth'
+        //@formatter:off
+        String contents = '''\
+            class Default {
+              def meth(int a, b = 1, c = 2) { }
+              def meth(String a) { }
+            }
+            new Default().meth(1)
+            new Default().meth(1, 2)
+            new Default().meth(1, 2, 3)
+            new Default().meth(1, 2, 3, 4)
+            new Default().meth
+            '''.stripIndent()
+        //@formatter:on
+
         // test the second method declaration
         // should match on
         int start = contents.indexOf('meth')
@@ -608,25 +674,48 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // on-demand imports should not be seen as Object
     void testStarImports() {
+        //@formatter:off
         String contents = '''\
-            import java.lang.Object
-            import java.lang.*
-            import foo.bar.*
-            Object object
-            '''.stripIndent()
+            |import java.lang.Object
+            |import java.lang.*
+            |import foo.bar.*
+            |Object object
+            |'''.stripMargin()
+        //@formatter:on
 
         int offset = contents.lastIndexOf('Object'), length = 'Object'.length()
         doTest(contents, offset, length, contents.indexOf('java.lang.Object'), 16, offset, length)
     }
 
-    @Test
+    @Test // GRECLIPSE-1363
     void testStaticImports1() {
-        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource('class Other {\n  public static int FOO\n}', 'Other', 'p')
+        //@formatter:off
         String contents = '''\
-            import static p.Other.FOO
-            FOO
-            p.Other.FOO
-            '''.stripIndent()
+            |import static p.Other.FOO as BAR
+            |BAR
+            |p.Other.FOO
+            |'''.stripMargin()
+        //@formatter:on
+
+        int offset = contents.indexOf('FOO')
+        int length = 'FOO'.length()
+        int start1 = offset
+        int start2 = contents.lastIndexOf('BAR')
+        int start3 = contents.lastIndexOf('FOO')
+        doTest(contents, offset, length, start1, length, start2, length, start3, length)
+    }
+
+    @Test // GRECLIPSE-1363
+    void testStaticImports2() {
+        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        //@formatter:off
+        String contents = '''\
+            |import static p.Other.FOO
+            |FOO
+            |p.Other.FOO
+            |'''.stripMargin()
+        //@formatter:on
 
         int offset = contents.indexOf('FOO')
         int length = 'FOO'.length()
@@ -637,13 +726,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testStaticImports2() {
+    void testStaticImports3() {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        //@formatter:off
         String contents = '''\
-            import static p.Other.BAR
-            BAR()
-            p.Other.BAR()
-            '''.stripIndent()
+            |import static p.Other.BAR
+            |BAR()
+            |p.Other.BAR()
+            |'''.stripMargin()
+        //@formatter:on
 
         int offset = contents.indexOf('BAR')
         int length = 'BAR'.length()
@@ -654,14 +745,16 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testStaticImports3() {
+    void testStaticImports4() {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        //@formatter:off
         String contents = '''\
-            import static p.Other.BAR
-            import p.Other
-            Other
-            p.Other.BAR
-            '''.stripIndent()
+            |import static p.Other.BAR
+            |import p.Other
+            |Other
+            |p.Other.BAR
+            |'''.stripMargin()
+        //@formatter:on
 
         int offset = contents.indexOf('p.Other')
         int length = 'p.Other'.length()

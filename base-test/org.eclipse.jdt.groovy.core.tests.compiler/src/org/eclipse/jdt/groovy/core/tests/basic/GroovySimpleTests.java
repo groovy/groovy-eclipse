@@ -3366,8 +3366,41 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "a");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-3311
+    public void testGroovy3311() {
+        //@formatter:off
+        String[] sources = {
+            "Day.groovy",
+            "class Day extends Date {\n" +
+            "  static main(args) {\n" +
+            "    print period\n" +
+            "  }\n" +
+            "  static Day get(_date) {\n" +
+            "    return new Day(new java.text.SimpleDateFormat('MM.dd.yyyy').parse(_date))\n" +
+            "  }\n" +
+            "  Day(Date _date) {\n" +
+            "    super(_date.time)\n" +
+            "    def time = getTime()\n" +
+            "    24.times { hour ->\n" +
+            "      hoursOfTheDay << new Date(time + hour*1000*60*60)\n" +
+            "    }\n" +
+            "  }\n" +
+            "  List<Date> hoursOfTheDay = []\n" +
+            "  \n" +
+            "  @Override String toString() {\n" +
+            "    this.format('MM.dd.yyyy')\n" +
+            "  }\n" +
+            "  \n" +
+            "  static def period = (1..3).collect { get \"12.3${it}.1999\" }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[12.31.1999, 01.01.2000, 01.02.2000]");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8311
-    public void testGroovy8831() {
+    public void testGroovy8311() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",

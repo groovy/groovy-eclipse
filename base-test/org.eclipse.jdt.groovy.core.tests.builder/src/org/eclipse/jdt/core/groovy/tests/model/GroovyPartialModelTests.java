@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -42,42 +43,42 @@ import org.junit.Test;
 
 public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
-    @Test // tests that a static field's initializer is not erased during a reconcile
-    public void testStaticFieldInitializerIsNotMoved1() throws Exception {
+    @Test
+    public void testFieldInitializerIsAvailable1() throws Exception {
         findFieldInitializer(
-            "package p1\n" +
-            "public class Hello {\n" +
-            "  static aStatic = []\n" +
+            "package p\n" +
+            "class C {\n" +
+            "  public static aField = []\n" +
             "}\n",
             ListExpression.class);
     }
 
-    @Test // tests that a static field's initializer is not erased during a reconcile
-    public void testStaticFieldInitializerIsNotMoved2() throws Exception {
+    @Test
+    public void testFieldInitializerIsAvailable2() throws Exception {
         findFieldInitializer(
-            "package p1\n" +
-            "public class Hello {\n" +
-            "  static aStatic = {}\n" +
+            "package p\n" +
+            "class C {\n" +
+            "  public static aField = { -> }\n" +
             "}\n",
             ClosureExpression.class);
     }
 
-    @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
-    public void testFieldInitializerIsNotMoved1() throws Exception {
+    @Test @Ignore
+    public void testFieldInitializerIsAvailable3() throws Exception {
         findFieldInitializer(
-            "package p1\n" +
-            "public class Hello {\n" +
-            "  def aStatic = []\n" +
+            "package p\n" +
+            "class C {\n" +
+            "  public Object aField = []\n" +
             "}\n",
             ListExpression.class);
     }
 
-    @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
-    public void testFieldInitializerIsNotMoved2() throws Exception {
+    @Test @Ignore
+    public void testFieldInitializerIsAvailable4() throws Exception {
         findFieldInitializer(
-            "package p1\n" +
-            "public class Hello {\n" +
-            "  def aStatic = {}\n" +
+            "package p\n" +
+            "class C {\n" +
+            "  public Object aField = { -> }\n" +
             "}\n",
             ClosureExpression.class);
     }
@@ -104,16 +105,14 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
     private Expression findFieldInitializer(String contents, Class<? extends Expression> expressionClass) throws Exception {
         IProject project = createSimpleGroovyProject().getProject();
-        env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2", contents);
-        IFile javaFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path("Project/src/p1/Hello2.groovy"));
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(javaFile);
-        ClassNode inClass = unit.getModuleNode().getClasses().get(0);
-        FieldNode field = inClass.getField("aStatic");
+        GroovyCompilationUnit unit = env.getUnit(env.addGroovyClass(project.getFullPath().append("src"), "p", "C", contents));
+
+        ClassNode clazz = unit.getModuleNode().getClasses().get(0);
+        FieldNode field = clazz.getField("aField");
         Expression initialExpression = field.getInitialExpression();
         assertNotNull(initialExpression);
         assertTrue(expressionClass.isInstance(initialExpression));
-
-        checkClinitAndAllConstructors(initialExpression, inClass);
+        checkClinitAndAllConstructors(initialExpression, clazz);
         return initialExpression;
     }
 
@@ -129,34 +128,24 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
 
     // asserts that the given expression has not been copied into the constructor
     // and so makes sure that this expression appears only once in the AST
-    private void assertUnique(Expression expr, MethodNode cons) {
-        UniquenessVisitor visitor = new UniquenessVisitor(expr);
-        visitor.visitMethod(cons);
-    }
+    private static void assertUnique(Expression expr, MethodNode node) {
+        GroovyClassVisitor visitor = new ClassCodeVisitorSupport() {
+            @Override
+            public void visitClosureExpression(ClosureExpression e) {
+                doCheck(e);
+                super.visitClosureExpression(e);
+            }
 
-    // Only checks for ClosureExpressions and ListExpressions, but we can easily add more
-    private static class UniquenessVisitor extends ClassCodeVisitorSupport {
-        UniquenessVisitor(Expression exprToCheck) {
-            this.exprToCheck = exprToCheck;
-        }
+            @Override
+            public void visitListExpression(ListExpression e) {
+                doCheck(e);
+                super.visitListExpression(e);
+            }
 
-        private final Expression exprToCheck;
-
-        @Override
-        public void visitListExpression(ListExpression expression) {
-            doCheck(expression);
-            super.visitListExpression(expression);
-        }
-
-        @Override
-        public void visitClosureExpression(ClosureExpression expression) {
-            doCheck(expression);
-            super.visitClosureExpression(expression);
-        }
-
-        void doCheck(Expression expr) {
-            assertFalse("Expression appears twice.  Once in constructor and once in field initializer.\nExpr: " +
-                expr, expr == exprToCheck);
-        }
+            void doCheck(Expression e) {
+                assertFalse("Expression appears twice.  Once in constructor and once in field initializer.\nExpr: " + e, e == expr);
+            }
+        };
+        visitor.visitMethod(node);
     }
 }

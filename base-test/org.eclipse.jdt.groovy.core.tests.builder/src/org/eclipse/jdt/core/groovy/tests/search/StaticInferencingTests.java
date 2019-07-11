@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -462,8 +462,32 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "dump", "p.Other", "java.lang.Void");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
+    @Test // GRECLIPSE-1371
     public void testStaticImport11() throws Exception {
+        String contents =
+            "import static Boolean.TRUE\n" +
+            "class StaticImportStaticField {\n" +
+            "  static boolean FLAG = TRUE\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("TRUE");
+        assertType(contents, offset, offset + 4, "java.lang.Boolean");
+    }
+
+    @Test // GRECLIPSE-1363
+    public void testStaticImport12() throws Exception {
+        createUnit("p", "Other",
+            "package p\n" +
+            "class Other {\n" +
+            "  public static int CONST = 42\n" +
+            "}\n");
+
+        String contents = "p.Other.CONST\n";
+        int offset = contents.lastIndexOf("CONST");
+        assertType(contents, offset, offset + 5, "java.lang.Integer");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
+    public void testStaticImport13() throws Exception {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 
@@ -487,7 +511,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
-    public void testStaticImport12() throws Exception {
+    public void testStaticImport14() throws Exception {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 
@@ -511,7 +535,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
-    public void testStaticImport13() throws Exception {
+    public void testStaticImport15() throws Exception {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 
