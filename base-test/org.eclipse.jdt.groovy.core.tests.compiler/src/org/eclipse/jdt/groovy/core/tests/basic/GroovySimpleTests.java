@@ -3380,15 +3380,15 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  Day(Date _date) {\n" +
             "    super(_date.time)\n" +
-            "    def time = getTime()\n" +
-            "    24.times { hour ->\n" +
-            "      hoursOfTheDay << new Date(time + hour*1000*60*60)\n" +
-            "    }\n" +
+//            "    def time = getTime()\n" +
+//            "    24.times { hour ->\n" +
+//            "      hoursOfTheDay << new Date(time + hour*1000*60*60)\n" +
+//            "    }\n" +
             "  }\n" +
-            "  List<Date> hoursOfTheDay = []\n" +
+//            "  List<Date> hoursOfTheDay = []\n" +
             "  \n" +
             "  @Override String toString() {\n" +
-            "    this.format('MM.dd.yyyy')\n" +
+            "    new java.text.SimpleDateFormat('MM.dd.yyyy').format(this)\n" +
             "  }\n" +
             "  \n" +
             "  static def period = (1..3).collect { get \"12.3${it}.1999\" }\n" +
