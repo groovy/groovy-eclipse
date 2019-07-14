@@ -20,13 +20,16 @@ package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyObject;
+import groovy.lang.GroovyRuntimeException;
 import groovy.lang.MetaClass;
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GroovyClassVisitor;
@@ -305,7 +308,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (!node.getDeclaredConstructors().isEmpty()) return;
 
         BlockStatement empty = new BlockStatement();
-        // GRECLIPSE edit -- We don't want source locations for synthetic default constructors
+        // GRECLIPSE edit -- no source positions for synthetic default constructors
         //empty.setSourcePosition(node);
         ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
         //constructor.setSourcePosition(node);
@@ -554,6 +557,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     public void visitConstructor(ConstructorNode node) {
+        /* GRECLIPSE edit -- GROOVY-9168
         CodeVisitorSupport checkSuper = new CodeVisitorSupport() {
             boolean firstMethodCall = true;
             String type = null;
@@ -591,6 +595,86 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             s.visit(new VerifierCodeVisitor(this));
         }
         s.visit(checkSuper);
+        */
+        Statement stmt = node.getCode();
+        if (stmt != null) {
+            stmt.visit(new VerifierCodeVisitor(this));
+            // check for uninitialized-this references
+            stmt.visit(new CodeVisitorSupport() {
+                @Override
+                public void visitClosureExpression(ClosureExpression ce) {
+                    boolean oldInClosure = inClosure;
+                    inClosure = true;
+                    super.visitClosureExpression(ce);
+                    inClosure = oldInClosure;
+                }
+
+                @Override
+                public void visitConstructorCallExpression(ConstructorCallExpression cce) {
+                    boolean oldIsSpecialConstructorCall = inSpecialConstructorCall;
+                    inSpecialConstructorCall |= cce.isSpecialCall();
+                    super.visitConstructorCallExpression(cce);
+                    inSpecialConstructorCall = oldIsSpecialConstructorCall;
+                }
+
+                @Override
+                public void visitMethodCallExpression(MethodCallExpression mce) {
+                    if (inSpecialConstructorCall && isThisObjectExpression(mce)) {
+                        MethodNode methodTarget = mce.getMethodTarget();
+                        if (methodTarget == null || !(methodTarget.isStatic() || classNode.getOuterClasses().contains(methodTarget.getDeclaringClass()))) {
+                            if (!mce.isImplicitThis()) {
+                                throw newVariableError(mce.getObjectExpression().getText(), mce.getObjectExpression());
+                            } else {
+                                throw newVariableError(mce.getMethodAsString(), mce.getMethod());
+                            }
+                        }
+                        mce.getMethod().visit(this);
+                        mce.getArguments().visit(this);
+                    } else {
+                        super.visitMethodCallExpression(mce);
+                    }
+                }
+
+                @Override
+                public void visitVariableExpression(VariableExpression ve) {
+                    // before this/super ctor call completes, only params and static or outer members are accessible
+                    if (inSpecialConstructorCall && (ve.isThisExpression() || ve.isSuperExpression() || isNonStaticMemberAccess(ve))) {
+                        throw newVariableError(ve.getName(), ve.getLineNumber() > 0 ? ve : node.getOriginal());
+                    }
+                }
+
+                //
+
+                private boolean inClosure, inSpecialConstructorCall;
+
+                private boolean isNonStaticMemberAccess(VariableExpression ve) {
+                    Variable variable = ve.getAccessedVariable();
+                    return !inClosure && variable != null && !isStatic(variable.getModifiers())
+                        && !(variable instanceof DynamicVariable) && !(variable instanceof Parameter);
+                }
+
+                private boolean isThisObjectExpression(MethodCallExpression mce) {
+                    if (mce.isImplicitThis()) {
+                        return true;
+                    } else if (mce.getObjectExpression() instanceof VariableExpression) {
+                        VariableExpression var = (VariableExpression) mce.getObjectExpression();
+                        return var.isThisExpression() || var.isSuperExpression();
+                    } else {
+                        return false;
+                    }
+                }
+
+                private GroovyRuntimeException newVariableError(String name, ASTNode node) {
+                    RuntimeParserException rpe = new RuntimeParserException("Cannot reference '" + name +
+                            "' before supertype constructor has been called. Possible causes:\n" +
+                            "You attempted to access an instance field, method, or property.\n" +
+                            "You attempted to construct a non-static inner class.", node);
+                    rpe.setModule(getClassNode().getModule());
+                    return rpe;
+                }
+            });
+        }
+        // GRECLIPSE end
     }
 
     public void visitMethod(MethodNode node) {
@@ -1554,5 +1638,4 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
     }
-
 }

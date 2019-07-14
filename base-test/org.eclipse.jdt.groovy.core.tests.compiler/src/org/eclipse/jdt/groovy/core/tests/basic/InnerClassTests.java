@@ -16,9 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InnerClassTests extends GroovyCompilerTestSuite {
@@ -608,7 +606,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "A.groovy",
             "class A {" +
-            // field with anon. inner initializer argument:
+            // field initializer with anon. inner argument:
             "  C cee = new C(1, '2', new Runnable() {\n" +
             "    void run() {\n" +
             "      println 'hi!'\n" +
@@ -652,7 +650,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "A.groovy",
             "class A {" +
-            // field with anon. inner initializer argument:
+            // field initializer with anon. inner argument:
             "  C cee = newC(1, '2', new Runnable() {\n" +
             "    void run() {\n" +
             "    }\n" +
@@ -697,7 +695,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "A.groovy",
             "class A {" +
-            // field with anon. inner initializer argument:
+            // field initializer with anon. inner argument:
             "  C cee = newC().one(1).two('2').three(new Runnable() {\n" +
             "    void run() {\n" +
             "    }\n" +
@@ -752,7 +750,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "A.groovy",
             "class A {" +
             "  static main(args) {\n" +
-            // local with anon. inner initializer argument:
+            // local initializer with anon. inner argument:
             "    C cee = new C(1, '2', new Runnable() {\n" +
             "      void run() {\n" +
             "        println 'hi!'\n" +
@@ -844,6 +842,30 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAnonymousInnerClass14a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  static int count\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
+            "  static def m() {\n" +
+            "    new LinkedList() {\n" +
+            "      @Override\n" +
+            "      def get(int i) {\n" +
+            "        setCount(getCount() + 1)\n" +
+            "        super.get(i)\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testAnonymousInnerClass15() {
         //@formatter:off
         String[] sources = {
@@ -892,8 +914,6 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-5961
     public void testAnonymousInnerClass17() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -916,8 +936,6 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-5961
     public void testAnonymousInnerClass18() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Abstract.groovy",
@@ -999,7 +1017,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "foo");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
     public void testAnonymousInnerClass21() {
         //@formatter:off
         String[] sources = {
@@ -1025,7 +1043,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9168
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
     public void testAnonymousInnerClass22() {
         //@formatter:off
         String[] sources = {
@@ -1050,7 +1068,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
     public void testAnonymousInnerClass23() {
         //@formatter:off
         String[] sources = {
@@ -1079,7 +1097,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-6809
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6809
     public void testAnonymousInnerClass23a() {
         //@formatter:off
         String[] sources = {
@@ -1128,8 +1146,32 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "works");
     }
 
-    @Test @Ignore
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
     public void testAnonymousInnerClass24a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.meth()\n" +
+            "  }\n" +
+            // default argument with anon. inner initializer:
+            "  static void meth(Runnable action = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      print 'works'\n" +
+            "    }\n" +
+            "  }) {\n" +
+            "    action.run()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9168
+    public void testAnonymousInnerClass24b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1267,7 +1309,13 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "java.lang.VerifyError: Bad type on operand stack\n");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Outer.groovy (at line 6)\n" +
+            "\tOuter() {\n" +
+            "\t^\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
+            "----------\n");
     }
 
     @Test
@@ -1286,10 +1334,10 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Outer.groovy (at line 1)\n" +
-            "\tclass Outer {\n" +
+            "1. ERROR in Outer.groovy (at line 4)\n" +
+            "\tOuter(Inner inner = new Inner()) {\n" +
             "\t^\n" +
-            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1310,8 +1358,8 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = bar()) {\n" +
-            "\t  ^^^^\n" +
-            "Groovy:Can't access instance method 'bar' for a constructor parameter default value\n" +
+            "\t        ^^^\n" +
+            "Groovy:Cannot reference 'bar' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1332,8 +1380,8 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = this.bar()) {\n" +
-            "\t  ^^^^\n" +
-            "Groovy:Can't access instance method 'bar' for a constructor parameter default value\n" +
+            "\t        ^^^^\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1355,12 +1403,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = this.&bar) {\n" +
             "\t        ^^^^\n" +
-            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "2. ERROR in C.groovy (at line 2)\n" +
-            "\tC(foo = this.&bar) {\n" +
-            "\t        ^^^^\n" +
-            "Groovy:cannot reference this inside of this ((java.lang.Object) this.&bar)(....) before supertype constructor has been called\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1382,7 +1425,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = bar) {\n" +
             "\t        ^^^\n" +
-            "Groovy:Apparent variable 'bar' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "Groovy:Cannot reference 'bar' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1404,12 +1447,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = this.bar) {\n" +
             "\t        ^^^^\n" +
-            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "2. ERROR in C.groovy (at line 2)\n" +
-            "\tC(foo = this.bar) {\n" +
-            "\t        ^^^^\n" +
-            "Groovy:cannot reference this inside of this ((java.lang.Object) this.bar)(....) before supertype constructor has been called\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
 
@@ -1431,12 +1469,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "1. ERROR in C.groovy (at line 2)\n" +
             "\tC(foo = this.@bar) {\n" +
             "\t        ^^^^\n" +
-            "Groovy:Apparent variable 'this' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-            "----------\n" +
-            "2. ERROR in C.groovy (at line 2)\n" +
-            "\tC(foo = this.@bar) {\n" +
-            "\t        ^^^^\n" +
-            "Groovy:cannot reference this inside of this ((java.lang.Object) this.bar)(....) before supertype constructor has been called\n" +
+            "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
 

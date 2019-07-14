@@ -224,7 +224,7 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
         while (node != null) {
             FieldNode fn = node.getDeclaredField(fieldName);
             if (fn != null) return fn;
-            List<ClassNode> interfacesToCheck = new ArrayList<ClassNode>(Arrays.asList(node.getInterfaces()));
+            List<ClassNode> interfacesToCheck = new ArrayList<>(Arrays.asList(node.getInterfaces()));
             while (!interfacesToCheck.isEmpty()) {
                 ClassNode nextInterface = interfacesToCheck.remove(0);
                 fn = nextInterface.getDeclaredField(fieldName);
