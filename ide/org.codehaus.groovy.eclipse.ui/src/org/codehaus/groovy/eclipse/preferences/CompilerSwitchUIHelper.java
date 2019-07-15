@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,7 +44,6 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
-import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.osgi.framework.Version;
 
 /**
@@ -67,9 +66,7 @@ public class CompilerSwitchUIHelper {
 
     static final String CMD_VMARGS = "-vmargs"; //$NON-NLS-1$
 
-
     static final String NEW_LINE = "\n"; //$NON-NLS-1$
-
 
     /**
      * Main entry point to generate UI for compiler switching
@@ -97,7 +94,7 @@ public class CompilerSwitchUIHelper {
         Link moreInfoLink = new Link(compilerPage, 0);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         moreInfoLink.setText("<a href=\"https://github.com/groovy/groovy-eclipse/wiki\">See here</a> for more information (opens a browser window).");
-        moreInfoLink.addListener (SWT.Selection, event -> openUrl(event.text));
+        moreInfoLink.addListener(SWT.Selection, event -> openUrl(event.text));
 
         return compilerPage;
     }
@@ -150,17 +147,16 @@ public class CompilerSwitchUIHelper {
      * borrowed from {@link OpenWorkspaceAction}
      */
     protected static void restart(Shell shell) {
-        String command_line = buildCommandLine(shell);
-        if (command_line == null) {
+        String commandLine = buildCommandLine(shell);
+        if (commandLine == null) {
             return;
         }
 
-        System.out.println("Restart command line begin:\n " + command_line);
+        System.out.println("Restart command line begin:\n " + commandLine);
         System.out.println("Restart command line end");
-        System.setProperty(PROP_EXIT_DATA, command_line);
+        System.setProperty(PROP_EXIT_DATA, commandLine);
         System.setProperty(PROP_EXIT_CODE, Integer.toString(24));
         Workbench.getInstance().restart();
-
     }
 
     /**
@@ -175,12 +171,8 @@ public class CompilerSwitchUIHelper {
     private static String buildCommandLine(Shell shell) {
         String property = System.getProperty(PROP_VM);
         if (property == null) {
-            MessageDialog
-            .openError(
-                    shell,
-                    IDEWorkbenchMessages.OpenWorkspaceAction_errorTitle,
-                    NLS.bind(IDEWorkbenchMessages.OpenWorkspaceAction_errorMessage,
-                            PROP_VM));
+            MessageDialog.openError(shell, "Missing System Property",
+                NLS.bind("Unable to relaunch the platform because the {0} property has not been set.", PROP_VM));
             return null;
         }
 
@@ -220,8 +212,7 @@ public class CompilerSwitchUIHelper {
 
             if (WebBrowserPreference.getBrowserChoice() == WebBrowserPreference.EXTERNAL) {
                 try {
-                    IWorkbenchBrowserSupport support = PlatformUI
-                            .getWorkbench().getBrowserSupport();
+                    IWorkbenchBrowserSupport support = PlatformUI.getWorkbench().getBrowserSupport();
                     support.getExternalBrowser().openURL(url);
                 } catch (Exception e) {
                     GroovyCore.logException("Could not open browser", e);
@@ -229,30 +220,19 @@ public class CompilerSwitchUIHelper {
             } else {
                 IWebBrowser browser = null;
                 int flags = 0;
-                if (WorkbenchBrowserSupport.getInstance()
-                        .isInternalWebBrowserAvailable()) {
-                    flags |= IWorkbenchBrowserSupport.AS_EDITOR
-                            | IWorkbenchBrowserSupport.LOCATION_BAR
-                            | IWorkbenchBrowserSupport.NAVIGATION_BAR;
+                if (WorkbenchBrowserSupport.getInstance().isInternalWebBrowserAvailable()) {
+                    flags |= IWorkbenchBrowserSupport.AS_EDITOR | IWorkbenchBrowserSupport.LOCATION_BAR | IWorkbenchBrowserSupport.NAVIGATION_BAR;
                 } else {
-                    flags |= IWorkbenchBrowserSupport.AS_EXTERNAL
-                            | IWorkbenchBrowserSupport.LOCATION_BAR
-                            | IWorkbenchBrowserSupport.NAVIGATION_BAR;
+                    flags |= IWorkbenchBrowserSupport.AS_EXTERNAL | IWorkbenchBrowserSupport.LOCATION_BAR | IWorkbenchBrowserSupport.NAVIGATION_BAR;
                 }
 
-                String id = "org.eclipse.contribution.weaving.jdt";
-                browser = WorkbenchBrowserSupport.getInstance().createBrowser(
-                        flags, id, null, null);
+                browser = WorkbenchBrowserSupport.getInstance().createBrowser(flags, "org.eclipse.contribution.weaving.jdt", null, null);
                 browser.openURL(url);
             }
         } catch (PartInitException e) {
-            MessageDialog.openError(Display.getDefault().getActiveShell(),
-                    "Browser initialization error",
-                    "Browser could not be initiated");
+            MessageDialog.openError(Display.getDefault().getActiveShell(), "Browser initialization error", "Browser could not be initiated");
         } catch (MalformedURLException e) {
-            MessageDialog.openInformation(Display.getDefault()
-                    .getActiveShell(), "Malformed URL",
-                    location);
+            MessageDialog.openInformation(Display.getDefault().getActiveShell(), "Malformed URL", location);
         }
     }
 }

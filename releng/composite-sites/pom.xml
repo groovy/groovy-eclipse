@@ -41,7 +41,7 @@
 			If all is working well? Then remove the '-test' -->
 		<dist.path>release/GRECLIPSE-test</dist.path>
 		<!-- if you change dist.targets you also have to change the list of <items> embedded in the build-loqic below -->
-		<dist.targets>e4.12,e4.11,e4.10,e4.9,e4.8</dist.targets>
+		<dist.targets>e4.13,e4.12,e4.11,e4.10,e4.9,e4.8</dist.targets>
 	</properties>
 
 	<profiles>
@@ -132,6 +132,7 @@
 					<configuration>
 						<items>
 							<!-- It would be nice to define the list of items as a variable up top but this not possible. -->
+							<item>e4.13</item>
 							<item>e4.12</item>
 							<item>e4.11</item>
 							<item>e4.10</item>
