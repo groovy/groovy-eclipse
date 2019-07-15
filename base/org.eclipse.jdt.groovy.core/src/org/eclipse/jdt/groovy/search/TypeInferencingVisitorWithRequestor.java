@@ -1918,6 +1918,24 @@ assert primaryExprType != null && dependentExprType != null;
                     return (IType) child;
                 }
             }
+            // check for method with AIC in default argument expression
+            if (enclosingElement instanceof IMethod) {
+                MethodNode meth = findMethodNode((IMethod) enclosingElement);
+                if (meth != null && meth.getOriginal() != meth) {
+                    for (IJavaElement elem : occurrenceCounts.keySet()) {
+                        if (elem instanceof IMethod &&
+                                elem != enclosingElement &&
+                                elem.getElementName().equals(meth.getName())) {
+                            for (IJavaElement child : ((IMember) elem).getChildren()) {
+                                if (child instanceof IType && ((IType) child).isAnonymous() &&
+                                          ((IType) child).getOccurrenceCount() == occurrenceCount) {
+                                    return (IType) child;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         } catch (JavaModelException e) {
             log(e, "Error visiting children of %s", type.getName());
         }
