@@ -20,8 +20,6 @@ package org.codehaus.groovy.classgen;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -54,8 +52,6 @@ import org.codehaus.groovy.syntax.Types;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;

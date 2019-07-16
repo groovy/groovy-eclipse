@@ -2495,6 +2495,63 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9136a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  public String field = 'foo'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  def doIt(Foo foo) {\n" +
+            "    print foo.field\n" + // TODO: https://issues.apache.org/jira/browse/GROOVY-9195 -- Access to Foo#foo is forbidden
+            "    return 'bar'\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "def bar = new Bar()\n" +
+            "print bar.doIt(new Foo())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
+    }
+
+    @Test
+    public void testCompileStatic9136b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  private String field = 'foo'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  def doIt(Foo foo) {\n" +
+            "    foo.with {\n" +
+            "      field\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 9)\n" +
+            "\tfield\n" +
+            "\t^\n" +
+            "Groovy:Access to Foo#field is forbidden @ line 9, column 7.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic9153() {
         //@formatter:off
         String[] sources = {

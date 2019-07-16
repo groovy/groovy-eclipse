@@ -1064,7 +1064,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\tint y()\n" +
             "\t^\n" +
-            "Groovy:You defined a method without body. Try adding a body, or declare it abstract. @ line 2, column 2.\n" +
+            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract. @ line 2, column 2.\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1707,7 +1707,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tclass X {int y()}\n" +
             "\t         ^\n" +
-            "Groovy:You defined a method without body. Try adding a body, or declare it abstract. @ line 1, column 10.\n" +
+            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract. @ line 1, column 10.\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",

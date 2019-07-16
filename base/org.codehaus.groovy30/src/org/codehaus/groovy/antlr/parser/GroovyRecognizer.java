@@ -6893,6 +6893,11 @@ inputState.guessing--;
                             nls();
                             {
                             switch ( LA(1)) {
+                            case SEMI:
+                            {
+                                match(SEMI);
+                                break;
+                            }
                             case RCURLY:
                             {
                                 match(RCURLY);

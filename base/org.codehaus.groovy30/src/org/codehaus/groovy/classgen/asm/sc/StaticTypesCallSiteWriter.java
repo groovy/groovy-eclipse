@@ -203,13 +203,6 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             if (makeGetPropertyWithGetter(receiver, CLASS_Type, methodName, safe, implicitThis)) return;
             if (makeGetField(receiver, CLASS_Type, methodName, safe, false, true)) return;
         }
-        /* GRECLIPSE edit -- GROOVY-9007, GROOVY-9043
-        if (receiverType.isEnum()) {
-            mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(receiverType), methodName, BytecodeHelper.getTypeDescription(receiverType));
-            controller.getOperandStack().push(receiverType);
-            return;
-        }
-        */
         if (makeGetPrivateFieldWithBridgeMethod(receiver, receiverType, methodName, safe, implicitThis)) return;
 
         // GROOVY-5580, it is still possible that we're calling a superinterface property

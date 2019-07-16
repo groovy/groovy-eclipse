@@ -113,6 +113,7 @@ import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.util.ListHashMap;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -183,6 +184,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.findActualTypeByGenericsPlaceholderName;
@@ -1585,17 +1587,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                 FieldNode field = current.getDeclaredField(propertyName);
                 field = allowStaticAccessToMember(field, staticOnly);
-                /* GRECLIPSE edit -- GROOVY-9127
-                if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode))
-                    return true;
-
-                boolean isThisExpression = objectExpression instanceof VariableExpression
-                        && ((VariableExpression) objectExpression).isThisExpression()
-                        && objectExpressionType.equals(current);
-
-                if (storeField(field, isThisExpression, pexp, receiver.getType(), visitor, receiver.getData(), !readMode))
-                    return true;
-                */
                 if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
@@ -1608,7 +1599,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
                 }
-                // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
                 getter = allowStaticAccessToMember(getter, staticOnly);
@@ -1668,6 +1658,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 foundGetterOrSetter = foundGetterOrSetter || !setters.isEmpty() || getter != null;
 
                 if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
+
                 if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
 
                 // check the parent class
@@ -1721,7 +1712,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return foundGetterOrSetter;
     }
 
-    // GRECLIPSE add
     private static boolean hasAccessToField(FieldNode field, ClassNode objectExpressionType) {
         if (field != null) {
             if (field.isPublic() || field.isProtected()) {
@@ -1733,7 +1723,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return false;
     }
-    // GRECLIPSE end
 
     private MethodNode findGetter(ClassNode current, String name, boolean searchOuterClasses) {
         MethodNode getterMethod = current.getGetterMethod(name);
@@ -2762,7 +2751,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void checkNamedParamsAnnotation(Parameter param, MapExpression args) {
-        if (!param.getType().isDerivedFrom(ClassHelper.MAP_TYPE)) return;
+        if (!isOrImplements(param.getType(), ClassHelper.MAP_TYPE)) return;
         List<MapEntryExpression> entryExpressions = args.getMapEntryExpressions();
         Map<Object, Expression> entries = new LinkedHashMap<Object, Expression>();
         for (MapEntryExpression entry : entryExpressions) {
@@ -2987,13 +2976,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             ClassLoader transformLoader = getTransformLoader();
             Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) transformLoader.loadClass(hintClass.getText());
-            ClosureSignatureHint hintInstance = hint.newInstance();
+            ClosureSignatureHint hintInstance = hint.getDeclaredConstructor().newInstance();
             closureSignatures = hintInstance.getClosureSignatures(
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
                     typeCheckingContext.source,
                     typeCheckingContext.compilationUnit,
                     convertToStringArray(options), expression);
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
         }
         return closureSignatures;
@@ -3004,7 +2993,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             ClassLoader transformLoader = getTransformLoader();
             Class<? extends ClosureSignatureConflictResolver> resolver = (Class<? extends ClosureSignatureConflictResolver>) transformLoader.loadClass(resolverClass.getText());
-            ClosureSignatureConflictResolver resolverInstance = resolver.newInstance();
+            ClosureSignatureConflictResolver resolverInstance = resolver.getDeclaredConstructor().newInstance();
             return resolverInstance.resolve(
                     candidates,
                     receiver,
@@ -3014,7 +3003,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     typeCheckingContext.source,
                     typeCheckingContext.compilationUnit,
                     convertToStringArray(options));
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
         }
     }

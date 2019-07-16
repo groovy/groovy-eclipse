@@ -1130,11 +1130,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node == null) {
             /* GRECLIPSE edit
-                throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
+                throw new ASTRuntimeException(methodDef, "You defined a method without a body. Try adding a body, or declare it abstract.");
             }
             */
                 if (getController() != null) getController().addError(new SyntaxException(
-                    "You defined a method without body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
+                    "You defined a method without a body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
                 code = statementListNoChild(null, methodDef);
             } else {

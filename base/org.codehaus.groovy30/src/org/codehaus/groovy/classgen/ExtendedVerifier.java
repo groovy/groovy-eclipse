@@ -142,7 +142,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     public void visitProperty(PropertyNode node) {
     }
 
-    private void visitAnnotations(AnnotatedNode node, int target) {
+    protected void visitAnnotations(AnnotatedNode node, int target) {
         if (node.getAnnotations().isEmpty()) {
             return;
         }
@@ -333,7 +333,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
      *
      * @return true if running on a 1.5+ runtime
      */
-    private boolean isAnnotationCompatible() {
+    protected boolean isAnnotationCompatible() {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
 
