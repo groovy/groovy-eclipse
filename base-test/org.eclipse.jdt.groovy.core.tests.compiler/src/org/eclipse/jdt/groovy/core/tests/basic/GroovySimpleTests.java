@@ -86,8 +86,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 12)\n" +
             "\tabc()\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: abc @ line 12, column 3.\n" +
+            "\t^" + (!isParrotParser() ? "" : "^^^^") + "\n" +
+            "Groovy:" + (!isParrotParser()
+                ? "unexpected token: abc @ line 12, column 3.\n"
+                : "You defined a method[abc] without a body. Try adding a method body, or declare it abstract @ line 12, column 3.\n") +
             "----------\n");
     }
 
@@ -574,7 +576,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGroovyColon_GRE801() {
+    public void testInvalidAssignment_GRE801() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -588,9 +590,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in A.groovy (at line 1)\n" +
             "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
-            "\t                                                 ^\n" +
-            "Groovy:\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression," +
-            " but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n" +
+            "\t" + (isParrotParser() ? "" : "                                                 ") + "^\n" +
+            "Groovy:" + (isParrotParser()
+                ? "The LHS of an assignment should be a variable or a field accessing expression @ line 1, column 1.\n"
+                : "\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n") +
             "----------\n");
     }
 
@@ -1349,7 +1352,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 1)\n" +
             "\tabstract def meth() {\n" +
             "\t^\n" +
-            "Groovy:Abstract methods do not define a body. at line: 1 column: 1. File: Script.groovy @ line 1, column 1.\n" +
+            "Groovy:" + (!isParrotParser()
+                ? "Abstract methods do not define a body. at line: 1 column: 1. File: Script.groovy @ line 1, column 1.\n"
+                : "You cannot define an abstract method[meth] in the script. Try removing the 'abstract' @ line 1, column 1.\n") +
             "----------\n");
     }
 
@@ -1366,13 +1371,43 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.groovy (at line 2)\n" +
-            "\tabstract def meth() {\n" +
-            "\t^\n" +
-            "Groovy:Abstract methods do not define a body. at line: 2 column: 3. File: Main.groovy @ line 2, column 3.\n" +
-            "----------\n");
+        if (!isParrotParser()) {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 2)\n" +
+                "\tabstract def meth() {\n" +
+                "\t^\n" +
+                "Groovy:Abstract methods do not define a body. at line: 2 column: 3. File: Main.groovy @ line 2, column 3.\n" +
+                "----------\n");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.groovy (at line 1)\n" +
+                "\tclass Main {\n" +
+                "\t      ^^^^\n" +
+                "The type Main must be an abstract class to define abstract methods\n" +
+                "----------\n" +
+                "2. ERROR in Main.groovy (at line 1)\n" +
+                "\tclass Main {\n" +
+                "\t      ^^^^\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class. The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must be implemented.\n" +
+                "----------\n" +
+                "3. ERROR in Main.groovy (at line 2)\n" +
+                "\tabstract def meth() {\n" +
+                "\t             ^^^^^^\n" +
+                "The abstract method meth in type Main can only be defined by an abstract class\n" +
+                "----------\n" +
+                "4. ERROR in Main.groovy (at line 2)\n" +
+                "\tabstract def meth() {\n" +
+                "\t             ^^^^^^\n" +
+                "Abstract methods do not specify a body\n" +
+                "----------\n" +
+                "5. ERROR in Main.groovy (at line 2)\n" +
+                "\tabstract def meth() {\n" +
+                "\t             ^^^^^^\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class. The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must not be abstract.\n" +
+                "----------\n");
+        }
     }
 
     @Test
@@ -1841,7 +1876,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\tbreak words\n" +
             "\t^^^^^^^^^^^\n" +
-            "Groovy:the break statement with named label is only allowed inside loops\n" +
+            "Groovy:" + (!isParrotParser()
+                ? "the break statement with named label is only allowed inside loops\n"
+                : "break statement is only allowed inside loops or switches @ line 2, column 3.\n") +
             "----------\n");
     }
 
@@ -1863,7 +1900,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in ContinueTestCase.groovy (at line 3)\n" +
             "\tcontinue;\n" +
             "\t^^^^^^^^\n" +
-            "Groovy:the continue statement is only allowed inside loops\n" +
+            "Groovy:" + (!isParrotParser()
+                ? "the continue statement is only allowed inside loops\n"
+                : "continue statement is only allowed inside loops @ line 3, column 5.\n") +
             "----------\n");
     }
 

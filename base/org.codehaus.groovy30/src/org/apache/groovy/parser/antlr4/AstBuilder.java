@@ -2797,6 +2797,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 ctx);
                     }
 
+                    /* GRECLIPSE edit
                     return configureAST(
                             new ConstructorCallExpression(
                                     SUPER_STR.equals(baseExprText)
@@ -2805,6 +2806,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                     argumentsExpr
                             ),
                             ctx);
+                    */
+                    ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(
+                            SUPER_STR.equals(baseExprText) ? ClassNode.SUPER : ClassNode.THIS, argumentsExpr);
+                    constructorCallExpression.setNameStart(baseExpr.getStart());
+                    constructorCallExpression.setNameEnd(baseExpr.getEnd() - 1);
+                    return configureAST(constructorCallExpression, ctx);
+                    // GRECLIPSE end
                 }
 
                 MethodCallExpression methodCallExpression =

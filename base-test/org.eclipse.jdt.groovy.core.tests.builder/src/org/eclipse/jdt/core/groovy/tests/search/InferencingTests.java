@@ -3083,8 +3083,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  face.with {\n" +
             "    setValue(Keys.ONE, false)\n" +
             "  }\n" +
-            "}\n" +
-            "}";
+            "}\n";
         int offset = contents.indexOf("setValue");
         MethodNode m = assertDeclaration(contents, offset, offset + "setValue".length(), "Face", "setValue", DeclarationKind.METHOD);
         Assert.assertEquals("Expected 'setValue(String,boolean)'", "boolean", m.getParameters()[1].getType().toString(false));
