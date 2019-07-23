@@ -19,14 +19,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -199,12 +197,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      */
     private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<>();
 
-    /**
-     * Tracks the anonymous inner class counts for type members.  Required for
-     * calls to {@code IMember.getType("", occurrenceCount);}
-     */
-    private Map<IJavaElement, AtomicInteger> occurrenceCounts = new HashMap<>();
-
     private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
     /**
@@ -262,7 +254,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 e.printStackTrace();
             }
         } finally {
-            occurrenceCounts.clear();
             scopes.removeLast();
         }
         if (DEBUG) {
@@ -997,11 +988,12 @@ assert primaryExprType != null && dependentExprType != null;
                 IJavaElement enclosingElement0 = enclosingElement;
                 enclosingDeclarationNode = type;
                 try {
-                    IType anon = findAnonType(type);
+                    IType anon = findAnonType(type, enclosingElement).orElseThrow(
+                        () -> new GroovyEclipseBug("Failed to locate anon. type " + type.getName()));
 
-                    for (Statement stmt : type.getObjectInitializerStatements()) {
-                        stmt.visit(this);
-                    }
+                    enclosingElement = anon; // visit inlined object initializers
+                    type.getDeclaredConstructors().forEach(this::visitMethodInternal);
+
                     for (FieldNode field : type.getFields()) {
                         if (field.getEnd() > 0) {
                             enclosingElement = anon.getField(field.getName());
@@ -1908,30 +1900,30 @@ assert primaryExprType != null && dependentExprType != null;
 
     //
 
-    private IType findAnonType(ClassNode type) {
-        int occurrenceCount = occurrenceCounts.computeIfAbsent(
-            enclosingElement, x -> new AtomicInteger()).incrementAndGet();
+    private Optional<IType> findAnonType(ClassNode type, IJavaElement enclosing) {
         try {
-            for (IJavaElement child : ((IMember) enclosingElement).getChildren()) {
+            for (IJavaElement child : ((IMember) enclosing).getChildren()) {
                 if (child instanceof IType && ((IType) child).isAnonymous() &&
-                          ((IType) child).getOccurrenceCount() == occurrenceCount) {
-                    return (IType) child;
+                        type.getName().endsWith("$" + ((SourceType) child).localOccurrenceCount)) {
+                    return Optional.of((IType) child);
                 }
             }
-            // check for method with AIC in default argument expression
-            if (enclosingElement instanceof IMethod) {
-                MethodNode meth = findMethodNode((IMethod) enclosingElement);
-                if (meth != null && meth.getOriginal() != meth) {
-                    for (IJavaElement elem : occurrenceCounts.keySet()) {
-                        if (elem instanceof IMethod &&
-                                elem != enclosingElement &&
-                                elem.getElementName().equals(meth.getName())) {
-                            for (IJavaElement child : ((IMember) elem).getChildren()) {
-                                if (child instanceof IType && ((IType) child).isAnonymous() &&
-                                          ((IType) child).getOccurrenceCount() == occurrenceCount) {
-                                    return (IType) child;
-                                }
-                            }
+
+            if (enclosing instanceof IType) {
+                for (IJavaElement child : ((IType) enclosing).getChildren()) {
+                    if (child instanceof org.eclipse.jdt.internal.core.Initializer) {
+                        Optional<IType> result = findAnonType(type, child);
+                        if (result.isPresent()) return result;
+                    }
+                }
+            } else if (enclosing instanceof IMethod) {
+                // check for method with AIC in default argument expression
+                MethodNode methodNode = findMethodNode((IMethod) enclosing);
+                if (methodNode != null && methodNode.getOriginal() != methodNode) {
+                    for (IMethod child : ((IMethod) enclosing).getDeclaringType().getMethods()) {
+                        if (child != enclosing && child.getElementName().equals(methodNode.getName())) {
+                            Optional<IType> result = findAnonType(type, child);
+                            if (result.isPresent()) return result;
                         }
                     }
                 }
@@ -1939,7 +1931,8 @@ assert primaryExprType != null && dependentExprType != null;
         } catch (JavaModelException e) {
             log(e, "Error visiting children of %s", type.getName());
         }
-        throw new GroovyEclipseBug("Failed to locate anon. type " + type.getName());
+
+        return Optional.empty();
     }
 
     private ClassNode findClassNode(String name) {

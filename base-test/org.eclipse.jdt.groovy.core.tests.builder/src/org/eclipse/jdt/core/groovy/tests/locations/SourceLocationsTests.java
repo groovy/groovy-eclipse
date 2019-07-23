@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -127,6 +128,9 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     private static void assertDeclaration(IMember decl, BodyDeclaration body, int memberNumber, String source) throws Exception {
         char astKind;
         switch (decl.getElementType()) {
+        case IJavaElement.INITIALIZER:
+            astKind = 'i';
+            break;
         case IJavaElement.METHOD:
             astKind = 'm';
             break;
@@ -148,10 +152,14 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         String endTag = "/*" + astKind + memberNumber + "e*/";
         int len = (isParrotParser() || (decl instanceof IMethod &&
-            decl.getNameRange().getLength() > 0 && !Flags.isAbstract(((IMethod) decl).getFlags())) ? 0 : endTag.length());
+            decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
         int end = source.indexOf(endTag) + len;
         if (len == 0 && source.substring(0, end).endsWith("*/")) {
             end = source.substring(0, end).lastIndexOf("/*");
+        } else if (len > 0) {
+            while (source.substring(end).startsWith("/*")) {
+                end = source.indexOf("*/", end) + 2;
+            }
         }
 
         ISourceRange declRange = decl.getSourceRange();
@@ -205,10 +213,11 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             nameEnd += nameEndTag.length();
         }
 
-        ISourceRange nameDeclRange = decl.getNameRange();
-        assertEquals(decl + "\nhas incorrect name start value", nameStart, nameDeclRange.getOffset());
-        assertEquals(decl + "\nhas incorrect name end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
-
+        if (!(body instanceof Initializer)) {
+            ISourceRange nameRange = decl.getNameRange();
+            assertEquals(decl + "\nhas incorrect name start value", nameStart, nameRange.getOffset());
+            assertEquals(decl + "\nhas incorrect name end value", nameEnd, nameRange.getOffset() + nameRange.getLength());
+        }
         if (body instanceof FieldDeclaration) {
             SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) body).fragments().get(0)).getName();
             assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
@@ -623,13 +632,30 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testSourceLocationsObjectInitializers() throws Exception {
+    public void testSourceLocationsObjectInitializers1() throws Exception {
         String source =
             "package p1\n" +
             "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*m0s*//*m0sb*/{\n" +
+            "  /*i0s*//*m1s*//*m1sb*/{\n" +
             "    int i = 0\n" +
-            "  }/*m0e*/\n" +
+            "  }/*i0e*//*m1e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsObjectInitializers2() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
+            "  /*i0s*//*m1s*//*m1sb*/{\n" +
+            "    int i = 0\n" +
+            "  }/*i0e*/\n" +
+            "  /*i2s*/{\n" +
+            "    int j = 1\n" +
+            "  }/*i2e*/\n" +
+            "  /*i3s*/{\n" +
+            "  }/*i3e*//*m1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }

@@ -134,6 +134,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1515,12 +1516,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             classNodeList.add(classNode);
         }
 
+        /* GRECLIPSE edit -- GROOVY-9203
         int oldAnonymousInnerClassCounter = this.anonymousInnerClassCounter;
+        */
         classNodeStack.push(classNode);
         ctx.classBody().putNodeMetaData(CLASS_DECLARATION_CLASS_NODE, classNode);
         this.visitClassBody(ctx.classBody());
         classNodeStack.pop();
+        /* GRECLIPSE edit -- GROOVY-9203
         this.anonymousInnerClassCounter = oldAnonymousInnerClassCounter;
+        */
 
         if (!(asBoolean(ctx.CLASS()) || asBoolean(ctx.TRAIT()))) {
             classNodeList.add(classNode);
@@ -3735,10 +3740,23 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return arrayType;
     }
 
-
+    /* GRECLIPSE edit -- GROOVY-9203
     private String genAnonymousClassName(String outerClassName) {
         return outerClassName + "$" + this.anonymousInnerClassCounter++;
     }
+    */
+    private static String nextAnonymousClassName(ClassNode outerClass) {
+        int anonymousClassCount = 0;
+        for (Iterator<InnerClassNode> it = outerClass.getInnerClasses(); it.hasNext();) {
+            InnerClassNode innerClass = it.next();
+            if (innerClass.isAnonymous()) {
+                anonymousClassCount += 1;
+            }
+        }
+
+        return outerClass.getName() + "$" + (anonymousClassCount + 1);
+    }
+    // GRECLIPSE end
 
     @Override
     public InnerClassNode visitAnonymousInnerClassDeclaration(AnonymousInnerClassDeclarationContext ctx) {
@@ -3750,7 +3768,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         ClassNode outerClass = this.classNodeStack.peek();
         outerClass = asBoolean(outerClass) ? outerClass : moduleNode.getScriptClassDummy();
 
+        /* GRECLIPSE edit -- GROOVY-9203
         String fullName = this.genAnonymousClassName(outerClass.getName());
+        */
+        String fullName = nextAnonymousClassName(outerClass);
+        // GRECLIPSE end
         if (1 == ctx.t) { // anonymous enum
             anonymousInnerClass = new EnumConstantClassNode(outerClass, fullName, superClass.getModifiers() | Opcodes.ACC_FINAL, superClass.getPlainNodeReference());
 
@@ -5296,7 +5318,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private final List<ClassNode> classNodeList = new LinkedList<>();
     private final Deque<ClassNode> classNodeStack = new ArrayDeque<>();
     private final Deque<List<InnerClassNode>> anonymousInnerClassesDefinedInMethodStack = new ArrayDeque<>();
+    /* GRECLIPSE edit -- GROOVY-9203
     private int anonymousInnerClassCounter = 1;
+    */
 
     private Tuple2<GroovyParserRuleContext, Exception> numberFormatError;
 

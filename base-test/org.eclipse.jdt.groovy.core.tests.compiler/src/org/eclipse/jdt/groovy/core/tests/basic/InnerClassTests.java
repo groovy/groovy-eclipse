@@ -547,6 +547,8 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
+            "  {\n" +
+            "  }\n" +
             "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
@@ -555,6 +557,31 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "    };\n" +
             "  }\n" +
             "}");
+    }
+
+    @Test
+    public void testAnonymousInnerClass9b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {}\n" +
+            "new A() {\n" +
+            "  {\n" +
+            "    def foo = new Runnable() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 4)\n" +
+            "\tdef foo = new Runnable() {\n" +
+            "\t              ^^^^^^^^^^\n" +
+            "Groovy:Can't have an abstract method in a non-abstract class." +
+            " The class 'Script$1$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+            "----------\n");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/715

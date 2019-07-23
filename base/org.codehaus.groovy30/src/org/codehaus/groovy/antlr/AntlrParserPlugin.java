@@ -183,7 +183,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private MethodNode methodNode;
     // GRECLIPSE private->protected
     protected String[] tokenNames;
+    /* GRECLIPSE edit -- GROOVY-9203
     private int innerClassCounter = 1;
+    */
     private boolean enumConstantBeingDef = false;
     private boolean forStatementBeingDef = false;
     private boolean annotationBeingDef = false;
@@ -335,11 +337,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         setClassLoader(classLoader);
         makeModule();
         try {
-            // GRECLIPSE add
-            // just in case buildAST is called twice
-            innerClassCounter = 1;
-            // GRECLIPSE end
-
             convertGroovy(ast);
 
             // GRECLIPSE add -- does it look broken (i.e. have we built a script for it containing rubbish)
@@ -756,10 +753,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected void interfaceDef(AST classDef) {
+        /* GRECLIPSE edit -- GROOVY-9203
         int oldInnerClassCounter = innerClassCounter;
+        */
         innerInterfaceDef(classDef);
         classNode = null;
+        /* GRECLIPSE edit -- GROOVY-9203
         innerClassCounter = oldInnerClassCounter;
+        */
     }
 
     protected void innerInterfaceDef(AST classDef) {
@@ -813,21 +814,29 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
 
+        /* GRECLIPSE edit -- GROOVY-9203
         int oldClassCount = innerClassCounter;
+        */
 
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
         output.addClass(classNode);
 
         classNode = outerClass;
+        /* GRECLIPSE edit -- GROOVY-9203
         innerClassCounter = oldClassCount;
+        */
     }
 
     protected void classDef(AST classDef) {
+        /* GRECLIPSE edit -- GROOVY-9203
         int oldInnerClassCounter = innerClassCounter;
+        */
         innerClassDef(classDef);
         classNode = null;
+        /* GRECLIPSE edit -- GROOVY-9203
         innerClassCounter = oldInnerClassCounter;
+        */
     }
 
     private ClassNode getClassOrScript(ClassNode node) {
@@ -835,11 +844,28 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return output.getScriptClassDummy();
     }
 
+    // GRECLIPSE add
+    private static int anonymousClassCount(ClassNode node) {
+        int count = 0;
+        for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
+            InnerClassNode innerClass = it.next();
+            if (innerClass.isAnonymous()) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+    // GRECLIPSE end
+
     protected Expression anonymousInnerClassDef(AST node) {
         ClassNode oldNode = classNode;
         ClassNode outerClass = getClassOrScript(oldNode);
+        /* GRECLIPSE edit -- GROOVY-9203
         String fullName = outerClass.getName() + '$' + innerClassCounter;
         innerClassCounter++;
+        */
+        String fullName = outerClass.getName() + '$' + (anonymousClassCount(outerClass) + 1);
+        // GRECLIPSE end
         if (enumConstantBeingDef) {
             classNode = new EnumConstantClassNode(outerClass, fullName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         } else {
@@ -935,7 +961,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // have here to ensure it won't be the inner class
         output.addClass(classNode);
 
+        /* GRECLIPSE edit -- GROOVY-9203
         int oldClassCount = innerClassCounter;
+        */
 
         // GRECLIPSE add
         // a null node means the classbody is missing but the parser recovered
@@ -949,7 +977,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE end
 
         classNode = outerClass;
+        /* GRECLIPSE edit -- GROOVY-9203
         innerClassCounter = oldClassCount;
+        */
     }
 
     protected void objectBlock(AST objectBlock) {

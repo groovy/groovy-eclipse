@@ -110,6 +110,7 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.CharLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
@@ -121,6 +122,7 @@ import org.eclipse.jdt.internal.compiler.ast.FalseLiteral;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FloatLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.IntLiteral;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.Literal;
@@ -1137,8 +1139,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
 
                 for (Statement statement : classNode.getObjectInitializerStatements()) {
-                    if (statement.getEnd() > 0 && typeDeclaration.methods.length > 0)
-                        statement.visit(new AnonInnerFinder(typeDeclaration.methods[0]));
+                    if (statement.getEnd() > 0) {
+                        Initializer initializer = new Initializer(new Block(0), Flags.AccDefault);
+                        initializer.declarationSourceEnd = initializer.sourceEnd = statement.getEnd() - 1;
+                        initializer.declarationSourceStart = initializer.sourceStart = statement.getStart();
+                        typeDeclaration.fields = (FieldDeclaration[]) ArrayUtils.add(typeDeclaration.fields, initializer);
+
+                        if (anonymousLocations != null) {
+                            statement.visit(new AnonInnerFinder(typeDeclaration.methods.length > 0 &&
+                                typeDeclaration.methods[0].isConstructor() ? typeDeclaration.methods[0] : initializer));
+                        }
+                    }
                 }
 
                 if (isInner) {
@@ -1186,6 +1197,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             methodDeclaration.bits |= ASTNode.HasLocalType;
                             methodDeclaration.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(methodDeclaration.statements != null
                                         ? methodDeclaration.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
+                        } else if (location instanceof Initializer) {
+                            Initializer initializer = (Initializer) location;
+                            initializer.bits |= ASTNode.HasLocalType;
+                            initializer.block.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(initializer.block.statements != null
+                                        ? initializer.block.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
                         } else if (location instanceof FieldDeclaration) {
                             FieldDeclarationWithInitializer fieldDeclaration = (FieldDeclarationWithInitializer) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
@@ -1319,7 +1335,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ctorName = classNode.getNameWithoutPackage().toCharArray();
             }
 
-            // add default constructor if no other constructors exist (and not trait/interface/anonymous)
+            // add default constructor if no other constructors exist (and not anonymous/interface/trait)
             if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 try {

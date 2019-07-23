@@ -1407,10 +1407,51 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClassWithInitializer1() {
+        String contents =
+            "class A {\n" +
+            "  static int x\n" +
+            "  static {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.lastIndexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
+    public void testClassWithInitializer2() {
+        String contents =
+            "class A {\n" +
+            "  int x\n" +
+            "  {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.lastIndexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
+    public void testClassWithInitializer3() {
+        String contents =
+            "class A {\n" +
+            "  int x\n" +
+            "}\n" +
+            "new A() {\n" +
+            "  {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.lastIndexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
     public void testFieldWithInitializer1() {
         String contents =
             "class A {\n" +
-            "  def x = 9\n" +
+            "  def x = 42\n" +
             "}\n" +
             "new A().x";
         int offset = contents.lastIndexOf('x');
@@ -1419,7 +1460,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testFieldWithInitializer2() {
-        createUnit("A", "class A {\ndef x = 9\n}");
+        createUnit("A", "class A {\ndef x = 42\n}");
         String contents = "new A().x";
         int offset = contents.lastIndexOf('x');
         assertType(contents, offset, offset + 1, "java.lang.Integer");
