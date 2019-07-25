@@ -17,7 +17,6 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,13 +124,13 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.IntLiteral;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
-import org.eclipse.jdt.internal.compiler.ast.Literal;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.LongLiteral;
 import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
+import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
@@ -145,6 +144,7 @@ import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.UnaryExpression;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -1266,9 +1266,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         if (!isEnumField) {
                             fieldDeclaration.modifiers = getModifiers(fieldNode);
                             fieldDeclaration.initializer = fieldNode.getInitialExpression();
-                            if (fieldNode.isStatic() && fieldNode.isFinal() && fieldNode.getInitialExpression() instanceof ConstantExpression) {
+                            if (fieldNode.isStatic() && fieldNode.isFinal()) {
                                 // this needs to be set for static finals to correctly determine constant status
-                                fieldDeclaration.initialization = createConstantExpression((ConstantExpression) fieldNode.getInitialExpression());
+                                fieldDeclaration.initialization = createInitializationExpression(fieldNode.getInitialExpression(), fieldNode.getType());
                             }
                             fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
 
@@ -1481,7 +1481,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (methodNode.hasAnnotationDefault()) {
                     methodDeclaration.modifiers |= ClassFileConstants.AccAnnotationDefault;
                     methodDeclaration.defaultValue = createAnnotationMemberExpression(
-                        ((ExpressionStatement) methodNode.getCode()).getExpression());
+                        ((ExpressionStatement) methodNode.getCode()).getExpression(), GroovyUtils.getBaseType(methodNode.getReturnType()));
                 }
                 methodDeclaration.returnType = createTypeReferenceForClassNode(methodNode.getReturnType());
                 fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
@@ -1555,8 +1555,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 List<Annotation> annotations = new ArrayList<>(groovyAnnotations.size());
 
                 for (AnnotationNode annotationNode : groovyAnnotations) {
-                    ClassNode annoType = annotationNode.getClassNode();
-                    TypeReference annotationReference = createTypeReferenceForClassNode(annoType);
+                    TypeReference annotationReference = createTypeReferenceForClassNode(annotationNode.getClassNode());
                     annotationReference.sourceStart = annotationNode.getStart();
                     annotationReference.sourceEnd = annotationNode.getEnd() - 1;
 
@@ -1566,7 +1565,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         annotations.add(annotation);
                     } else if (memberValuePairs.size() == 1 && memberValuePairs.containsKey("value")) {
                         SingleMemberAnnotation annotation = new SingleMemberAnnotation(annotationReference, annotationReference.sourceStart);
-                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"));
+                        annotation.memberValue = createAnnotationMemberExpression(memberValuePairs.get("value"), null);
                         annotations.add(annotation);
                     } else {
                         NormalAnnotation annotation = new NormalAnnotation(annotationReference, annotationReference.sourceStart);
@@ -1582,7 +1581,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return null;
         }
 
-        private org.eclipse.jdt.internal.compiler.ast.Expression createAnnotationMemberExpression(Expression expr) {
+        private org.eclipse.jdt.internal.compiler.ast.Expression createAnnotationMemberExpression(Expression expr, ClassNode type) {
             if (expr instanceof ListExpression) {
                 ListExpression list = (ListExpression) expr;
                 ArrayInitializer arrayInitializer = new ArrayInitializer();
@@ -1592,7 +1591,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int n = list.getExpressions().size();
                 arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[n];
                 for (int i = 0; i < n; i += 1) {
-                    arrayInitializer.expressions[i] = createAnnotationMemberExpression(list.getExpression(i));
+                    arrayInitializer.expressions[i] = createAnnotationMemberExpression(list.getExpression(i), type);
                 }
                 return arrayInitializer;
 
@@ -1601,10 +1600,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     (AnnotationNode) ((AnnotationConstantExpression) expr).getValue()));
                 assert annos != null && annos.length == 1;
                 return annos[0];
-
-            } else if (expr instanceof ConstantExpression) {
-                Literal literal = createConstantExpression((ConstantExpression) expr);
-                if (literal != null) return literal;
 
             } else if (expr instanceof VariableExpression) {
                 String name = ((VariableExpression) expr).getName();
@@ -1641,9 +1636,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd())));
 
             } else if (expr instanceof BinaryExpression) {
-                // annotation is something like "@Tag(value = List<String)" (incomplete generics specification)
+                // annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
 
             } else {
+                org.eclipse.jdt.internal.compiler.ast.Expression expression = createInitializationExpression(expr, type);
+                if (expression != null) {
+                    return expression;
+                }
+
                 Util.log(IStatus.WARNING, "Unhandled annotation value type: " + expr.getClass().getSimpleName());
             }
 
@@ -1652,75 +1652,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private org.eclipse.jdt.internal.compiler.ast.MemberValuePair[] createAnnotationMemberValuePairs(Map<String, Expression> memberValuePairs) {
-            List<org.eclipse.jdt.internal.compiler.ast.MemberValuePair> mvps =
-                new ArrayList<>(memberValuePairs.size());
-
-            for (Map.Entry<String, Expression> memberValuePair : memberValuePairs.entrySet()) {
+            return memberValuePairs.entrySet().stream().map(memberValuePair -> {
                 char[] name = memberValuePair.getKey().toCharArray();
                 // TODO: What to do when the value expression lacks source position information?
                 int start = Math.max(0, memberValuePair.getValue().getStart() - name.length - 1), until = memberValuePair.getValue().getEnd();
-                org.eclipse.jdt.internal.compiler.ast.Expression value = createAnnotationMemberExpression(memberValuePair.getValue());
-                mvps.add(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value));
-            }
-
-            return mvps.toArray(new org.eclipse.jdt.internal.compiler.ast.MemberValuePair[mvps.size()]);
-        }
-
-        private Literal createConstantExpression(ConstantExpression expr) {
-            int start = expr.getStart(), until = expr.getEnd();
-            String type = expr.getType().getName();
-            Object value = expr.getValue();
-
-            if ("java.lang.Object".equals(type)) {
-                assert value == null;
-                return new NullLiteral(start, until);
-            } else if ("java.lang.String".equals(type)) {
-                return new StringLiteral(((String) value).toCharArray(), start, until - 1, expr.getLineNumber());
-            } else if ("boolean".equals(type) || "java.lang.Boolean".equals(type)) {
-                if ("true".equals(value.toString())) {
-                    return new TrueLiteral(start, until);
-                } else {
-                    return new FalseLiteral(start, until);
-                }
-            } else if ("int".equals(type) || "java.lang.Integer".equals(type)) {
-                // TODO: Should return a unary minus expression for negative values...
-                char[] chars = String.valueOf(Math.abs((Integer) value)).toCharArray();
-                return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            } else if ("long".equals(type) || "java.lang.Long".equals(type)) {
-                char[] chars = (String.valueOf(Math.abs((Long) value)) + 'L').toCharArray();
-                return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
-            } else if ("double".equals(type) || "java.lang.Double".equals(type)) {
-                return new DoubleLiteral(value.toString().toCharArray(), start, until);
-            } else if ("float".equals(type) || "java.lang.Float".equals(type)) {
-                return new FloatLiteral(value.toString().toCharArray(), start, until);
-            }/* else if ("byte".equals(type) || "java.lang.Byte".equals(type) ||
-                        "short".equals(type) || "java.lang.Short".equals(type)) {
-                char[] chars = value.toString().toCharArray();
-                return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            }*/ else if ("char".equals(type) || "java.lang.Character".equals(type)) {
-                return new CharLiteral(value.toString().toCharArray(), start, until);
-            } else if ("java.math.BigDecimal".equals(type)) {
-                return new DoubleLiteral(value.toString().toCharArray(), start, until);
-            } else if ("java.math.BigInteger".equals(type)) {
-                long thing = ((BigInteger) value).abs().longValue();
-                char[] chars = (String.valueOf(thing) + 'L').toCharArray();
-                return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
-            } else {
-                Util.log(IStatus.WARNING, "Unhandled annotation constant type: " + expr.getType().getName());
-                return null;
-            }
+                org.eclipse.jdt.internal.compiler.ast.Expression value = createAnnotationMemberExpression(memberValuePair.getValue(), null);
+                return new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value);
+            }).toArray(org.eclipse.jdt.internal.compiler.ast.MemberValuePair[]::new);
         }
 
         /**
          * Creates JDT Argument representations of Groovy parameters.
          */
-        private Argument[] createArguments(Parameter[] ps) {
-            if (ps == null || ps.length == 0) {
+        private Argument[] createArguments(Parameter[] parameters) {
+            if (parameters == null || parameters.length == 0) {
                 return null;
             }
-            Argument[] arguments = new Argument[ps.length];
-            for (int i = 0; i < ps.length; i++) {
-                Parameter parameter = ps[i];
+            Argument[] arguments = new Argument[parameters.length];
+            for (int i = 0; i < parameters.length; i++) {
+                Parameter parameter = parameters[i];
                 TypeReference parameterTypeReference = createTypeReferenceForClassNode(parameter.getType());
                 long pos;
                 int pstart = parameter.getStart();
@@ -1734,10 +1684,137 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 arguments[i].annotations = createAnnotations(parameter.getAnnotations());
                 arguments[i].declarationSourceStart = pstart;
             }
-            if (isVargs(ps)) {
-                arguments[ps.length - 1].type.bits |= ASTNode.IsVarArgs;
+            if (isVargs(parameters)) {
+                arguments[parameters.length - 1].type.bits |= ASTNode.IsVarArgs;
             }
             return arguments;
+        }
+
+        private org.eclipse.jdt.internal.compiler.ast.Expression createInitializationExpression(Expression expr, ClassNode type) {
+            if (expr instanceof ConstantExpression) {
+                char[] chars = sourceUnit.readSourceRange(expr.getStart(), expr.getLength());
+                if (chars == null || chars.length < 1) chars = expr.getText().toCharArray();
+                int start = expr.getStart(), until = expr.getEnd() - 1;
+                Object value = ((ConstantExpression) expr).getValue();
+
+                switch (expr.getType().getName()) {
+                case "java.lang.Object":
+                    assert value == null;
+                    return new NullLiteral(start, until);
+
+                case "boolean":
+                case "java.lang.Boolean":
+                    return (Boolean.TRUE.equals(value) ? new TrueLiteral(start, until) : new FalseLiteral(start, until));
+
+                case "int":
+                case "java.lang.Integer":
+                    switch (chars[0]) {
+                    case '+':
+                    case '-':
+                        org.eclipse.jdt.internal.compiler.ast.Expression constant = new UnaryExpression(
+                            IntLiteral.buildIntLiteral(CharOperation.subarray(chars, 1, chars.length), start + 1, start + chars.length),
+                            chars[0] == '-' ? OperatorIds.MINUS : OperatorIds.PLUS);
+                        constant.sourceStart = start;
+                        constant.sourceEnd = until;
+                        return constant;
+                    default:
+                        return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
+                    }
+
+                case "long":
+                case "java.lang.Long":
+                    switch (chars[0]) {
+                    case '+':
+                    case '-':
+                        org.eclipse.jdt.internal.compiler.ast.Expression constant = new UnaryExpression(
+                            LongLiteral.buildLongLiteral(CharOperation.subarray(chars, 1, chars.length), start + 1, start + chars.length),
+                            chars[0] == '-' ? OperatorIds.MINUS : OperatorIds.PLUS);
+                        constant.sourceStart = start;
+                        constant.sourceEnd = until;
+                        return constant;
+                    default:
+                        return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
+                    }
+
+                case "float":
+                case "java.lang.Float":
+                    switch (chars[0]) {
+                    case '+':
+                    case '-':
+                        org.eclipse.jdt.internal.compiler.ast.Expression constant = new UnaryExpression(
+                            new FloatLiteral(CharOperation.subarray(chars, 1, chars.length), start + 1, until),
+                            chars[0] == '-' ? OperatorIds.MINUS : OperatorIds.PLUS);
+                        constant.sourceStart = start;
+                        constant.sourceEnd = until;
+                        return constant;
+                    default:
+                        return new FloatLiteral(chars, start, until);
+                    }
+
+                case "double":
+                case "java.lang.Double":
+                    switch (chars[0]) {
+                    case '+':
+                    case '-':
+                        org.eclipse.jdt.internal.compiler.ast.Expression constant = new UnaryExpression(
+                            new DoubleLiteral(CharOperation.subarray(chars, 1, chars.length), start + 1, until),
+                            chars[0] == '-' ? OperatorIds.MINUS : OperatorIds.PLUS);
+                        constant.sourceStart = start;
+                        constant.sourceEnd = until;
+                        return constant;
+                    default:
+                        return new DoubleLiteral(chars, start, until);
+                    }
+
+                case "java.math.BigDecimal":
+                    return new DoubleLiteral(value.toString().toCharArray(), start, until);
+
+                case "java.math.BigInteger":
+                    chars[chars.length - 1] = 'L'; // replace 'g' or 'G' with 'L'
+                    return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
+
+                case "byte":
+                case "java.lang.Byte":
+                case "short":
+                case "java.lang.Short":
+                    return IntLiteral.buildIntLiteral(value.toString().toCharArray(), start, start + chars.length);
+
+                case "char":
+                case "java.lang.Character":
+                    if (chars.length < 3 || chars[0] != '\'' || chars[chars.length - 1] != '\'')
+                        chars = new char[] {'\'', ((Character) value).charValue(), '\''};
+                    return new CharLiteral(chars, start, until);
+
+                case "java.lang.String":
+                    if (ClassHelper.char_TYPE.equals(type) && ((String) value).length() == 1) {
+                        return new CharLiteral(new char[] {'\'', ((String) value).charAt(0), '\''}, start, until);
+                    }
+
+                    if (CharOperation.prefixEquals(TRIPLE_QUOTE1, chars) ||
+                            CharOperation.prefixEquals(TRIPLE_QUOTE2, chars)) {
+                        chars = CharOperation.subarray(chars, 3, chars.length - 3);
+                    } else if (CharOperation.prefixEquals(DOLLAR_SLASHY, chars)) {
+                        chars = CharOperation.subarray(chars, 2, chars.length - 2);
+                    } else if (chars[0] == '"' || chars[0] == '\'' || chars[0] == '/') {
+                        chars = CharOperation.subarray(chars, 1, chars.length - 1);
+                    }
+                    // TODO: Support concatenation using StringLiteral#extend(s)With?
+                    return new StringLiteral(chars, start, until, expr.getLineNumber());
+
+                default:
+                    Util.log(IStatus.WARNING, "Unhandled constant expression type: " + expr.getType().getName());
+                }
+            } else if (expr instanceof org.codehaus.groovy.ast.expr.CastExpression) {
+                Expression operand = ((org.codehaus.groovy.ast.expr.CastExpression) expr).getExpression();
+
+                return java.util.Optional.ofNullable(createInitializationExpression(operand, expr.getType())).map(o -> {
+                    CastExpression cast = new CastExpression(o, createTypeReferenceForClassNode(expr.getType()));
+                    cast.sourceStart = expr.getStart();
+                    cast.sourceEnd = expr.getEnd();
+                    return cast;
+                }).orElse(null);
+            }
+            return null;
         }
 
         private org.eclipse.jdt.internal.compiler.ast.Statement[] createStatements(Collection<VariableExpression> expressions) {
@@ -2147,6 +2224,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             return typeParameters;
         }
+
+        private static final char[] DOLLAR_SLASHY = "$/".toCharArray();
+        private static final char[] TRIPLE_QUOTE1 = "'''".toCharArray();
+        private static final char[] TRIPLE_QUOTE2 = "\"\"\"".toCharArray();
+
         private static final Pattern AND = Pattern.compile("^\\s*&\\s*");
         private static final Pattern EXTENDS = Pattern.compile("^\\s*extends\\s+");
 
@@ -2602,6 +2684,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // (or the end of the entire declaration if it is the last one)
             // (how is this different from declarationSourceEnd?)
             fieldDecl.endPart2Position = fieldNode.getEnd() - 1;
+
+            if (fieldDecl.initialization != null && fieldDecl.initialization.sourceStart < fieldDecl.declarationEnd) {
+                fieldDecl.initialization.sourceStart = fieldDecl.initialization.sourceEnd = fieldDecl.declarationEnd;
+            }
         }
 
         /**

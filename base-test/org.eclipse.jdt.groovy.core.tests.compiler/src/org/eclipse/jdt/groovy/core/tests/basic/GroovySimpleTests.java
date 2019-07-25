@@ -4687,6 +4687,174 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testFieldPositions3() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  boolean b\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions4() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  byte b\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions5() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  char c\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions6() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  float f\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions7() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  double d\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions8() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  int i\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions9() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  long l\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions10() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  short s\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions11() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  BigDecimal big = 0.0\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions12() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  BigInteger big = 42g\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions13() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  Class<?> type = Object\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testFieldPositions14() {
+        //@formatter:off
+        String[] sources = {
+            "I.groovy",
+            "interface I {\n" +
+            "  String typeName = Object.name\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testSecondaryTypeTagging() {
         //@formatter:off
         String[] sources = {

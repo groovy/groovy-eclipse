@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class AnnotationsTests extends GroovyCompilerTestSuite {
@@ -66,8 +67,540 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
+    @Test
+    public void testIntLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  int value() default 42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testIntLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  int value() default -42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42");
+    }
+
+    @Test
+    public void testIntLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  int value() default +42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testIntLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  int value() default (int)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testIntLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  int value() default (42 as int)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testLongLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  long value() default 42L\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testLongLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  long value() default -42L\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42");
+    }
+
+    @Test
+    public void testLongLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  long value() default +42L\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testLongLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  long value() default (long)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testLongLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  long value() default (42 as long)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testShortLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  short value() default 42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testShortLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  short value() default -42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testShortLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  short value() default +42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testShortLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  short value() default (short)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testShortLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  short value() default (42 as short)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testByteLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  byte value() default 42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testByteLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  byte value() default -42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testByteLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  byte value() default +42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testByteLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  byte value() default (byte)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testByteLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  byte value() default (42 as byte)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testCharLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  char value() default 42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "*");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testCharLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  char value() default '*'\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "*");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testCharLiteralAttributeDefault3() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  char value() default (char)'*'\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "*");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-6025
+    public void testCharLiteralAttributeDefaul4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  char value() default ('*' as char)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "*");
+    }
+
+    @Test
+    public void testFloatLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  float value() default 42f\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test
+    public void testFloatLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  float value() default -42f\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42.0");
+    }
+
+    @Test
+    public void testFloatLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  float value() default +42f\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testFloatLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  float value() default (float)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testFloatLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  float value() default (42 as float)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test
+    public void testDoubleLiteralAttributeDefault() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  double value() default 42d\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test
+    public void testDoubleLiteralAttributeDefault1a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  double value() default -42d\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-42.0");
+    }
+
+    @Test
+    public void testDoubleLiteralAttributeDefault1b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  double value() default +42d\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testDoubleLiteralAttributeDefault2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  double value() default (double)42\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9205
+    public void testDoubleLiteralAttributeDefault2a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@interface A {\n" +
+            "  double value() default (42 as double)\n" +
+            "}\n" +
+            "print A.getMethod('value').defaultValue\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42.0");
+    }
+
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9206
+    public void testCharLiteralAttributeValue() {
+        //@formatter:off
+        String[] sources = {
+            "Separator.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Separator {\n" +
+            "  char value();\n" +
+            "}",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Separator(';')\n" +
+            "  String tokens\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
     @Test // ArrayIndexOutOfBoundsException in LongLiteral.computeConstant
-    public void testLongLiteral() {
+    public void testLongLiteralAttributeValue() {
         //@formatter:off
         String[] sources = {
             "Min.java",
@@ -89,7 +622,51 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testBigIntegerLiteral() {
+    public void testLongLiteralAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  long value();\n" +
+            "}",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(+1L)\n" +
+            "  Integer index\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testLongLiteralAttributeValue3() {
+        //@formatter:off
+        String[] sources = {
+            "Min.java",
+            "import java.lang.annotation.*;\n" +
+            "@Target(ElementType.FIELD)\n" +
+            "@interface Min {\n" +
+            "  long value();\n" +
+            "}",
+
+            "Main.groovy",
+            "class Main {\n" +
+            "  @Min(-1L)\n" +
+            "  Integer index\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources);
+    }
+
+    @Test
+    public void testBigIntegerLiteralAttributeValue() {
         //@formatter:off
         String[] sources = {
             "Min.java",
@@ -107,7 +684,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -118,7 +695,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testBigDecimalLiteral() {
+    public void testBigDecimalLiteralAttributeValue() {
         //@formatter:off
         String[] sources = {
             "Min.java",
@@ -136,7 +713,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator.createConstantExpression(ConstantExpression)
+        // there should not be an error from the Java model -- GroovyCompilationUnitDeclaration.UnitPopulator#createExpression(ConstantExpression)
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
@@ -147,7 +724,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testClassAnnotationValue1() {
+    public void testClassLiteralAttributeValue1() {
         //@formatter:off
         String[] sources = {
             "Anno.java",
@@ -169,7 +746,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testClassAnnotationValue2() {
+    public void testClassLiteralAttributeValue2() {
         //@formatter:off
         String[] sources = {
             "Anno.java",
@@ -191,7 +768,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testClassAnnotationValue3() {
+    public void testClassLiteralAttributeValue3() {
         //@formatter:off
         String[] sources = {
             "Anno.java",
@@ -215,7 +792,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testClosureAnnotationValue() {
+    public void testClosureExpressionAttributeValue() {
         //@formatter:off
         String[] sources = {
             "Anno.java",
@@ -237,7 +814,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GRECLIPSE-629
-    public void testConstAnnotationValue() {
+    public void testInlinedStaticFinalAttributeValue() {
         //@formatter:off
         String[] sources = {
             "Const.java",
@@ -923,7 +1500,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnnotations04_defaultParamMethods() {
+    public void testAnnotationsOnDefaultArgumentMethod() {
         //@formatter:off
         String[] sources = {
             "p/X.groovy",
