@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,12 +24,12 @@ import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.RangeExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
 import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -49,7 +49,7 @@ import org.eclipse.text.edits.ReplaceEdit;
 public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
 
     private VariableScope variableScope;
-    private DeclarationExpression variableDeclaration;
+    private BinaryExpression variableDeclaration;
 
     @Override
     public String getDisplayString() {
@@ -66,9 +66,8 @@ public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
         ASTNode coveredNode = context.getCoveredNode();
         if (coveredNode instanceof VariableExpression && ((VariableExpression) coveredNode).getAccessedVariable() instanceof VariableExpression) {
             TypeLookupResult result = context.getNodeType((VariableExpression) ((VariableExpression) coveredNode).getAccessedVariable());
-            if (result != null && result.scope != null && result.enclosingAssignment instanceof DeclarationExpression &&
-                    !((DeclarationExpression) result.enclosingAssignment).isMultipleAssignmentDeclaration()) {
-                variableDeclaration = (DeclarationExpression) result.enclosingAssignment;
+            if (result != null && result.scope != null && !(result.enclosingAssignment.getLeftExpression() instanceof TupleExpression)) {
+                variableDeclaration = result.enclosingAssignment;
                 variableScope = result.scope;
 
                 // TODO: Does core Groovy offer an isEffectivelyFinal(VariableExpression)?
@@ -166,7 +165,7 @@ public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
     }
 
     private void forEachOccurrence(Consumer<VariableExpression> consumer) {
-        VariableExpression variableExpr = variableDeclaration.getVariableExpression();
+        VariableExpression variableExpr = (VariableExpression) variableDeclaration.getLeftExpression();
         VariableScope.VariableInfo variableInfo = variableScope.lookupNameInCurrentScope(variableExpr.getName());
 
         variableInfo.scopeNode.visit(new CodeVisitorSupport() {

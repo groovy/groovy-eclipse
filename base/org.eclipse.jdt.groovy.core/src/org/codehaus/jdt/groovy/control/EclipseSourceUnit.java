@@ -33,7 +33,7 @@ public class EclipseSourceUnit extends SourceUnit {
     private final IFile file;
     public final JDTResolver resolver;
 
-    public EclipseSourceUnit(/*@Nullable*/ IFile file, String filePath, char[] sourceCode, boolean isReconcile,
+    public EclipseSourceUnit(/*@Nullable*/ IFile file, String filePath, char[] sourceCode,
         CompilerConfiguration compilerConfig, GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
 
         super(filePath, new CharArrayReaderSource(sourceCode) {
@@ -44,7 +44,6 @@ public class EclipseSourceUnit extends SourceUnit {
 
         this.file = file;
         this.resolver = resolver;
-        this.isReconcile = isReconcile;
     }
 
     /**

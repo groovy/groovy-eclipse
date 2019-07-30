@@ -84,8 +84,6 @@ public class SourceUnit extends ProcessingUnit {
     protected ModuleNode ast;
 
     // GRECLIPSE add
-    public boolean isReconcile;
-
     public List<Comment> getComments() {
         return comments;
     }

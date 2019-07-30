@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -67,7 +67,7 @@ public class AssignmentStorer {
                 handleMultiAssignment(vars, decl.getRightExpression(), scope, rhsType);
             } else {
                 VariableExpression var = decl.getVariableExpression();
-                scope.addVariable(var.getName(), findVariableType(var, rhsType), null);
+                handleSingleAssignment(var, scope, rhsType);
             }
         } else {
             Expression lhs = exp.getLeftExpression();
@@ -149,7 +149,10 @@ public class AssignmentStorer {
     private static void handleSingleAssignment(Expression lhs, VariableScope scope, ClassNode rhsType) {
         if (lhs instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) lhs;
-            if (scope.inScriptRunMethod() || scope.getEnclosingClosure() != null ||
+            if (var.getAccessedVariable() == var) {
+                scope.addVariable(var.getName(), findVariableType(var, rhsType), null);
+
+            } else if (scope.inScriptRunMethod() || scope.getEnclosingClosure() != null ||
                     scope.getEnclosingTypeDeclaration().equals(findDeclaringType(var))) {
                 // undeclared variables are allowed in scripts or unqualified names may resolve to something in a closure or the declaring type
                 scope.updateOrAddVariable(var.getName(), findVariableType(var, rhsType), findDeclaringType(var));

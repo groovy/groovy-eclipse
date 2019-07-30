@@ -179,7 +179,7 @@ public class GroovyParser {
         }
 
         char[] sourceCode = Optional.ofNullable(iCompilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
-        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, sourceCode, compilationUnit.isReconcile,
+        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, sourceCode,
             compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
 
         compilationUnit.addSource(sourceUnit);
