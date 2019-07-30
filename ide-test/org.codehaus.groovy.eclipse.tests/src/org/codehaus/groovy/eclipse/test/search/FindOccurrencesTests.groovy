@@ -689,7 +689,36 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test // GRECLIPSE-1363
     void testStaticImports1() {
-        addGroovySource('class Other {\n  public static int FOO\n}', 'Other', 'p')
+        addGroovySource '''\
+            class Other {
+                public static int FOO
+            }
+            ''', 'Other', 'p'
+
+        //@formatter:off
+        String contents = '''\
+            |import static p.Other.FOO
+            |FOO
+            |p.Other.FOO
+            |'''.stripMargin()
+        //@formatter:on
+
+        int offset = contents.indexOf('FOO')
+        int length = 'FOO'.length()
+        int start1 = offset
+        int start2 = contents.indexOf('FOO', offset + 1)
+        int start3 = contents.lastIndexOf('FOO')
+        doTest(contents, offset, length, start1, length, start2, length, start3, length)
+    }
+
+    @Test // GRECLIPSE-1363
+    void testStaticImports2() {
+        addGroovySource '''\
+            class Other {
+                public static int FOO
+            }
+            ''', 'Other', 'p'
+
         //@formatter:off
         String contents = '''\
             |import static p.Other.FOO as BAR
@@ -706,28 +735,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, offset, length, start1, length, start2, length, start3, length)
     }
 
-    @Test // GRECLIPSE-1363
-    void testStaticImports2() {
-        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
-        //@formatter:off
-        String contents = '''\
-            |import static p.Other.FOO
-            |FOO
-            |p.Other.FOO
-            |'''.stripMargin()
-        //@formatter:on
-
-        int offset = contents.indexOf('FOO')
-        int length = 'FOO'.length()
-        int start1 = offset
-        int start2 = contents.indexOf('FOO', start1 + 1)
-        int start3 = contents.indexOf('FOO', start2 + 1)
-        doTest(contents, offset, length, start1, length, start2, length, start3, length)
-    }
-
     @Test
     void testStaticImports3() {
-        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource '''\
+            class Other {
+                static int FOO
+                static boolean BAR() {}
+            }
+            ''', 'Other', 'p'
+
         //@formatter:off
         String contents = '''\
             |import static p.Other.BAR
@@ -746,7 +762,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     @Test
     void testStaticImports4() {
-        addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
+        addGroovySource '''\
+            class Other {
+                static int FOO
+                static boolean BAR() {}
+            }
+            ''', 'Other', 'p'
+
         //@formatter:off
         String contents = '''\
             |import static p.Other.BAR

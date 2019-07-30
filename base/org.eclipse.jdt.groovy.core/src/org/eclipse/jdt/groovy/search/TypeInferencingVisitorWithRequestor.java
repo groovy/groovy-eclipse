@@ -497,12 +497,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 } else {
                     importName = imp.getClassName().replace('$', '.') + "." + imp.getFieldName();
                 }
-                // TODO: concatenate import alias?
             }
 
             enclosingElement = unit.getImport(importName);
             if (!enclosingElement.exists()) {
-                enclosingElement = oldEnclosingElement;
+                // GRECLIPSE-1363, GRECLIPSE-1371, et al. -- handle imports like "import static Boolean.TRUE"
+                if (imp.isStatic()) {
+                    if (imp.isStar()) {
+                        importName = imp.getType().getNameWithoutPackage().replace('$', '.') + ".*";
+                    } else {
+                        importName = imp.getType().getNameWithoutPackage().replace('$', '.') + "." + imp.getFieldName();
+                    }
+                    enclosingElement = unit.getImport(importName);
+                }
+                if (!enclosingElement.exists()) {
+                    enclosingElement = oldEnclosingElement;
+                }
             }
 
             try {

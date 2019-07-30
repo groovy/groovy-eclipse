@@ -73,10 +73,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private boolean inAnnotation;
     private boolean inLeftExpression;
 
-    // GRECLIPE-1371 and GRECLIPSE-1363 ability to toggle behavior based on reconcile or not
-    boolean isReconcile;
-    // GRECLIPSE end
-
     public void visitClass(ClassNode node, SourceUnit source) {
         this.currentClass = node;
         this.source = source;
@@ -457,14 +453,8 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE end
         if (importNodes.containsKey(name)) {
             ImportNode importNode = importNodes.get(name);
-            // GRECLIPSE add
-            if (!isReconcile) {
-            // GRECLIPSE end
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
-            // GRECLIPSE add
-            }
-            // GRECLIPSE end
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
         }

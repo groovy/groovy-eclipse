@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
+import static org.apache.groovy.util.BeanUtils.decapitalize;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -797,7 +799,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
         String prefix;
         if (!field.exists() && (prefix = extractPrefix(text)) != null) {
             // try as a property
-            String newName = Character.toLowerCase(text.charAt(prefix.length())) + text.substring(prefix.length() + 1);
+            String newName = decapitalize(text.substring(prefix.length()));
             field = type.getField(newName);
         }
         if (field.exists()) {
