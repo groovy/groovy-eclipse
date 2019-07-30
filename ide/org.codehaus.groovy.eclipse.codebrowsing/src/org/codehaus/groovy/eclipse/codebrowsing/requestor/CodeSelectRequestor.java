@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
-import static org.apache.groovy.util.BeanUtils.decapitalize;
+import static java.beans.Introspector.decapitalize;
 
 import java.util.List;
 import java.util.Optional;
