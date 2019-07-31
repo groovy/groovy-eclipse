@@ -3142,9 +3142,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.setUsingAnonymousInnerClass(true);
             innerClass.setUnresolvedSuperClass(type);
             // GRECLIPSE add
-            Expression name = literalExpression(node, null);
-            innerClass.setNameStart(name.getStart());
-            innerClass.setNameEnd(name.getEnd() - 1);
+            innerClass.setNameStart(type.getStart());
+            innerClass.setNameStart2(type.getNameStart2());
+            innerClass.setNameEnd(type.getEnd() - 1);
             innerClass.putNodeMetaData("rparen.offset",
                 locations.findOffset(((GroovySourceAST) elist).getLineLast(), ((GroovySourceAST) elist).getColumnLast()));
             // GRECLIPSE end
@@ -3152,9 +3152,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         configureAST(ret, constructorCallNode);
         // GRECLIPSE add
-        Expression name = literalExpression(node, null);
-        ret.setNameStart(name.getStart());
-        ret.setNameEnd(name.getEnd() - 1);
+        ret.setNameStart(type.getStart());
+        ret.setNameEnd(type.getEnd() - 1);
         // GRECLIPSE end
         return ret;
     }

@@ -3616,6 +3616,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ctx.anonymousInnerClassDeclaration().putNodeMetaData(ANONYMOUS_INNER_CLASS_SUPER_CLASS, classNode);
                 InnerClassNode anonymousInnerClassNode = this.visitAnonymousInnerClassDeclaration(ctx.anonymousInnerClassDeclaration());
                 // GRECLIPSE add
+                anonymousInnerClassNode.setNameStart(classNode.getStart());
+                anonymousInnerClassNode.setNameStart2(classNode.getNameStart2());
+                anonymousInnerClassNode.setNameEnd(classNode.getEnd() - 1);
                 Token rparen = ctx.arguments().rparen().getStart();
                 anonymousInnerClassNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
                 // GRECLIPSE end
@@ -3627,11 +3630,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
                 ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(anonymousInnerClassNode, arguments);
                 // GRECLIPSE add
-                ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
-                anonymousInnerClassNode.setNameStart(nameNode.getStart());
-                anonymousInnerClassNode.setNameEnd(nameNode.getEnd() - 1);
-                constructorCallExpression.setNameStart(nameNode.getStart());
-                constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
+                constructorCallExpression.setNameStart(anonymousInnerClassNode.getNameStart());
+                constructorCallExpression.setNameEnd(anonymousInnerClassNode.getNameEnd());
                 // GRECLIPSE end
                 constructorCallExpression.setUsingAnonymousInnerClass(true);
 
@@ -3644,9 +3644,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     ctx);
             */
             ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(classNode, arguments);
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
-            constructorCallExpression.setNameStart(nameNode.getStart());
-            constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
+            constructorCallExpression.setNameStart(classNode.getStart());
+            constructorCallExpression.setNameEnd(classNode.getEnd() - 1);
             return configureAST(constructorCallExpression, ctx);
             // GRECLIPSE end
         }
@@ -3720,8 +3719,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 configureAST(componentType, ctx, configureAST(new ConstantExpression(""), annOptCtxt.get(i)));
             }
 
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()),ctx.createdName().primitiveType() != null
-                ? ctx.createdName().primitiveType() : ctx.createdName().qualifiedClassName());
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()),
+                Optional.<GroovyParserRuleContext>ofNullable(ctx.createdName().primitiveType()).orElse(ctx.createdName().qualifiedClassName()));
             arrayExpression.setNameStart(nameNode.getStart());
             arrayExpression.setNameEnd(nameNode.getEnd() - 1);
             // GRECLIPSE end

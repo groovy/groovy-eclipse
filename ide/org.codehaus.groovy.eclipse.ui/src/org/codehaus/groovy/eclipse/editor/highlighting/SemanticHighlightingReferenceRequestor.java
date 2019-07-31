@@ -340,8 +340,12 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(MethodCallExpression expr) {
-        HighlightKind kind = HighlightKind.METHOD_CALL;
-        if (expr.getObjectExpression() instanceof ClassExpression) kind = HighlightKind.STATIC_CALL;
+        HighlightKind kind;
+        if (expr.getObjectExpression() instanceof ClassExpression) {
+            kind = HighlightKind.STATIC_CALL;
+        } else {
+            kind = HighlightKind.METHOD_CALL;
+        }
 
         int offset = expr.getMethod().getStart(),
             length = expr.getMethod().getLength();
@@ -350,11 +354,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(ConstructorCallExpression expr) {
-        if (expr.isSpecialCall()) {
-            return null; // handled by GroovyTagScanner
-        }
+        if (expr.isSpecialCall()) return null; // handled by GroovyTagScanner
 
-        int offset = expr.getNameStart(),
+        // name start works most of the time (incl. @Newify); name start 2 is for qualified types
+        int offset = Math.max(expr.getNameStart(), expr.getType().getNameStart2()),
             length = expr.getNameEnd() - offset + 1;
 
         return new HighlightedTypedPosition(offset, length, HighlightKind.CTOR_CALL);
@@ -368,8 +371,12 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(MethodPointerExpression expr) {
-        HighlightKind kind = !(expr.getExpression() instanceof ClassExpression)
-                ? HighlightKind.METHOD_CALL : HighlightKind.STATIC_CALL;
+        HighlightKind kind;
+        if (expr.getExpression() instanceof ClassExpression) {
+            kind = HighlightKind.STATIC_CALL;
+        } else {
+            kind = HighlightKind.METHOD_CALL;
+        }
 
         int offset = expr.getMethodName().getStart(),
             length = expr.getMethodName().getLength();
@@ -400,10 +407,13 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {
-        HighlightKind kind = HighlightKind.PARAMETER;
+        HighlightKind kind;
         if (isCatchParam(expr, scope) || isForLoopParam(expr, scope)) {
             kind = HighlightKind.VARIABLE; // treat block params as vars
+        } else {
+            kind = HighlightKind.PARAMETER;
         }
+
         return new HighlightedTypedPosition(expr.getNameStart(), expr.getNameEnd() - expr.getNameStart(), kind);
     }
 

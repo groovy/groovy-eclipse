@@ -3088,6 +3088,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('entry'), 5, VARIABLE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/929
+    void testQualifiedType4() {
+        String contents = 'def sdf = new java.text.SimpleDateFormat("MM.dd.yyyy")'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('sdf'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('SimpleDateFormat'), 'SimpleDateFormat'.length(), CLASS),
+            new HighlightedTypedPosition(contents.indexOf('SimpleDateFormat'), 'SimpleDateFormat'.length(), CTOR_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/929
+    void testQualifiedType5() {
+        String contents = '''\
+            |def foo = new java.lang.Runnable() {
+            |  @Override void run() {}
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 'Runnable'.length(), INTERFACE),
+            new HighlightedTypedPosition(contents.indexOf('Runnable'), 'Runnable'.length(), CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('run'), 3, METHOD))
+    }
+
     @Test
     void testTraits1() {
         String contents = '''\
