@@ -3113,6 +3113,16 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('run'), 3, METHOD))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/930
+    void testQualifiedType6() {
+        String contents = 'def pat = java.util.regex.Pattern.compile("abc")'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Pattern'), 'Pattern'.length(), CLASS),
+            new HighlightedTypedPosition(contents.indexOf('compile'), 'compile'.length(), STATIC_CALL))
+    }
+
     @Test
     void testTraits1() {
         String contents = '''\

@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.CompileUnit;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -1126,9 +1127,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (className != null) {
             ClassNode type = ClassHelper.make(className);
             if (resolve(type)) {
-                Expression ret = new ClassExpression(type);
-                // GRECLIPSE edit
+                // GRECLIPSE add
+                if (type instanceof ImmutableClassNode && !type.isPrimitive()) {
+                    ClassNode wrapper = ClassHelper.makeWithoutCaching(className);
+                    wrapper.setRedirect(type);
+                    type = wrapper;
+                }
+                type.setStart(pe.getStart()); type.setEnd(pe.getEnd());
                 type.setNameStart2(property.getStart());
+                // GRECLIPSE end
+                Expression ret = new ClassExpression(type);
+                // GRECLIPSE edit -- redundant
                 //ret.setSourcePosition(pe);
                 // GRECLIPSE end
                 return ret;
