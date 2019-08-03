@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -91,19 +91,20 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
     private Image decorateImage(ImageDescriptor base, IResource rsrc, Point size) {
         int flags = 0;
 
-        if (!isExternalProject(rsrc.getProject()))
-        try {
-            if (isGroovyProject(rsrc.getProject())) {
-                if (isRuntimeCompiled(rsrc)) {
-                    // display "circle slash" in lower left corner
-                    flags |= JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS;
+        if (!isExternalProject(rsrc.getProject())) {
+            try {
+                if (isGroovyProject(rsrc.getProject())) {
+                    if (isRuntimeCompiled(rsrc)) {
+                        // display "circle slash" in lower left corner
+                        flags |= JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS;
+                    }
+                } else {
+                    // display "red exclamation" in lower left corner
+                    flags |= JavaElementImageDescriptor.BUILDPATH_ERROR;
                 }
-            } else {
-                // display "red exclamation" in lower left corner
-                flags |= JavaElementImageDescriptor.BUILDPATH_ERROR;
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logError("Failed to apply image overlay(s) to: " + rsrc.getName(), e);
             }
-        } catch (Exception e) {
-            GroovyPlugin.getDefault().logError("Failed to apply image overlay(s) to: " + rsrc.getName(), e);
         }
 
         return getImage(base, flags, size);
@@ -134,11 +135,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
     }
 
     private boolean isRuntimeCompiled(IResource resource) throws CoreException {
-        ScriptFolderSelector scriptFolderSelector = scriptFolderSelectors.get(resource.getProject());
-        if (scriptFolderSelector == null) {
-            scriptFolderSelectors.put(resource.getProject(), (scriptFolderSelector = new ScriptFolderSelector(resource.getProject())));
-        }
-        return scriptFolderSelector.isScript(resource);
+        return scriptFolderSelectors.computeIfAbsent(resource.getProject(), ScriptFolderSelector::new).isScript(resource);
     }
 
     //--------------------------------------------------------------------------

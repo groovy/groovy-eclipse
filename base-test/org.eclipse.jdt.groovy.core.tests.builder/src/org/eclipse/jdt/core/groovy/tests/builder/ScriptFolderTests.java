@@ -109,19 +109,29 @@ public final class ScriptFolderTests extends BuilderTestSuite {
     @Test // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
-        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/**/*.groovy,y");
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/*.groovy,y");
         createScriptInGroovyProject("Script", "def x", true);
-        assertNoExists("Project/bin/Script.class");
+        assertNotExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
     }
 
     @Test
-    public void testScriptInProjectNoCopy() throws Exception {
+    public void testScriptInProjectNotCopied() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
-        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/**/*.groovy,n");
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/*.groovy,n");
         createScriptInGroovyProject("Script", "def x", true);
-        assertNoExists("Project/bin/Script.class");
-        assertNoExists("Project/bin/Script.groovy");
+        assertNotExists("Project/bin/Script.class");
+        assertNotExists("Project/bin/Script.groovy");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/901
+    public void testScriptInProjectNoMarkers() throws Exception {
+        Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "scripts/*.groovy,y");
+        createScriptInGroovyProject("Script", "import foo.bar.Baz;", true); // error in editor only
+        expectingNoProblemsFor(new Path("Project/scripts/Script.groovy"));
+        assertNotExists("Project/bin/Script.class");
+        assertExists("Project/bin/Script.groovy");
     }
 
     @Test
@@ -130,7 +140,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
         assertExists("Project/bin/Script.class");
-        assertNoExists("Project/bin/Script.groovy");
+        assertNotExists("Project/bin/Script.groovy");
     }
 
     @Test
@@ -139,11 +149,11 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "class Script {}", false);  // creates a java file
         assertExists("Project/bin/Script.class");
-        assertNoExists("Project/bin/Script.groovy");
-        assertNoExists("Project/bin/Script.java");
+        assertNotExists("Project/bin/Script.groovy");
+        assertNotExists("Project/bin/Script.java");
     }
 
-    @Test // This is the big test.
+    @Test
     public void testComplexScriptFolderProject() throws Exception {
         Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
@@ -154,26 +164,26 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
 
         // src1 is a script folder and compiles to default out folder
         assertExists("ScriptFoldersProject/bin/Script1.groovy");
         assertExists("ScriptFoldersProject/bin/p/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/Script1.class");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.class");
 
         // src2 is a script folder and compiles to bin2
         assertExists("ScriptFoldersProject/bin2/Script2.groovy");
         assertExists("ScriptFoldersProject/bin2/p/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.class");
 
         // src3 is a script folder, and is its own out folder
         assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
         assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
-        assertNoExists("ScriptFoldersProject/src3/Script3.class");
-        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/p/Script3.class");
     }
 
     @Test // as above, but don't copy
@@ -186,29 +196,29 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
 
         // src1 is a script folder and compiles to default out folder
-        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/Script1.class");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.class");
 
         // src2 is a script folder and compiles to bin2
-        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.class");
 
         // src3 is a script folder, and is its own out folder
         assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
         assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
-        assertNoExists("ScriptFoldersProject/src3/Script3.class");
-        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/p/Script3.class");
     }
 
-    @Test // This is the big test.
+    @Test
     public void testComplexScriptFolderProjectProjectSettings() throws Exception {
         IProject project = createPredefinedProject("ScriptFoldersProject");
         createPredefinedProject("ScriptFoldersProject2");
@@ -222,40 +232,40 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
 
         // src1 is a script folder and compiles to default out folder
         assertExists("ScriptFoldersProject/bin/Script1.groovy");
         assertExists("ScriptFoldersProject/bin/p/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/Script1.class");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/Script1.class");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.class");
 
         // src2 is a script folder and compiles to bin2
         assertExists("ScriptFoldersProject/bin2/Script2.groovy");
         assertExists("ScriptFoldersProject/bin2/p/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.class");
 
         // src3 is a script folder, and is its own out folder
         assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
         assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
-        assertNoExists("ScriptFoldersProject/src3/Script3.class");
-        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/Script3.class");
+        assertNotExists("ScriptFoldersProject/src3/p/Script3.class");
 
         // now check another project
         assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
 
-        assertNoExists("ScriptFoldersProject2/bin/Script1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/p/Script1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/Script1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/p/Script1.groovy");
         assertExists("ScriptFoldersProject2/bin/Script1.class");
         assertExists("ScriptFoldersProject2/bin/p/Script1.class");
 
-        assertNoExists("ScriptFoldersProject2/bin2/Script2.groovy");
-        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
+        assertNotExists("ScriptFoldersProject2/bin2/Script2.groovy");
+        assertNotExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
         assertExists("ScriptFoldersProject2/bin2/Script2.class");
         assertExists("ScriptFoldersProject2/bin2/p/Script2.class");
 
@@ -269,16 +279,16 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         env.fullBuild();
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
 
-        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.groovy");
         assertExists("ScriptFoldersProject/bin/Script1.class");
         assertExists("ScriptFoldersProject/bin/p/Script1.class");
 
-        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.groovy");
         assertExists("ScriptFoldersProject/bin2/Script2.class");
         assertExists("ScriptFoldersProject/bin2/p/Script2.class");
 
@@ -290,16 +300,16 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // other project should be the same
         assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
 
-        assertNoExists("ScriptFoldersProject2/bin/Script1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/p/Script1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/Script1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/p/Script1.groovy");
         assertExists("ScriptFoldersProject2/bin/Script1.class");
         assertExists("ScriptFoldersProject2/bin/p/Script1.class");
 
-        assertNoExists("ScriptFoldersProject2/bin2/Script2.groovy");
-        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
+        assertNotExists("ScriptFoldersProject2/bin2/Script2.groovy");
+        assertNotExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
         assertExists("ScriptFoldersProject2/bin2/Script2.class");
         assertExists("ScriptFoldersProject2/bin2/p/Script2.class");
 
@@ -317,16 +327,16 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
 
-        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
-        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNotExists("ScriptFoldersProject/bin/p/Script1.groovy");
         assertExists("ScriptFoldersProject/bin/Script1.class");
         assertExists("ScriptFoldersProject/bin/p/Script1.class");
 
-        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
-        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNotExists("ScriptFoldersProject/bin2/p/Script2.groovy");
         assertExists("ScriptFoldersProject/bin2/Script2.class");
         assertExists("ScriptFoldersProject/bin2/p/Script2.class");
 
@@ -339,26 +349,26 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
-        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNotExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
 
         // src1 is a script folder and compiles to default out folder
         assertExists("ScriptFoldersProject2/bin/Script1.groovy");
         assertExists("ScriptFoldersProject2/bin/p/Script1.groovy");
-        assertNoExists("ScriptFoldersProject2/bin/Script1.class");
-        assertNoExists("ScriptFoldersProject2/bin/p/Script1.class");
+        assertNotExists("ScriptFoldersProject2/bin/Script1.class");
+        assertNotExists("ScriptFoldersProject2/bin/p/Script1.class");
 
         // src2 is a script folder and compiles to bin2
         assertExists("ScriptFoldersProject2/bin2/Script2.groovy");
         assertExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
-        assertNoExists("ScriptFoldersProject2/bin2/Script2.class");
-        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.class");
+        assertNotExists("ScriptFoldersProject2/bin2/Script2.class");
+        assertNotExists("ScriptFoldersProject2/bin2/p/Script2.class");
 
         // src3 is a script folder, and is its own out folder
         assertExistsNotDerived("ScriptFoldersProject2/src3/Script3.groovy");
         assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
-        assertNoExists("ScriptFoldersProject2/src3/Script3.class");
-        assertNoExists("ScriptFoldersProject2/src3/p/Script3.class");
+        assertNotExists("ScriptFoldersProject2/src3/Script3.class");
+        assertNotExists("ScriptFoldersProject2/src3/p/Script3.class");
 
         preferences.put(Activator.USING_PROJECT_PROPERTIES, "false");
     }
@@ -434,7 +444,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         assertFalse("File should not be derived: " + file, file.isDerived());
     }
 
-    private static void assertNoExists(String projectRelativePath) {
+    private static void assertNotExists(String projectRelativePath) {
         IWorkspaceRoot root = env.getWorkspace().getRoot();
         IFile file = root.getFile(new Path(projectRelativePath));
         assertFalse("File should not exist: " + file, file.exists());

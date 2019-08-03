@@ -322,7 +322,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     public void generateCode() {
         boolean successful = processToPhase(Phases.ALL);
         if (successful) {
-
             // At the end of this method we want to make this call for each of the classes generated during processing
             //
             // compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, foundBinding, path));
@@ -351,22 +350,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 log("Processing sourceUnit " + groovySourceUnit.getName());
             }
 
-            for (GroovyClass clazz : classes) {
-                ClassNode classNode = clazz.getClassNode();
+            for (GroovyClass groovyClass : classes) {
+                ClassNode classNode = groovyClass.getClassNode();
                 if (DEBUG_CODE_GENERATION) {
-                    log("Looking at class " + clazz.getName());
+                    log("Looking at class " + groovyClass.getName());
                     log("ClassNode where it came from " + classNode);
                 }
                 // Only care about those coming about because of this groovySourceUnit
-                if (clazz.getSourceUnit() == groovySourceUnit) {
+                if (groovyClass.getSourceUnit() == groovySourceUnit) {
                     if (DEBUG_CODE_GENERATION) {
                         log("It is from this source unit");
                     }
                     // Worth continuing
-                    String classname = clazz.getName();
                     SourceTypeBinding binding = null;
                     if (types != null && types.length != 0) {
-                        binding = findBinding(types, clazz.getClassNode());
+                        binding = findBinding(types, groovyClass.getClassNode());
                     }
                     if (DEBUG_CODE_GENERATION) {
                         log("Binding located? " + (binding != null));
@@ -383,30 +381,24 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     boolean isScript = false;
-                    // Suppress class file output if it is a script
-                    // null binding implies synthetic type, which we assume cannot be a script
+                    // suppress class file output if it is a script; a null binding implies a synthetic type, which we assume cannot be a script
                     if (binding != null && binding.scope != null && (binding.scope.parent instanceof GroovyCompilationUnitScope)) {
                         GroovyCompilationUnitScope gcuScope = (GroovyCompilationUnitScope) binding.scope.parent;
-                        if (gcuScope.isScript()) {
-                            isScript = true;
-                        }
+                        isScript = gcuScope.isScript();
                     }
                     if (!isScript) {
-                        byte[] classbytes = clazz.getBytes();
-                        String path = clazz.getName().replace('.', '/');
-                        GroovyClassFile classFile = new GroovyClassFile(classname, classbytes, binding, path);
-                        char[] classNameChars = classname.toCharArray();
+                        GroovyClassFile groovyClassFile = new GroovyClassFile(groovyClass.getName(), groovyClass.getBytes(), binding, groovyClass.getName().replace('.', '/'));
                         if (binding == null) {
-                            // GRECLIPSE-1653 this type likely added by AST transform and is synthetic
+                            // GRECLIPSE-1653: this type is synthetic -- likely added by an AST transform
                             Map<char[], ClassFile> compiledTypes = Map.class.cast(compilationResult.compiledTypes);
-                            compiledTypes.put(classNameChars, classFile);
+                            compiledTypes.put(groovyClass.getName().toCharArray(), groovyClassFile);
                         } else {
-                            compilationResult.record(classNameChars, classFile);
+                            compilationResult.record(groovyClass.getName().toCharArray(), groovyClassFile);
                         }
                     }
                 }
             }
-        } else if (types != null) {
+        } else if (!isScript && types != null && types.length > 0) {
             // GRECLIPSE-1773
             // We should create problem types if some types are not compiled successfully as it is done for Java types.
             // Otherwise incremental builder is not able to recompile dependencies of broken types.
@@ -556,6 +548,27 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             errorsRecorded.add(message);
         }
         errors.removeAll(errorsRecorded);
+    }
+
+    @Override
+    public void finalizeProblems() {
+        boolean isReconcile = (compilationUnit.allowTransforms && !compilerOptions.parseLiteralExpressionsAsConstants);
+
+        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit) {
+            CategorizedProblem[] problems = compilationResult.problems;
+            if (problems != null && problems.length > 0) {
+                for (int i = 0, n = problems.length; i < n; i += 1) {
+                    CategorizedProblem problem = problems[i];
+
+                    if (problem != null && CharOperation.equals(problem.getOriginatingFileName(),
+                            ((EclipseSourceUnit) groovySourceUnit).getEclipseFile().getFullPath().toString().toCharArray())) {
+                        compilationResult.removeProblem(problem);
+                    }
+                }
+            }
+        }
+
+        super.finalizeProblems();
     }
 
     private static int getOffset(int[] lineSeparatorPositions, int line, int column) {
