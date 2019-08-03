@@ -45,8 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -85,13 +84,13 @@ public class SourceUnit extends ProcessingUnit {
     protected ModuleNode ast;
 
     // GRECLIPSE add
-    private List<Comment> comments;
     public List<Comment> getComments() {
         return comments;
     }
     public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
+    private List<Comment> comments = Collections.emptyList();
     // GRECLIPSE end
 
     /**
@@ -200,7 +199,6 @@ public class SourceUnit extends ProcessingUnit {
         return new SourceUnit(name, source, configuration, null, new ErrorCollector(configuration));
     }
 
-
     /**
      * A convenience routine to create a standalone SourceUnit on a String
      * with defaults for almost everything that is configurable.
@@ -261,7 +259,7 @@ public class SourceUnit extends ProcessingUnit {
         }
         catch (SyntaxException e) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             getErrorCollector().addError(new SyntaxErrorMessage(e, this));
@@ -269,13 +267,14 @@ public class SourceUnit extends ProcessingUnit {
         // GRECLIPSE add
         catch (CompilationFailedException cfe) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             throw cfe;
         }
         // GRECLIPSE end
 
+        /* GRECLIPSE edit
         String property = (String) AccessController.doPrivileged(new PrivilegedAction() {
             public Object run() {
                 return System.getProperty("groovy.ast");
@@ -285,13 +284,14 @@ public class SourceUnit extends ProcessingUnit {
         if ("xml".equals(property)) {
             saveAsXML(name, ast);
         }
+        */
     }
 
+    /* GRECLIPSE edit
     private static void saveAsXML(String name, ModuleNode ast) {
-        // GRECLIPSE edit
-        //XStreamUtils.serialize(name, ast);
-        // GRECLIPSE end
+        XStreamUtils.serialize(name, ast);
     }
+    */
 
     //---------------------------------------------------------------------------
     // SOURCE SAMPLING
@@ -353,7 +353,9 @@ public class SourceUnit extends ProcessingUnit {
         getErrorCollector().addErrorAndContinue(se, this);
     }
 
-    public ReaderSource getSource() { return source; }
+    public ReaderSource getSource() {
+        return source;
+    }
 
     // GRECLIPSE add
     public char[] readSourceRange(int offset, int length) {

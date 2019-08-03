@@ -199,7 +199,6 @@ public class SourceUnit extends ProcessingUnit {
         return new SourceUnit(name, source, configuration, null, new ErrorCollector(configuration));
     }
 
-
     /**
      * A convenience routine to create a standalone SourceUnit on a String
      * with defaults for almost everything that is configurable.

@@ -23,7 +23,6 @@ import groovyjarjarantlr.MismatchedCharException;
 import groovyjarjarantlr.MismatchedTokenException;
 import groovyjarjarantlr.NoViableAltException;
 import groovyjarjarantlr.NoViableAltForCharException;
-
 import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.Comment;
@@ -46,8 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -86,13 +84,13 @@ public class SourceUnit extends ProcessingUnit {
     protected ModuleNode ast;
 
     // GRECLIPSE add
-    private List<Comment> comments;
     public List<Comment> getComments() {
         return comments;
     }
     public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
+    private List<Comment> comments = Collections.emptyList();
     // GRECLIPSE end
 
     /**
@@ -230,30 +228,13 @@ public class SourceUnit extends ProcessingUnit {
         //
         // Create a reader on the source and run the parser.
 
-        Reader reader = null;
-        try {
-            reader = source.getReader();
-
+        try (Reader reader = source.getReader()) {
             // let's recreate the parser each time as it tends to keep around state
             parserPlugin = getConfiguration().getPluginFactory().createParserPlugin();
 
             cst = parserPlugin.parseCST(this, reader);
-
-            reader.close();
-
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             getErrorCollector().addFatalError(new SimpleMessage(e.getMessage(), this));
-        }
-        finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                }
-                catch (IOException e) {
-                    // Ignore
-                }
-            }
         }
     }
 
@@ -278,7 +259,7 @@ public class SourceUnit extends ProcessingUnit {
         }
         catch (SyntaxException e) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             getErrorCollector().addError(new SyntaxErrorMessage(e, this));
@@ -286,13 +267,14 @@ public class SourceUnit extends ProcessingUnit {
         // GRECLIPSE add
         catch (CompilationFailedException cfe) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             throw cfe;
         }
         // GRECLIPSE end
 
+        /* GRECLIPSE edit
         String property = (String) AccessController.doPrivileged(new PrivilegedAction() {
             public Object run() {
                 return System.getProperty("groovy.ast");
@@ -302,13 +284,14 @@ public class SourceUnit extends ProcessingUnit {
         if ("xml".equals(property)) {
             saveAsXML(name, ast);
         }
+        */
     }
 
+    /* GRECLIPSE edit
     private static void saveAsXML(String name, ModuleNode ast) {
-        // GRECLIPSE edit
-        //XStreamUtils.serialize(name, ast);
-        // GRECLIPSE end
+        XStreamUtils.serialize(name, ast);
     }
+    */
 
     //---------------------------------------------------------------------------
     // SOURCE SAMPLING
@@ -329,7 +312,7 @@ public class SourceUnit extends ProcessingUnit {
                     int start = column - 30 - 1;
                     int end = (column + 10 > text.length() ? text.length() : column + 10 - 1);
                     sample = "   " + text.substring(start, end) + Utilities.eol() + "   " +
-                            marker.substring(start, marker.length());
+                            marker.substring(start);
                 } else {
                     sample = "   " + text + Utilities.eol() + "   " + marker;
                 }
@@ -345,10 +328,9 @@ public class SourceUnit extends ProcessingUnit {
      * This method adds an exception to the error collector. The Exception most likely has no line number attached to it.
      * For this reason you should use this method sparingly. Prefer using addError for syntax errors or add an error
      * to the {@link ErrorCollector} directly by retrieving it with getErrorCollector().
-     * @param e
-     *      the exception that occurred
-     * @throws CompilationFailedException
-     *      on error
+     *
+     * @param e the exception that occurred
+     * @throws CompilationFailedException on error
      */
     public void addException(Exception e) throws CompilationFailedException {
         getErrorCollector().addException(e, this);
@@ -359,16 +341,17 @@ public class SourceUnit extends ProcessingUnit {
      * number of the error.  This method should be reserved for real errors in the syntax of the SourceUnit. If
      * your error is not in syntax, and is a semantic error, or more general error, then use addException or use
      * the error collector directly by retrieving it with getErrorCollector().
-     * @param se
-     *      the exception, which should have line and column information
-     * @throws CompilationFailedException
-     *      on error
+     *
+     * @param se the exception, which should have line and column information
+     * @throws CompilationFailedException on error
      */
     public void addError(SyntaxException se) throws CompilationFailedException {
         getErrorCollector().addError(se, this);
     }
 
-    public ReaderSource getSource() { return source; }
+    public ReaderSource getSource() {
+        return source;
+    }
 
     // GRECLIPSE add
     public char[] readSourceRange(int offset, int length) {
