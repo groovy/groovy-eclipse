@@ -1234,11 +1234,10 @@ public class CompilationUnit extends ProcessingUnit {
     /**
      * Modifies the behaviour of the phases based on what the caller really needs.
      * Some invocations of the compilation infrastructure don't need the bytecode,
-     * so we can skip creating it, they would rather have a more "source like" AST.
+     * so we can skip creating it; they would rather have a more "source like" AST.
      */
     public void tweak(boolean isReconcile) {
         verifier.inlineStaticFieldInitializersIntoClinit = !isReconcile;
-        phaseOperations[Phases.OUTPUT].remove(output);
     }
 
     private ProgressListener listener;
