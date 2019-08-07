@@ -105,8 +105,7 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
                         @Override
                         public void visitVariableExpression(VariableExpression ve) {
                             if (exceptions.contains(ve.getName())) return;
-                            Variable av = ve.getAccessedVariable();
-                            if (av instanceof DynamicVariable || !av.isInStaticContext()) {
+                            if (ve.getAccessedVariable() instanceof DynamicVariable || !ve.isInStaticContext()) {
                                 addVariableError(ve);
                             }
                         }
@@ -137,6 +136,16 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression mce) {
+        if (inSpecialConstructorCall && !isInnerClass(currentMethod.getDeclaringClass())) {
+            Expression objectExpression = mce.getObjectExpression();
+            if (objectExpression instanceof VariableExpression) {
+                VariableExpression ve = (VariableExpression) objectExpression;
+                if (ve.isThisExpression()) {
+                    addError("Can't access instance method '" + mce.getMethodAsString() + "' before the class is constructed", mce);
+                    return;
+                }
+            }
+        }
         super.visitMethodCallExpression(mce);
     }
 

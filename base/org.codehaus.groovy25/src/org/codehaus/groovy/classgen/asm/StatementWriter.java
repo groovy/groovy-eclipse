@@ -120,7 +120,7 @@ public class StatementWriter {
     }
 
     protected void writeForInLoop(ForStatement loop) {
-        controller.getAcg().onLineNumber(loop,"visitForLoop");
+        controller.getAcg().onLineNumber(loop, "visitForLoop");
         writeStatementLabel(loop);
 
         CompileStack compileStack = controller.getCompileStack();
@@ -164,7 +164,7 @@ public class StatementWriter {
     }
 
     protected void writeForLoopWithClosureList(ForStatement loop) {
-        controller.getAcg().onLineNumber(loop,"visitForLoop");
+        controller.getAcg().onLineNumber(loop, "visitForLoop");
         writeStatementLabel(loop);
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -194,7 +194,7 @@ public class StatementWriter {
             Expression condExpr = expressions.get(condIndex);
             int mark = controller.getOperandStack().getStackLength();
             condExpr.visit(controller.getAcg());
-            controller.getOperandStack().castToBool(mark,true);
+            controller.getOperandStack().castToBool(mark, true);
         }
         // jump if we don't want to continue
         // note: ifeq tests for ==0, a boolean is 0 if it is false
@@ -235,7 +235,7 @@ public class StatementWriter {
     }
 
     public void writeWhileLoop(WhileStatement loop) {
-        controller.getAcg().onLineNumber(loop,"visitWhileLoop");
+        controller.getAcg().onLineNumber(loop, "visitWhileLoop");
         writeStatementLabel(loop);
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -249,10 +249,10 @@ public class StatementWriter {
         boolean boolHandled = false;
         if (bool.getExpression() instanceof ConstantExpression) {
             ConstantExpression constant = (ConstantExpression) bool.getExpression();
-            if (constant.getValue()==Boolean.TRUE) {
+            if (constant.getValue() == Boolean.TRUE) {
                 boolHandled = true;
                 // do nothing
-            } else if (constant.getValue()==Boolean.FALSE) {
+            } else if (constant.getValue() == Boolean.FALSE) {
                 boolHandled = true;
                 mv.visitJumpInsn(GOTO, breakLabel);
             }
@@ -272,7 +272,7 @@ public class StatementWriter {
     }
 
     public void writeDoWhileLoop(DoWhileStatement loop) {
-        controller.getAcg().onLineNumber(loop,"visitDoWhileLoop");
+        controller.getAcg().onLineNumber(loop, "visitDoWhileLoop");
         writeStatementLabel(loop);
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -292,7 +292,7 @@ public class StatementWriter {
     }
 
     public void writeIfElse(IfStatement ifElse) {
-        controller.getAcg().onLineNumber(ifElse,"visitIfElse");
+        controller.getAcg().onLineNumber(ifElse, "visitIfElse");
         writeStatementLabel(ifElse);
 
         MethodVisitor mv = controller.getMethodVisitor();
@@ -306,10 +306,7 @@ public class StatementWriter {
         ifElse.getIfBlock().visit(controller.getAcg());
         controller.getCompileStack().pop();
 
-        // GRECLIPSE edit
-        //if (ifElse.getElseBlock()==EmptyStatement.INSTANCE) {
         if (ifElse.getElseBlock() instanceof EmptyStatement) {
-        // GRECLIPSE end
             mv.visitLabel(l0);
         } else {
             Label l1 = new Label();
@@ -427,7 +424,7 @@ public class StatementWriter {
         compileStack.removeVar(anyExceptionIndex);
     }
 
-    private BlockRecorder makeBlockRecorder(Statement finallyStatement) {
+    private BlockRecorder makeBlockRecorder(final Statement finallyStatement) {
         final BlockRecorder block = new BlockRecorder();
         block.excludedStatement = new Runnable() {
             @Override
@@ -475,8 +472,7 @@ public class StatementWriter {
 
     protected void writeCaseStatement(
             CaseStatement statement, int switchVariableIndex,
-            Label thisLabel, Label nextLabel)
-    {
+            Label thisLabel, Label nextLabel) {
         controller.getAcg().onLineNumber(statement, "visitCaseStatement");
         MethodVisitor mv = controller.getMethodVisitor();
         OperandStack operandStack = controller.getOperandStack();

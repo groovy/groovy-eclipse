@@ -1406,24 +1406,14 @@ enumConstantsStart
 enumConstants
     :
         enumConstant
-        (    options {generateAmbigWarnings=false;} :
-        /* GRECLIPSE edit -- GROOVY-4438
-            (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop * / }
-        |   nls! COMMA!
-            (
-                (nls annotationsOpt IDENT) => nls! enumConstant
-            |
-                (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop * / }
-            )
-        */
-            (nls (SEMI! | RCURLY | declarationStart | constructorStart)) => {break;}
+        ( options {generateAmbigWarnings=false;} :
+            (nls ( options {generateAmbigWarnings=false;} : SEMI! | RCURLY | declarationStart | constructorStart)) => {break;}
         |
             nls! COMMA! (
                 (nls annotationsOpt IDENT) => nls! enumConstant
             |
-                (nls (RCURLY | classField)) => {break;}
+                (nls (SEMI! | RCURLY | classField)) => {break;}
             )
-        // GRECLIPSE end
         )*
     ;
 
@@ -1440,8 +1430,6 @@ annotationField!  {Token first = LT(1);}
                 (IDENT LPAREN)=>
                 i:IDENT              // the name of the field
                 LPAREN! RPAREN!
-
-                /*OBS* rt:declaratorBrackets[#t] *OBS*/
 
                 ( "default" nls! amvi:annotationMemberValueInitializer )?
 
@@ -1790,7 +1778,6 @@ constructorDefinition[AST mods]  {Token first = cloneToken(LT(1));
 variableDeclarator![AST mods, AST t,Token first]
     :
         id:variableName
-        /*OBS*d:declaratorBrackets[t]*/
         (v:varInitializer)?
         {#variableDeclarator = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)), mods, #(create(TYPE,"TYPE",first,LT(1)),t), id, v);}
     ;
@@ -1842,37 +1829,6 @@ varInitializer
         // GRECLIPSE end
     ;
 
-/*OBS*
-// This is an initializer used to set up an array.
-arrayInitializer
-    :   lc:LCURLY^ {#lc.setType(ARRAY_INIT);}
-        (   initializer
-            (
-                // CONFLICT: does a COMMA after an initializer start a new
-                // initializer or start the option ',' at end?
-                // ANTLR generates proper code by matching
-                // the comma as soon as possible.
-                options {
-                        warnWhenFollowAmbig = false;
-                }
-            :
-                COMMA! initializer
-            )*
-            (COMMA!)?
-        )?
-        RCURLY!
-    ;
-*OBS*/
-
-/*OBS*  // Use [...] for initializing all sorts of sequences, including arrays.
-// The two "things" that can initialize an array element are an expression
-// and another (nested) array initializer.
-initializer
-    :   expression
-    |   arrayInitializer
-    ;
-*OBS*/
-
 // This is a list of exception classes that the method is declared to throw
 throwsClause
     :   nls! "throws"^ nls! identifier ( COMMA! nls! identifier )*
@@ -1916,7 +1872,6 @@ parameterDeclaration!
         // allow an optional default value expression
         (exp:varInitializer)?
 
-        /*OBS*pd:declaratorBrackets[#t]*/
         {
             if (spreadParam) {
                 #parameterDeclaration = #(create(VARIABLE_PARAMETER_DEF,"VARIABLE_PARAMETER_DEF",first,LT(1)),
@@ -1959,16 +1914,6 @@ multicatch
         }
         // GRECLIPSE end
     ;
-
-/*OBS*
-variableLengthParameterDeclaration!  {Token first = LT(1);}
-    :   pm:parameterModifier t:typeSpec[false] TRIPLE_DOT! id:IDENT
-
-        pd:declaratorBrackets[#t]
-        {#variableLengthParameterDeclaration = #(create(VARIABLE_PARAMETER_DEF,"VARIABLE_PARAMETER_DEF",first,LT(1)),
-                                                                                            pm, #(create(TYPE,"TYPE",first,LT(1)),t), id);}
-    ;
-*OBS*/
 
 parameterModifiersOpt
         { Token first = LT(1);int seenDef = 0; }
@@ -2163,10 +2108,6 @@ statement[int prevToken]
                 #statement = #(create(LITERAL_while,"Literal_while",first,LT(1)),while_sce,while_cbs);
         }
 
-    /*OBS* no do-while statement in Groovy (too ambiguous)
-    // do-while statement
-    |   "do"^ statement "while"! LPAREN! strictContextExpression RPAREN! SEMI!
-    *OBS*/
     // GRECLIPSE add
     | "do"^ compoundStatement nls! "while"! LPAREN! strictContextExpression[false]! RPAREN!
         {
@@ -2194,11 +2135,6 @@ statement[int prevToken]
     // synchronize a statement
     |   "synchronized"! LPAREN! sce=synch_sce:strictContextExpression[false]! RPAREN! nlsWarn! synch_cs:compoundStatement!
         {#statement = #(create(LITERAL_synchronized,"synchronized",first,LT(1)),synch_sce,synch_cs);}
-
-    /*OBS*
-    // empty statement
-    |   s:SEMI {#s.setType(EMPTY_STAT);}
-    *OBS*/
 
     |   branchStatement
 
@@ -2238,11 +2174,6 @@ forStatement {Token first = LT(1);}
     :   "for"!
         LPAREN!
         (   (SEMI |(strictContextExpression[true] SEMI))=>cl:closureList!
-            // *OBS*
-            // There's no need at all for squeezing in the new Java 5 "for"
-            // syntax, since Groovy's is a suitable alternative.
-            // |   (parameterDeclaration COLON)=> forEachClause
-            // *OBS*
         |   // the coast is clear; it's a modern Groovy for statement
             fic:forInClause!
         )
@@ -2277,14 +2208,6 @@ closureList
         )+
         {#closureList = #(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1)),#closureList);}
     ;
-
-/*OBS*
-forEachClause  {Token first = LT(1);}
-    :
-        p:parameterDeclaration COLON! expression
-        {#forEachClause = #(create(FOR_EACH_CLAUSE,"FOR_EACH_CLAUSE",first,LT(1)), #forEachClause);}
-    ;
-*OBS*/
 
 forInClause
     :   (   (declarationStart)=>
@@ -3447,58 +3370,6 @@ listOrMapConstructorExpression
         /* Special case:  [:] is an empty map constructor. */
         emcon:LBRACK^ COLON! RBRACK!   {#emcon.setType(MAP_CONSTRUCTOR);}
     ;
-
-
-/*OBS*
-/** Match a, a.b.c refs, a.b.c(...) refs, a.b.c[], a.b.c[].class,
- *  and a.b.c.class refs. Also this(...) and super(...). Match
- *  this or super.
- */
-/*OBS*
-identPrimary
-    :   (ta1:typeArguments!)?
-        IDENT
-        // Syntax for method invocation with type arguments is
-        // <String>foo("blah")
-        (
-            options {
-                // .ident could match here or in postfixExpression.
-                // We do want to match here. Turn off warning.
-                greedy=true;
-                // This turns the ambiguity warning of the second alternative
-                // off. See below. (The "ANTLR_LOOP_EXIT" predicate makes it non-issue)
-                warnWhenFollowAmbig=false;
-            }
-            // we have a new nondeterminism because of
-            // typeArguments... only a syntactic predicate will help...
-            // The problem is that this loop here conflicts with
-            // DOT typeArguments "super" in postfixExpression (k=2)
-            // A proper solution would require a lot of refactoring...
-        :   (DOT (typeArguments)? IDENT) =>
-            DOT^ (ta2:typeArguments!)? IDENT
-        |   {ANTLR_LOOP_EXIT}?  //(see documentation above)
-        )*
-        (
-            options {
-                // ARRAY_DECLARATOR here conflicts with INDEX_OP in
-                // postfixExpression on LBRACK RBRACK.
-                // We want to match [] here, so greedy. This overcomes
-                // limitation of linear approximate lookahead.
-                greedy=true;
-            }
-        :   (   lp:LPAREN^ {#lp.setType(METHOD_CALL);}
-                // if the input is valid, only the last IDENT may
-                // have preceding typeArguments... rather hacky, this is...
-                {if (#ta2 != null) astFactory.addASTChild(currentAST, #ta2);}
-                {if (#ta2 == null) astFactory.addASTChild(currentAST, #ta1);}
-                argList RPAREN!
-            )
-        |   (    options {greedy=true;} :
-                lbc:LBRACK^ {#lbc.setType(ARRAY_DECLARATOR);} RBRACK!
-            )+
-        )?
-    ;
-*OBS*/
 
 /** object instantiation.
  *  Trees are built as illustrated by the following input/tree pairs:

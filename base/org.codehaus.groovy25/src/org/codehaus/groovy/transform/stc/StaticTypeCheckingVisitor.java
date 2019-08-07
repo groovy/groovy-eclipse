@@ -103,13 +103,13 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.StaticTypesTransformation;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.util.ListHashMap;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -200,7 +200,6 @@ import static org.codehaus.groovy.syntax.Types.ASSIGNMENT_OPERATOR;
 import static org.codehaus.groovy.syntax.Types.COMPARE_EQUAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_IDENTICAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_EQUAL;
-import static org.codehaus.groovy.syntax.Types.COMPARE_NOT_IDENTICAL;
 import static org.codehaus.groovy.syntax.Types.COMPARE_TO;
 import static org.codehaus.groovy.syntax.Types.DIVIDE;
 import static org.codehaus.groovy.syntax.Types.DIVIDE_EQUAL;
@@ -804,7 +803,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
         int op = expression.getOperation().getType();
-        if (op == COMPARE_IDENTICAL || op == COMPARE_NOT_IDENTICAL) {
+        if (op == COMPARE_IDENTICAL) {
             return; // we'll report those as errors later
         }
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
@@ -2864,13 +2863,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             ClassLoader transformLoader = getTransformLoader();
             Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) transformLoader.loadClass(hintClass.getText());
-            ClosureSignatureHint hintInstance = hint.newInstance();
+            ClosureSignatureHint hintInstance = hint.getDeclaredConstructor().newInstance();
             closureSignatures = hintInstance.getClosureSignatures(
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
                     typeCheckingContext.source,
                     typeCheckingContext.compilationUnit,
                     convertToStringArray(options), expression);
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
         }
         return closureSignatures;
@@ -2881,7 +2880,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         try {
             ClassLoader transformLoader = getTransformLoader();
             Class<? extends ClosureSignatureConflictResolver> resolver = (Class<? extends ClosureSignatureConflictResolver>) transformLoader.loadClass(resolverClass.getText());
-            ClosureSignatureConflictResolver resolverInstance = resolver.newInstance();
+            ClosureSignatureConflictResolver resolverInstance = resolver.getDeclaredConstructor().newInstance();
             return resolverInstance.resolve(
                     candidates,
                     receiver,
@@ -2891,7 +2890,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     typeCheckingContext.source,
                     typeCheckingContext.compilationUnit,
                     convertToStringArray(options));
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
         }
     }
@@ -3800,7 +3799,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         BinaryExpression instanceOfExpression = (BinaryExpression) expression;
         int op = instanceOfExpression.getOperation().getType();
-        if (op != Types.KEYWORD_INSTANCEOF) {
+        if (op != KEYWORD_INSTANCEOF) {
             return null;
         }
         Statement block = ifElse.getIfBlock();

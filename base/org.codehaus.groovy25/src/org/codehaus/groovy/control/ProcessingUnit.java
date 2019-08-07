@@ -125,14 +125,9 @@ public abstract class ProcessingUnit {
         return Phases.getDescription(phase);
     }
 
-    // GROOVY add
     public boolean isPhaseComplete() {
         return phaseComplete;
     }
-    // GROOVY end
-
-    //---------------------------------------------------------------------------
-    // PROCESSING
 
     /**
      * Marks the current phase complete and processes any errors.

@@ -20,13 +20,13 @@
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>2.5.7</version>
+      <version>2.5.8</version>
       <classifier>indy</classifier>
     </dependency>
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-test</artifactId>
-      <version>2.5.7</version>
+      <version>2.5.8</version>
       <classifier>indy</classifier>
       <exclusions>
         <exclusion>
@@ -59,7 +59,7 @@
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-batch</artifactId>
-            <version>2.5.7-01</version>
+            <version>2.5.8-01</version>
           </dependency>
         </dependencies>
       </plugin>

@@ -501,7 +501,7 @@ public class GenericsUtils {
                     ret.put(name, type);
                 } else {
                 */
-                    ret.putIfAbsent(name, sgt.getType());
+                    ret.put(name, sgt.getType());
                 //}
                 // GRECLIPSE end
             }

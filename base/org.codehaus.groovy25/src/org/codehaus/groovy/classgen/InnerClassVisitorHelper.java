@@ -107,7 +107,7 @@ public abstract class InnerClassVisitorHelper extends ClassCodeVisitorSupport {
     protected static boolean isStatic(InnerClassNode node) {
         /* GRECLIPSE edit
         VariableScope scope = node.getVariableScope();
-        if (scope != null) return scope.isInStaticContext();
+        if (scope != null) return scope.getParent().isInStaticContext();
         return (node.getModifiers() & Opcodes.ACC_STATIC) != 0;
         */
         return node.getDeclaredField("this$0") == null;

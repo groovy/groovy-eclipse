@@ -343,13 +343,6 @@ public class CompilationUnit extends ProcessingUnit {
     public void configure(CompilerConfiguration configuration) {
         super.configure(configuration);
         this.debug = configuration.getDebug();
-
-        /* GRECLIPSE edit
-        if (!this.configured && this.classLoader instanceof GroovyClassLoader) {
-            appendCompilerConfigurationClasspathToClassLoader(configuration, this.classLoader);
-        }
-        */
-
         this.configured = true;
     }
 
@@ -726,6 +719,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
+    @SuppressWarnings("unused")
     private final GroovyClassOperation output = new GroovyClassOperation() {
         public void call(GroovyClass gclass) throws CompilationFailedException {
             String name = gclass.getName().replace('.', File.separatorChar) + ".class";
