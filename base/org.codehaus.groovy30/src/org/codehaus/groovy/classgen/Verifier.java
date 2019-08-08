@@ -636,7 +636,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     public void visitConstructor(ConstructorNode node) {
         Statement stmt = node.getCode();
         if (stmt != null) {
-            stmt.visit(new VerifierCodeVisitor(this));
+            stmt.visit(new VerifierCodeVisitor(getClassNode()));
             // check for uninitialized-this references
             stmt.visit(new CodeVisitorSupport() {
                 @Override
@@ -727,7 +727,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
         Statement stmt = node.getCode();
         if (stmt != null) {
-            stmt.visit(new VerifierCodeVisitor(this));
+            stmt.visit(new VerifierCodeVisitor(getClassNode()));
         }
     }
 

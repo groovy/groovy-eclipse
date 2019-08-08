@@ -215,10 +215,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 ClassNode declaringClass = fn.getDeclaringClass();
                 if (fn.isStatic() && currentClass.isDerivedFrom(declaringClass)) {
                     Expression result = new PropertyExpression(new ClassExpression(declaringClass), v.getName());
-                    // GRECLIPSE edit
-                    //result.setSourcePosition(ve);
                     setSourcePosition(result, ve);
-                    // GRECLIPSE end
                     return result;
                 }
             }

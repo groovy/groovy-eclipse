@@ -393,16 +393,7 @@ public class CompilerConfiguration {
 
     private BytecodeProcessor bytecodePostprocessor;
 
-    /**
-     * defines if antlr2 parser should be used or the antlr4 one if
-     * no factory is set yet
-     *
-     * The antlr4 parser Parrot is enabled by default
-     *
-     */
     /* GRECLIPSE edit
-    private ParserVersion parserVersion = ParserVersion.V_4;
-
     public static final int ASM_API_VERSION = Opcodes.ASM7;
     */
 
@@ -463,19 +454,6 @@ public class CompilerConfiguration {
 
         jointCompilationOptions = new HashMap<>(4);
         handleJointCompilationOption(jointCompilationOptions, MEM_STUB, "groovy.generate.stub.in.memory");
-
-        /* GRECLIPSE edit
-        try {
-            String groovyAntlr4Opt = getSystemPropertySafe(GROOVY_ANTLR4_OPT);
-
-            this.parserVersion =
-                    null == groovyAntlr4Opt || Boolean.valueOf(groovyAntlr4Opt)
-                            ? ParserVersion.V_4
-                            : ParserVersion.V_2;
-        } catch (Exception e) {
-            // IGNORE
-        }
-        */
     }
 
     private void handleOptimizationOption(Map<String, Boolean> options, String optionName, String sysOptionName) {
@@ -537,9 +515,6 @@ public class CompilerConfiguration {
         }
         setJointCompilationOptions(jointCompilationOptions);
         setPluginFactory(configuration.getPluginFactory());
-        /* GRECLIPSE edit
-        setParserVersion(configuration.getParserVersion());
-        */
         setDisabledGlobalASTTransformations(configuration.getDisabledGlobalASTTransformations());
         setScriptExtensions(new LinkedHashSet<String>(configuration.getScriptExtensions()));
         setOptimizationOptions(new HashMap<String, Boolean>(configuration.getOptimizationOptions()));
@@ -929,9 +904,8 @@ public class CompilerConfiguration {
     public ParserPluginFactory getPluginFactory() {
         if (pluginFactory == null) {
             /* GRECLIPSE edit
-            pluginFactory = ParserVersion.V_2 == parserVersion
-                                ? ParserPluginFactory.antlr2()
-                                : ParserPluginFactory.antlr4(this);
+            pluginFactory = !Boolean.parseBoolean(getSystemPropertySafe("groovy.antlr4", "true"))
+                                ? ParserPluginFactory.antlr2() : ParserPluginFactory.antlr4(this);
             */
             pluginFactory = new ParserPluginFactory() {
                 @Override
@@ -1133,16 +1107,6 @@ public class CompilerConfiguration {
         this.bytecodePostprocessor = bytecodePostprocessor;
     }
 
-    /* GRECLIPSE edit
-    public ParserVersion getParserVersion() {
-        return this.parserVersion;
-    }
-
-    public void setParserVersion(ParserVersion parserVersion) {
-        this.parserVersion = parserVersion;
-    }
-    */
-
     /**
      * Checks if invoke dynamic is enabled.
      */
@@ -1152,7 +1116,7 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Check if groovydoc is enabled.
+     * Checks if groovydoc is enabled.
      */
     public boolean isGroovydocEnabled() {
         Boolean groovydocEnabled = getOptimizationOptions().get(GROOVYDOC);
@@ -1160,7 +1124,7 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Check if runtime groovydoc is enabled.
+     * Checks if runtime groovydoc is enabled.
      */
     public boolean isRuntimeGroovydocEnabled() {
         Boolean runtimeGroovydocEnabled = getOptimizationOptions().get(RUNTIME_GROOVYDOC);
@@ -1168,7 +1132,7 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Check if in-memory stub creation is enabled.
+     * Checks if in-memory stub creation is enabled.
      */
     public boolean isMemStubEnabled() {
         Object memStubEnabled = getJointCompilationOptions().get(MEM_STUB);

@@ -210,15 +210,21 @@ public class MethodCallExpression extends Expression implements MethodCall {
         return target;
     }
 
-    // GRECLIPSE add -- GROOVY-8002
+    @Override
     public void setSourcePosition(ASTNode node) {
         super.setSourcePosition(node);
+        // GROOVY-8002: propagate position to (possibly new) method expression
         if (node instanceof MethodCall) {
             if (node instanceof MethodCallExpression) {
                 method.setSourcePosition(((MethodCallExpression) node).getMethod());
-            } else {
-                method.setSourcePosition(node);
-                method.setEnd(method.getStart() + getMethodAsString().length());
+            } else if (node.getLineNumber() > 0) {
+                method.setLineNumber(node.getLineNumber());
+                method.setColumnNumber(node.getColumnNumber());
+                method.setLastLineNumber(node.getLineNumber());
+                method.setLastColumnNumber(node.getColumnNumber() + getMethodAsString().length());
+                // GRECLIPSE add
+                method.setStart(node.getStart()); method.setEnd(method.getStart() + getMethodAsString().length());
+                // GRECLIPSE end
             }
             if (arguments != null) {
                 arguments.setSourcePosition(((MethodCall) node).getArguments());
@@ -227,5 +233,4 @@ public class MethodCallExpression extends Expression implements MethodCall {
             method.setSourcePosition(((PropertyExpression) node).getProperty());
         }
     }
-    // GRECLIPSE end
 }

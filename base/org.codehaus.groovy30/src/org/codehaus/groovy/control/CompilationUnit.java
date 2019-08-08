@@ -717,6 +717,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
+    @SuppressWarnings("unused")
     private final GroovyClassOperation output = new GroovyClassOperation() {
         public void call(GroovyClass gclass) throws CompilationFailedException {
             String name = gclass.getName().replace('.', File.separatorChar) + ".class";

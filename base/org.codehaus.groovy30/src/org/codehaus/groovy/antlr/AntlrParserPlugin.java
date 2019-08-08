@@ -183,9 +183,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private MethodNode methodNode;
     // GRECLIPSE private->protected
     protected String[] tokenNames;
-    /* GRECLIPSE edit -- GROOVY-9203
-    private int innerClassCounter = 1;
-    */
     private boolean enumConstantBeingDef = false;
     private boolean forStatementBeingDef = false;
     private boolean annotationBeingDef = false;
@@ -338,7 +335,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         makeModule();
         try {
             convertGroovy(ast);
-
             // GRECLIPSE add -- does it look broken (i.e. have we built a script for it containing rubbish)
             if (looksBroken(output) && output.getMethods().isEmpty() && sourceUnit.getErrorCollector().hasErrors()) {
                 output.setEncounteredUnrecoverableError(true);
@@ -367,7 +363,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
                 }
             }
-
             // GRECLIPSE add
             output.setStart(0);
             output.setLineNumber(1);
@@ -753,14 +748,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected void interfaceDef(AST classDef) {
-        /* GRECLIPSE edit -- GROOVY-9203
-        int oldInnerClassCounter = innerClassCounter;
-        */
         innerInterfaceDef(classDef);
         classNode = null;
-        /* GRECLIPSE edit -- GROOVY-9203
-        innerClassCounter = oldInnerClassCounter;
-        */
     }
 
     protected void innerInterfaceDef(AST classDef) {
@@ -814,29 +803,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
 
-        /* GRECLIPSE edit -- GROOVY-9203
-        int oldClassCount = innerClassCounter;
-        */
-
         assertNodeType(OBJBLOCK, node);
         objectBlock(node);
         output.addClass(classNode);
 
         classNode = outerClass;
-        /* GRECLIPSE edit -- GROOVY-9203
-        innerClassCounter = oldClassCount;
-        */
     }
 
     protected void classDef(AST classDef) {
-        /* GRECLIPSE edit -- GROOVY-9203
-        int oldInnerClassCounter = innerClassCounter;
-        */
         innerClassDef(classDef);
         classNode = null;
-        /* GRECLIPSE edit -- GROOVY-9203
-        innerClassCounter = oldInnerClassCounter;
-        */
     }
 
     private ClassNode getClassOrScript(ClassNode node) {
@@ -844,7 +820,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return output.getScriptClassDummy();
     }
 
-    // GRECLIPSE add
     private static int anonymousClassCount(ClassNode node) {
         int count = 0;
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
@@ -855,21 +830,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         return count;
     }
-    // GRECLIPSE end
 
     protected Expression anonymousInnerClassDef(AST node) {
         ClassNode oldNode = classNode;
         ClassNode outerClass = getClassOrScript(oldNode);
-        /* GRECLIPSE edit -- GROOVY-9203
-        String fullName = outerClass.getName() + '$' + innerClassCounter;
-        innerClassCounter++;
-        */
-        String fullName = outerClass.getName() + '$' + (anonymousClassCount(outerClass) + 1);
-        // GRECLIPSE end
+        String innerClassName = outerClass.getName() + '$' + (anonymousClassCount(outerClass) + 1);
         if (enumConstantBeingDef) {
-            classNode = new EnumConstantClassNode(outerClass, fullName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+            classNode = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         } else {
-            classNode = new InnerClassNode(outerClass, fullName, /*GRECLIPSE Opcodes.ACC_PUBLIC*/0, ClassHelper.OBJECT_TYPE);
+            classNode = new InnerClassNode(outerClass, innerClassName, /*GRECLIPSE Opcodes.ACC_PUBLIC*/0, ClassHelper.OBJECT_TYPE);
         }
         ((InnerClassNode) classNode).setAnonymous(true);
         classNode.setEnclosingMethod(methodNode);
@@ -961,10 +930,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // have here to ensure it won't be the inner class
         output.addClass(classNode);
 
-        /* GRECLIPSE edit -- GROOVY-9203
-        int oldClassCount = innerClassCounter;
-        */
-
         // GRECLIPSE add
         // a null node means the classbody is missing but the parser recovered
         // an error will already have been recorded against the file
@@ -977,9 +942,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE end
 
         classNode = outerClass;
-        /* GRECLIPSE edit -- GROOVY-9203
-        innerClassCounter = oldClassCount;
-        */
     }
 
     protected void objectBlock(AST objectBlock) {
@@ -1264,16 +1226,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // GRECLIPSE add
             }
             // GRECLIPSE end
-        /* GRECLIPSE edit -- GROOVY-9141
-        } else if (node != null && classNode.isAnnotationDefinition()) {
-            code = statement(node);
-            hasAnnotationDefault = true;
-        } else if ((modifiers & Opcodes.ACC_ABSTRACT) > 0) {
-            if (node != null) {
-                throw new ASTRuntimeException(methodDef, "Abstract methods do not define a body.");
-            }
-        }
-        */
         } else if (node != null) {
             if (classNode != null && classNode.isAnnotationDefinition()) {
                 code = statement(node);
@@ -1986,7 +1938,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         }
         // GRECLIPSE end
-
         IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;
