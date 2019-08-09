@@ -118,9 +118,7 @@ public abstract class StaticPropertyAccessHelper {
         public Expression transformExpression(final ExpressionTransformer transformer) {
             PoppingMethodCallExpression trn = new PoppingMethodCallExpression(receiver.transformExpression(transformer), setter, (TemporaryVariableExpression) tmp.transformExpression(transformer));
             trn.copyNodeMetaData(this);
-            // GRECLIPSE add -- GROOVY-8002
             trn.setSourcePosition(this);
-            // GRECLIPSE end
             trn.setImplicitThis(isImplicitThis());
             trn.setSafe(isSafe());
             trn.setSpreadSafe(isSpreadSafe());

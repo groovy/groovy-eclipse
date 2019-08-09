@@ -100,6 +100,7 @@ public class STCTypeLookup implements ITypeLookup {
                 } else if (enclosingNode instanceof MethodCallExpression && ((MethodCallExpression) enclosingNode).getMethod() == expr) {
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
+                    if (methodTarget == null) methodTarget = ((MethodCallExpression) enclosingNode).getMethodTarget();
                 }
 
                 if (methodTarget instanceof ExtensionMethodNode) {
