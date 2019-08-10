@@ -226,7 +226,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 }
 
             // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
-            } else if (methodName.equals(node.getText()) || (isNotSynthetic(node.getText(), result.declaringType) && !skipPseudoProperties)) {
+            } else if (methodName.equals(node.getText()) || (isNotSynthetic(node.getText(), result.declaringType, (MethodNode) result.declaration) && !skipPseudoProperties)) {
                 start = node.getStart();
                 end = node.getEnd();
             }
@@ -430,13 +430,15 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         return !(Flags.isPrivate(method.getFlags()) || Flags.isStatic(method.getFlags()));
     }
 
-    private static boolean isNotSynthetic(String name, ClassNode type) {
-        if (type.getField(name) != null) {
-            return true;
-        }
-        PropertyNode prop = type.getProperty(name);
-        if (prop != null && !prop.isSynthetic()) {
-            return true;
+    private static boolean isNotSynthetic(String name, ClassNode type, MethodNode method) {
+        if (!method.isSynthetic()) {
+            if (type.getField(name) != null) {
+                return true;
+            }
+            PropertyNode prop = type.getProperty(name);
+            if (prop != null && !prop.isSynthetic()) {
+                return true;
+            }
         }
         return false;
     }
