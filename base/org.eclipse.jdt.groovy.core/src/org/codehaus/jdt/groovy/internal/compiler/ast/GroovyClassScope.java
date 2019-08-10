@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -190,9 +191,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        MethodBinding[] newMethodBindings = groovyMethods.toArray(new MethodBinding[methodBindings.length + groovyMethods.size()]);
-        System.arraycopy(methodBindings, 0, newMethodBindings, groovyMethods.size(), methodBindings.length);
-        return newMethodBindings;
+        return Stream.concat(Stream.of(methodBindings), groovyMethods.stream()).toArray(MethodBinding[]::new);
     }
 
     private int getModifiers(PropertyNode property) {

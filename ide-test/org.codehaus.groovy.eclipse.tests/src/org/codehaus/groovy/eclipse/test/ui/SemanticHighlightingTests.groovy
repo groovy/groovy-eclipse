@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -1572,6 +1573,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('Number'), 6, ABSTRACT_CLASS),
             new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/938
+    void testEnumValues() {
+        setJavaPreference(CompilerOptions.OPTION_AnnotationBasedNullAnalysis, CompilerOptions.ENABLED)
+
+        String contents = '''\
+            |enum X {
+            |  Y
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE))
     }
 
     @Test
