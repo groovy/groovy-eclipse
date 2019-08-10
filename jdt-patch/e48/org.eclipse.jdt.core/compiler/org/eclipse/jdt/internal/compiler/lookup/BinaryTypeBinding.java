@@ -1000,16 +1000,18 @@ private IBinaryMethod[] createMethods(IBinaryMethod[] iMethods, IBinaryType bina
 		if (this.environment.globalOptions.buildGroovyFiles == 2) {
 			int skipped = (initialTotal - total - (iClinit == -1 ? 0 : 1));
 			if (skipped > 0) {
-				MethodBinding[] methods2 = new MethodBinding[skipped];
-				for (int i = 0, index = 0; i < initialTotal; i += 1) {
-					if (iClinit != i && (toSkip != null && toSkip[i] == -1)) {
+				ArrayList<MethodBinding> methods2 = new ArrayList<>(skipped);
+				for (int i = 0; i < initialTotal; i += 1) {
+					if (iClinit != i && (toSkip != null && toSkip[i] == -1) && !iMethods[i].isConstructor()) {
 						MethodBinding method = createMethod(iMethods[i], binaryType, sourceLevel, missingTypeNames);
 						if (hasRestrictedAccess)
 							method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
-						methods2[index++] = method;
+						methods2.add(method);
 					}
 				}
-				this.infraMethods = methods2;
+				if (!methods2.isEmpty()) {
+					this.infraMethods = methods2.toArray(new MethodBinding[methods2.size()]);
+				}
 			}
 		}
 		// GROOVY end
