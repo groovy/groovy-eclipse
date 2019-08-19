@@ -3153,6 +3153,56 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCallingConstructors_JcallingG() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.java",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    OtherClass oClass = new OtherClass();\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/OtherClass.groovy",
+            "package p;\n" +
+            "public class OtherClass {\n" +
+            "  public OtherClass() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testCallingConstructors_GcallingJ() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.groovy",
+            "package p;\n" +
+            "public class C {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    OtherClass oClass = new OtherClass();\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/OtherClass.java",
+            "package p;\n" +
+            "public class OtherClass {\n" +
+            "  public OtherClass() {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
     public void testReferencingFields_JreferingToG() {
         //@formatter:off
         String[] sources = {
@@ -3201,53 +3251,69 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCallingConstructors_JcallingG() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.java",
-            "package p;\n" +
-            "public class C {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    OtherClass oClass = new OtherClass();\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
+    public void testReferencingFields_DirectAccess1() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", "private"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "print new C().@field\n",
 
-            "p/OtherClass.groovy",
-            "package p;\n" +
-            "public class OtherClass {\n" +
-            "  public OtherClass() {\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
+                "C.groovy",
+                "class C {\n" +
+                "  " + modifier + " String field = 'value'\n" +
+                "}\n",
+            };
+            //@formatter:on
 
-        runConformTest(sources, "success");
+            runConformTest(sources, "value");
+        }
     }
 
     @Test
-    public void testCallingConstructors_GcallingJ() {
-        //@formatter:off
-        String[] sources = {
-            "p/C.groovy",
-            "package p;\n" +
-            "public class C {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    OtherClass oClass = new OtherClass();\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
+    public void testReferencingFields_DirectAccess2() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", /*GROOVY-8167: "private"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "print new D().@field\n",
 
-            "p/OtherClass.java",
-            "package p;\n" +
-            "public class OtherClass {\n" +
-            "  public OtherClass() {\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
+                "C.groovy",
+                "class C {\n" +
+                "  " + modifier + " String field = 'value'\n" +
+                "}\n",
 
-        runConformTest(sources, "success");
+                "D.groovy",
+                "class D extends C {\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "value");
+        }
+    }
+
+    @Test
+    public void testReferencingFields_DirectAccess3() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", "private"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "print new D().@field\n",
+
+                "C.groovy",
+                "class C {\n" +
+                "  " + modifier + " String field = 'C'\n" +
+                "}\n",
+
+                "D.groovy",
+                "class D extends C {\n" +
+                "  " + modifier + " String field = 'D'\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "D");
+        }
     }
 
     @Test
