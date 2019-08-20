@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.core.builder;
 
+import static org.eclipse.jdt.core.JavaCore.newClasspathAttribute;
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -39,7 +43,6 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
 
@@ -47,11 +50,11 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     public static final IPath CONTAINER_ID = new Path("GROOVY_SUPPORT");
 
-    public static final IClasspathAttribute MINIMAL_ATTRIBUTE = new ClasspathAttribute("minimal", "true");
-
-    private IClasspathEntry[] entries;
+    public static final IClasspathAttribute MINIMAL_ATTRIBUTE = newClasspathAttribute("minimal", "true");
 
     private IJavaProject project;
+
+    private IClasspathEntry[] entries;
 
     public GroovyClasspathContainer(IJavaProject project) {
         this.project = project;
@@ -105,10 +108,10 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
                 List<IClasspathAttribute> attrs = new ArrayList<>();
                 if (jarPath.lastSegment().startsWith("groovy-test")) {
-                    attrs.add(newTestClasspathAttribute());
+                    attrs.add(newIsTestClasspathAttribute());
                 }
                 if (docPath != null) {
-                    attrs.add(new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURI().toURL().toString()));
+                    attrs.add(newJavadocLocationClasspathAttribute(docPath));
                 }
 
                 cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, attrs.toArray(new IClasspathAttribute[attrs.size()]), true));
@@ -119,10 +122,8 @@ public class GroovyClasspathContainer implements IClasspathContainer {
             }
 
             entries = cpEntries.toArray(new IClasspathEntry[cpEntries.size()]);
-
         } catch (Exception e) {
             GroovyCore.logException("Problem finding Groovy runtime", e);
-
             entries = new IClasspathEntry[0];
         }
     }
@@ -143,14 +144,32 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     //--------------------------------------------------------------------------
 
     /**
-     * Finds all the jars in the ~/.groovy/lib directory and adds them to the classpath.
+     * Finds all the jars in the ~/.groovy/lib directory.
      */
     private static Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
-        return Arrays.stream(CompilerUtils.findJarsInDotGroovyLocation()).map(file -> {
-            IPath path = new Path(file.getAbsolutePath());
-            IClasspathAttribute[] icas = (!file.getName().startsWith("groovy-test")
-                ? null : new IClasspathAttribute[] {newTestClasspathAttribute()});
-            return newLibraryEntry(path, null, null, null, icas, true);
+        File[] jars = CompilerUtils.findJarsInDotGroovyLocation();
+        Predicate<File> isSources = file -> file.getName().endsWith("-sources.jar");
+        Predicate<File> isJavadoc = file -> file.getName().endsWith("-javadoc.jar");
+
+        return Arrays.stream(jars).filter(isSources.or(isJavadoc).negate()).map(file -> {
+            IPath jarPath = new Path(file.getAbsolutePath());
+
+            String srcName = jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-sources.jar";
+            String docName = jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-javadoc.jar";
+
+            // check for sources
+            IPath srcPath = Arrays.stream(jars)
+                .filter(isSources.and(srcFile -> srcFile.getName().equals(srcName)))
+                .findFirst().map(srcFile -> new Path(srcFile.getAbsolutePath())).orElse(null);
+
+            // check for javadoc
+            IPath docPath = Arrays.stream(jars)
+                .filter(isJavadoc.and(docFile -> docFile.getName().equals(docName)))
+                .findFirst().map(docFile -> new Path(docFile.getAbsolutePath())).orElse(null);
+
+            IClasspathAttribute[] icas = (docPath == null ? null : new IClasspathAttribute[] {newJavadocLocationClasspathAttribute(docPath)});
+
+            return newLibraryEntry(jarPath, srcPath, null, null, icas, true);
         }).collect(Collectors.toList());
     }
 
@@ -166,7 +185,17 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         return false;
     }
 
-    private static IClasspathAttribute newTestClasspathAttribute() {
-        return new ClasspathAttribute(/*IClasspathAttribute.TEST*/"test", "true");
+    private static IClasspathAttribute newIsTestClasspathAttribute() {
+        return newClasspathAttribute(IClasspathAttribute.TEST, "true");
+    }
+
+    private static IClasspathAttribute newJavadocLocationClasspathAttribute(IPath docPath) {
+        try {
+            String name = IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME;
+            String path = docPath.toFile().toURI().toURL().toString();
+            return newClasspathAttribute(name, "jar:" + path + "!/");
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
