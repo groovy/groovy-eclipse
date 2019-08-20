@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -76,7 +76,7 @@ public class DSLDScriptExecutor {
                 Class scriptType = null;
                 try {
                     scriptType = classLoader.parseClass(scriptText, scriptName);
-                } catch (Exception e) {
+                } catch (AssertionError | Exception e) {
                     if (GroovyLogManager.manager.hasLoggers()) {
                         StringWriter writer = new StringWriter();
                         e.printStackTrace(new PrintWriter(writer));
@@ -101,7 +101,7 @@ public class DSLDScriptExecutor {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, e.getMessage());
                 }
-            } catch (Exception e) {
+            } catch (AssertionError | Exception e) {
                 // log exception to the event console and the error log
                 GroovyDSLCoreActivator.logException(e);
             }
@@ -118,11 +118,11 @@ public class DSLDScriptExecutor {
             return IOGroovyMethods.getText(br);
         } catch (ResourceException e) {
             if (e.getStatus().getCode() == IResourceStatus.RESOURCE_NOT_FOUND) {
-                // ignore...probably not able to access an external file
+                // probably not able to access an external file
+                return "";
             } else {
                 throw e;
             }
-            return "";
         }
     }
 
