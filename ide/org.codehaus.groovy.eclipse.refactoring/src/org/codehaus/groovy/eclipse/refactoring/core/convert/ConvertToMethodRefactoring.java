@@ -87,14 +87,13 @@ public class ConvertToMethodRefactoring {
         int afterName = targetField.getNameEnd() + 1;
         int openingBracket = findOpenBracket(doc, targetField, afterName);
         int afterLastParam = findAfterLastParam(targetField); // -1 means that there are no params
-        int afterArrow = findAfterArrow(doc, afterLastParam); // -1 means that there are no params
+        int afterArrow = findAfterArrow(doc, Math.max(openingBracket, afterLastParam)); // -1 means that there are no params
 
         if (!(openingBracket < doc.getLength() && (doc.getChar(openingBracket) == '{') || Character.isWhitespace(doc.getChar(openingBracket)))) {
             return null;
         }
         if (afterLastParam > -1 && afterArrow == -1) {
-            // couldn't find the arrow even though there were parameters, somnething
-            // strange has happened
+            // couldn't find the arrow even though there were parameters, something strange has happened
             return null;
         }
         TextEdit edit;
@@ -103,7 +102,7 @@ public class ConvertToMethodRefactoring {
             edit.addChild(new ReplaceEdit(afterName, openingBracket - afterName + 1, "("));
             edit.addChild(new ReplaceEdit(afterLastParam, afterArrow - afterLastParam + 1, ") {"));
         } else {
-            edit = new ReplaceEdit(afterName, openingBracket - afterName + 1, "() {");
+            edit = new ReplaceEdit(afterName, Math.max(openingBracket, afterArrow) - afterName + 1, "() {");
         }
         return edit;
     }

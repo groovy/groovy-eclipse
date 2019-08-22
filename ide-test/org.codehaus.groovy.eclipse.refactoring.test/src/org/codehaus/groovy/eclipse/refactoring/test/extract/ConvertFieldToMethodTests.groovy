@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.test.extract
 
 import static org.eclipse.jdt.core.compiler.CharOperation.indexOf
 
-import groovy.transform.NotYetImplemented
-
 import org.codehaus.groovy.eclipse.refactoring.core.convert.ConvertToMethodRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -69,7 +67,7 @@ final class ConvertFieldToMethodTests extends RefactoringTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testPropertyToMethod2() {
         String originalContents = '''\
             class C {
