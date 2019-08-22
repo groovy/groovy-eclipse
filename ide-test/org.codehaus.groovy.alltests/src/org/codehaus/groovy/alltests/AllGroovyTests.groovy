@@ -103,6 +103,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.quickfix.test.templates.GroovyTemplatesCompletionTests,
 
     // org.codehaus.groovy.eclipse.refactoring.tests
+    org.codehaus.groovy.eclipse.refactoring.test.extract.ConvertFieldToMethodTests,
     org.codehaus.groovy.eclipse.refactoring.test.extract.ConvertLocalToFieldTests,
     org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractConstantTests,
     org.codehaus.groovy.eclipse.refactoring.test.extract.ExtractLocalTests,

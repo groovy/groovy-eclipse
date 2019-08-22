@@ -33,7 +33,7 @@ public class SimpleDocument implements IDocument {
 
 	@Override
 	public char getChar(int offset) {
-		return 0;
+		return this.buffer.charAt(offset);
 	}
 
 	@Override
