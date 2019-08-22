@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -35,48 +35,46 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
 
     private GroovyEditor editor;
     private ITextSelection selection;
-    private GroovyCompilationUnit gcu;
+    private GroovyCompilationUnit groovyUnit;
 
-    protected boolean initRefactoring() {
-        if (editor == null || selection == null || gcu == null) {
-            return false;
-        }
-        if (gcu != null) {
-            if (gcu.getModuleNode() == null) {
-                displayErrorDialog("Cannot find ModuleNode for " + gcu.getElementName());
-                return false;
+    protected boolean checkPreconditions() {
+        if (editor != null && selection != null && groovyUnit != null) {
+            if (groovyUnit.getModuleNode() != null) {
+                return true;
             }
-            return true;
-            // return PlatformUI.getWorkbench().saveAllEditors(true);
+            displayErrorDialog("Cannot find ModuleNode for " + groovyUnit.getElementName());
         }
         return false;
     }
 
     protected void displayErrorDialog(String message) {
         ErrorDialog error = new ErrorDialog(
-                editor.getSite().getShell(), "Groovy Refactoring error", message,
-                new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message),
-                IStatus.ERROR | IStatus.WARNING);
+            editor.getSite().getShell(), "Groovy Refactoring error", message,
+            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message), IStatus.ERROR | IStatus.WARNING);
         error.open();
     }
 
     @Override
     public void dispose() {
         editor = null;
-        gcu = null;
         selection = null;
+        groovyUnit = null;
     }
 
-    protected GroovyEditor getEditor() {
+    protected final IDocument getDocument() {
+        return editor.getDocumentProvider().getDocument(editor.getEditorInput());
+    }
+
+    protected final GroovyEditor getEditor() {
         return editor;
     }
 
-    protected ITextSelection getSelection() {
+    protected final ITextSelection getSelection() {
         return selection;
     }
 
-    protected GroovyCompilationUnit getUnit() {
-        return gcu;
+    protected final GroovyCompilationUnit getUnit() {
+        return groovyUnit;
     }
 
     @Override
@@ -87,27 +85,25 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
     public void selectionChanged(IAction action, ISelection selection) {
         if (selection instanceof ITextSelection) {
             this.selection = (ITextSelection) selection;
-            action.setEnabled(true);
         } else {
             this.selection = null;
-            action.setEnabled(false);
         }
+        updateEnabled(action);
     }
 
     @Override
     public void setActiveEditor(IAction action, IEditorPart targetEditor) {
         if (targetEditor instanceof GroovyEditor) {
             this.editor = (GroovyEditor) targetEditor;
-            this.gcu = editor.getGroovyCompilationUnit();
-            action.setEnabled(true);
+            this.groovyUnit = editor.getGroovyCompilationUnit();
         } else {
             this.editor = null;
-            this.gcu = null;
-            action.setEnabled(false);
+            this.groovyUnit = null;
         }
+        updateEnabled(action);
     }
 
-    public static int getUIFlags() {
-        return RefactoringWizard.DIALOG_BASED_USER_INTERFACE | RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
+    private void updateEnabled(IAction action) {
+        action.setEnabled(editor != null && selection != null && groovyUnit != null);
     }
 }
