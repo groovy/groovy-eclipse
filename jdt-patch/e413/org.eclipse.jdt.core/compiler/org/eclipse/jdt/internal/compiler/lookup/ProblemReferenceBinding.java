@@ -28,6 +28,9 @@ public class ProblemReferenceBinding extends ReferenceBinding {
 public ProblemReferenceBinding(char[][] compoundName, ReferenceBinding closestMatch, int problemReason) {
 	this.compoundName = compoundName;
 	this.closestMatch = closestMatch;
+	if (closestMatch != null) {
+		this.sourceName = closestMatch.sourceName;
+	}
 	this.problemReason = problemReason;
 }
 

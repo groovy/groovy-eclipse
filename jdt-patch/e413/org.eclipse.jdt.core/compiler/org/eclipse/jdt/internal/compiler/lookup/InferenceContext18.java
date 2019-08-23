@@ -1168,18 +1168,18 @@ public class InferenceContext18 {
 										if (upperBounds.length == 1) {
 											glb = upperBounds[0];
 										} else {
-											ReferenceBinding[] glbs = Scope.greaterLowerBound((ReferenceBinding[])upperBounds);
+											TypeBinding[] glbs = Scope.greaterLowerBound(upperBounds, this.scope, this.environment);
 											if (glbs == null) {
 												return null;
 											} else if (glbs.length == 1) {
 												glb = glbs[0];
 											} else {
-												IntersectionTypeBinding18 intersection = (IntersectionTypeBinding18) this.environment.createIntersectionType18(glbs);
-												if (!ReferenceBinding.isConsistentIntersection(intersection.intersectingTypes)) {
+												glb = intersectionFromGlb(glbs);
+												if (glb == null) {
+													// inconsistent intersection
 													tmpBoundSet = prevBoundSet; // clean up
-													break variables; // and start over
+													break variables; // and start over													
 												}
-												glb = intersection;
 											}
 										}
 									}
@@ -1271,6 +1271,22 @@ public class InferenceContext18 {
 			}
 		}
 		return tmpBoundSet;
+	}
+	
+	private TypeBinding intersectionFromGlb(TypeBinding[] glbs) {
+		ReferenceBinding[] refGlbs = new ReferenceBinding[glbs.length];
+		for (int i = 0; i < glbs.length; i++) {
+			TypeBinding typeBinding = glbs[i];
+			if (typeBinding instanceof ReferenceBinding) {
+				refGlbs[i] = (ReferenceBinding) typeBinding;
+			} else {
+				return null;
+			}
+		}
+		IntersectionTypeBinding18 intersection = (IntersectionTypeBinding18) this.environment.createIntersectionType18(refGlbs);
+		if (ReferenceBinding.isConsistentIntersection(intersection.intersectingTypes))
+			return intersection;
+		return null;
 	}
 	
 	int captureId = 0;

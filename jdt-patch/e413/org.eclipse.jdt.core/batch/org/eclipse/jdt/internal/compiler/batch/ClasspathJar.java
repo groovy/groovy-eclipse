@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -330,18 +329,6 @@ public int getMode() {
 
 @Override
 public IModule getModule() {
-	if (this.isAutoModule && this.module == null) {
-		Manifest manifest = null;
-		try {
-			initialize();
-			ZipEntry entry = this.zipFile.getEntry(TypeConstants.META_INF_MANIFEST_MF);
-			if (entry != null)
-				manifest = new Manifest(this.zipFile.getInputStream(entry));
-		} catch (IOException e) {
-			// no usable manifest 
-		}
-		return this.module = IModule.createAutomatic(this.file.getName(), true, manifest);
-	}
 	return this.module;
 }
 }

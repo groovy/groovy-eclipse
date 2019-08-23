@@ -155,7 +155,7 @@ public SourceTypeBinding(SourceTypeBinding prototype) {
 	this.typeVariables = prototype.typeVariables;
 	this.environment = prototype.environment;
 
-	// this.scope = prototype.scope;  // Will defeat CompilationUnitDeclaration.cleanUp(TypeDeclaration) && CompilationUnitDeclaration.cleanUp(), so not copied, not an issue for JSR 308.
+	this.scope = prototype.scope; // compensated by TypeSystem.cleanUp(int)
 
 	this.synthetics = prototype.synthetics;
 	this.genericReferenceTypeSignature = prototype.genericReferenceTypeSignature;
@@ -1036,6 +1036,19 @@ public long getAnnotationTagBits() {
 	if (!isPrototype())
 		return this.prototype.getAnnotationTagBits();
 	
+	if ((this.tagBits & TagBits.EndHierarchyCheck) == 0) {
+		CompilationUnitScope pkgCUS = this.scope.compilationUnitScope();
+		boolean current = pkgCUS.connectingHierarchy;
+		pkgCUS.connectingHierarchy = true;
+		try {
+			return internalGetAnnotationTagBits();
+		} finally {
+			pkgCUS.connectingHierarchy = current;
+		}
+	}
+	return internalGetAnnotationTagBits();
+}
+private long internalGetAnnotationTagBits() {
 	if ((this.tagBits & TagBits.AnnotationResolved) == 0 && this.scope != null) {
 		TypeDeclaration typeDecl = this.scope.referenceContext;
 		boolean old = typeDecl.staticInitializerScope.insideTypeAnnotation;
@@ -2218,19 +2231,7 @@ public void evaluateNullAnnotations() {
 				pkg.setDefaultNullness(NULL_UNSPECIFIED_BY_DEFAULT);
 			} else {
 				// if pkgInfo has no default annot. - complain
-				if (packageInfo instanceof SourceTypeBinding
-						&& (packageInfo.tagBits & TagBits.EndHierarchyCheck) == 0) {
-					CompilationUnitScope pkgCUS = ((SourceTypeBinding) packageInfo).scope.compilationUnitScope();
-					boolean current = pkgCUS.connectingHierarchy;
-					pkgCUS.connectingHierarchy = true;
-					try {
-						packageInfo.getAnnotationTagBits();
-					} finally {
-						pkgCUS.connectingHierarchy = current;
-					}
-				} else {
-					packageInfo.getAnnotationTagBits();
-				}
+				packageInfo.getAnnotationTagBits();
 			}
 		}
 	}
@@ -2706,6 +2707,14 @@ public List<String> getNestMembers() {
 							.sorted()
 							.collect(Collectors.toList());
 	return list;
+}
+
+public void cleanUp() {
+	if (this.environment != null) {
+		// delegate so as to clean all variants of this prototype:
+		this.environment.typeSystem.cleanUp(this.id);
+	}
+	this.scope = null; // for types that are not registered in typeSystem.
 }
 
 }

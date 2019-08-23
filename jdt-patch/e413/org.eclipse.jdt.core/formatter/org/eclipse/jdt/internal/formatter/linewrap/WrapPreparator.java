@@ -60,7 +60,6 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.CreationReference;
@@ -75,7 +74,6 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
 import org.eclipse.jdt.core.dom.LambdaExpression;
@@ -225,8 +223,6 @@ public class WrapPreparator extends ASTVisitor {
 
 	final Aligner aligner;
 
-	int importsStart = -1, importsEnd = -1;
-
 	/*
 	 * temporary values used when calling {@link #handleWrap(int)} to avoid ArrayList initialization and long lists of
 	 * parameters
@@ -265,16 +261,6 @@ public class WrapPreparator extends ASTVisitor {
 	@Override
 	public void postVisit(ASTNode node) {
 		this.currentDepth--;
-	}
-
-	@Override
-	public boolean visit(CompilationUnit node) {
-		List<ImportDeclaration> imports = node.imports();
-		if (!imports.isEmpty()) {
-			this.importsStart = this.tm.firstIndexIn(imports.get(0), -1);
-			this.importsEnd = this.tm.lastIndexIn(imports.get(imports.size() - 1), -1);
-		}
-		return true;
 	}
 
 	@Override
@@ -1318,9 +1304,7 @@ public class WrapPreparator extends ASTVisitor {
 
 			@Override
 			protected boolean token(Token token, int index) {
-				boolean isBetweenImports = index > WrapPreparator.this.importsStart
-						&& index < WrapPreparator.this.importsEnd;
-				int lineBreaks = getLineBreaksToPreserve(getPrevious(), token, isBetweenImports);
+				int lineBreaks = getLineBreaksToPreserve(getPrevious(), token);
 				if (lineBreaks > 1 || (!this.join_wrapped_lines && token.isWrappable()) || index == 0)
 					token.putLineBreaksBefore(lineBreaks);
 				return true;
@@ -1330,7 +1314,7 @@ public class WrapPreparator extends ASTVisitor {
 
 		Token last = this.tm.get(this.tm.size() - 1);
 		last.clearLineBreaksAfter();
-		int endingBreaks = getLineBreaksToPreserve(last, null, false);
+		int endingBreaks = getLineBreaksToPreserve(last, null);
 		if (endingBreaks > 0) {
 			last.putLineBreaksAfter(endingBreaks);
 		} else if ((this.kind & (CodeFormatter.K_COMPILATION_UNIT | CodeFormatter.K_MODULE_INFO)) != 0
@@ -1339,7 +1323,11 @@ public class WrapPreparator extends ASTVisitor {
 		}
 	}
 
-	int getLineBreaksToPreserve(Token token1, Token token2, boolean isBetweenImports) {
+	int getLineBreaksToPreserve(Token token1, Token token2) {
+		if ((token1 != null && !token1.isPreserveLineBreaksAfter())
+				|| (token2 != null && !token2.isPreserveLineBreaksBefore())) {
+			return 0;
+		}
 		if (token1 != null) {
 			List<Token> structure = token1.getInternalStructure();
 			if (structure != null && !structure.isEmpty())
@@ -1351,9 +1339,6 @@ public class WrapPreparator extends ASTVisitor {
 				token2 = structure.get(0);
 		}
 		int lineBreaks = WrapPreparator.this.tm.countLineBreaksBetween(token1, token2);
-		if (isBetweenImports)
-			return lineBreaks > 1 ? (this.options.blank_lines_between_import_groups + 1) : 0;
-
 		int toPreserve = this.options.number_of_empty_lines_to_preserve;
 		if (token1 != null && token2 != null)
 			toPreserve++; // n empty lines = n+1 line breaks, except for file start and end

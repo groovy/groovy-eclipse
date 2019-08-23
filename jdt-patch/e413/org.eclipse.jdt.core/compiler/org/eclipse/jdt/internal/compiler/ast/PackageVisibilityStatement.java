@@ -47,11 +47,11 @@ public abstract class PackageVisibilityStatement extends ModuleStatement {
 			HashtableOfObject modules = new HashtableOfObject(this.targets.length);
 			for (int i = 0; i < this.targets.length; i++) {
 				ModuleReference ref = this.targets[i];
+				// targets will be resolved later (during ModuleDeclaration.resolveModuleDirectives())
 				if (modules.containsKey(ref.moduleName)) {
 					scope.problemReporter().duplicateModuleReference(IProblem.DuplicateModuleRef, ref);
 					errorsExist = true;
 				} else {
-					ref.resolve(scope.compilationUnitScope());
 					modules.put(ref.moduleName, ref);
 				}
 			}

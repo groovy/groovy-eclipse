@@ -193,14 +193,22 @@ public class DefaultCodeFormatterOptions {
 	public int blank_lines_after_package;
 	public int blank_lines_before_field;
 	public int blank_lines_before_first_class_body_declaration;
+	public int blank_lines_after_last_class_body_declaration;
 	public int blank_lines_before_imports;
 	public int blank_lines_before_member_type;
+	public int blank_lines_before_abstract_method;
 	public int blank_lines_before_method;
 	public int blank_lines_before_new_chunk;
 	public int blank_lines_before_package;
 	public int blank_lines_between_import_groups;
 	public int blank_lines_between_type_declarations;
 	public int blank_lines_at_beginning_of_method_body;
+	public int blank_lines_at_end_of_method_body;
+	public int blank_lines_at_beginning_of_code_block;
+	public int blank_lines_at_end_of_code_block;
+	public int blank_lines_before_code_block;
+	public int blank_lines_after_code_block;
+	public int blank_lines_between_statement_groups_in_switch;
 
 	public boolean comment_clear_blank_lines_in_javadoc_comment;
 	public boolean comment_clear_blank_lines_in_block_comment;
@@ -599,14 +607,22 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_PACKAGE, Integer.toString(this.blank_lines_after_package));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_FIELD, Integer.toString(this.blank_lines_before_field));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_FIRST_CLASS_BODY_DECLARATION, Integer.toString(this.blank_lines_before_first_class_body_declaration));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_LAST_CLASS_BODY_DECLARATION, Integer.toString(this.blank_lines_after_last_class_body_declaration));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_IMPORTS, Integer.toString(this.blank_lines_before_imports));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_MEMBER_TYPE, Integer.toString(this.blank_lines_before_member_type));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_ABSTRACT_METHOD, Integer.toString(this.blank_lines_before_abstract_method));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_METHOD, Integer.toString(this.blank_lines_before_method));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_NEW_CHUNK, Integer.toString(this.blank_lines_before_new_chunk));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_PACKAGE, Integer.toString(this.blank_lines_before_package));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS, Integer.toString(this.blank_lines_between_import_groups));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_TYPE_DECLARATIONS, Integer.toString(this.blank_lines_between_type_declarations));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_BEGINNING_OF_METHOD_BODY, Integer.toString(this.blank_lines_at_beginning_of_method_body));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_END_OF_METHOD_BODY, Integer.toString(this.blank_lines_at_end_of_method_body));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_BEGINNING_OF_CODE_BLOCK, Integer.toString(this.blank_lines_at_beginning_of_code_block));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_END_OF_CODE_BLOCK, Integer.toString(this.blank_lines_at_end_of_code_block));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_CODE_BLOCK, Integer.toString(this.blank_lines_before_code_block));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_CODE_BLOCK, Integer.toString(this.blank_lines_after_code_block));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_STATEMENT_GROUPS_IN_SWITCH, Integer.toString(this.blank_lines_between_statement_groups_in_switch));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INDENT_STATEMENTS_COMPARE_TO_BLOCK, this.indent_statements_compare_to_block ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INDENT_STATEMENTS_COMPARE_TO_BODY, this.indent_statements_compare_to_body ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INDENT_BODY_DECLARATIONS_COMPARE_TO_ANNOTATION_DECLARATION_HEADER, this.indent_body_declarations_compare_to_annotation_declaration_header ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
@@ -1305,6 +1321,8 @@ public class DefaultCodeFormatterOptions {
 				this.blank_lines_before_first_class_body_declaration = 0;
 			}
 		}
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_LAST_CLASS_BODY_DECLARATION,
+				v -> this.blank_lines_after_last_class_body_declaration = v);
 		final Object blankLinesBeforeImportsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_IMPORTS);
 		if (blankLinesBeforeImportsOption != null) {
 			try {
@@ -1321,6 +1339,8 @@ public class DefaultCodeFormatterOptions {
 				this.blank_lines_before_member_type = 0;
 			}
 		}
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_ABSTRACT_METHOD,
+				v -> this.blank_lines_before_abstract_method = v);
 		final Object blankLinesBeforeMethodOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_METHOD);
 		if (blankLinesBeforeMethodOption != null) {
 			try {
@@ -1369,6 +1389,18 @@ public class DefaultCodeFormatterOptions {
 				this.blank_lines_at_beginning_of_method_body = 0;
 			}
 		}
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_END_OF_METHOD_BODY,
+				v -> this.blank_lines_at_end_of_method_body = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_BEGINNING_OF_CODE_BLOCK,
+				v -> this.blank_lines_at_beginning_of_code_block = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AT_END_OF_CODE_BLOCK,
+				v -> this.blank_lines_at_end_of_code_block = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_CODE_BLOCK,
+				v -> this.blank_lines_before_code_block = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_AFTER_CODE_BLOCK,
+				v -> this.blank_lines_after_code_block = v);
+		setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_STATEMENT_GROUPS_IN_SWITCH,
+				v -> this.blank_lines_between_statement_groups_in_switch = v);
 		final Object insertNewLineAfterTypeAnnotationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_TYPE_ANNOTATION);
 		if (insertNewLineAfterTypeAnnotationOption != null) {
 			this.insert_new_line_after_type_annotation = JavaCore.INSERT.equals(insertNewLineAfterTypeAnnotationOption);
@@ -2414,6 +2446,8 @@ public class DefaultCodeFormatterOptions {
 		if (wrapWrapOuterExpressionsWhenNestedOption != null) {
 			this.wrap_outer_expressions_when_nested = DefaultCodeFormatterConstants.TRUE.equals(wrapWrapOuterExpressionsWhenNestedOption);
 		}
+
+		setDerivableOptions(settings);
 	}
 
 	private int toInt(Object value, int defaultValue) {
@@ -2708,6 +2742,17 @@ public class DefaultCodeFormatterOptions {
 		}
 	}
 
+	/**
+	 * Handles new settings which may not be defined in an older profile, but are can be easily derived from other
+	 * settings to keep the behavior consistent with previous versions.
+	 */
+	private void setDerivableOptions(Map<String, String> settings) {
+		if (!settings.containsKey(DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_ABSTRACT_METHOD)) {
+			setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_METHOD,
+					v -> this.blank_lines_before_abstract_method = v);
+		}
+	}
+
 	public void setDefaultSettings() {
 		this.alignment_for_arguments_in_allocation_expression = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_arguments_in_annotation = Alignment.M_NO_ALIGNMENT;
@@ -2800,14 +2845,22 @@ public class DefaultCodeFormatterOptions {
 		this.blank_lines_after_package = 0;
 		this.blank_lines_before_field = 0;
 		this.blank_lines_before_first_class_body_declaration = 0;
+		this.blank_lines_after_last_class_body_declaration = 0;
 		this.blank_lines_before_imports = 0;
 		this.blank_lines_before_member_type = 0;
+		this.blank_lines_before_abstract_method = 0;
 		this.blank_lines_before_method = 0;
 		this.blank_lines_before_new_chunk = 0;
 		this.blank_lines_before_package = 0;
 		this.blank_lines_between_import_groups = 1;
 		this.blank_lines_between_type_declarations = 0;
 		this.blank_lines_at_beginning_of_method_body = 0;
+		this.blank_lines_at_end_of_method_body = 0;
+		this.blank_lines_at_beginning_of_code_block = 0;
+		this.blank_lines_at_end_of_code_block = 0;
+		this.blank_lines_before_code_block = 0;
+		this.blank_lines_after_code_block = 0;
+		this.blank_lines_between_statement_groups_in_switch = 0;
 		this.indent_statements_compare_to_block = true;
 		this.indent_statements_compare_to_body = true;
 		this.indent_body_declarations_compare_to_annotation_declaration_header = true;
@@ -3155,15 +3208,22 @@ public class DefaultCodeFormatterOptions {
 		this.blank_lines_after_imports = 1;
 		this.blank_lines_after_package = 1;
 		this.blank_lines_before_field = 0;
-		this.blank_lines_before_first_class_body_declaration = 0;
+		this.blank_lines_after_last_class_body_declaration = 0;
 		this.blank_lines_before_imports = 1;
 		this.blank_lines_before_member_type = 1;
+		this.blank_lines_before_abstract_method = 1;
 		this.blank_lines_before_method = 1;
 		this.blank_lines_before_new_chunk = 1;
 		this.blank_lines_before_package = 0;
 		this.blank_lines_between_import_groups = 1;
 		this.blank_lines_between_type_declarations = 1;
 		this.blank_lines_at_beginning_of_method_body = 0;
+		this.blank_lines_at_end_of_method_body = 0;
+		this.blank_lines_at_beginning_of_code_block = 0;
+		this.blank_lines_at_end_of_code_block = 0;
+		this.blank_lines_before_code_block = 0;
+		this.blank_lines_after_code_block = 0;
+		this.blank_lines_between_statement_groups_in_switch = 0;
 		this.indent_statements_compare_to_block = true;
 		this.indent_statements_compare_to_body = true;
 		this.indent_body_declarations_compare_to_annotation_declaration_header = true;

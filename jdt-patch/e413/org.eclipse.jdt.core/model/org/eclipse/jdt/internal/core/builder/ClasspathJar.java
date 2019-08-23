@@ -48,6 +48,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 @SuppressWarnings("rawtypes")
 public class ClasspathJar extends ClasspathLocation {
+final boolean isOnModulePath;
 
 static class PackageCacheEntry {
 	long lastModified;

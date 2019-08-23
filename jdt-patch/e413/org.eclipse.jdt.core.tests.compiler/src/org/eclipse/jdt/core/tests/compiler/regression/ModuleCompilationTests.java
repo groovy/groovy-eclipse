@@ -5443,4 +5443,38 @@ public void testBug521362_emptyFile() {
 				false,
 				"package p1.p2.t3 clashes with class of same name");
 	}
+	public void testBug550178() throws Exception {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		File modDir = new File(OUTPUT_DIR + File.separator + "mod");
+		createReusableModules(srcDir, outDir, modDir);
+		String moduleLoc = srcDir + File.separator + "mod.three";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.three { \n" +
+						"	exports pkg.invalid;\n" +
+						"}");
+
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -9 ")
+			.append(" --module-path \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append(modDir.getAbsolutePath())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ");
+		runNegativeModuleTest(files, buffer,
+				"",
+				"----------\n" + 
+				"1. ERROR in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.three/module-info.java (at line 2)\n" + 
+				"	exports pkg.invalid;\n" + 
+				"	        ^^^^^^^^^^^\n" + 
+				"The package pkg.invalid does not exist or is empty\n" + 
+				"----------\n" + 
+				"1 problem (1 error)\n",
+				false,
+				"");
+	}
 }

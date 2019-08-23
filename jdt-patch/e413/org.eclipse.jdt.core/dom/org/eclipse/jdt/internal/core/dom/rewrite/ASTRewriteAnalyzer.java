@@ -2576,7 +2576,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		try {
 			int offset= getScanner().getTokenEndOffset(TerminalTokens.TokenNamebreak, node.getStartPosition());
 			rewriteNode(node, BreakStatement.LABEL_PROPERTY, offset, ASTRewriteFormatter.SPACE); // space between break and label
-			if (node.getAST().apiLevel() >= JLS12_INTERNAL) {
+			if (node.getAST().apiLevel() == JLS12_INTERNAL && node.getAST().isPreviewEnabled()) {
 				rewriteNode(node, BreakStatement.EXPRESSION_PROPERTY, offset, ASTRewriteFormatter.SPACE); // space between break and label
 			}
 		} catch (CoreException e) {
@@ -3519,7 +3519,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 		}
 
 		// dont allow switching from case to default or back. New statements should be created.
-		if (node.getAST().apiLevel() >= JLS12_INTERNAL) {
+		if (node.getAST().apiLevel() == JLS12_INTERNAL && node.getAST().isPreviewEnabled()) {
 			int pos = node.expressions().size() == 0 ? node.getStartPosition() :
 					rewriteNodeList(node, SwitchCase.EXPRESSIONS2_PROPERTY, node.getStartPosition(), Util.EMPTY_STRING, ", "); //$NON-NLS-1$
 			if (isChanged(node, SwitchCase.SWITCH_LABELED_RULE_PROPERTY)) {
@@ -3743,7 +3743,7 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 					insertIndent++;
 				}
 				ParagraphListRewriter listRewriter;
-				if (node.getAST().apiLevel() >= JLS12_INTERNAL) {
+				if (node.getAST().apiLevel() == JLS12_INTERNAL && node.getAST().isPreviewEnabled()) {
 					listRewriter= new SwitchListLabeledRuleRewriter(insertIndent);
 				} else {
 					listRewriter= new SwitchListRewriter(insertIndent);

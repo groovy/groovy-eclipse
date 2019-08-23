@@ -40,7 +40,6 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	char[] normalizedPath;
 	public AccessRuleSet accessRuleSet;
 	IModule module;
-	protected boolean isAutoModule;
 
 	public String destinationPath;
 		// destination path for compilation units that are reached through this
@@ -126,11 +125,10 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	@Override
 	public void acceptModule(IModule mod) {
 		this.module = mod;
-		this.isAutoModule = mod.isAutomatic();
 	}
 	@Override
 	public boolean isAutomaticModule() {
-		return this.isAutoModule;
+		return this.module == null ? false : this.module.isAutomatic();
 	}
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModules) {

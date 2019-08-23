@@ -939,6 +939,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("RedundantLocalVariableNullAssignment", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullAnnotation", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
 		expectedProblemAttributes.put("RedundantNullCheckAgainstNonNullType", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
+		expectedProblemAttributes.put("RedundantNullCheckOnConstNonNullField", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullCheckOnField", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullCheckOnNonNullExpression", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullCheckOnNonNullSpecdField", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
@@ -1887,6 +1888,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("RedundantLocalVariableNullAssignment", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullAnnotation", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));
 		expectedProblemAttributes.put("RedundantNullCheckAgainstNonNullType", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
+		expectedProblemAttributes.put("RedundantNullCheckOnConstNonNullField", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullCheckOnField", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullCheckOnNonNullExpression", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullCheckOnNonNullSpecdField", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));

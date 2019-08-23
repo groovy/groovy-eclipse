@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2018 IBM Corporation and others.
+ * Copyright (c) 2015, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,6 +15,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseHasABug;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 
@@ -1120,6 +1121,47 @@ public void testBug511676a() {
 			"}\n"
 		},
 		"Done");
+}
+public void testBug543778() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"Sandbox.java",
+			"import java.util.function.Supplier;\n" + 
+			"\n" + 
+			"public class Sandbox {\n" + 
+			"\n" + 
+			"    <R extends Object> R get(Supplier<@NonNull R> impl) {\n" + 
+			"        return null;\n" + 
+			"    }\n" + 
+			"\n" + 
+			"    Object getter() {\n" + 
+			"        return get(() -> new Object() {\n" + 
+			"\n" + 
+			"            @Override\n" + 
+			"            public String toString() {\n" + 
+			"                return super.toString();\n" + 
+			"            }\n" + 
+			"\n" + 
+			"        });\n" + 
+			"    }\n" + 
+			"\n" + 
+			"}\n",
+			"NonNull.java",
+			"import java.lang.annotation.ElementType;\n" + 
+			"import java.lang.annotation.Retention;\n" + 
+			"import java.lang.annotation.RetentionPolicy;\n" + 
+			"import java.lang.annotation.Target;\n" + 
+			"\n" + 
+			"@Retention(RetentionPolicy.CLASS)\n" + 
+			"@Target({ ElementType.TYPE_USE })\n" + 
+			"public @interface NonNull {\n" + 
+			"    // marker annotation with no members\n" + 
+			"}\n",
+		};
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_ANNOTATION_NULL_ANALYSIS, JavaCore.ENABLED); // bug happens due to type annotation handling
+	runner.runConformTest();
 }
 public static Class testClass() {
 	return LambdaRegressionTest.class;

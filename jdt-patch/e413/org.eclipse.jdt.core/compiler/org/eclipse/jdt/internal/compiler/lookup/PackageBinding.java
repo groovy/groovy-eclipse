@@ -38,8 +38,8 @@ public abstract class PackageBinding extends Binding implements TypeConstants {
 	HashtableOfPackage<PackageBinding> knownPackages;
 
 	// code representing the default that has been defined for this package (using @NonNullByDefault)
-	// one of Binding.{NO_NULL_DEFAULT,NULL_UNSPECIFIED_BY_DEFAULT,NONNULL_BY_DEFAULT}
-	private int defaultNullness = NO_NULL_DEFAULT;
+	// once initialized it will be one of Binding.{NO_NULL_DEFAULT,NULL_UNSPECIFIED_BY_DEFAULT,NONNULL_BY_DEFAULT}
+	private int defaultNullness = -1;
 
 	public ModuleBinding enclosingModule;
 
@@ -231,7 +231,7 @@ ReferenceBinding getType0(char[] name) {
  */
 boolean hasType0Any(char[] name) {
 	ReferenceBinding type0 = getType0(name);
-	return type0 != null && type0 != LookupEnvironment.TheNotFoundType && !(type0 instanceof UnresolvedReferenceBinding);
+	return type0 != null && type0.isValidBinding() && !(type0 instanceof UnresolvedReferenceBinding);
 }
 
 /* Answer the package or type named name; ask the oracle if it is not in the cache.
@@ -320,7 +320,23 @@ public final boolean isViewedAsDeprecated() {
 	}
 	return (this.tagBits & TagBits.AnnotationDeprecated) != 0;
 }
+private void initDefaultNullness() {
+	if (this.defaultNullness == -1) {
+		ReferenceBinding packageInfo = getType(TypeConstants.PACKAGE_INFO_NAME, this.enclosingModule);
+		if (packageInfo != null) {
+			packageInfo.getAnnotationTagBits();
+			if (packageInfo instanceof SourceTypeBinding) {
+				this.defaultNullness = ((SourceTypeBinding) packageInfo).defaultNullness;
+			} else {
+				this.defaultNullness = ((BinaryTypeBinding) packageInfo).defaultNullness;
+			}
+		} else {
+			this.defaultNullness = NO_NULL_DEFAULT;
+		}
+	}
+}
 public int getDefaultNullness() {
+	initDefaultNullness();
 	if (this.defaultNullness == NO_NULL_DEFAULT)
 		return this.enclosingModule.getDefaultNullness();
 	return this.defaultNullness;
@@ -333,6 +349,7 @@ public void setDefaultNullness(int nullness) {
  * where 'defaultNullness' matches the given predicate.
  */
 public Binding findDefaultNullnessTarget(Predicate<Integer> predicate) {
+	initDefaultNullness();
 	if (predicate.test(this.defaultNullness))
 		return this;
 	if (this.defaultNullness == NO_NULL_DEFAULT)

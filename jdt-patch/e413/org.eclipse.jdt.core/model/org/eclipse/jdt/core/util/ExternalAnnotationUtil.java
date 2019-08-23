@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
+import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
 import org.eclipse.jdt.internal.compiler.lookup.SignatureWrapper;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.util.KeyToSignature;
@@ -76,6 +77,7 @@ public final class ExternalAnnotationUtil {
 
 	private static final int POSITION_RETURN_TYPE = -1;
 	private static final int POSITION_FULL_SIGNATURE = -2;
+	private static final int POSITION_TYPE_PARAMETER = -3;
 
 	/**
 	 * Answer the give method's signature in class file format.
@@ -98,6 +100,36 @@ public final class ExternalAnnotationUtil {
 		KeyToSignature parser = new KeyToSignature(type.getKey(), KeyToSignature.SIGNATURE, true);
 		parser.parse();
 		return parser.toString();
+	}
+
+	/**
+	 * Answer the signature of all type parameters of this type in class file format.
+	 * @param type binding representing a type, required to have type parameters
+	 * @return a signature in class file format
+	 * @since 3.19
+	 */
+	public static String extractGenericTypeParametersSignature(ITypeBinding type) {
+		StringBuilder signature = new StringBuilder().append('<');
+		for (ITypeBinding typeParameter : type.getTypeParameters()) {
+			signature.append(typeParameter.getName());
+			// superclass (if relevant, else empty ':'):
+			signature.append(':');
+			ITypeBinding superclass = typeParameter.getSuperclass();
+			if (superclass != null) {
+				String superclassSignature = extractGenericTypeSignature(superclass);
+				boolean superIsRelevant = typeParameter.getInterfaces().length == 0;
+				superIsRelevant |= !superclassSignature.equals(new String(ConstantPool.JavaLangObjectSignature));
+				if (superIsRelevant) {
+					signature.append(superclassSignature);
+				}
+			}
+			// superinterfaces:
+			for (ITypeBinding superInterface : typeParameter.getInterfaces()) {
+				signature.append(':').append(extractGenericTypeSignature(superInterface));
+			}
+		}
+		signature.append('>');
+		return signature.toString();
 	}
 
 	/**
@@ -217,6 +249,59 @@ public final class ExternalAnnotationUtil {
 	}
 
 	/**
+	 * Update the given external annotation file with details regarding annotations of a type parameter of the type itself.
+	 * If the type already has external annotations, old and new annotations will be merged,
+	 * with priorities controlled by the parameter 'mergeStrategy'.
+	 * <p>
+	 * This method is suitable only for type use annotations.
+	 * </p>
+	 * @param typeName binary name (slash separated) of the type being annotated
+	 * @param file a file assumed to be in .eea format, will be created if it doesn't exist.
+	 * @param originalSignature unannotated signature of all type parameters of the type
+	 * @param annotatedTypeParameter signature of the new type parameter whose annotations should be superimposed on the method
+	 * @param rank rank of the type parameter to be annotated
+	 * @param mergeStrategy controls how old and new signatures should be merged
+	 * @param monitor progress monitor to be passed through into file operations, or null if no reporting is desired
+	 * @throws CoreException if access to the file fails
+	 * @throws IOException if reading file content fails
+	 * @throws IllegalArgumentException if the annotatedTypeParameter does not structurally match to originalSignature
+	 * @since 3.19
+	 */
+	public static void annotateTypeTypeParameter(String typeName, IFile file, String originalSignature, String annotatedTypeParameter,
+			int rank, MergeStrategy mergeStrategy, IProgressMonitor monitor)
+			throws CoreException, IOException, IllegalArgumentException
+	{
+		annotateMember(typeName, file, null, originalSignature, annotatedTypeParameter, POSITION_TYPE_PARAMETER-rank, mergeStrategy, monitor);
+	}
+
+	/**
+	 * Update the given external annotation file with details regarding annotations of a type parameter of a given method.
+	 * If the specified method already has external annotations, old and new annotations will be merged,
+	 * with priorities controlled by the parameter 'mergeStrategy'.
+	 * <p>
+	 * This method is suitable only for type use annotations.
+	 * </p>
+	 * @param typeName binary name (slash separated) of the type being annotated
+	 * @param file a file assumed to be in .eea format, will be created if it doesn't exist.
+	 * @param selector selector of the method
+	 * @param originalSignature unannotated signature of the member, used for identification
+	 * @param annotatedTypeParameter signature of the new type parameter whose annotations should be superimposed on the method
+	 * @param rank rank of the type parameter to be annotated
+	 * @param mergeStrategy controls how old and new signatures should be merged
+	 * @param monitor progress monitor to be passed through into file operations, or null if no reporting is desired
+	 * @throws CoreException if access to the file fails
+	 * @throws IOException if reading file content fails
+	 * @throws IllegalArgumentException if the annotatedTypeParameter does not structurally match to originalSignature
+	 * @since 3.19
+	 */
+	public static void annotateMethodTypeParameter(String typeName, IFile file, String selector, String originalSignature, String annotatedTypeParameter,
+			int rank, MergeStrategy mergeStrategy, IProgressMonitor monitor)
+			throws CoreException, IOException, IllegalArgumentException
+	{
+		annotateMember(typeName, file, selector, originalSignature, annotatedTypeParameter, POSITION_TYPE_PARAMETER-rank, mergeStrategy, monitor);
+	}
+
+	/**
 	 * Update the given external annotation file with details regarding annotations of the return type of a given method.
 	 * If the specified method already has external annotations, old and new annotations will be merged,
 	 * with priorities controlled by the parameter 'mergeStrategy'.
@@ -281,7 +366,9 @@ public final class ExternalAnnotationUtil {
 			newContent.append(ExternalAnnotationProvider.CLASS_PREFIX);
 			newContent.append(typeName).append('\n');
 			// new entry:
-			newContent.append(selector).append('\n');
+			if (selector != null) { // otherwise we are annotating a class type parameter
+				newContent.append(selector).append('\n');
+			}
 			newContent.append(' ').append(originalSignature).append('\n');
 			newContent.append(' ').append(annotatedSignature).append('\n');
 
@@ -290,9 +377,22 @@ public final class ExternalAnnotationUtil {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(file.getContents()));
 			StringBuffer newContent = new StringBuffer();
 			try {
+				// type references get the previous signature from the existing type binding:
+				String previousSignature = originalSignature;
 				newContent.append(reader.readLine()).append('\n'); // skip class name
 				String line;
 				while ((line = reader.readLine()) != null) {
+					if (selector == null) { // annotating a type parameter?
+						if (line.trim().startsWith("<")) { //$NON-NLS-1$
+							line = reader.readLine();
+							assert line.trim().startsWith("<"); // reading old annotated type parameters //$NON-NLS-1$
+							// bindings of type parameters (being declarations) don't include annotations in their signature,
+							// so we need to preserve the previous signature from the .eea:
+							previousSignature = line.trim();
+							line = reader.readLine();
+						}
+						break;
+					}
 					if (line.isEmpty()) {
 						newContent.append('\n');
 						continue;
@@ -353,9 +453,10 @@ public final class ExternalAnnotationUtil {
 					}
 				}
 				// add new entry:
-				newContent.append(selector).append('\n');
+				if (selector != null)
+					newContent.append(selector).append('\n');
 				newContent.append(' ').append(originalSignature).append('\n');
-				annotatedSignature = updateSignature(originalSignature, annotatedSignature, updatePosition, mergeStrategy);
+				annotatedSignature = updateSignature(previousSignature, annotatedSignature, updatePosition, mergeStrategy);
 				writeFile(file, newContent, annotatedSignature, line, reader, monitor);
 			} finally {
 				reader.close();
@@ -367,28 +468,48 @@ public final class ExternalAnnotationUtil {
 		StringBuffer buf = new StringBuffer();
 		String signatureToReplace;
 		String postfix = null;
-		switch (updatePosition) {
-			case POSITION_FULL_SIGNATURE:
-				signatureToReplace = originalSignature;
-				break;
-			case POSITION_RETURN_TYPE:
-				assert originalSignature.charAt(0) == '(' || originalSignature.charAt(0) == '<': "signature must start with '(' or '<'"; //$NON-NLS-1$
-				int close = originalSignature.indexOf(')');
-				buf.append(originalSignature, 0, close+1);
-				signatureToReplace = originalSignature.substring(close+1);
-				break;
-			default: // parameter
-				SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
-				wrapper.start = CharOperation.indexOf('(', wrapper.signature) + 1; // possibly skipping type parameters
-				for (int i = 0; i < updatePosition; i++)
-					wrapper.start = wrapper.skipAngleContents(wrapper.computeEnd()) + 1;
-				int start = wrapper.start;
-				int end = wrapper.skipAngleContents(wrapper.computeEnd());
-				buf.append(originalSignature, 0, start);
-				signatureToReplace = originalSignature.substring(start, end+1);
-				postfix = originalSignature.substring(end+1, originalSignature.length());
+		if (updatePosition <= POSITION_TYPE_PARAMETER) {
+			// '<' [Annot] Identifier ClassBound {InterfaceBound} ... '>'
+			assert originalSignature.charAt(0) ==  '<': "generic signature must start with '<'"; //$NON-NLS-1$
+			SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+			wrapper.start = 1; // skip '<'
+			// skip preceding type parameters:
+			for (int i = 0; i < (-updatePosition+POSITION_TYPE_PARAMETER); i++) {
+				wrapper.skipTypeParameter();
+			}
+			int start = wrapper.start;
+			// copy entire prefix:
+			buf.append(originalSignature, 0, start);
+			// process selected type parameter:
+			int end = wrapper.skipTypeParameter();
+			signatureToReplace = originalSignature.substring(start, end);
+			updateTypeParameter(buf, signatureToReplace.toCharArray(), annotatedSignature.toCharArray(), mergeStrategy);
+			// extract postfix:
+			postfix = originalSignature.substring(end, originalSignature.length());
+		} else {
+			switch (updatePosition) {
+				case POSITION_FULL_SIGNATURE:
+					signatureToReplace = originalSignature;
+					break;
+				case POSITION_RETURN_TYPE:
+					assert originalSignature.charAt(0) == '(' || originalSignature.charAt(0) == '<': "signature must start with '(' or '<'"; //$NON-NLS-1$
+					int close = originalSignature.indexOf(')');
+					buf.append(originalSignature, 0, close+1);
+					signatureToReplace = originalSignature.substring(close+1);
+					break;
+				default: // parameter
+					SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+					wrapper.start = CharOperation.indexOf('(', wrapper.signature) + 1; // possibly skipping type parameters
+					for (int i = 0; i < updatePosition; i++)
+						wrapper.start = wrapper.skipAngleContents(wrapper.computeEnd()) + 1;
+					int start = wrapper.start;
+					int end = wrapper.skipAngleContents(wrapper.computeEnd());
+					buf.append(originalSignature, 0, start);
+					signatureToReplace = originalSignature.substring(start, end+1);
+					postfix = originalSignature.substring(end+1, originalSignature.length());
+			}
+			updateType(buf, signatureToReplace.toCharArray(), annotatedSignature.toCharArray(), mergeStrategy);
 		}
-		updateType(buf, signatureToReplace.toCharArray(), annotatedSignature.toCharArray(), mergeStrategy);
 		if (postfix != null)
 			buf.append(postfix);
 		return buf.toString();
@@ -453,6 +574,62 @@ public final class ExternalAnnotationUtil {
 				return true; // annotation allowed after this (not included in oldType / newType)
 			} else {			
 				buf.append(oldType);
+			}
+		} catch (ArrayIndexOutOfBoundsException aioobe) { // from several locations inside match() or mergeAnnotation().
+			StringBuilder msg = new StringBuilder("Structural mismatch between ").append(oldType).append(" and ").append(newType); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new IllegalArgumentException(msg.toString(), aioobe);
+		}
+		return false;
+	}
+	/**
+	 * similar to updateType() but for type parameters, syntax:
+	 * 		[Annot] Identifier ClassBound {InterfaceBound}
+	 */
+	private static boolean updateTypeParameter(StringBuffer buf, char[] oldType, char[] newType, MergeStrategy mergeStrategy) {
+		if (mergeStrategy == MergeStrategy.REPLACE_SIGNATURE) {
+			buf.append(newType);
+			return false;
+		}			
+		try {
+			SignatureWrapper oWrap = new SignatureWrapper(oldType, true, true); // may already contain annotations
+			SignatureWrapper nWrap = new SignatureWrapper(newType, true, true); // may already contain annotations
+			// [Annot]
+			mergeAnnotation(buf, oWrap, nWrap, mergeStrategy);
+			// Identifier:
+			char[] oName = oWrap.wordUntil(':');
+			char[] nName = nWrap.wordUntil(':');
+			if (!CharOperation.equals(oName, nName)) {
+				StringBuilder msg = new StringBuilder("Structural mismatch between type parameters ").append(oName).append(" and ").append(nName); //$NON-NLS-1$ //$NON-NLS-2$
+				throw new IllegalArgumentException(msg.toString());
+			}
+			buf.append(oName);
+			// one or more bounds each starting with ':'
+			while (match(buf, oWrap, nWrap, ':', false)) {
+				int oStart = oWrap.start;
+				int nStart = nWrap.start;
+				nWrap.skipAngleContents(nWrap.computeEnd());
+				char[] nType = nWrap.getFrom(nStart);
+				char[] oType;
+				if (oWrap.charAtStart() == ':') {
+					// old bound is empty!
+					if (CharOperation.equals(nType, new char[]{':'})) {
+						nWrap.start--; // unget second ':'
+						continue; // both bounds empty
+					}
+					if (CharOperation.equals(nType, ConstantPool.JavaLangObjectSignature)) {
+						// new: j.l.Object => skip
+						continue;
+					}
+					// new is not exactly Ljava/lang/Object; (perhaps already annotated?) => replace old with j.l.Object for decoration:
+					oType = ConstantPool.JavaLangObjectSignature;
+				} else {
+					oWrap.skipAngleContents(oWrap.computeEnd());
+					oType = oWrap.getFrom(oStart);
+				}
+				if (updateType(buf, oType, nType, mergeStrategy))
+					mergeAnnotation(buf, oWrap, nWrap, mergeStrategy);
+				if (oWrap.atEnd() || nWrap.atEnd())
+					return false;
 			}
 		} catch (ArrayIndexOutOfBoundsException aioobe) { // from several locations inside match() or mergeAnnotation().
 			StringBuilder msg = new StringBuilder("Structural mismatch between ").append(oldType).append(" and ").append(newType); //$NON-NLS-1$ //$NON-NLS-2$
@@ -572,7 +749,7 @@ public final class ExternalAnnotationUtil {
 	 * Retrieve the annotated signature of a specified member as found in the given external annotation file, if any.
 	 * @param typeName fully qualified slash-separated name of the type for which the file defines external annotations
 	 * @param file a file assumed to be in .eea format, must not be null, but may not exist
-	 * @param selector name of the member whose annotation we are looking for
+	 * @param selector name of the member whose annotation we are looking for, or null when annotating the type's type parameters
 	 * @param originalSignature the unannotated signature by which the member is identified
 	 * @return the annotated signature as found in the file, or null.
 	 */
@@ -583,9 +760,17 @@ public final class ExternalAnnotationUtil {
 				while (true) {
 					String line = reader.readLine();
 					// selector:
-					if (selector.equals(line)) {
+					if (selector != null) {
+						if (selector.equals(line)) {
+							// original signature:
+							line = reader.readLine();
+							if (originalSignature.equals(ExternalAnnotationProvider.extractSignature(line))) {
+								// annotated signature:
+								return ExternalAnnotationProvider.extractSignature(reader.readLine());
+							}
+						}
+					} else if (line != null && line.trim().startsWith("<")) { //$NON-NLS-1$
 						// original signature:
-						line = reader.readLine();
 						if (originalSignature.equals(ExternalAnnotationProvider.extractSignature(line))) {
 							// annotated signature:
 							return ExternalAnnotationProvider.extractSignature(reader.readLine());
@@ -664,7 +849,7 @@ public final class ExternalAnnotationUtil {
 	 * 
 	 * @param originalSignature the original full signature, may be annotated already
 	 * @param annotatedType a type signature with additional annotations (incl. {@link #NO_ANNOTATION}).
-	 * @param paramIdx the index of a parameter to annotated
+	 * @param paramIdx the index of a parameter to annotate
 	 * @param mergeStrategy controls how old and new signatures should be merged
 	 * @return an array of length four: <ul>
 	 * <li>prefix up-to the changed type</li>
@@ -689,6 +874,48 @@ public final class ExternalAnnotationUtil {
 		updateType(buf, result[1].toCharArray(), annotatedType.toCharArray(), mergeStrategy);
 		result[2] = buf.toString();
 		result[3] = originalSignature.substring(end+1, originalSignature.length());
+		return result;
+	}
+
+	/**
+	 * Apply the specified changes on a type parameter within the given signature.
+	 * This method can be used as a dry run without modifying an annotation file.
+	 * 
+	 * @param originalSignature the original full signature, may be annotated already
+	 * @param annotatedType a type signature with additional annotations (incl. {@link #NO_ANNOTATION}).
+	 * @param rank the index of a type parameter to annotate
+	 * @param mergeStrategy controls how old and new signatures should be merged
+	 * @return an array of length four: <ul>
+	 * <li>prefix up-to the changed type</li>
+	 * <li>original type</li>
+	 * <li>changed type</li>
+	 * <li>postfix after the changed type</li>
+	 * </ul>
+	 * @since 3.19
+	 */
+	public static String[] annotateTypeParameter(String originalSignature, String annotatedType, int rank, MergeStrategy mergeStrategy)
+	{
+		String[] result = new String[4]; // prefix, orig, replacement, postfix
+		StringBuffer buf = new StringBuffer();
+		SignatureWrapper wrapper = new SignatureWrapper(originalSignature.toCharArray(), true, true); // may already contain annotations
+		wrapper.start = 1; // skip '<'
+		// prefix:
+		for (int i = 0; i < rank; i++) {
+			wrapper.skipTypeParameter();
+		}
+		int start = wrapper.start;
+		result[0] = originalSignature.substring(0, start);
+		// orig:
+		int end = wrapper.skipTypeParameter();
+		result[1] = originalSignature.substring(start, end);
+		// replacement:
+		SignatureWrapper oWrap = new SignatureWrapper(result[1].toCharArray());
+		SignatureWrapper nWrap = new SignatureWrapper(annotatedType.toCharArray());
+		mergeAnnotation(buf, oWrap, nWrap, mergeStrategy);
+		updateTypeParameter(buf, oWrap.tail(), nWrap.tail(), mergeStrategy);
+		result[2] = buf.toString();
+		// postfix:
+		result[3] = originalSignature.substring(end, originalSignature.length());
 		return result;
 	}
 }

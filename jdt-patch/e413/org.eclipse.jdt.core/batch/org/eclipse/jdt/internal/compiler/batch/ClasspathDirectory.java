@@ -318,7 +318,10 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 @Override
 public boolean hasCUDeclaringPackage(String qualifiedPackageName, Function<CompilationUnit, String> pkgNameExtractor) {
 	String qp2 = File.separatorChar == '/' ? qualifiedPackageName : qualifiedPackageName.replace('/', File.separatorChar);
-	return Stream.of(directoryList(qp2)).anyMatch(entry -> {
+	String[] directoryList = directoryList(qp2);
+	if(directoryList == null)
+		return false;
+	return Stream.of(directoryList).anyMatch(entry -> {
 		String entryLC = entry.toLowerCase();
 		boolean hasDeclaration = false;
 		String fullPath = this.path + qp2 + "/" + entry; //$NON-NLS-1$
@@ -384,9 +387,6 @@ public int getMode() {
 }
 @Override
 public IModule getModule() {
-	if (this.isAutoModule && this.module == null) {
-		return this.module = IModule.createAutomatic(this.path, false, null/*no manifest*/);
-	}
 	return this.module;
 }
 }

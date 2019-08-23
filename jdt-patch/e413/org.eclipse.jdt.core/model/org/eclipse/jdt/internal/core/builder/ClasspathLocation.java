@@ -38,7 +38,6 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 
 public abstract class ClasspathLocation {
 
-	protected boolean isOnModulePath;
 	protected IModule module;
 	protected IUpdatableModule.UpdatesByKind updates;
 	protected Set<String> limitModuleNames = null;
@@ -134,13 +133,13 @@ static ClasspathLocation forLibrary(String libraryPathname,
 										long lastModified, 
 										AccessRuleSet accessRuleSet, 
 										IPath annotationsPath,
-										boolean autoModule,
+										boolean isOnModulePath,
 										String compliance) {
 	return Util.archiveFormat(libraryPathname) == Util.JMOD_FILE ?
 					new ClasspathJMod(libraryPathname, lastModified, accessRuleSet, annotationsPath) :
 						(compliance == null || (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
-			new ClasspathJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule) :
-				new ClasspathMultiReleaseJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule, compliance));
+			new ClasspathJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, isOnModulePath) :
+				new ClasspathMultiReleaseJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, isOnModulePath, compliance));
 
 }
 public static ClasspathJrt forJrtSystem(String jrtPath, AccessRuleSet accessRuleSet, IPath annotationsPath, String release) throws CoreException {
@@ -149,15 +148,15 @@ public static ClasspathJrt forJrtSystem(String jrtPath, AccessRuleSet accessRule
 }
 
 public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet accessRuleSet, IPath annotationsPath,
-											boolean autoModule, String compliance) {
-	return forLibrary(libraryPathname, 0, accessRuleSet, annotationsPath, autoModule, compliance);
+											boolean isOnModulePath, String compliance) {
+	return forLibrary(libraryPathname, 0, accessRuleSet, annotationsPath, isOnModulePath, compliance);
 }
 
 static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRuleSet, IPath annotationsPath,
-										boolean autoModule, String compliance) {
+										boolean isOnModulePath, String compliance) {
 	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
-			new ClasspathJar(library, accessRuleSet, annotationsPath, autoModule) :
-				new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, autoModule, compliance);
+			new ClasspathJar(library, accessRuleSet, annotationsPath, isOnModulePath) :
+				new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, isOnModulePath, compliance);
 }
 public static ClasspathLocation forLibrary(ZipFile zipFile, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath, String compliance) {
 	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?

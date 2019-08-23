@@ -1238,7 +1238,7 @@ public void checkAppropriateMethodAgainstSupers(char[] selector, MethodBinding c
 	}
 }
 private boolean checkAppropriate(MethodBinding compileTimeDeclaration, MethodBinding otherMethod, InvocationSite location) {
-	if (otherMethod == null || !otherMethod.isValidBinding() || otherMethod == compileTimeDeclaration)
+	if (otherMethod == null || !otherMethod.isValidBinding() || otherMethod.original() == compileTimeDeclaration.original())
 		return true;
 	if (MethodVerifier.doesMethodOverride(otherMethod, compileTimeDeclaration, this.environment())) {
 		problemReporter().illegalSuperCallBypassingOverride(location, compileTimeDeclaration, otherMethod.declaringClass);

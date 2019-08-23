@@ -1191,7 +1191,8 @@ public int getNextToken() throws InvalidInputException {
 	if (this.activeParser == null) { // anybody interested in the grammatical structure of the program should have registered.
 		return token;
 	}
-	if (token == TokenNameLPAREN || token == TokenNameLESS || token == TokenNameAT || token == TokenNameARROW) {
+	if (token == TokenNameLPAREN || token == TokenNameLESS || token == TokenNameAT || token == TokenNameARROW
+			|| token == TokenNamebreak) {
 		token = disambiguatedToken(token);
 	} else if (token == TokenNameELLIPSIS) {
 		this.consumingEllipsisAnnotations = false;
@@ -4837,7 +4838,10 @@ int disambiguatedRestrictedKeyword(int restrictedKeywordToken) {
 }
 int disambiguatedToken(int token) {
 	final VanguardParser parser = getVanguardParser();
-	if (token == TokenNameARROW  && this.inCase) {
+	if (token == TokenNamebreak  && this.sourceLevel == ClassFileConstants.JDK12 && this.previewEnabled) {
+		this.nextToken = TokenNameBreakPreviewMarker;
+		return token;
+	} else if (token == TokenNameARROW  && this.inCase) {
 		this.nextToken = TokenNameARROW;
 		this.inCase = false;
 		return TokenNameBeginCaseExpr;

@@ -193,6 +193,8 @@ public class CommentsPreparator extends ASTVisitor {
 			// merge previous and current line comment
 			Token previous = this.lastLineComment;
 			Token merged = new Token(previous, previous.originalStart, commentToken.originalEnd, previous.tokenType);
+			merged.putLineBreaksAfter(commentToken.getLineBreaksAfter());
+			merged.setPreserveLineBreaksAfter(commentToken.isPreserveLineBreaksAfter());
 			this.tm.remove(commentIndex - 1);
 			this.tm.insert(commentIndex - 1, merged);
 			this.tm.remove(commentIndex);
@@ -441,12 +443,20 @@ public class CommentsPreparator extends ASTVisitor {
 			}
 
 			if (existingBreaksBefore < existingBreaksAfter && previous != null) {
-				commentToken.putLineBreaksAfter(previous.getLineBreaksAfter());
-				previous.clearLineBreaksAfter();
-			} else if (existingBreaksAfter <= existingBreaksBefore && next != null
+				if (previous.isPreserveLineBreaksAfter() || previous.getLineBreaksAfter() >= 2 || existingBreaksAfter < 2) {
+					commentToken.putLineBreaksAfter(previous.getLineBreaksAfter());
+					commentToken.setPreserveLineBreaksAfter(previous.isPreserveLineBreaksAfter());
+					previous.clearLineBreaksAfter();
+					previous.setPreserveLineBreaksAfter(true);
+				}
+			} else if (existingBreaksAfter < 2 && existingBreaksAfter <= existingBreaksBefore && next != null
 					&& next.tokenType != TokenNamepackage /* doesn't apply to a comment before the package declaration */) {
-				commentToken.putLineBreaksBefore(next.getLineBreaksBefore());
-				next.clearLineBreaksBefore();
+				if (next.isPreserveLineBreaksBefore() || next.getLineBreaksBefore() >= 2 || existingBreaksBefore < 2) {
+					commentToken.putLineBreaksBefore(next.getLineBreaksBefore());
+					commentToken.setPreserveLineBreaksBefore(next.isPreserveLineBreaksBefore());
+					next.clearLineBreaksBefore();
+					next.setPreserveLineBreaksBefore(true);
+				}
 			}
 		}
 

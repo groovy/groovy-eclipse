@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2017 GK Software AG, IBM Corporation and others.
+ * Copyright (c) 2013, 2019 GK Software AG, IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -3110,5 +3110,34 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"	      ^\n" +
 			"The default method foo() inherited from JavaTest.D conflicts with another method inherited from JavaTest.C\n" +
 			"----------\n");
+	}
+
+	public void testBug539743() {
+		runConformTest(
+		new String[] {
+			"Test.java",
+			"public class Test {\n" + 
+			"	static <V> void m(V v) {\n" + 
+			"\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	interface Foo {\n" + 
+			"		@SuppressWarnings(\"unchecked\")\n" + 
+			"		default <U> U f() {\n" + 
+			"			return (U) new Object();\n" + 
+			"		}\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	static class Bar implements Foo {\n" + 
+			"		@SuppressWarnings(\"unchecked\")\n" + 
+			"		@Override\n" + 
+			"		public Object f() {\n" + 
+			"			m(Foo.super.f());\n" + 
+			"			return null;\n" + 
+			"		}\n" + 
+			"	}\n" + 
+			"}",
+		}, 
+		"");
 	}
 }

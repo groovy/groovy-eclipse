@@ -1802,6 +1802,8 @@ void setSourceStart(int sourceStart);
 	int FieldComparisonYieldsFalse = Internal + 942;
 	/** @since 3.14 */
 	int RedundantNullDefaultAnnotationModule = Internal + 943;
+	/** @since 3.19 */
+	int RedundantNullCheckOnConstNonNullField = Internal + 944;
 
 	/** @since 3.10 */
 	int ArrayReferencePotentialNullReference = Internal + 951;

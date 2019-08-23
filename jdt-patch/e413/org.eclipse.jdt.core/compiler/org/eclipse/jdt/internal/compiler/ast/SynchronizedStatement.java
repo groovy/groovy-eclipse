@@ -59,11 +59,15 @@ public FlowInfo analyseCode(
 	this.synchroVariable.useFlag = LocalVariableBinding.USED;
 
 	// simple propagation to subnodes
+	FlowInfo expressionFlowInfo = this.expression.analyseCode(this.scope, flowContext, flowInfo);
+
+	this.expression.checkNPE(currentScope, flowContext, expressionFlowInfo, 1);
+
 	flowInfo =
 		this.block.analyseCode(
 			this.scope,
 			new InsideSubRoutineFlowContext(flowContext, this),
-			this.expression.analyseCode(this.scope, flowContext, flowInfo));
+			expressionFlowInfo);
 
 	this.mergedSynchronizedInitStateIndex =
 		currentScope.methodScope().recordInitializationStates(flowInfo);

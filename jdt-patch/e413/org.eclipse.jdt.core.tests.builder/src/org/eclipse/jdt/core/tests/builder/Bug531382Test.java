@@ -14,10 +14,6 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
@@ -117,7 +113,7 @@ public class Bug531382Test extends BuilderTests {
 		fullBuild(this.project);
 		assertTrue("expected source to be generated from build participant", generatedFile.exists());
 
-		expectCompileProblem("The public type NameMismatch must be defined in its own file");
+		expectCompileProblem(this.project, "The public type NameMismatch must be defined in its own file");
 	}
 
 	protected void createFile(IFile generatedFile, String contents) {
@@ -129,19 +125,5 @@ public class Bug531382Test extends BuilderTests {
 		} catch (CoreException e) {
 			throw new AssertionError("failed to generate file in build participant", e);
 		}
-	}
-
-	private void expectCompileProblem(String expectedProblemMessage) {
-		List<String> actualProblemMessages = new ArrayList<>();
-		Problem[] problems = env.getProblemsFor(this.project, "org.eclipse.jdt.core.tests.compile.problem");
-		if (problems != null) {
-			for (Problem problem : problems) {
-				actualProblemMessages.add(problem.getMessage());
-			}
-		}
-
-		List<String> expectedProblemMessages = Arrays.asList(expectedProblemMessage);
-		assertEquals("expected build participant to cause compile problems",
-				expectedProblemMessages, actualProblemMessages);
 	}
 }

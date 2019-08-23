@@ -92,7 +92,14 @@ public class BreakStatement extends Statement {
 	 * @since 3.0
 	 */
 	public static List propertyDescriptors(int apiLevel) {
-		if (apiLevel >= AST.JLS12_INTERNAL) {
+		return PROPERTY_DESCRIPTORS;
+	}
+	
+	/**
+	 * @since 3.19 BETA_JAVA13
+	 */
+	public static List propertyDescriptors(int apiLevel, boolean previewEnabled) {
+		if (apiLevel == AST.JLS12_INTERNAL && previewEnabled) {
 			return PROPERTY_DESCRIPTORS_12;
 		}
 		return PROPERTY_DESCRIPTORS;
@@ -124,6 +131,11 @@ public class BreakStatement extends Statement {
 	@Override
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
+	}
+	
+	@Override
+	final List internalStructuralPropertiesForType(int apiLevel, boolean isPreviewEnabled) {
+		return propertyDescriptors(apiLevel, isPreviewEnabled);
 	}
 
 	@Override
@@ -159,7 +171,7 @@ public class BreakStatement extends Statement {
 		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
 		result.setLabel((SimpleName) ASTNode.copySubtree(target, getLabel()));
-		if (this.ast.apiLevel >= AST.JLS12_INTERNAL) {
+		if (isPreviewEnabled()) {
 			result.setExpression((Expression) ASTNode.copySubtree(target, getExpression()));
 		}
 		return result;
@@ -175,7 +187,7 @@ public class BreakStatement extends Statement {
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
-			if (this.ast.apiLevel >= AST.JLS12_INTERNAL) {
+			if (isPreviewEnabled()) {
 				acceptChild(visitor, getExpression());
 			} 
 			acceptChild(visitor, getLabel());
@@ -217,11 +229,13 @@ public class BreakStatement extends Statement {
 	 *
 	 * @return the expression, or <code>null</code> if there is none
 	 * @exception UnsupportedOperationException if this operation is used below JLS12
+	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
 	 * @since 3.18
 	 */
 	public Expression getExpression() {
 		// optionalExpression can be null
 		unsupportedBelow12();
+		unsupportedWithoutPreviewError();
 		return this.optionalExpression;
 	}
 
@@ -236,10 +250,12 @@ public class BreakStatement extends Statement {
 	 * <li>the node already has a parent</li>
 	 * </ul>
 	 * @exception UnsupportedOperationException if this operation is used below JLS12
+	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
 	 * @since 3.18
 	 */
 	public void setExpression(Expression expression) {
 		unsupportedBelow12();
+		unsupportedWithoutPreviewError();
 		ASTNode oldChild = this.optionalExpression;
 		preReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 		this.optionalExpression = expression;
@@ -252,10 +268,12 @@ public class BreakStatement extends Statement {
 	 *
 	 * @return isImplicit <code>true</code> or <code>false</code>
 	 * @exception UnsupportedOperationException if this operation is used below JLS12
+	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
 	 * @since 3.18
 	 */
 	public boolean isImplicit() {
 		unsupportedBelow12();
+		unsupportedWithoutPreviewError();
 		return this.isImplicit;
 	}
 
@@ -266,10 +284,12 @@ public class BreakStatement extends Statement {
 
 	 * @param isImplicit <code>true</code> or <code>false</code>
 	 * @exception UnsupportedOperationException if this operation is used below JLS12
+	 * @exception UnsupportedOperationException if this expression is used with previewEnabled flag as false
 	 * @since 3.18
 	 */
 	void setImplicit(boolean isImplicit) {
 		unsupportedBelow12();
+		unsupportedWithoutPreviewError();
 		this.isImplicit = isImplicit;
 	}
 

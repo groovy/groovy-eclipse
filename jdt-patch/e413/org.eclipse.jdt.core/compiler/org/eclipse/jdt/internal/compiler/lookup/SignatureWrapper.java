@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -144,6 +144,20 @@ public class SignatureWrapper {
 			}
 		}
 		return i;
+	}
+	public int skipTypeParameter() {
+		// [Annot] Identifier ClassBound {InterfaceBound}
+		this.start = CharOperation.indexOf(':', this.signature, this.start);
+		while (charAtStart() == ':') {
+			this.start++;
+			if (charAtStart() != ':') // ClassBound may be empty
+				this.start = skipAngleContents(computeEnd()) + 1;
+		}
+		return this.start;
+	}
+	public char[] wordUntil(char c) {
+		this.end = CharOperation.indexOf(c, this.signature, this.start);
+		return CharOperation.subarray(this.signature, this.start, this.start = this.end); // skip word
 	}
 	public char[] nextWord() {
 		this.end = CharOperation.indexOf(';', this.signature, this.start);

@@ -4091,6 +4091,12 @@ public final class CompletionEngine
 			} else if(parent instanceof InstanceOfExpression) {
 				InstanceOfExpression e = (InstanceOfExpression) parent;
 				TypeBinding binding = e.expression.resolvedType;
+				if (binding == null) {
+					if (scope instanceof BlockScope)
+						binding = e.expression.resolveType((BlockScope) scope);
+					else if (scope instanceof ClassScope)
+						binding = e.expression.resolveType((ClassScope) scope);
+				}
 				if(binding != null){
 					addExpectedType(binding, scope);
 					this.expectedTypesFilter = SUBTYPE | SUPERTYPE;

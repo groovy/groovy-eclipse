@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
+import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
@@ -155,6 +156,8 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		return FlowInfo.NON_NULL;
 	FieldBinding fieldBinding = lastFieldBinding();
 	if (fieldBinding != null) {
+		if (fieldBinding.isFinal() && fieldBinding.constant() != Constant.NotAConstant)
+			return FlowInfo.NON_NULL;
 		if (fieldBinding.isNonNull() || flowContext.isNullcheckedFieldAccess(this)) {
 			return FlowInfo.NON_NULL;
 		} else if (fieldBinding.isNullable()) {

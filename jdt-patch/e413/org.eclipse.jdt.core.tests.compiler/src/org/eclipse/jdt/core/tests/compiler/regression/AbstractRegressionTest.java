@@ -556,6 +556,15 @@ protected static class JavacTestOptions {
 			options.setCompilerOptions("-source 1."+release+" -target 1."+release);
 		return options;
 	}
+	@java.lang.SuppressWarnings("synthetic-access")
+	static JavacTestOptions forReleaseWithPreview(String release) {
+		JavacTestOptions options = new JavacTestOptions(Long.parseLong(release));
+		if (isJRE9Plus)
+			options.setCompilerOptions("--release "+release+" --enable-preview -Xlint:-preview");
+		else
+			throw new IllegalArgumentException("preview not supported at release "+release);
+		return options;
+	}
 	public static class SuppressWarnings extends JavacTestOptions {
 		public SuppressWarnings(String token) {
 			setCompilerOptions("-Xlint:-"+token);
@@ -936,7 +945,13 @@ protected static class JavacTestOptions {
 			JavacBug6337964 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=112433
 					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK1_6, 1045/*guessed*/, true) : null,
 			JavacBug8144832 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144832
-					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0000) : null;
+					new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0000) : null,
+			JavacBug8179483_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8179483
+					new JavacBug8179483(" --release 12 --enable-preview -Xlint:-preview") : null,
+			JavacBug8221413_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8221413
+					new JavacBug8221413(" --release 12 --enable-preview -Xlint:-preview") : null,
+			JavacBug8226510_switchExpression = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8226510
+					new JavacBug8226510(" --release 12 --enable-preview -Xlint:-preview") : null;
 
 		// bugs that have been fixed but that we've not identified
 		public static JavacHasABug
@@ -969,6 +984,39 @@ protected static class JavacTestOptions {
 										compiler.minor != 1600 ? null : this;
 							}
 					}: null;
+	}
+	public static class JavacBug8179483 extends JavacHasABug {
+		String extraJavacOptions;
+		public JavacBug8179483(String extraJavacOptions) {
+			super(MismatchType.EclipseErrorsJavacWarnings);
+			this.extraJavacOptions = extraJavacOptions;
+		}
+		@Override
+		String getCompilerOptions() {
+			return super.getCompilerOptions() + this.extraJavacOptions;
+		}
+	}
+	public static class JavacBug8221413 extends JavacHasABug {
+		String extraJavacOptions;
+		public JavacBug8221413(String extraJavacOptions) {
+			super(MismatchType.JavacErrorsEclipseNone);
+			this.extraJavacOptions = extraJavacOptions;
+		}
+		@Override
+		String getCompilerOptions() {
+			return super.getCompilerOptions() + this.extraJavacOptions;
+		}
+	}
+	public static class JavacBug8226510 extends JavacHasABug {
+		String extraJavacOptions;
+		public JavacBug8226510(String extraJavacOptions) {
+			super(MismatchType.EclipseErrorsJavacWarnings);
+			this.extraJavacOptions = extraJavacOptions;
+		}
+		@Override
+		String getCompilerOptions() {
+			return super.getCompilerOptions() + this.extraJavacOptions;
+		}
 	}
 }
 

@@ -1920,7 +1920,7 @@ public abstract class ASTNode {
 	 * @since 3.0
 	 */
 	public final List structuralPropertiesForType() {
-		return internalStructuralPropertiesForType(this.ast.apiLevel);
+		return internalStructuralPropertiesForType(this.ast.apiLevel, this.ast.isPreviewEnabled());
 	}
 
 	/**
@@ -1940,6 +1940,27 @@ public abstract class ASTNode {
 	 */
 	abstract List internalStructuralPropertiesForType(int apiLevel);
 
+		
+	/**
+	 * Returns a list of property descriptors for this node type.
+	 * Clients must not modify the result. This abstract method
+	 * must be implemented in each concrete AST node type.
+	 * <p>
+	 * N.B. This method is package-private, so that the implementations
+	 * of this method in each of the concrete AST node types do not
+	 * clutter up the API doc.
+	 * </p>
+	 *
+	 * @param apiLevel the API level; one of the <code>AST.JLS*</code> constants
+	 * @param previewEnabled the previewEnabled flag
+	 * @return a list of property descriptors (element type:
+	 * {@link StructuralPropertyDescriptor})
+	 * @since 3.19
+	 */
+	List internalStructuralPropertiesForType(int apiLevel, boolean previewEnabled) {
+		return internalStructuralPropertiesForType(apiLevel);
+	}
+	
 	/**
 	 * Internal helper method that starts the building a list of
 	 * property descriptors for the given node type.
@@ -2094,6 +2115,23 @@ public abstract class ASTNode {
 			throw new UnsupportedOperationException("Operation only supported in ASTs with level JLS12 and above"); //$NON-NLS-1$
 		}
 	}
+	
+	/**
+     * Checks that this AST operation is not used when
+     * building ASTs without previewEnabled flag.
+     * <p>
+     * Use this method to prevent access to new properties that have been added with preview feature
+     * </p>
+     *
+	 * @exception UnsupportedOperationException if this operation is used with previewEnabled flag as false
+	 * @since 3.19
+	 */
+	final void unsupportedWithoutPreviewError() {
+		if (!this.ast.isPreviewEnabled()) {
+			throw new UnsupportedOperationException("Operation only supported in ASTs with previewEnabled flag as true"); //$NON-NLS-1$
+		}
+	}
+	
 	/**
      * Checks that this AST operation is only used when
      * building JLS2 level ASTs.
@@ -3099,4 +3137,11 @@ public abstract class ASTNode {
 	 * @return the size of this node in bytes
 	 */
 	abstract int memSize();
+	
+	boolean isPreviewEnabled() {
+		if (this.ast.apiLevel == AST.JLS12_INTERNAL && this.ast.isPreviewEnabled()) {
+			return true;
+		}
+		return false;
+	}
 }

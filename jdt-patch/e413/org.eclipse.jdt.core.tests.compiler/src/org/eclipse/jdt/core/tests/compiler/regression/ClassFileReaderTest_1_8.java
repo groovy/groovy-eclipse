@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 GoPivotal, Inc.
+ * Copyright (c) 2013, 2019 GoPivotal, Inc.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,6 +15,8 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import junit.framework.Test;
+
+import java.io.File;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -430,6 +432,41 @@ public class ClassFileReaderTest_1_8 extends AbstractRegressionTest {
 		assertEquals("@LBar;(value=(int)7) METHOD_RETURN",printTypeAnnotation(typeAnnotations[0]));
 		assertEquals("@LFoo; METHOD_RETURN", printTypeAnnotation(typeAnnotations[1]));
 		assertEquals(((org.eclipse.jdt.internal.compiler.impl.Constant)method.getDefaultValue()).stringValue(), "aaa");
+	}
+
+	public void testBug548596() {
+		/*-
+		 * Test548596.jar contains classes for the following kotlin code (compiled with kotlin 1.3.21):
+		 * package k;
+		 *	class A {
+		 *	    class B {
+		 *	        class C {
+		 *	            //
+		 *	        }
+		 *	    }
+		 *	}
+		 */
+		String[] libs = getDefaultClassPaths();
+		int len = libs.length;
+		System.arraycopy(libs, 0, libs = new String[len+1], 0, len);
+		libs[libs.length-1] = this.getCompilerTestsPluginDirectoryPath() + File.separator + "workspace" + File.separator + "Test548596.jar";
+
+		runConformTest(
+			new String[] {
+				"j/Usage.java",
+				"package j;\n" + 
+				"\n" + 
+				"import k.A.B.C;\n" + 
+				"\n" + 
+				"public class Usage {\n" + 
+				"    C c;\n" + 
+				"}"
+			},
+			"",
+			libs,
+			false,
+			null
+		);
 	}
 
 	/**

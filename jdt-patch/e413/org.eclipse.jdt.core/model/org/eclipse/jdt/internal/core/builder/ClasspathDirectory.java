@@ -39,6 +39,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathDirectory extends ClasspathLocation {
 
+final boolean isOnModulePath;
 IContainer binaryFolder; // includes .class files for a single directory
 boolean isOutputFolder;
 SimpleLookupTable directoryCache;

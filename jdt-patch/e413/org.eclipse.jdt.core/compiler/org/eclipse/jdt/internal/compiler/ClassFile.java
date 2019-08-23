@@ -218,6 +218,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 			classFile.addFieldInfos();
 		} else {
 			// we have to set the number of fields to be equals to 0
+			if (classFile.contentsOffset + 2 >= classFile.contents.length) {
+				classFile.resizeContents(2);
+			}
 			classFile.contents[classFile.contentsOffset++] = 0;
 			classFile.contents[classFile.contentsOffset++] = 0;
 		}
@@ -665,6 +668,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 		// write the number of fields
 		if (fieldCount > 0xFFFF) {
 			this.referenceBinding.scope.problemReporter().tooManyFields(this.referenceBinding.scope.referenceType());
+		}
+		if (this.contentsOffset + 2 >= this.contents.length) {
+			resizeContents(2);
 		}
 		this.contents[this.contentsOffset++] = (byte) (fieldCount >> 8);
 		this.contents[this.contentsOffset++] = (byte) fieldCount;

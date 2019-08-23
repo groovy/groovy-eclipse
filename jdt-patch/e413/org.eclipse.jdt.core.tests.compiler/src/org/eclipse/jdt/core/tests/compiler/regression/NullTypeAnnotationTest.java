@@ -17797,4 +17797,25 @@ public void testBug542707_1() {
 			"----------\n";
 	runner.runNegativeTest();
 }
+public void testBug499714() {
+	runNegativeTestWithLibs(
+		new String[] {
+			"Type.java",
+			"import org.eclipse.jdt.annotation.*;\n" + 
+			"\n" + 
+			"interface Type<@Nullable K> {\n" + 
+			"    K get();\n" + 
+			"\n" + 
+			"    static <@Nullable T> void x(Type<T> t) {\n" + 
+			"        t.get().toString();\n" + 
+			"    }\n" + 
+			"}"
+		}, 
+		"----------\n" + 
+		"1. ERROR in Type.java (at line 7)\n" + 
+		"	t.get().toString();\n" + 
+		"	^^^^^^^\n" + 
+		"Potential null pointer access: The method get() may return null\n" + 
+		"----------\n");
+}
 }

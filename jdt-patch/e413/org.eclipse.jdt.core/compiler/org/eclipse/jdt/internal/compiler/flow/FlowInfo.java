@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -686,7 +686,7 @@ public static int tagBitsToNullStatus(long tagBits) {
 	if ((tagBits & TagBits.AnnotationNonNull) != 0)
 		return NON_NULL;
 	if ((tagBits & TagBits.AnnotationNullable) != 0)
-		return POTENTIALLY_NULL | POTENTIALLY_NON_NULL;
+		return POTENTIALLY_NULL | FlowInfo.POTENTIALLY_UNKNOWN;
 	return UNKNOWN;
 }
 }

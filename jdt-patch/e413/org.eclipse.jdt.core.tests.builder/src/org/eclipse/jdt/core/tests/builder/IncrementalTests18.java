@@ -599,8 +599,8 @@ public class IncrementalTests18 extends BuilderTests {
 			projectPath,
 			"Problem : Dead code [" +
 			" resource : </Project/src/testNullAnnotations/NonNullUtils.java> range : <145,202> category : <90> severity : <1>]\n" +
-			"Problem : Null type mismatch (type annotations): required '@NonNull Object @NonNull[]' but this expression has type '@NonNull Object @Nullable[]' [" +
-			" resource : </Project/src/testNullAnnotations/Snippet.java> range : <316,323> category : <90> severity : <2>]");		
+			"Problem : Null type mismatch: required \'@NonNull Object @NonNull[]\' but the provided value is null [" +
+			" resource : </Project/src/testNullAnnotations/Snippet.java> range : <316,323> category : <90> severity : <2>]");
 	}
 
 	public void testBug481276b() throws Exception {

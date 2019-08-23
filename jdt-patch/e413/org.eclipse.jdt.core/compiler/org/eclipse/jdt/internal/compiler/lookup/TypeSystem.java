@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2018 IBM Corporation and others.
+ * Copyright (c) 2013, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -547,6 +547,17 @@ public class TypeSystem {
 
 	public boolean isAnnotatedTypeSystem() {
 		return false;
+	}
+
+	public void cleanUp(int typeId) {
+		if (typeId != -1 && typeId < this.typeid && this.types != null) {
+			TypeBinding[] typesForId = this.types[typeId];
+			if (typesForId != null) {
+				for (TypeBinding type : typesForId)
+					if (type instanceof SourceTypeBinding)
+						((SourceTypeBinding) type).scope = null;
+			}
+		}
 	}
 
 	public void reset() {

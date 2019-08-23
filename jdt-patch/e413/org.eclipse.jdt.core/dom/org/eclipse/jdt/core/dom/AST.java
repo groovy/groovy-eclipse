@@ -433,7 +433,7 @@ public final class AST {
 	 * <ul>
 	 * <li>the API level is not one of the <code>JLS*</code> level constants</li>
 	 * </ul>
-     * @since 3.19 BETA_JAVA13
+     * @since 3.19
 	 */
 	public static AST newAST(int level, boolean previewEnabled) {
 		return new AST(level, previewEnabled);

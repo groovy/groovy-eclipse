@@ -10606,4 +10606,153 @@ public void testBug545715() {
 	    customOptions,
 	    new String[] {"--enable-preview"});
 }
+public void testBug499714() {
+	runConformTestWithLibs(
+		new String[] {
+			"test/X.java",
+			"package test;\n" + 
+			"\n" + 
+			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+			"import org.eclipse.jdt.annotation.Nullable;\n" + 
+			"\n" + 
+			"@NonNullByDefault\n" + 
+			"public class X {\n" + 
+			"    public static void main(String[] args) {\n" + 
+			"        Object o = null;\n" + 
+			"        for (final String s : args) {\n" + 
+			"            if (s.equals(\"-x\")) {\n" + 
+			"                if (o != null) { // bogus warning here\n" + 
+			"                    //\n" + 
+			"                }\n" + 
+			"                continue;\n" + 
+			"            }\n" + 
+			"            o = read();\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"\n" + 
+			"    @Nullable\n" + 
+			"    public static Object read() {\n" + 
+			"        return \"\";\n" + 
+			"    }\n" + 
+			"}\n" + 
+			"",
+		}, 
+		getCompilerOptions(),
+		""
+	);
+}
+public void testBug481931_source() {
+	runNegativeTestWithLibs(
+		new String[] {
+			"X.java",
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"public class X {\n" +
+			"	static final String CONST = \"const1\";\n" +
+			"	final String INST_CONST = \"const2\" + CONST;\n" +
+			"	@NonNull String getInstConst() {\n" +
+			"		if (INST_CONST == null) {\n" +
+			"			System.out.println(\"null\");\n" +
+			"		}\n" +
+			"		return INST_CONST;\n" +
+			"	}\n" +
+			"	static @NonNull String getConst() {\n" +
+			"		if (CONST == null) {\n" +
+			"			System.out.println(\"null\");\n" +
+			"		}\n" +
+			"		return CONST;\n" +
+			"	}\n" +
+			"}\n"
+		},
+		getCompilerOptions(),
+		"----------\n" + 
+		"1. ERROR in X.java (at line 6)\n" + 
+		"	if (INST_CONST == null) {\n" + 
+		"	    ^^^^^^^^^^\n" + 
+		"Null comparison always yields false: The field INST_CONST is a nonnull constant\n" + 
+		"----------\n" + 
+		"2. WARNING in X.java (at line 6)\n" + 
+		"	if (INST_CONST == null) {\n" + 
+		"			System.out.println(\"null\");\n" + 
+		"		}\n" + 
+		"	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Dead code\n" + 
+		"----------\n" + 
+		"3. ERROR in X.java (at line 12)\n" + 
+		"	if (CONST == null) {\n" + 
+		"	    ^^^^^\n" + 
+		"Null comparison always yields false: The field CONST is a nonnull constant\n" + 
+		"----------\n" + 
+		"4. WARNING in X.java (at line 12)\n" + 
+		"	if (CONST == null) {\n" + 
+		"			System.out.println(\"null\");\n" + 
+		"		}\n" + 
+		"	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Dead code\n" + 
+		"----------\n");
+}
+public void testBug481931_binary() {
+	runConformTestWithLibs(
+		new String[] {
+			"test/X.java",
+			"package test;\n" +
+			"public class X {\n" +
+			"	public static final String CONST = \"const1\";\n" +
+			"	public final String INST_CONST = \"const2\" + CONST;\n" +
+			"	X() {}\n" +
+			"	X(int i) {}\n" + // ctors to demonstrate independence of actual initialization
+			"}\n"
+		},
+		getCompilerOptions(),
+		"");
+	Runner runner = new Runner();
+	runner.shouldFlushOutputDirectory = false;
+	runner.testFiles = new String[] {
+			"Y.java",
+			"import org.eclipse.jdt.annotation.*;\n" +
+			"import test.X;\n" +
+			"public class Y {\n" +
+			"	@NonNull String getInstConst(X x) {\n" +
+			"		if (x.INST_CONST == null) {\n" +
+			"			System.out.println(\"null\");\n" +
+			"		}\n" +
+			"		return x.INST_CONST;\n" +
+			"	}\n" +
+			"	static @NonNull String getConst() {\n" +
+			"		if (X.CONST == null) {\n" +
+			"			System.out.println(\"null\");\n" +
+			"		}\n" +
+			"		return X.CONST;\n" +
+			"	}\n" +
+			"}\n"
+		};
+	runner.classLibraries = this.LIBS;
+	runner.customOptions = getCompilerOptions();
+	runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in Y.java (at line 5)\n" + 
+			"	if (x.INST_CONST == null) {\n" + 
+			"	      ^^^^^^^^^^\n" + 
+			"Null comparison always yields false: The field INST_CONST is a nonnull constant\n" + 
+			"----------\n" + 
+			"2. WARNING in Y.java (at line 5)\n" + 
+			"	if (x.INST_CONST == null) {\n" + 
+			"			System.out.println(\"null\");\n" + 
+			"		}\n" + 
+			"	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Dead code\n" + 
+			"----------\n" + 
+			"3. ERROR in Y.java (at line 11)\n" + 
+			"	if (X.CONST == null) {\n" + 
+			"	      ^^^^^\n" + 
+			"Null comparison always yields false: The field CONST is a nonnull constant\n" + 
+			"----------\n" + 
+			"4. WARNING in Y.java (at line 11)\n" + 
+			"	if (X.CONST == null) {\n" + 
+			"			System.out.println(\"null\");\n" + 
+			"		}\n" + 
+			"	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Dead code\n" + 
+			"----------\n";
+	runner.runNegativeTest();
+}
 }

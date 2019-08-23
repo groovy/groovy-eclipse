@@ -484,7 +484,7 @@ public class ASTMatcher {
 			return false;
 		}
 		BreakStatement o = (BreakStatement) other;
-		return ( node.getAST().apiLevel >= AST.JLS12_INTERNAL && node.getExpression() != null
+		return ( node.getAST().apiLevel == AST.JLS12_INTERNAL && node.getAST().isPreviewEnabled() && node.getExpression() != null
 				? safeSubtreeMatch(node.getExpression(), o.getExpression()) && node.isImplicit() == o.isImplicit()
 						: safeSubtreeMatch(node.getLabel(), o.getLabel()));
 	}
@@ -2269,7 +2269,7 @@ public class ASTMatcher {
 			return false;
 		}
 		SwitchCase o = (SwitchCase) other;
-		return ( node.getAST().apiLevel >= AST.JLS12_INTERNAL
+		return ( node.getAST().apiLevel == AST.JLS12_INTERNAL && node.getAST().isPreviewEnabled()
 				? safeSubtreeListMatch(node.expressions(), o.expressions())
 						: compareDeprecatedSwitchExpression(node, o));
 	}

@@ -1949,6 +1949,9 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 
 	if (CharOperation.equals(CharOperation.splitOn('/', binaryType.getName()), nonNullByDefaultAnnotationName))
 		return; // don't recursively apply @NNBD on @NNBD, neither directly nor via the 'enclosing' package-info.java
+	for (String name : this.environment.globalOptions.nonNullByDefaultAnnotationSecondaryNames)
+		if (CharOperation.toString(this.compoundName).equals(name))
+			return;
 
 	IBinaryAnnotation[] annotations = binaryType.getAnnotations();
 	boolean isPackageInfo = CharOperation.equals(sourceName(), TypeConstants.PACKAGE_INFO_NAME);

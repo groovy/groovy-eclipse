@@ -331,7 +331,7 @@ public class BasicBuildTests extends BuilderTests {
 			"public class MyException extends Exception {\n" +
 			"	private static final long serialVersionUID = 1L;\n" +
 			"}"
-		); //$NON-NLS-1$
+		);
 
 		env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
 			"package p;\n" +
@@ -410,7 +410,7 @@ public class BasicBuildTests extends BuilderTests {
 			"public class MyException extends Exception {\n" +
 			"	private static final long serialVersionUID = 1L;\n" +
 			"}"
-		); //$NON-NLS-1$
+		);
 
 		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
 			"package p;\n" +
@@ -445,7 +445,7 @@ public class BasicBuildTests extends BuilderTests {
 			"public class MyException extends Exception {\n" +
 			"	private static final long serialVersionUID = 1L;\n" +
 			"}"
-		); //$NON-NLS-1$
+		);
 
 		IPath cuPath = env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
 			"package p;\n" +
@@ -531,33 +531,33 @@ public class BasicBuildTests extends BuilderTests {
 		try {
 			IPath projectPath = env.addProject("Project");
 			env.addExternalJars(projectPath, Util.getJavaClassLibs());
-	
+
 			// remove old package fragment root so that names don't collide
 			env.removePackageFragmentRoot(projectPath, "");
-	
+
 			IPath root = env.addPackageFragmentRoot(projectPath, "src");
 			env.setOutputFolder(projectPath, "bin");
-	
+
 			// this class is the primary unit during build (see comment below)
 			env.addClass(root, "pack",
 				"Zork",
 				"package pack;\npublic class Zork { Main main; }\n" // pull in Main first
 			);
-			
+
 			env.addClass(root, "pack", "Main",
 				"package pack;\n" +
 				"public class Main {\n" +
 				"	Main$Sub sub;\n" + // indirectly pull in Main$Sub
 				"}\n"
 			);
-	
+
 			env.addClass(root, "pack", "Main$Sub",
 				"package pack;\n" +
 				"public class Main$Sub { }\n"
 			);
-	
+
 			org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = 1;
-	
+
 			// Assumption regarding the order of compilation units:
 			// - org.eclipse.core.internal.dtree.AbstractDataTreeNode.assembleWith(AbstractDataTreeNode[], AbstractDataTreeNode[], boolean)
 			//   assembles children array in lexical order, so "Zork.java" is last
@@ -568,7 +568,7 @@ public class BasicBuildTests extends BuilderTests {
 			//   puts only "Zork.java" into 'toCompile' (due to MAX_AT_ONCE=1) and the others into 'remainingUnits'
 			// This ensures that NameEnvironment is setup with "Main.java" and "Main$Sub.java" both served from 'additionalUnits'
 			// which is essential for reproducing the bug.
-	
+
 			fullBuild(projectPath);
 			expectingNoProblems();
 		} finally {
@@ -577,7 +577,7 @@ public class BasicBuildTests extends BuilderTests {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=386901
 	public void testbBug386901() throws JavaModelException {
-		
+
 		int previous = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
 		try {
 			IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -636,5 +636,55 @@ public class BasicBuildTests extends BuilderTests {
 				path,
 				"Problem : The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files [ resource : </Project/src/X.java> range : <0,1> category : <10> severity : <2>]"
 			);
+	}
+	public void testBug549942() throws JavaModelException {
+		int save = org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE;
+		try {
+			IPath projectPath = env.addProject("Project");
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, "");
+
+			IPath root = env.addPackageFragmentRoot(projectPath, "src");
+			env.setOutputFolder(projectPath, "bin");
+
+			env.addClass(root, "test",
+				"ARequiresNested",
+				"package test;\n" +
+				"\n" +
+				"public class ARequiresNested {\n" +
+				"	Nested n;\n" +
+				"}"
+			);
+
+			env.addClass(root, "test",
+					"BRequiresToplevel",
+					"package test;\n" +
+					"\n" +
+					"public class BRequiresToplevel {\n" +
+					"	TopLevel t;\n" +
+					"}"
+				);
+
+			env.addClass(root, "test",
+					"TopLevel",
+					"package test;\n" +
+					"\n" +
+					"public class TopLevel {\n" +
+					"\n" +
+					"}\n" +
+					"\n" +
+					"class Nested extends TopLevel {\n" +
+					"}"
+				);
+
+			org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = 2;
+
+			fullBuild(projectPath);
+			expectingNoProblems();
+		} finally {
+			org.eclipse.jdt.internal.core.builder.AbstractImageBuilder.MAX_AT_ONCE = save;
+		}
 	}
 }

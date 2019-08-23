@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -62,7 +62,6 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 
 	// initialized in case the .class file is a nested type
 	private InnerClassInfo innerInfo;
-	private int innerInfoIndex;
 	private InnerClassInfo[] innerInfos;
 	private char[][] interfaceNames;
 	private int interfacesCount;
@@ -373,7 +372,6 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 									new InnerClassInfo(this.reference, this.constantPoolOffsets, innerOffset);
 								if (this.classNameIndex == this.innerInfos[j].innerClassNameIndex) {
 									this.innerInfo = this.innerInfos[j];
-									this.innerInfoIndex = j;
 								}
 								innerOffset += 8;
 							}
@@ -711,14 +709,12 @@ public IBinaryNestedType[] getMemberTypes() {
 	// we might have some member types of the current type
 	if (this.innerInfos == null) return null;
 
-	int length = this.innerInfos.length;
-	int startingIndex = this.innerInfo != null ? this.innerInfoIndex + 1 : 0;
-	if (length != startingIndex) {
+	int length = this.innerInfos.length - (this.innerInfo != null ? 1 : 0);
+	if (length != 0) {
 		IBinaryNestedType[] memberTypes =
-			new IBinaryNestedType[length - this.innerInfoIndex];
+				new IBinaryNestedType[length];
 		int memberTypeIndex = 0;
-		for (int i = startingIndex; i < length; i++) {
-			InnerClassInfo currentInnerInfo = this.innerInfos[i];
+		for (InnerClassInfo currentInnerInfo : this.innerInfos) {
 			int outerClassNameIdx = currentInnerInfo.outerClassNameIndex;
 			int innerNameIndex = currentInnerInfo.innerNameIndex;
 			/*

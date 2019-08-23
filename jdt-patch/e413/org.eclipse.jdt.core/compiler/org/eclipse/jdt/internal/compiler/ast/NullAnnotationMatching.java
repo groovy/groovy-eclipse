@@ -302,8 +302,11 @@ public class NullAnnotationMatching {
 									}
 								}
 								severity = severity.max(dimSeverity);
-								if (severity == Severity.MISMATCH)
+								if (severity == Severity.MISMATCH) {
+									if (nullStatus == FlowInfo.NULL)
+										return new NullAnnotationMatching(severity, nullStatus, null);
 									return NullAnnotationMatching.NULL_ANNOTATIONS_MISMATCH;
+								}
 							}
 							if (severity == Severity.OK)
 								nullStatus = -1;
@@ -568,6 +571,9 @@ public class NullAnnotationMatching {
 		} else if (requiredBits == TagBits.AnnotationNonNull) {
 			switch (mode) {
 				case COMPATIBLE:
+					if (nullStatus == FlowInfo.NULL)
+						return Severity.MISMATCH; // NOK by flow analysis
+					//$FALL-THROUGH$
 				case BOUND_SUPER_CHECK:
 					if (nullStatus == FlowInfo.NON_NULL)
 						return Severity.OK; // OK by flow analysis

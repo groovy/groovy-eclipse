@@ -27,7 +27,6 @@ Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
  org.eclipse.jdt.launching,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.ui.console,
- org.eclipse.ui.internal.views.log,
  org.eclipse.ui.views.contentoutline
 Require-Bundle: org.codehaus.groovy.eclipse.ui;bundle-version="3.5.0";visibility:=reexport,
  org.eclipse.jdt.groovy.core.tests.builder;bundle-version="3.5.0";visibility:=reexport,

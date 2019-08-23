@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -97,8 +97,11 @@ public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output
 @Override
 public TypeBinding resolveType(BlockScope scope) {
 	this.constant = Constant.NotAConstant;
-	TypeBinding expressionType = this.expression.resolveType(scope);
 	TypeBinding checkedType = this.type.resolveType(scope, true /* check bounds*/);
+	if (this.expression instanceof CastExpression) {
+		((CastExpression) this.expression).setInstanceofType(checkedType); // for cast expression we need to know instanceof type to not tag unnecessary when needed
+	}
+	TypeBinding expressionType = this.expression.resolveType(scope);
 	if (expressionType != null && checkedType != null && this.type.hasNullTypeAnnotation(AnnotationPosition.ANY)) {
 		// don't complain if the entire operation is redundant anyway
 		if (!expressionType.isCompatibleWith(checkedType) || NullAnnotationMatching.analyse(checkedType, expressionType, -1).isAnyMismatch())

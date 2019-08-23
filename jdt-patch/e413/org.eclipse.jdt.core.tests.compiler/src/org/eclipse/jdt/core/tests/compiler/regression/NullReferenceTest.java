@@ -17426,14 +17426,58 @@ public void testBug432109() {
 			"}\n"
 		});
 }
-public void testBug435528() {
+public void testBug435528_orig() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"Test.java",
+			"public class Test\n" + 
+			"{\n" + 
+			"   static final String a = \"A\";\n" + 
+			"\n" + 
+			"   static void main(String args[])\n" + 
+			"   {\n" + 
+			"      String x = null;\n" + 
+			"      while (true) {\n" + 
+			"         x = Math.random() < 0.5 ? a : \"BB\";\n" + 
+			"         if (a != null) {\n" + 
+			"            System.out.println(\"s2 value: \" + x);\n" + 
+			"         }\n" + 
+			"         if (x.equals(\"A\")) {\n" + 
+			"            break;\n" + 
+			"         } else {\n" + 
+			"            x = null;\n" + 
+			"         }\n" + 
+			"      }\n" + 
+			"   }\n" + 
+			"}\n"
+		};
+	runner.expectedCompilerLog =
+		"----------\n" + 
+		"1. ERROR in Test.java (at line 10)\n" + 
+		"	if (a != null) {\n" + 
+		"	    ^\n" + 
+		"Null comparison always yields false: The field a is a nonnull constant\n" + 
+		"----------\n" + 
+		"2. WARNING in Test.java (at line 15)\n" + 
+		"	} else {\n" + 
+		"            x = null;\n" + 
+		"         }\n" + 
+		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Statement unnecessarily nested within else clause. The corresponding then clause does not complete normally\n" + 
+		"----------\n";
+	runner.customOptions = getCompilerOptions();
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runNegativeTest();
+}
+public void testBug435528_notaconstant() {
 	runConformTest(
 		true/*flush*/,
 		new String[] {
 			"Test.java",
 			"public class Test\n" + 
 			"{\n" + 
-			"   static final String a = \"A\";\n" + 
+			"   static String a	;\n" + 
 			"\n" + 
 			"   static void main(String args[])\n" + 
 			"   {\n" + 
@@ -18264,5 +18308,28 @@ public void testBug542707_1() {
 			"Potential null pointer access: The variable s may be null at this location\n" + 
 			"----------\n";
 	runner.runNegativeTest();
+}
+public void testBug544872() {
+	runNegativeNullTest(
+		new String[] {
+			"Test.java",
+			"public class Test {\n" + 
+			"    static void f(String string) {\n" + 
+			"        if (string != null)\n" + 
+			"            string.hashCode();\n" + 
+			"        synchronized (string) {\n" + 
+			"            string.hashCode();\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"}\n" + 
+			""
+		}, 
+		"----------\n" + 
+		"1. ERROR in Test.java (at line 5)\n" + 
+		"	synchronized (string) {\n" + 
+		"	              ^^^^^^\n" + 
+		"Potential null pointer access: The variable string may be null at this location\n" + 
+		"----------\n"
+	);
 }
 }

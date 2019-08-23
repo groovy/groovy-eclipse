@@ -204,17 +204,21 @@ public class Aligner {
 	private boolean isNewGroup(ASTNode node, ASTNode previousNode) {
 		if (previousNode == null)
 			return true;
-		int lineBreaks = 0;
+		int totalLineBreaks = 0;
 		int from = this.tm.lastIndexIn(previousNode, -1);
 		int to = this.tm.firstIndexIn(node, -1);
 		Token previousToken = this.tm.get(from);
 		for (int i = from + 1; i <= to; i++) {
 			Token token = this.tm.get(i);
-			lineBreaks += Math.min(this.tm.countLineBreaksBetween(previousToken, token),
-					this.options.number_of_empty_lines_to_preserve + 1);
+			int lineBreaks = Math.max(previousToken.getLineBreaksAfter(), token.getLineBreaksBefore());
+			if (previousToken.isPreserveLineBreaksAfter() && token.isPreserveLineBreaksBefore()) {
+				lineBreaks = Math.max(lineBreaks, Math.min(this.tm.countLineBreaksBetween(previousToken, token),
+						this.options.number_of_empty_lines_to_preserve + 1));
+			}
+			totalLineBreaks += lineBreaks;
 			previousToken = token;
 		}
-		return lineBreaks > this.options.align_fields_grouping_blank_lines;
+		return totalLineBreaks > this.options.align_fields_grouping_blank_lines;
 	}
 
 	private <N extends ASTNode> void alignNodes(List<N> alignGroup, AlignIndexFinder<N> tokenFinder) {

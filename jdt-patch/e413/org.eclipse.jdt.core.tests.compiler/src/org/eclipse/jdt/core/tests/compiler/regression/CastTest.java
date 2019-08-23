@@ -3346,6 +3346,81 @@ public void test543727_notequals() {
 		},
 		"SUCCESS");
 }
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=548647 JDT reports unnecessary cast, using the Quickfix to remove it creates syntax error
+public void test548647() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return;
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.ERROR);
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"interface MUIElement {}\n" + 
+			"interface MUIElementContainer<T extends MUIElement> extends MUIElement{}\n" + 
+			"interface MWindowElement extends MUIElement {}\n" + 
+			"interface MWindow extends MUIElementContainer<MWindowElement> {}\n" + 
+			"public class X {\n" +
+			"	MUIElementContainer<MUIElement> field;\n" +
+			"	MUIElementContainer<MUIElement> getField() {\n" +
+			"		return field;\n" +
+			"	}\n" +
+			"	void test(MUIElementContainer<MUIElement> me) {\n" +
+			"		MUIElementContainer<MUIElement> localVar = me;\n" +
+			"		if ((Object) localVar instanceof MWindow) return;\n" +
+			"		if(((Object) me) instanceof MWindow) return;\n" +
+			"		if ((MUIElement)field instanceof MWindow) return;\n" +
+			"		if ((MUIElement)getField() instanceof MWindow) return;\n" +
+			"		MWindow mw = (MWindow)((MUIElement)me);\n" + 
+			"	}\n" + 
+			"}\n"
+		},
+		customOptions);
+}
+public void test548647a() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5)
+		return;
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
+	runner.testFiles =
+		new String[] {
+			"Bug.java",
+			"public class Bug {\n" +
+			"	Integer k;\n" +
+			"	private Number getK() { return k; }\n" +
+			"	public void fn(Number n) {\n" + 
+			"		Number j = n;\n" +
+			"		if ((Number) n instanceof Long) return;\n" +
+			"		if ((Number) k instanceof Integer) return;\n" +
+			"		if ((Number) j instanceof Integer) return;\n" +
+			"		if ((Number) getK() instanceof Integer) return;\n" +
+			"	}\n" + 
+			"}"
+		};
+	runner.expectedCompilerLog =
+			"----------\n" +
+			"1. WARNING in Bug.java (at line 6)\n" +
+			"	if ((Number) n instanceof Long) return;\n" +
+			"	    ^^^^^^^^^^\n" +
+			"Unnecessary cast from Number to Number\n" +
+			"----------\n" +
+			"2. WARNING in Bug.java (at line 7)\n" +
+			"	if ((Number) k instanceof Integer) return;\n" +
+			"	    ^^^^^^^^^^\n" +
+			"Unnecessary cast from Integer to Number\n" +
+			"----------\n" +
+			"3. WARNING in Bug.java (at line 8)\n" +
+			"	if ((Number) j instanceof Integer) return;\n" +
+			"	    ^^^^^^^^^^\n" +
+			"Unnecessary cast from Number to Number\n" +
+			"----------\n" +
+			"4. WARNING in Bug.java (at line 9)\n" +
+			"	if ((Number) getK() instanceof Integer) return;\n" +
+			"	    ^^^^^^^^^^^^^^^\n" +
+			"Unnecessary cast from Number to Number\n" +
+			"----------\n";
+	runner.runWarningTest();
+}
 
 public static Class testClass() {
 	return CastTest.class;

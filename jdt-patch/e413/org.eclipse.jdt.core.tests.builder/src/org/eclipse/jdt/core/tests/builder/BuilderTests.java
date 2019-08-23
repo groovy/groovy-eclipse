@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -546,6 +547,7 @@ public class BuilderTests extends TestCase {
 			TestAttributeBuilderTests.class,
 			Bug530366Test.class,
 			Bug531382Test.class,
+			Bug549457Test.class,
 			LeakTestsBefore9.class,
 		};
 		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));
@@ -560,6 +562,7 @@ public class BuilderTests extends TestCase {
 		}
 		if (matchesCompliance(F_9)) {
 			list.add(LeakTestsAfter9.class);
+			list.add(Bug549646Test.class);
 		}
 		return list.toArray(new Class[0]);
 	}
@@ -634,5 +637,33 @@ public class BuilderTests extends TestCase {
 			jarPath = env.addInternalJar(projectPath, jarName, jarContent);
 		}
 		return jarPath;
+	}
+
+	protected static void expectCompileProblem(IPath project, String expectedProblemMessage) {
+		List<String> actualProblemMessages = new ArrayList<>();
+		Problem[] problems = env.getProblemsFor(project, "org.eclipse.jdt.core.tests.compile.problem");
+		if (problems != null) {
+			for (Problem problem : problems) {
+				actualProblemMessages.add(problem.getMessage());
+			}
+		}
+
+		List<String> expectedProblemMessages = Arrays.asList(expectedProblemMessage);
+		assertEquals("expected compile problem not observed",
+				expectedProblemMessages, actualProblemMessages);
+	}
+
+	protected static void expectNoCompileProblems(IPath project) {
+		List<String> actualProblemMessages = new ArrayList<>();
+		Problem[] problems = env.getProblemsFor(project, "org.eclipse.jdt.core.tests.compile.problem");
+		if (problems != null) {
+			for (Problem problem : problems) {
+				actualProblemMessages.add(problem.getMessage());
+			}
+		}
+
+		List<String> expectedProblemMessages = Collections.EMPTY_LIST;
+		assertEquals("expected no compile problems",
+				expectedProblemMessages, actualProblemMessages);
 	}
 }

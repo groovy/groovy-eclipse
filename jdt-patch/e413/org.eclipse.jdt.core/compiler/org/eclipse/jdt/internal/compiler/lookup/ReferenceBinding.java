@@ -242,9 +242,23 @@ static void sortMemberTypes(ReferenceBinding[] sortedMemberTypes, int left, int 
 	Arrays.sort(sortedMemberTypes, left, right, BASIC_MEMBER_TYPES_COMPARATOR);
 }
 
+/**
+ * Compares two reference bindings by the value of the {@link #sourceName} field.
+ * A ReferenceBinding with a sourceName field that has the value null is considered
+ * to be smaller than a ReferenceBinding that does have a source name.
+ */
 static final Comparator<ReferenceBinding> BASIC_MEMBER_TYPES_COMPARATOR = (ReferenceBinding o1, ReferenceBinding o2) -> {
 	char[] n1 = o1.sourceName;
 	char[] n2 = o2.sourceName;
+	// n1 or n2 may be null - compare without accessing the length of the array
+	if (n1 == null) {
+		if (n2 == null) {
+			return 0;
+		}
+		return -1;
+	} else if (n2 == null) {
+		return 1;
+	}
 	return ReferenceBinding.compare(n1, n2, n1.length, n2.length);
 };
 
@@ -1079,18 +1093,24 @@ public ReferenceBinding getMemberType(char[] typeName) {
 	return null;
 }
 
-static int binarySearch(char[] name, ReferenceBinding[] sortedMemberTypes) {
+/**
+ * Search the given sourceName in the list of sorted member types.
+ * 
+ * Neither the array of sortedMemberTypes nor the given sourceName may be null.
+ */
+static int binarySearch(char[] sourceName, ReferenceBinding[] sortedMemberTypes) {
 	if (sortedMemberTypes == null)
 		return -1;
-	int max = sortedMemberTypes.length;
+	int max = sortedMemberTypes.length, nameLength = sourceName.length;
 	if (max == 0)
 		return -1;
-	int left = 0, right = max - 1, nameLength = name.length;
-	int mid = 0;
-	char[] midName;
+	int left = 0, right = max - 1;
 	while (left <= right) {
-		mid = left + (right - left) /2;
-		int compare = compare(name, midName = sortedMemberTypes[mid].sourceName, nameLength, midName.length);
+		int mid = left + (right - left) / 2;
+		char[] midName = sortedMemberTypes[mid].sourceName;
+		// The read source name may be null. In that case, the given sourceName is considered
+		// to be larger than the current value at mid.
+		int compare = midName == null ? 1 : compare(sourceName, midName, nameLength, midName.length);
 		if (compare < 0) {
 			right = mid-1;
 		} else if (compare > 0) {

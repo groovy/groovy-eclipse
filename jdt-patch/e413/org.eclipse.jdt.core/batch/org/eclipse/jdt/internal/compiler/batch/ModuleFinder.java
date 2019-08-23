@@ -30,7 +30,6 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.PackageExportImpl;
 import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
@@ -280,10 +279,11 @@ public class ModuleFinder {
 		return null;
 	}
 	private static IModule extractModuleFromSource(File file, Parser parser, Classpath pathEntry) {
-		ICompilationUnit cu = new CompilationUnit(null, file.getAbsolutePath(), null, pathEntry.getDestinationPath());
+		CompilationUnit cu = new CompilationUnit(null, file.getAbsolutePath(), null, pathEntry.getDestinationPath());
 		CompilationResult compilationResult = new CompilationResult(cu, 0, 1, 10);
 		CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
 		if (unit.isModuleInfo() && unit.moduleDeclaration != null) {
+			cu.module = unit.moduleDeclaration.moduleName;
 			return new BasicModule(unit.moduleDeclaration, pathEntry);
 		}
 		return null;

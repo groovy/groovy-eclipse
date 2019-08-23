@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.test
 import static org.junit.Assert.fail
 
 import org.eclipse.core.runtime.IStatus
-import org.eclipse.ui.internal.views.log.AbstractEntry
-import org.eclipse.ui.internal.views.log.LogView
 import org.junit.Test
 
 /**
@@ -36,9 +34,10 @@ final class ErrorLogTest {
 
     @Test
     void testNoWarningsOnStartup() {
-        LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
-        Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { logEntry ->
-            return (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
+        def view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
+
+        def errorsAndWarnings = view.elements.findAll { logEntry ->
+            (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
                 !(KNOWN_MSGS.any { logEntry.message =~ it }) && !(logEntry.pluginId =~ /\.win32$/)
         }
 

@@ -52586,4 +52586,175 @@ public void testBug541772_typeannotations() {
 	compilerOptions,
 	null /*customRequestor*/);
 }
+/**
+ * This test targets the optimization for parameterized dependencies in {@code BoundSet.combineSameSameWithProperType(...)}.
+ */
+public void testBug543480BasedOnTest2FromComment4ToSameSameOptimization() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		final long durationFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+			new String[] {
+				"Test2_2.java",
+				"public class Test2_2 {\n" + 
+				"	void test() {\n" + 
+				"		m(s(\n" + 
+				"			f(1),\n" + 
+				"			f(2)\n" + 
+				"		));\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	static <R> R m(S<R> s) { return null; }\n" + 
+				"    static <T> F<T> f(T t) { return null; }\n" + 
+				"	static <T1> S<R1<T1>> s(F<T1> t1) { return null; }\n" + 
+				"	static <T1, T2> S<R2<T1, T2>> s(F<T1> t1, F<T2> t2) { return null; }\n" + 
+				"}\n" + 
+				"interface F<T> {}\n" + 
+				"interface S<R> {}\n" + 
+				"interface R1<T1> {}\n" + 
+				"interface R2<T1, T2> {}\n"
+			}));
+		final long durationFor11TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+				new String[] {
+					"Test2_11.java",
+					"public class Test2_11 {\n" + 
+					"	void test() {\n" + 
+					"		m(s(\n" + 
+					"			f(1),\n" + 
+					"			f(2),\n" + 
+					"			f(3),\n" + 
+					"			f(4),\n" + 
+					"			f(5),\n" + 
+					"			f(6),\n" + 
+					"			f(7),\n" + 
+					"			f(8),\n" + 
+					"			f(9),\n" + 
+					"			f(10),\n" + 
+					"			f(11)\n" + 
+					"		));\n" + 
+					"	}\n" + 
+					"\n" + 
+					"	static <R> R m(S<R> s) { return null; }\n" + 
+					"   static <T> F<T> f(T t) { return null; }\n" + 
+					"	static <T1> S<R1<T1>> s(F<T1> t1) { return null; }\n" + 
+					"	static <T1, T2> S<R2<T1, T2>> s(F<T1> t1, F<T2> t2) { return null; }\n" + 
+					"	static <T1, T2, T3> S<R3<T1, T2, T3>> s(F<T1> t1, F<T2> t2, F<T3> t3) { return null; }\n" + 
+					"	static <T1, T2, T3, T4> S<R4<T1, T2, T3, T4>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4) { return null; }\n" + 
+					"	static <T1, T2, T3, T4, T5> S<R5<T1, T2, T3, T4, T5>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5) { return null; }\n" + 
+					"	static <T1, T2, T3, T4, T5, T6> S<R6<T1, T2, T3, T4, T5, T6>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6) { return null; }\n" + 
+					"	static <T1, T2, T3, T4, T5, T6, T7> S<R7<T1, T2, T3, T4, T5, T6, T7>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6, F<T7> t7) { return null; }\n" + 
+					"	static <T1, T2, T3, T4, T5, T6, T7, T8> S<R8<T1, T2, T3, T4, T5, T6, T7, T8>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6, F<T7> t7, F<T8> t8) { return null; }\n" + 
+					"	static <T1, T2, T3, T4, T5, T6, T7, T8, T9> S<R9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6, F<T7> t7, F<T8> t8, F<T9> t9) { return null; }\n" + 
+					"   static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> S<R10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6, F<T7> t7, F<T8> t8, F<T9> t9, F<T10> t10) { return null; }\n" +
+					"   static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> S<R11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> s(F<T1> t1, F<T2> t2, F<T3> t3, F<T4> t4, F<T5> t5, F<T6> t6, F<T7> t7, F<T8> t8, F<T9> t9, F<T10> t10, F<T11> t11) { return null; }\n" +
+					"}\n" + 
+					"interface F<T> {}\n" + 
+					"interface S<R> {}\n" + 
+					"interface R1<T1> {}\n" + 
+					"interface R2<T1, T2> {}\n" +
+					"interface R3<T1, T2, T3> {}\n" + 
+					"interface R4<T1, T2, T3, T4> {}\n" + 
+					"interface R5<T1, T2, T3, T4, T5> {}\n" + 
+					"interface R6<T1, T2, T3, T4, T5, T6> {}\n" + 
+					"interface R7<T1, T2, T3, T4, T5, T6, T7> {}\n" + 
+					"interface R8<T1, T2, T3, T4, T5, T6, T7, T8> {}\n" + 
+					"interface R9<T1, T2, T3, T4, T5, T6, T7, T8, T9> {}\n" + 
+					"interface R10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> {}\n" +
+					"interface R11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {}\n"
+				}));
+		// Time complexity should grow roughly linearly, not O(2^n)
+		// To make the test robust, it tests for the same order of magnitude only, i.e. factor 10.
+		assertCompileTimes(durationFor2TypeParameters, 10, durationFor11TypeParameters);
+	}
 }
+/**
+ * This test targets the optimization for parameterized dependencies in {@code BoundSet.combineSameSubSuperWithProperType(...)}.
+ */
+public void testBug543480WithSameSubSuperOptimization() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		final long durationFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+			new String[] {
+					"WithParameterizedDependencies_2.java",
+					"abstract class WithParameterizedDependencies_2 {\n" + 
+					"    <T1, T2> \n" +
+					"           Type1<T1, T2>\n" +
+					"           s1(Type1<T1, T2> t) {\n" +
+					// This line causes the optimization in BoundSet.combineSameSubSuperWithProperType(...) to be effective.
+					"        return s2(new Type1<>(t));\n" + 
+					"    }\n" + 
+					"    abstract <E> E s2(E e);\n" +
+					"}\n" +
+					"class Type1<T1, T2> {\n" +
+					"    Type1(final Type1<T1, T2> l) {}" +
+					"}\n"
+			}));
+		final long durationFor12TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+				new String[] {
+					"WithParameterizedDependencies_12.java",
+					"abstract class WithParameterizedDependencies_12 {\n" + 
+					"    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> \n" +
+					"           Type1<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>\n" +
+					"           s1(Type1<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> t) {\n" +
+					// This line causes the optimization in BoundSet.combineSameSubSuperWithProperType(...) to be effective.
+					"        return s2(new Type1<>(t));\n" + 
+					"    }\n" + 
+					"    abstract <E> E s2(E e);\n" +
+					"}\n" +
+					"class Type1<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> {\n" +
+					"    Type1(final Type1<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> l) {}" +
+					"}\n"
+				}));
+		// Time complexity should grow roughly linearly, not O(2^n).
+		// To make the test robust, it tests for the same order of magnitude only, i.e. factor 10.
+		assertCompileTimes(durationFor2TypeParameters, 10, durationFor12TypeParameters);
+	}
+}
+/**
+ * An earlier version of the fix for bug 543480 causes a NullPointerException when compiling this code.
+ */
+public void testBug543480WithoutNullPointerExceptionDuringBytecodeGeneration() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		runConformTest(
+			new String[] {
+				"Test.java",
+				"import java.util.function.BiConsumer;\n" + 
+				"\n" + 
+				"public class Test {\n" + 
+				"	\n" + 
+				"	interface I0<T extends I0<T>> {}\n" + 
+				"\n" + 
+				"	class Type<T extends I0<T>, D> {\n" + 
+				"		// TODO: The problem might be that BiConsumer is not declared in the same file?\n" + 
+				"		public Type(final BiConsumer<T, D> b) { }\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	public void foo() {\n" + 
+				"		new Type<>((unused0, unused1) -> {});\n" + 
+				"	}\n" + 
+				"}"
+			});
+	}
+}
+
+protected void assertCompileTimes(final long shortTime, final double factor, final long longTime) {
+	assertTrue(longTime + " should be less than " + factor + "x the compile time of " + shortTime,
+			longTime < factor*shortTime);
+}
+
+protected long compileTimesAfterWarmup(final Runnable compileTask) {
+	// warm up
+	duration(compileTask);
+	// average 
+	return (duration(compileTask) + duration(compileTask) +
+			  duration(compileTask) + duration(compileTask) +
+			  duration(compileTask) + duration(compileTask)) / 6;
+}
+
+protected long duration(final Runnable runnable) {
+	final long startMs = System.currentTimeMillis();
+	runnable.run();
+	final long endMs = System.currentTimeMillis();
+	final long duration = endMs-startMs;
+	return duration;
+}
+
+}
+

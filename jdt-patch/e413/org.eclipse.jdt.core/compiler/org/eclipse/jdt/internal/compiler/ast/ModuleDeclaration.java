@@ -181,6 +181,24 @@ public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 		}
 		this.binding.setRequires(requiredModules.toArray(new ModuleBinding[requiredModules.size()]),
 								 requiredTransitiveModules.toArray(new ModuleBinding[requiredTransitiveModules.size()]));
+
+		// also resolve module references inside package statements ("to"):
+		if (this.exports != null) {
+			for (ExportsStatement exportsStatement : this.exports) {
+				if (exportsStatement.isQualified()) {
+					for (ModuleReference moduleReference : exportsStatement.targets)
+						moduleReference.resolve(cuScope);
+				}
+			}
+		}
+		if (this.opens != null) {
+			for (OpensStatement opensStatement : this.opens) {
+				if (opensStatement.isQualified()) {
+					for (ModuleReference moduleReference : opensStatement.targets)
+						moduleReference.resolve(cuScope);
+				}
+			}
+		}
 	}
 
 	/** Resolve those module directives that relate to packages (exports, opens). */

@@ -308,7 +308,7 @@ public class NullAnnotationBatchCompilerTest extends AbstractBatchCompilerTest {
 			+ " -1.5"
 			+ " -warn:+nullAnnot(foo|bar) -warn:+null -nonNullByDefault -proc:none -d \"" + OUTPUT_DIR + "\"",
 			"",
-			"Token nullAnnot(foo|bar) is not in the expected format \"nullAnnot(<non null annotation name> | <nullable annotation name> | <non-null by default annotation name>)\"\n",
+			"Token nullAnnot(foo|bar) is not in the expected format \"nullAnnot(<nullable annotation name> | <non null annotation name> | <non-null by default annotation name>)\"\n",
 			true);
 	}
 
