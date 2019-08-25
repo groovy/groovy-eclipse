@@ -45,14 +45,17 @@ public class MethodCallExpression extends Expression implements MethodCall {
     public static final Expression NO_ARGUMENTS = new TupleExpression();
 
     public MethodCallExpression(Expression objectExpression, String method, Expression arguments) {
-        this(objectExpression,new ConstantExpression(method),arguments);
+        this(objectExpression, new ConstantExpression(method), arguments);
     }
 
     public MethodCallExpression(Expression objectExpression, Expression method, Expression arguments) {
         this.objectExpression = objectExpression;
         this.method = method;
-        if (!(arguments instanceof TupleExpression)){
+        if (!(arguments instanceof TupleExpression)) {
             this.arguments = new TupleExpression(arguments);
+            // GRECLIPSE add
+            this.arguments.setSourcePosition(arguments);
+            // GRECLIPSE end
         } else {
             this.arguments = arguments;
         }

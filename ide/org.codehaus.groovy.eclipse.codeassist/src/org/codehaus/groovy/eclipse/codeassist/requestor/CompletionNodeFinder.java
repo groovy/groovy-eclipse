@@ -536,7 +536,10 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (expression.isUsingAnonymousInnerClass()) {
             visitClass(expression.getType());
         }
-        checkForAfterClosingParen(expression, expression.getArguments());
+        if (completionEnd > expression.getArguments().getEnd()) {
+            // completion for 'new Type()|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+        }
         // at a paren, at a comma, or at the start of an argument expression; do constructor context
         createContextForCallContext(expression, constructorType, constructorType.getNameWithoutPackage(), expression.getNameEnd() + 1);
     }
@@ -621,7 +624,10 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         methodExpression.visit(this);
 
         visitArguments(expression.getArguments(), expression);
-        checkForAfterClosingParen(expression, expression.getArguments());
+        if (completionEnd > expression.getArguments().getEnd()) {
+            // completion for 'method()|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+        }
         // at a paren, at a comma, or at the start of an argument expression; do method context
         createContextForCallContext(expression, methodExpression, expression.getMethodAsString());
     }
@@ -679,7 +685,10 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         visitArguments(expression.getArguments(), expression);
-        checkForAfterClosingParen(expression, expression.getArguments());
+        if (completionEnd > expression.getArguments().getEnd()) {
+            // completion for 'method()|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+        }
         // at a paren, at a comma, or at the start of an argument expression; do method context
         createContextForCallContext(expression, expression, expression.getMethod(), expression.getNameEnd() + 1);
     }
@@ -716,33 +725,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             return containsCompletionOffset || containsSupportingOffset;
         }
         return false;
-    }
-
-    private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {
-        int lastArgEnd = findLastArgumentEnd(arguments);
-        int start = arguments.getStart();
-        if (start == 0 && arguments instanceof TupleExpression && !((TupleExpression) arguments).getExpressions().isEmpty()) {
-            // TupleExpressions as argument lists do not always have slocs available
-            start = ((TupleExpression) arguments).getExpression(0).getStart();
-        }
-
-        if (start == 0 && lastArgEnd == 0) {
-            // possibly a malformed constructor call with no parens
-            return;
-        }
-
-        boolean shouldLookAtArguments = !(lastArgEnd == start && completionOffset == start);
-        if (shouldLookAtArguments) {
-            if ((supportingNodeEnd == -1 && lastArgEnd < completionOffset) || lastArgEnd <= supportingNodeEnd) {
-                // we are at this situation (completing on 'x'):
-                // foo().x
-                createContext(contextTarget, blockStack.getLast(), expressionOrStatement());
-            }
-        } else {
-            // completion inside of empty argument list:
-            // foo()
-            // should show context, so do nothing here
-        }
     }
 
     private void checkForCommandExpression(Expression leftExpression, Expression rightExpression) {
@@ -829,29 +811,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     //--------------------------------------------------------------------------
-
-    /**
-     * finds end of the last argument of an argument list expression
-     */
-    private static int findLastArgumentEnd(Expression args) {
-        // need to look at the last argument expression as well as the argument list itself
-        // problem is that closure expressions are not included in the end offset
-        int listEnd = args.getEnd();
-        int lastExpressionEnd = -1;
-        if (args instanceof TupleExpression) {
-            TupleExpression list = (TupleExpression) args;
-            int numExprs = list.getExpressions().size();
-            if (numExprs > 0) {
-                if (listEnd == 0) {
-                    listEnd = list.getExpression(numExprs - 1).getEnd();
-                }
-
-                Expression lastExpression = list.getExpression(numExprs - 1);
-                lastExpressionEnd = lastExpression.getEnd();
-            }
-        }
-        return Math.max(listEnd, lastExpressionEnd);
-    }
 
     private static Expression getLeftMost(Expression expr) {
         if (expr instanceof ConstantExpression) {
