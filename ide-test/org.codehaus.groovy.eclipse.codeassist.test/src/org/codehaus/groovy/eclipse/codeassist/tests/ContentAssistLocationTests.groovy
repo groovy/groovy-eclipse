@@ -194,7 +194,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     @Test
     void testStatement19() {
-        assertLocation('new ArrayList(a,b)#', ContentAssistLocation.STATEMENT)
+        assertLocation('def x = { new ArrayList(a,b)# }', ContentAssistLocation.STATEMENT)
     }
 
     @Test

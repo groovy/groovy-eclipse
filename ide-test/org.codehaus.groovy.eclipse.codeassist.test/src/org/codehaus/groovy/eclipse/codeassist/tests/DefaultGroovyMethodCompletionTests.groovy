@@ -31,7 +31,6 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     private static final String CONTENTS = 'class Class {\n public Class(int x) {\n }\n void doNothing(int x) {\n  this.toString();\n  new Object().toString();\n }\n}'
     private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()'
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
-    private static final String LISTCONTENTS = '[].findA'
 
     private void setDGMFilter(String... filter) {
         GroovyContentAssist.default.setFilteredDGMs(filter as Set)
@@ -124,7 +123,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInClosure() {
         def unit = createGroovyForClosure()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CLOSURECONTENTS, ' t -> '))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf('def x = { t -> print t }', ' t -> '))
         proposalExists(proposals, 'identity', 1)
     }
 
@@ -285,7 +284,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1422
     void testNoDups1() {
-        ICompletionProposal[] proposals = createProposalsAtOffset(LISTCONTENTS, getIndexOf(LISTCONTENTS, 'findA'))
+        ICompletionProposal[] proposals = createProposalsAtOffset('[].findA', getIndexOf('[].findA', 'findA'))
         // should find 2, not 4.  dups removed
         proposalExists(proposals, 'findAll', 2)
     }

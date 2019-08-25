@@ -154,6 +154,66 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'abs', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/946
+    void testObjectExpr7() {
+        String contents = '''\
+            class C {
+              static Date date(whatever) {
+              }
+              static main(args) {
+                date('x').
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'time', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/946
+    void testObjectExpr7a() {
+        String contents = '''\
+            class C {
+              static Date date(whatever) {
+              }
+              static main(args) {
+                date('x').t
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 't'))
+        proposalExists(proposals, 'time', 1)
+    }
+
+    @Test
+    void testObjectExpr8() {
+        String contents = '''\
+            class C {
+              Date date(whatever) {
+              }
+              void meth() {
+                date('x').
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'time', 1)
+    }
+
+    @Test
+    void testObjectExpr8a() {
+        String contents = '''\
+            class C {
+              Date date(whatever) {
+              }
+              void meth() {
+                date('x').t
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 't'))
+        proposalExists(proposals, 'time', 1)
+    }
+
     @Test // GRECLIPSE-1374
     void testParensExpr1() {
         String contents = '''\

@@ -500,21 +500,22 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitConstructorCallExpression(ConstructorCallExpression expression) {
-        if (!check(expression)) {
+        if (supportingNodeEnd > 0 && supportingNodeEnd == expression.getEnd()) {
+            // completion for 'new Type().|' or 'new Type().x|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+        }
+        if (completionOffset <= expression.getStart() || expression.getEnd() < completionOffset) {
+            super.visitConstructorCallExpression(expression);
             return;
         }
 
         visitAnnotations(expression.getAnnotations());
-        ClassNode constructorType = expression.getType();
 
-        if (completionOffset < expression.getNameStart()) {
+        if (completionOffset <= expression.getNameStart()) {
             createContext(expression, blockStack.getLast(), expressionOrStatement());
         }
-        if (completionOffset >= expression.getNameStart() && completionOffset <= expression.getNameEnd() + 1) {
-            createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
-        }
-        // TODO: Does name range include type parameters?
 
+        ClassNode constructorType = expression.getType();
         if (expression.isSpecialCall()) {
             AnnotatedNode enclosing = declarationStack.getLast();
             constructorType = enclosing.getDeclaringClass(); // "this" type
@@ -524,15 +525,18 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             constructorType = expression.getType().getUnresolvedSuperClass(false);
             if (constructorType == ClassHelper.OBJECT_TYPE)
                 constructorType = expression.getType().getUnresolvedInterfaces(false)[0];
-
-            visitClass(expression.getType()); // see https://github.com/groovy/groovy-eclipse/issues/395
         }
 
-        Expression arguments = expression.getArguments();
-        checkForAfterClosingParen(expression, arguments);
+        if (completionOffset <= expression.getNameEnd() + 1) {
+            createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
+        }
 
-        visitArguments(arguments, expression);
-
+        visitArguments(expression.getArguments(), expression);
+        // https://github.com/groovy/groovy-eclipse/issues/395
+        if (expression.isUsingAnonymousInnerClass()) {
+            visitClass(expression.getType());
+        }
+        checkForAfterClosingParen(expression, expression.getArguments());
         // at a paren, at a comma, or at the start of an argument expression; do constructor context
         createContextForCallContext(expression, constructorType, constructorType.getNameWithoutPackage(), expression.getNameEnd() + 1);
     }
@@ -591,31 +595,35 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression expression) {
-        if (!check(expression)) { super.visitMethodCallExpression(expression);
+        if (supportingNodeEnd > 0 && supportingNodeEnd == expression.getEnd()) {
+            // completion for 'method().|' or 'method().x|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+        }
+        if (completionOffset <= expression.getStart() || expression.getEnd() < completionOffset) {
+            super.visitMethodCallExpression(expression);
             return;
         }
+
+        visitAnnotations(expression.getAnnotations());
 
         Expression objectExpression = expression.getObjectExpression();
         Expression methodExpression = expression.getMethod();
 
-        // Could be a groovy 1.8 style command expression
         checkForCommandExpression(objectExpression, methodExpression);
-
-        Expression arguments = expression.getArguments();
-        checkForAfterClosingParen(methodExpression, arguments);
 
         objectExpression.visit(this);
 
-        if (completionOffset > objectExpression.getEnd() && completionOffset < methodExpression.getStart()) {
+        if (objectExpression.getEnd() < completionOffset && completionOffset <= methodExpression.getStart()) {
             // probably a completion after dot in 'foo.\nbar()' or 'foo.\n"$bar"()' or '(foo).\ndef bar'
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
 
         methodExpression.visit(this);
 
-        visitArguments(arguments, expression);
+        visitArguments(expression.getArguments(), expression);
+        checkForAfterClosingParen(expression, expression.getArguments());
         // at a paren, at a comma, or at the start of an argument expression; do method context
-        createContextForCallContext(expression, methodExpression, methodExpression.getText());
+        createContextForCallContext(expression, methodExpression, expression.getMethodAsString());
     }
 
     @Override
@@ -655,26 +663,25 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
-        if (!check(expression)) { super.visitStaticMethodCallExpression(expression);
+        if (supportingNodeEnd > 0 && supportingNodeEnd == expression.getEnd()) {
+            // completion for 'method().|' or 'method().x|'
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+        }
+        if (completionOffset <= expression.getStart() || expression.getEnd() < completionOffset) {
+            super.visitStaticMethodCallExpression(expression);
             return;
         }
 
-        // don't check here if the type reference is implicit
-        // we know that the type is not implicit if the name
-        // location is filled in.
-        if (expression.getOwnerType().getNameEnd() == 0 && check(expression.getOwnerType())) {
-            createContext(expression.getOwnerType(), blockStack.getLast(), expressionOrStatement());
-        }
-        visitArguments(expression.getArguments(), expression);
+        visitAnnotations(expression.getAnnotations());
 
-        // the method itself is not an expression, but only a string
-        Expression methodName = new ConstantExpression(expression.getMethod());
-        methodName.setStart(expression.getNameStart());
-        methodName.setEnd(expression.getNameEnd());
-        if (check(methodName)) {
-            createContext(expression, blockStack.getLast(), expressionOrStatement());
+        if (expression.getNameStart() < completionOffset && completionOffset <= expression.getNameEnd() + 1) {
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
         }
-        createContextForCallContext(expression, expression, expression.getMethod(), expression.getNameEnd());
+
+        visitArguments(expression.getArguments(), expression);
+        checkForAfterClosingParen(expression, expression.getArguments());
+        // at a paren, at a comma, or at the start of an argument expression; do method context
+        createContextForCallContext(expression, expression, expression.getMethod(), expression.getNameEnd() + 1);
     }
 
     @Override

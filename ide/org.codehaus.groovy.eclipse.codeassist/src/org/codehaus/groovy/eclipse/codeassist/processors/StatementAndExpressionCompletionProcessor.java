@@ -564,10 +564,10 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 maybeRememberTypeOfLHS(result);
                 setResultingType(result, derefList);
                 categories = result.scope.getCategoryNames();
-                isStatic = (node instanceof StaticMethodCallExpression ||
-                    getContext().containingCodeBlock instanceof AnnotationNode ||
+                isStatic = (getContext().containingCodeBlock instanceof AnnotationNode ||
                     // if we are completing on '.class' then never static context
-                    (node instanceof ClassExpression && !VariableScope.CLASS_CLASS_NODE.equals(resultingType)));
+                    (node instanceof ClassExpression && !VariableScope.CLASS_CLASS_NODE.equals(resultingType)) ||
+                    (node instanceof StaticMethodCallExpression && getContext().location != ContentAssistLocation.EXPRESSION));
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;

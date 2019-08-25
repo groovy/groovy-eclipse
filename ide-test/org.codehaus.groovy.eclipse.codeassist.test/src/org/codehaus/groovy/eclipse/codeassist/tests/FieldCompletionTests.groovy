@@ -772,11 +772,10 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'length', 1)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testArrayLength4() {
         String contents = '''\
             static <T> T[] array() {
-              return null
             }
             array().len
             '''.stripIndent()
