@@ -358,10 +358,14 @@ public abstract class GroovyCompilerTestSuite {
     protected static String stringify(FieldDeclaration decl) {
         StringBuilder sb = new StringBuilder();
         sb.append(decl.name);
-        sb.append(" sourceStart>sourceEnd:" + decl.sourceStart + ">" + decl.sourceEnd);
-        sb.append(" declSourceStart>declSourceEnd:" + decl.declarationSourceStart + ">" + decl.declarationSourceEnd);
-        sb.append(" modifiersSourceStart=" + decl.modifiersSourceStart); // first char of decls modifiers
-        sb.append(" endPart1Position:" + decl.endPart1Position); // char after type decl ('int x,y' is space)
+        sb.append(" declarationSourceStart:").append(decl.declarationSourceStart); // first char (slash in "/** javadoc */ int x")
+        sb.append(" modifiersSourceStart:").append(decl.modifiersSourceStart); // first char of annotation or modifier
+        sb.append(" endPart1Position:").append(decl.endPart1Position); // char before first name (space in "int x,y")
+        sb.append(" sourceStart:").append(decl.sourceStart); // first char of name
+        sb.append(" sourceEnd:").append(decl.sourceEnd); // last char of name
+        sb.append(" endPart2Position:").append(decl.endPart2Position); // last char in fragment (comma for 'x' and semicolon for 'y' in "int x,y;")
+        sb.append(" declarationEnd:").append(decl.declarationEnd); // last char of declaration (semicolon in "int x = 1; // comment")
+        sb.append(" declarationSourceEnd:").append(decl.declarationSourceEnd); // last char (t in "int x = 1; // comment")
         return sb.toString();
     }
 

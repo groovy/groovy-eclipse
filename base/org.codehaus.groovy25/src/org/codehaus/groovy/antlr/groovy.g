@@ -1739,9 +1739,11 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // which look like method declarations
         // since the block is optional and nls is part of sep we have to be sure
         // a newline is followed by a block or ignore the nls too
-        // GRECLIPSE edit
-        //((nls! LCURLY) => (nlsWarn! mb:openBlock!))?
+        /* GRECLIPSE edit
+        ((nls! LCURLY) => (nlsWarn! mb:openBlock!))?
+        */
         ((nls! LCURLY) => (nlsWarn! mb:methodBody!))?
+        // GRECLIPSE end
 
         {int i = (#mb != null ? 0 : 1);
          if (#qid != null) #id = #qid;
@@ -1779,7 +1781,11 @@ variableDeclarator![AST mods, AST t,Token first]
     :
         id:variableName
         (v:varInitializer)?
+        /* GRECLIPSE edit
         {#variableDeclarator = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)), mods, #(create(TYPE,"TYPE",first,LT(1)),t), id, v);}
+        */
+        {#variableDeclarator = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)), mods, #(create(TYPE,"TYPE",t,LT(1)),t), id, v);}
+        // GRECLIPSE end
     ;
 
 /** Used in cases where a declaration cannot have commas, or ends with the "in" operator instead of '='. */
@@ -3420,11 +3426,13 @@ listOrMapConstructorExpression
  *               2
  *
  */
- // GRECLIPSE edit
-//newExpression {Token first = LT(1);}
-//    :   "new"! nls! (ta:typeArguments!)? t:type!
+/* GRECLIPSE edit
+newExpression {Token first = LT(1);}
+    :   "new"! nls! (ta:typeArguments!)? t:type!
+*/
 newExpression {Token first = LT(1); int start = mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
+// GRECLIPSE end
         (   nls!
             mca:methodCallArgs[null]!
 

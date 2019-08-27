@@ -594,13 +594,13 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("Color.groovy");
 
         FieldDeclaration fDecl = findField(decl, "RED");
-        assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>32 modifiersSourceStart=30 endPart1Position:30", stringify(fDecl));
+        assertEquals("RED declarationSourceStart:15 modifiersSourceStart:30 endPart1Position:0 sourceStart:30 sourceEnd:32 endPart2Position:0 declarationEnd:32 declarationSourceEnd:32", stringify(fDecl));
 
         fDecl = findField(decl, "GREEN");
-        assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>41 modifiersSourceStart=37 endPart1Position:37", stringify(fDecl));
+        assertEquals("GREEN declarationSourceStart:37 modifiersSourceStart:37 endPart1Position:0 sourceStart:37 sourceEnd:41 endPart2Position:0 declarationEnd:41 declarationSourceEnd:41", stringify(fDecl));
 
         fDecl = findField(decl, "BLUE");
-        assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>49 modifiersSourceStart=46 endPart1Position:46", stringify(fDecl));
+        assertEquals("BLUE declarationSourceStart:46 modifiersSourceStart:46 endPart1Position:0 sourceStart:46 sourceEnd:49 endPart2Position:0 declarationEnd:49 declarationSourceEnd:49", stringify(fDecl));
     }
 
     @Test

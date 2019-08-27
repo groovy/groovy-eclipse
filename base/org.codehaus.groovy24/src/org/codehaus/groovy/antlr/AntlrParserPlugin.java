@@ -960,7 +960,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast());
         // GRECLIPSE end
-
         String name = identifier(node);
         node = node.getNextSibling();
 
@@ -1001,8 +1000,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         String identifier = identifier(element);
         // GRECLIPSE add
-        int savedLine = element.getLine();
-        int savedColumn = element.getColumn();
+        int nameStart = locations.findOffset(element.getLine(), element.getColumn());
+        int nameEnd = nameStart + identifier.length();
         // GRECLIPSE end
         Expression init = null;
         element = element.getNextSibling();
@@ -1027,8 +1026,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 innerClass.setSuperClass(classNode.getPlainNodeReference());
                 innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
                 // GRECLIPSE add
-                innerClass.setNameStart(locations.findOffset(savedLine, savedColumn));
-                innerClass.setNameEnd(innerClass.getNameStart() + identifier.length() - 1);
+                innerClass.setNameStart(nameStart);
+                innerClass.setNameEnd(nameEnd - 1);
                 // GRECLIPSE end
                 // we use a ClassExpression for transportation to EnumVisitor
                 Expression inner = new ClassExpression(innerClass);
@@ -1059,10 +1058,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
         enumField.addAnnotations(annotations);
         // GRECLIPSE add
-        enumField.setLineNumber(savedLine);
-        enumField.setColumnNumber(savedColumn);
-        enumField.setNameStart(locations.findOffset(savedLine, savedColumn));
-        enumField.setNameEnd(enumField.getNameStart() + identifier.length() - 1);
+        enumField.setNameStart(nameStart);
+        enumField.setNameEnd(nameEnd - 1);
         // GRECLIPSE end
         configureAST(enumField, node);
         enumConstantBeingDef = false;
@@ -1307,15 +1304,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void fieldDef(AST fieldDef) {
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
         AST node = fieldDef.getFirstChild();
+        // GRECLIPSE add
+        int nodeStart = locations.findOffset(node.getLine(), node.getColumn());
+        // GRECLIPSE end
 
         int modifiers = 0;
         if (isType(MODIFIERS, node)) {
             modifiers = modifiers(node, annotations, modifiers);
+            // GRECLIPSE add
+            modifiers &= ~Opcodes.ACC_SYNTHETIC;
+            // GRECLIPSE end
             node = node.getNextSibling();
         }
-        // GRECLIPSE add
-        modifiers &= ~Opcodes.ACC_SYNTHETIC;
-        // GRECLIPSE end
         if (classNode.isInterface()) {
             modifiers |= Opcodes.ACC_STATIC | Opcodes.ACC_FINAL;
             if ((modifiers & (Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) == 0) {
@@ -1331,9 +1331,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         String name = identifier(node);
         // GRECLIPSE add
-        GroovySourceAST groovySourceAST = (GroovySourceAST) node;
-        int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
-        int nameEnd = nameStart + name.length();
+        int nameStart = locations.findOffset(node.getLine(), node.getColumn());
         // GRECLIPSE end
         node = node.getNextSibling();
 
@@ -1363,13 +1361,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
         }
 
-
         FieldNode fieldNode = new FieldNode(name, modifiers, type, classNode, initialValue);
         fieldNode.addAnnotations(annotations);
         configureAST(fieldNode, fieldDef);
         // GRECLIPSE add
         fieldNode.setNameStart(nameStart);
-        fieldNode.setNameEnd(nameEnd - 1);
+        fieldNode.setNameEnd(nameStart + name.length() - 1);
+        if (nodeStart < fieldNode.getStart()) fieldNode.setStart(nodeStart);
+
+        node = fieldDef.getNextSibling();
+        if (isType(VARIABLE_DEF, node)) {
+            fieldNode.putNodeMetaData("end2pos", locations.findOffset(node.getLine(), node.getColumn()) - 1);
+        }
         // GRECLIPSE end
 
         if (!hasVisibility(modifiers)) {

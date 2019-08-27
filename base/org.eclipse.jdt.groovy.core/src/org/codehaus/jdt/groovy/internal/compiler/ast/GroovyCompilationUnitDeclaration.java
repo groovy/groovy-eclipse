@@ -1274,7 +1274,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     boolean isSynthetic = GroovyUtils.isSynthetic(fieldNode);
                     if (!isSynthetic) {
                         // JavaStubGenerator ignores private fields but I don't think we want to here
-                        FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), 0, 0);
+                        FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName().toCharArray(), fieldNode.getNameStart(), fieldNode.getNameEnd());
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!isEnumField) {
                             fieldDeclaration.modifiers = getModifiers(fieldNode);
@@ -2673,33 +2673,67 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Javadoc doc = findJavadoc(fieldNode.getLineNumber());
             fieldDecl.javadoc = doc;
 
+            // "/** javadoc comment. */ @Tag protected String  name = initializer() ; // trailing note"
+            //  ^declarationSourceStart ^modifiersSourceStart ^endPart1Position     ^declarationEnd  ^declarationSourceEnd
+
+            // "int i = 1, j = initializer();"
+            //            ^endPart2Position ^endPart2Position
+
             fieldDecl.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
+
             fieldDecl.modifiersSourceStart = fieldNode.getStart();
-            fieldDecl.declarationSourceEnd = fieldNode.getEnd()-1;
 
-            fieldDecl.sourceStart = fieldNode.getNameStart();
-            fieldDecl.sourceEnd = fieldNode.getNameEnd();
+            fieldDecl.endPart1Position = fieldNode.getType().getEnd(); // TODO: assumes one tab or space
 
-            // Here, we distinguish between the declaration and the fragment, e.g.- def x = 9, y = "l"
-            // 'x = 9,' and 'y = "l"' are the fragments and 'def x = 9, y = "l"' is the declaration
+            Integer end2pos = fieldNode.getNodeMetaData("end2pos");
+            if (end2pos != null) {
+                fieldDecl.endPart2Position = end2pos.intValue();
 
-            // end of the entire field declaration (after all fragments and including ';' if exists)
-            fieldDecl.declarationEnd = fieldNode.getEnd();
+                List<FieldNode> fields = fieldNode.getDeclaringClass().getFields();
+                int i = fields.indexOf(fieldNode), n = fields.size();
+                while (i + 1 < n && fields.get(i + 1).getStart() == fieldNode.getStart()) {
+                    i += 1;
+                }
+                // fields.get(i) should now be 'z' in "int x = 1, y = 2, z = 3;"
 
-            // TODO (groovy) each area marked with a '*' is only approximate
-            // and can be revisited to make more precise
+                Expression fieldInit = fields.get(i).getInitialExpression();
+                if (fieldInit != null && fieldInit.getEnd() > 0) {
+                    fieldDecl.declarationEnd = fieldInit.getEnd() - 1;
+                } else {
+                    fieldDecl.declarationEnd = fields.get(i).getNameEnd();
+                }
+                fieldDecl.declarationSourceEnd = fields.get(i).getEnd() - 1;
 
-            // * end of the type declaration part of the declaration (the same for each fragment)
-            // eg- int x, y corresponds to the location after 'int'
-            fieldDecl.endPart1Position = fieldNode.getNameStart();
+                // check for semicolon
+                if (sourceUnit.readSourceRange(fields.get(i).getEnd(), 1)[0] == ';') {
+                    fieldDecl.declarationSourceEnd += 1;
+                    fieldDecl.declarationEnd = fieldDecl.declarationSourceEnd;
+                    // TODO: if comment follows semicolon, JDT expects it as part of declarationSourceEnd
+                }
+            } else if (!fieldNode.isEnum()) {
+                Expression fieldInit = fieldNode.getInitialExpression();
+                if (fieldInit != null && fieldInit.getEnd() > 0) {
+                    fieldDecl.endPart2Position = fieldInit.getEnd() - 1;
+                } else {
+                    fieldDecl.endPart2Position = fieldNode.getNameEnd();
+                }
+                fieldDecl.declarationEnd = fieldDecl.endPart2Position;
+                fieldDecl.declarationSourceEnd = fieldNode.getEnd() - 1;
 
-            // * just before the start of the next fragment
-            // (or the end of the entire declaration if it is the last one)
-            // (how is this different from declarationSourceEnd?)
-            fieldDecl.endPart2Position = fieldNode.getEnd() - 1;
+                // check for semicolon
+                if (sourceUnit.readSourceRange(fieldNode.getEnd(), 1)[0] == ';') {
+                    fieldDecl.declarationSourceEnd += 1;
+                    fieldDecl.declarationEnd = fieldDecl.declarationSourceEnd;
+                    fieldDecl.endPart2Position = fieldDecl.declarationSourceEnd;
+                    // TODO: if comment follows semicolon, JDT expects it as part of declarationSourceEnd
+                }
+            } else {
+                fieldDecl.endPart1Position = fieldDecl.endPart2Position = 0;
+                fieldDecl.declarationEnd = fieldDecl.declarationSourceEnd = fieldNode.getEnd() - 1;
+            }
 
-            if (fieldDecl.initialization != null && fieldDecl.initialization.sourceStart < fieldDecl.declarationEnd) {
-                fieldDecl.initialization.sourceStart = fieldDecl.initialization.sourceEnd = fieldDecl.declarationEnd;
+            if (fieldDecl.initialization != null && fieldDecl.initialization.sourceStart < fieldDecl.sourceEnd) {
+                fieldDecl.initialization.sourceStart = fieldDecl.initialization.sourceEnd = fieldDecl.sourceEnd;
             }
         }
 

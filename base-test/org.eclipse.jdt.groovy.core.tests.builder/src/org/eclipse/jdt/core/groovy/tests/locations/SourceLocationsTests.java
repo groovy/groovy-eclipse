@@ -28,6 +28,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
@@ -151,8 +152,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         }
 
         String endTag = "/*" + astKind + memberNumber + "e*/";
-        int len = (isParrotParser() || (decl instanceof IMethod &&
-            decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
+        int len = (isParrotParser() || (decl instanceof IField && source.charAt(source.indexOf(endTag) - 1) == ';') ||
+            (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(decl.getFlags())) ? 0 : endTag.length());
         int end = source.indexOf(endTag) + len;
         if (len == 0 && source.substring(0, end).endsWith("*/")) {
             end = source.substring(0, end).lastIndexOf("/*");
@@ -246,8 +247,8 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 ||
                 (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
             bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
-        } else if (body instanceof FieldDeclaration) {
-            bodyEnd -= 1; // adjust for possible ';'
+        } else if (body instanceof FieldDeclaration && source.charAt(source.indexOf(endTag) - 1) != ';') {
+            end -= endTag.length();
         }
         assertEquals(body + "\nhas incorrect source end value", end, bodyEnd);
     }
@@ -311,7 +312,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "  /*m0s*/public static/*m0em*/ void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
             "    println 'Hello world';\n" +
             "  }/*m0e*/\n" +
-            "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/;\n" +
+            "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9;/*f1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -351,7 +352,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "  /*m0s*/def /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
             "    println 'Hello world'\n" +
             "  }/*m0e*/\n" +
-            "  /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n" +
+            "  /*f1s*/def /*f1sn*/x/*f1en*/;/*f1e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -719,9 +720,34 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     public void testSourceLocationsMultipleVariableFragments() throws Exception {
         String source =
             "package p1\n" +
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ /*t0sb*/{\n" +
-            "  /*f0s*/int /*f0sn*/x/*f0en*/ = 1/*f0e*/, /*f1s*//*f1sn*/y/*f1en*/ = 2/*f1e*/, /*f2s*//*f2sn*/z/*f2en*/ = 3/*f2e*/\n" +
-            "}/*t0e*/\n";
-        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+            "class Hello {\n" +
+            "  int x = 1, y = 2, z = 3;\n" +
+            "}\n";
+
+        IType type = createCompUnit("p1", "Hello", source).getTypes()[0];
+
+        IMember field = (IMember) type.getChildren()[0];
+        ISourceRange range = field.getSourceRange();
+        assertEquals(source.indexOf("int"), range.getOffset());
+        assertEquals(source.indexOf(";"), range.getOffset() + range.getLength() - 1);
+        range = field.getNameRange();
+        assertEquals(source.indexOf("x"), range.getOffset());
+        assertEquals(source.indexOf("x"), range.getOffset() + range.getLength() - 1);
+
+        field = (IMember) type.getChildren()[1];
+        range = field.getSourceRange();
+        assertEquals(source.indexOf("int"), range.getOffset());
+        assertEquals(source.indexOf(";"), range.getOffset() + range.getLength() - 1);
+        range = field.getNameRange();
+        assertEquals(source.indexOf("y"), range.getOffset());
+        assertEquals(source.indexOf("y"), range.getOffset() + range.getLength() - 1);
+
+        field = (IMember) type.getChildren()[2];
+        range = field.getSourceRange();
+        assertEquals(source.indexOf("int"), range.getOffset());
+        assertEquals(source.indexOf(";"), range.getOffset() + range.getLength() - 1);
+        range = field.getNameRange();
+        assertEquals(source.indexOf("z"), range.getOffset());
+        assertEquals(source.indexOf("z"), range.getOffset() + range.getLength() - 1);
     }
 }

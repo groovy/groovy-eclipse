@@ -2184,7 +2184,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private DeclarationListStatement createFieldDeclarationListStatement(VariableDeclarationContext ctx, ModifierManager modifierManager, ClassNode variableType, List<DeclarationExpression> declarationExpressionList, ClassNode classNode) {
-        for (int i = 0, n = declarationExpressionList.size(); i < n; i++) {
+        for (int i = 0, n = declarationExpressionList.size(); i < n; i += 1) {
             DeclarationExpression declarationExpression = declarationExpressionList.get(i);
             VariableExpression variableExpression = (VariableExpression) declarationExpression.getLeftExpression();
 
@@ -2192,7 +2192,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             int modifiers = modifierManager.getClassMemberModifiersOpValue();
 
-            Expression initialValue = EmptyExpression.INSTANCE.equals(declarationExpression.getRightExpression()) ? null : declarationExpression.getRightExpression();
+            Expression initialValue = declarationExpression.getRightExpression() instanceof EmptyExpression ? null : declarationExpression.getRightExpression();
             Object defaultValue = findDefaultValueByType(variableType);
 
             if (classNode.isInterface()) {
@@ -2208,6 +2208,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             } else {
                 declareProperty(ctx, modifierManager, variableType, classNode, i, variableExpression, fieldName, modifiers, initialValue);
             }
+            // GRECLIPSE add
+            if (i < n - 1) {
+                classNode.getDeclaredField(fieldName).putNodeMetaData("end2pos", Integer.valueOf(declarationExpressionList.get(i + 1).getStart() - 1));
+            }
+            // GRECLIPSE end
         }
 
         return null;
@@ -2246,6 +2251,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         groovydocManager.handle(fieldNode, ctx);
         groovydocManager.handle(propertyNode, ctx);
 
+        /* GRECLIPSE edit
         if (0 == i) {
             configureAST(fieldNode, ctx, initialValue);
             configureAST(propertyNode, ctx, initialValue);
@@ -2253,19 +2259,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             configureAST(fieldNode, variableExpression, initialValue);
             configureAST(propertyNode, variableExpression, initialValue);
         }
-        // GRECLIPSE add
+        */
+        if (initialValue != null && initialValue.getEnd() > 0) {
+            configureAST(fieldNode, ctx, initialValue);
+            configureAST(propertyNode, ctx, initialValue);
+        } else {
+            configureAST(fieldNode, ctx, variableExpression);
+            configureAST(propertyNode, ctx, variableExpression);
+        }
         fieldNode.setNameStart(variableExpression.getStart());
         fieldNode.setNameEnd(variableExpression.getEnd() - 1);
         propertyNode.setNameStart(variableExpression.getStart());
         propertyNode.setNameEnd(variableExpression.getEnd() - 1);
-        if (initialValue == null) {
-            fieldNode.setEnd(variableExpression.getEnd());
-            fieldNode.setLastLineNumber(variableExpression.getLastLineNumber());
-            fieldNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
-            propertyNode.setEnd(variableExpression.getEnd());
-            propertyNode.setLastLineNumber(variableExpression.getLastLineNumber());
-            propertyNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
-        }
         // GRECLIPSE end
     }
 
@@ -2295,19 +2300,20 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         modifierManager.attachAnnotations(fieldNode);
         groovydocManager.handle(fieldNode, ctx);
 
+        /* GRECLIPSE edit
         if (0 == i) {
             configureAST(fieldNode, ctx, initialValue);
         } else {
             configureAST(fieldNode, variableExpression, initialValue);
         }
-        // GRECLIPSE add
+        */
+        if (initialValue != null && initialValue.getEnd() > 0) {
+            configureAST(fieldNode, ctx, initialValue);
+        } else {
+            configureAST(fieldNode, ctx, variableExpression);
+        }
         fieldNode.setNameStart(variableExpression.getStart());
         fieldNode.setNameEnd(variableExpression.getEnd() - 1);
-        if (initialValue == null) {
-            fieldNode.setEnd(variableExpression.getEnd());
-            fieldNode.setLastLineNumber(variableExpression.getLastLineNumber());
-            fieldNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
-        }
         // GRECLIPSE end
     }
 

@@ -8560,7 +8560,7 @@ inputState.guessing--;
         }
         if ( inputState.guessing==0 ) {
             variableDeclarator_AST = (AST)currentAST.root;
-            variableDeclarator_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(mods).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t))).add(id_AST).add(v_AST));
+            variableDeclarator_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(mods).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",t,LT(1))).add(t))).add(id_AST).add(v_AST));
             currentAST.root = variableDeclarator_AST;
             currentAST.child = variableDeclarator_AST!=null &&variableDeclarator_AST.getFirstChild()!=null ?
                 variableDeclarator_AST.getFirstChild() : variableDeclarator_AST;
