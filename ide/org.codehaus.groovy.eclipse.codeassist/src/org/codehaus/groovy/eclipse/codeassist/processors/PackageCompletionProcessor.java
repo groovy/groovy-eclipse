@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -65,6 +66,10 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
 
     protected boolean doPackageCompletion(ContentAssistContext context, String expression) {
         if (expression.isEmpty() || ILLEGAL_CHARS.matcher(expression).find()) {
+            return false;
+        }
+        if (context.location == ContentAssistLocation.GENERICS &&
+                context.completionNode instanceof GenericsType) {
             return false;
         }
         // check for parameter name completion

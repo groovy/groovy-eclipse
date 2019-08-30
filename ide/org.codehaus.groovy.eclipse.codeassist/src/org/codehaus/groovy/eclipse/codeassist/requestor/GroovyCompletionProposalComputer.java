@@ -111,6 +111,11 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
             new PackageCompletionProcessorFactory()
         )));
 
+        locationFactories.put(ContentAssistLocation.GENERICS, Collections.unmodifiableList(Arrays.asList(
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory()
+        )));
+
         locationFactories.put(ContentAssistLocation.IMPLEMENTS, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory()

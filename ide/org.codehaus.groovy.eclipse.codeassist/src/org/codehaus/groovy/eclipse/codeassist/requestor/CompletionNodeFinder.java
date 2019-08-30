@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -157,6 +158,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         declarationStack.add(node);
 
+        visitGenerics(node.getGenericsTypes(), node);
+
         ClassNode ext = node.getUnresolvedSuperClass();
         if (check(ext)) {
             createContext(null, node, ContentAssistLocation.EXTENDS);
@@ -237,6 +240,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             }
 
             declarationStack.add(node);
+
+            visitGenerics(node.getGenericsTypes(), node);
 
             if (check(node.getReturnType())) {
                 createContext(null, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
@@ -368,6 +373,40 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
         if (args instanceof TupleExpression) {
             argumentListStack.removeLast();
+        }
+    }
+
+    /**
+     * @param gts generics from declaration, type reference or call expression
+     * @param node the enclosing declaration, type reference or call expression
+     */
+    private void visitGenerics(GenericsType[] gts, ASTNode node) {
+        if (isNotEmpty(gts) && gts[0].getStart() <= completionOffset && completionOffset <= gts[gts.length - 1].getEnd()) {
+            for (GenericsType gt : gts) {
+                if (gt.getStart() <= completionOffset && completionOffset <= gt.getEnd()) {
+                    if (!gt.isPlaceholder()) {
+                        ClassNode type = gt.getType();
+                        if (check(type)) {
+                            createContext(type, node, ContentAssistLocation.GENERICS);
+                        }
+                    }
+                    if (gt.getLowerBound() != null) {
+                        ClassNode type = gt.getLowerBound();
+                        if (check(type)) {
+                            createContext(type, node, ContentAssistLocation.GENERICS);
+                        }
+                    }
+                    if (isNotEmpty(gt.getUpperBounds())) {
+                        for (ClassNode type : gt.getUpperBounds()) {
+                            if (check(type)) {
+                                createContext(type, node, ContentAssistLocation.GENERICS);
+                            }
+                        }
+                    }
+                    createContext(gt, node, ContentAssistLocation.GENERICS);
+                }
+            }
+            createContext(null, node, ContentAssistLocation.GENERICS);
         }
     }
 
@@ -541,6 +580,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
         }
 
+        visitGenerics(constructorType.getGenericsTypes(), expression);
+
         visitArguments(expression.getArguments(), expression);
         // https://github.com/groovy/groovy-eclipse/issues/395
         if (expression.isUsingAnonymousInnerClass()) {
@@ -627,6 +668,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         objectExpression.visit(this);
 
         if (objectExpression.getEnd() < completionOffset && completionOffset <= methodExpression.getStart()) {
+            visitGenerics(expression.getGenericsTypes(), expression); // first check any call type arguments
             // probably a completion after dot in 'foo.\nbar()' or 'foo.\n"$bar"()' or '(foo).\ndef bar'
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
@@ -732,7 +774,14 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             boolean containsCompletionOffset = (completionOffset > node.getStart() && completionOffset <= node.getEnd());
             boolean containsSupportingOffset = (supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd());
 
-            return containsCompletionOffset || containsSupportingOffset;
+            if (!containsCompletionOffset && !containsSupportingOffset && node instanceof ClassNode) {
+                ClassNode type = (ClassNode) node;
+                if (type.isUsingGenerics()) {
+                    visitGenerics(type.getGenericsTypes(), type);
+                }
+            }
+
+            return (containsCompletionOffset || containsSupportingOffset);
         }
         return false;
     }

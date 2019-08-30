@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
@@ -123,6 +124,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
      * Don't show types...
      * <ul>
      * <li>if there is no previous text (except for imports or annotations)
+     * <li>if completing on generics wildcard, placeholder, "extends" or "super"
      * <li>if completing a constructor, method, for loop or catch parameter name
      * <li>when in a class body and there is a type declaration immediately before
      * </ul>
@@ -130,6 +132,9 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
     protected boolean doTypeCompletion(ContentAssistContext context, String expression) {
         if (expression.isEmpty()) {
             return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
+        }
+        if (context.location == ContentAssistLocation.GENERICS && context.completionNode instanceof GenericsType) {
+            return false;
         }
         // check for parameter name completion
         if (context.location == ContentAssistLocation.PARAMETER && context.completionNode != null) {
@@ -143,7 +148,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
     }
 
     protected int getSearchFor() {
-        switch(getContext().location) {
+        switch (getContext().location) {
         case EXTENDS:
             return IJavaSearchConstants.CLASS;
         case IMPLEMENTS:

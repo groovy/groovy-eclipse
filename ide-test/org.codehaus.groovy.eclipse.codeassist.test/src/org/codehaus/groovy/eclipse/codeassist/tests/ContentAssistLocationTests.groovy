@@ -1378,6 +1378,51 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         }
     }
 
+    @Test
+    void testTypeArguments1() {
+        assertLocation('Class<S#tring> c', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments2() {
+        assertLocation('Map<String, O#bject> m', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments3() {
+        assertLocation('Map<String,# Object> m', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments4() {
+        assertLocation('def list = (List<S#tring>) []', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments5() {
+        assertLocation('Collections.<S#tring>emptyList()', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments6() {
+        assertLocation('def list = new ArrayList<S#tring>()', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeArguments7() {
+        assertLocation('def list = new ArrayList<S#tring>() {\n}', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeParameters1() {
+        assertLocation('class C<T#> {}', ContentAssistLocation.GENERICS)
+    }
+
+    @Test
+    void testTypeParameters2() {
+        assertLocation('def <T#> T meth() {}', ContentAssistLocation.GENERICS)
+    }
+
     //--------------------------------------------------------------------------
 
     private void assertLocation(String contents, ContentAssistLocation expected,

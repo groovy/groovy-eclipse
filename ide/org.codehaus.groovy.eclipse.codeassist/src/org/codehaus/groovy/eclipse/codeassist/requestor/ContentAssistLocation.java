@@ -52,6 +52,11 @@ public enum ContentAssistLocation {
     EXCEPTIONS,
 
     /**
+     * Type parameters or arguments.
+     */
+    GENERICS,
+
+    /**
      * Constructor call types and their constructors are available.
      */
     CONSTRUCTOR,
