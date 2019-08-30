@@ -26,16 +26,35 @@ public enum ContentAssistLocation {
     /** Proposals should be restricted to annotation members. */
     ANNOTATION_BODY,
 
+    /** Proposals should be restricted to known packages. */
+    PACKAGE,
+
     /**
-     * Type proposals should be available. They should not cause an additional
-     * import statement, and filter out proposals of types already imported.
+     * Type and package proposals should be available. They should not cause an
+     * additional import statement and proposals for already-imported types
+     * should be excluded.
      */
     IMPORT,
 
     /**
-     * Package declarations. package proposals only.
+     * Types for extends clauses.
      */
-    PACKAGE,
+    EXTENDS,
+
+    /**
+     * Types for implements clauses.
+     */
+    IMPLEMENTS,
+
+    /**
+     * Exception types.
+     */
+    EXCEPTIONS,
+
+    /**
+     * Constructor call types and their constructors are available.
+     */
+    CONSTRUCTOR,
 
     /**
      * Types for parameters. Types proposals are available only. They cause the
@@ -44,34 +63,14 @@ public enum ContentAssistLocation {
     PARAMETER,
 
     /**
-     * Types for implements clauses.
-     */
-    IMPLEMENTS,
-
-    /**
-     * Types for extends clauses.
-     */
-    EXTENDS,
-
-    /**
-     * Exception types.
-     */
-    EXCEPTIONS,
-
-    /**
      * Part of an expression (e.g. foo.bar|, or foo().bar|).
      */
     EXPRESSION,
 
     /**
-     * Constructor call types and their constructors are available.
-     */
-    CONSTRUCTOR,
-
-    /**
-     * Start of a new statement. So, everything from expressions are available,
-     * but also local variables and types should be included
-     * Eg- all cases of 'A' fall into the STATEMENT location
+     * Start of a new statement. Everything from expressions are available,
+     * but also local variables and types should be included.
+     * Eg- all cases of 'A' fall into the STATEMENT location.
      *
      * <code>
      * A
@@ -87,19 +86,18 @@ public enum ContentAssistLocation {
     STATEMENT,
 
     /**
-     * Inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
-     */
-    CLASS_BODY,
-
-    /**
-     * Inside a script, but not in an expression. Here, type proposals,
-     * modifiers, and overridable methods, as well as statements should
-     * appear
+     * Inside a script, but not in an expression. Type proposals, modifiers and
+     * overridable methods, as well as statements should appear.
      */
     SCRIPT,
 
     /**
-     * Method call at a paren or a comma. Here should show context information of the relevant method.
+     * Inside a class body. Type proposals, modifiers and overridable methods should appear.
+     */
+    CLASS_BODY,
+
+    /**
+     * Method call at a paren or a comma. Should display context information of the relevant method.
      */
     METHOD_CONTEXT
 }

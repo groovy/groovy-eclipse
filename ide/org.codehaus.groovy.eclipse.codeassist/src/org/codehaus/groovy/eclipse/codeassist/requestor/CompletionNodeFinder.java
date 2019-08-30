@@ -151,7 +151,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitClass(ClassNode node) {
-        if (!check(node)) {
+        if (completionOffset <= node.getStart() || node.getEnd() < completionOffset) {
             return;
         }
 
@@ -181,13 +181,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitField(FieldNode node) {
-        if (!check(node)) {
+        if (completionOffset <= node.getStart() || node.getEnd() < completionOffset) {
             return;
         }
 
         declarationStack.add(node);
 
-        if (check(node.getType()) && !node.isEnum()) {
+        if (!node.isEnum() && check(node.getType())) {
             createContext(null, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
         }
 
@@ -197,7 +197,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         declarationStack.removeLast();
 
-        // enum bodies and static initializers are included in the field node's source range but are rooted elsewhere
+        // enum bodies and static initializers are included in the field's source range but are rooted elsewhere
         if (!node.isEnum() && !(node.isStatic() && node.getEnd() > node.getNameEnd() + 1)) {
             createContext(node, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
         }
@@ -205,14 +205,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitProperty(PropertyNode node) {
-        if (!check(node)) {
+        if (completionOffset <= node.getStart() || node.getEnd() < completionOffset) {
             return;
         }
 
         declarationStack.add(node);
 
-        ClassNode type = node.getType();
-        if (check(type)) {
+        if (check(node.getType())) {
             createContext(null, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
         }
 
@@ -225,42 +224,53 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitMethod(MethodNode node) {
-        if (node == runMethod) {
+        if (node == runMethod || node.isStaticConstructor()) {
             return;
         }
 
-        if (node.hasAnnotationDefault()) {
-            // provide some context for the visitation of the annotation attribute default value expression
-            lhsNode = new MemberValueExpression(node.getName(), ((ReturnStatement) node.getCode()).getExpression(), new AnnotationNode(node.getDeclaringClass()));
-        }
+        Statement body = node.getCode();
 
-        declarationStack.add(node);
+        if (!node.isScriptBody()) {
+            if (node.hasAnnotationDefault()) {
+                // provide some context for the visitation of the annotation attribute default value expression
+                lhsNode = new MemberValueExpression(node.getName(), ((ReturnStatement) node.getCode()).getExpression(), new AnnotationNode(node.getDeclaringClass()));
+            }
 
-        blockStack.add(node);
-        super.visitMethod(node);
-        blockStack.removeLast();
+            declarationStack.add(node);
 
-        if (isNotEmpty(node.getExceptions()) && !node.isScriptBody()) {
-            for (ClassNode type : node.getExceptions()) {
-                if (check(type)) {
-                    createContext(null, node, ContentAssistLocation.EXCEPTIONS);
+            if (check(node.getReturnType())) {
+                createContext(null, node.getDeclaringClass(), ContentAssistLocation.CLASS_BODY);
+            }
+
+            if (isNotEmpty(node.getExceptions())) {
+                for (ClassNode type : node.getExceptions()) {
+                    if (check(type)) {
+                        createContext(null, node, ContentAssistLocation.EXCEPTIONS);
+                    }
                 }
             }
-        }
 
-        Statement body = node.getCode();
-        if (body != null) {
-            if (completionOffset > Math.max(node.getStart(), node.getNameEnd() + 1) && completionOffset < body.getStart() && !node.isScriptBody()) {
-                // probably inside an empty parameters list
-                createContext(null, node, ContentAssistLocation.PARAMETER);
-            }
-            if (check(node) || node.isScriptBody()) {
-                if (body.getEnd() < 1) body.setSourcePosition(node);
-                createContext(body, body, expressionScriptOrStatement(node));
-            }
-        }
+            blockStack.add(node);
+            super.visitMethod(node);
+            blockStack.removeLast();
 
-        declarationStack.removeLast();
+            int lparenOffset = node.getNameEnd() + 1;
+            if (lparenOffset < completionOffset && completionOffset <= node.getEnd()) {
+                int rparenOffset = node.getNodeMetaData("rparen.offset");
+                if (completionOffset <= rparenOffset) {
+                    createContext(null, node, ContentAssistLocation.PARAMETER);
+                } else if (body != null && check(body)) {
+                    createContext(body, body, expressionOrStatement());
+                }
+            }
+            declarationStack.removeLast();
+        } else if (body != null) {
+            declarationStack.add(node);
+            blockStack.add(node);
+            body.visit(this);
+
+            createContext(body, body, expressionOrScript());
+        }
     }
 
     @Override
@@ -776,10 +786,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         throw new VisitCompleteException();
     }
 
-    private ContentAssistLocation expressionScriptOrStatement(MethodNode node) {
-        return node.isScriptBody() ? expressionOrScript() : expressionOrStatement();
-    }
-
     private ContentAssistLocation expressionOrScript() {
         return supportingNodeEnd == -1 ? ContentAssistLocation.SCRIPT : ContentAssistLocation.EXPRESSION;
     }
@@ -797,7 +803,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     private boolean isArgument(Expression expr, List<? extends Expression> args) {
-        if (args != null && !args.isEmpty()) {
+        if (isNotEmpty(args)) {
             for (Expression arg : args) {
                 if (arg == expr) {
                     return true;
