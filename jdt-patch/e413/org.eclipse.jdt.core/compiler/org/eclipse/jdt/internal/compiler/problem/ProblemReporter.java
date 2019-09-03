@@ -1614,7 +1614,7 @@ public int computeSeverity(int problemID){
 		case IProblem.VarargsConflict :
 			return ProblemSeverities.Warning;
  		case IProblem.TypeCollidesWithPackage :
-			return ProblemSeverities.Warning;
+			return ProblemSeverities.Error;
 
 		/*
 		 * Javadoc tags resolved references errors

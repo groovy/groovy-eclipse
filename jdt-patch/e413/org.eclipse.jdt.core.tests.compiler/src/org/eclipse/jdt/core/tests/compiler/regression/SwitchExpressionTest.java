@@ -24,7 +24,7 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
-//		TESTS_NAMES = new String[] { "testBug543240_1" };
+//		TESTS_NAMES = new String[] { "testBug548476" };
 	}
 	
 	public static Class<?> testClass() {
@@ -2473,6 +2473,103 @@ public class SwitchExpressionTest extends AbstractRegressionTest {
 			"	case MONDAY, SUNDAY:\n" + 
 			"	^^^^^^^^^^^^^^^^^^^\n" + 
 			"Duplicate case\n" + 
+			"----------\n");
+	}
+	public void testBug548476_01() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n" + 
+				"	I expr = () -> break;\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface I {\n" + 
+				"	void foo();\n" + 
+				"}",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 2)\n" + 
+			"	I expr = () -> break;\n" + 
+			"	               ^^^^^\n" + 
+			"Syntax error on token \"break\", invalid LambdaBody\n" + 
+			"----------\n");
+	}
+	public void testBug548476_02() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n" + 
+				"	void break () {}\n" + 
+				"}",
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 2)\n" + 
+			"	void break () {}\n" + 
+			"	     ^^^^^\n" + 
+			"Syntax error on token \"break\", Identifier expected\n" + 
+			"----------\n");
+	}
+	public void testBug548476_03() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n" + 
+				"}\n" + 
+				"\n" + 
+				"class break{}\n" 
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 4)\n" + 
+			"	class break{}\n" + 
+			"	      ^^^^^\n" + 
+			"Syntax error on token \"break\", Identifier expected\n" + 
+			"----------\n");
+	}
+	public void testBug548476_04() {
+		this.runNegativeTest(
+			new String[] {
+				"module-info.java",
+				"module break.me {\n" + 
+				"}\n" 
+			},
+			"----------\n" + 
+			"1. ERROR in module-info.java (at line 1)\n" + 
+			"	module break.me {\n" + 
+			"	       ^^^^^\n" + 
+			"Syntax error on token \"break\", Identifier expected\n" + 
+			"----------\n");
+	}
+	public void testBug548476_05() {
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"class X {\n"+
+				"  public static void foo(int i) {\n"+
+				"	  int v = switch (i) {\n"+
+				"	  case 0 -> {\n"+
+				"		  I k = () -> break;\n"+
+				"	  }\n"+
+				"	  default -> {\n"+
+				"		  I k = () -> break;\n"+
+				"		  break 0;\n"+
+				"	  }\n"+
+				"	  };\n"+
+				"  }\n"+
+				"}\n"+
+				"interface I {\n"+
+				"	void foo();\n"+
+				"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 5)\n" + 
+			"	I k = () -> break;\n" + 
+			"	            ^^^^^\n" + 
+			"Syntax error on token \"break\", invalid LambdaBody\n" + 
+			"----------\n" + 
+			"2. ERROR in X.java (at line 8)\n" + 
+			"	I k = () -> break;\n" + 
+			"	            ^^^^^\n" + 
+			"Syntax error on token \"break\", invalid LambdaBody\n" + 
 			"----------\n");
 	}
 }

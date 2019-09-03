@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -2459,7 +2459,7 @@ public class StaticImportTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" + 
-			"1. WARNING in node\\Test.java (at line 2)\n" + 
+			"1. ERROR in node\\Test.java (at line 2)\n" + 
 			"	public class Test {\n" + 
 			"	             ^^^^\n" + 
 			"The type Test collides with a package\n" + 

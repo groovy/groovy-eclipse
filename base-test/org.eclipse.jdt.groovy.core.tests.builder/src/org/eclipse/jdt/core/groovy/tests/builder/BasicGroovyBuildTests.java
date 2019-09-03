@@ -64,6 +64,7 @@ import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.framework.Version;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and groovy code
@@ -1015,9 +1016,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "com.acme.Foo", "xyz",
             "print 'abc'");
 
+        boolean conflictIsError = (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.19")) >= 0);
+
         incrementalBuild(paths[0]);
-        expectingSpecificProblemFor(cuPath, new Problem("", "The type Foo collides with a package",
-            cuPath, 31, 34, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_WARNING));
+        expectingSpecificProblemFor(cuPath, new Problem("", "The type Foo collides with a package", cuPath, 31, 34,
+            CategorizedProblem.CAT_TYPE, (conflictIsError ? IMarker.SEVERITY_ERROR : IMarker.SEVERITY_WARNING)));
         expectingCompiledClasses("com.acme.Foo", "xyz");
         executeClass(paths[0], "xyz", "abc", null);
     }

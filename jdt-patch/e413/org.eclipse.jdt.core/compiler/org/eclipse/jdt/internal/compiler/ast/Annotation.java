@@ -1283,7 +1283,7 @@ public abstract class Annotation extends Expression {
 	}
 
 	static void checkAnnotationTarget(Annotation annotation, BlockScope scope, ReferenceBinding annotationType, int kind, Binding recipient, long tagBitsToRevert) {
-		// GROOVY start
+		// GROOVY add
 		if (!scope.compilationUnitScope().checkTargetCompatibility()) {
 			return;
 		}

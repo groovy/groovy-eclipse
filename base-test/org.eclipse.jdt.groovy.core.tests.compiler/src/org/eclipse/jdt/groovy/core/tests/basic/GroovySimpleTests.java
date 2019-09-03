@@ -34,11 +34,13 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Test;
+import org.osgi.framework.Version;
 
 public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
@@ -245,9 +247,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        boolean conflictIsError = (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.19")) >= 0);
+
         runNegativeTest(sources,
             "----------\n" +
-            "1. WARNING in com\\foo\\Bar.java (at line 2)\n" +
+            "1. " + (conflictIsError ? "ERROR" : "WARNING") + " in com\\foo\\Bar.java (at line 2)\n" +
             "\tclass Bar {}\n" +
             "\t      ^^^\n" +
             "The type Bar collides with a package\n" +

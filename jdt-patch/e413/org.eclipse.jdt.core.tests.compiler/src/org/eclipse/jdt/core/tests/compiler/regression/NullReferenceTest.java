@@ -17467,7 +17467,7 @@ public void testBug435528_orig() {
 		"Statement unnecessarily nested within else clause. The corresponding then clause does not complete normally\n" + 
 		"----------\n";
 	runner.customOptions = getCompilerOptions();
-	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 	runner.runNegativeTest();
 }
 public void testBug435528_notaconstant() {
