@@ -32,6 +32,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.zip.ZipFile;
 
+import javax.lang.model.SourceVersion;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -169,12 +171,16 @@ public class FileSystem implements IModuleAwareNameEnvironment, SuffixConstants 
 
 	/** Tasks resulting from --add-reads or --add-exports command line options. */
 	Map<String,UpdatesByKind> moduleUpdates = new HashMap<>();
+	static boolean isJRE12Plus = false;
 
 	private boolean hasLimitModules = false;
 
-	static final boolean isJRE12Plus;
 	static {
-		isJRE12Plus = CompilerOptions.VERSION_12.equals(System.getProperty("java.specification.version")); //$NON-NLS-1$
+		try {
+			isJRE12Plus = SourceVersion.valueOf("RELEASE_12") != null; //$NON-NLS-1$
+		} catch(IllegalArgumentException iae) {
+			// fall back to default
+		}
 	}
 
 /*
