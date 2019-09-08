@@ -397,16 +397,17 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
-					<!--dependency-resolution>
+					<dependency-resolution>
 						<extraRequirements>
 							<requirement>
-								<id>org.eclipse.xyz</id>
-								<type>eclipse-feature</type>
-								<versionRange>0.0.0</versionRange>
+								<!-- for Error Log view -->
+								<type>eclipse-plugin</type>
+								<id>org.eclipse.pde.runtime</id>
+								<versionRange>[3.6.100,4)</versionRange>
 							</requirement>
 						</extraRequirements>
 					</dependency-resolution>
-					<pomDependencies>consider</pomDependencies-->
+					<pomDependencies>consider</pomDependencies>
 				</configuration>
 			</plugin>
 
