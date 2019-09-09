@@ -402,8 +402,8 @@
 							<requirement>
 								<!-- for Error Log view -->
 								<type>eclipse-plugin</type>
-								<id>org.eclipse.pde.runtime</id>
-								<versionRange>[3.6.100,4)</versionRange>
+								<id>org.eclipse.ui.views.log</id>
+								<versionRange>[1.2.200,4)</versionRange>
 							</requirement>
 						</extraRequirements>
 					</dependency-resolution>
