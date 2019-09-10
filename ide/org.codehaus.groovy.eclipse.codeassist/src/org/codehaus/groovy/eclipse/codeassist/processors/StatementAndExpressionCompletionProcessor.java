@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -84,7 +85,6 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -638,8 +638,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 // ordering of the proposals
                 if (lhsNode instanceof Variable) {
                     Variable variable = (Variable) lhsNode;
-                    VariableInfo info = result.scope.lookupName(variable.getName());
-                    lhsType = (info != null ? info.type : variable.getType());
+                    lhsType = Optional.ofNullable(result.scope.lookupName(variable.getName())).map(info -> info.type).orElse(variable.getType());
                 } else if (lhsNode instanceof PropertyExpression) {
                     lhsType = ((PropertyExpression) lhsNode).getProperty().getType();
                 }

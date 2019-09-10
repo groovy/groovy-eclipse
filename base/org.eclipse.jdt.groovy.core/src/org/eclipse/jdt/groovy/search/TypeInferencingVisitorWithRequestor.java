@@ -891,7 +891,7 @@ assert primaryExprType != null && dependentExprType != null;
                 ClassNode ownerType = scope.getThis();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
                 VariableScope.VariableInfo info = scope.lookupName("owner");
-                if (info == null || info.scopeNode instanceof ClosureExpression) {
+                if (info == null || info.type == null || info.scopeNode instanceof ClosureExpression) {
                     scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
                 }
                 scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
@@ -910,8 +910,8 @@ assert primaryExprType != null && dependentExprType != null;
             } else {
                 ClassNode delegateType = scope.getOwner();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
-                VariableScope.VariableInfo inf = scope.lookupName("delegate");
-                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+                VariableScope.VariableInfo info = scope.lookupName("delegate");
+                if (info == null || info.type == null || info.scopeNode instanceof ClosureExpression) {
                     scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
                 }
                 scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
@@ -931,8 +931,8 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("it", inferredParamTypes[0], VariableScope.CLOSURE_CLASS_NODE);
             }
 
-            //GRECLIPSE-598 make sure enclosingAssignment is set before visitClosureExpression() to make assignedVariable pointcut work
-            //immediately inside assigned closure block: def foo = { | }
+            // GRECLIPSE-598: make sure enclosingAssignment is set before visitClosureExpression() to make the
+            // assignedVariable pointcut work immediately inside assigned closure block like "def foo = { | }"
             scope.getWormhole().put("enclosingAssignment", enclosingAssignment);
 
             super.visitClosureExpression(node);
@@ -994,6 +994,10 @@ assert primaryExprType != null && dependentExprType != null;
             // visit anonymous inner class body
             if (node.isUsingAnonymousInnerClass()) {
                 scopes.add(new VariableScope(scopes.getLast(), type, false));
+                // in case of an enclosing closure, disable access to Closure's implicit variables (note: must keep in sync with visitClosureExpression)
+                Stream.of("owner", "getOwner", "delegate", "getDelegate", "thisObject", "getThisObject").map(name -> scopes.getLast().lookupName(name))
+                    .filter(info -> info != null && info.type != null && VariableScope.CLOSURE_CLASS_NODE.equals(info.declaringType))
+                    .forEach(info -> scopes.getLast().addVariable(info.name, null, VariableScope.CLOSURE_CLASS_NODE));
                 ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
                 IJavaElement enclosingElement0 = enclosingElement;
                 enclosingDeclarationNode = type;
@@ -2145,7 +2149,7 @@ assert primaryExprType != null && dependentExprType != null;
         // "bar = 123" may refer to "setBar(x)"
         if (node instanceof VariableExpression && node == scopes.getLast().getWormhole().get("lhs")) {
             VariableScope.VariableInfo info = scopes.getLast().lookupName(node.getText());
-            return (info != null ? Collections.singletonList(info.type) : null);
+            return (info == null || info.type == null ? null : Collections.singletonList(info.type));
         }
 
         // "foo.bar = 123" may refer to "setBar(x)"
@@ -2259,7 +2263,7 @@ assert primaryExprType != null && dependentExprType != null;
                         return expr.getType();
                     } else if (expr instanceof VariableExpression && expr.getText() != null) {
                         VariableScope.VariableInfo info = scope.lookupName(expr.getText());
-                        if (info != null) {
+                        if (info != null && info.type != null) {
                             // info.type should be Class<Category>
                             return info.type.getGenericsTypes()[0].getType();
                         }
@@ -2798,7 +2802,7 @@ assert primaryExprType != null && dependentExprType != null;
                     be.getLeftExpression() instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) be.getLeftExpression();
                 VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
-                if (vi != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
+                if (vi != null && vi.type != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
                     return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
                 }
             }

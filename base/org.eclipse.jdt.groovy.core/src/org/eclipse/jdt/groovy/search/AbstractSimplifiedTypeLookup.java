@@ -73,7 +73,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     protected Variable getDeclaredVariable(String name, VariableScope scope) {
         Variable var = null;
         VariableScope.VariableInfo info = scope.lookupName(name);
-        if (info != null) {
+        if (info != null && info.type != null) {
             org.codehaus.groovy.ast.VariableScope groovyScope = null;
             if (info.scopeNode instanceof MethodNode) {
                 groovyScope = ((MethodNode) info.scopeNode).getVariableScope();

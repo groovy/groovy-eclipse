@@ -1218,6 +1218,51 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAnonymousInnerClass25() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  String string = 'foo'\n" +
+            "}\n" +
+            "new Foo().with {\n" +
+            // anon. inner has static scoping
+            "  def bar = new Object() {\n" +
+            "    String string = 'bar'\n" +
+            "    @Override\n" +
+            "    String toString() { return string }\n" +
+            "  }\n" +
+            "  print bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "bar");
+    }
+
+    @Test
+    public void testAnonymousInnerClass25a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  String string = 'foo'\n" +
+            "}\n" +
+            "new Foo().with {\n" +
+            // anon. inner has static scoping
+            "  def bar = new Object() {\n" +
+            "    @Override\n" +
+            "    String toString() { return string }\n" +
+            "  }\n" +
+            "  print bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: string for class: Script");
+    }
+
+    @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off
         String[] sources = {

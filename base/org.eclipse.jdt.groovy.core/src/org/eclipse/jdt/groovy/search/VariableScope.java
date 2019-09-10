@@ -408,7 +408,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         }
         // TODO: When scope is popped, should the flag be restored to its previous value?
 
-        // initialize type of "this" (and by deduction "super"; see lookupName("super"))
+        // initialize type of "this" (and by extension "super"; see lookupName("super"))
         if (enclosingNode instanceof ClassNode) {
             ClassNode type = (ClassNode) enclosingNode;
             addVariable("this", newClassClassNode(type), type);
@@ -675,6 +675,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             if (scope.scopeNode instanceof ClosureExpression) {
                 return scope;
             }
+            if (scope.scopeNode instanceof ClassNode) {
+                break;
+            }
         } while ((scope = scope.parent) != null);
 
         return null;
@@ -736,7 +739,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (info == null && parent != null) {
             info = parent.lookupName(name);
         }
-        if (info != null) {
+        if (info != null && info.type != null) {
             nameVariableMap.put(name, merge(info, type, declaringType));
             // if variable is declared in a parent scope, mark it dirty
             if (info.scopeNode != this.scopeNode) {

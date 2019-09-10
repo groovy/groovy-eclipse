@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -1018,6 +1018,76 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
         assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+    }
+
+    @Test
+    public void testWithAndClosure5() throws Exception {
+        createUnit("p", "A",
+            "package p\n" +
+            "class A {\n" +
+            "  String foo\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "class B {\n" +
+            "  void meth() {\n" +
+            "    new A().with {\n" +
+            "      def c = new Object() {\n" +
+            "        String toString() {foo}\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.lastIndexOf("foo");
+        assertUnknownConfidence(contents, offset, offset + 3, "p.A", false);
+    }
+
+    @Test
+    public void testWithAndClosure6() throws Exception {
+        createUnit("p", "A",
+            "package p\n" +
+            "class A {\n" +
+            "  String foo\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "class B {\n" +
+            "  void meth() {\n" +
+            "    new A().with {\n" +
+            "      def c = new Object() {\n" +
+            "        String toString() {it.foo}\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.lastIndexOf("foo");
+        assertDeclaringType(contents, offset, offset + 3, "p.A");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/927
+    public void testWithAndClosure7() throws Exception {
+        createUnit("p", "A",
+            "package p\n" +
+            "class A {\n" +
+            "  String foo\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "class B {\n" +
+            "  void meth() {\n" +
+            "    new A().with {\n" +
+            "      def c = new Object() {\n" +
+            "        String foo = 'bar'\n" +
+            "        String toString() {foo}\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.lastIndexOf("foo");
+        assertDeclaringType(contents, offset, offset + 3, "p.B$1");
     }
 
     @Test
