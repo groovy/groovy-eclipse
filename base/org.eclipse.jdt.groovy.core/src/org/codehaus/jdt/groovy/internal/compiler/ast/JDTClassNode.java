@@ -17,12 +17,12 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static java.beans.Introspector.decapitalize;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import groovy.lang.MissingClassException;
 
@@ -612,7 +612,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                             ReflectionUtils.setPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding, memberTypes);
                         }
                         // workaround end
-                        Stream.of(jdtBinding.memberTypes()).map(resolver::convertToClassNode).forEach(cn -> {
+                        Arrays.stream(jdtBinding.memberTypes()).map(resolver::convertToClassNode).forEach(cn -> {
                             @SuppressWarnings("unused") // InnerClassNode constructor adds itself to this.innerClasses
                             ClassNode icn = new InnerClassNode(this, cn.getName(), cn.getModifiers(), cn.getSuperClass()) {{
                                 isPrimaryNode = false;
@@ -639,28 +639,28 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return getOuterClass().getDeclaredField(name);
     }
 
-    /**
-     * Some AST transforms are written such that they refer to typeClass on a ClassNode.
-     * This is not available under Eclipse. However, we can support it in a rudimentary
-     * fashion by attempting a class load for the class using the transform loader (if
-     * available).
-     */
     @Override
     public Class getTypeClass() {
-        if (clazz != null || unfindable) {
-            return clazz;
-        }
-        ClassLoader transformLoader = resolver.compilationUnit.getTransformLoader();
-        if (transformLoader != null) {
-            // TODO: What about array types?
-            try {
-                clazz = Class.forName(getName(), false, transformLoader);
-                return clazz;
-            } catch (ClassNotFoundException e) {
-                unfindable = true;
+        if (hasClass()) return clazz;
+        throw new MissingClassException(this, "-- JDTClassNode.getTypeClass() cannot locate it using transform loader");
+    }
+
+    @Override
+    public boolean hasClass() {
+        if (clazz == null && !unfindable) {
+            // Some AST transforms are written such that they refer to typeClass on a ClassNode.
+            // This is not available within Eclipse. However, we can support it in a rudimentary
+            // fashion by attempting a class load using the transform loader (if it's available).
+            ClassLoader transformLoader = resolver.compilationUnit.getTransformLoader();
+            if (transformLoader != null) {
+                try {
+                    clazz = Class.forName(getName(), false, transformLoader);
+                } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                    unfindable = true;
+                }
             }
         }
-        throw new MissingClassException(this, "-- JDTClassNode.getTypeClass() cannot locate it using transform loader " + transformLoader);
+        return (clazz != null);
     }
 
     public boolean isAnonymous() {

@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -121,18 +122,55 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }
             addTransformsToClassNode(annotation, transformClassAnnotation);
             */
-            String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
-            Class[] transformClasses = getTransformClasses(annotation.getClassNode());
-            if (transformClassNames == null && transformClasses == null) {
-                continue;
+            Class[] transformClasses = null;
+            String[] transformClassNames = null;
+            if (annotation.getClassNode().hasClass()) {
+                Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
+                if (transformClassAnnotation != null) {
+                    try {
+                        Method valueMethod = transformClassAnnotation.getClass().getMethod("value");
+                        transformClassNames = (String[]) valueMethod.invoke(transformClassAnnotation);
+
+                        Method classesMethod = transformClassAnnotation.getClass().getMethod("classes");
+                        transformClasses = (Class[]) classesMethod.invoke(transformClassAnnotation);
+                    } catch (Exception e) {
+                        source.addException(e);
+                    }
+                }
+            } else {
+                Optional<AnnotationNode> transformClassAnnotation = annotation.getClassNode().getAnnotations().stream()
+                    .filter(an -> an.getClassNode().getName().equals("org.codehaus.groovy.transform.GroovyASTTransformationClass")).findFirst();
+                if (transformClassAnnotation.isPresent()) {
+                    Expression value = transformClassAnnotation.get().getMember("value");
+                    if (value == null) {
+                        transformClassNames = new String[0];
+                    } else if (value instanceof ConstantExpression) {
+                        transformClassNames = new String[] {((ConstantExpression) value).getText()};
+                    } else if (value instanceof ListExpression) {
+                        transformClassNames = ((ListExpression) value).getExpressions().stream().map(expr -> ((ConstantExpression) expr).getText()).toArray(String[]::new);
+                    } else {
+                        throw new IllegalStateException("NYI: eclipse doesn't understand AnnotationCollector(value=" + value + ") class:" + value.getClass().getName());
+                    }
+
+                    Expression classes = transformClassAnnotation.get().getMember("classes");
+                    if (classes == null) {
+                        transformClasses = new Class[0];
+                    } else if (classes instanceof ListExpression) {
+                        transformClasses = ((ListExpression) classes).getExpressions().stream()
+                            .map(expr -> ((ClassExpression) expr).getType().getName())
+                            .map(name -> loadTransformClass(name, annotation))
+                            .toArray(Class[]::new);
+                    } else {
+                        throw new IllegalStateException("NYI: eclipse doesn't understand AnnotationCollector(classes=" + classes + ") class:" + classes.getClass());
+                    }
+                }
             }
-            if (transformClassNames == null) {
-                transformClassNames = NONE;
+
+            if (transformClassNames != null || transformClasses != null) {
+                if (transformClasses == null) transformClasses = new Class[0];
+                if (transformClassNames == null) transformClassNames = new String[0];
+                addTransformsToClassNode(annotation, transformClassNames, transformClasses);
             }
-            if (transformClasses == null) {
-                transformClasses = NO_CLASSES;
-            }
-            addTransformsToClassNode(annotation, transformClassNames, transformClasses);
             // GRECLIPSE end
         }
     }
@@ -299,51 +337,21 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
     */
-
-    // GRECLIPSE add
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
         if (transformClassNames.length == 0 && transformClasses.length == 0) {
-            source.getErrorCollector().addError(new SimpleMessage(
-                    "@GroovyASTTransformationClass in " + annotation.getClassNode().getName() +
-                    " does not specify any transform class names/classes", source));
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
+                    annotation.getClassNode().getName() + " does not specify any transform class names/classes", source));
         } else if (transformClassNames.length > 0 && transformClasses.length > 0) {
-            source.getErrorCollector().addError(new SimpleMessage(
-                    "@GroovyASTTransformationClass in " + annotation.getClassNode().getName() +
-                    " should specify transforms by class names or by classes, not by both", source));
+            source.getErrorCollector().addError(new SimpleMessage("@GroovyASTTransformationClass in " +
+                    annotation.getClassNode().getName() + " should specify transforms by class names or by classes, not by both", source));
         }
 
         for (String transformClass : transformClassNames) {
-            try {
-                Class klass = transformLoader.loadClass(transformClass, false, true, false);
-                verifyAndAddTransform(annotation, klass);
-            } catch (ClassNotFoundException e) {
-                source.getErrorCollector().addErrorAndContinue(new SimpleMessage(
-                        "Could not find class for Transformation Processor "+ transformClass +
-                        " declared by " + annotation.getClassNode().getName(), source));
-            }
+            Class klass = loadTransformClass(transformClass, annotation);
+            if (klass != null) verifyAndAddTransform(annotation, klass);
         }
         for (Class klass : transformClasses) {
-            verifyAndAddTransform(annotation, klass);
-        }
-    }
-
-    private String[] getTransformClassNames(Annotation transformClassAnnotation) {
-        try {
-            Method valueMethod = transformClassAnnotation.getClass().getMethod("value");
-            return (String[]) valueMethod.invoke(transformClassAnnotation);
-        } catch (Exception e) {
-            source.addException(e);
-            return NONE;
-        }
-    }
-
-    private Class[] getTransformClasses(Annotation transformClassAnnotation) {
-        try {
-            Method classesMethod = transformClassAnnotation.getClass().getMethod("classes");
-            return (Class[]) classesMethod.invoke(transformClassAnnotation);
-        } catch (Exception e) {
-            source.addException(e);
-            return NO_CLASSES;
+            if (klass != null) verifyAndAddTransform(annotation, klass);
         }
     }
     // GRECLIPSE end
@@ -440,106 +448,4 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         return result;
     }
     */
-
-    // GRECLIPSE add
-    private static final String[] NONE = new String[0];
-    private static final Class[] NO_CLASSES = new Class[0];
-
-    /**
-     * For the supplied classnode, this method will check if there is an annotation on it of kind 'GroovyASTTransformationClass'.  If there is then
-     * the 'value' member of that annotation will be retrieved and the value considered to be the class name of a transformation.
-     *
-     * @return null if no annotation found, otherwise a String[] of classnames - this will be size 0 if no value was specified
-     */
-    private String[] getTransformClassNames(ClassNode cn) {
-        if (!cn.hasClass()) {
-            List<AnnotationNode> annotations = cn.getAnnotations();
-            AnnotationNode transformAnnotation = null;
-            for (AnnotationNode anno: annotations) {
-                if (anno.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())) {
-                    transformAnnotation = anno;
-                    break;
-                }
-            }
-            if (transformAnnotation != null) {
-                // will work so long as signature for the member 'value' is String[]
-                Expression expr2 = transformAnnotation.getMember("value");
-                String[] values = null;
-                if (expr2 == null) {
-                    return NONE;
-                }
-                if (expr2 instanceof ListExpression) {
-                    ListExpression expression = (ListExpression) expr2;
-                    List<Expression> expressions = expression.getExpressions();
-                    values = new String[expressions.size()];
-                    int e = 0;
-                    for (Expression expr: expressions) {
-                        values[e++] = ((ConstantExpression) expr).getText();
-                    }
-                } else if (expr2 instanceof ConstantExpression) {
-                    values = new String[1];
-                    values[0] = ((ConstantExpression) expr2).getText();
-                } else {
-                    throw new IllegalStateException("NYI: eclipse doesn't understand this kind of expression in an Ast transform definition: " + expr2 + " (class=" + expr2.getClass().getName() + ")");
-                }
-                return values;
-            }
-            return null;
-        } else {
-            // FIXASC check haven't broken transforms for 'vanilla' (outside of eclipse) execution of groovyc
-            Annotation transformClassAnnotation = getTransformClassAnnotation(cn);
-            if (transformClassAnnotation == null) {
-                return null;
-            }
-            return getTransformClassNames(transformClassAnnotation);
-        }
-    }
-
-    private Class[] getTransformClasses(ClassNode classNode) {
-        if (!classNode.hasClass()) {
-            List<AnnotationNode> annotations = classNode.getAnnotations();
-            AnnotationNode transformAnnotation = null;
-            for (AnnotationNode anno: annotations) {
-                if (anno.getClassNode().getName().equals(GroovyASTTransformationClass.class.getName())) {
-                    transformAnnotation = anno;
-                    break;
-                }
-            }
-            if (transformAnnotation != null) {
-                Expression expr = transformAnnotation.getMember("classes");
-                if (expr == null) {
-                    return NO_CLASSES;
-                }
-                Class<?>[] values = NO_CLASSES;
-                // Will need to extract the classnames
-                if (expr instanceof ListExpression) {
-                    List<Class<?>> loadedClasses = new ArrayList<>();
-                    ListExpression expression = (ListExpression) expr;
-                    List<Expression> expressions = expression.getExpressions();
-                    for (Expression oneExpr: expressions) {
-                        String classname = ((ClassExpression) oneExpr).getType().getName();
-                        try {
-                            Class<?> clazz = Class.forName(classname, false, transformLoader);
-                            loadedClasses.add(clazz);
-                        } catch (ClassNotFoundException cnfe) {
-                            source.getErrorCollector().addError(new SimpleMessage("Ast transform processing, cannot find " + classname, source));
-                        }
-                    }
-                    if (!loadedClasses.isEmpty()) {
-                        values = loadedClasses.toArray(new Class[loadedClasses.size()]);
-                    }
-                    return values;
-                }
-                throw new RuntimeException("nyi implemented in eclipse: need to support: " + expr + " (class=" + expr.getClass() + ")");
-            }
-            return null;
-        } else {
-            Annotation transformClassAnnotation = getTransformClassAnnotation(classNode);
-            if (transformClassAnnotation == null) {
-                return null;
-            }
-            return getTransformClasses(transformClassAnnotation);
-        }
-    }
-    // GRECLIPSE end
 }

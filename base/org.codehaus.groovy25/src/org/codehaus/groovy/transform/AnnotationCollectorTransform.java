@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.transform;
 
+import groovy.lang.MissingClassException;
 import groovy.transform.AnnotationCollector;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
@@ -286,6 +287,17 @@ public class AnnotationCollectorTransform {
 
     // 2.5.3 and above gets from annotation attribute otherwise self
     private static ClassNode getSerializeClass(ClassNode alias) {
+        // GRECLIPSE add -- serializeClass is not available through AST in JDTClassNode for source reference
+        try {
+            Class<?> c = alias.getTypeClass();
+            AnnotationCollector ac = c.getAnnotation(AnnotationCollector.class);
+            Class<?> sc = ac.serializeClass();
+            if (!sc.equals(AnnotationCollector.class)) {
+                return new ClassNode(sc);
+            }
+        } catch (GroovyBugError | MissingClassException | NullPointerException ignore) {
+        }
+        // GRECLIPSE end
         List<AnnotationNode> annotations = alias.getAnnotations(ClassHelper.make(AnnotationCollector.class));
         if (!annotations.isEmpty()) {
             AnnotationNode annotationNode = annotations.get(0);
