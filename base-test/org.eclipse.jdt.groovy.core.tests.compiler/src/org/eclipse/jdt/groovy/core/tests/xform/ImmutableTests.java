@@ -34,6 +34,94 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
     public void testImmutable1() {
         //@formatter:off
         String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.Immutable class Foo {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("Foo.groovy",
+            "public @groovy.transform.Immutable class Foo {\n" +
+            "  public Foo() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testImmutable2() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.Immutable class Foo {\n" +
+            "  String bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("Foo.groovy",
+            "public @groovy.transform.Immutable class Foo {\n" +
+            "  private final String bar;\n" +
+            "  public Foo(public String bar) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testImmutable2a() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "import groovy.transform.Immutable\n" +
+            "@Immutable class Foo {\n" +
+            "  String bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("Foo.groovy",
+            "import groovy.transform.Immutable;\n" +
+            "public @Immutable class Foo {\n" +
+            "  private final String bar;\n" +
+            "  public Foo(public String bar) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testImmutable3() {
+        //@formatter:off
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p;\n" +
+            "import groovy.transform.Immutable\n" +
+            "@Immutable class Foo {\n" +
+            "  String bar\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("Foo.groovy",
+            "package p;\n" +
+            "import groovy.transform.Immutable;\n" +
+            "public @Immutable class Foo {\n" +
+            "  private final String bar;\n" +
+            "  public Foo(public String bar) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testImmutable4() {
+        //@formatter:off
+        String[] sources = {
             "c/Main.java",
             "package c;\n" +
             "public class Main {\n" +
@@ -60,7 +148,7 @@ public final class ImmutableTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
 
         CompilationUnit unit = getCUDeclFor("SomeValueObject.groovy").getCompilationUnit();
         ClassNode fieldType = unit.getClassNode("b.SomeValueObject").getField("id").getType();

@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.tests
 
 import static org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.MODIFIER_TOGGLE_COMPLETION_MODE
 
-import groovy.transform.NotYetImplemented
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -463,7 +461,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionCanonicalTransform() {
         String contents = '''\
             @groovy.transform.Canonical
@@ -479,7 +477,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionImmutableTransform() {
         String contents = '''\
             @groovy.transform.Immutable
@@ -495,7 +493,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testConstructorCompletionInheritConstructorsTransform() {
         String contents = '''\
             class Num {

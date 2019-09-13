@@ -176,7 +176,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     private final CompilationUnit compilationUnit;
 
-    private final CompilerOptions compilerOptions;
+            final CompilerOptions compilerOptions;
 
     private final SourceUnit groovySourceUnit;
 

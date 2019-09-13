@@ -15,10 +15,13 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -122,8 +125,62 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         return new GroovyClassScope(parent, typeDecl);
     }
 
+    protected void buildClassScopes(Scope parent, TypeDeclaration[] typeDecls) {
+        if (asBoolean(typeDecls)) {
+            for (TypeDeclaration typeDecl : typeDecls) {
+                typeDecl.scope = buildClassScope(parent, typeDecl);
+                buildClassScopes(typeDecl.scope, typeDecl.memberTypes);
+                /*if (typeDecl instanceof GroovyTypeDeclaration) { // recurse into anonymous inners
+                    buildClassScopes(typeDecl.scope, ((GroovyTypeDeclaration) typeDecl).getAnonymousTypes());
+                }*/
+            }
+        }
+    }
+
     @Override
     protected void buildTypeBindings(AccessRestriction accessRestriction) {
+        if (referenceContext.types != null && !referenceContext.compilationResult().hasErrors()) {
+            GroovyCompilationUnitDeclaration unitDecl = (GroovyCompilationUnitDeclaration) referenceContext;
+            if (unitDecl.getCompilationUnit().allowTransforms && (unitDecl.compilerOptions.produceReferenceInfo ||
+                    (!(unitDecl.getSourceUnit() instanceof EclipseSourceUnit) && unitDecl.compilationResult().unitIndex > 0))) {
+
+                System.err.printf("%s[%s]: phase: %s (%scomplete), xforms: %b, unitIndex: %d%n", String.valueOf(referenceContext.getFileName()),
+                    Thread.currentThread().getName(), unitDecl.getCompilationUnit().getPhaseDescription(), !unitDecl.getCompilationUnit().isPhaseComplete() ? "in" : "", unitDecl.getCompilationUnit().allowTransforms, unitDecl.compilationResult().unitIndex);
+
+                buildClassScopes(this, referenceContext.types);
+                // TODO: this.topLevelTypes is likely null but is required by CompilationUnitScope.verifyMethods, which is triggered by analyseCode
+
+                try {
+                    fPackage = (asBoolean(currentPackageName) ? environment.createPackage(currentPackageName) : environment.defaultPackage);
+                    unitDecl.analyseCode(); unitDecl.populateCompilationUnitDeclaration();
+                } catch (RuntimeException e) {
+                    e.printStackTrace();
+                } finally {
+                    fPackage = null;
+                }
+              //or
+//                Thread currentThread = Thread.currentThread();
+//                ClassLoader classLoader = currentThread.getContextClassLoader();
+//                currentThread.setContextClassLoader(unitDecl.getCompilationUnit().getTransformLoader());
+//                try {
+//                    fPackage = (asBoolean(currentPackageName) ? environment.createPackage(currentPackageName) : environment.defaultPackage);
+//                    unitDecl.getCompilationUnit().compile(org.codehaus.groovy.control.Phases.CANONICALIZATION);
+//                    unitDecl.populateCompilationUnitDeclaration();
+//
+//                    JDTResolver resolver = (JDTResolver) unitDecl.getCompilationUnit().getResolveVisitor();
+//                    for (TypeDeclaration typeDecl : unitDecl.types) {
+//                        if (typeDecl instanceof GroovyTypeDeclaration) {
+//                            resolver.record((GroovyTypeDeclaration) typeDecl);
+//                        }
+//                    }
+//                } catch (Throwable t) {
+//                    t.printStackTrace();
+//                } finally {
+//                    fPackage = null;
+//                    currentThread.setContextClassLoader(classLoader);
+//                }
+            }
+        }
         super.buildTypeBindings(accessRestriction);
     }
 

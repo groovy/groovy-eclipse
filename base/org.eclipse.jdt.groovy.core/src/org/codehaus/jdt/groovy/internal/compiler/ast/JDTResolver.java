@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -166,6 +166,7 @@ public class JDTResolver extends ResolveVisitor {
      * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be used.
      */
     public void record(GroovyTypeDeclaration typeDecl) {
+//log("record: " + typeDecl.getClassNode().toString(false));
         // FIXASC: Can the relationship here from classNode to scope be better preserved to remove the need for this map?
         scopes.put(typeDecl.getClassNode(), typeDecl);
 
@@ -229,6 +230,7 @@ public class JDTResolver extends ResolveVisitor {
             throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
         }
         activeScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
+//log("commencingResolution: " + currentClass.toString(false));
         if (DEBUG) {
             log("commencing resolution for " + currentClass.getName());
         }
@@ -246,6 +248,7 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     public synchronized void cleanUp() {
+//log("cleanUp");
         scopes.clear();
         inProgress.clear();
         currentClass = null;

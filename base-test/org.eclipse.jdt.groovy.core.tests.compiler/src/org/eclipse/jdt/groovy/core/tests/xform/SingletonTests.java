@@ -16,7 +16,6 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -24,7 +23,7 @@ import org.junit.Test;
  */
 public final class SingletonTests extends GroovyCompilerTestSuite {
 
-    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
+    @Test
     public void testSingleton1() {
         //@formatter:off
         String[] sources = {

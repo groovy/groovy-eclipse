@@ -19,7 +19,6 @@ import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -27,7 +26,7 @@ import org.junit.Test;
  */
 public final class CanonicalTests extends GroovyCompilerTestSuite {
 
-    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
+    @Test
     public void testCanonical1() {
         //@formatter:off
         String[] sources = {
