@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -88,9 +88,9 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
 
             // augment with the Groovy on-demand imports
-            importBindings.add(new ImportBinding(javaUtil, true, environment.getPackage(javaUtil, module()), null));
             importBindings.add(new ImportBinding(javaIo, true, environment.getPackage(javaIo, module()), null));
             importBindings.add(new ImportBinding(javaNet, true, environment.getPackage(javaNet, module()), null));
+            importBindings.add(1, new ImportBinding(javaUtil, true, environment.getPackage(javaUtil, module()), null));
             importBindings.add(new ImportBinding(groovyLang, true, environment.getPackage(groovyLang, module()), null));
             importBindings.add(new ImportBinding(groovyUtil, true, environment.getPackage(groovyUtil, module()), null));
 
