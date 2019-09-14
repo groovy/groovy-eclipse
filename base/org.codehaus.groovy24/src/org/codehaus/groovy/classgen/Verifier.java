@@ -41,15 +41,36 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
+import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
+import org.codehaus.groovy.ast.expr.NotExpression;
+import org.codehaus.groovy.ast.expr.PostfixExpression;
+import org.codehaus.groovy.ast.expr.PrefixExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
+import org.codehaus.groovy.ast.expr.SpreadExpression;
+import org.codehaus.groovy.ast.expr.SpreadMapExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
+import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -75,10 +96,12 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -601,25 +624,102 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             stmt.visit(new VerifierCodeVisitor(this));
             // check for uninitialized-this references
             stmt.visit(new CodeVisitorSupport() {
+                private final Deque<ASTNode> nodes = new ArrayDeque<>();
+
+                @Override
+                public void visitArrayExpression(ArrayExpression ae) {
+                    nodes.push(ae);
+                    super.visitArrayExpression(ae);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitAttributeExpression(AttributeExpression ae) {
+                    nodes.push(ae);
+                    super.visitAttributeExpression(ae);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitBinaryExpression(BinaryExpression be) {
+                    nodes.push(be);
+                    super.visitBinaryExpression(be);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitBitwiseNegationExpression(BitwiseNegationExpression bne) {
+                    nodes.push(bne);
+                    super.visitBitwiseNegationExpression(bne);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitBooleanExpression(BooleanExpression be) {
+                    nodes.push(be);
+                    super.visitBooleanExpression(be);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitCastExpression(CastExpression ce) {
+                    nodes.push(ce);
+                    super.visitCastExpression(ce);
+                    nodes.pop();
+                }
+
                 @Override
                 public void visitClosureExpression(ClosureExpression ce) {
-                    boolean oldInClosure = inClosure;
-                    inClosure = true;
+                    nodes.push(ce);
                     super.visitClosureExpression(ce);
-                    inClosure = oldInClosure;
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitClosureListExpression(ClosureListExpression cle) {
+                    nodes.push(cle);
+                    super.visitClosureListExpression(cle);
+                    nodes.pop();
                 }
 
                 @Override
                 public void visitConstructorCallExpression(ConstructorCallExpression cce) {
-                    boolean oldIsSpecialConstructorCall = inSpecialConstructorCall;
-                    inSpecialConstructorCall |= cce.isSpecialCall();
+                    nodes.push(cce);
                     super.visitConstructorCallExpression(cce);
-                    inSpecialConstructorCall = oldIsSpecialConstructorCall;
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitGStringExpression(GStringExpression gse) {
+                    nodes.push(gse);
+                    super.visitGStringExpression(gse);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitListExpression(ListExpression le) {
+                    nodes.push(le);
+                    super.visitListExpression(le);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitMapExpression(MapExpression me) {
+                    nodes.push(me);
+                    super.visitMapExpression(me);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitMapEntryExpression(MapEntryExpression mee) {
+                    nodes.push(mee);
+                    super.visitMapEntryExpression(mee);
+                    nodes.pop();
                 }
 
                 @Override
                 public void visitMethodCallExpression(MethodCallExpression mce) {
-                    if (inSpecialConstructorCall && isThisObjectExpression(mce)) {
+                    if (inSpecialConstructorCall() && isThisObjectExpression(mce)) {
                         MethodNode methodTarget = mce.getMethodTarget();
                         if (methodTarget == null || !(methodTarget.isStatic() || classNode.getOuterClasses().contains(methodTarget.getDeclaringClass()))) {
                             if (!mce.isImplicitThis()) {
@@ -628,28 +728,123 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                                 throw newVariableError(mce.getMethodAsString(), mce.getMethod());
                             }
                         }
+                        nodes.push(mce);
                         mce.getMethod().visit(this);
                         mce.getArguments().visit(this);
                     } else {
+                        nodes.push(mce);
                         super.visitMethodCallExpression(mce);
                     }
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitMethodPointerExpression(MethodPointerExpression mpe) {
+                    nodes.push(mpe);
+                    super.visitMethodPointerExpression(mpe);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitNotExpression(NotExpression ne) {
+                    nodes.push(ne);
+                    super.visitNotExpression(ne);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitPrefixExpression(PrefixExpression pe) {
+                    nodes.push(pe);
+                    super.visitPrefixExpression(pe);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitPropertyExpression(PropertyExpression pe) {
+                    nodes.push(pe);
+                    super.visitPropertyExpression(pe);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitPostfixExpression(PostfixExpression pe) {
+                    nodes.push(pe);
+                    super.visitPostfixExpression(pe);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitTernaryExpression(TernaryExpression te) {
+                    nodes.push(te);
+                    super.visitTernaryExpression(te);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitTupleExpression(TupleExpression te) {
+                    nodes.push(te);
+                    super.visitTupleExpression(te);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitRangeExpression(RangeExpression re) {
+                    nodes.push(re);
+                    super.visitRangeExpression(re);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitSpreadExpression(SpreadExpression se) {
+                    nodes.push(se);
+                    super.visitSpreadExpression(se);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitSpreadMapExpression(SpreadMapExpression sme) {
+                    nodes.push(sme);
+                    super.visitSpreadMapExpression(sme);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitUnaryMinusExpression(UnaryMinusExpression ume) {
+                    nodes.push(ume);
+                    super.visitUnaryMinusExpression(ume);
+                    nodes.pop();
+                }
+
+                @Override
+                public void visitUnaryPlusExpression(UnaryPlusExpression upe) {
+                    nodes.push(upe);
+                    super.visitUnaryPlusExpression(upe);
+                    nodes.pop();
                 }
 
                 @Override
                 public void visitVariableExpression(VariableExpression ve) {
+                    nodes.push(ve);
                     // before this/super ctor call completes, only params and static or outer members are accessible
-                    if (inSpecialConstructorCall && (ve.isThisExpression() || ve.isSuperExpression() || isNonStaticMemberAccess(ve))) {
-                        throw newVariableError(ve.getName(), ve.getLineNumber() > 0 ? ve : node.getOriginal());
+                    if (inSpecialConstructorCall() && (ve.isThisExpression() || ve.isSuperExpression() || isNonStaticMemberAccess(ve))) {
+                        throw newVariableError(ve.getName(), nodes.stream().filter(it -> it.getLineNumber() > 0).findFirst().orElse(ve));
                     }
+                    nodes.pop();
                 }
 
                 //
 
-                private boolean inClosure, inSpecialConstructorCall;
+                private boolean inClosure() {
+                    return nodes.stream().anyMatch(it -> it instanceof ClosureExpression);
+                }
+
+                private boolean inSpecialConstructorCall() {
+                    return nodes.stream().anyMatch(it -> it instanceof ConstructorCallExpression && ((ConstructorCallExpression) it).isSpecialCall());
+                }
 
                 private boolean isNonStaticMemberAccess(VariableExpression ve) {
                     Variable variable = ve.getAccessedVariable();
-                    return !inClosure && variable != null && !isStatic(variable.getModifiers())
+                    return !inClosure() && variable != null && !isStatic(variable.getModifiers())
                         && !(variable instanceof DynamicVariable) && !(variable instanceof Parameter);
                 }
 

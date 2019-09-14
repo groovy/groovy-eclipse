@@ -1383,9 +1383,9 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Outer.groovy (at line 6)\n" +
-            "\tOuter() {\n" +
-            "\t^\n" +
+            "1. ERROR in Outer.groovy (at line 7)\n" +
+            "\tthis(new Inner())\n" +
+            "\t               ^\n" +
             "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
@@ -1408,7 +1408,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Outer.groovy (at line 4)\n" +
             "\tOuter(Inner inner = new Inner()) {\n" +
-            "\t^\n" +
+            "\t                              ^\n" +
             "Groovy:Cannot reference 'this' before supertype constructor has been called.\n" +
             "----------\n");
     }
