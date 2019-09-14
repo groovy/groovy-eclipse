@@ -42,7 +42,6 @@ import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.InputStreamReaderSource;
 import org.codehaus.groovy.control.io.ReaderSource;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
-import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
@@ -54,8 +53,6 @@ import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.CodeSource;
@@ -712,6 +709,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
+    /* GRECLIPSE edit
     private GroovyClassOperation output = new GroovyClassOperation() {
         public void call(GroovyClass gclass) throws CompilationFailedException {
             String name = gclass.getName().replace('.', File.separatorChar) + ".class";
@@ -747,6 +745,7 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }
     };
+    */
 
     /* checks if all needed classes are compiled before generating the bytecode */
     private SourceUnitOperation compileCompleteCheck = new SourceUnitOperation() {
