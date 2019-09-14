@@ -286,7 +286,7 @@ public final class GroovyClassLoaderFactory {
 
                             defaultCategories = objectCategories;
                             defaultStaticCategories = staticCategories;
-                        } catch (Exception e) {
+                        } catch (Exception | NoClassDefFoundError e) {
                             defaultCategories = Collections.EMPTY_SET;
                             defaultStaticCategories = Collections.EMPTY_SET;
 
