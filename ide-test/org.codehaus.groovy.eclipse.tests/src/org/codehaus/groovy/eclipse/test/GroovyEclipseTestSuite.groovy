@@ -87,7 +87,7 @@ abstract class GroovyEclipseTestSuite {
     @Before
     final void setUpTestCase() {
         println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
+        println 'Starting: ' + test.methodName
     }
 
     @After
@@ -124,7 +124,7 @@ abstract class GroovyEclipseTestSuite {
         }
 
         spm = new SimpleProgressMonitor("$testProject.project.name reset classpath")
-        testProject.javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[0]), spm)
+        testProject.javaProject.setRawClasspath(entries as IClasspathEntry[], spm)
         spm.waitForCompletion()
     }
 
@@ -141,11 +141,9 @@ abstract class GroovyEclipseTestSuite {
             def options = JavaCore.options
             options.put(key, val)
             JavaCore.options = options
-
         } else if (key.startsWith(JavaPlugin.pluginId) || JavaPlugin.default.preferenceStore.contains(key)) {
             def prefs = JavaPlugin.default.preferenceStore
             prefs.setValue(key, val)
-
         } else {
             System.err.println("Unexpected preference: $key")
         }
@@ -232,7 +230,7 @@ abstract class GroovyEclipseTestSuite {
         testProject.waitForIndexer()
     }
 
-    protected final void withProject(@ClosureParams(value=SimpleType, options=['org.eclipse.core.resources.IProject']) Closure closure) {
+    protected final void withProject(@ClosureParams(value=SimpleType, options='org.eclipse.core.resources.IProject') Closure closure) {
         closure(testProject.project)
     }
 }
