@@ -1884,9 +1884,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (ImportReference importReference : unitDeclaration.imports) {
                     if (isAliasForType(importReference, compoundName[0])) {
                         typeName = CharOperation.concatWith(importReference.getImportName(), '.');
-                        //if (compoundName.length > 1) {
-                        //    typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
-                        //}
+                        if (compoundName.length > 1) {
+                            typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
+                        }
                         break;
                     }
                 }
@@ -1931,9 +1931,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     for (ImportReference importReference : unitDeclaration.imports) {
                         if (isAliasForType(importReference, compoundName[0])) {
                             typeName = CharOperation.concatWith(importReference.getImportName(), '.');
-                            //if (compoundName.length > 1) {
-                            //    typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
-                            //}
+                            if (compoundName.length > 1) {
+                                typeName = CharOperation.concatWith(typeName, CharOperation.subarray(compoundName, 1, -1), '.');
+                            }
                             break;
                         }
                     }
@@ -2032,18 +2032,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // need to distinguish between raw usage of a type 'List' and generics usage 'List<T>'
             // it basically depends upon whether the type variable reference can be resolved within
             // the current 'scope' - if it cannot then this is probably a raw reference (yes?)
-
-            if (classNode.isUsingGenerics()) {
-                GenericsType[] genericsInfo = classNode.getGenericsTypes();
-                if (genericsInfo != null) {
-                    for (GenericsType gt : genericsInfo) {
-                        TypeReference tr = createTypeReferenceForGenerics(gt);
-                        if (tr != null) {
-                            if (typeArguments == null) {
-                                typeArguments = new ArrayList<>();
-                            }
-                            typeArguments.add(tr);
+            GenericsType[] genericsTypes = classNode.getGenericsTypes();
+            if (genericsTypes != null) {
+                for (GenericsType gt : genericsTypes) {
+                    TypeReference tr = createTypeReferenceForGenerics(gt);
+                    if (tr != null) {
+                        if (typeArguments == null) {
+                            typeArguments = new ArrayList<>();
                         }
+                        typeArguments.add(tr);
                     }
                 }
             }
@@ -2080,7 +2077,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         if (compoundName.length == 1) {
                             compoundName = importReference.getImportName();
                         } else {
-                            //compoundName = CharOperation.arrayConcat(importReference.getImportName(), CharOperation.subarray(compoundName, 1, -1));
+                            compoundName = CharOperation.arrayConcat(importReference.getImportName(), CharOperation.subarray(compoundName, 1, -1));
                         }
                         break;
                     }
@@ -2106,7 +2103,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     return tr;
                 } else {
-                    // TODO: Support individual component parameterization: A<String>.B<Wibble>
+                    // TODO: Support individual component parameterization: A<X>.B<Y>
                     TypeReference[][] typeRefs = new TypeReference[compoundName.length][];
                     typeRefs[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
                     return new ParameterizedQualifiedTypeReference(compoundName, typeRefs, 0, positionsFor(compoundName, sourceStart, sourceEnd));

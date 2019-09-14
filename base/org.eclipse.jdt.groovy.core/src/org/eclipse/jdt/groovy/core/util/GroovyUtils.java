@@ -179,7 +179,7 @@ public class GroovyUtils {
     }
 
     public static ClassNode[] getTypeParameterBounds(ClassNode typeParam) {
-        if (typeParam.isGenericsPlaceHolder()) { assert typeParam.isUsingGenerics();
+        if (typeParam.isGenericsPlaceHolder()) {
             GenericsType[] generics = typeParam.getGenericsTypes();
             if (generics != null && generics.length > 0) {
                 ClassNode[] bounds = generics[0].getUpperBounds();
@@ -200,7 +200,7 @@ public class GroovyUtils {
     public static String getTypeSignature(ClassNode node, boolean qualified, boolean resolved) {
         String signature = getTypeSignatureWithoutGenerics(node, qualified, resolved);
 
-        if (getBaseType(node).isUsingGenerics() && !getBaseType(node).isGenericsPlaceHolder()) {
+        if (getBaseType(node).getGenericsTypes() != null && !getBaseType(node).isGenericsPlaceHolder()) {
             GenericsType[] generics = getGenericsTypes(node);
             if (generics.length > 0) {
                 StringBuilder builder = new StringBuilder(signature);
@@ -234,15 +234,21 @@ public class GroovyUtils {
             node = node.getComponentType();
         }
 
-        String name = node.getName();
+        String name;
         if (node.isGenericsPlaceHolder()) {
             // use "T" instead of "Object"
             name = node.getUnresolvedName();
-        } else if (!qualified) {
-            name = node.getNameWithoutPackage();
-            if (name.indexOf('$') > 0) {
-                name = node.getUnresolvedName();
+        } else if (resolved || node.getOuterClass() == null) {
+            name = qualified ? node.getName() : node.getNameWithoutPackage();
+        } else {
+            LinkedList<ClassNode> nodes = (LinkedList<ClassNode>) node.getOuterClasses();
+            nodes.addFirst(node);
+
+            StringBuilder sb = new StringBuilder(nodes.removeLast().getName());
+            while (!nodes.isEmpty()) {
+                sb.append('.').append(nodes.removeLast().getName().substring(sb.length()));
             }
+            name = sb.toString();
         }
         assert !name.startsWith("[") && !name.contains("<") && !name.endsWith(";");
 

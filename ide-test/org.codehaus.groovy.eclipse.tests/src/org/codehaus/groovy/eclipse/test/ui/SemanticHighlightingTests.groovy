@@ -3007,6 +3007,43 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testAliasType4() {
+        addGroovySource '''\
+            |class Bar {
+            |  enum Inner {
+            |    ONE, TWO
+            |  }
+            |}
+            |'''.stripMargin(), 'Bar', 'foo'
+
+        String contents = '''\
+            |import foo.Bar.Inner as Baz
+            |class C {
+            |  def meth(int idx = -1, obj = null, Baz baz) {
+            |    if (idx > 0) {
+            |        baz
+            |    } else {
+            |        obj
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('idx'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('-1'), 2, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('Baz'), 3, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('idx'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('obj'), 3, PARAMETER))
+    }
+
+    @Test
     void testLocalType() {
         addGroovySource '''\
             |interface I<T> extends Serializable {
