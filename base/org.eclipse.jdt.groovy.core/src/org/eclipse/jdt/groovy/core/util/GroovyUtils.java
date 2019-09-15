@@ -248,6 +248,8 @@ public class GroovyUtils {
             while (!nodes.isEmpty()) {
                 sb.append('.').append(nodes.removeLast().getName().substring(sb.length()));
             }
+            if (!qualified && node.getPackageName() != null) sb.delete(0, node.getPackageName().length() + 1);
+
             name = sb.toString();
         }
         assert !name.startsWith("[") && !name.contains("<") && !name.endsWith(";");
