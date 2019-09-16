@@ -333,9 +333,9 @@ public abstract class TraitComposer {
                 helperMethodArgList
         );
         mce.setImplicitThis(false);
-
+        /* GRECLIPSE edit -- GROOVY-8757
         genericsSpec = GenericsUtils.addMethodGenerics(helperMethod,genericsSpec);
-
+        */
         ClassNode[] exceptionNodes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
         ClassNode fixedReturnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
         boolean noCastRequired = genericsSpec.isEmpty() || fixedReturnType.getName().equals(ClassHelper.VOID_TYPE.getName());
@@ -345,8 +345,7 @@ public abstract class TraitComposer {
         // guaranteed to be always present
         boolean isHelperForStaticMethod = helperMethodParams[0].getOriginType().equals(ClassHelper.CLASS_Type);
         if (Modifier.isPrivate(access) && !isHelperForStaticMethod) {
-            // do not create forwarder for private methods
-            // see GROOVY-7213
+            // GROOVY-7213: do not create forwarder for private methods
             return;
         }
         if (!isHelperForStaticMethod) {
