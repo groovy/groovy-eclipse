@@ -20,7 +20,6 @@ import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -102,19 +101,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
-    /**
-     * @return {@code node}, unless the declaration is an {@link InnerClassNode}
-     */
     @Override
     public TypeLookupResult lookupType(final ClassNode node, final VariableScope scope) {
-        ClassNode type;
-        if (node.getOuterClass() != null && !node.isRedirectNode()) {
-            type = node.getSuperClass();
-            if (type.getName().equals(VariableScope.OBJECT_CLASS_NODE.getName()) && node.getInterfaces().length > 0) {
-                type = node.getInterfaces()[0];
+        ClassNode type = node;
+        if (node.getOuterClass() != null) {
+            if (!node.isRedirectNode() && GroovyUtils.isAnonymous(node)) {
+                // return extended/implemented type for anonymous inner class
+                if (node.getUnresolvedSuperClass() == VariableScope.OBJECT_CLASS_NODE) {
+                    type = node.getInterfaces()[0];
+                } else {
+                    type = node.getSuperClass();
+                }
+            } else if (Flags.isSynthetic(node.getModifiers()) && node.getName().endsWith("Helper") && node.getName().contains("$Trait$")) {
+                // return trait type for trait helper
+                type = node.getOuterClass();
             }
-        } else {
-            type = node;
         }
         return new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
     }
@@ -326,9 +327,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 collector.accept(staticImport.getType(), alias != null ? alias : methodName);
             }*/
 
-            for (Iterator<MethodNode> it = candidates.iterator(); it.hasNext();) {
-                if (!it.next().isStatic()) it.remove();
-            }
+            candidates.removeIf(candidate -> !candidate.isStatic());
 
             if (!candidates.isEmpty()) {
                 MethodNode closestMatch;

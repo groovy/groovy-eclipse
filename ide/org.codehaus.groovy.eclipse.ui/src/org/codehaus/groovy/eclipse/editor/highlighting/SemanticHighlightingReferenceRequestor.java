@@ -136,7 +136,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 });
             }
             if (!(enclosingElement instanceof IImportDeclaration || ((ClassNode) node).isScriptBody())) {
-                pos = handleClassReference((ClassNode) node);
+                pos = handleClassReference((ClassNode) node, result.type);
             }
 
         } else if (result.declaration instanceof FieldNode) {
@@ -249,7 +249,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
     }
 
-    private HighlightedTypedPosition handleClassReference(ClassNode node) {
+    private HighlightedTypedPosition handleClassReference(ClassNode node, ClassNode type) {
         int offset, length;
         if (node.getNameEnd() > 0) {
             offset = node.getNameStart();
@@ -264,16 +264,16 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         HighlightKind kind;
-        if (node.isEnum()) {
+        if (type.isEnum()) {
             kind = HighlightKind.ENUMERATION;
-        } else if (node.isGenericsPlaceHolder()) {
+        } else if (type.isGenericsPlaceHolder()) {
             kind = HighlightKind.PLACEHOLDER;
-        } else if (node.isAnnotationDefinition()) {
+        } else if (type.isAnnotationDefinition()) {
             kind = HighlightKind.ANNOTATION;
-        } else if (node.isInterface()/* <-- must follow isAnnotationDefinition() */) {
-            kind = Traits.isTrait(node) ? HighlightKind.TRAIT : HighlightKind.INTERFACE;
+        } else if (type.isInterface()/* <-- must follow isAnnotationDefinition() */) {
+            kind = Traits.isTrait(type) ? HighlightKind.TRAIT : HighlightKind.INTERFACE;
         } else {
-            kind = node.isAbstract() ? HighlightKind.ABSTRACT_CLASS : HighlightKind.CLASS;
+            kind = type.isAbstract() ? HighlightKind.ABSTRACT_CLASS : HighlightKind.CLASS;
         }
 
         return new HighlightedTypedPosition(offset, length, kind);

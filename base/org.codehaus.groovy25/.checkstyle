@@ -72,6 +72,7 @@
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/MethodCallExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/trait/SuperCallTraitTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/vmplugin/v5/Java5.java" include-pattern="false" />

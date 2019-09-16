@@ -3261,6 +3261,58 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, METHOD_CALL))
     }
 
+    @Test
+    void testTraits4() {
+        String contents = '''\
+            |trait T {
+            |  def whatever() {}
+            |}
+            |class C implements T {
+            |  void meth() {
+            |    T.super.whatever()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T {'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('whatever'), 8, METHOD),
+
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('T {'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('whatever'), 8, STATIC_CALL))
+    }
+
+    @Test
+    void testTraits5() {
+        String contents = '''\
+            |trait T {
+            |  def foo
+            |  void setBar(bar) {}
+            |}
+            |class C implements T {
+            |  void meth() {
+            |    T.super.foo = null
+            |    T.super.bar = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T {'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('setBar'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, PARAMETER),
+
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('T {'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('T.'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT))
+    }
+
     //
     private int counter
 

@@ -1364,4 +1364,36 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "    desc=\"(Ljava/lang/Object;)V\")\n" +
             "  public void setValue(java.lang.String " + (isAtLeastGroovy(25) ? "value" : "arg1") + ");\n");
     }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-7909
+    public void testTraits54() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            // defining Three before One and Two
+            "trait Three implements One, Two {\n" +
+            "  def postMake() {\n" +
+            "    One.super.postMake()\n" +
+            "    Two.super.postMake()\n" +
+            "    print 'Three'\n" +
+            "  }\n" +
+            "}\n" +
+            "trait One {\n" +
+            "  def postMake() { print 'One'}\n" +
+            "}\n" +
+            "trait Two {\n" +
+            "  def postMake() { print 'Two'}\n" +
+            "}\n" +
+            "class Four implements Three {\n" +
+            "  def make() {\n" +
+            "    Three.super.postMake()\n" +
+            "    print 'Four'\n" +
+            "  }\n" +
+            "}\n" +
+            "new Four().make()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "OneTwoThreeFour");
+    }
 }

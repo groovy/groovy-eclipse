@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -98,8 +98,8 @@ public class TypeLookupResult {
     /**
      * @param type the type of the expression being analyzed
      * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
+     * @param declaration the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
      * @param confidence the confidence in this type assertion
-     * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
      * @param scope the variable scope at this location
      */
     public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence, VariableScope scope) {
@@ -109,8 +109,8 @@ public class TypeLookupResult {
     /**
      * @param type the type of the expression being analyzed
      * @param declaringType the declaring type of the expression if the expression is a field, method, or type reference
+     * @param declaration the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
      * @param confidence the confidence in this type assertion
-     * @param the declaration that this node refers to, or null if none (ie- the method, field, class, or property node)
      * @param scope the variable scope at this location
      * @param extraDoc extra javadoc to be shown in hovers
      */

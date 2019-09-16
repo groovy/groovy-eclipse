@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -174,6 +174,26 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "trait Auditable extends Checkable {\n" +
             "  boolean audit() {\n" +
             "    if (check()) {\n" +
+            "      ;\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "check", "Checkable");
+        assertExprType(source, "check", "java.lang.Boolean");
+    }
+
+    @Test
+    public void testPublicStaticSuperMethod2() {
+        String source =
+            "trait Checkable {\n" +
+            "  static boolean check() {\n" +
+            "    true\n" +
+            "  }\n" +
+            "}\n" +
+            "trait Auditable extends Checkable {\n" +
+            "  boolean audit() {\n" +
+            "    if (Checkable.super.check()) {\n" +
             "      ;\n" +
             "    }\n" +
             "  }\n" +
