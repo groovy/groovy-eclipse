@@ -429,8 +429,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        // StatementAndExpressionCompletionProcessor circa line 390 has similar check for proposals
-        if (confidence == TypeConfidence.UNKNOWN && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
+        // StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
+        if (TypeConfidence.INFERRED.compareTo(confidence) < 0 && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && GroovyUtils.getGenericsTypes(declaringType).length > 0) {
             ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
                 // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations

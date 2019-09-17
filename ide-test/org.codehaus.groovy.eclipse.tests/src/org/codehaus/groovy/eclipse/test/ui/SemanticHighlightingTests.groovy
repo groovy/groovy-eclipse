@@ -3310,7 +3310,9 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('T {'), 1, TRAIT),
             new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
             new HighlightedTypedPosition(contents.indexOf('T.'), 1, TRAIT),
-            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT))
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
     }
 
     //
