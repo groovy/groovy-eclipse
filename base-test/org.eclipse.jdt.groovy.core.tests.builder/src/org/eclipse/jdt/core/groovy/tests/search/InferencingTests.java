@@ -1714,6 +1714,14 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testAnonInner1() {
+        String contents = "def foo = new Object() {}";
+        int start = contents.lastIndexOf("Object");
+        int end = start + "Object".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test
+    public void testAnonInner2() {
         String contents = "def foo = new Runnable() { void run() {} }";
         int start = contents.lastIndexOf("Runnable");
         int end = start + "Runnable".length();
@@ -1721,7 +1729,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testAnonInner2() {
+    public void testAnonInner3() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }";
         int start = contents.lastIndexOf("Comparable");
         int end = start + "Comparable".length();
@@ -1729,17 +1737,8 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testAnonInner3() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()} }";
-        int start = contents.lastIndexOf("compareTo");
-        int end = start + "compareTo".length();
-        assertDeclaringType(contents, start, end, "Search$1");
-    }
-
-    @Test
     public void testAnonInner4() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo.compareTo('one', 'two')";
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo() } }";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
         assertDeclaringType(contents, start, end, "Search$1");
@@ -1748,15 +1747,24 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testAnonInner5() {
         String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+            "foo.compareTo('one', 'two')";
+        int start = contents.lastIndexOf("compareTo");
+        int end = start + "compareTo".length();
+        assertDeclaringType(contents, start, end, "java.lang.Comparable<java.lang.String>");
+    }
+
+    @Test
+    public void testAnonInner6() {
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
             "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
             "foo.compareTo('one', 'two')";
         int start = contents.lastIndexOf("compareTo");
         int end = start + "compareTo".length();
-        assertDeclaringType(contents, start, end, "Search$2");
+        assertDeclaringType(contents, start, end, "java.lang.Comparable<java.lang.String>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/378
-    public void testAnonInner6() {
+    public void testAnonInner7() {
         String contents =
             "class A {\n" +
             "  protected def f\n" +
@@ -1779,7 +1787,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/383
-    public void testAnonInner7() {
+    public void testAnonInner8() {
         String contents =
             "class A {\n" +
             "  protected def m() { }\n" +

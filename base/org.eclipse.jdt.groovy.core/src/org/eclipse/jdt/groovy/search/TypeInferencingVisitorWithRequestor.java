@@ -971,8 +971,9 @@ assert primaryExprType != null && dependentExprType != null;
             final ClassNode type = node.getType();
             if (node.isUsingAnonymousInnerClass()) {
                 // in "new Type() { ... }", Type is super class or interface
-                if (type.getSuperClass() != VariableScope.OBJECT_CLASS_NODE) {
-                    visitClassReference(type.getUnresolvedSuperClass(false));
+                ClassNode superClass = type.getUnresolvedSuperClass(false);
+                if (superClass != VariableScope.OBJECT_CLASS_NODE) {
+                    visitClassReference(superClass); // incl. Object
                 } else {
                     visitClassReference(type.getInterfaces()[0]);
                 }

@@ -107,11 +107,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (node.getOuterClass() != null) {
             if (!node.isRedirectNode() && GroovyUtils.isAnonymous(node)) {
                 // return extended/implemented type for anonymous inner class
-                if (node.getUnresolvedSuperClass() == VariableScope.OBJECT_CLASS_NODE) {
-                    type = node.getInterfaces()[0];
-                } else {
-                    type = node.getSuperClass();
-                }
+                type = node.getUnresolvedSuperClass(false); if (type == VariableScope.OBJECT_CLASS_NODE) type = node.getInterfaces()[0];
+
             } else if (Flags.isSynthetic(node.getModifiers()) && node.getName().endsWith("Helper") && node.getName().contains("$Trait$")) {
                 // return trait type for trait helper
                 type = node.getOuterClass();
@@ -265,7 +262,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 resolvedDeclaringType = scope.getEnclosingMethodDeclaration().getDeclaringClass();
                 if (call.isSuperCall()) resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false);
             } else if (call.isUsingAnonymousInnerClass()) {
-                resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false); // nodeType is anon. inner
+                nodeType = lookupType(call.getType(), scope).type;
+                // resolve declaring type of the referenced constructor
+                resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false);
             }
 
             // try to find best match if there is more than one constructor to choose from
