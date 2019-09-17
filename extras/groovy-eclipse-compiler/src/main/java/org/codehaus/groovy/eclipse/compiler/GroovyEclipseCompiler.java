@@ -122,12 +122,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (verbose) getLogger().info("Compiler arguments: " + Arrays.toString(args));
             InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
 
-            List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
-            if (!result.success) {
-                messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
+            boolean success = result.success;
+            boolean failOnWarning = config.isFailOnWarning();
+            if (failOnWarning && result.globalWarningsCount > 0) {
+                success = false;
             }
 
-            return new CompilerResult(result.success, messages);
+            List<CompilerMessage> messages = parseMessages(success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
+            if (!success) {
+                messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount, failOnWarning));
+            }
+
+            return new CompilerResult(success, messages);
         }
     }
 
@@ -167,29 +173,40 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             try {
                 staleSources.addAll(scanner.getIncludedSources(sourcePath, outputDirectory));
             } catch (InclusionScanException e) {
-                throw new CompilerException("Error scanning source root: \'" + sourceRoot + "\' for stale files to recompile.", e);
+                throw new CompilerException(
+                        "Error scanning source root: \'" + sourceRoot + "\' for stale files to recompile.", e);
             }
         }
 
         return staleSources;
     }
 
-    private CompilerMessage formatFailure(int globalErrorsCount, int globalWarningsCount) {
+    private CompilerMessage formatFailure(int globalErrorsCount, int globalWarningsCount, boolean failOnWarning) {
         Kind kind;
         if (globalErrorsCount > 0) {
             kind = Kind.ERROR;
         } else if (globalWarningsCount > 0) {
-            kind = Kind.WARNING;
+            if (failOnWarning) {
+                kind = Kind.ERROR;
+            } else {
+                kind = Kind.WARNING;
+            }
         } else {
             kind = Kind.NOTE;
         }
 
         String error = globalErrorsCount == 1 ? "error" : "errors";
         String warning = globalWarningsCount == 1 ? "warning" : "warnings";
-        return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + ".", kind);
+        String failedOnWarning = "";
+        if(failOnWarning){
+            if(globalErrorsCount == 0 && globalWarningsCount > 0) {
+                failedOnWarning = " Warnings found and failOnWarning specified.";
+            }
+        }
+        return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + "." + failedOnWarning, kind);
     }
 
-    private Map<String,String> composeSourceFiles(File[] sourceFiles) {
+    private Map<String, String> composeSourceFiles(File[] sourceFiles) {
         Map<String, String> sources = new DeduplicatingHashMap<>(getLogger(), sourceFiles.length);
         for (File sourceFile : sourceFiles) {
             sources.put(sourceFile.getPath(), null);
@@ -293,9 +310,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
         }
-        if (config.isFailOnWarning()) {
-            args.put("-proceedOnError:Fatal", null);
-        }
+        /*if (config.isFailOnWarning()) {
+            args.put("-err:TODO", null);
+        }*/
         if (!config.isShowWarnings()) {
             args.put("-nowarn", null);
         }
