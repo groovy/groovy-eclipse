@@ -120,7 +120,7 @@
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.13milestones</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.13</url>
 				</repository>
 			</repositories>
 			<modules>
