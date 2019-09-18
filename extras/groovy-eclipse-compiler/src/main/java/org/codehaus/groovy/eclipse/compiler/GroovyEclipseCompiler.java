@@ -124,7 +124,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
             List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
             if (!result.success) {
-                messages.add(formatResult(result.success, result.globalErrorsCount, result.globalWarningsCount));
+                messages.add(formatFailure(result.globalErrorsCount, result.globalWarningsCount));
             }
 
             return new CompilerResult(result.success, messages);
@@ -174,23 +174,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return staleSources;
     }
 
-    private CompilerMessage formatResult(boolean result, int globalErrorsCount, int globalWarningsCount) {
-        if (result) {
-            return new CompilerMessage("Success!", Kind.NOTE);
+    private CompilerMessage formatFailure(int globalErrorsCount, int globalWarningsCount) {
+        Kind kind;
+        if (globalErrorsCount > 0) {
+            kind = Kind.ERROR;
+        } else if (globalWarningsCount > 0) {
+            kind = Kind.WARNING;
         } else {
-            Kind kind;
-            if (globalErrorsCount > 0) {
-                kind = Kind.ERROR;
-            } else if (globalWarningsCount > 0) {
-                kind = Kind.WARNING;
-            } else {
-                kind = Kind.NOTE;
-            }
-
-            String error = globalErrorsCount == 1 ? "error" : "errors";
-            String warning = globalWarningsCount == 1 ? "warning" : "warnings";
-            return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + ".", kind);
+            kind = Kind.NOTE;
         }
+
+        String error = globalErrorsCount == 1 ? "error" : "errors";
+        String warning = globalWarningsCount == 1 ? "warning" : "warnings";
+        return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + ".", kind);
     }
 
     private Map<String,String> composeSourceFiles(File[] sourceFiles) {
@@ -297,9 +293,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
         }
-        /*if (config.isFailOnWarning()) {
-            args.put("-err:TODO", null);
-        }*/
+        if (config.isFailOnWarning()) {
+            args.put("-failOnWarning", null);
+        }
         if (!config.isShowWarnings()) {
             args.put("-nowarn", null);
         }
