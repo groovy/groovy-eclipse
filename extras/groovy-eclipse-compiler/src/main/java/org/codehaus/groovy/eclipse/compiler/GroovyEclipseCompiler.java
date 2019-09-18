@@ -294,7 +294,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-deprecation", null);
         }
         if (config.isFailOnWarning()) {
-            args.put("-proceedOnError:Fatal", null);
+            args.put("-failOnWarning", null);
         }
         if (!config.isShowWarnings()) {
             args.put("-nowarn", null);
