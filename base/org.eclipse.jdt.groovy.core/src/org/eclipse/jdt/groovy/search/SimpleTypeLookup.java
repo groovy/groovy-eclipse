@@ -31,6 +31,7 @@ import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -59,6 +60,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -676,8 +678,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             List<MethodNode> candidates = getMethods(name, type);
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
-                if (innerCandidate.getOriginal() == null) {
-                    innerCandidate = null; // trait bridge
+                if (isTraitBridge(innerCandidate)) {
+                    continue;
                 }
                 if (outerCandidate == null) {
                     outerCandidate = innerCandidate;
@@ -967,6 +969,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static boolean isSynthetic(final MethodNode method) {
         // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
         return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE);
+    }
+
+    protected static boolean isTraitBridge(final MethodNode method) {
+        return method.getAnnotations().stream().map(AnnotationNode::getClassNode).anyMatch(Traits.TRAITBRIDGE_CLASSNODE::equals);
     }
 
     /**
