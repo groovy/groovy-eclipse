@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +33,7 @@ import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -376,11 +376,11 @@ public class JDTResolver extends ResolveVisitor {
     @Override
     protected boolean resolveToOuter(ClassNode type) {
         if (activeScope != null) {
-            // ask the JDT for a binary or source type, visible from this scope
+            // ask the JDT for a binary or source type that is visible from the active scope
             char[][] compoundName = CharOperation.splitOn('.', type.getName().toCharArray());
             TypeBinding jdtBinding = null;
             try {
-                jdtBinding = activeScope.getType(compoundName, compoundName.length); // TODO: Use getImport(char[][], boolean, boolean) in some cases?
+                jdtBinding = activeScope.getType(compoundName, compoundName.length);
             } catch (AbortCompilation t) {
                 if (!(t.silentException instanceof AbortIncrementalBuildException)) {
                     throw t;
@@ -391,7 +391,7 @@ public class JDTResolver extends ResolveVisitor {
                 if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                     jdtBinding = prBinding.closestMatch();
                 } else if (prBinding.problemId() == ProblemReasons.NotFound &&
-                    prBinding.closestMatch() instanceof MissingTypeBinding && currImportNode != null && currImportNode.isStar()) {
+                        prBinding.closestMatch() instanceof MissingTypeBinding && currImportNode != null && currImportNode.isStar()) {
                     MissingTypeBinding mtBinding = (MissingTypeBinding) prBinding.closestMatch();
                     mtBinding.fPackage.knownTypes.put(compoundName[compoundName.length - 1], null);
                 }
@@ -399,7 +399,8 @@ public class JDTResolver extends ResolveVisitor {
 
             ClassNode node = null;
             if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&
-                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || type.getName().equals(String.valueOf(jdtBinding.readableName())))) {
+                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) ||
+                        type.getName().contentEquals(new CharArraySequence(jdtBinding.readableName())))) {
                 node = convertToClassNode(jdtBinding);
             }
             if (DEBUG) {
@@ -411,7 +412,7 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        // Rudimentary grab support - if the compilation unit has our special classloader and as grab has occurred, try and find the class through it
+        // rudimentary grab support; if the compilation unit has our special classloader and a grab has occurred, try to find the class through it
         if (compilationUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader) {
             GrapeAwareGroovyClassLoader loader = (GrapeAwareGroovyClassLoader) compilationUnit.getClassLoader();
             if (loader.grabbed) {
@@ -471,7 +472,7 @@ public class JDTResolver extends ResolveVisitor {
             node = nodeCache.get(jdtBinding);
         }
         if (node != null) {
-            assert Arrays.equals(jdtBinding.readableName(), node.getJdtBinding().readableName());
+            assert CharOperation.equals(jdtBinding.readableName(), node.getJdtBinding().readableName());
         }
         return node;
     }
