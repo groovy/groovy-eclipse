@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+
 import java.util.Map;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -123,5 +125,65 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Foo(one, two)", options);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/957
+    public void testCanonical5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static void main(args) {\n" +
+            "    print(new Foo('bar'))\n" +
+            "  }\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "@groovy.transform.Canonical(excludes='baz')\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Foo(bar)");
+    }
+
+    @Test
+    public void testCanonical6() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.Canonical(doesNotExist=null)\n" +
+            "class Foo {\n" +
+            "  String bar, baz\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            (isAtLeastGroovy(25)
+                ?
+                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:Annotation collector got unmapped names [doesNotExist]. @ line 1, column 1.\n"
+                :
+                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:'doesNotExist'is not part of the annotation Canonical in @groovy.transform.Canonical\n" +
+                "----------\n" +
+                "2. ERROR in Foo.groovy (at line 1)\n" +
+                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+                "\t                            ^^^^^^^^^^^^^^^^^^\n" +
+                "The attribute doesNotExist is undefined for the annotation type Canonical\n" +
+                "----------\n" +
+                "3. ERROR in Foo.groovy (at line 1)\n" +
+                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+                "\t                                         ^^^^\n" +
+                "Groovy:Unexpected type java.lang.Object in @groovy.transform.Canonical\n"
+            ) +
+            "----------\n");
     }
 }

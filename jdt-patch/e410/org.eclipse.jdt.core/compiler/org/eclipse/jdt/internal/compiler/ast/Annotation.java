@@ -1283,7 +1283,7 @@ public abstract class Annotation extends Expression {
 	}
 
 	static void checkAnnotationTarget(Annotation annotation, BlockScope scope, ReferenceBinding annotationType, int kind, Binding recipient, long tagBitsToRevert) {
-		// GROOVY start
+		// GROOVY add
 		if (!scope.compilationUnitScope().checkTargetCompatibility()) {
 			return;
 		}
@@ -1428,11 +1428,12 @@ public abstract class Annotation extends Expression {
 	 * Try to eliminate things we don't care about from being 'special groovy handled'.
 	 */
 	private static boolean isInterestingGroovyType(ReferenceBinding rtb) {
-		if (rtb instanceof SourceTypeBinding) return true; // TODO: Find better check
-		FieldBinding f = rtb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve:*/ false);
-		return (f != null);
+		return (!rtb.isBinaryBinding() || // TODO: stricter check for source bindings
+			rtb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve:*/ false) != null ||
+			rtb.getPackage().knownTypes.containsKey(CharOperation.concat(rtb.sourceName(), COLLECTOR_HELPER_NAME)));
 	}
 
+	private static final char[] COLLECTOR_HELPER_NAME = "$CollectorHelper".toCharArray(); //$NON-NLS-1$
 	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$staticClassInfo".toCharArray(); //$NON-NLS-1$
 	// GROOVY end
 }
