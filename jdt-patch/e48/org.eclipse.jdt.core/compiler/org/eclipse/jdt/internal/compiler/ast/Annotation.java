@@ -1395,28 +1395,29 @@ public abstract class Annotation extends Expression {
 
 	// GROOVY add
 	private boolean isFakeGroovyAnnotation(TypeBinding tb) {
+		char[][] packageName = tb.getPackage().compoundName;
 		try {
-			if (tb instanceof ReferenceBinding) {
-				ReferenceBinding trb = (ReferenceBinding) tb;
-				if (isInterestingGroovyType(trb)) {
-					AnnotationBinding[] abs = trb.getAnnotations();
-					if (abs != null && abs.length > 0) {
-						for (AnnotationBinding ab : abs) {
-							if (ab == null) continue;
-							ReferenceBinding arb = ab.getAnnotationType();
-							if (arb != null && arb.compoundName != null) {
-								String name = CharOperation.toString(arb.compoundName);
-								if (name.equals("groovy.transform.AnnotationCollector")) { //$NON-NLS-1$
-									return true;
-								}
+			if ((packageName.length==0 || !CharOperation.equals(packageName[0], TypeConstants.JAVA)) &&
+					tb instanceof ReferenceBinding && isInterestingGroovyType((ReferenceBinding) tb)) {
+				AnnotationBinding[] annotations = tb.getAnnotations();
+				if (annotations != null && annotations.length > 0) {
+					for (AnnotationBinding ab : annotations) {
+						if (ab == null) continue;
+						ReferenceBinding arb = ab.getAnnotationType();
+						if (arb != null && arb.compoundName != null) {
+							String name = CharOperation.toString(arb.compoundName);
+							if (name.equals("groovy.transform.AnnotationCollector")) { //$NON-NLS-1$
+								return true;
 							}
 						}
 					}
 				}
 			}
-		} catch (Throwable t) {
+		} catch (org.eclipse.jdt.internal.compiler.problem.AbortCompilation abort) {
+			throw abort;
+		} catch (Exception e) {
 			// Protect the JDT!
-			t.printStackTrace();
+			e.printStackTrace();
 		}
 		return false;
 	}
@@ -1424,10 +1425,10 @@ public abstract class Annotation extends Expression {
 	/**
 	 * Try to eliminate things we don't care about from being 'special groovy handled'.
 	 */
-	private static boolean isInterestingGroovyType(ReferenceBinding rtb) {
-		return (!rtb.isBinaryBinding() || // TODO: stricter check for source bindings
-			rtb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve:*/ false) != null ||
-			rtb.getPackage().knownTypes.containsKey(CharOperation.concat(rtb.sourceName(), COLLECTOR_HELPER_NAME)));
+	private static boolean isInterestingGroovyType(ReferenceBinding tb) {
+		return (!tb.isBinaryBinding() || // TODO: stricter check for source bindings
+			tb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve:*/ false) != null ||
+			tb.getPackage().knownTypes.containsKey(CharOperation.concat(tb.sourceName(), COLLECTOR_HELPER_NAME)));
 	}
 
 	private static final char[] COLLECTOR_HELPER_NAME = "$CollectorHelper".toCharArray(); //$NON-NLS-1$
