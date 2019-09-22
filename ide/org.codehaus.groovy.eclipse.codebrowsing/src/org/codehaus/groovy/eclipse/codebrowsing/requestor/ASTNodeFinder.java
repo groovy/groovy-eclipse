@@ -230,8 +230,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                     checkTypes(call.getType().getUnresolvedInterfaces(false));
                 } else {
                     checkNameRange(call);
+                    checkGenerics(call.getType());
                 }
-                checkGenerics(call.getType());
             } else try {
                 int start = call.getStart() + "new ".length();
                 int until = call.getArguments().getStart() - 1;

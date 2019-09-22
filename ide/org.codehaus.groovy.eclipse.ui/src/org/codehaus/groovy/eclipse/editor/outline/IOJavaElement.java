@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,13 +18,14 @@ package org.codehaus.groovy.eclipse.editor.outline;
 import org.codehaus.groovy.ast.ASTNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.compiler.CharOperation;
 
 public interface IOJavaElement extends IJavaElement, ISourceReference {
 
     /**
      * No categories for IOJavaElements that don't exist
      */
-    String[] NO_CATEGORIES = new String[0];
+    String[] NO_CATEGORIES = CharOperation.NO_STRINGS;
 
     ASTNode getNode();
 }

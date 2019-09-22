@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**
  * Manipulator of all preferences for DSLD settings.
@@ -32,16 +34,13 @@ public class DSLPreferences {
      */
     public static final String DISABLED_SCRIPTS = "org.codehaus.groovy.eclipse.dsl.scripts.disabled";
 
-    private final static String[] EMPTY = new String[0];
-
     private DSLPreferences() {
-
     }
 
     public static String[] getDisabledScripts() {
         String disabled = GroovyDSLCoreActivator.getDefault().getPreferenceStore().getString(DISABLED_SCRIPTS);
         if (disabled == null) {
-            return EMPTY;
+            return CharOperation.NO_STRINGS;
         }
         return disabled.split(",");
     }

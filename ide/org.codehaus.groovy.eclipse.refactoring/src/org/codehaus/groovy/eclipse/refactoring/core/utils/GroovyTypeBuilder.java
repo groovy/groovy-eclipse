@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IScanner;
 import org.eclipse.jdt.core.compiler.ITerminalSymbols;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
@@ -181,7 +182,7 @@ public class GroovyTypeBuilder {
                 String fileComment = null, typeComment = null, typeContent = "class " + typeName + " {}";
                 if (addComments) {
                     fileComment = CodeGeneration.getFileComment(cu, lineDelimiter);
-                    String comment = CodeGeneration.getTypeComment(cu, typeName, new String[0], lineDelimiter);
+                    String comment = CodeGeneration.getTypeComment(cu, typeName, CharOperation.NO_STRINGS, lineDelimiter);
                     if (isValidComment(comment)) {
                         typeComment = comment;
                     }
@@ -245,7 +246,7 @@ public class GroovyTypeBuilder {
 
                 StringBuilder typeContent = new StringBuilder();
                 if (addComments) {
-                    String typeComment = CodeGeneration.getTypeComment(cu, JavaModelUtil.concatenateName(enclosingType.getTypeQualifiedName('.'), typeName), new String[0], lineDelimiter);
+                    String typeComment = CodeGeneration.getTypeComment(cu, JavaModelUtil.concatenateName(enclosingType.getTypeQualifiedName('.'), typeName), CharOperation.NO_STRINGS, lineDelimiter);
                     if (isValidComment(typeComment)) {
                         typeContent.append(typeComment).append(lineDelimiter);
                     }
@@ -496,7 +497,7 @@ public class GroovyTypeBuilder {
 
             if (addComments) {
                 String comment = CodeGeneration.getMethodComment(type.getCompilationUnit(), type.getTypeQualifiedName('.'),
-                    "main", new String[] {"args"}, new String[0], Signature.createTypeSignature("void", true), null, endl);
+                    "main", new String[] {"args"}, CharOperation.NO_STRINGS, Signature.createTypeSignature("void", true), null, endl);
                 if (comment != null) {
                     stub.append(comment).append(endl);
                 }
