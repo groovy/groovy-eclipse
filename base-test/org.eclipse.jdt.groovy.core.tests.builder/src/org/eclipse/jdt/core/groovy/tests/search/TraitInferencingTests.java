@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class TraitInferencingTests extends InferencingTestSuite {
@@ -32,7 +33,222 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     //--------------------------------------------------------------------------
 
     @Test
-    public void testPublicMethod() {
+    public void testProperty1() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    println number\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test @Ignore
+    public void testProperty2() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test @Ignore
+    public void testProperty3() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    println this.number\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test @Ignore
+    public void testProperty4() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    this.number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty5() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    println getNumber()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "getNumber", "T");
+        assertExprType(source, "getNumber", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty6() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "  void meth() {\n" +
+            "    setNumber(42)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "setNumber", "T");
+        assertExprType(source, "setNumber", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty7() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    println number\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty8() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty9() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    println this.number\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty10() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    this.number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty11() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    println getNumber()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "getNumber", "T");
+        assertExprType(source, "getNumber", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty12() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    setNumber(42)\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "setNumber", "T");
+        assertExprType(source, "setNumber", "java.lang.Void");
+    }
+
+    @Test
+    public void testProperty13() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    println T.super.number\n" +
+            "  }\n" +
+            "}\n";
+
+        // TODO: assertDeclType(source, "number", "T");
+        // TODO: assertExprType(source, "number", "java.lang.Number");
+        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length(), "T", false);
+    }
+
+    @Test @Ignore
+    public void testProperty14() {
+        String source =
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    T.super.number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Void");
+    }
+
+    //
+
+    @Test
+    public void testPublicMethod1() {
         String source =
             "trait Auditable {\n" +
             "  boolean check() {\n" +
@@ -107,7 +323,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
-    public void testPublicStaticSuperMethod() {
+    public void testPublicStaticSuperMethod1() {
         String source =
             "trait Checkable {\n" +
             "  static boolean check() {\n" +
@@ -147,7 +363,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPublicField() {
+    public void testPublicField1() {
         String source =
             "trait T {\n" +
             "  public String field\n" +
@@ -207,7 +423,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     //
 
     @Test
-    public void testPrivateMethod() {
+    public void testPrivateMethod1() {
         String source =
             "trait Auditable {\n" +
             "  private boolean check() {\n" +
@@ -300,7 +516,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPrivateField() {
+    public void testPrivateField1() {
         String source =
             "trait T {\n" +
             "  private String field\n" +

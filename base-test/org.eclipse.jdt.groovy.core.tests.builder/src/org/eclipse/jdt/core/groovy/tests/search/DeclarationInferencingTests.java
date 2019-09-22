@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -508,6 +508,52 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         String contents = "Other.@xxx";
         int start = contents.indexOf("xxx"), end = start + "xxx".length();
         assertUnknownConfidence(contents, start, end, "Other", false);
+    }
+
+    @Test
+    public void testSetterAndField1() {
+        String contents =
+            "class Foo {\n" +
+            "  String xxx\n" +
+            "  void setXxx(String xxx) { this.xxx = xxx }\n" +
+            "  void meth() { def closure = { xxx = ''; this.xxx = '' } }\n" +
+            "}";
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testSetterAndField2() {
+        createUnit("Foo",
+            "class Foo {\n" +
+            "  String xxx\n" +
+            "  void setXxx(String xxx) { this.xxx = xxx }\n" +
+            "}");
+
+        String contents =
+            "class Bar extends Foo {\n" +
+            "  String yyy\n" +
+            "  def meth() {\n" +
+            "    xxx = yyy\n" +
+            "    this.xxx = this.yyy\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.indexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("yyy", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "yyy", DeclarationKind.FIELD);
+
+            offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Foo", "setXxx", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("yyy");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "yyy", DeclarationKind.PROPERTY);
     }
 
     @Test

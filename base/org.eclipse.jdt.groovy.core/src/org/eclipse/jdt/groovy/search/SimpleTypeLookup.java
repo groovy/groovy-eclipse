@@ -485,7 +485,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
             ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
-                    (AccessorSupport.isGetter((MethodNode) candidate) && !var.getName().equals(((MethodNode) candidate).getName())))) {
+                    ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;
                     ClassNode owner = field.getDeclaringClass();
@@ -501,7 +501,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (Flags.isPrivate(((MethodNode) candidate).getModifiers()) && isNotThisOrOuterClass(resolvedDeclaringType, ((MethodNode) candidate).getDeclaringClass())) {
+                    if ((((MethodNode) candidate).isPrivate()) && isNotThisOrOuterClass(resolvedDeclaringType, ((MethodNode) candidate).getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
@@ -763,7 +763,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {
         Stream<MethodNode> accessors = AccessorSupport.findAccessorMethodsForPropertyName(propertyName, declaringType, false, !isLhsExpression ? READER : WRITER);
-        accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression));
+        accessors = accessors.filter(accessor -> isCompatible(accessor, isStaticExpression) && !isTraitBridge(accessor));
         if (isLhsExpression) {
             // use methodCallArgumentTypes to select closer match
             accessors = accessors.sorted((m1, m2) -> (m1 == closer(m2, m1, methodCallArgumentTypes) ? -1 : +1));
