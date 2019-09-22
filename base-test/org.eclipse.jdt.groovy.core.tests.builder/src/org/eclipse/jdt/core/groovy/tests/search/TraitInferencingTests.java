@@ -83,7 +83,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        assertDeclType(contents, "method", "A$Trait$Helper");
+        assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
     }
 
@@ -102,7 +102,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        assertDeclType(contents, "method", "B$Trait$Helper");
+        assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
     }
 
@@ -258,7 +258,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        assertDeclType(contents, "method", "A$Trait$Helper");
+        assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
     }
 
@@ -277,7 +277,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        assertDeclType(contents, "method", "B$Trait$Helper");
+        assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
     }
 

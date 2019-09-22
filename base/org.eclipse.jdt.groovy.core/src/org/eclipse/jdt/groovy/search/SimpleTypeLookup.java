@@ -110,8 +110,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (!node.isRedirectNode() && GroovyUtils.isAnonymous(node)) {
                 // return extended/implemented type for anonymous inner class
                 type = node.getUnresolvedSuperClass(false); if (type == VariableScope.OBJECT_CLASS_NODE) type = node.getInterfaces()[0];
-
-            } else if (Flags.isSynthetic(node.getModifiers()) && node.getName().endsWith("Helper") && node.getName().contains("$Trait$")) {
+            } else if (isTraitHelper(node)) {
                 // return trait type for trait helper
                 type = node.getOuterClass();
             }
@@ -407,12 +406,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     MethodNode method = (MethodNode) declaration;
                     if (isStaticObjectExpression && !method.isStatic() && !isStaticReferenceToInstanceMethod(scope)) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (Flags.isPrivate(method.getModifiers()) && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
+                    } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
                     } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters())) {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
+                    }
+                    if (isTraitHelper(resolvedDeclaringType) && method.getOriginal() != method) {
+                        resolvedDeclaringType = method.getOriginal().getDeclaringClass();
+                        declaration = method.getOriginal(); // the trait method
                     }
                 }
             } else if (VariableScope.CLASS_CLASS_NODE.equals(resolvedDeclaringType) && declaration instanceof MethodNode) {
@@ -973,6 +976,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected static boolean isTraitBridge(final MethodNode method) {
         return method.getAnnotations().stream().map(AnnotationNode::getClassNode).anyMatch(Traits.TRAITBRIDGE_CLASSNODE::equals);
+    }
+
+    protected static boolean isTraitHelper(final ClassNode candidate) {
+        return Flags.isSynthetic(candidate.getModifiers()) && candidate.getName().endsWith("Helper") && candidate.getName().contains("$Trait$") && Traits.isTrait(candidate.getOuterClass());
     }
 
     /**
