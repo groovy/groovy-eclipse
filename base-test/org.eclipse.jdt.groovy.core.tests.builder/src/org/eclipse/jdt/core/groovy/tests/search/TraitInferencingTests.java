@@ -145,7 +145,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
 
         assertDeclType(source, "number", "T");
-        assertExprType(source, "number", "java.lang.Void");
+        assertExprType(source, "number", "java.lang.Number");
     }
 
     @Test
@@ -177,7 +177,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
 
         assertDeclType(source, "number", "T");
-        assertExprType(source, "number", "java.lang.Void");
+        assertExprType(source, "number", "java.lang.Number");
     }
 
     @Test
@@ -242,7 +242,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
 
         assertDeclType(source, "number", "T");
-        assertExprType(source, "number", "java.lang.Void");
+        assertExprType(source, "number", "java.lang.Number");
     }
 
     //

@@ -271,6 +271,9 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         }
         initStatements.clear();
 
+        // GRECLIPSE add
+        cNode.putNodeMetaData("trait.properties", new ArrayList<>(cNode.getProperties()));
+        // GRECLIPSE end
         // clear properties to avoid generation of methods
         cNode.getProperties().clear();
 

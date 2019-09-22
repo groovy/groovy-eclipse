@@ -605,6 +605,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for property
         for (ClassNode type : typeHierarchy) {
             PropertyNode property = type.getProperty(name);
+            if (property == null && implementsTrait(declaringType) && Traits.isTrait(type)) {
+                property = Optional.ofNullable(type.redirect().<List<PropertyNode>>getNodeMetaData("trait.properties"))
+                    .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
+            }
             if (isCompatible(property, isStaticExpression)) {
                 return property;
             }
