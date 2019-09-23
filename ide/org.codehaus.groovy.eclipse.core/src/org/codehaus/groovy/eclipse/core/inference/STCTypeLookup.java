@@ -109,8 +109,8 @@ public class STCTypeLookup implements ITypeLookup {
                 }
 
                 if (methodTarget instanceof MethodNode) {
-                    declaration = methodTarget;
-                    declaringType = ((MethodNode) methodTarget).getDeclaringClass();
+                    declaration = ((MethodNode) methodTarget).getOriginal();
+                    declaringType = ((MethodNode) methodTarget).getOriginal().getDeclaringClass();
                     inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
                     if (inferredType == null) inferredType = ((MethodNode) methodTarget).getReturnType();
                 }

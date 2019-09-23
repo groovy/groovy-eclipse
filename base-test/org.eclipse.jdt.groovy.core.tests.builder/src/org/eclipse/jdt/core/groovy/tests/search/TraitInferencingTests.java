@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class TraitInferencingTests extends InferencingTestSuite {
@@ -229,7 +228,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length(), "T", false);
     }
 
-    @Test @Ignore
+    @Test
     public void testProperty14() {
         String source =
             "trait T {\n" +
@@ -242,7 +241,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
 
         assertDeclType(source, "number", "T");
-        assertExprType(source, "number", "java.lang.Number");
+        assertExprType(source, "number", "java.lang.Void");
     }
 
     //
