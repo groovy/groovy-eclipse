@@ -46,7 +46,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Number");
     }
 
-    @Test @Ignore
+    @Test
     public void testProperty2() {
         String source =
             "trait T {\n" +
@@ -60,7 +60,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Number");
     }
 
-    @Test @Ignore
+    @Test
     public void testProperty3() {
         String source =
             "trait T {\n" +
@@ -74,7 +74,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Number");
     }
 
-    @Test @Ignore
+    @Test
     public void testProperty4() {
         String source =
             "trait T {\n" +

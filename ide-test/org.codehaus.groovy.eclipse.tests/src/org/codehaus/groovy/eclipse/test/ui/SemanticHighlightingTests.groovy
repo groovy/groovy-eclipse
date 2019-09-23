@@ -3235,6 +3235,101 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testTraits3() {
+        String contents = '''\
+            |trait T {
+            |  String string
+            |  void method() {
+            |    this.string
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+    }
+
+    @Test
+    void testTraits4() {
+        String contents = '''\
+            |trait T {
+            |  String string
+            |  void method() {
+            |    this.getString()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('getString'), 9, METHOD_CALL))
+    }
+
+    @Test
+    void testTraits5() {
+        String contents = '''\
+            |trait T {
+            |  String string
+            |  void method() {
+            |    string = ''
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+    }
+
+    @Test
+    void testTraits6() {
+        String contents = '''\
+            |trait T {
+            |  String string
+            |  void method() {
+            |    this.string = ''
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('string'), 6, FIELD))
+    }
+
+    @Test
+    void testTraits7() {
+        String contents = '''\
+            |trait T {
+            |  String string
+            |  void method() {
+            |    this.setString('')
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('string'), 6, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('setString'), 9, METHOD_CALL))
+    }
+
+    @Test
+    void testTraits8() {
         addGroovySource '''\
             |trait T {
             |  String getFoo() { 'foo' }
@@ -3262,7 +3357,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits4() {
+    void testTraits9() {
         String contents = '''\
             |trait T {
             |  def whatever() {}
@@ -3286,7 +3381,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits5() {
+    void testTraits10() {
         String contents = '''\
             |trait T {
             |  def foo
