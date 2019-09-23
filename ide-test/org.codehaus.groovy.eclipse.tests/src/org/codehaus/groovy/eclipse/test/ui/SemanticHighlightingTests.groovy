@@ -2196,6 +2196,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('this'), 4, DEPRECATED))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/962
+    void testDeprecated11() {
+        addGroovySource '''\
+            |class Foo {
+            |  @Deprecated static def getSomeThing(one, two) {}
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            |import static Foo.getSomeThing as something
+            |class Bar {
+            |  @groovy.transform.CompileStatic
+            |  def baz(x, y) {
+            |    something(x, y)
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getSomeThing'), 12, DEPRECATED),
+            new HighlightedTypedPosition(contents.indexOf('Bar'), 3, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('baz'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x,'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('y)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 9, DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('y'), 1, PARAMETER))
+    }
+
     @Test
     void testNumberWithSuffix() {
         String contents

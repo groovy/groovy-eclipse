@@ -19,6 +19,7 @@
 package org.codehaus.groovy.ast.expr;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
@@ -221,12 +222,18 @@ public class MethodCallExpression extends Expression implements MethodCall {
             if (node instanceof MethodCallExpression) {
                 method.setSourcePosition(((MethodCallExpression) node).getMethod());
             } else if (node.getLineNumber() > 0) {
+                /* GRECLIPSE edit
                 method.setLineNumber(node.getLineNumber());
                 method.setColumnNumber(node.getColumnNumber());
                 method.setLastLineNumber(node.getLineNumber());
                 method.setLastColumnNumber(node.getColumnNumber() + getMethodAsString().length());
-                // GRECLIPSE add
-                method.setStart(node.getStart()); method.setEnd(method.getStart() + getMethodAsString().length());
+                */
+                method.setLineNumber(-1);
+                method.setColumnNumber(-1);
+                method.setLastLineNumber(-1);
+                method.setLastColumnNumber(-1);
+                method.setStart(((AnnotatedNode) node).getNameStart());
+                method.setEnd(((AnnotatedNode) node).getNameEnd() + 1);
                 // GRECLIPSE end
             }
             if (arguments != null) {

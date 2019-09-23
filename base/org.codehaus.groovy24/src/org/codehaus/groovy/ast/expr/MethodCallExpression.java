@@ -19,6 +19,7 @@
 package org.codehaus.groovy.ast.expr;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
@@ -219,9 +220,13 @@ public class MethodCallExpression extends Expression implements MethodCall {
         if (node instanceof MethodCall) {
             if (node instanceof MethodCallExpression) {
                 method.setSourcePosition(((MethodCallExpression) node).getMethod());
-            } else {
-                method.setSourcePosition(node);
-                method.setEnd(method.getStart() + getMethodAsString().length());
+            } else if (node.getLineNumber() > 0) {
+                method.setLineNumber(-1);
+                method.setColumnNumber(-1);
+                method.setLastLineNumber(-1);
+                method.setLastColumnNumber(-1);
+                method.setStart(((AnnotatedNode) node).getNameStart());
+                method.setEnd(((AnnotatedNode) node).getNameEnd() + 1);
             }
             if (arguments != null) {
                 arguments.setSourcePosition(((MethodCall) node).getArguments());
