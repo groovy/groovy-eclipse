@@ -615,10 +615,9 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         } else {
             methodNode.addAnnotation(new AnnotationNode(Traits.IMPLEMENTED_CLASSNODE));
         }
-        // GRECLIPSE edit
-        //methodNode.setCode(null);
-        // GRECLIPSE end
-
+        /* GRECLIPSE edit
+        methodNode.setCode(null);
+        */
         if (!methodNode.isPrivate() && !methodNode.isStatic()) {
             methodNode.setModifiers(ACC_PUBLIC | ACC_ABSTRACT);
         }

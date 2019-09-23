@@ -350,7 +350,11 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 Traits.getSuperTraitMethodName(traitClass, method),
                 superCallArgs
         );
+        /* GRECLIPSE edit
         transformed.setSourcePosition(call);
+        */
+        transformed.getMethod().setSourcePosition(call.getMethod());
+        // GRECLIPSE end
         transformed.setSafe(call.isSafe());
         transformed.setSpreadSafe(call.isSpreadSafe());
         transformed.setImplicitThis(false);

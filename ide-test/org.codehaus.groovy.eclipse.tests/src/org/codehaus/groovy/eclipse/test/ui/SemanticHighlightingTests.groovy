@@ -3410,6 +3410,37 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('bar'), 3, STATIC_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/961
+    void testTraits11() {
+        // http://docs.groovy-lang.org/latest/html/documentation/#_semantics_of_super_inside_a_trait
+        String contents = '''\
+            |trait Filtering {
+            |  StringBuilder append(String str) {
+            |    def sub = str.replace('o', '')
+            |    super.append(sub)
+            |  }
+            |  String toString() {
+            |    super.toString()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Filtering'), 9, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('StringBuilder'), 13, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('append'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String '), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('str'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('sub'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('replace'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('str'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('append'), 6, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('sub'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('String '), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('toString'), 8, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('toString'), 8, UNKNOWN))
+    }
+
     //
     private int counter
 

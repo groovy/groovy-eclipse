@@ -110,7 +110,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         HighlightedTypedPosition pos = null;
         if (result.confidence == TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             // GRECLIPSE-1327: check to see if this is a synthetic call() on a closure reference
-            if (isRealASTNode(node)) {
+            if (isRealASTNode(node) || node.getText().contains("trait$super$")) {
                 Position p = getPosition(node);
                 typedPositions.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
                 // don't continue past an unknown reference
@@ -510,7 +510,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
         int contentsLength = unitLength();
         char[] textArr = text.toCharArray();
-        for (int i = 0, j = node.getStart(); i < textArr.length && j < contentsLength; i++, j++) {
+        for (int i = 0, j = node.getStart(); i < textArr.length && j < contentsLength; i += 1, j += 1) {
             if (textArr[i] != contents[j]) {
                 return false;
             }
