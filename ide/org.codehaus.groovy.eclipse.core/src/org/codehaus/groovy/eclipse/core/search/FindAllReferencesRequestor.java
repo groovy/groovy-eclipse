@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.core.search;
 
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -110,8 +109,9 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             return maybeField.getName().equals(field.getName()) && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
         } else if (maybeDeclaration instanceof MethodNode && declaration instanceof MethodNode) {
             MethodNode maybeMethod = (MethodNode) maybeDeclaration, method = (MethodNode) declaration;
-            return maybeMethod.getName().equals(method.getName()) && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) &&
-                checkParams(Optional.ofNullable(maybeMethod.getOriginal()).orElse(maybeMethod).getParameters(), method.getParameters());
+            return maybeMethod.getName().equals(method.getName()) &&
+                maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) &&
+                checkParams(maybeMethod.getOriginal().getParameters(), method.getParameters());
         }
         // check for inner class nodes
         if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode) ||

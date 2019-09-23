@@ -468,7 +468,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     Parameter[] parameters = null;
                     if (declaration instanceof MethodNode) {
                         name = ((MethodNode) declaration).getName();
-                        parameters = Optional.ofNullable(((MethodNode) declaration).getOriginal()).orElse((MethodNode) declaration).getParameters();
+                        parameters = ((MethodNode) declaration).getOriginal().getParameters();
                     }
                     maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }
