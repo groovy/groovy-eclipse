@@ -26,6 +26,45 @@
 
 	<profiles>
 		<profile>
+			<id>release</id>
+
+			<pluginRepositories>
+				<pluginRepository>
+					<id>spring-plugins-snapshot</id>
+					<name>Spring Plugins Repository</name>
+					<url>https://repo.spring.io/plugins-snapshot</url>
+					<snapshots>
+						<enabled>true</enabled>
+					</snapshots>
+				</pluginRepository>
+			</pluginRepositories>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springsource.ide</groupId>
+						<artifactId>p2.composite.site.maven.plugin</artifactId>
+						<version>1.0.0-SNAPSHOT</version>
+						<executions>
+							<execution>
+								<configuration>
+									<name>Groovy Development Tools for ${dist.target}</name>
+									<sites>
+										<param>https://${dist.bucket}/${dist.type}/${dist.key}/${dist.version}/${dist.target}</param>
+									</sites>
+									<target>${project.build.directory}</target><!-- writes compositeArtifacts.xml and compositeContent.xml -->
+								</configuration>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
 			<id>s3-deploy</id>
 			<activation>
 				<property>
@@ -58,9 +97,8 @@
 										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
 
 										<echo>==== dist props are set so we can deploy? ===</echo>
-										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
 										<echo>dist_properties=${env.dist_properties}</echo>
-										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
+										<echo>bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
 
 										<echo>dist.accessKey=${dist.accessKey}</echo> <!-- on bamboo this is !@#!@# -->
 										<echo>accessKey=${accessKey}</echo> <!-- so be sure to only use this property directly! -->
@@ -68,32 +106,26 @@
 										<property name="site.target.dir" value="${project.build.directory}" />
 										<echo>site.target.dir=${site.target.dir}</echo>
 
-										<echo>unqualifiedVersion=${unqualifiedVersion}</echo>
-										<echo>buildQualifier=${buildQualifier}</echo>
 										<property name="dist.full.version" value="${unqualifiedVersion}.${buildQualifier}" />
-										<echo>dist.full.version=${dist.full.version}</echo>
+										<echo>dist.full.version=${dist.full.version}</echo><!-- ex: 3.5.0.v201909232147-e1909 -->
 
 										<property name="dist.file.name" value="${dist.project}-${dist.full.version}-updatesite.zip" />
-										<echo>dist.file.name=${dist.file.name}</echo>
+										<echo>dist.file.name=${dist.file.name}</echo><!-- ex: org.codehaus.groovy-3.5.0.v201909232147-e1909-updatesite.zip -->
 
-										<!--property name="dist.full.path" value="${site.target.dir}/site_assembly.zip" /-->
-										<property name="dist.full.path" value="${site.target.dir}/site/${dist.file.name}" />
+										<property name="dist.full.path" value="${site.target.dir}/${dist.file.name}" />
 
 										<delete file="${dist.full.path}" />
 										<zip zipfile="${dist.full.path}" filesonly="true">
-											<zipfileset dir="${site.target.dir}/site">
-												<exclude name="*.zip" />
-												<exclude name="**/*.gz" />
-											</zipfileset>
+											<zipfileset dir="${site.target.dir}/site" />
 										</zip>
 										<checksum file="${dist.full.path}" algorithm="MD5" fileext=".md5" />
 										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
 
-										<echo>Preparing for upload... This will happen:</echo>
+										<echo>Preparing for upload...</echo>
 
 										<echo>Will Delete: </echo>
-										<echo> dist.bucket=${dist.bucket}</echo>
-										<echo> dist.path=${dist.path}</echo>
+										<echo> dist.bucket=${dist.bucket}</echo><!-- ex: dist.springsource.org -->
+										<echo> dist.path=${dist.path}</echo><!-- ex: snapshot/GRECLIPSE/e4.13 -->
 
 										<echo>Will Upload: </echo>
 										<echo> dist.bucket=${dist.bucket}</echo>
@@ -104,37 +136,50 @@
 										<echo> dist.bucket=${dist.bucket}</echo>
 										<echo> fromFile=${dist.full.path}</echo>
 										<echo> toFile=${dist.path}/${dist.file.name}</echo>
-										<echo> metadata project.name=${dist.name}</echo>
-										<echo> metadata release.type=${dist.type}</echo>
 										<echo> metadata bundle.version=${dist.full.version}</echo>
 										<echo> metadata package.file.name=${dist.file.name}</echo>
+										<echo> metadata project.name=${dist.name}</echo>
+										<echo> metadata release.type=${dist.type}</echo>
 
 										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
-													<include name="site.xml" />
-													<include name="content.jar" />
 													<include name="artifacts.jar" />
-													<include name="plugins/**" />
+													<include name="content.jar" />
 													<include name="features/**" />
+													<include name="plugins/**" />
+													<include name="site.xml" />
 												</fileset>
 											</delete>
 
 											<upload bucketName="${dist.bucket}" toDir="${dist.path}" publicRead="true">
-												<fileset dir="${site.target.dir}/site">
-													<include name="**/*" />
-													<include name="**" />
-													<exclude name="*.zip" />
-												</fileset>
+												<fileset dir="${site.target.dir}/site" />
 											</upload>
 
-											<upload bucketName="${dist.bucket}" file="${dist.full.path}" toFile="${dist.path}/${dist.file.name}" publicRead="true">
-												<metadata name="project.name" value="${dist.name}" />
-												<metadata name="release.type" value="${dist.type}" />
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}" toDir="${dist.path}" publicRead="true">
 												<metadata name="bundle.version" value="${dist.full.version}" />
 												<metadata name="package.file.name" value="${dist.file.name}" />
+												<metadata name="project.name" value="${dist.name}" />
+												<metadata name="release.type" value="${dist.type}" />
 											</upload>
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}.md5" toDir="${dist.path}" publicRead="true" />
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}.sha1" toDir="${dist.path}" publicRead="true" />
 										</s3>
+
+										<if>
+											<equals arg1="${dist.type}" arg2="release" />
+											<then>
+												<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+													<delete bucketName="${dist.bucket}">
+														<fileset dir="${dist.type}/${dist.key}/${dist.target}" includes="composite*.xml" />
+													</delete>
+
+													<upload bucketName="${dist.bucket}" toDir="${dist.type}/${dist.key}/${dist.target}" publicRead="true">
+														<fileset dir="${site.target.dir}" includes="composite*.xml" />
+													</upload>
+												</s3>
+											</then>
+										</if>
 									</target>
 								</configuration>
 								<goals>
@@ -174,7 +219,6 @@
 					</plugin>
 				</plugins>
 			</build>
-
 		</profile>
 	</profiles>
 </project>
