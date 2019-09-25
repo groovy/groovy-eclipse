@@ -96,15 +96,9 @@
 										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
 
-										<echo>==== dist props are set so we can deploy? ===</echo>
+										<echo>== Are props set so we can deploy? ==</echo>
 										<echo>dist_properties=${env.dist_properties}</echo>
 										<echo>bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
-
-										<echo>dist.accessKey=${dist.accessKey}</echo> <!-- on bamboo this is !@#!@# -->
-										<echo>accessKey=${accessKey}</echo> <!-- so be sure to only use this property directly! -->
-
-										<property name="site.target.dir" value="${project.build.directory}" />
-										<echo>site.target.dir=${site.target.dir}</echo>
 
 										<property name="dist.full.version" value="${unqualifiedVersion}.${buildQualifier}" />
 										<echo>dist.full.version=${dist.full.version}</echo><!-- ex: 3.5.0.v201909232147-e1909 -->
@@ -112,11 +106,11 @@
 										<property name="dist.file.name" value="${dist.project}-${dist.full.version}-updatesite.zip" />
 										<echo>dist.file.name=${dist.file.name}</echo><!-- ex: org.codehaus.groovy-3.5.0.v201909232147-e1909-updatesite.zip -->
 
-										<property name="dist.full.path" value="${site.target.dir}/${dist.file.name}" />
+										<property name="dist.full.path" value="${project.build.directory}/${dist.file.name}" />
 
 										<delete file="${dist.full.path}" />
 										<zip zipfile="${dist.full.path}" filesonly="true">
-											<zipfileset dir="${site.target.dir}/site" />
+											<zipfileset dir="${project.build.directory}/site" />
 										</zip>
 										<checksum file="${dist.full.path}" algorithm="MD5" fileext=".md5" />
 										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
@@ -129,7 +123,7 @@
 
 										<echo>Will Upload: </echo>
 										<echo> dist.bucket=${dist.bucket}</echo>
-										<echo> fromDir=${site.target.dir}/site</echo>
+										<echo> fromDir=${project.build.directory}/site</echo>
 										<echo> toDir=${dist.path}</echo>
 
 										<echo>Will Upload: </echo>
@@ -153,7 +147,7 @@
 											</delete>
 
 											<upload bucketName="${dist.bucket}" toDir="${dist.path}" publicRead="true">
-												<fileset dir="${site.target.dir}/site" />
+												<fileset dir="${project.build.directory}/site" />
 											</upload>
 
 											<upload bucketName="${dist.bucket}" file="${dist.full.path}" toDir="${dist.path}" publicRead="true">
@@ -175,7 +169,7 @@
 													</delete>
 
 													<upload bucketName="${dist.bucket}" toDir="${dist.type}/${dist.key}/${dist.target}" publicRead="true">
-														<fileset dir="${site.target.dir}" includes="composite*.xml" />
+														<fileset dir="${project.build.directory}" includes="composite*.xml" />
 													</upload>
 												</s3>
 											</then>
