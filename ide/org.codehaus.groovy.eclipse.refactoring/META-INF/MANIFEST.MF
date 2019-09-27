@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring; singleton:=true
 Bundle-Name: Groovy Refactoring
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.5.0.qualifier
+Bundle-Version: 3.5.1.qualifier
 Export-Package: org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.refactoring.core.convert,
  org.codehaus.groovy.eclipse.refactoring.core.extract,
@@ -16,8 +16,8 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.refactoring.formatter,
  org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap,
  org.codehaus.groovy.eclipse.refactoring.ui.extract
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.5.0",
- org.codehaus.groovy.eclipse.core;bundle-version="3.5.0",
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="[3.5.0,3.6.0)",
+ org.codehaus.groovy.eclipse.core;bundle-version="[3.5.0,3.6.0)",
  org.eclipse.jdt.core.manipulation;visibility:=reexport,
  org.eclipse.jdt.ui,
  org.eclipse.jface.text,

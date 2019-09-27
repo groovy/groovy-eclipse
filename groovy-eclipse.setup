@@ -69,7 +69,7 @@
   <setupTask
       xsi:type="setup:VariableTask"
       name="eclipse.target.platform"
-      defaultValue="2019-06"
+      defaultValue="2019-09"
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
