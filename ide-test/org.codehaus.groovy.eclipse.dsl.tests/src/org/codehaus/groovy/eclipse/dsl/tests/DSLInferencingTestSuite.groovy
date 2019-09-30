@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,7 +26,6 @@ import org.codehaus.groovy.eclipse.TraceCategory
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.core.internal.resources.Folder
 import org.eclipse.core.internal.resources.Workspace
@@ -112,7 +111,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertDeprecated(String contents, int exprStart, int exprEnd) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit)
         assert requestor.node != null : 'Did not find expected ASTNode'
         assert GroovyUtils.isDeprecated(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
     }
@@ -124,7 +123,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType, String extraJavadoc) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType, extraJavadoc, false)
+        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType, extraJavadoc)
     }
 
     protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
@@ -133,8 +132,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean expectingUnknown) {
         def unit = addGroovySource(contents, nextUnitName())
-        SynchronizationUtils.waitForIndexingToComplete(unit)
-        def requestor = doVisit(exprStart, exprEnd, unit, false)
+        def requestor = doVisit(exprStart, exprEnd, unit)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
@@ -171,7 +169,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     protected final void assertUnknownConfidence(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
+        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (requestor.result.confidence != TypeConfidence.UNKNOWN) {

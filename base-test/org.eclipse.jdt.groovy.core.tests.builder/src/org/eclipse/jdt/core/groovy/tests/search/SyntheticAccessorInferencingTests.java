@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -158,10 +158,10 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
         shouldBeUnknown(contents, "propertyCat8");
         shouldBeUnknown(contents, "propertyCat9");
 
-        shouldBeKnown(contents, "property1a", "Search");
-        shouldBeKnown(contents, "property2a", "Search");
-        shouldBeKnown(contents, "property3a", "Search");
-        shouldBeKnown(contents, "property4a", "Search");
+        shouldBeKnown(contents, "property1a", DEFAULT_UNIT_NAME);
+        shouldBeKnown(contents, "property2a", DEFAULT_UNIT_NAME);
+        shouldBeKnown(contents, "property3a", DEFAULT_UNIT_NAME);
+        shouldBeKnown(contents, "property4a", DEFAULT_UNIT_NAME);
 
         shouldBeKnown(contents, "propertyCat1a", "Cat");
         shouldBeKnown(contents, "propertyCat2a", "Cat");
@@ -173,12 +173,12 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
     private void shouldBeUnknown(String contents, String var) {
         int start = contents.indexOf(var);
         int end = start + var.length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
+        assertUnknownConfidence(contents, start, end);
     }
 
     private void shouldBeKnown(String contents, String var, String type) {
         int start = contents.lastIndexOf(var);
         int end = start + var.length();
-        assertDeclaringType(contents, start, end, type, false);
+        assertDeclaringType(contents, start, end, type);
     }
 }

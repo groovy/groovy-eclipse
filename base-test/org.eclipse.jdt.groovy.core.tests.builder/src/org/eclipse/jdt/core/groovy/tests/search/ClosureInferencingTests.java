@@ -239,7 +239,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 3, "java.lang.Number");
 
         offset = contents.indexOf("owner.bar") + "owner.".length();
-        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
     }
 
     @Test // static object expression for delegate
@@ -260,13 +260,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "owner", "java.lang.Class<Foo>");
 
         int offset = contents.indexOf("delegate.bar") + "delegate.".length();
-        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
 
         offset = contents.indexOf("owner.bar") + "owner.".length();
-        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
 
         offset = contents.lastIndexOf("bar");
-        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
     }
 
     @Test // other (invariant) members of Closure
@@ -327,7 +327,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf('b');
-        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -342,7 +342,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf('b');
-        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/360
@@ -363,7 +363,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "class C {}";
         assertExprType(contents, "xxx", "C");
         int offset = contents.lastIndexOf("xyz");
-        assertUnknownConfidence(contents, offset, offset + 3, "B", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
     }
 
     @Test // closure is part of method call expression
@@ -442,7 +442,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  substring()" +
             "}";
         int offset = contents.indexOf("substring");
-        assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
+        assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
@@ -452,7 +452,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  delegate.substring()" +
             "}";
         int offset = contents.indexOf("substring");
-        assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
+        assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
@@ -462,7 +462,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  this.substring()" +
             "}";
         int offset = contents.indexOf("substring");
-        assertUnknownConfidence(contents, offset, offset + "substring".length(), "", false);
+        assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
@@ -561,8 +561,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "getOwner", "groovy.lang.Closure");
         assertExprType(contents, "delegate", "groovy.lang.Closure");
         assertExprType(contents, "getDelegate", "groovy.lang.Closure");
-        assertExprType(contents, "thisObject", "Search");
-        assertExprType(contents, "getThisObject", "Search");
+        assertExprType(contents, "thisObject", DEFAULT_UNIT_NAME);
+        assertExprType(contents, "getThisObject", DEFAULT_UNIT_NAME);
         assertExprType(contents, "resolveStrategy", "java.lang.Integer");
         assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
     }
@@ -576,7 +576,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.indexOf("intValue");
-        assertUnknownConfidence(contents, offset, offset + "intValue".length(), null, false);
+        assertUnknownConfidence(contents, offset, offset + "intValue".length());
     }
 
     @Test
@@ -610,7 +610,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.indexOf("abs");
-        assertUnknownConfidence(contents, offset, offset + "abs".length(), null, false);
+        assertUnknownConfidence(contents, offset, offset + "abs".length());
     }
 
     @Test // DGM
@@ -644,7 +644,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.indexOf("abs");
-        assertUnknownConfidence(contents, offset, offset + "abs".length(), null, false);
+        assertUnknownConfidence(contents, offset, offset + "abs".length());
     }
 
     @Test
@@ -655,7 +655,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    this\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this", "Search");
+        assertExprType(contents, "this", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -667,8 +667,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    owner.getThisObject()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "thisObject", "Search");
-        assertExprType(contents, "getThisObject", "Search");
+        assertExprType(contents, "thisObject", DEFAULT_UNIT_NAME);
+        assertExprType(contents, "getThisObject", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -693,8 +693,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def y = owner.getOwner()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "Search");
-        assertExprType(contents, "y", "Search");
+        assertExprType(contents, "x", DEFAULT_UNIT_NAME);
+        assertExprType(contents, "y", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -1040,7 +1040,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
 
         int offset = contents.lastIndexOf("foo");
-        assertUnknownConfidence(contents, offset, offset + 3, "p.A", false);
+        assertUnknownConfidence(contents, offset, offset + 3);
     }
 
     @Test

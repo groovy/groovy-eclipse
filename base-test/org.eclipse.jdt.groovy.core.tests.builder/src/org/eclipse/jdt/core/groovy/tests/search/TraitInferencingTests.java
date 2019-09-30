@@ -225,7 +225,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
         // TODO: assertDeclType(source, "number", "T");
         // TODO: assertExprType(source, "number", "java.lang.Number");
-        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length(), "T", false);
+        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length());
     }
 
     @Test

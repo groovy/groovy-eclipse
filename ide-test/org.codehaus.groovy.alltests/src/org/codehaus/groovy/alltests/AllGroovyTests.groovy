@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.alltests
 
+import org.codehaus.groovy.eclipse.chooser.CompilerChooser
 import org.junit.BeforeClass
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
@@ -153,13 +154,13 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.ui.OutlineExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.SemanticHighlightingTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestWizardTests,
-    org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests
+    org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests,
 ])
 final class AllGroovyTests {
     @BeforeClass
     static void setUp() {
         // ensure that the compiler chooser is started
-        def compiler = GroovyTestSuiteSupport.initializeCompilerChooser()
+        def compiler = CompilerChooser.instance.initialize()
 
         println '------------ AllGroovyTests ------------'
         println 'active Groovy version = ' + compiler.activeVersion

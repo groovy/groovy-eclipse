@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.alltests
 
+import org.codehaus.groovy.eclipse.chooser.CompilerChooser
 import org.junit.BeforeClass
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
@@ -94,12 +95,11 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.StaticInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.SyntheticAccessorInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.TraitInferencingTests,
-    org.eclipse.jdt.core.groovy.tests.search.TypeReferenceSearchTests
+    org.eclipse.jdt.core.groovy.tests.search.TypeReferenceSearchTests,
 ])
 final class GroovyJDTTests {
     @BeforeClass
     static void setUp() {
-        // ensure that the compiler chooser starts up
-        GroovyTestSuiteSupport.initializeCompilerChooser()
+        CompilerChooser.instance.initialize()
     }
 }

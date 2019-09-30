@@ -39,13 +39,13 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     private void assertDsldType(GroovyCompilationUnit unit, String expr) {
         int start = unit.source.lastIndexOf(expr), until = start + expr.length()
-        String declType = InferencingTestSuite.doVisit(start, until, unit, false).declaringTypeName
+        String declType = InferencingTestSuite.doVisit(start, until, unit).declaringTypeName
         assert declType == 'p.IPointcut'
     }
 
     private void assertDsldUnknown(GroovyCompilationUnit unit, String expr) {
         int start = unit.source.lastIndexOf(expr), until = start + expr.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        def result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.confidence == TypeConfidence.UNKNOWN
     }
 
@@ -63,7 +63,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             '''.stripIndent())
 
         int start = unit.source.indexOf('methods'), until = start + 'methods'.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        def result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.declaration instanceof ConstantExpression
         assert result.type.name == 'java.lang.String'
     }
@@ -217,27 +217,27 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
         // "method" in "Parameter[] params = method.parameters"
         int start = unit.source.indexOf('method.'), until = start + 'method'.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        def result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.type.toString(false) == 'org.codehaus.groovy.ast.MethodNode'
 
         // "method()" in "method(name:'other', params: params(mn))"
         start = unit.source.lastIndexOf('method'); until = start + 'method'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
 
         // "params" in "Parameter[] params = method.parameters"
         start = unit.source.indexOf('params'); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.type.toString(false) == 'org.codehaus.groovy.ast.Parameter[]'
 
         // "params:" in "method(name:'other', params: params(mn))"
         start = unit.source.indexOf('params:'); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.type.toString(false) == 'java.lang.String'
 
         // "params()" in "method(name:'other', params: params(mn))"
         start = unit.source.indexOf('params('); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        result = InferencingTestSuite.doVisit(start, until, unit).result
         assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
         assert result.type.toString(false) == 'java.util.Map <java.lang.String, org.codehaus.groovy.ast.ClassNode>'
     }

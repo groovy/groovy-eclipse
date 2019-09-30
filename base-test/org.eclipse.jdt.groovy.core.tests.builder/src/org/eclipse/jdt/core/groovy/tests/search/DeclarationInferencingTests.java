@@ -29,7 +29,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
     private void assertUnknown(String source, String target) {
         int offset = source.lastIndexOf(target);
-        assertUnknownConfidence(source, offset, offset + target.length(), "N/A", false);
+        assertUnknownConfidence(source, offset, offset + target.length());
     }
 
     //--------------------------------------------------------------------------
@@ -401,7 +401,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertDeclaration(contents, start, end, "Bar", "yyy", DeclarationKind.FIELD);
 
         start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
-        assertUnknownConfidence(contents, start, end, "Foo", false);
+        assertUnknownConfidence(contents, start, end);
     }
 
     @Test
@@ -507,7 +507,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         String contents = "Other.@xxx";
         int start = contents.indexOf("xxx"), end = start + "xxx".length();
-        assertUnknownConfidence(contents, start, end, "Other", false);
+        assertUnknownConfidence(contents, start, end);
     }
 
     @Test
@@ -646,7 +646,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
                 "a.field.field";
         int start = contents.lastIndexOf("field");
         int end = start + "field".length();
-        assertUnknownConfidence(contents, start, end, "A", false);
+        assertUnknownConfidence(contents, start, end);
     }
 
     @Test

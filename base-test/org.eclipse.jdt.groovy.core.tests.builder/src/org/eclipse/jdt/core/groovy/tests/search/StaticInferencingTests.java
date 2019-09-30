@@ -31,8 +31,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     private ASTNode assertKnown(String source, String target, String declaringType, String expressionType) {
         int offset = source.lastIndexOf(target);
-        GroovyCompilationUnit unit = createUnit("Search", source);
-        SearchRequestor requestor = doVisit(offset, offset + target.length(), unit, false);
+        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, source);
+        SearchRequestor requestor = doVisit(offset, offset + target.length(), unit);
 
         Assert.assertNotEquals("Expected token '" + target + "' at offset " + offset + " to be recognized",
             TypeLookupResult.TypeConfidence.UNKNOWN, requestor.result.confidence);
@@ -44,7 +44,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     private void assertUnknown(String source, String target) {
         int offset = source.lastIndexOf(target);
-        assertUnknownConfidence(source, offset, offset + target.length(), "N/A", false);
+        assertUnknownConfidence(source, offset, offset + target.length());
     }
 
     //--------------------------------------------------------------------------
@@ -425,9 +425,9 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
         String contents = "import static p.Other.BAR\nBAR";
         int offset = contents.indexOf("BAR");
-        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean", false);
+        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean");
         offset = contents.lastIndexOf("BAR");
-        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean", false);
+        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean");
     }
 
     @Test
@@ -552,6 +552,6 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             offset = contents.indexOf("wasSomething(i)");
         assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.B");
             offset = contents.indexOf("wasSomething(a)");
-        assertDeclaringType(contents, offset, offset + "wasSomething".length(), "Search");
+        assertDeclaringType(contents, offset, offset + "wasSomething".length(), DEFAULT_UNIT_NAME);
     }
 }

@@ -18,9 +18,11 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeFalse;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,6 +37,18 @@ public final class InferencingTests extends InferencingTestSuite {
     private void assertExprType(String source, String target, String type) {
         final int offset = source.lastIndexOf(target);
         assertType(source, offset, offset + target.length(), type);
+    }
+
+    protected void assertNoUnknowns(String source) {
+        List<ASTNode> unknownNodes = new ArrayList<>();
+        org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(createUnit(DEFAULT_UNIT_NAME, source));
+        visitor.visitCompilationUnit((node, result, element) -> {
+            if (result.confidence == org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
+                unknownNodes.add(node);
+            }
+            return org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus.CONTINUE;
+        });
+        Assert.assertTrue("Should not have found any AST nodes with unknown confidence, but found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
 
     //--------------------------------------------------------------------------
@@ -107,7 +121,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testLocalVar4() {
         String contents = "int x; this.x";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -120,56 +134,56 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testLocalVar6() {
         String contents = "def x; def y = { this.x }";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar7() {
         String contents = "def x; def y = { this.x() }";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar8() {
         String contents = "def x; def y = { owner.x }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar9() {
         String contents = "def x; def y = { owner.x() }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar10() {
         String contents = "def x; def y = { delegate.x }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar11() {
         String contents = "def x; def y = { delegate.x() }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar12() {
         String contents = "def x; def y = { thisObject.x }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testLocalVar13() {
         String contents = "def x; def y = { thisObject.x() }\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -496,7 +510,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  x\n" +
             "}\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/802
@@ -507,7 +521,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def z = x\n" +
             "}\n";
         int offset = contents.lastIndexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -760,7 +774,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testClassReference1() {
         String contents = "String.substring";
         int start = contents.indexOf("substring"), until = start + 9;
-        assertDeclaringType(contents, start, until, "java.lang.String", false, true);
+        assertDeclaringType(contents, start, until, "java.lang.String", true);
     }
 
     @Test
@@ -998,7 +1012,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         int offset = contents.indexOf("x");
-        assertUnknownConfidence(contents, offset, offset + 1, null, false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test // GRECLISPE-1244
@@ -1145,7 +1159,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("field");
-        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "field".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
@@ -1160,7 +1174,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("field");
-        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "field".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
@@ -1175,7 +1189,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("field");
-        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "field".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
@@ -1190,7 +1204,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("field");
-        assertUnknownConfidence(contents, offset, offset + "field".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "field".length());
     }
 
     @Test
@@ -1316,7 +1330,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("method");
-        assertUnknownConfidence(contents, offset, offset + "method".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "method".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
@@ -1331,7 +1345,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf("method");
-        assertUnknownConfidence(contents, offset, offset + "method".length(), "A", false);
+        assertUnknownConfidence(contents, offset, offset + "method".length());
     }
 
     @Test
@@ -1651,10 +1665,10 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
         int offset = contents.lastIndexOf('f');
         assertType(contents, offset, offset + 1, "java.lang.Object");
-        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+        assertUnknownConfidence(contents, offset, offset + 1);
             offset = contents.lastIndexOf('m');
         assertType(contents, offset, offset + 1, "java.lang.Object");
-        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+        assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
@@ -1861,7 +1875,7 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "other\n";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Search", false, true);
+        assertDeclaringType(contents, start, end, DEFAULT_UNIT_NAME, true);
     }
 
     @Test
@@ -1936,7 +1950,7 @@ public final class InferencingTests extends InferencingTestSuite {
         int start = CONTENTS_GETAT2.indexOf("startsWith");
         int end = start + "startsWith".length();
         // expecting unknown confidence because getAt not explicitly defined
-        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", true);
     }
 
     @Test
@@ -1944,7 +1958,7 @@ public final class InferencingTests extends InferencingTestSuite {
         int start = CONTENTS_GETAT2.lastIndexOf("startsWith");
         int end = start + "startsWith".length();
         // expecting unknown confidence because getAt not explicitly defined
-        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
+        assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", true);
     }
 
     @Test // GRECLIPSE-743
@@ -2267,7 +2281,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "}";
         int start = contents.lastIndexOf("doesNotExist");
-        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length());
     }
 
     @Test // GRECLIPSE-1264
@@ -2278,7 +2292,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "}";
         int start = contents.lastIndexOf("doesNotExist");
-        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length());
     }
 
     @Test // GRECLIPSE-1264
@@ -2286,14 +2300,14 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents =
             "doesNotExist";
         int start = contents.lastIndexOf("doesNotExist");
-        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length());
     }
 
     @Test // GRECLIPSE-1264
     public void testImplicitVar4() {
         String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
-        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), DEFAULT_UNIT_NAME);
     }
 
     @Test // GRECLIPSE-1264
@@ -2302,7 +2316,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "doesNotExist = 9\n" +
             "def x = {doesNotExist }";
         int start = contents.lastIndexOf("doesNotExist");
-        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), DEFAULT_UNIT_NAME);
     }
 
     @Test // GRECLIPSE-1264
@@ -2312,7 +2326,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "doesNotExist = 9\n" +
             "doesNotExist }";
         int start = contents.lastIndexOf("doesNotExist");
-        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), DEFAULT_UNIT_NAME);
     }
 
     @Test // GRECLIPSE-1264
@@ -2322,7 +2336,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "    doesNotExist = 9\n" +
             "}\n";
         int start = contents.lastIndexOf("doesNotExist");
-        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length());
     }
 
     @Test // nested expressions of various forms

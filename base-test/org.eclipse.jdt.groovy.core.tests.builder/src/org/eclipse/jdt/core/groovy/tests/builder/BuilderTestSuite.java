@@ -17,12 +17,13 @@ package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
@@ -417,17 +418,8 @@ public abstract class BuilderTestSuite {
          * @param fileExtension file extension of the groovy class to create (without a '.')
          */
         public IPath addGroovyClassExtension(IPath packagePath, String className, String contents, String fileExtension) {
-            //checkAssertion("a workspace must be open", fIsOpen);
-            if (fileExtension == null) {
-                fileExtension = "groovy";
-            }
-            IPath classPath = packagePath.append(className + "." + fileExtension);
-            try {
-                createFile(classPath, contents.getBytes("UTF8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                Assert.fail("e1");
-            }
+            IPath classPath = packagePath.append(className + "." + Optional.ofNullable(fileExtension).orElse("groovy"));
+            createFile(classPath, contents.getBytes(StandardCharsets.US_ASCII));
             return classPath;
         }
 
@@ -440,8 +432,7 @@ public abstract class BuilderTestSuite {
          * Returns the path of the added class.
          * @param fileExtension file extension of the groovy class to create (without a '.')
          */
-        public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className,
-            String contents, String fileExtension) {
+        public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className, String contents, String fileExtension) {
             // make sure the package exists
             if (packageName != null && packageName.length() > 0) {
                 IPath packagePath = addPackage(packageFragmentRootPath, packageName);
