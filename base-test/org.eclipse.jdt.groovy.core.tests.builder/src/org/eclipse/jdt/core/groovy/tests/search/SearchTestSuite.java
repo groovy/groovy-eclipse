@@ -23,6 +23,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -309,6 +310,21 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
                 }
             }
         }
+    }
+
+    public static void joinUninterruptibly(Job job) {
+        boolean interrupted;
+        do {
+            interrupted = false;
+            try {
+                System.err.println("Waiting for: " + job.getName());
+                job.join();
+            } catch (OperationCanceledException ignore) {
+
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        } while (interrupted);
     }
 
     protected static class MatchRegion {

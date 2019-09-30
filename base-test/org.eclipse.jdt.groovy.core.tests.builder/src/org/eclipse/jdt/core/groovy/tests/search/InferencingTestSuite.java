@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -264,6 +265,16 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
+        for (Job job : Job.getJobManager().find(null)) {
+            switch (job.getState()) {
+            case Job.RUNNING:
+            case Job.WAITING:
+                if (job.getName().contains("Java index")) {
+                    joinUninterruptibly(job);
+                }
+            }
+        }
+
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.DEBUG = true; // enable syserr and the post-visit sanity checks
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);

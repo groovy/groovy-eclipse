@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
+import org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -44,7 +45,7 @@ public class SynchronizationUtils {
             interrupted = false;
             try {
                 Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
-            } catch (OperationCanceledException e) {
+            } catch (OperationCanceledException ignore) {
 
             } catch (InterruptedException e) {
                 interrupted = true;
@@ -55,14 +56,14 @@ public class SynchronizationUtils {
             interrupted = false;
             try {
                 Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, null);
-            } catch (OperationCanceledException e) {
+            } catch (OperationCanceledException ignore) {
 
             } catch (InterruptedException e) {
                 interrupted = true;
             }
         } while (interrupted);
 
-        joinJobs(100, 500, 500);
+        joinJobs(100, 1000, 100);
     }
 
     private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
@@ -85,7 +86,7 @@ public class SynchronizationUtils {
     public static void sleep(int intervalTime) {
         try {
             Thread.sleep(intervalTime);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignore) {
         }
     }
 
@@ -174,7 +175,7 @@ public class SynchronizationUtils {
             case Job.RUNNING:
             case Job.WAITING:
                 if (job.getName().contains("Java index")) {
-                    joinUninterruptibly(job);
+                    SearchTestSuite.joinUninterruptibly(job);
                 }
             }
         }
@@ -187,22 +188,10 @@ public class SynchronizationUtils {
             case Job.RUNNING:
             case Job.WAITING:
                 if (job.getName().startsWith("Refresh DSLD scripts")) {
-                    joinUninterruptibly(job);
+                    SearchTestSuite.joinUninterruptibly(job);
                 }
             }
         }
-    }
-
-    private static void joinUninterruptibly(Job job) {
-        boolean interrupted;
-        do {
-            interrupted = false;
-            try {
-                job.join();
-            } catch (InterruptedException e) {
-                interrupted = true;
-            }
-        } while (interrupted);
     }
 
     private static final List<String> SKIP_JOBS = Arrays.asList("animation start", "decoration calculation", "flush cache job", "open blocked dialog", "sending problem marker updates...", "update for decoration completion", "update dynamic java sources working sets", "update package explorer", "update progress", "usage data event consumer");
