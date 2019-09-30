@@ -36,9 +36,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "Other");
+        assertType(contents, "delegate", "Other");
     }
 
     @Test
@@ -48,9 +46,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(@DelegatesTo(Other) c) { }\n" +
             "meth { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "Other");
+        assertType(contents, "delegate", "Other");
     }
 
     @Test
@@ -60,9 +56,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { xxx }";
 
-        String toFind = "xxx";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "java.lang.Integer");
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -71,9 +65,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(@DelegatesTo(List) Closure c) { }\n" +
             "meth { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+        assertType(contents, "delegate", "java.util.List");
     }
 
     @Test
@@ -82,9 +74,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(int x, int y, @DelegatesTo(List) Closure c) { }\n" +
             "meth 1, 2, { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+        assertType(contents, "delegate", "java.util.List");
     }
 
     @Test // expected to be broken (due to missing closing angle bracket on type)
@@ -93,9 +83,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(int x, int y, @DelegatesTo(List<String) Closure c) { }\n" +
             "meth { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), DEFAULT_UNIT_NAME);
+        assertType(contents, "delegate", DEFAULT_UNIT_NAME);
     }
 
     @Test
@@ -114,10 +102,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "A");
-        offset = contents.lastIndexOf('y');
-        assertDeclaringType(contents, offset, offset + 1, "B");
+
+        assertDeclaringType(contents, "x", "A");
+        assertDeclaringType(contents, "y", "B");
     }
 
     @Test
@@ -136,10 +123,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "A");
-        offset = contents.lastIndexOf('y');
-        assertDeclaringType(contents, offset, offset + 1, "B");
+
+        assertDeclaringType(contents, "x", "A");
+        assertDeclaringType(contents, "y", "B");
     }
 
     @Test // uses constant instead of literal for target
@@ -164,10 +150,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "A");
-        offset = contents.lastIndexOf('y');
-        assertDeclaringType(contents, offset, offset + 1, "B");
+
+        assertDeclaringType(contents, "x", "A");
+        assertDeclaringType(contents, "y", "B");
     }
 
     @Test
@@ -186,9 +171,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "A");
-        offset = contents.lastIndexOf('y');
+
+        assertDeclaringType(contents, "x", "A");
+        int offset = contents.lastIndexOf('y');
         assertUnknownConfidence(contents, offset, offset + 1);
     }
 
@@ -209,12 +194,10 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "B");
-        offset = contents.lastIndexOf('y');
-        assertDeclaringType(contents, offset, offset + 1, "B");
-        offset = contents.lastIndexOf('z');
-        assertDeclaringType(contents, offset, offset + 1, "A");
+
+        assertDeclaringType(contents, "x", "B");
+        assertDeclaringType(contents, "y", "B");
+        assertDeclaringType(contents, "z", "A");
     }
 
     @Test
@@ -233,10 +216,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf('x');
-        assertDeclaringType(contents, offset, offset + 1, "B");
-        offset = contents.lastIndexOf('y');
-        assertDeclaringType(contents, offset, offset + 1, "B");
+
+        assertDeclaringType(contents, "x", "B");
+        assertDeclaringType(contents, "y", "B");
     }
 
     @Test // seemingly invalid combination
@@ -255,6 +237,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+
         int offset = contents.lastIndexOf('x');
         assertUnknownConfidence(contents, offset, offset + 1);
         offset = contents.lastIndexOf('y');
@@ -267,9 +250,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure c) { }\n" +
             "meth 1, 2, { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+        assertType(contents, "delegate", "java.util.List");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
@@ -281,9 +262,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "}\n" +
             "C.meth 1, 2, { delegate }";
 
-        String toFind = "delegate";
-        int offset = contents.lastIndexOf(toFind);
-        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+        assertType(contents, "delegate", "java.util.List");
     }
 
     @Test
@@ -300,10 +279,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf("delegate");
-        assertType(contents, offset, offset + "delegate".length(), "A");
-        offset = contents.lastIndexOf("owner");
-        assertType(contents, offset, offset + "owner".length(), "B");
+
+        assertType(contents, "delegate", "A");
+        assertType(contents, "owner", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/657
@@ -320,10 +298,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf("delegate");
-        assertType(contents, offset, offset + "delegate".length(), "A");
-        offset = contents.lastIndexOf("owner");
-        assertType(contents, offset, offset + "owner".length(), "B");
+
+        assertType(contents, "delegate", "A");
+        assertType(contents, "owner", "B");
     }
 
     @Test
@@ -340,10 +317,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        int offset = contents.lastIndexOf("delegate");
-        assertType(contents, offset, offset + "delegate".length(), "A");
-        offset = contents.lastIndexOf("owner");
-        assertType(contents, offset, offset + "owner".length(), "B");
+
+        assertType(contents, "delegate", "A");
+        assertType(contents, "owner", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
@@ -358,6 +334,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
+
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
     }
@@ -375,6 +352,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
+
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
     }
@@ -425,11 +403,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "    robot.move \"left\"\n" +
                 "}";
 
-            int offset = contents.lastIndexOf("move");
-            assertType(contents, offset, offset + "move".length(), "java.lang.Void");
-
-            offset = contents.lastIndexOf("robot");
-            assertType(contents, offset, offset + "robot".length(), "Robot");
+            assertType(contents, "robot", "Robot");
+            assertType(contents, "move", "java.lang.Void");
 
             // also, just make sure no problems
             env.fullBuild(project.getFullPath());

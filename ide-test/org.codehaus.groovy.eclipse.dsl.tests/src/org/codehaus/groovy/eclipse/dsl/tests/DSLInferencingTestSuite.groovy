@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.doVisit
-import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.printTypeName
 import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
 
@@ -33,7 +31,6 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
@@ -72,13 +69,13 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
             GroovyRuntime.addLibraryToClasspath(javaProject, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false)
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
         }
-        javaProject.getProject().refreshLocal(IResource.DEPTH_ONE, null)
+        javaProject.project.refreshLocal(IResource.DEPTH_ONE, null)
     }
 
     @After
     final void tearDownDslTestCase() {
         GroovyLogManager.manager.removeLogger(logger)
-        for (IResource member : project.members()) {
+        for (member in project.members()) {
             if (member.name.endsWith('.dsld')) {
                 Util.delete(member)
             }
@@ -96,7 +93,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
     protected int index
 
     protected String[] createDsls(String... dsls) {
-        for (String dsl : dsls) {
+        for (dsl in dsls) {
             IFile file = project.getFile('dsl' + (index++) + '.dsld')
             file.create(new ByteArrayInputStream(dsl.getBytes(project.defaultCharset)), true, null)
 
@@ -109,38 +106,38 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         Util.delete(project.getFile('dsl' + i + '.dsld'))
     }
 
-    protected final void assertDeprecated(String contents, int exprStart, int exprEnd) {
+    protected final void assertDeprecated(String contents, int exprStart, int exprUntil) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit)
+        InferencingTestSuite.SearchRequestor requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
         assert requestor.node != null : 'Did not find expected ASTNode'
         assert GroovyUtils.isDeprecated(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
     }
 
-    protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType) {
+    protected final void assertType(String contents, int exprStart, int exprUntil, String expectedType) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType)
+        InferencingTestSuite.assertType(unit, exprStart, exprUntil, expectedType)
     }
 
-    protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType, String extraJavadoc) {
+    protected final void assertType(String contents, int exprStart, int exprUntil, String expectedType, String extraJavadoc) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.assertType(unit, exprStart, exprEnd, expectedType, extraJavadoc)
+        InferencingTestSuite.assertType(unit, exprStart, exprUntil, expectedType, extraJavadoc)
     }
 
-    protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
-        assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false)
+    protected final void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType) {
+        assertDeclaringType(contents, exprStart, exprUntil, expectedDeclaringType, false)
     }
 
-    protected final void assertDeclaringType(String contents, int exprStart, int exprEnd, String expectedDeclaringType, boolean expectingUnknown) {
+    protected final void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType, boolean expectingUnknown) {
         def unit = addGroovySource(contents, nextUnitName())
-        def requestor = doVisit(exprStart, exprEnd, unit)
+        def requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
-        if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
+        if (expectedDeclaringType != requestor.declaringTypeName) {
             StringBuilder sb = new StringBuilder()
             sb.append('Expected declaring type not found.\n')
             sb.append('\tExpected: ').append(expectedDeclaringType).append('\n')
-            sb.append('\tFound type: ').append(printTypeName(requestor.result.type)).append('\n')
-            sb.append('\tFound declaring type: ').append(printTypeName(requestor.result.declaringType)).append('\n')
+            sb.append('\tFound type: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
+            sb.append('\tFound declaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
             sb.append('\tASTNode: ').append(requestor.node)
             fail(sb.toString())
         }
@@ -149,8 +146,8 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
                 StringBuilder sb = new StringBuilder()
                 sb.append('Confidence: ').append(requestor.result.confidence).append(' (but expecting UNKNOWN)\n')
                 sb.append('\tExpected: ').append(expectedDeclaringType).append('\n')
-                sb.append('\tFound: ').append(printTypeName(requestor.result.type)).append('\n')
-                sb.append('\tDeclaring type: ').append(printTypeName(requestor.result.declaringType)).append('\n')
+                sb.append('\tFound: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
+                sb.append('\tDeclaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
                 sb.append('\tASTNode: ').append(requestor.node)
                 fail(sb.toString())
             }
@@ -159,25 +156,25 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
                 StringBuilder sb = new StringBuilder()
                 sb.append('Expected Confidence should not have been UNKNOWN, but it was.\n')
                 sb.append('\tExpected declaring type: ').append(expectedDeclaringType).append('\n')
-                sb.append('\tFound type: ').append(printTypeName(requestor.result.type)).append('\n')
-                sb.append('\tFound declaring type: ').append(printTypeName(requestor.result.declaringType)).append('\n')
+                sb.append('\tFound type: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
+                sb.append('\tFound declaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
                 sb.append('\tASTNode: ').append(requestor.node)
                 fail(sb.toString())
             }
         }
     }
 
-    protected final void assertUnknownConfidence(String contents, int exprStart, int exprEnd, String expectedDeclaringType) {
+    protected final void assertUnknownConfidence(String contents, int exprStart, int exprUntil, String expectedDeclaringType) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit)
+        InferencingTestSuite.SearchRequestor requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
 
         assert requestor.node != null : 'Did not find expected ASTNode'
         if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
             StringBuilder sb = new StringBuilder()
             sb.append('Expecting unknown confidentce, but was ' + requestor.result.confidence + '.\n')
             sb.append('Expected: ' + expectedDeclaringType + '\n')
-            sb.append('Found: ' + printTypeName(requestor.result.type) + '\n')
-            sb.append('Declaring type: ' + printTypeName(requestor.result.declaringType) + '\n')
+            sb.append('Found: ' + InferencingTestSuite.printTypeName(requestor.result.type) + '\n')
+            sb.append('Declaring type: ' + InferencingTestSuite.printTypeName(requestor.result.declaringType) + '\n')
             sb.append('ASTNode: ' + requestor.node + '\n')
             fail(sb.toString())
         }
@@ -192,8 +189,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected static final URL getTestResourceURL(String fileName) {
-        IPath path = new Path('testResources').append(fileName)
-        new URL(FrameworkUtil.getBundle(DSLInferencingTestSuite.class).getEntry('/'), path.toString())
+        new URL(FrameworkUtil.getBundle(DSLInferencingTestSuite).getEntry('/'), new Path('testResources').append(fileName).toString())
     }
 
     /**
@@ -206,10 +202,10 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         Workspace workspace = (Workspace) ResourcesPlugin.getWorkspace()
         IProject externalProject = workspace.root.getProject('.org.eclipse.jdt.core.external.folders')
         if (externalProject.exists()) {
-            for (IResource member : externalProject.members()) {
+            for (member in externalProject.members()) {
                 if (member instanceof Folder) {
                     Folder folder = (Folder) member
-                    workspace.getAliasManager().updateAliases(folder, folder.store, IResource.DEPTH_INFINITE, null)
+                    workspace.aliasManager.updateAliases(folder, folder.store, IResource.DEPTH_INFINITE, null)
                     if (folder.exists()) {
                         folder.refreshLocal(IResource.DEPTH_INFINITE, null)
                     }

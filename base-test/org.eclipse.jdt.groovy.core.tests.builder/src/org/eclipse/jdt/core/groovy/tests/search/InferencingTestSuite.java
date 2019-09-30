@@ -15,6 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,33 +44,34 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.junit.Assert;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 public abstract class InferencingTestSuite extends SearchTestSuite {
 
     protected static final String DEFAULT_UNIT_NAME = "Search";
 
-    protected void assertType(String contents, String expectedType) {
-        assertType(contents, 0, contents.length(), expectedType, null);
+    protected void assertType(String script, String expectedType) {
+        assertType(script, 0, script.length(), expectedType);
+    }
+
+    protected void assertType(String source, String target, String expectedType) {
+        final int offset = source.lastIndexOf(target);
+        assertType(source, offset, offset + target.length(), expectedType);
     }
 
     protected void assertType(String contents, int exprStart, int exprUntil, String expectedType) {
-        assertType(contents, exprStart, exprUntil, expectedType, null);
-    }
-
-    protected void assertType(String contents, int exprStart, int exprUntil, String expectedType, String extraJavadoc) {
         GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
-        assertType(unit, exprStart, exprUntil, expectedType, extraJavadoc);
+        assertType(unit, exprStart, exprUntil, expectedType, null);
     }
 
     public static void assertType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedType) {
         assertType(unit, exprStart, exprUntil, expectedType, null);
     }
 
-    public static void assertType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedType, String extraJavadoc) {
+    public static void assertType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedType, String extraDocSnippet) {
         SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
 
-        Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
+        assertNotNull("Did not find expected ASTNode", requestor.node);
         if (!expectedType.equals(printTypeName(requestor.result.type))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expected type not found.\n");
@@ -74,66 +80,95 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             sb.append("Confidence: " + requestor.result.confidence + "\n");
-            Assert.fail(sb.toString());
+            fail(sb.toString());
         }
 
-        if (extraJavadoc != null && (requestor.result.extraDoc == null || !requestor.result.extraDoc.replace("}", "").contains(extraJavadoc))) {
+        if (extraDocSnippet != null && (requestor.result.extraDoc == null || !requestor.result.extraDoc.replace("}", "").contains(extraDocSnippet))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Incorrect Doc found.\n");
-            sb.append("Expected doc should contain: " + extraJavadoc + "\n");
+            sb.append("Expected doc should contain: " + extraDocSnippet + "\n");
             sb.append("Found: " + requestor.result.extraDoc + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
             sb.append("Confidence: " + requestor.result.confidence + "\n");
-            Assert.fail(sb.toString());
+            fail(sb.toString());
         }
     }
 
-    protected void assertTypeOneOf(String contents, int start, int end, String... expectedTypes) throws Throwable {
-        boolean ok = false;
-        Throwable error = null;
-        for (int i = 0; !ok && i < expectedTypes.length; i += 1) {
-            try {
-                assertType(contents, start, end, expectedTypes[i]);
-                ok = true;
-            } catch (Throwable e) {
-                error = e;
+    //
+
+    protected void assertDeclaringType(String source, String target, String expectedType) {
+        final int offset = source.lastIndexOf(target);
+        assertDeclaringType(source, offset, offset + target.length(), expectedType);
+    }
+
+    protected void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclType) {
+        assertDeclaringType(contents, exprStart, exprUntil, expectedDeclType, false);
+    }
+
+    protected void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclType, boolean expectUnknown) {
+        assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedDeclType, expectUnknown);
+    }
+
+    private SearchRequestor assertDeclaringType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedDeclType, boolean expectUnknown) {
+        SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
+        assertNotNull("Did not find expected ASTNode", requestor.node);
+        if (!expectedDeclType.equals(requestor.getDeclaringTypeName())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expected declaring type not found.\n");
+            sb.append("\tExpected: ").append(expectedDeclType).append("\n");
+            sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
+            sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+            sb.append("\tASTNode: ").append(requestor.node);
+            fail(sb.toString());
+        }
+        if (expectUnknown) {
+            if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Confidence: ").append(requestor.result.confidence).append(" (but expecting UNKNOWN)\n");
+                sb.append("\tExpected: ").append(expectedDeclType).append("\n");
+                sb.append("\tFound: ").append(printTypeName(requestor.result.type)).append("\n");
+                sb.append("\tDeclaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("\tASTNode: ").append(requestor.node);
+                fail(sb.toString());
+            }
+        } else {
+            if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
+                sb.append("\tExpected declaring type: ").append(expectedDeclType).append("\n");
+                sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
+                sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
+                sb.append("\tASTNode: ").append(requestor.node);
+                fail(sb.toString());
             }
         }
-        if (!ok) {
-            if (error != null) {
-                throw error;
-            } else {
-                Assert.fail("assertTypeOneOf must be called with at least one expectedType");
-            }
-        }
+        return requestor;
     }
 
     protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprUntil, String expectedType, String name, DeclarationKind kind) {
-        assertDeclaringType(contents, exprStart, exprUntil, expectedType, false);
-        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
-        SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
+        SearchRequestor requestor = assertDeclaringType(createUnit(DEFAULT_UNIT_NAME, contents), exprStart, exprUntil, expectedType, false);
 
         switch (kind) {
         case CLASS:
-            Assert.assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
-            Assert.assertEquals("Wrong class name", name, ((ClassNode) requestor.result.declaration).getName());
+            assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
+            assertEquals("Wrong class name", name, ((ClassNode) requestor.result.declaration).getName());
             break;
         case FIELD:
-            Assert.assertTrue("Expecting field, but was " + requestor.result.declaration, requestor.result.declaration instanceof FieldNode);
-            Assert.assertEquals("Wrong field name", name, ((FieldNode) requestor.result.declaration).getName());
+            assertTrue("Expecting field, but was " + requestor.result.declaration, requestor.result.declaration instanceof FieldNode);
+            assertEquals("Wrong field name", name, ((FieldNode) requestor.result.declaration).getName());
             break;
         case METHOD:
-            Assert.assertTrue("Expecting method, but was " + requestor.result.declaration, requestor.result.declaration instanceof MethodNode);
-            Assert.assertEquals("Wrong method name", name, ((MethodNode) requestor.result.declaration).getName());
+            assertTrue("Expecting method, but was " + requestor.result.declaration, requestor.result.declaration instanceof MethodNode);
+            assertEquals("Wrong method name", name, ((MethodNode) requestor.result.declaration).getName());
             break;
         case PROPERTY:
-            Assert.assertTrue("Expecting property, but was " + requestor.result.declaration, requestor.result.declaration instanceof PropertyNode);
-            Assert.assertEquals("Wrong property name", name, ((PropertyNode) requestor.result.declaration).getName());
+            assertTrue("Expecting property, but was " + requestor.result.declaration, requestor.result.declaration instanceof PropertyNode);
+            assertEquals("Wrong property name", name, ((PropertyNode) requestor.result.declaration).getName());
             break;
         case VARIABLE:
-            Assert.assertTrue("Expecting variable, but was " + requestor.result.declaration, requestor.result.declaration instanceof Variable &&
+            assertTrue("Expecting variable, but was " + requestor.result.declaration, requestor.result.declaration instanceof Variable &&
                 !(requestor.result.declaration instanceof FieldNode || requestor.result.declaration instanceof PropertyNode));
-            Assert.assertEquals("Wrong variable name", name, ((Variable) requestor.result.declaration).getName());
+            assertEquals("Wrong variable name", name, ((Variable) requestor.result.declaration).getName());
             break;
         }
 
@@ -141,47 +176,6 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         N decl = (N) requestor.result.declaration;
 
         return decl;
-    }
-
-    protected void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType) {
-        assertDeclaringType(contents, exprStart, exprUntil, expectedDeclaringType, false);
-    }
-
-    protected void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType, boolean expectUnknown) {
-        GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
-        SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
-
-        Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
-        if (!expectedDeclaringType.equals(requestor.getDeclaringTypeName())) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Expected declaring type not found.\n");
-            sb.append("\tExpected: ").append(expectedDeclaringType).append("\n");
-            sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-            sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
-            sb.append("\tASTNode: ").append(requestor.node);
-            Assert.fail(sb.toString());
-        }
-        if (expectUnknown) {
-            if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Confidence: ").append(requestor.result.confidence).append(" (but expecting UNKNOWN)\n");
-                sb.append("\tExpected: ").append(expectedDeclaringType).append("\n");
-                sb.append("\tFound: ").append(printTypeName(requestor.result.type)).append("\n");
-                sb.append("\tDeclaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
-                sb.append("\tASTNode: ").append(requestor.node);
-                Assert.fail(sb.toString());
-            }
-        } else {
-            if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
-                sb.append("\tExpected declaring type: ").append(expectedDeclaringType).append("\n");
-                sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
-                sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");
-                sb.append("\tASTNode: ").append(requestor.node);
-                Assert.fail(sb.toString());
-            }
-        }
     }
 
     /**
@@ -192,22 +186,23 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     protected void assertDeprecated(String contents, int exprStart, int exprUntil) {
         GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
-        Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
-        Assert.assertTrue("Declaration should be deprecated: " + requestor.result.declaration, GroovyUtils.isDeprecated(requestor.result.declaration));
+
+        assertNotNull("Did not find expected ASTNode", requestor.node);
+        assertTrue("Declaration should be deprecated: " + requestor.result.declaration, GroovyUtils.isDeprecated(requestor.result.declaration));
     }
 
     protected void assertUnknownConfidence(String contents, int exprStart, int exprUntil) {
         GroovyCompilationUnit unit = createUnit(DEFAULT_UNIT_NAME, contents);
         SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
 
-        Assert.assertNotNull("Did not find expected ASTNode", requestor.node);
+        assertNotNull("Did not find expected ASTNode", requestor.node);
         if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
             StringBuilder sb = new StringBuilder();
             sb.append("Expecting unknown confidence, but was " + requestor.result.confidence + ".\n");
             sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
             sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
-            Assert.fail(sb.toString());
+            fail(sb.toString());
         }
     }
 
@@ -265,6 +260,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
+        JavaModelManager.getIndexManager().indexAll(unit.getJavaProject().getProject());
         for (Job job : Job.getJobManager().find(null)) {
             switch (job.getState()) {
             case Job.RUNNING:

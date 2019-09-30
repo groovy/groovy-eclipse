@@ -15,36 +15,20 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.junit.Test;
-import org.osgi.framework.Version;
 
 public final class ClosureInferencingTests extends InferencingTestSuite {
-
-    private void assertExprType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertType(source, offset, offset + target.length(), type);
-    }
-
-    // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
-    // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
-    private static boolean isAccessorPreferredForSTCProperty() {
-        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
-        return (version.compareTo(new Version(2, 4, 6)) >= 0);
-    }
-
-    //--------------------------------------------------------------------------
 
     @Test
     public void testClosure1() {
         String contents = "def fn = { a, b -> a + b }";
-        assertExprType(contents, "fn", "groovy.lang.Closure");
+        assertType(contents, "fn", "groovy.lang.Closure");
     }
 
     @Test
     public void testClosure2() {
         String contents = "def fn = x.&y";
-        assertExprType(contents, "fn", "groovy.lang.Closure");
+        assertType(contents, "fn", "groovy.lang.Closure");
     }
 
     @Test
@@ -56,7 +40,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def fn = { -> param }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "param", "java.lang.Number");
+        assertType(contents, "param", "java.lang.Number");
     }
 
     @Test
@@ -69,7 +53,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def fn = { -> local }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "local", "java.lang.Number");
+        assertType(contents, "local", "java.lang.Number");
     }
 
     @Test
@@ -81,7 +65,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def fn = { -> proper }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "proper", "java.net.URL");
+        assertType(contents, "proper", "java.net.URL");
     }
 
     @Test
@@ -93,7 +77,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def fn = { -> proper }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "proper", "java.net.URL");
+        assertType(contents, "proper", "java.net.URL");
     }
 
     @Test
@@ -112,12 +96,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",          "Bar");
-        assertExprType(contents, "super",         "Foo");
-        assertExprType(contents, "owner",         "Bar");
-        assertExprType(contents, "getOwner()",    "Bar");
-        assertExprType(contents, "delegate",      "Bar");
-        assertExprType(contents, "getDelegate()", "Bar");
+        assertType(contents, "this",          "Bar");
+        assertType(contents, "super",         "Foo");
+        assertType(contents, "owner",         "Bar");
+        assertType(contents, "getOwner()",    "Bar");
+        assertType(contents, "delegate",      "Bar");
+        assertType(contents, "getDelegate()", "Bar");
     }
 
     @Test // closure with non-default resolve strategy
@@ -136,12 +120,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",          "Bar");
-        assertExprType(contents, "super",         "java.lang.Object");
-        assertExprType(contents, "owner",         "Bar");
-        assertExprType(contents, "getOwner()",    "Bar");
-        assertExprType(contents, "delegate",      "Foo");
-        assertExprType(contents, "getDelegate()", "Foo");
+        assertType(contents, "this",          "Bar");
+        assertType(contents, "super",         "java.lang.Object");
+        assertType(contents, "owner",         "Bar");
+        assertType(contents, "getOwner()",    "Bar");
+        assertType(contents, "delegate",      "Foo");
+        assertType(contents, "getDelegate()", "Foo");
     }
 
     @Test // closure in static scope wrt owner
@@ -160,12 +144,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "owner",           "java.lang.Class<Bar>");
-        assertExprType(contents, "getOwner()",      "java.lang.Class<Bar>");
-        assertExprType(contents, "delegate",        "java.lang.Class<Bar>");
-        assertExprType(contents, "getDelegate()",   "java.lang.Class<Bar>");
-        assertExprType(contents, "thisObject",      "java.lang.Class<Bar>");
-        assertExprType(contents, "getThisObject()", "java.lang.Class<Bar>");
+        assertType(contents, "owner",           "java.lang.Class<Bar>");
+        assertType(contents, "getOwner()",      "java.lang.Class<Bar>");
+        assertType(contents, "delegate",        "java.lang.Class<Bar>");
+        assertType(contents, "getDelegate()",   "java.lang.Class<Bar>");
+        assertType(contents, "thisObject",      "java.lang.Class<Bar>");
+        assertType(contents, "getThisObject()", "java.lang.Class<Bar>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
@@ -181,7 +165,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "bar", "java.lang.Long");
+        assertType(contents, "bar", "java.lang.Long");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
@@ -199,7 +183,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "bar", "java.lang.Long");
+        assertType(contents, "bar", "java.lang.Long");
     }
 
     @Test
@@ -214,8 +198,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",  "java.lang.Class<Bar>");
-        assertExprType(contents, "super", "java.lang.Class<Bar>");
+        assertType(contents, "this",  "java.lang.Class<Bar>");
+        assertType(contents, "super", "java.lang.Class<Bar>");
     }
 
     @Test // non-static delegate is same type as static owner
@@ -231,9 +215,9 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "delegate", "Foo"); // obj exp of with
-        assertExprType(contents, "owner", "java.lang.Class<Foo>");
-        assertExprType(contents, "bar", "java.lang.Number");
+        assertType(contents, "delegate", "Foo"); // obj exp of with
+        assertType(contents, "owner", "java.lang.Class<Foo>");
+        assertType(contents, "bar", "java.lang.Number");
 
         int offset = contents.indexOf("delegate.bar") + "delegate.".length();
         assertType(contents, offset, offset + 3, "java.lang.Number");
@@ -256,8 +240,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "delegate", "java.lang.Class<Boo>");
-        assertExprType(contents, "owner", "java.lang.Class<Foo>");
+        assertType(contents, "delegate", "java.lang.Class<Boo>");
+        assertType(contents, "owner", "java.lang.Class<Foo>");
 
         int offset = contents.indexOf("delegate.bar") + "delegate.".length();
         assertUnknownConfidence(contents, offset, offset + 3);
@@ -282,14 +266,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}";
-        assertExprType(contents, "directive", "java.lang.Integer");
-        assertExprType(contents, "getDirective", "java.lang.Integer");
-        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
-        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
-        assertExprType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertExprType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertExprType(contents, "maximumNumberOfParameters", "java.lang.Integer");
-        assertExprType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
+        assertType(contents, "directive", "java.lang.Integer");
+        assertType(contents, "getDirective", "java.lang.Integer");
+        assertType(contents, "resolveStrategy", "java.lang.Integer");
+        assertType(contents, "getResolveStrategy", "java.lang.Integer");
+        assertType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "maximumNumberOfParameters", "java.lang.Integer");
+        assertType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }
 
     @Test // other members of Closure (in static scope wrt owner)
@@ -305,14 +289,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}}}";
-        assertExprType(contents, "directive", "java.lang.Integer");
-        assertExprType(contents, "getDirective", "java.lang.Integer");
-        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
-        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
-        assertExprType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertExprType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
-        assertExprType(contents, "maximumNumberOfParameters", "java.lang.Integer");
-        assertExprType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
+        assertType(contents, "directive", "java.lang.Integer");
+        assertType(contents, "getDirective", "java.lang.Integer");
+        assertType(contents, "resolveStrategy", "java.lang.Integer");
+        assertType(contents, "getResolveStrategy", "java.lang.Integer");
+        assertType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertType(contents, "maximumNumberOfParameters", "java.lang.Integer");
+        assertType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }
 
     @Test
@@ -361,7 +345,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n" +
             "class C {}";
-        assertExprType(contents, "xxx", "C");
+        assertType(contents, "xxx", "C");
         int offset = contents.lastIndexOf("xyz");
         assertUnknownConfidence(contents, offset, offset + 3);
     }
@@ -382,10 +366,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",     "B");
-        assertExprType(contents, "super",    "A");
-        assertExprType(contents, "owner",    "B");
-        assertExprType(contents, "delegate", "B");
+        assertType(contents, "this",     "B");
+        assertType(contents, "super",    "A");
+        assertType(contents, "owner",    "B");
+        assertType(contents, "delegate", "B");
     }
 
     @Test
@@ -405,10 +389,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "getThisObject", "B");
-        assertExprType(contents, "thisObject", "B");
-        assertExprType(contents, "super", "A");
-        assertExprType(contents, "this", "B");
+        assertType(contents, "getThisObject", "B");
+        assertType(contents, "thisObject", "B");
+        assertType(contents, "super", "A");
+        assertType(contents, "this", "B");
 
         // @CompileStatic 2.3+ alters calls to super methods
         int start = contents.lastIndexOf("m()"), end = start + 1;
@@ -557,14 +541,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  resolveStrategy\n" +
             "  getResolveStrategy()\n" +
             "}}";
-        assertExprType(contents, "owner", "groovy.lang.Closure");
-        assertExprType(contents, "getOwner", "groovy.lang.Closure");
-        assertExprType(contents, "delegate", "groovy.lang.Closure");
-        assertExprType(contents, "getDelegate", "groovy.lang.Closure");
-        assertExprType(contents, "thisObject", DEFAULT_UNIT_NAME);
-        assertExprType(contents, "getThisObject", DEFAULT_UNIT_NAME);
-        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
-        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
+        assertType(contents, "owner", "groovy.lang.Closure");
+        assertType(contents, "getOwner", "groovy.lang.Closure");
+        assertType(contents, "delegate", "groovy.lang.Closure");
+        assertType(contents, "getDelegate", "groovy.lang.Closure");
+        assertType(contents, "thisObject", DEFAULT_UNIT_NAME);
+        assertType(contents, "getThisObject", DEFAULT_UNIT_NAME);
+        assertType(contents, "resolveStrategy", "java.lang.Integer");
+        assertType(contents, "getResolveStrategy", "java.lang.Integer");
     }
 
     @Test
@@ -587,7 +571,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    intValue()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "intValue", "java.lang.Integer");
+        assertType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test
@@ -598,7 +582,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    delegate.intValue()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "intValue", "java.lang.Integer");
+        assertType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test // DGM
@@ -621,7 +605,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    abs()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "abs", "java.lang.Integer");
+        assertType(contents, "abs", "java.lang.Integer");
     }
 
     @Test
@@ -632,7 +616,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    delegate.abs()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "abs", "java.lang.Integer");
+        assertType(contents, "abs", "java.lang.Integer");
     }
 
     @Test
@@ -655,7 +639,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    this\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this", DEFAULT_UNIT_NAME);
+        assertType(contents, "this", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -667,8 +651,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    owner.getThisObject()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "thisObject", DEFAULT_UNIT_NAME);
-        assertExprType(contents, "getThisObject", DEFAULT_UNIT_NAME);
+        assertType(contents, "thisObject", DEFAULT_UNIT_NAME);
+        assertType(contents, "getThisObject", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -680,8 +664,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    owner.getDelegate()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "delegate", "java.lang.Integer");
-        assertExprType(contents, "getDelegate", "java.lang.Integer");
+        assertType(contents, "delegate", "java.lang.Integer");
+        assertType(contents, "getDelegate", "java.lang.Integer");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -693,8 +677,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def y = owner.getOwner()\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", DEFAULT_UNIT_NAME);
-        assertExprType(contents, "y", DEFAULT_UNIT_NAME);
+        assertType(contents, "x", DEFAULT_UNIT_NAME);
+        assertType(contents, "y", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -708,8 +692,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "delegate", "java.util.regex.Pattern");
-        assertExprType(contents, "getDelegate", "java.util.regex.Pattern");
+        assertType(contents, "delegate", "java.util.regex.Pattern");
+        assertType(contents, "getDelegate", "java.util.regex.Pattern");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
@@ -738,10 +722,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "v", "java.lang.Number");
-        assertExprType(contents, "x", "java.lang.Number");
-        assertExprType(contents, "y", "java.lang.Number");
-        assertExprType(contents, "z", "java.lang.Number");
+        assertType(contents, "v", "java.lang.Number");
+        assertType(contents, "x", "java.lang.Number");
+        assertType(contents, "y", "java.lang.Number");
+        assertType(contents, "z", "java.lang.Number");
 
         int offset = contents.indexOf("= nnn") + 2;
         assertDeclaringType(contents, offset, offset + "nnn".length(), "Foo");
@@ -806,9 +790,9 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         String contents = "Face f = { x, y, z-> }";
 
-        assertExprType(contents, "x", "java.lang.Integer");
-        assertExprType(contents, "y", "java.math.BigInteger");
-        assertExprType(contents, "z", "java.util.regex.Pattern");
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.math.BigInteger");
+        assertType(contents, "z", "java.util.regex.Pattern");
     }
 
     @Test
@@ -820,9 +804,9 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         String contents = "def f = { x, y, z-> } as Face";
 
-        assertExprType(contents, "x", "java.lang.Integer");
-        assertExprType(contents, "y", "java.math.BigInteger");
-        assertExprType(contents, "z", "java.util.regex.Pattern");
+        assertType(contents, "x", "java.lang.Integer");
+        assertType(contents, "y", "java.math.BigInteger");
+        assertType(contents, "z", "java.util.regex.Pattern");
     }
 
     @Test // Closure type inference without @CompileStatic
@@ -983,7 +967,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+        assertType(contents, start, end, "java.lang.Void");
     }
 
     @Test
@@ -1017,7 +1001,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+        assertType(contents, start, end, "java.lang.Void");
     }
 
     @Test

@@ -38,9 +38,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  List list = Collections.emptyList()\n" +
             "}";
 
-        String target = "list";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.List");
+        assertType(contents, "list", "java.util.List");
     }
 
     @Test
@@ -51,9 +49,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  List list = new ArrayList()\n" +
             "}";
 
-        String target = "list";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.List");
+        assertType(contents, "list", "java.util.List");
     }
 
     @Test
@@ -64,9 +60,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  List list = [1, 2]\n" +
             "}";
 
-        String target = "list";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.List");
+        assertType(contents, "list", "java.util.List");
     }
 
     @Test
@@ -80,9 +74,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        String target = "list";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.List");
+        assertType(contents, "list", "java.util.List");
     }
 
     @Test
@@ -93,9 +85,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  Map map = Collections.emptyMap()\n" +
             "}";
 
-        String target = "map";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.Map");
+        assertType(contents, "map", "java.util.Map");
     }
 
     @Test
@@ -106,9 +96,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  Map map = new HashMap()\n" +
             "}";
 
-        String target = "map";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.Map");
+        assertType(contents, "map", "java.util.Map");
     }
 
     @Test
@@ -119,9 +107,7 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  Map map = [:]\n" +
             "}";
 
-        String target = "map";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.Map");
+        assertType(contents, "map", "java.util.Map");
     }
 
     @Test
@@ -135,8 +121,6 @@ public final class Groovy25InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        String target = "map";
-        int offset = contents.indexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.Map");
+        assertType(contents, "map", "java.util.Map");
     }
 }

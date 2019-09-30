@@ -20,13 +20,11 @@ import org.junit.Test;
 public final class TraitInferencingTests extends InferencingTestSuite {
 
     private void assertDeclType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertDeclaringType(source, offset, offset + target.length(), type);
+        assertDeclaringType(source, target, type);
     }
 
     private void assertExprType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertType(source, offset, offset + target.length(), type);
+        assertType(source, target, type);
     }
 
     //--------------------------------------------------------------------------

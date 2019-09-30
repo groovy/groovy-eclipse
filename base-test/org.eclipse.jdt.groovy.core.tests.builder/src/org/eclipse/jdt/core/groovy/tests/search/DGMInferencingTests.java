@@ -18,19 +18,20 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeFalse;
 
+import java.util.Comparator;
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
 public final class DGMInferencingTests extends InferencingTestSuite {
 
     private void assertDeclType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertDeclaringType(source, offset, offset + target.length(), type);
+        assertDeclaringType(source, target, type);
     }
 
     private void assertExprType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertType(source, offset, offset + target.length(), type);
+        assertType(source, target, type);
     }
 
     //--------------------------------------------------------------------------
@@ -364,7 +365,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    /*@Test relies on each(Object,Closure) type inferencing, which lacks @ClosureParams
+    @Test @Ignore("each(T, Closure) lacks @ClosureParams metadata")
     public void testDGM45a() {
         // Java 8 adds default method sort(Comparator) to the List interface
         boolean jdkListSort;
@@ -382,7 +383,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "  it\n" +
             "}\n";
         assertExprType(contents, "it", jdkListSort ? "java.lang.Void" : "java.lang.String");
-    }*/
+    }
 
     @Test
     public void testDGM46() {
@@ -401,8 +402,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}.collect {\n" + // <T> List<T> collect(Object self, Closure<T> xform)
             "  it\n" +
             "}\n";
-        int start = contents.lastIndexOf("collect"), until = start + "collect".length();
-        assertTypeOneOf(contents, start, until, "java.util.List", "java.util.List<java.lang.Object>");
+        assertExprType(contents, "collect", "java.util.List<java.lang.Object>");
     }
 
     @Test

@@ -345,10 +345,6 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
     private static final String FIRST_CONTENTS_CLASS_FOR_FIELDS = "class First {\n  def xxx\n}";
 
-    private void doTestForTwoFieldReferencesInGString(String secondContents) throws Exception {
-        doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, "xxx");
-    }
-
     private void doTestForTwoFieldWritesInScript(String secondContents) throws Exception {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.WRITE_ACCESSES);
     }
@@ -394,6 +390,10 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         // match is enclosed in run method (for script), or x method for class
 
         checkMatches(secondContents, matchName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
+    }
+
+    private void doTestForTwoFieldReferencesInGString(String secondContents) throws Exception {
+        doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, "xxx");
     }
 
     // as above, but enclosing element is always the first child of the enclosing type

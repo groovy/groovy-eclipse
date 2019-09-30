@@ -141,7 +141,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test // Class members may be accessed directly from static initializers
     public void testClassReference15() {
-        String contents = "class S { static { getCanonicalName() } }";
+        String contents = "class S { static { getCanonicalName();}}";
         assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
@@ -187,7 +187,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         String contents =
             "class GGG {\n" +
             "  static int length\n" +
-            "  static int getLength() { length }\n" +
+            "  static int getLength() { length;}\n" +
             "}\n" +
             "GGG.length";
         ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
@@ -199,7 +199,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         String contents =
             "class GGG {\n" +
             "  static int length\n" +
-            "  static int getLength() { length }\n" +
+            "  static int getLength() { length;}\n" +
             "}\n" +
             "new GGG().length";
         ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
@@ -211,7 +211,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         String contents = "package p\n" +
             "@groovy.transform.TypeChecked\n" +
             "public class BugClass {\n" +
-            "  static BugClass getInstance() { null }\n" +
+            "  static BugClass getInstance() { null;}\n" +
             "  void showBug() {\n" +
             "    BugClass.getInstance();  \n" +
             "  }\n" +
@@ -343,37 +343,37 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNonStaticReference3() {
-        String contents = "class GGG { int length }\nGGG.length";
+        String contents = "class GGG { int length;}\nGGG.length";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference4() {
-        String contents = "class GGG { int length }\nGGG.@length";
+        String contents = "class GGG { int length;}\nGGG.@length";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference5() {
-        String contents = "class GGG { int length() { } }\nGGG.length()";
+        String contents = "class GGG { int length() {}}\nGGG.length()";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference6() {
-        String contents = "class GGG { def length = { } }\nGGG.length()";
+        String contents = "class GGG { def length = {}}\nGGG.length()";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference7() {
-        String contents = "class GGG { int length() { } \nstatic {\nlength() } }";
+        String contents = "class GGG { int length() {} \nstatic {\nlength();}}";
         assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference8() {
-        String contents = "class GGG { def length = { } \nstatic {\nlength() } }";
+        String contents = "class GGG { def length = {} \nstatic {\nlength();}}";
         assertUnknown(contents, "length");
     }
 
@@ -381,7 +381,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport1() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO";
         assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
@@ -389,7 +389,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport2() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR";
         assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
@@ -397,7 +397,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport3() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO\nFOO";
         assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
@@ -405,7 +405,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport4() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR\nFOO";
         assertUnknown(contents, "FOO");
@@ -413,7 +413,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport5() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FO";
         assertUnknown(contents, "FO");
@@ -421,7 +421,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport6() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.BAR\nBAR";
         int offset = contents.indexOf("BAR");
@@ -432,7 +432,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport7() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO\nFOO";
         assertKnown(contents, "p.Other", "p.Other", "p.Other");
@@ -440,7 +440,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport8() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR\nFOO";
         assertKnown(contents, "p.Other", "p.Other", "p.Other");
@@ -448,7 +448,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticImport9() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.*\nFOO";
         assertKnown(contents, "p.Other", "p.Other", "p.Other");
@@ -456,7 +456,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/539
     public void testStaticImport10() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other { static void dump(Object o) { } }");
+        createUnit("p", "Other", "package p\nclass Other { static void dump(Object o) {}}");
 
         String contents = "import static p.Other.dump\n";
         assertKnown(contents, "dump", "p.Other", "java.lang.Void");

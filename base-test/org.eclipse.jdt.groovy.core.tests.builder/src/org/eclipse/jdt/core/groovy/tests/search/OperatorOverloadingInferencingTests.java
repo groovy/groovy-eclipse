@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,334 +23,334 @@ import org.junit.Test;
 public final class OperatorOverloadingInferencingTests extends InferencingTestSuite {
 
     @Test
-    public void testPlus1() throws Exception {
+    public void testPlus1() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo plus() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() + nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo plus() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() + nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testPlus2() throws Exception {
+    public void testPlus2() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo plus() { }\n" +
-                "}\n" +
-                "class Sub extends Bar { }\n" +
-                "def xxx = new Sub() + nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo plus() {}\n" +
+            "}\n" +
+            "class Sub extends Bar {}\n" +
+            "def xxx = new Sub() + nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testPlus3() throws Exception {
+    public void testPlus3() {
         String contents =
-                "def xxx = [2]+[2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
+            "def xxx = [2]+[2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
-    public void testMinus1() throws Exception {
+    public void testMinus1() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo minus() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() - nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo minus() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() - nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testMinus2() throws Exception {
+    public void testMinus2() {
         String contents =
-                "def xxx = [2]-[2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
+            "def xxx = [2]-[2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
-    public void testMultiply() throws Exception {
+    public void testMultiply() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo multiply() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() * nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo multiply() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() * nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testDivide() throws Exception {
+    public void testDivide() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo div() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() / nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo div() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() / nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testMod() throws Exception {
+    public void testMod() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo mod() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() % nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo mod() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() % nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testAnd() throws Exception {
+    public void testAnd() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo and() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() & nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo and() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() & nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testOr() throws Exception {
+    public void testOr() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo or() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() | nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo or() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() | nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testXor() throws Exception {
+    public void testXor() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo xor() { }\n" +
-                "}\n" +
-                "def xxx = new Bar() ^ nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo xor() {}\n" +
+            "}\n" +
+            "def xxx = new Bar() ^ nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testRightShift() throws Exception {
+    public void testRightShift() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo rightShift(a) { }\n" +
-                "}\n" +
-                "def xxx = new Bar() >> nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo rightShift(a) {}\n" +
+            "}\n" +
+            "def xxx = new Bar() >> nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
-    public void testLeftShift() throws Exception {
+    public void testLeftShift() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo leftShift(a) { }\n" +
-                "}\n" +
-                "def xxx = new Bar() << nuthin\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo leftShift(a) {}\n" +
+            "}\n" +
+            "def xxx = new Bar() << nuthin\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
     public void testGetAt1() {
         String contents =
-                "class Foo { }\n" +
-                "class Bar {\n" +
-                "  Foo getAt() { }\n" +
-                "}\n" +
-                "def xxx = new Bar()[nuthin]\n" + // should be DGM.getAt(Object, String): Object
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Object");
+            "class Foo {}\n" +
+            "class Bar {\n" +
+            "  Foo getAt() {}\n" +
+            "}\n" +
+            "def xxx = new Bar()[nuthin]\n" + // should be DGM.getAt(Object, String): Object
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Object");
     }
 
     @Test
     public void testGetAt2() {
         String contents =
-                "class Foo{ }\n" +
-                "Foo[] yyy\n" +
-                "def xxx = yyy[0]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "Foo[] yyy\n" +
+            "def xxx = yyy[0]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
     public void testGetAt3() {
         String contents =
-                "class Foo{ }\n" +
-                "Foo[] yyy\n" +
-                "def xxx = yyy[0,1,2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
+            "class Foo {}\n" +
+            "Foo[] yyy\n" +
+            "def xxx = yyy[0,1,2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<Foo>");
     }
 
     @Test
     public void testGetAt4() {
         String contents =
-                "class Foo{ }\n" +
-                "Foo[] yyy\n" +
-                "def xxx = yyy[0..2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
+            "class Foo {}\n" +
+            "Foo[] yyy\n" +
+            "def xxx = yyy[0..2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<Foo>");
     }
 
     @Test
     public void testGetAt5() {
         String contents =
-                "class Foo{ }\n" +
-                "List<Foo> yyy\n" +
-                "def xxx = yyy[0]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "List<Foo> yyy\n" +
+            "def xxx = yyy[0]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
     public void testGetAt6() {
         String contents =
-                "class Foo{ }\n" +
-                "List<Foo> yyy\n" +
-                "def xxx = yyy[0,1,2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
+            "class Foo {}\n" +
+            "List<Foo> yyy\n" +
+            "def xxx = yyy[0,1,2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<Foo>");
     }
 
     @Test
     public void testGetAt7() {
         String contents =
-                "class Foo{ }\n" +
-                "List<Foo> yyy\n" +
-                "def xxx = yyy[0..2]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<Foo>");
+            "class Foo {}\n" +
+            "List<Foo> yyy\n" +
+            "def xxx = yyy[0..2]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.util.List<Foo>");
     }
 
     @Test
     public void testGetAt8() {
         String contents =
-                "class Foo{ }\n" +
-                "Map<Integer,Foo> yyy\n" +
-                "def xxx = yyy[0]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo {}\n" +
+            "Map<Integer,Foo> yyy\n" +
+            "def xxx = yyy[0]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
     public void testGetAt9() {
         String contents =
-                "class Foo{ }\n" +
-                "BitSet yyy\n" +
-                "def xxx = yyy[0]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
+            "class Foo {}\n" +
+            "BitSet yyy\n" +
+            "def xxx = yyy[0]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Boolean");
     }
 
     @Test
     public void testAttributeExpr1() throws Exception {
         String contents =
-                "class Foo {\n boolean str\n }\n" +
-                "def xxx = new Foo().@str\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
+            "class Foo { boolean str\n}\n" +
+            "def xxx = new Foo().@str\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Boolean");
     }
 
     @Test
     public void testAttributeExpr2() throws Exception {
         String contents =
-                "class Foo {\n String str\n }\n" +
-                "def xxx = new Foo().@str.startsWith('1')\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
+            "class Foo { String str\n}\n" +
+            "def xxx = new Foo().@str.startsWith('1')\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Boolean");
     }
 
     @Test
     public void testLongExpr1() throws Exception {
         String contents =
-                "class Foo {\n String str\n }\n" +
-                "def xxx = ([ new Foo() ].str.length() + 4 - 9) % 7\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+            "class Foo { String str\n}\n" +
+            "def xxx = ([ new Foo() ].str.length() + 4 - 9) % 7\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testLongExpr2() throws Exception {
         String contents =
-                "class Foo {\n String str\n }\n" +
-                "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) % 7]\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+            "class Foo { String str\n}\n" +
+            "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) % 7]\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test
     public void testLongExpr3() throws Exception {
         String contents =
-                "class Foo {\n Foo next() { }\n int previous() { }\n }\n" +
-                        "def xxx = ([new Foo()++][0]--) + 8\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+            "class Foo { Foo next() {}\n int previous() {}\n}\n" +
+            "def xxx = ([new Foo()++][0]--) + 8\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testNumberPlusString1() throws Exception {
         String contents =
-                "def xxx = 1 + ''\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
+            "def xxx = 1 + ''\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.String");
     }
 
     @Test
     public void testNumberPlusString2() throws Exception {
         String contents =
-                "def xxx = 1 + \"${this}\"\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
+            "def xxx = 1 + \"${this}\"\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.String");
     }
 
     @Test
@@ -396,77 +396,77 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     @Test
     public void testPrefix1() throws Exception {
         String contents = "def x = 1\ndef xxx = -x\nxxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testPrefix2() throws Exception {
         String contents =
-                "class Foo { double positive() { } }\n" +
-                "def xxx = +(new Foo())\n" +
-                "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double positive() {}}\n" +
+            "def xxx = +(new Foo())\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPrefix3() throws Exception {
         String contents =
-                "class Foo { double negative() { } }\n" +
-                        "def xxx = -(new Foo())\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double negative() {}}\n" +
+            "def xxx = -(new Foo())\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPrefix4() throws Exception {
         String contents =
-                "class Foo { double next() { } }\n" +
-                        "def xxx = ++(new Foo())\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double next() {}}\n" +
+            "def xxx = ++(new Foo())\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPrefix5() throws Exception {
         String contents =
-                "class Foo { double previous() { } }\n" +
-                        "def xxx = --(new Foo())\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double previous() {}}\n" +
+            "def xxx = --(new Foo())\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPrefix6() throws Exception {
         String contents =
-                "class Foo { double bitwiseNegate() { } }\n" +
-                        "def xxx = ~(new Foo())\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double bitwiseNegate() {}}\n" +
+            "def xxx = ~(new Foo())\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPostfix1() throws Exception {
         String contents =
-                "class Foo { double next() { } }\n" +
-                        "def xxx = (new Foo())++\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double next() {}}\n" +
+            "def xxx = (new Foo())++\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 
     @Test
     public void testPostfix2() throws Exception {
         String contents =
-                "class Foo { double previous() { } }\n" +
-                        "def xxx = (new Foo())--\n" +
-                        "xxx";
-        String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+            "class Foo { double previous() {}}\n" +
+            "def xxx = (new Foo())--\n" +
+            "xxx";
+
+        assertType(contents, "xxx", "java.lang.Double");
     }
 }

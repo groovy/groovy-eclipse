@@ -22,6 +22,17 @@ import org.junit.Test;
  */
 public final class SyntheticAccessorInferencingTests extends InferencingTestSuite {
 
+    private void assertKnown(String source, String target, String type) {
+        assertDeclaringType(source, target, type);
+    }
+
+    private void assertUnknown(String contents, String target) {
+        int offset = contents.indexOf(target);
+        assertUnknownConfidence(contents, offset, offset + target.length());
+    }
+
+    //--------------------------------------------------------------------------
+
     @Test
     public void testSyntheticAccessors1() {
         String contents =
@@ -34,9 +45,9 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  }\n" +
             "}\n";
 
-        shouldBeKnown(contents, "isBar",  "Foo");
-        shouldBeKnown(contents, "getBar", "Foo");
-        shouldBeKnown(contents, "setBar", "Foo");
+        assertKnown(contents, "isBar",  "Foo");
+        assertKnown(contents, "getBar", "Foo");
+        assertKnown(contents, "setBar", "Foo");
     }
 
     @Test
@@ -51,9 +62,9 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  }\n" +
             "}\n";
 
-        shouldBeUnknown(contents, "isBar");
-        shouldBeKnown(contents, "getBar", "Foo");
-        shouldBeKnown(contents, "setBar", "Foo");
+        assertUnknown(contents, "isBar");
+        assertKnown(contents, "getBar", "Foo");
+        assertKnown(contents, "setBar", "Foo");
     }
 
     @Test
@@ -68,9 +79,9 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  }\n" +
             "}\n";
 
-        shouldBeUnknown(contents, "isBar");
-        shouldBeKnown(contents, "getBar", "Foo");
-        shouldBeKnown(contents, "setBar", "Foo");
+        assertUnknown(contents, "isBar");
+        assertKnown(contents, "getBar", "Foo");
+        assertKnown(contents, "setBar", "Foo");
     }
 
     @Test
@@ -140,45 +151,31 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "    propertyCat3a\n" +
             "}";
 
-        shouldBeUnknown(contents, "property1");
-        shouldBeUnknown(contents, "property2");
-        shouldBeUnknown(contents, "property3");
-        shouldBeUnknown(contents, "property4");
-        shouldBeUnknown(contents, "property5");
-        shouldBeUnknown(contents, "property6");
-        shouldBeUnknown(contents, "property7");
-        shouldBeUnknown(contents, "property8");
-        shouldBeUnknown(contents, "propertyCat1");
-        shouldBeUnknown(contents, "propertyCat2");
-        shouldBeUnknown(contents, "propertyCat3");
-        shouldBeUnknown(contents, "propertyCat4");
-        shouldBeUnknown(contents, "propertyCat5");
-        shouldBeUnknown(contents, "propertyCat6");
-        shouldBeUnknown(contents, "propertyCat7");
-        shouldBeUnknown(contents, "propertyCat8");
-        shouldBeUnknown(contents, "propertyCat9");
+        assertUnknown(contents, "property1");
+        assertUnknown(contents, "property2");
+        assertUnknown(contents, "property3");
+        assertUnknown(contents, "property4");
+        assertUnknown(contents, "property5");
+        assertUnknown(contents, "property6");
+        assertUnknown(contents, "property7");
+        assertUnknown(contents, "property8");
+        assertUnknown(contents, "propertyCat1");
+        assertUnknown(contents, "propertyCat2");
+        assertUnknown(contents, "propertyCat3");
+        assertUnknown(contents, "propertyCat4");
+        assertUnknown(contents, "propertyCat5");
+        assertUnknown(contents, "propertyCat6");
+        assertUnknown(contents, "propertyCat7");
+        assertUnknown(contents, "propertyCat8");
+        assertUnknown(contents, "propertyCat9");
 
-        shouldBeKnown(contents, "property1a", DEFAULT_UNIT_NAME);
-        shouldBeKnown(contents, "property2a", DEFAULT_UNIT_NAME);
-        shouldBeKnown(contents, "property3a", DEFAULT_UNIT_NAME);
-        shouldBeKnown(contents, "property4a", DEFAULT_UNIT_NAME);
+        assertKnown(contents, "property1a", DEFAULT_UNIT_NAME);
+        assertKnown(contents, "property2a", DEFAULT_UNIT_NAME);
+        assertKnown(contents, "property3a", DEFAULT_UNIT_NAME);
+        assertKnown(contents, "property4a", DEFAULT_UNIT_NAME);
 
-        shouldBeKnown(contents, "propertyCat1a", "Cat");
-        shouldBeKnown(contents, "propertyCat2a", "Cat");
-        shouldBeKnown(contents, "propertyCat3a", "Cat");
-    }
-
-    //--------------------------------------------------------------------------
-
-    private void shouldBeUnknown(String contents, String var) {
-        int start = contents.indexOf(var);
-        int end = start + var.length();
-        assertUnknownConfidence(contents, start, end);
-    }
-
-    private void shouldBeKnown(String contents, String var, String type) {
-        int start = contents.lastIndexOf(var);
-        int end = start + var.length();
-        assertDeclaringType(contents, start, end, type);
+        assertKnown(contents, "propertyCat1a", "Cat");
+        assertKnown(contents, "propertyCat2a", "Cat");
+        assertKnown(contents, "propertyCat3a", "Cat");
     }
 }

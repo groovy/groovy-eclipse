@@ -28,7 +28,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args != null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
@@ -40,7 +40,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args == null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
@@ -52,7 +52,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    null == args\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
@@ -64,7 +64,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args == 9\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
@@ -76,7 +76,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    9 == args\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests instanceof flow typing
@@ -89,7 +89,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Number");
+        assertType(contents, "x", "java.lang.Number");
     }
 
     @Test // tests instanceof flow typing
@@ -102,7 +102,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Object");
+        assertType(contents, "x", "java.lang.Object");
     }
 
     @Test // tests instanceof flow typing
@@ -113,7 +113,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    x instanceof Number ? x.intValue() : null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Number");
+        assertType(contents, "x", "java.lang.Number");
     }
 
     @Test // tests instanceof flow typing
@@ -124,7 +124,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    !(x instanceof Number) ? x.toString() : null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Object");
+        assertType(contents, "x", "java.lang.Object");
     }
 
     @Test // GRECLIPSE-1720
@@ -137,7 +137,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    isEarly\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "isEarly", "java.lang.Boolean");
+        assertType(contents, "isEarly", "java.lang.Boolean");
     }
 
     @Test // indirect static-star method reference
@@ -154,8 +154,8 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "  isOne()\n" +
             "  isTwo()\n" +
             "}";
-        assertExprType(contents, "isOne", "java.lang.Boolean");
-        assertExprType(contents, "isTwo", "java.lang.Boolean");
+        assertType(contents, "isOne", "java.lang.Boolean");
+        assertType(contents, "isTwo", "java.lang.Boolean");
     }
 
     @Test // indirect static-star property reference
@@ -172,8 +172,8 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "  one\n" +
             "  two\n" +
             "}";
-        assertExprType(contents, "one", "java.lang.Boolean");
-        assertExprType(contents, "two", "java.lang.Boolean");
+        assertType(contents, "one", "java.lang.Boolean");
+        assertType(contents, "two", "java.lang.Boolean");
     }
 
     @Test
@@ -257,7 +257,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args != null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
@@ -269,7 +269,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args == null\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
@@ -281,7 +281,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    null == args\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
@@ -293,7 +293,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    args== 9\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
@@ -305,7 +305,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    9 == args\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "args", "java.lang.String");
+        assertType(contents, "args", "java.lang.String");
     }
 
     @Test // tests instanceof flow typing
@@ -318,7 +318,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Number");
+        assertType(contents, "x", "java.lang.Number");
     }
 
     @Test // tests instanceof flow typing
@@ -331,7 +331,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Object");
+        assertType(contents, "x", "java.lang.Object");
     }
 
     @Test // tests instanceof flow typing
@@ -342,13 +342,6 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "    x instanceof Number ? x.intValue() : ''\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Number");
-    }
-
-    //--------------------------------------------------------------------------
-
-    private void assertExprType(String source, String target, String type) {
-        int offset = source.lastIndexOf(target);
-        assertType(source, offset, offset + target.length(), type);
+        assertType(contents, "x", "java.lang.Number");
     }
 }

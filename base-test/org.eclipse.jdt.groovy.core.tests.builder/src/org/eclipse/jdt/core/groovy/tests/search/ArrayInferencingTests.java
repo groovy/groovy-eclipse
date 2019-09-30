@@ -19,59 +19,54 @@ import org.junit.Test;
 
 public final class ArrayInferencingTests extends InferencingTestSuite {
 
-    private void assertExprType(String source, String target, String type) {
-        final int offset = source.lastIndexOf(target);
-        assertType(source, offset, offset + target.length(), type);
-    }
-
     @Test
     public void testArray1() {
         String contents = "def x = new CharSequence[0]";
-        assertExprType(contents, "x", "java.lang.CharSequence[]");
-        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
+        assertType(contents, "x", "java.lang.CharSequence[]");
+        assertType(contents, "CharSequence", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray2() {
         String contents = "def x = (CharSequence[]) null";
-        assertExprType(contents, "x", "java.lang.CharSequence[]");
-        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
+        assertType(contents, "x", "java.lang.CharSequence[]");
+        assertType(contents, "CharSequence", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray3() {
         String contents = "def x = ['1', '2'] as CharSequence[]; x";
-        assertExprType(contents, "x", "java.lang.CharSequence[]");
+        assertType(contents, "x", "java.lang.CharSequence[]");
     }
 
     @Test
     public void testArray4() {
         String contents = "def x = ['1', '2'] as CharSequence[]; x[0]";
-        assertExprType(contents, "x[0]", "java.lang.CharSequence");
+        assertType(contents, "x[0]", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray5() {
         String contents = "def x = ['1', '2'] as CharSequence[]; x[0].length()";
-        assertExprType(contents, "length", "java.lang.Integer");
+        assertType(contents, "length", "java.lang.Integer");
     }
 
     @Test
     public void testArray6() {
         String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i]";
-        assertExprType(contents, "x[i]", "java.lang.CharSequence");
+        assertType(contents, "x[i]", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray7() {
         String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i].length()";
-        assertExprType(contents, "length", "java.lang.Integer");
+        assertType(contents, "length", "java.lang.Integer");
     }
 
     @Test
     public void testArrayLength1() {
         String contents = "int[] x = [1, 2]; x.length";
-        assertExprType(contents, "length", "java.lang.Integer");
+        assertType(contents, "length", "java.lang.Integer");
 
         int offset = contents.indexOf("length");
         assertDeclaringType(contents, offset, offset + "length".length(), "int[]");
@@ -80,7 +75,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     @Test
     public void testArrayLength2() {
         String contents = "String[] x = ['1', '2']; x.length";
-        assertExprType(contents, "length", "java.lang.Integer");
+        assertType(contents, "length", "java.lang.Integer");
 
         int offset = contents.indexOf("length");
         assertDeclaringType(contents, offset, offset + "length".length(), "java.lang.String[]");
@@ -89,7 +84,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     @Test
     public void testArrayLength3() {
         String contents = "String[][] x = ['1', '2']; x.length";
-        assertExprType(contents, "length", "java.lang.Integer");
+        assertType(contents, "length", "java.lang.Integer");
 
         int offset = contents.indexOf("length");
         assertDeclaringType(contents, offset, offset + "length".length(), "java.lang.String[][]");
@@ -98,47 +93,47 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
     @Test
     public void testArrayGenerics1() {
         String contents = "Class<? extends CharSequence>[] array";
-        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
-        assertExprType(contents, "Class",  "java.lang.Class<? extends java.lang.CharSequence>");
+        assertType(contents, "CharSequence", "java.lang.CharSequence");
+        assertType(contents, "Class",  "java.lang.Class<? extends java.lang.CharSequence>");
     }
 
     @Test
     public void testArrayGenerics2() {
         String contents = "import java.util.regex.*; Map<String, Pattern>[] array";
-        assertExprType(contents, "String", "java.lang.String");
-        assertExprType(contents, "Pattern", "java.util.regex.Pattern");
-        assertExprType(contents, "Map", "java.util.Map<java.lang.String,java.util.regex.Pattern>");
+        assertType(contents, "String", "java.lang.String");
+        assertType(contents, "Pattern", "java.util.regex.Pattern");
+        assertType(contents, "Map", "java.util.Map<java.lang.String,java.util.regex.Pattern>");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/763
     public void testArrayGenerics3() {
         String contents = "Collection<List<String>>[] array = []; array*.trim()";
-        assertExprType(contents, "trim", "java.lang.String");
+        assertType(contents, "trim", "java.lang.String");
     }
 
     @Test
     public void testArrayGenerics4() {
         String contents = "Map<String, ?>[] array = [[val:1]]; array*.val";
-        assertExprType(contents, "val", "java.lang.Object");
+        assertType(contents, "val", "java.lang.Object");
     }
 
     @Test
     public void testArrayProperty1() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().xx";
-        assertExprType(contents, "xx", "XX[]");
+        assertType(contents, "xx", "XX[]");
     }
 
     @Test
     public void testArrayProperty2() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().xx[0].yy";
-        assertExprType(contents, "yy", "XX");
+        assertType(contents, "yy", "XX");
     }
 
     @Test
     public void testArrayProperty3() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().xx[new XX()].yy";
         String toFind = "yy";
         int start = contents.lastIndexOf(toFind);
@@ -148,51 +143,52 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArrayProperty4() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().xx[0].yy";
-        assertExprType(contents, "yy", "XX");
+        assertType(contents, "yy", "XX");
     }
 
     @Test
     public void testArrayProperty5() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().xx[0].xx[9].yy";
-        assertExprType(contents, "yy", "XX");
+        assertType(contents, "yy", "XX");
     }
 
     @Test
     public void testArrayProperty6() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().getXx()[0].xx[9].yy";
-        assertExprType(contents, "yy", "XX");
+        assertType(contents, "yy", "XX");
     }
 
     @Test
     public void testArrayProperty7() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().getXx()[0].getYy()";
-        assertExprType(contents, "getYy", "XX");
+        assertType(contents, "getYy", "XX");
     }
 
     @Test
     public void testArrayProperty8() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().getXx()";
-        assertExprType(contents, "getXx", "XX[]");
+        assertType(contents, "getXx", "XX[]");
     }
 
     @Test
     public void testArrayProperty9() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
         String contents = "new XX().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
-        assertExprType(contents, "xx", "XX[]");
+        assertType(contents, "xx", "XX[]");
     }
 
     @Test
     public void testArrayProperty10() {
-        createUnit("XX", "class XX { XX[] xx; XX yy; }");
-        String contents = "new XX().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
-        assertExprType(contents, "xx", "XX[]");
+        createUnit("XX", "class XX { XX[] xx; XX yy;}");
+        String contents = "new XX().getYy().getYy().getYy().getYy().getYy().getYy().getYy().getYy()" +
+                        ".getXx()[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx[0].xx";
+        assertType(contents, "xx", "XX[]");
     }
 
     @Test
@@ -202,7 +198,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
             "for (int i = 0; i < a.length; i += 1) {\n" +
             "  def x = a[i]\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Integer");
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
@@ -212,7 +208,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
             "for (def x : a) {\n" +
             "  x\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Integer");
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
@@ -222,7 +218,7 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
             "for (x in a) {\n" +
             "  x\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Integer");
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
@@ -231,6 +227,6 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
             "Integer[] a = [1, 2, 3]\n" +
             "for (x in a) {\n" +
             "}";
-        assertExprType(contents, "x", "java.lang.Integer");
+        assertType(contents, "x", "java.lang.Integer");
     }
 }
