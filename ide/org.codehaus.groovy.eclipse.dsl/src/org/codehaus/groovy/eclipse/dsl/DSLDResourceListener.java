@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,6 +44,33 @@ import org.eclipse.jdt.core.JavaCore;
  */
 public class DSLDResourceListener implements IResourceChangeListener {
 
+    private static final DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
+
+    @Override
+    public void resourceChanged(IResourceChangeEvent event) {
+        switch (event.getType()) {
+        case IResourceChangeEvent.PRE_DELETE:
+        case IResourceChangeEvent.PRE_CLOSE:
+        case IResourceChangeEvent.POST_CHANGE:
+            try {
+                if (event.getDelta() != null) {
+                    event.getDelta().accept(new DSLDChangeResourceDeltaVisitor(event.getType()));
+                }
+            } catch (CoreException e) {
+                GroovyDSLCoreActivator.logException(e);
+            }
+        }
+    }
+
+    public boolean isDSLDFile(IFile file) {
+        return "dsld".equals(file.getFileExtension());
+    }
+
+    public boolean isXDSL(IFile file) {
+        String fileExtension = file.getFileExtension();
+        return fileExtension != null && fileExtension.equals(SuggestionsFileProperties.FILE_TYPE);
+    }
+
     private class DSLDChangeResourceDeltaVisitor implements IResourceDeltaVisitor {
         private final int eventType;
 
@@ -66,17 +93,17 @@ public class DSLDResourceListener implements IResourceChangeListener {
                 // two possibilities handled here:
                 // project being closed/deleted/groovy nature removed
                 // project being opened.
-                if ((eventType == IResourceChangeEvent.PRE_DELETE && delta.getKind() == IResourceDelta.REMOVED)
-                        || eventType == IResourceChangeEvent.PRE_CLOSE ||
+                if ((eventType == IResourceChangeEvent.PRE_DELETE && delta.getKind() == IResourceDelta.REMOVED) ||
+                        eventType == IResourceChangeEvent.PRE_CLOSE ||
                         // just in case nature has been removed for this project
                         !GroovyNature.hasGroovyNature(project)) {
                     // no longer managing state for this project
                     if (GroovyLogManager.manager.hasLoggers()) {
                         GroovyLogManager.manager.log(TraceCategory.DSL, "Deleting DSL context for: " + project.getName());
                     }
-                    contextStoreManager.clearDSLDStore(project);
+                    contextStoreManager.removeDSLDStore(project);
                     return false;
-                } else if (!contextStoreManager.hasDSLDStoreFor(project) && GroovyNature.hasGroovyNature(project)) {
+                } else if (GroovyNature.hasGroovyNature(project) && !contextStoreManager.hasDSLDStoreFor(project)) {
                     // could be that this project has just been opened
                     GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, false);
                     return false;
@@ -123,33 +150,5 @@ public class DSLDResourceListener implements IResourceChangeListener {
             // so keep on trudging through the delta
             return true;
         }
-    }
-
-    private static final DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
-
-    @Override
-    public void resourceChanged(IResourceChangeEvent event) {
-        switch (event.getType()) {
-            case IResourceChangeEvent.PRE_DELETE:
-            case IResourceChangeEvent.PRE_CLOSE:
-            case IResourceChangeEvent.POST_CHANGE:
-                try {
-                    if (event.getDelta() != null) {
-                        event.getDelta().accept(new DSLDChangeResourceDeltaVisitor(event.getType()));
-                    }
-                } catch (CoreException e) {
-                    GroovyDSLCoreActivator.logException(e);
-                }
-        }
-    }
-
-    public boolean isDSLDFile(IFile file) {
-        String fileExtension = file.getFileExtension();
-        return fileExtension != null && fileExtension.equals("dsld");
-    }
-
-    public boolean isXDSL(IFile file) {
-        String fileExtension = file.getFileExtension();
-        return fileExtension != null && fileExtension.equals(SuggestionsFileProperties.FILE_TYPE);
     }
 }

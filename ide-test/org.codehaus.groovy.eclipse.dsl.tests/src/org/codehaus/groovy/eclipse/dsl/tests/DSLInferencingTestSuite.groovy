@@ -63,7 +63,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         GroovyLogManager.manager.addLogger(logger)
         if (doRemoveClasspathContainer) {
             GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, javaProject)
-            GroovyDSLCoreActivator.default.contextStoreManager.getDSLDStore(javaProject).purgeAll()
+            GroovyDSLCoreActivator.default.contextStoreManager.getDSLDStore(project).purgeAll()
         } else {
             refreshExternalFoldersProject()
             GroovyRuntime.addLibraryToClasspath(javaProject, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false)

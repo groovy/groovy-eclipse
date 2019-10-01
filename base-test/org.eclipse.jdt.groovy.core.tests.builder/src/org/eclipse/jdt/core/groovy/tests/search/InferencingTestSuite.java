@@ -265,7 +265,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             switch (job.getState()) {
             case Job.RUNNING:
             case Job.WAITING:
-                if (job.getName().contains("Java index")) {
+                if (job.getName().contains("index")) {
                     joinUninterruptibly(job);
                 }
             }

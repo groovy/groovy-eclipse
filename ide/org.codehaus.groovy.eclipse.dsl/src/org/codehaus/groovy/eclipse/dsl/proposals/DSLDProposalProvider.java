@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,8 @@ public class DSLDProposalProvider implements IProposalProvider {
     }
 
     @Override
-    public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
+    public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context,
+            ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Getting DSL proposals for " + context.fullCompletionExpression);
@@ -61,7 +62,7 @@ public class DSLDProposalProvider implements IProposalProvider {
         List<IContributionElement> contributions;
         List<IGroovyProposal> proposals = new ArrayList<>();
         try {
-            DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject());
+            DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject().getProject());
             ModuleNodeInfo info = context.unit.getModuleInfo(true);
             if (info == null) {
                 if (GroovyLogManager.manager.hasLoggers()) {

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,6 +80,11 @@ public class RefreshDSLDJob extends Job {
         this.projects = contextStoreManager.addInProgress(projects);
     }
 
+    @Override
+    public boolean belongsTo(Object family) {
+        return family == RefreshDSLDJob.class;
+    }
+
     protected boolean isDSLD(IStorage file) {
         return isFile(file, "dsld");
     }
@@ -91,7 +96,7 @@ public class RefreshDSLDJob extends Job {
     protected boolean isFile(IStorage file, String extension) {
         if (file instanceof IFile) {
             IFile iFile = (IFile) file;
-            return !iFile.isDerived() && extension.equals(iFile.getFileExtension());
+            return !iFile.isDerived() && iFile.getFileExtension().equals(extension);
         } else {
             String name = file.getName();
             return name != null && name.endsWith(extension);
@@ -205,11 +210,6 @@ public class RefreshDSLDJob extends Job {
             GroovyLogManager.manager.logEnd(event, TraceCategory.DSL);
         }
         return Status.OK_STATUS;
-    }
-
-    @Override
-    public boolean belongsTo(Object family) {
-        return family == RefreshDSLDJob.class;
     }
 
     //--------------------------------------------------------------------------
