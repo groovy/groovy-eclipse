@@ -40,6 +40,7 @@ import org.junit.Test;
 public final class CategorySearchTests extends SearchTestSuite {
 
     private static String CATEGORY_DEFN =
+        //@formatter:off
         "class Cat {\n" +
         "  static String doNothing(CatTarget e, msg) {\n" +
         "    print msg\n" +
@@ -53,8 +54,10 @@ public final class CategorySearchTests extends SearchTestSuite {
         "    print msg\n" +
         "  }\n" +
         "}";
+        //@formatter:on
 
     private static String SIMPLE_CATEGORY =
+        //@formatter:off
         "use (Cat) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -63,8 +66,10 @@ public final class CategorySearchTests extends SearchTestSuite {
         "  x.doNothing 'jello'\n" +
         "  Cat.doNothing x, 'jello'\n" +
         "}";
+        //@formatter:on
 
     private static String CATEGORY_WITH_SUBTYPE =
+        //@formatter:off
         "class Sub extends CatTarget { }\n" +
         "use (Cat) {\n" +
         "  new Sub().doNothing 'jello'\n" +
@@ -74,8 +79,10 @@ public final class CategorySearchTests extends SearchTestSuite {
         "  x.doNothing 'jello'\n" +
         "  Cat.doNothing x, 'jello'\n" +
         "}";
+        //@formatter:on
 
     private static String CATEGORY_ASSIGNED =
+        //@formatter:off
         "def y = Cat\n" +
         "use (y) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
@@ -85,8 +92,10 @@ public final class CategorySearchTests extends SearchTestSuite {
         "  x.doNothing 'jello'\n" +
         "  y.doNothing x, 'jello'\n" +
         "}";
+        //@formatter:on
 
     private static String CATEGORY_MULTIPLE_OUTER =
+        //@formatter:off
         "use (Cat) { use (Cat2) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -95,8 +104,10 @@ public final class CategorySearchTests extends SearchTestSuite {
         "  x.doNothing 'jello'\n" +
         "  Cat.doNothing x, 'jello'\n" +
         "} }";
+        //@formatter:on
 
     private static String CATEGORY_MULTIPLE_INNER =
+        //@formatter:off
         "use (Cat2) { use (Cat) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -105,11 +116,14 @@ public final class CategorySearchTests extends SearchTestSuite {
         "  x.doNothing 'jello'\n" +
         "  Cat.doNothing x, 'jello'\n" +
         "} }";
+        //@formatter:on
 
     private static String NO_CATEGORY =
+        //@formatter:off
         "use (Cat) {\n" +
         "}\n" +
         "new CatTarget().doNothing 'jello'\n";
+        //@formatter:on
 
     @Test
     public void testCategorySearch1() throws Exception {

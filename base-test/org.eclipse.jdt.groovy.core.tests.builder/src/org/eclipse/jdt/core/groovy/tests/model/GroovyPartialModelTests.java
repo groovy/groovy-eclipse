@@ -46,40 +46,48 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
     @Test
     public void testFieldInitializerIsAvailable1() throws Exception {
         findFieldInitializer(
+            //@formatter:off
             "package p\n" +
             "class C {\n" +
             "  public static aField = []\n" +
             "}\n",
+            //@formatter:on
             ListExpression.class);
     }
 
     @Test
     public void testFieldInitializerIsAvailable2() throws Exception {
         findFieldInitializer(
+            //@formatter:off
             "package p\n" +
             "class C {\n" +
             "  public static aField = { -> }\n" +
             "}\n",
+            //@formatter:on
             ClosureExpression.class);
     }
 
     @Test @Ignore
     public void testFieldInitializerIsAvailable3() throws Exception {
         findFieldInitializer(
+            //@formatter:off
             "package p\n" +
             "class C {\n" +
             "  public Object aField = []\n" +
             "}\n",
+            //@formatter:on
             ListExpression.class);
     }
 
     @Test @Ignore
     public void testFieldInitializerIsAvailable4() throws Exception {
         findFieldInitializer(
+            //@formatter:off
             "package p\n" +
             "class C {\n" +
             "  public Object aField = { -> }\n" +
             "}\n",
+            //@formatter:on
             ClosureExpression.class);
     }
 

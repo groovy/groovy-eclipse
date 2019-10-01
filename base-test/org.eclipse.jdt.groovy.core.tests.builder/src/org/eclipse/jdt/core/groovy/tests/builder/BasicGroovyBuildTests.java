@@ -28,21 +28,17 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.ResolveVisitor;
-import org.codehaus.groovy.vmplugin.VMPluginFactory;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
@@ -62,7 +58,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
 
@@ -87,43 +82,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.setOutputFolder(path, "bin");
         env.removePackageFragmentRoot(path, "");
         return new IPath[] {path, env.addPackageFragmentRoot(path, "src")};
-    }
-
-    private static MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
-        List<MethodNode> mns = jcn.getDeclaredMethods(selector);
-        for (MethodNode mn : mns) {
-            if (mn.getParameters().length == paramCount) {
-                return mn;
-            }
-        }
-        return null;
-    }
-
-    private static void compareMethodNodes(MethodNode jmn, MethodNode mn) {
-        System.out.println("\n\n\nComparing method nodes jmn=" + jmn + " mn=" + mn);
-        System.out.println("Comparing return types");
-        compareClassNodes(jmn.getReturnType(), mn.getReturnType(), 1);
-        compareParameterArrays(jmn.getParameters(), mn.getParameters(), 1);
-    }
-
-    private static void compareParameterArrays(Parameter[] jps, Parameter[] ps, int d) {
-        if (ps == null) {
-            if (jps != null) {
-                fail("Expected null parameters but was " + Arrays.toString(jps));
-            }
-        } else {
-            if (ps.length != jps.length) {
-                fail("Expected same number of parameters, should be " + Arrays.toString(ps) + " but was " + Arrays.toString(jps));
-            }
-            for (int p = 0; p < ps.length; p++) {
-                System.out.println("Comparing parameters jp=" + jps[p] + " p=" + ps[p]);
-                compareParameters(jps[p], ps[p], d + 1);
-            }
-        }
-    }
-
-    private static void compareParameters(Parameter jp, Parameter p, int d) {
-        compareClassNodes(jp.getType(), p.getType(), d + 1);
     }
 
     // check whether these are identical (in everything except name!)
@@ -272,9 +230,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n");
             //@formatter:on
 
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "config.groovy");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         env.addGroovyClass(paths[1], "foo", "Bar",
             "package foo\n" +
@@ -509,140 +467,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild(paths[0]);
         expectingNoProblems();
-    }
-
-    @Test @Ignore
-    public void testCompileStatic_1505() throws Exception {
-        JDTResolver.recordInstances = true;
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
-            "import groovy.transform.CompileStatic\n" +
-            "@CompileStatic\n" +
-            "void method(String message) {\n" +
-            "  Collection<Integer> cs;\n" +
-            /*"   List<Integer> ls = new ArrayList<Integer>();\n" +
-            "   ls.add(123);\n" +
-            "   ls.add('abc');\n" +*/
-            // GRECLIPSE-1511 code
-            "  List<String> second = []\n" +
-            "  List<String> artefactResources2\n" +
-            "  second.addAll(artefactResources2)\n" +
-            "}\n"
-            /*"interface List2<E> extends Collection<E> {\n" +
-            "  boolean add(E e);\n"  +
-            "}"*/);
-            //@formatter:on
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("Foo", "List2");
-        expectingNoProblems();
-
-        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-
-        // Access the jdtresolver bits and pieces
-
-        JDTClassNode jcn = JDTResolver.getCachedNode("java.util.Collection<E>");
-
-        assertNotNull(jcn);
-        System.out.println("JDT ClassNode=" + jcn);
-        //JDTClassNode jcn2 = jdtr.getCachedNode("List2");
-
-        ClassNode listcn = new ClassNode(java.util.Collection.class);
-        VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
-        listcn.lazyClassInit();
-        System.out.println("Groovy ClassNode=" + listcn);
-
-        //IJavaProject ijp = env.getJavaProject("Project");
-        //GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo").getCompilationUnit();
-
-        // now find the class reference
-        //ClassNode cn = unit.getModuleNode().getClasses().get(1);
-
-        // Compare java.util.List from JDTClassNode and List2 from groovy
-        compareClassNodes(jcn.redirect(), listcn.redirect(), 0);
-        MethodNode jmn = getMethodNode(jcn, "add", 1); // boolean add(E)
-        MethodNode rmn = getMethodNode(listcn, "add", 1);
-        compareMethodNodes(jmn, rmn);
-
-        jmn = getMethodNode(jcn, "addAll", 1);
-        rmn = getMethodNode(listcn, "addAll", 1);
-        compareMethodNodes(jmn, rmn);
-
-        // Want to compare type information in the
-        // env.addClass(root, "", "Client", "public class Client {\n"
-        // + "  { new Outer.Inner(); }\n" + "}\n");
-        // incrementalBuild(projectPath);
-        // expectingNoProblems();
-        // expectingCompiledClasses("Client");
-    }
-
-    @Test @Ignore
-    public void testCompileStatic_1506() throws Exception {
-        JDTResolver.recordInstances = true;
-        IPath[] paths = createSimpleProject("Project", true);
-
-        env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
-            "import groovy.transform.CompileStatic\n" +
-            "@CompileStatic\n" +
-            "void method(String message) {\n" +
-            "   Collection<Integer> cs;\n" +
-            //"   List<Integer> ls = new ArrayList<Integer>();\n" +
-            //"   ls.add(123);\n" +
-            //"   ls.add('abc');\n" +
-            // GRECLIPSE-1511 code
-            "   List<String> second = []\n" +
-            "   List<String> artefactResources2\n" +
-            "   second.addAll(artefactResources2)\n" +
-            "}\n" +
-            "interface ListOfFile extends ArrayList<File> {\n" +
-            "}");
-            //@formatter:on
-
-        incrementalBuild(paths[0]);
-        //expectingCompiledClasses("Foo","List2");
-        expectingNoProblems();
-
-        // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
-
-        // Access the jdtresolver bits and pieces
-
-        JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
-
-        assertNotNull(jcn);
-        System.out.println("JDT ClassNode=" + jcn);
-        //JDTClassNode jcn2 = jdtr.getCachedNode("List2");
-
-        //List<File> C = new ArrayList<File>();
-        ClassNode listcn = new ClassNode(java.util.Collection.class);
-        VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
-        listcn.lazyClassInit();
-        System.out.println("Groovy ClassNode=" + listcn);
-
-        //IJavaProject ijp = env.getJavaProject("Project");
-        //GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo").getCompilationUnit();
-
-        // now find the class reference
-        //ClassNode cn = unit.getModuleNode().getClasses().get(1);
-
-        // Compare java.util.List from JDTClassNode and List2 from groovy
-        compareClassNodes(jcn.redirect(), listcn.redirect(), 0);
-        MethodNode jmn = getMethodNode(jcn, "add", 1); // boolean add(E)
-        MethodNode rmn = getMethodNode(listcn, "add", 1);
-        compareMethodNodes(jmn, rmn);
-
-        jmn = getMethodNode(jcn, "addAll", 1);
-        rmn = getMethodNode(listcn, "addAll", 1);
-        compareMethodNodes(jmn, rmn);
-
-        // Want to compare type information in the
-        // env.addClass(root, "", "Client", "public class Client {\n"
-        // + "  { new Outer.Inner(); }\n" + "}\n");
-        // incrementalBuild(projectPath);
-        // expectingNoProblems();
-        // expectingCompiledClasses("Client");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/863
@@ -899,28 +723,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         incrementalBuild(paths[0]);
         expectingNoProblems();
         expectingCompiledClasses("brooklyn.event.adapter.Foo", "brooklyn.event.adapter.HttpSensorAdapter");
-    }
-
-    @Test @Ignore
-    public void testScriptSupport() throws Exception {
-        IPath[] paths = createSimpleProject("Project", true);
-
-        // The fact that this is 'scripts' should cause us to suppress the .class file
-        IPath root = env.addPackageFragmentRoot(paths[0], "scripts");
-
-        env.addGroovyClass(root, "p1", "Hello",
-            //@formatter:off
-            "package p1;\n" +
-            "public class Hello {\n" +
-            "  public static void main(String[] args) {\n" +
-            "    System.out.println('Hello world')\n" +
-            "  }\n" +
-            "}");
-            //@formatter:on
-
-        incrementalBuild(paths[0]);
-        expectingCompiledClasses("");
-        expectingNoProblems();
     }
 
     @Test
@@ -2497,9 +2299,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testSimpleTaskMarkerInSingleLineComment() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2523,9 +2325,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testSimpleTaskMarkerInSingleLineCommentEndOfClass() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2544,10 +2346,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testSimpleTaskMarkerInSingleLineCommentEndOfClassCaseInsensitive() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
         newOptions.put(JavaCore.COMPILER_TASK_CASE_SENSITIVE, JavaCore.DISABLED);
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2570,9 +2372,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTaskMarkerInMultiLineCommentButOnOneLine() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2591,9 +2393,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTaskMarkerInMultiLineButNoText() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2613,9 +2415,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTaskMarkerInMultiLineOutsideClass() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2636,9 +2438,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // task marker inside a multi line comment inside a class
     public void testTaskMarkerInMultiLineInsideClass() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2659,10 +2461,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // tag priority
     public void testTaskMarkerMixedPriorities() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2708,10 +2510,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTaskMarkerMultipleOnOneLineInSLComment() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2751,10 +2553,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTaskMarkerMultipleOnOneLineInMLComment() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2794,10 +2596,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // two on one line
     public void testTaskMarkerSharedDescription() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -3409,10 +3211,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testTags3() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "NORMAL,HIGH,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", false);
 
@@ -3434,9 +3236,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testUnusedImport() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", false);
 
@@ -3497,12 +3299,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
-    /**
-     * @bug 75471: [prefs] no re-compile when loading settings
-     * @test Ensure that changing project preferences is well taking into account while rebuilding project
-     * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=75471"
-     */
-    @Test @Ignore
+    @Test
     public void testUpdateProjectPreferences() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
@@ -3523,15 +3320,16 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:on
 
         fullBuild(paths[0]);
-        expectingSpecificProblemFor(paths[0], new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
+        expectingSpecificProblemFor(paths[0], new Problem("",
+            "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
 
         env.getJavaProject(paths[0]).setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
         incrementalBuild(paths[0]);
         expectingNoProblems();
     }
 
-    @Test @Ignore
-    public void testUpdateWkspPreferences() throws Exception {
+    @Test
+    public void testUpdateWorkspacePreferences() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
         env.addClass(paths[1], "util", "MyException",
@@ -3551,29 +3349,29 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:on
 
         fullBuild(paths[0]);
-        expectingSpecificProblemFor(paths[0], new Problem("", "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
+        expectingSpecificProblemFor(paths[0], new Problem("",
+            "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
 
-        JavaModelManager manager = JavaModelManager.getJavaModelManager();
-        String unusedImport = manager.getInstancePreferences().get(JavaCore.COMPILER_PB_UNUSED_IMPORT, null);
+        String unusedImport = JavaModelManager.getJavaModelManager().getInstancePreferences().get(JavaCore.COMPILER_PB_UNUSED_IMPORT, null);
         try {
-            manager.getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-            incrementalBuild();
+            JavaModelManager.getJavaModelManager().getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
+            fullBuild(paths[0]);
             expectingNoProblems();
         } finally {
-            if (unusedImport == null) {
-                manager.getInstancePreferences().remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
+            if (unusedImport != null) {
+                JavaModelManager.getJavaModelManager().getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
             } else {
-                manager.getInstancePreferences().put(JavaCore.COMPILER_PB_UNUSED_IMPORT, unusedImport);
+                JavaModelManager.getJavaModelManager().getInstancePreferences().remove(JavaCore.COMPILER_PB_UNUSED_IMPORT);
             }
         }
     }
 
     @Test
     public void testTags4() throws Exception {
-        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO!,TODO,TODO?");
         newOptions.put(JavaCore.COMPILER_TASK_PRIORITIES, "HIGH,NORMAL,LOW");
-        JavaCore.setOptions(newOptions);
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
 
         IPath[] paths = createSimpleProject("Project", false);
 
@@ -3604,41 +3402,41 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assertEquals("Wrong priority", IMarker.PRIORITY_HIGH, priority);
     }
 
-    @Test @Ignore // When a groovy file name clashes with an existing type
+    @Test // When a groovy file name clashes with an existing type
     public void testBuildClash() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Stack",
             //@formatter:off
             "class StackTester {\n" +
-            "   def o = new Stack();\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println('>>'+new StackTester().o.getClass());\n" +
-            "      System.out.println(\"Hello world\");\n" +
-            "   }\n" +
+            "  def o = new Stack();\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println('>>'+new StackTester().o.getClass());\n" +
+            "    System.out.println(\"Hello world\");\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("StackTester");
         expectingNoProblems();
-        executeClass(paths[0], "StackTester", ">>class java.util.Stack\r\nHello world\r\n", "");
+        executeClass(paths[0], "StackTester", ">>class java.util.Stack\nHello world\n", "");
 
         env.addGroovyClass(paths[1], "", "Stack",
             //@formatter:off
             "class StackTester {\n" +
-            "   def o = new Stack();\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println('>>'+new StackTester().o.getClass());\n" +
-            "      System.out.println(\"Hello world\");\n" +
-            "   }\n" +
+            "  def o = new Stack();\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println('>>'+new StackTester().o.getClass());\n" +
+            "    System.out.println(\"Hello world\");\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("StackTester");
         expectingNoProblems();
-        executeClass(paths[0], "StackTester", ">>class java.util.Stack\r\nHello world\r\n", "");
+        executeClass(paths[0], "StackTester", ">>class java.util.Stack\nHello world\n", "");
     }
 
     @Test
@@ -3650,9 +3448,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package a\n" +
             "class Hello {\n" +
-            "   static void main(String[] args) {\n" +
-            "      System.out.println('Hello world')\n" +
-            "   }\n" +
+            "  static void main(String[] args) {\n" +
+            "    System.out.println('Hello world')\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
@@ -3667,9 +3465,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package b\n" +
             "class Hello {\n" +
-            "   static void main(String[] args) {\n" +
-            "      a.Hello.main(args)\n" +
-            "   }\n" +
+            "  static void main(String[] args) {\n" +
+            "    a.Hello.main(args)\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
@@ -3682,9 +3480,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package c\n" +
             "class Hello {\n" +
-            "   static void main(String[] args) {\n" +
-            "      b.Hello.main(args)\n" +
-            "   }\n" +
+            "  static void main(String[] args) {\n" +
+            "    b.Hello.main(args)\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
@@ -3697,9 +3495,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package d\n" +
             "class Hello {\n" +
-            "   static void main(String[] args) {\n" +
-            "      c.Hello.main(args)\n" +
-            "   }\n" +
+            "  static void main(String[] args) {\n" +
+            "    c.Hello.main(args)\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
@@ -3716,9 +3514,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package p1;\n" +
             "public class Iterables {\n" +
-            "   public <T> @Nullable T getFirst(Iterable<? extends T> iterable, @Nullable T defaultValue) {\n" +
-            "      return null;\n" +
-            "   }\n" +
+            "  public <T> @Nullable T getFirst(Iterable<? extends T> iterable, @Nullable T defaultValue) {\n" +
+            "    return null;\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
         env.addClass(paths[1], "p1", "Multimap",
