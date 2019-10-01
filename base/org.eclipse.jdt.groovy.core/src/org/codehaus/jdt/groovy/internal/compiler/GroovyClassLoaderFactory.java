@@ -268,14 +268,14 @@ public final class GroovyClassLoaderFactory {
                     if (defaultCategories == null) {
                         Set<Class> objectCategories = new LinkedHashSet<>(), staticCategories = new LinkedHashSet<>();
                         try {
-                            Class dgm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyMethods");
-                            Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+                            Class dgm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyMethods", false, true);
+                            Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false, true);
 
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
 
                             staticCategories.add(dgsm);
 
-                            new ExtensionModuleScanner(module ->  {
+                            new ExtensionModuleScanner(module -> {
                                 if (module instanceof SimpleExtensionModule) {
                                     objectCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
                                     staticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());

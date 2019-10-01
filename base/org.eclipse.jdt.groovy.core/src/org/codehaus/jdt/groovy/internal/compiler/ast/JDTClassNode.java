@@ -39,7 +39,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
@@ -319,7 +318,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
             ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
-            if (DefaultGroovyMethods.asBoolean(methodBinding.thrownExceptions)) {
+            if (methodBinding.thrownExceptions != null && methodBinding.thrownExceptions.length > 0) {
                 exceptions = new ClassNode[methodBinding.thrownExceptions.length];
                 for (int i = 0; i < methodBinding.thrownExceptions.length; i += 1) {
                     exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
@@ -344,7 +343,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
         ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
-        if (DefaultGroovyMethods.asBoolean(methodBinding.thrownExceptions)) {
+        if (methodBinding.thrownExceptions != null && methodBinding.thrownExceptions.length > 0) {
             exceptions = new ClassNode[methodBinding.thrownExceptions.length];
             for (int i = 0; i < methodBinding.thrownExceptions.length; i += 1) {
                 exceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
@@ -430,7 +429,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames, AnnotationBinding[][] parameterAnnotations) {
         Parameter[] parameters = Parameter.EMPTY_ARRAY;
-        if (DefaultGroovyMethods.asBoolean(parameterTypes)) {
+        if (parameterTypes != null && parameterTypes.length > 0) {
             parameters = new Parameter[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i += 1) {
                 String parameterName;
@@ -442,8 +441,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     parameterName = "arg" + i;
                 }
                 parameters[i] = makeParameter(parameterTypes[i], parameterName);
-
-                if (DefaultGroovyMethods.asBoolean(parameterAnnotations)) {
+                if (parameterAnnotations != null && parameterAnnotations.length > i) {
                     for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
                         parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
                     }

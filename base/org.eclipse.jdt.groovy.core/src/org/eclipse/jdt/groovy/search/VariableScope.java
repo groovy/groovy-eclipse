@@ -245,7 +245,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                                 if (j >= 0 && j < arguments.size()) {
                                                     Expression target = arguments.get(j);
                                                     ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
-                                                    if (generics != null && generics >= 0 && targetType.isUsingGenerics()) {
+                                                    if (generics != null && generics >= 0 && targetType.getGenericsTypes() != null) {
                                                         targetType.getGenericsTypes()[generics].getType();
                                                     }
                                                     addDelegatesToClosure(closure, targetType, strategy);
@@ -284,7 +284,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          */
         public ClassNode getPerceivedDeclaringType() {
             if (declaringType.equals(CLASS_CLASS_NODE)) {
-                if (declaringType.isUsingGenerics()) {
+                if (declaringType.getGenericsTypes() != null) {
                     GenericsType genericsType = declaringType.getGenericsTypes()[0];
                     return genericsType.getType();
                 }
@@ -534,7 +534,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                             superType = type.getInterfaces()[0];
                         }
                     } else { // type is Class<T>, so produce Class<super of T>
-                        assert type.equals(CLASS_CLASS_NODE) && type.isUsingGenerics();
+                        assert type.equals(CLASS_CLASS_NODE) && type.getGenericsTypes() != null;
                         superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T
                         if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
                             superType = newClassClassNode(superType);
@@ -1296,11 +1296,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public static boolean isPlainClosure(ClassNode type) {
-        return CLOSURE_CLASS_NODE.equals(type) && !type.isUsingGenerics();
+        return CLOSURE_CLASS_NODE.equals(type) && type.getGenericsTypes() == null;
     }
 
     public static boolean isParameterizedClosure(ClassNode type) {
-        return CLOSURE_CLASS_NODE.equals(type) &&  type.isUsingGenerics();
+        return CLOSURE_CLASS_NODE.equals(type) && type.getGenericsTypes() != null;
     }
 
     public static boolean isThisOrSuper(Variable var) {
