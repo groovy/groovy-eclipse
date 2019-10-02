@@ -234,7 +234,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                         if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
                                             addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
 
-                                        } else if (typeName != null && !typeName.isEmpty()) { CompilationUnit compilationUnit = null; // TODO
+                                        } else if (typeName != null && !typeName.isEmpty()) {
+                                            CompilationUnit compilationUnit = null;
+                                            if (enclosingModule.getContext() instanceof org.codehaus.jdt.groovy.control.EclipseSourceUnit) {
+                                                compilationUnit = ((org.codehaus.jdt.groovy.control.EclipseSourceUnit) enclosingModule.getContext()).resolver.compilationUnit;
+                                            }
                                             ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
                                             addDelegatesToClosure(closure, resolved[0], strategy);
 

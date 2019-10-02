@@ -32,9 +32,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToValue() {
         String contents =
+            //@formatter:off
             "class Other { }\n" +
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "Other");
     }
@@ -42,9 +44,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToValue2() {
         String contents =
+            //@formatter:off
             "class Other { }\n" +
             "def meth(@DelegatesTo(Other) c) { }\n" +
             "meth { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "Other");
     }
@@ -52,9 +56,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToValue3() {
         String contents =
+            //@formatter:off
             "class Other { int xxx }\n" +
             "def meth(@DelegatesTo(Other) Closure c) { }\n" +
             "meth { xxx }";
+            //@formatter:on
 
         assertType(contents, "xxx", "java.lang.Integer");
     }
@@ -62,8 +68,10 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToValue4() {
         String contents =
+            //@formatter:off
             "def meth(@DelegatesTo(List) Closure c) { }\n" +
             "meth { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "java.util.List");
     }
@@ -71,8 +79,10 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToValue5() {
         String contents =
+            //@formatter:off
             "def meth(int x, int y, @DelegatesTo(List) Closure c) { }\n" +
             "meth 1, 2, { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "java.util.List");
     }
@@ -80,8 +90,10 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // expected to be broken (due to missing closing angle bracket on type)
     public void testDelegatesToValue6() {
         String contents =
+            //@formatter:off
             "def meth(int x, int y, @DelegatesTo(List<String) Closure c) { }\n" +
             "meth { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", DEFAULT_UNIT_NAME);
     }
@@ -89,9 +101,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget1() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
+            "@Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -102,6 +116,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
@@ -110,9 +125,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget2() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -123,6 +140,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
@@ -136,10 +154,12 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  static def cat(\n" +
             "    @Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
             "    @DelegatesTo(target=SELF, strategy=Closure.DELEGATE_FIRST) Closure code\n" +
-            "   ) { }\n" +
+            "   ) {}\n" +
             "}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -150,6 +170,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "A");
         assertDeclaringType(contents, "y", "B");
@@ -158,9 +179,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget3() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) { } }");
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -171,6 +194,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "A");
         int offset = contents.lastIndexOf('y');
@@ -180,9 +204,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget4() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) { } }");
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
 
-        String contents = "class A { def x, z }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x, z }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -194,6 +220,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "B");
         assertDeclaringType(contents, "y", "B");
@@ -203,9 +230,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget5() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) { } }");
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -216,6 +245,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertDeclaringType(contents, "x", "B");
         assertDeclaringType(contents, "y", "B");
@@ -224,9 +254,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // seemingly invalid combination
     public void testDelegatesToTarget6() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) { } }");
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
 
-        String contents = "class A { def x }\n" +
+        String contents =
+            //@formatter:off
+            "class A { def x }\n" +
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
@@ -237,6 +269,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         int offset = contents.lastIndexOf('x');
         assertUnknownConfidence(contents, offset, offset + 1);
@@ -247,8 +280,10 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
     public void testDelegatesToTypeName1() {
         String contents =
-            "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure c) { }\n" +
+            //@formatter:off
+            "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure block) { }\n" +
             "meth 1, 2, { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "java.util.List");
     }
@@ -256,18 +291,97 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
     public void testDelegatesToTypeName2() {
         String contents =
+            //@formatter:off
             "class C {\n" +
             "  private static final String LIST = 'java.util.List'\n" +
-            "  static void meth(int x, int y, @DelegatesTo(type=LIST) Closure c) { }\n" +
+            "  static void meth(int x, int y, @DelegatesTo(type=LIST) Closure block) { }\n" +
             "}\n" +
             "C.meth 1, 2, { delegate }";
+            //@formatter:on
 
         assertType(contents, "delegate", "java.util.List");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/966
+    public void testDelegatesToTypeName3() throws Exception {
+        createUnit("p", "A",
+            //@formatter:off
+            "package p\n" +
+            "class A {\n" +
+            "  static class B {\n" +
+            "    Number getNumber() {}\n" +
+            "  }\n" +
+            "}\n");
+            //@formatter:on
+        fullBuild();
+
+        String contents =
+            //@formatter:off
+            "class C {\n" +
+            "  static void meth(@DelegatesTo(type='p.A.B') Closure block) { }\n" +
+            "}\n" +
+            "C.meth { number }";
+            //@formatter:on
+
+        assertType(contents, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/966
+    public void testDelegatesToTypeName3a() throws Exception {
+        createUnit("p", "A",
+            //@formatter:off
+            "package p\n" +
+            "class A {\n" +
+            "  static class B {\n" +
+            "    Number getNumber() {}\n" +
+            "  }\n" +
+            "}\n");
+            //@formatter:on
+        fullBuild();
+
+        String contents =
+            //@formatter:off
+            "class C {\n" +
+            "  static void meth(@DelegatesTo(type='p.A$B') Closure block) { }\n" + // uses '$' instead of '.'
+            "}\n" +
+            "C.meth { number }";
+            //@formatter:on
+
+        assertType(contents, "number", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/966
+    public void testDelegatesToTypeName3b() throws Exception {
+        createUnit("p", "A",
+            //@formatter:off
+            "package p\n" +
+            "class A {\n" +
+            "  private static class B {\n" +
+            "    Number getNumber() {}\n" +
+            "  }\n" +
+            "  void impl(@DelegatesTo(B) Closure c) {\n" +
+            "    c.setDelegate(new B())\n" +
+            "    c.call((Object)null)\n" +
+            "  }\n" +
+            "}\n");
+            //@formatter:on
+        fullBuild();
+
+        String contents =
+            //@formatter:off
+            "class C {\n" +
+            "  static void meth(@DelegatesTo(type='p.A.B') Closure block) { new A().impl(block) }\n" +
+            "}\n" +
+            "C.meth { number }";
+            //@formatter:on
+
+        assertType(contents, "number", "java.lang.Number");
     }
 
     @Test
     public void testDelegatesToResolveStrategy2() {
         String contents =
+            //@formatter:off
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.OWNER_ONLY) Closure code) {\n" +
@@ -279,6 +393,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
@@ -287,6 +402,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/657
     public void testDelegatesToResolveStrategy3() {
         String contents =
+            //@formatter:off
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.DELEGATE_ONLY) Closure code) {\n" +
@@ -298,6 +414,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
@@ -306,6 +423,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToResolveStrategy4() {
         String contents =
+            //@formatter:off
             "class A {}\n" +
             "class B { \n" +
             "  def m(@DelegatesTo(value=A, strategy=Closure.TO_SELF) Closure code) {\n" +
@@ -317,6 +435,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
+            //@formatter:on
 
         assertType(contents, "delegate", "A");
         assertType(contents, "owner", "B");
@@ -325,6 +444,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     public void testEnumOverrides() {
         String contents =
+            //@formatter:off
             "enum E {\n" +
             "  ONE() {\n" +
             "    void meth(Number param) { println param }\n" +
@@ -334,6 +454,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
+            //@formatter:on
 
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
@@ -342,6 +463,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/390
     public void testEnumOverrides2() {
         String contents =
+            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "enum E {\n" +
             "  ONE() {\n" +
@@ -352,6 +474,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "  abstract void meth(Number param);\n" +
             "}";
+            //@formatter:on
 
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
@@ -364,7 +487,9 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         try {
             // the type checking script
             IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "robot");
-            env.addGroovyClass(robotPath, "RobotMove", "package robot\n" +
+            env.addGroovyClass(robotPath, "RobotMove",
+                //@formatter:off
+                "package robot\n" +
                 "import org.codehaus.groovy.ast.expr.MethodCall\n" +
                 "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
                 "unresolvedVariable { VariableExpression var ->\n" +
@@ -386,6 +511,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "        }\n" +
                 "    }\n" +
                 "}");
+                //@formatter:on
 
             // set the script folders
             Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
@@ -394,6 +520,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             env.fullBuild();
 
             String contents =
+                //@formatter:off
                 "import groovy.transform.TypeChecked\n" +
                 "class Robot {\n" +
                 "    void move(String dist) { println \"Moved $dist\" }\n" +
@@ -402,6 +529,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "void operate() {\n" +
                 "    robot.move \"left\"\n" +
                 "}";
+                //@formatter:on
 
             assertType(contents, "robot", "Robot");
             assertType(contents, "move", "java.lang.Void");

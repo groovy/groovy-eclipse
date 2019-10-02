@@ -18,6 +18,7 @@ package org.codehaus.jdt.groovy.control;
 import static org.eclipse.core.filesystem.URIUtil.toURI;
 
 import java.net.URI;
+import java.util.Objects;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -43,7 +44,7 @@ public class EclipseSourceUnit extends SourceUnit {
         }, compilerConfig, classLoader, errorCollector);
 
         this.file = file;
-        this.resolver = resolver;
+        this.resolver = Objects.requireNonNull(resolver);
     }
 
     /**
