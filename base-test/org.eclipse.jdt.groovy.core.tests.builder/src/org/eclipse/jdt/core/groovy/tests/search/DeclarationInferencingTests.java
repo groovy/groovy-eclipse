@@ -816,6 +816,46 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "field", "A", "field", DeclarationKind.PROPERTY);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/967
+    public void testJavaInterfaceWithDefaultMethod1() {
+        createJavaUnit("Face",
+            //@formatter:off
+            "public interface Face {\n" +
+            "  default void meth() {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Impl implements Face {\n" +
+            "}\n" +
+            "new Impl().meth()";
+            //@formatter:on
+
+        assertKnown(contents, "meth", "Face", "meth", DeclarationKind.METHOD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/967
+    public void testJavaInterfaceWithDefaultMethod2() {
+        createJavaUnit("Face",
+            //@formatter:off
+            "public interface Face {\n" +
+            "  default void meth() {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+        createJavaUnit("Impl",
+            //@formatter:off
+            "public class Impl implements Face {\n" +
+            "}");
+            //@formatter:on
+
+        String contents = "new Impl().meth()";
+
+        assertKnown(contents, "meth", "Face", "meth", DeclarationKind.METHOD);
+    }
+
     @Test // GRECLIPSE-1105
     public void testFluentInterfaceWithFieldNameConflicts() {
         createUnit("A",

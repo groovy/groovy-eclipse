@@ -184,6 +184,12 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         return (modifiers & ACC_ABSTRACT) != 0;
     }
 
+    // GRECLIPSE add
+    public boolean isDefault() {
+        return (modifiers & (ACC_ABSTRACT | ACC_PUBLIC | ACC_STATIC)) == ACC_PUBLIC && getDeclaringClass() != null && getDeclaringClass().isInterface();
+    }
+    // GRECLIPSE end
+
     public boolean isStatic() {
         return (modifiers & ACC_STATIC) != 0;
     }

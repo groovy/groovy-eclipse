@@ -543,7 +543,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (maybeRequested.getElementType() == IJavaElement.METHOD) {
                 String methodName = maybeRequested.getElementName();
                 List<MethodNode> methods = declaration.getDeclaringClass().getMethods(methodName);
-                if (methods != null && !methods.isEmpty()) declaration = methods.get(0);
+                if (!methods.isEmpty()) declaration = methods.get(0);
             } else {
                 declaration = ((PropertyNode) declaration).getField();
             }
@@ -642,6 +642,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 ClassNode[] upper = gt.getUpperBounds();
 
                 sb.append(gt.getName());
+                sb.append(Signature.C_COLON);
                 sb.append(Signature.C_COLON);
                 if (lower != null) {
                     appendUniqueKeyForResolvedType(sb, lower);

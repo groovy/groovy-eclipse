@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import groovy.lang.Closure;
@@ -663,9 +664,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * then will return an arbitrary one.
      */
     protected MethodNode findMethodDeclaration(final String name, final ClassNode declaringType, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
-        // concrete types (without mixins/traits) return all declared methods from getMethods(String)
+        // concrete types (without mixins/traits) return all declared methods from getMethods(String), except interface default methods
         if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = declaringType.getMethods(name);
+            if (candidates.isEmpty()) {
+                candidates = declaringType.getAllDeclaredMethods().stream().filter(meth -> meth.isDefault() && meth.getName().equals(name)).collect(Collectors.toList());
+            }
             if (!candidates.isEmpty()) {
                 return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
             }
