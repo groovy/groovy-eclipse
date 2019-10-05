@@ -2565,4 +2565,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test
+    public void testCompileStatic9265() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "    public String field = 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  { ->\n" + // <-- could be each, with, or whatever
+            "    def inner = new Outer.Inner()\n" +
+            "    print inner.field\n" +
+            "  }()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

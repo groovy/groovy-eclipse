@@ -248,6 +248,27 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + "entry".length(), "java.util.Map$Entry<java.lang.String,java.lang.String>");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9265
+    public void testCompileStatic17() {
+        String contents =
+            //@formatter:off
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "    public Number field = 42\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  return { ->\n" +
+            "    def inner = new Outer.Inner()\n" +
+            "    inner.field\n" +
+            "  }()\n" +
+            "}\n";
+        //@formatter:on
+
+        assertType(contents, "field", "java.lang.Number");
+    }
+
     @Test // tests CompareToNullExpression
     public void testTypeChecked1() {
         String contents = "import groovy.transform.TypeChecked\n" +

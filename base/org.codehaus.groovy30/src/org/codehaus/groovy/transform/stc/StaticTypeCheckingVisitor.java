@@ -518,6 +518,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * Checks valid cases for accessing a field from an inner class.
      */
     private String checkOrMarkInnerPropertyOwnerAccess(PropertyExpression source, boolean lhsOfAssignment, String delegationData) {
+        /* GRECLIPSE edit -- GROOVY-9265
         // check for reference to method, closure, for loop, try with, or catch block parameter from a non-nested closure
         if (typeCheckingContext.getEnclosingClosureStack().size() == 1 && !"this".equals(source.getPropertyAsString())) {
             if (!(source.getObjectExpression() instanceof VariableExpression &&
@@ -526,8 +527,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 source.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
             }
         }
+        */
+        if (typeCheckingContext.getEnclosingClosureStack().size() == 1 && !"this".equals(source.getPropertyAsString()) &&
+                !isParameterOrVariableReference(source.getObjectExpression())) {
+            delegationData = "owner";
+            source.getObjectExpression().putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
+        }
+        // GRECLIPSE end
         return delegationData;
     }
+
+    // GRECLIPSE add
+    private static boolean isParameterOrVariableReference(Expression objectExpr) {
+        if (objectExpr instanceof VariableExpression) {
+            Variable accessedVar = ((VariableExpression) objectExpr).getAccessedVariable();
+            return (accessedVar instanceof Parameter || accessedVar instanceof VariableExpression);
+        }
+        return false;
+    }
+    // GRECLIPSE end
 
     private MethodNode findValidGetter(ClassNode classNode, String name) {
         MethodNode getterMethod = classNode.getGetterMethod(name);
