@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -35,16 +36,17 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 public abstract class InferencingTestSuite extends SearchTestSuite {
 
@@ -260,16 +262,14 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
-        JavaModelManager.getIndexManager().indexAll(unit.getJavaProject().getProject());
-        for (Job job : Job.getJobManager().find(null)) {
-            switch (job.getState()) {
-            case Job.RUNNING:
-            case Job.WAITING:
-                if (job.getName().contains("index")) {
-                    joinUninterruptibly(job);
-                }
-            }
+        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Incremental build");
+        try {
+            IProject project = unit.getJavaProject().getProject();
+            project.build(INCREMENTAL_BUILD, monitor);
+        } catch (CoreException e) {
+            throw new RuntimeException(e);
         }
+        monitor.waitForCompletion(5);
 
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.DEBUG = true; // enable console output and post-visit assertions
