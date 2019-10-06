@@ -94,6 +94,11 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
     }
 
     @Override
+    public boolean isDefault() {
+        return methodBinding.isDefaultMethod();
+    }
+
+    @Override
     public boolean isDeprecated() {
         return methodBinding.isViewedAsDeprecated();
     }

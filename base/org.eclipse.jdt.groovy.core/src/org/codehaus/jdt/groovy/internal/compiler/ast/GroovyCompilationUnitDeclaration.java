@@ -2383,12 +2383,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
             modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
+            if (node.isDefault()) {
+                modifiers |= Flags.AccDefaultMethod;
+            }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
             }
-            /*if (!node.isAbstract() && !node.isPrivate() && isTrait(node.getDeclaringClass())) {
-                modifiers |= Flags.AccDefaultMethod;
-            }*/
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;
             }
