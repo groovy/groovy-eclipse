@@ -775,7 +775,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         node.getClassNode().setStart(-1);
         node.getClassNode().setEnd(-2);
         node.setStart(-1);
-        node.setEnd(-2);
+        node.setEnd(-1);
         return node;
     }
 
