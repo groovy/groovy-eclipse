@@ -290,23 +290,14 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
                         "flush cache job",
                         "open blocked dialog",
                         "sending problem marker updates...",
-                        "update for decoration completion",
                         "update dynamic java sources working sets",
+                        "update for decoration completion",
                         "update package explorer",
                         "update progress",
                         "usage data event consumer",
                         "workbench auto-save job"
                 ).contains(job.getName().toLowerCase())) {
-                    boolean interrupted;
-                    do {
-                        interrupted = false;
-                        try {
-                            System.err.println("Waiting for: " + job.getName());
-                            job.join();
-                        } catch (InterruptedException e) {
-                            interrupted = true;
-                        }
-                    } while (interrupted);
+                    joinUninterruptibly(job);
                 }
             }
         }
@@ -330,6 +321,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
     protected static class MatchRegion {
         final int offset;
         final int length;
+
         public MatchRegion(int offset, int length) {
             this.offset = offset;
             this.length = length;

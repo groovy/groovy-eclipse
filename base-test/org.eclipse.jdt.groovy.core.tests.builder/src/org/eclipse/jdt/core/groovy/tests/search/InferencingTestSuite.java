@@ -272,7 +272,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         }
 
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        visitor.DEBUG = true; // enable syserr and the post-visit sanity checks
+        visitor.DEBUG = true; // enable console output and post-visit assertions
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);
         visitor.visitCompilationUnit(requestor);
         return requestor;
@@ -327,7 +327,9 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected enum DeclarationKind { CLASS, FIELD, METHOD, PROPERTY, VARIABLE }
+    protected enum DeclarationKind {
+        CLASS, FIELD, METHOD, PROPERTY, VARIABLE
+    }
 
     public static class SearchRequestor implements ITypeRequestor {
 
