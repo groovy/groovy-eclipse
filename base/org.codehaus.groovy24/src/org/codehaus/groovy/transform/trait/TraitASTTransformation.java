@@ -387,6 +387,10 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         if (getterBlock != null) {
             MethodNode getter =
                     new MethodNode(getterName, propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+            // GRECLIPSE add
+            getter.setNameStart(field.getNameStart());
+            getter.setNameEnd(field.getNameEnd());
+            // GRECLIPSE end
             getter.setSynthetic(true);
             cNode.addMethod(getter);
 
@@ -394,6 +398,10 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                 String secondGetterName = "is" + Verifier.capitalize(name);
                 MethodNode secondGetter =
                         new MethodNode(secondGetterName, propNodeModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+                // GRECLIPSE add
+                secondGetter.setNameStart(field.getNameStart());
+                secondGetter.setNameEnd(field.getNameEnd());
+                // GRECLIPSE end
                 secondGetter.setSynthetic(true);
                 cNode.addMethod(secondGetter);
             }
@@ -404,6 +412,10 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             var.setAccessedVariable(setterParameterTypes[0]);
             MethodNode setter =
                     new MethodNode(setterName, propNodeModifiers, ClassHelper.VOID_TYPE, setterParameterTypes, ClassNode.EMPTY_ARRAY, setterBlock);
+            // GRECLIPSE add
+            setter.setNameStart(field.getNameStart());
+            setter.setNameEnd(field.getNameEnd());
+            // GRECLIPSE end
             setter.setSynthetic(true);
             cNode.addMethod(setter);
         }
