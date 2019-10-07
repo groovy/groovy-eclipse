@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
+import static org.junit.Assume.assumeTrue
+
 import org.junit.Test
 
 final class CodeSelectKeywordsTests extends BrowsingTestSuite {
@@ -94,6 +97,26 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
     void testCodeSelectKeywordDef2() {
         String contents = 'class C { Object x() { def y } }'
         assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef3() {
+        String contents = 'def (x, y) = [1, 2]'
+        assertCodeSelect([contents], 'def', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef4() {
+        assumeTrue(isParrotParser())
+        String contents = 'var (x, y) = [1, 2]'
+        assertCodeSelect([contents], 'var', null)
+    }
+
+    @Test
+    void testCodeSelectKeywordDef5() {
+        assumeTrue(isParrotParser())
+        String contents = 'final (x, y) = [1, 2]'
+        assertCodeSelect([contents], 'final', null)
     }
 
     @Test
