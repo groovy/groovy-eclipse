@@ -72,6 +72,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.CharArraySequence;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -853,8 +854,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         // add star import for each enclosing type to prevent unnecessary import/qualifier insertions
         ClassNode enclosingType = context.getEnclosingGroovyType();
         while (enclosingType != null) {
-            char[] typeName = enclosingType.getName().replace('$', '.').toCharArray();
-            starImports = (char[][]) ArrayUtils.add(starImports, s, typeName);
+            if (!GroovyUtils.isAnonymous(enclosingType)) {
+                char[] typeName = enclosingType.getName().replace('$', '.').toCharArray();
+                starImports = (char[][]) ArrayUtils.add(starImports, s, typeName);
+            }
             enclosingType = enclosingType.getOuterClass();
         }
 
