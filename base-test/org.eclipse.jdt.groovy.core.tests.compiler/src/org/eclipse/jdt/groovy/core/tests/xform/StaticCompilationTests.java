@@ -268,26 +268,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-8337
-    public void testCompileStatic10() {
-        //@formatter:off
-        String[] sources = {
-            "FlowTyping.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class FlowTyping {\n" +
-            "  private Number number;\n" +
-            "  private BigDecimal method() {\n" +
-            "    return (number == null || number instanceof BigDecimal) ? number : new BigDecimal(number.toString());\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
     @Test
-    public void testCompileStatic11() {
+    public void testCompileStatic10() {
         //@formatter:off
         String[] sources = {
             "BridgeMethod.groovy",
@@ -304,7 +286,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic13() {
+    public void testCompileStatic11() {
         assumeTrue(isAtLeastGroovy(25));
 
         //@formatter:off
@@ -430,7 +412,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    @Test
     public void testCompileStatic7687() {
         assumeTrue(isAtLeastGroovy(25));
 
@@ -469,7 +451,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[hello world]");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    @Test
     public void testCompileStatic7687a() {
         assumeTrue(isAtLeastGroovy(25));
 
@@ -508,7 +490,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[hello world]");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7687
+    @Test
     public void testCompileStatic7687b() {
         assumeTrue(isAtLeastGroovy(25));
 
@@ -538,7 +520,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hello world");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7996
+    @Test
     public void testCompileStatic7996() {
         assumeTrue(isAtLeastGroovy(25));
 
@@ -645,6 +627,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8337() {
+        //@formatter:off
+        String[] sources = {
+            "FlowTyping.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class FlowTyping {\n" +
+            "  private Number number;\n" +
+            "  private BigDecimal method() {\n" +
+            "    return (number == null || number instanceof BigDecimal) ? number : new BigDecimal(number.toString());\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic8342() {
         //@formatter:off
         String[] sources = {
@@ -662,6 +662,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8409")
+    public void testCompileStatic8409() {
+        for (char t : new char[] {'R', 'S', 'T', 'U'}) { // BiFunction uses R, T and U
+            //@formatter:off
+            String[] sources = {
+                "Script.groovy",
+                "@groovy.transform.CompileStatic\n" +
+                "static <" + t + "> " + t + " meth(java.util.function.BiFunction<Date, URL, " + t + "> func) {\n" +
+                "  " + t + " result = func.apply(new Date(), new URL('http://www.example.com'))\n" +
+                "  return result\n" +
+                "}\n" +
+                "meth({ Date d, URL u -> 'result' })",
+            };
+            //@formatter:on
+
+            runNegativeTest(sources, "");
+        }
     }
 
     @Test
@@ -917,7 +936,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8873
+    @Test
     public void testCompileStatic8873() {
         //@formatter:off
         String[] sources = {
@@ -967,7 +986,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8955
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8946")
+    public void testCompileStatic8946() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@GrabResolver(name='grails', root='https://repo.grails.org/grails/core')\n" +
+            "@Grapes([\n" +
+            "  @Grab('javax.servlet:javax.servlet-api:3.0.1'),\n" +
+            "  @Grab('org.grails.plugins:converters:3.3.+'),\n" +
+            "  @Grab('org.grails:grails-web:3.3.+')\n" +
+            "])\n" +
+            "@GrabExclude('org.codehaus.groovy:*')\n" +
+            "import static grails.converters.JSON.parse\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def json = parse('[{\"k\":1},{\"k\":2}]')\n" + // returns org.grails.web.json.JSONElement
+            "  def vals = json['k']\n" +
+            "  assert vals == [1,2]\n" +
+            "  boolean result = 'k'.tokenize('.').every { token ->\n" + // 'k' represents a path like 'a.b.c.d'
+            "    json = json[token]\n" + // GroovyCastException: Cannot cast object '[1, 2]' with class 'java.util.ArrayList' to class 'org.grails.web.json.JSONElement'
+            "  }\n" +
+            "  assert result\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic8955() {
         assumeTrue(isAtLeastGroovy(25));
 
@@ -1015,7 +1065,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8978
+    @Test
     public void testCompileStatic8978() {
         //@formatter:off
         String[] sources = {
@@ -1053,7 +1103,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9005
+    @Test
     public void testCompileStatic9005() {
         //@formatter:off
         String[] sources = {
@@ -1099,7 +1149,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hi!");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9007
+    @Test
     public void testCompileStatic9007() {
         //@formatter:off
         String[] sources = {
@@ -1222,7 +1272,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    @Test
     public void testCompileStatic9043_nonStaticInnerToPackage() {
         //@formatter:off
         String[] sources = {
@@ -1327,7 +1377,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9043
+    @Test
     public void testCompileStatic9043_staticInnerToPackage() {
         //@formatter:off
         String[] sources = {
@@ -1348,7 +1398,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
     public void testCompileStatic9043_staticInnerToPackage2() {
         //@formatter:off
         String[] sources = {
@@ -1710,7 +1760,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
     public void testCompileStatic9043_subToPackage2() {
         //@formatter:off
         String[] sources = {
@@ -1858,7 +1908,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9093
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
     public void testCompileStatic9043_subToPrivate2() {
         //@formatter:off
         String[] sources = {
@@ -1916,7 +1966,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9063
+    @Test
     public void testCompileStatic9063() {
         //@formatter:off
         String[] sources = {
@@ -1943,7 +1993,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "5");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
     public void testCompileStatic9074() {
         //@formatter:off
         String[] sources = {
@@ -1961,7 +2011,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "The method add(capture#1-of ?) in the type Collection<capture#1-of ?> is not applicable for the arguments (Object)");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-9074
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
     public void testCompileStatic9074a() {
         //@formatter:off
         String[] sources = {
@@ -1989,7 +2039,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "The method add(capture#1-of ?) in the type List<capture#1-of ?> is not applicable for the arguments (Rectangle)");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9074
+    @Test
     public void testCompileStatic9074b() {
         //@formatter:off
         String[] sources = {
@@ -2046,7 +2096,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test @Ignore
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9074")
     public void testCompileStatic9074d() {
         //@formatter:off
         String[] sources = {
@@ -2075,7 +2125,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "cannot convert from capture#1-of ? super Type to Type");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086() {
         //@formatter:off
         String[] sources = {
@@ -2115,7 +2165,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate inner delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086a() {
         //@formatter:off
         String[] sources = {
@@ -2155,7 +2205,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate inner delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086b() {
         //@formatter:off
         String[] sources = {
@@ -2195,7 +2245,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate inner delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086c() {
         //@formatter:off
         String[] sources = {
@@ -2235,7 +2285,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate inner delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086d() {
         //@formatter:off
         String[] sources = {
@@ -2275,7 +2325,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate inner delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086e() {
         //@formatter:off
         String[] sources = {
@@ -2315,7 +2365,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate outer delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9086
+    @Test
     public void testCompileStatic9086f() {
         //@formatter:off
         String[] sources = {
@@ -2355,7 +2405,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "outer delegate outer delegate");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9089
+    @Test
     public void testCompileStatic9089() {
         //@formatter:off
         String[] sources = {
@@ -2549,6 +2599,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t^\n" +
             "Groovy:Access to Foo#field is forbidden @ line 9, column 7.\n" +
             "----------\n");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9151")
+    public void testCompileStatic9151() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void greet(Object o = 'world', String s = o.toString()) {\n" +
+            "  print \"hello $s\"\n" +
+            "}\n" +
+            "greet()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9151")
+    public void testCompileStatic9151a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Thing {\n" +
+            "  Thing(Object o = 'foo', String s = o.toString()) {\n" +
+            "    print s\n" +
+            "  }\n" +
+            "}\n" +
+            "new Thing()\n" +
+            "new Thing('bar')\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foobar");
     }
 
     @Test

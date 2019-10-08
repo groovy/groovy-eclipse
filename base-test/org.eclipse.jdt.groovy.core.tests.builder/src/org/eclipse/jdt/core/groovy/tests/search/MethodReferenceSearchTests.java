@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -251,7 +251,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             false, 0, "xxx");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/373
+    @Test
     public void testOverloadedMethodReferences5() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
@@ -271,8 +271,28 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/373
-    public void testOverloadedMethodReferences6() throws Exception {
+    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/373")
+    public void testOverloadedMethodReferences5a() throws Exception {
+        doTestForTwoMethodReferences(
+            "class First {\n" +
+            "  URL doSomething(String s, URL u) {}\n" + // search for references
+            "  URL doSomething(Integer i, URL u) {}\n" +
+            "}",
+            "class Second {\n" +
+            "  First first\n" +
+            "  def other\n" +
+            "  void xxx() {\n" +
+            "    URL u = new URL('www.example.com')\n" +
+            "    first.doSomething('ciao', u)\n" + //yes
+            "    first.doSomething(1L, u)\n" + //no!
+            "    first.&doSomething\n" + //yes
+            "  }\n" +
+            "}",
+            true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
+    }
+
+    @Test
+    public void testOverloadedMethodReferences5b() throws Exception {
         doTestForTwoMethodReferences(
             "class First {\n" +
             "  URL doSomething(Integer i, URL u) {}\n" + // search for references
@@ -339,7 +359,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             false, 0, "xxx");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/776
+    @Test
     public void testMethodWithDefaultParameters3() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
@@ -516,7 +536,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getString"), matches.get(3).getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/489
+    @Test
     public void testExplicitPropertySetterSearch1() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
@@ -559,7 +579,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("setString"), matches.get(4).getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/784
+    @Test
     public void testExplicitPropertySetterSearch2() throws Exception {
         GroovyCompilationUnit bar = createUnit("foo", "Bar",
             "package foo\n" +
@@ -604,7 +624,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("setString"), matches.get(4).getOffset());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/402
+    @Test
     public void testGenericsMethodReferenceSearch() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +
