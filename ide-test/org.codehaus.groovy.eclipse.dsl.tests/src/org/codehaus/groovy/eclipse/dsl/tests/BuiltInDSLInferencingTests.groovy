@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assert.*
 import static org.junit.Assume.assumeFalse
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
@@ -27,6 +26,7 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Test
 
 /**
@@ -38,10 +38,13 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         doRemoveClasspathContainer = false
     }
 
-    List findRange(String source, String target, int length = target.length()) {
+    private InferencingTestSuite.SearchRequestor inferType(String source, String target, int length = target.length()) {
         int offset = source.lastIndexOf(target)
-        [source, offset, offset + length]
+        def unit = addGroovySource(source, nextUnitName())
+        InferencingTestSuite.doVisit(offset, offset + length, unit)
     }
+
+    //--------------------------------------------------------------------------
 
     @Test
     void testBasics() {
@@ -79,159 +82,314 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testDelegate1() {
-        String contents = 'class Foo { @Delegate List<Integer> myList }\nnew Foo().get(0)'
+        String contents = '''\
+            |class Foo {
+            |  @Delegate List<Integer> list
+            |}
+            |new Foo().get(0)
+            |'''.stripMargin()
 
-        assertDeclaringType(*findRange(contents, 'get'), 'java.util.List<java.lang.Integer>')
-        assertType(*findRange(contents, 'get'), 'java.lang.Integer', 'Delegate AST transform')
+        inferType(contents, 'get').with {
+            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.util.List<java.lang.Integer>'
+            assert typeName == 'java.lang.Integer'
+        }
     }
 
     @Test
     void testDelegate2() {
-        String contents = 'class Foo { @Delegate List<Integer> myList\n @Delegate URL myUrl }\nnew Foo().get(0)\nnew Foo().getFile()'
+        String contents = '''\
+            |class Bar {
+            |  @Delegate URL url
+            |}
+            |new Bar().file
+            |'''.stripMargin()
 
-        assertDeclaringType(*findRange(contents, 'get(', 3), 'java.util.List<java.lang.Integer>')
-        assertType(*findRange(contents, 'get(', 3), 'java.lang.Integer', 'Delegate AST transform')
-
-        assertDeclaringType(*findRange(contents, 'getFile'), 'java.net.URL')
-        assertType(*findRange(contents, 'getFile'), 'java.lang.String', 'Delegate AST transform')
+        inferType(contents, 'file').with {
+            assert result.extraDoc.replace('}', '') =~ 'Delegate AST transform'
+            assert declaringTypeName == 'java.net.URL'
+            assert typeName == 'java.lang.String'
+        }
     }
 
     @Test
-    void testMixin() {
+    void testMixin1() {
         addGroovySource '''\
-            class FlyingAbility {
-              String fly() { "I'm the ${name} and I fly!" }
-            }
-            class DivingAbility {
-              String dive() { "I'm the ${name} and I dive!" }
-            }
-            interface Vehicle {
-              String getName()
-            }
-            '''.stripIndent(), 'Abilities'
+            |class FlyingAbility {
+            |  String fly() { "I'm the ${name} and I fly!" }
+            |}
+            |class DivingAbility {
+            |  String dive() { "I'm the ${name} and I dive!" }
+            |}
+            |interface Vehicle {
+            |  String getName()
+            |}
+            |'''.stripMargin(), 'Abilities'
 
-        String single = '''\
-            @Mixin(FlyingAbility)
-            class Plane implements Vehicle {
-              String getName() { "Concorde" }
-            }
-            @Mixin(DivingAbility)
-            class Submarine implements Vehicle {
-              String getName() { "Yellow Submarine" }
-            }
-            assert new Plane().fly() == "I'm the Concorde and I FLY!"
-            assert new Submarine().dive() == "I'm the Yellow Submarine and I DIVE!"
-            '''.stripIndent()
+        String contents = '''\
+            |@Mixin(FlyingAbility)
+            |class Plane implements Vehicle {
+            |  String getName() { "Concorde" }
+            |}
+            |assert new Plane().fly() == "I'm the Concorde and I FLY!"
+            |'''.stripMargin()
 
-        assertDeclaringType(*findRange(single, 'fly'), 'FlyingAbility')
-        assertType(*findRange(single, 'fly'), 'java.lang.String', 'Mixin AST transform')
+        inferType(contents, 'fly').with {
+            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert declaringTypeName == 'FlyingAbility'
+            assert typeName == 'java.lang.String'
+        }
+    }
 
-        assertDeclaringType(*findRange(single, 'dive'), 'DivingAbility')
-        assertType(*findRange(single, 'dive'), 'java.lang.String', 'Mixin AST transform')
+    @Test
+    void testMixin2() {
+        addGroovySource '''\
+            |class FlyingAbility {
+            |  String fly() { "I'm the ${name} and I fly!" }
+            |}
+            |class DivingAbility {
+            |  String dive() { "I'm the ${name} and I dive!" }
+            |}
+            |interface Vehicle {
+            |  String getName()
+            |}
+            |'''.stripMargin(), 'Abilities'
 
+        String contents = '''\
+            |@Mixin(DivingAbility)
+            |class Submarine implements Vehicle {
+            |  String getName() { "Yellow Submarine" }
+            |}
+            |assert new Submarine().dive() == "I'm the Yellow Submarine and I DIVE!"
+            |'''.stripMargin()
 
-        String multiple = '''\
-            @Mixin([DivingAbility, FlyingAbility])
-            class JamesBondVehicle implements Vehicle {
-              String getName() { "James Bond's vehicle" }
-            }
-            assert new JamesBondVehicle().fly() == "I'm the James Bond's vehicle and I FLY!"
-            assert new JamesBondVehicle().dive() == "I'm the James Bond's vehicle and I DIVE!"
-            '''.stripIndent()
+        inferType(contents, 'dive').with {
+            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert declaringTypeName == 'DivingAbility'
+            assert typeName == 'java.lang.String'
+        }
+    }
 
-        assertDeclaringType(*findRange(multiple, 'fly'), 'FlyingAbility')
-        assertType(*findRange(multiple, 'fly'), 'java.lang.String', 'Mixin AST transform')
+    @Test
+    void testMixin3() {
+        addGroovySource '''\
+            |class FlyingAbility {
+            |  String fly() { "I'm the ${name} and I fly!" }
+            |}
+            |class DivingAbility {
+            |  String dive() { "I'm the ${name} and I dive!" }
+            |}
+            |interface Vehicle {
+            |  String getName()
+            |}
+            |'''.stripMargin(), 'Abilities'
 
-        assertDeclaringType(*findRange(multiple, 'dive'), 'DivingAbility')
-        assertType(*findRange(multiple, 'dive'), 'java.lang.String', 'Mixin AST transform')
+        String contents = '''\
+            |@Mixin([DivingAbility, FlyingAbility])
+            |class JamesBondVehicle implements Vehicle {
+            |  String getName() { "James Bond's vehicle" }
+            |}
+            |assert new JamesBondVehicle().fly() == "I'm the James Bond's vehicle and I FLY!"
+            |'''.stripMargin()
+
+        inferType(contents, 'fly').with {
+            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert declaringTypeName == 'FlyingAbility'
+            assert typeName == 'java.lang.String'
+        }
+    }
+
+    @Test
+    void testMixin4() {
+        addGroovySource '''\
+            |class FlyingAbility {
+            |  String fly() { "I'm the ${name} and I fly!" }
+            |}
+            |class DivingAbility {
+            |  String dive() { "I'm the ${name} and I dive!" }
+            |}
+            |interface Vehicle {
+            |  String getName()
+            |}
+            |'''.stripMargin(), 'Abilities'
+
+        String contents = '''\
+            |@Mixin([DivingAbility, FlyingAbility])
+            |class JamesBondVehicle2 implements Vehicle {
+            |  String getName() { "James Bond's vehicle" }
+            |}
+            |assert new JamesBondVehicle2().dive() == "I'm the James Bond's vehicle and I DIVE!"
+            |'''.stripMargin()
+
+        inferType(contents, 'dive').with {
+            assert result.extraDoc.replace('}', '') =~ 'Mixin AST transform'
+            assert declaringTypeName == 'DivingAbility'
+            assert typeName == 'java.lang.String'
+        }
     }
 
     @Test
     void testSingleton1() {
         String contents = '''\
-            @Singleton
-            class Foo {}
-            Foo.instance
-            Foo.getInstance()
-            '''.stripIndent()
+            |@Singleton
+            |class A {}
+            |A.instance
+            |'''.stripMargin()
 
-        assertType(*findRange(contents, 'instance'), 'Foo', 'Singleton AST transform')
-        assertType(*findRange(contents, 'getInstance'), 'Foo', 'Singleton AST transform')
+        inferType(contents, 'instance').with {
+            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert declaringTypeName == 'A'
+            assert typeName == 'A'
+        }
     }
 
     @Test
     void testSingleton2() {
         String contents = '''\
-            @Singleton(property='thereCanBeOnlyOne')
-            class Foo {}
-            Foo.thereCanBeOnlyOne
-            Foo.getThereCanBeOnlyOne()
-            '''.stripIndent()
+            |@Singleton
+            |class B {}
+            |B.getInstance()
+            |'''.stripMargin()
 
-        assertType(*findRange(contents, 'thereCanBeOnlyOne'), 'Foo', 'Singleton AST transform')
-        assertType(*findRange(contents, 'getThereCanBeOnlyOne'), 'Foo', 'Singleton AST transform')
+        inferType(contents, 'getInstance').with {
+            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert declaringTypeName == 'B'
+            assert typeName == 'B'
+        }
+    }
+
+    @Test
+    void testSingleton3() {
+        String contents = '''\
+            |@Singleton(property='thereCanBeOnlyOne')
+            |class C {}
+            |C.thereCanBeOnlyOne
+            |'''.stripMargin()
+
+        inferType(contents, 'thereCanBeOnlyOne').with {
+            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert declaringTypeName == 'C'
+            assert typeName == 'C'
+        }
+    }
+
+    @Test
+    void testSingleton4() {
+        String contents = '''\
+            |@Singleton(property='thereCanBeOnlyOne')
+            |class D {}
+            |D.getThereCanBeOnlyOne()
+            |'''.stripMargin()
+
+        inferType(contents, 'getThereCanBeOnlyOne').with {
+            assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert declaringTypeName == 'D'
+            assert typeName == 'D'
+        }
     }
 
     @Test
     void testSortable1() {
         String contents = '''\
-            import groovy.transform.*
-            @Sortable
-            class Foo {
-              String value
-            }
-            new Foo().compareTo(null)
-            '''.stripIndent()
+            |import groovy.transform.*
+            |@Sortable
+            |class E {
+            |  String value
+            |}
+            |new E().compareTo(null)
+            |'''.stripMargin()
 
-        assertType(*findRange(contents, 'compareTo'), 'java.lang.Integer', 'Sortable AST transform')
+        inferType(contents, 'compareTo').with {
+            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert typeName == 'java.lang.Integer'
+        }
     }
 
     @Test
     void testSortable2() {
         String contents = '''\
-            import groovy.transform.*
-            @Sortable
-            class Foo {
-              String value
-            }
-            Foo.comparatorByValue()
-            '''.stripIndent()
+            |import groovy.transform.*
+            |@Sortable
+            |class F {
+            |  String value
+            |}
+            |F.comparatorByValue()
+            |'''.stripMargin()
 
-        assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
+        inferType(contents, 'comparatorByValue').with {
+            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert typeName == 'java.util.Comparator'
+        }
     }
 
     @Test
     void testSortable3() {
         String contents = '''\
-            import groovy.transform.*
-            @Sortable(includes='value')
-            class Foo {
-              String value
-              String zebra
-            }
-            Foo.comparatorByValue()
-            Foo.comparatorByZebra()
-            '''.stripIndent()
+            |import groovy.transform.*
+            |@Sortable(includes='value')
+            |class G {
+            |  String value
+            |  String zebra
+            |}
+            |G.comparatorByValue()
+            |'''.stripMargin()
 
-        assertUnknownConfidence(*findRange(contents, 'comparatorByZebra'), 'Foo')
-        assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
+        inferType(contents, 'comparatorByValue').with {
+            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert typeName == 'java.util.Comparator'
+        }
     }
 
     @Test
     void testSortable4() {
         String contents = '''\
-            import groovy.transform.*
-            @Sortable(excludes='zebra')
-            class Foo {
-              String value
-              String zebra
-            }
-            Foo.comparatorByValue()
-            Foo.comparatorByZebra()
-            '''.stripIndent()
+            |import groovy.transform.*
+            |@Sortable(includes='value')
+            |class G {
+            |  String value
+            |  String zebra
+            |}
+            |G.comparatorByZebra()
+            |'''.stripMargin()
 
-        assertUnknownConfidence(*findRange(contents, 'comparatorByZebra'), 'Foo')
-        assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
+        inferType(contents, 'comparatorByZebra').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testSortable5() {
+        String contents = '''\
+            |import groovy.transform.*
+            |@Sortable(excludes='zebra')
+            |class H {
+            |  String value
+            |  String zebra
+            |}
+            |H.comparatorByZebra()
+            |'''.stripMargin()
+
+        inferType(contents, 'comparatorByZebra').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testSortable6() {
+        String contents = '''\
+            |import groovy.transform.*
+            |@Sortable(excludes='zebra')
+            |class I {
+            |  String value
+            |  String zebra
+            |}
+            |I.comparatorByValue()
+            |'''.stripMargin()
+
+        inferType(contents, 'comparatorByValue').with {
+            assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
+            assert typeName == 'java.util.Comparator'
+        }
     }
 
     @Test
@@ -240,8 +398,11 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
         String contents = 'new groovy.swing.SwingBuilder().edt { frame }'
 
-        assertDeclaringType(*findRange(contents, 'frame'), 'groovy.swing.SwingBuilder')
-        assertType(*findRange(contents, 'frame'), 'javax.swing.JFrame', 'SwingBuilder')
+        inferType(contents, 'frame').with {
+            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
+            assert declaringTypeName == 'groovy.swing.SwingBuilder'
+            assert typeName == 'javax.swing.JFrame'
+        }
     }
 
     @Test
@@ -250,7 +411,10 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
         String contents = 'groovy.swing.SwingBuilder.edtBuilder { frame }'
 
-        assertDeclaringType(*findRange(contents, 'frame'), 'groovy.swing.SwingBuilder')
-        assertType(*findRange(contents, 'frame'), 'javax.swing.JFrame', 'SwingBuilder')
+        inferType(contents, 'frame').with {
+            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
+            assert declaringTypeName == 'groovy.swing.SwingBuilder'
+            assert typeName == 'javax.swing.JFrame'
+        }
     }
 }
