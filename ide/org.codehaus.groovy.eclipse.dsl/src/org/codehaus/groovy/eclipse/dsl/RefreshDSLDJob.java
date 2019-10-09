@@ -96,7 +96,7 @@ public class RefreshDSLDJob extends Job {
     protected boolean isFile(IStorage file, String extension) {
         if (file instanceof IFile) {
             IFile iFile = (IFile) file;
-            return !iFile.isDerived() && iFile.getFileExtension().equals(extension);
+            return !iFile.isDerived() && extension.equals(iFile.getFileExtension());
         } else {
             String name = file.getName();
             return name != null && name.endsWith(extension);
