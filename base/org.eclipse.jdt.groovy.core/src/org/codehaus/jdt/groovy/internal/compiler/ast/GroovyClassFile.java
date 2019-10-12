@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,8 @@ import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
@@ -138,18 +140,24 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    @Override
     public void completeCodeAttribute(int codeAttributeOffset) {
         throw new ImmutableException();
     }
-
-    @Override
-    public void completeCodeAttributeForClinit(int codeAttributeOffset) {
+    public void completeCodeAttribute(int codeAttributeOffset, MethodScope scope) {
         throw new ImmutableException();
     }
 
-    @Override
+    public void completeCodeAttributeForClinit(int codeAttributeOffset) {
+        throw new ImmutableException();
+    }
+    public void completeCodeAttributeForClinit(int codeAttributeOffset, Scope scope) {
+        throw new ImmutableException();
+    }
+
     public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine) {
+        throw new ImmutableException();
+    }
+    public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine, MethodScope scope) {
         throw new ImmutableException();
     }
 
@@ -163,8 +171,10 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    @Override
     public void completeCodeAttributeForSyntheticMethod(boolean hasExceptionHandlers, SyntheticMethodBinding binding, int codeAttributeOffset, int[] startLineIndexes) {
+        throw new ImmutableException();
+    }
+    public void completeCodeAttributeForSyntheticMethod(boolean hasExceptionHandlers, SyntheticMethodBinding binding, int codeAttributeOffset, int[] startLineIndexes, Scope scope) {
         throw new ImmutableException();
     }
 
@@ -258,8 +268,10 @@ class GroovyClassFile extends ClassFile {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit) {
+        throw new UnsupportedOperationException();
+    }
+    public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit, Scope scope) {
         throw new UnsupportedOperationException();
     }
 

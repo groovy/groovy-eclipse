@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.junit.After;
 import org.junit.Test;
@@ -389,8 +390,8 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         // create project
         final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (!project.exists()) {
-            SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project " + projectName);
-            ResourcesPlugin.getWorkspace().run(monitor -> project.create(monitor), spm);
+            SimpleProgressMonitor spm = new SimpleProgressMonitor("creating project " + projectName);
+            project.create(spm);
             spm.waitForCompletion();
         }
 
@@ -400,14 +401,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         spm.waitForCompletion();
 
         IJavaProject jp = JavaCore.create(project);
-        if (jp == null) {
-            // project was not found
-            return null;
-        }
-        try {
-            jp.setOption("org.eclipse.jdt.core.compiler.problem.missingSerialVersion", "ignore");
-        } catch (NullPointerException ignore) {
-        }
+        jp.setOption(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
         return jp.getProject();
     }
 

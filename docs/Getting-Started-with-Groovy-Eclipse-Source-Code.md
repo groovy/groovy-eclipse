@@ -158,7 +158,7 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.tests
 * org.codehaus.groovy.eclipse.ui
 * org.codehaus.groovyXX (where XX is the Groovy version you are working with; you should only have one of these open in your workspace at a time)
-* org.eclipse.jdt.core (There are multiple projects with this name, so they cannot all be imported into the workspace at once. Import only the one in the folder corresponding to the Eclipse version you are working with; for example, the patch in the /e48 folder is for Eclipse 4.8 (Photon))
+* org.eclipse.jdt.core (There are multiple projects with this name, so they cannot all be imported into the workspace at once. Import only the one in the folder corresponding to the Eclipse version you are working with; for example, the patch in the /e49 folder is for Eclipse 4.8 (Photon))
 * org.eclipse.jdt.groovy.core
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
@@ -182,16 +182,17 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.8 (Photon).
 
 ```
-mvn -Pe48  clean install
+mvn -Pe49  clean install
 ```
 
-Replace e48 with a different option to build it for another Eclipse version:
+Replace e49 with a different option to build it for another Eclipse version:
 
 * e49
 * e4.10
 * e4.11
 * e4.12
 * e4.13
+* e4.14
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

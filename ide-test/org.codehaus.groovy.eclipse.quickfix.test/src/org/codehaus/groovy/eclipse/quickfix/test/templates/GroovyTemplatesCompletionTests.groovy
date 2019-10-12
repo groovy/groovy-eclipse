@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -79,63 +79,70 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
 
     @Test
     void testBasicTemplate() {
+        //@formatter:off
         String input = '''\
             try
             '''
         String output = '''\
             try {
-              line_selection
+              |
             } catch (Exception e) {
               e.printStackTrace()
             }
             '''
+        //@formatter:on
         runTest(input, output, 'try')
     }
 
     @Test
     void testJUnitBefore() {
+        //@formatter:off
         String input = '''\
-            class SomeTest {
+            final class SomeTest {
               Bef
             }
             '''
         String output = '''\
             import org.junit.Before
 
-            class SomeTest {
+            final class SomeTest {
               @Before
               void before() {
                 |
               }
             }
             '''
+        //@formatter:on
         runTest(input, output, 'Bef', 'Before')
     }
 
     @Test
     void testJUnitAfter() {
+        //@formatter:off
         String input = '''\
-            class SomeTest {
+            final class SomeTest {
               Aft
             }
             '''
         String output = '''\
             import org.junit.After
 
-            class SomeTest {
+            final class SomeTest {
               @After
               void after() {
                 |
               }
             }
             '''
+        //@formatter:on
         runTest(input, output, 'Aft', 'After')
     }
 
     @Test
     void testGContractsEnsures() {
+        //@formatter:off
         String input = '''\
-            class SomeTest {
+            final class SomeTest {
               Ens
               def meth() {
               }
@@ -144,19 +151,21 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String output = '''\
             import org.gcontracts.annotations.Ensures
 
-            class SomeTest {
+            final class SomeTest {
               @Ensures({ predicate })
               def meth() {
               }
             }
             '''
+        //@formatter:on
         runTest(input, output, 'Ens', 'Ensures')
     }
 
     @Test
     void testGContractsRequires() {
+        //@formatter:off
         String input = '''\
-            class SomeTest {
+            final class SomeTest {
               Req
               def meth() {
               }
@@ -165,12 +174,13 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String output = '''\
             import org.gcontracts.annotations.Requires
 
-            class SomeTest {
+            final class SomeTest {
               @Requires({ predicate })
               def meth() {
               }
             }
             '''
+        //@formatter:on
         runTest(input, output, 'Req', 'Requires')
     }
 }

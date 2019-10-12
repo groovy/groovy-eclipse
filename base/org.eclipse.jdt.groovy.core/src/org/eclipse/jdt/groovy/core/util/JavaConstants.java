@@ -23,13 +23,18 @@ public abstract class JavaConstants {
     public static int AST_LEVEL = AST.JLS10;
     static {
         try {
-            AST.class.getDeclaredField("JLS12");
-            AST_LEVEL = 12;
-        } catch (NoSuchFieldException ignore12) {
+            AST.class.getDeclaredField("JLS13");
+            AST_LEVEL = 13;
+        } catch (NoSuchFieldException ignore13) {
             try {
-                AST.class.getDeclaredField("JLS11");
-                AST_LEVEL = 11;
-            } catch (NoSuchFieldException ignore11) {
+                AST.class.getDeclaredField("JLS12");
+                AST_LEVEL = 12;
+            } catch (NoSuchFieldException ignore12) {
+                try {
+                    AST.class.getDeclaredField("JLS11");
+                    AST_LEVEL = 11;
+                } catch (NoSuchFieldException ignore11) {
+                }
             }
         }
     }

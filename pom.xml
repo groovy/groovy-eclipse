@@ -6,9 +6,9 @@
 	<packaging>pom</packaging>
 
 	<!-- To run this build, use the following commands (depending on what you are trying to do):
-		mvn clean verify -Pe48
-		mvn clean deploy -Pe48 -Pmilestone -Ddist.qualifier=-M1
-		mvn clean deploy -Pe48 -Prelease
+		mvn clean verify -Pe49
+		mvn clean deploy -Pe49 -Pmilestone -Ddist.qualifier=-M1
+		mvn clean deploy -Pe49 -Prelease
 
 		Running 'deploy' requires s3 accessKey and secretKey to be provided in a
 		properties file. The properties file must be specified via env variable
@@ -110,30 +110,56 @@
 
 	<profiles>
 		<profile>
-			<id>e4.13</id>
+			<id>e4.14</id>
 			<repositories>
 				<repository>
-					<id>2019-09</id>
+					<id>2019-12</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/releases/2019-09</url>
+					<url>https://download.eclipse.org/releases/2019-12</url>
 				</repository>
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.13</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.14milestones</url>
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e413/org.eclipse.jdt.core</module>
-				<module>jdt-patch/e413/org.eclipse.jdt.core.tests.builder</module>
-				<module>jdt-patch/e413/org.eclipse.jdt.core.tests.compiler</module>
-				<module>jdt-patch/e413/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e414/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e414/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e414/org.eclipse.jdt.core.tests.compiler</module>
+				<module>jdt-patch/e414/Feature-org.codehaus.groovy.jdt.patch</module>
 			</modules>
 			<properties>
-				<dist.target>e4.13</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1909${dist.qualifier}'</greclipse.build.qualifier>
+				<dist.target>e4.14</dist.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1912${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
+
+        <profile>
+            <id>e4.13</id>
+            <repositories>
+                <repository>
+                    <id>2019-09</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/releases/2019-09</url>
+                </repository>
+                <repository>
+                    <id>eclipse</id>
+                    <layout>p2</layout>
+                    <url>https://download.eclipse.org/eclipse/updates/4.13</url>
+                </repository>
+            </repositories>
+            <modules>
+                <module>jdt-patch/e413/org.eclipse.jdt.core</module>
+                <module>jdt-patch/e413/org.eclipse.jdt.core.tests.builder</module>
+                <module>jdt-patch/e413/org.eclipse.jdt.core.tests.compiler</module>
+                <module>jdt-patch/e413/Feature-org.codehaus.groovy.jdt.patch</module>
+            </modules>
+            <properties>
+                <dist.target>e4.13</dist.target>
+                <greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1909${dist.qualifier}'</greclipse.build.qualifier>
+            </properties>
+        </profile>
 
 		<profile>
 			<id>e4.12</id>
@@ -236,33 +262,6 @@
 			<properties>
 				<dist.target>e4.9</dist.target>
 				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e1809${dist.qualifier}'</greclipse.build.qualifier>
-			</properties>
-		</profile>
-
-		<profile>
-			<id>e48</id>
-			<repositories>
-				<repository>
-					<id>photon</id>
-					<layout>p2</layout>
-					<!--url>https://download.eclipse.org/releases/photon</url-->
-					<url>https://download.eclipse.org/releases/photon/201806271001</url>
-				</repository>
-				<repository>
-					<id>eclipse48</id>
-					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.8</url>
-				</repository>
-			</repositories>
-			<modules>
-				<module>jdt-patch/e48/org.eclipse.jdt.core</module>
-				<module>jdt-patch/e48/org.eclipse.jdt.core.tests.builder</module>
-				<module>jdt-patch/e48/org.eclipse.jdt.core.tests.compiler</module>
-				<module>jdt-patch/e48/Feature-org.codehaus.groovy.jdt.patch</module>
-			</modules>
-			<properties>
-				<dist.target>e4.8</dist.target>
-				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e48${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 

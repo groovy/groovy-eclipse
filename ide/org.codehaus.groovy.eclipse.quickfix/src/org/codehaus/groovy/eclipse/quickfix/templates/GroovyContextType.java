@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,18 @@
 package org.codehaus.groovy.eclipse.quickfix.templates;
 
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.corext.template.java.AbstractJavaContextType;
+import org.eclipse.jdt.internal.corext.template.java.CompilationUnitContext;
 import org.eclipse.jdt.internal.corext.template.java.JavaContext;
 import org.eclipse.jdt.internal.corext.template.java.StaticImportResolver;
 import org.eclipse.jdt.internal.corext.template.java.TypeResolver;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.templates.GlobalTemplateVariables;
 
 public class GroovyContextType extends AbstractJavaContextType {
+
     public GroovyContextType() {
         setId(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
         setName("Groovy surround-with templates");
@@ -30,8 +35,17 @@ public class GroovyContextType extends AbstractJavaContextType {
     }
 
     @Override
-    protected void initializeContext(JavaContext context) {
-        context.addCompatibleContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+    public CompilationUnitContext createContext(IDocument document, int offset, int length, ICompilationUnit compilationUnit) {
+        JavaContext javaContext = new JavaContext(this, document, offset, length, compilationUnit);
+        javaContext.addCompatibleContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+        return javaContext;
+    }
+
+    @Override
+    public CompilationUnitContext createContext(IDocument document, Position completionPosition, ICompilationUnit compilationUnit) {
+        JavaContext javaContext = new JavaContext(this, document, completionPosition, compilationUnit);
+        javaContext.addCompatibleContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+        return javaContext;
     }
 
     /*
@@ -39,11 +53,11 @@ public class GroovyContextType extends AbstractJavaContextType {
      */
     @Override
     public void initializeContextTypeResolvers() {
-
         // global
         addResolver(new GlobalTemplateVariables.Cursor());
         addResolver(new GlobalTemplateVariables.WordSelection());
-        //addResolver(new SurroundWithLineSelection());
+        addResolver(new GlobalTemplateVariables.Selection(GlobalTemplateVariables.LineSelection.NAME, /*org.eclipse.jdt.internal.corext.template.java.JavaTemplateMessages.CompilationUnitContextType_variable_description_line_selection:*/
+            "<b>${id\\:line_selection[(default)]}</b><br>Evaluates to the selected text for multiple lines. 'default' is an optional parameter, which specifies the text if the selected text is empty.<br><br>Templates that contain this variable will also be shown in the 'Source &gt; Surround With > ...' menu.<br><br><b>Examples:</b><br><code>${line_selection}</code><br><code>${currentLine:line_selection(myStringVariable)}</code><br><code>${currentLine:line_selection('\"A default text\"')}</code>"));
         addResolver(new GlobalTemplateVariables.Dollar());
         addResolver(new GlobalTemplateVariables.Date());
         addResolver(new GlobalTemplateVariables.Year());
@@ -52,13 +66,13 @@ public class GroovyContextType extends AbstractJavaContextType {
 
         // compilation unit
         addResolver(new File());
-        //addResolver(new PrimaryTypeName());
-        //addResolver(new ReturnType());
-        //addResolver(new Method());
+      //addResolver(new PrimaryTypeName());
+      //addResolver(new ReturnType());
+      //addResolver(new Method());
         addResolver(new Type());
         addResolver(new Package());
         addResolver(new Project());
-        //addResolver(new Arguments());
+      //addResolver(new Arguments());
 
         // java
         addResolver(new Array());
@@ -72,7 +86,7 @@ public class GroovyContextType extends AbstractJavaContextType {
         addResolver(new IterableElement());
         addResolver(new Todo());
 
-        // Extra
+        // groovy
         addResolver(new StaticImportResolver("importStatic", "adds a static import"));
         TypeResolver resolver = new TypeResolver();
         resolver.setType("newType");

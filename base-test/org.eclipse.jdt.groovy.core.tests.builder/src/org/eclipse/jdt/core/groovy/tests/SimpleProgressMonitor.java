@@ -31,13 +31,13 @@ public class SimpleProgressMonitor implements IProgressMonitor {
     }
 
     @Override
-    public void beginTask(String name, int totalWork) {
-        incomplete += 1;
+    public void beginTask(String name, int work) {
+        incomplete += work;
     }
 
     @Override
     public void done() {
-        incomplete -= 1;
+        incomplete = 0;
     }
 
     @Override
@@ -63,6 +63,7 @@ public class SimpleProgressMonitor implements IProgressMonitor {
 
     @Override
     public void worked(int work) {
+        incomplete -= work;
     }
 
     /**
