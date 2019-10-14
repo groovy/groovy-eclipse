@@ -375,7 +375,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         }
 
         public String getTypeName() {
-            return result.type.getName();
+            return printTypeName(result.type);
         }
     }
 }

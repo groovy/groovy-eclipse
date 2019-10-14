@@ -106,6 +106,8 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         Util.delete(project.getFile('dsl' + i + '.dsld'))
     }
 
+    //--------------------------------------------------------------------------
+
     protected final void assertDeprecated(String contents, int exprStart, int exprUntil) {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         InferencingTestSuite.SearchRequestor requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
@@ -179,6 +181,14 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
             fail(sb.toString())
         }
     }
+
+    protected final InferencingTestSuite.SearchRequestor inferType(String source, String target, int length = target.length()) {
+        int offset = source.lastIndexOf(target)
+        def unit = addGroovySource(source, nextUnitName())
+        InferencingTestSuite.doVisit(offset, offset + length, unit)
+    }
+
+    //--------------------------------------------------------------------------
 
     protected static final String getTestResourceContents(String fileName) {
         getTestResourceStream(fileName).text

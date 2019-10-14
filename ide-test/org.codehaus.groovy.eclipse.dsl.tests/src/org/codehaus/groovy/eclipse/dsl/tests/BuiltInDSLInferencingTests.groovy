@@ -26,7 +26,6 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Test
 
 /**
@@ -37,14 +36,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     BuiltInDSLInferencingTests() {
         doRemoveClasspathContainer = false
     }
-
-    private InferencingTestSuite.SearchRequestor inferType(String source, String target, int length = target.length()) {
-        int offset = source.lastIndexOf(target)
-        def unit = addGroovySource(source, nextUnitName())
-        InferencingTestSuite.doVisit(offset, offset + length, unit)
-    }
-
-    //--------------------------------------------------------------------------
 
     @Test
     void testBasics() {
