@@ -819,7 +819,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Const.java",
             "public class Const {\n" +
-            "static final String instance= \"abc\";\n" +
+            "  static final String instance= \"abc\";\n" +
             "  public static void main(String[] argv) {\n" +
             "    System.out.print(XXX.class.getAnnotation(Anno.class));\n" +
             "  }\n" +
@@ -837,6 +837,31 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, CompilerOptions.versionToJdkLevel(System.getProperty("java.version")) < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
+    }
+
+    @Test
+    public void testInlinedStaticFinalAttributeValue2() {
+        //@formatter:off
+        String[] sources = {
+            "Const.java",
+            "public class Const {\n" +
+            "  public static final String ABC = \"abc\";\n" +
+            "}",
+
+            "Script.groovy",
+            "@SuppressWarnings(value = Const.ABC)\n" +
+            "void meth() {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Script.groovy (at line 1)\n" +
+            "\t@SuppressWarnings(value = Const.ABC)\n" +
+            "\t                          ^^^^^^^^^\n" +
+            "Unsupported @SuppressWarnings(\"abc\")\n" +
+            "----------\n");
     }
 
     @Test // GRECLIPSE-830

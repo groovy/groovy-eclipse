@@ -2161,7 +2161,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
+            "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
             "----------\n");
     }
@@ -2254,7 +2254,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
+            "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? extends Number>\n" +
             "----------\n");
     }
@@ -2334,7 +2334,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\X.groovy (at line 2)\n" +
             "\t@Anno(String.class)\n" +
-            "\t      ^^^^^^^^^^^^^\n" +
+            "\t      ^^^^^^^^^^^^\n" +
             "Type mismatch: cannot convert from Class<String> to Class<? super Integer>\n" +
             "----------\n");
     }

@@ -170,7 +170,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Anno.groovy (at line 3)\n" +
             "\t@Repeatable(Annos.class)\n" +
-            "\t            ^^^^^^^^^^^^\n" +
+            "\t            ^^^^^^^^^^^\n" +
             "The container annotation type @Annos must declare a member value()\n" +
             "----------\n");
     }

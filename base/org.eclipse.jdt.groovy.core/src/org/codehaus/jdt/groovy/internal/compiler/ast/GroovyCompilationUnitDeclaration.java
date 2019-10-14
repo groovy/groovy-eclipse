@@ -1599,7 +1599,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ListExpression list = (ListExpression) expr;
                 ArrayInitializer arrayInitializer = new ArrayInitializer();
                 arrayInitializer.sourceStart = expr.getStart();
-                arrayInitializer.sourceEnd = expr.getEnd();
+                arrayInitializer.sourceEnd = expr.getEnd() - 1;
 
                 int n = list.getExpressions().size();
                 arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[n];
@@ -1621,16 +1621,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
-                final int propertyEnd = prop.getProperty().getEnd();
+                int propertyEnd = prop.getProperty().getEnd() - 1;
                 if ("class".equals(prop.getPropertyAsString())) {
                     return new ClassLiteralAccess(propertyEnd, createTypeReferenceForClassLiteral(prop));
                 }
                 // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                char[] text = sourceUnit.readSourceRange(prop.getStart(), propertyEnd - prop.getStart());
+                char[] text = sourceUnit.readSourceRange(prop.getStart(), propertyEnd - prop.getStart() + 1);
                 if (text == null || text.length == 0) text = prop.getText().toCharArray();
                 char[][] toks = CharOperation.splitOn('.',  text);
 
-                if (toks.length == 1) return new SingleNameReference(toks[0], toPos(prop.getStart(), propertyEnd - 1));
+                if (toks.length == 1) return new SingleNameReference(toks[0], toPos(prop.getStart(), propertyEnd));
                 return new QualifiedNameReference(toks, positionsFor(toks, prop.getStart(), propertyEnd), prop.getStart(), propertyEnd);
 
             } else if (expr instanceof ClassExpression) {
@@ -1639,14 +1639,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 char[][] toks = CharOperation.splitOn('.', text);
 
                 int n = "class".equals(String.valueOf(toks[toks.length - 1]).trim()) ? toks.length - 1 : toks.length;
-                long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd());
+                long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd() - 1);
 
-                return new ClassLiteralAccess(expr.getEnd(), n == 1 ? new SingleTypeReference(toks[0], poss[0])
-                    : new QualifiedTypeReference(Arrays.copyOfRange(toks, 0, n), Arrays.copyOfRange(poss, 0, n)));
+                return new ClassLiteralAccess(expr.getEnd() - 1, n == 1 ? new SingleTypeReference(toks[0], poss[0])
+                        : new QualifiedTypeReference(Arrays.copyOfRange(toks, 0, n), Arrays.copyOfRange(poss, 0, n)));
 
             } else if (expr instanceof ClosureExpression) {
                 // annotation is something like "@Tag(value = { -> ... })" return "Closure.class" to appease JDT
-                return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd())));
+                return new ClassLiteralAccess(expr.getEnd() - 1, new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1)));
 
             } else if (expr instanceof BinaryExpression) {
                 // annotation may be something like "@Tag(value = List<String)" (incomplete generics specification)
@@ -1656,12 +1656,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (expression != null) {
                     return expression;
                 }
-
                 Util.log(IStatus.WARNING, "Unhandled annotation value type: " + expr.getClass().getSimpleName());
             }
 
             // must be non-null or there will be NPEs in MVP
-            return new NullLiteral(expr.getStart(), expr.getEnd());
+            return new NullLiteral(expr.getStart(), expr.getEnd() - 1);
         }
 
         private org.eclipse.jdt.internal.compiler.ast.MemberValuePair[] createAnnotationMemberValuePairs(Map<String, Expression> memberValuePairs) {
