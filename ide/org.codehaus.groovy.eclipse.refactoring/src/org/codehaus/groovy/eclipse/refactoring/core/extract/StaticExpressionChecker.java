@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,14 +32,12 @@ import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
  */
 public class StaticExpressionChecker extends CodeVisitorSupport {
 
-
     boolean maybeStatic = true;
-
 
     public boolean doVisit(Expression e) {
         try {
             e.visit(this);
-        } catch (VisitCompleteException vce) {
+        } catch (VisitCompleteException ignore) {
         }
 
         return maybeStatic;
@@ -47,10 +45,11 @@ public class StaticExpressionChecker extends CodeVisitorSupport {
 
     @Override
     public void visitFieldExpression(FieldExpression expression) {
-        if (! expression.getField().isStatic()) {
+        if (!expression.getField().isStatic()) {
             maybeStatic = false;
             throw new VisitCompleteException();
         }
+
         super.visitFieldExpression(expression);
     }
 
@@ -60,6 +59,7 @@ public class StaticExpressionChecker extends CodeVisitorSupport {
             maybeStatic = false;
             throw new VisitCompleteException();
         }
+
         super.visitMethodCallExpression(call);
     }
 
@@ -70,9 +70,9 @@ public class StaticExpressionChecker extends CodeVisitorSupport {
         if (accessedVar instanceof Parameter || accessedVar instanceof VariableExpression) {
             notStatic = true;
         } else if (accessedVar instanceof FieldNode) {
-            notStatic = ! ((FieldNode) accessedVar).isStatic();
+            notStatic = !((FieldNode) accessedVar).isStatic();
         } else if (accessedVar instanceof PropertyNode) {
-            notStatic = ! ((PropertyNode) accessedVar).isStatic();
+            notStatic = !((PropertyNode) accessedVar).isStatic();
         }
 
         if (notStatic) {
@@ -82,5 +82,4 @@ public class StaticExpressionChecker extends CodeVisitorSupport {
 
         super.visitVariableExpression(expression);
     }
-
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,6 +42,20 @@ public class ExtractLocalWizard extends RefactoringWizard {
 
     static final String DIALOG_SETTING_SECTION = "ExtractLocalWizard";
 
+    public ExtractLocalWizard(ExtractGroovyLocalRefactoring ref) {
+        super(ref, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
+        setDefaultPageTitle(RefactoringMessages.ExtractTempWizard_defaultPageTitle);
+    }
+
+    @Override
+    protected void addUserInputPages() {
+        addPage(new ExtractLocalPage(getExtractTempRefactoring().guessLocalNames()));
+    }
+
+    private ExtractGroovyLocalRefactoring getExtractTempRefactoring() {
+        return (ExtractGroovyLocalRefactoring) getRefactoring();
+    }
+
     private static class ExtractLocalPage extends TextInputWizardPage {
 
         private static final String REPLACE_ALL = "replaceOccurrences";
@@ -54,7 +68,7 @@ public class ExtractLocalWizard extends RefactoringWizard {
 
         private IDialogSettings fSettings;
 
-        public ExtractLocalPage(String[] tempNameProposals) {
+        ExtractLocalPage(String[] tempNameProposals) {
             super(DESCRIPTION, true, tempNameProposals.length == 0 ? "" : tempNameProposals[0]);
             Assert.isNotNull(tempNameProposals);
             fTempNameProposals = tempNameProposals;
@@ -113,21 +127,12 @@ public class ExtractLocalWizard extends RefactoringWizard {
             });
         }
 
-        /*
-         * @see
-         * org.eclipse.jdt.internal.ui.refactoring.TextInputWizardPage#textModified
-         * (java.lang.String)
-         */
         @Override
         protected void textModified(String text) {
             getExtractLocalRefactoring().setLocalName(text);
             super.textModified(text);
         }
 
-        /*
-         * @seeorg.eclipse.jdt.internal.ui.refactoring.TextInputWizardPage#
-         * validateTextField(String)
-         */
         @Override
         protected RefactoringStatus validateTextField(String text) {
             return getExtractLocalRefactoring().checkLocalNameOnChange(text);
@@ -145,28 +150,9 @@ public class ExtractLocalWizard extends RefactoringWizard {
             return checkBox;
         }
 
-        /*
-         * @seeorg.eclipse.jdt.internal.ui.refactoring.TextInputWizardPage#
-         * isInitialInputValid()
-         */
         @Override
         protected boolean isInitialInputValid() {
             return fInitialValid;
         }
     }
-
-    public ExtractLocalWizard(ExtractGroovyLocalRefactoring ref) {
-        super(ref, DIALOG_BASED_USER_INTERFACE | PREVIEW_EXPAND_FIRST_NODE);
-        setDefaultPageTitle(RefactoringMessages.ExtractTempWizard_defaultPageTitle);
-    }
-
-    @Override
-    protected void addUserInputPages() {
-        addPage(new ExtractLocalPage(getExtractTempRefactoring().guessLocalNames()));
-    }
-
-    private ExtractGroovyLocalRefactoring getExtractTempRefactoring() {
-        return (ExtractGroovyLocalRefactoring) getRefactoring();
-    }
-
 }

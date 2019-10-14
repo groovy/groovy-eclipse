@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -67,9 +67,65 @@ import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
  */
 public class NewDSLDWizard extends BasicNewResourceWizard {
 
+    private WizardNewFileCreationPage mainPage;
+
+    /**
+     * Creates a wizard for creating a new file resource in the workspace.
+     */
+    public NewDSLDWizard() {
+        super();
+    }
+
+    @Override
+    public void addPages() {
+        super.addPages();
+        mainPage = new NewDSLDWizardPage("newDSLDFilePage", getSelection());
+        mainPage.setTitle("DSLD File");
+        mainPage.setDescription("Create a new Groovy DSL Descriptor");
+        mainPage.setFileExtension("dsld");
+        addPage(mainPage);
+    }
+
+    @Override
+    public void init(IWorkbench workbench, IStructuredSelection currentSelection) {
+        super.init(workbench, currentSelection);
+        setWindowTitle("New DSLD File");
+        setNeedsProgressMonitor(true);
+    }
+
+    @Override
+    protected void initializeDefaultPageImageDescriptor() {
+        setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "$nl$/groovy.png"));
+    }
+
+    @Override
+    public boolean performFinish() {
+        IFile file = mainPage.createNewFile();
+        if (file == null) {
+            return false;
+        }
+
+        selectAndReveal(file);
+
+        // Open editor on new file.
+        IWorkbenchWindow dw = getWorkbench().getActiveWorkbenchWindow();
+        try {
+            if (dw != null) {
+                IWorkbenchPage page = dw.getActivePage();
+                if (page != null) {
+                    IDE.openEditor(page, file, true);
+                }
+            }
+        } catch (PartInitException e) {
+            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage, e.getMessage(), e);
+        }
+
+        return true;
+    }
+
     class NewDSLDWizardPage extends WizardNewFileCreationPage {
 
-        public NewDSLDWizardPage(String pageName, IStructuredSelection selection) {
+        NewDSLDWizardPage(String pageName, IStructuredSelection selection) {
             super(pageName, selection);
         }
 
@@ -80,9 +136,10 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                 "// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
                 "\n" +
                 "// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
-                "// contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
-                "//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
-                "// }\n"
+                "//contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
+                "//  property name: 'newProp', type: String, provider: 'Sample DSL',\n" +
+                "//    doc: 'This is a sample. You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
+                "//}\n"
             ).getBytes();
 
             return new ByteArrayInputStream(bytes);
@@ -143,61 +200,5 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
             }
             return true;
         }
-    }
-
-    private WizardNewFileCreationPage mainPage;
-
-    /**
-     * Creates a wizard for creating a new file resource in the workspace.
-     */
-    public NewDSLDWizard() {
-        super();
-    }
-
-    @Override
-    public void addPages() {
-        super.addPages();
-        mainPage = new NewDSLDWizardPage("newDSLDFilePage", getSelection());//$NON-NLS-1$
-        mainPage.setTitle("DSLD File");
-        mainPage.setDescription("Create a new Groovy DSL Descriptor");
-        mainPage.setFileExtension("dsld");
-        addPage(mainPage);
-    }
-
-    @Override
-    public void init(IWorkbench workbench, IStructuredSelection currentSelection) {
-        super.init(workbench, currentSelection);
-        setWindowTitle("New DSLD File");
-        setNeedsProgressMonitor(true);
-    }
-
-    @Override
-    protected void initializeDefaultPageImageDescriptor() {
-        setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "$nl$/groovy.png"));
-    }
-
-    @Override
-    public boolean performFinish() {
-        IFile file = mainPage.createNewFile();
-        if (file == null) {
-            return false;
-        }
-
-        selectAndReveal(file);
-
-        // Open editor on new file.
-        IWorkbenchWindow dw = getWorkbench().getActiveWorkbenchWindow();
-        try {
-            if (dw != null) {
-                IWorkbenchPage page = dw.getActivePage();
-                if (page != null) {
-                    IDE.openEditor(page, file, true);
-                }
-            }
-        } catch (PartInitException e) {
-            DialogUtil.openError(dw.getShell(), ResourceMessages.FileResource_errorMessage, e.getMessage(), e);
-        }
-
-        return true;
     }
 }

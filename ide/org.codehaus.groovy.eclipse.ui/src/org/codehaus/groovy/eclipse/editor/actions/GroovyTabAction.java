@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -159,14 +159,14 @@ public class GroovyTabAction extends TextEditorAction {
             // either the selection has to be empty and the caret in the WS at
             // the line start
             // or the selection has to extend over multiple lines
-            if (length == 0)
+            if (length == 0) {
                 return document.get(lineOffset, offset - lineOffset).trim().length() == 0;
-            else
+            } else {
                 // return lineOffset + firstLine.getLength() < offset + length;
                 return false; // only enable for empty selections for now
-
-        } catch (BadLocationException e) {}
-
+            }
+        } catch (BadLocationException ignore) {
+        }
         return false;
     }
 
@@ -199,7 +199,6 @@ public class GroovyTabAction extends TextEditorAction {
             IEditorInput input = editor.getEditorInput();
             if (provider != null && input != null)
                 return provider.getDocument(input);
-
         }
         return null;
     }
@@ -273,7 +272,6 @@ public class GroovyTabAction extends TextEditorAction {
      * Andre Soereng <andreis@fast.no> - [syntax highlighting] highlight numbers
      * - https://bugs.eclipse.org/bugs/show_bug.cgi?id=63573
      *******************************************************************************/
-    private static final String BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.jdt.internal.ui.javaeditor.ConstructedJavaEditorMessages";//$NON-NLS-1$
+    private static final String BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.jdt.internal.ui.javaeditor.ConstructedJavaEditorMessages";
     private static ResourceBundle fgBundleForConstructedKeys = ResourceBundle.getBundle(BUNDLE_FOR_CONSTRUCTED_KEYS);
-
 }

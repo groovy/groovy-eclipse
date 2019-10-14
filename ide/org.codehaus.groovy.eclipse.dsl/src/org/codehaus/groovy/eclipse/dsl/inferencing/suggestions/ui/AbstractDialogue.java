@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         super(parentShell);
     }
 
-    abstract protected @NonNull DialogueDescriptor getDialogueDescriptor();
+    protected abstract @NonNull DialogueDescriptor getDialogueDescriptor();
 
     @Override
     protected boolean isResizable() {
@@ -142,7 +142,79 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         return convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
     }
 
-    abstract protected void createCommandArea(Composite parent);
+    protected abstract void createCommandArea(Composite parent);
+
+    protected void notifyValidValueSet(IDialogueControlDescriptor descriptor, Object value) {
+        invalidValues.remove(descriptor);
+
+        // Check if there are any remaining inValid values and display the next
+        // error
+        if (invalidValues != null) {
+
+            for (Entry<IDialogueControlDescriptor, SetValue> entry : invalidValues.entrySet()) {
+                if (entry.getValue().getValue() == null) {
+                    displayInvalidValueError(entry.getKey(), entry.getValue().getErrorMessage(), true);
+                    return;
+                }
+            }
+        }
+        setErrorMessage(null);
+        enableOKButton(true);
+    }
+
+    /**
+     * Checks if any required values are set with valid values before enabling
+     * the "OK" button.
+     */
+    protected void displayInvalidValueError(IDialogueControlDescriptor descriptor, String errorMessage, boolean displayErrorMessage) {
+        StringBuffer missingFields = new StringBuffer();
+        missingFields.append("Value (");
+        missingFields.append(descriptor.getLabel());
+        missingFields.append(')');
+        if (errorMessage != null && errorMessage.length() > 0) {
+            missingFields.append(':');
+            missingFields.append(' ');
+
+            missingFields.append(errorMessage);
+        } else {
+            missingFields.append(" is missing");
+        }
+
+        if (displayErrorMessage) {
+            setErrorMessage(missingFields.toString());
+        }
+        enableOKButton(false);
+    }
+
+    /**
+     * Should only be called once the button bars have been created for the
+     * dialogue
+     */
+    protected void enableOKButton(boolean enable) {
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        if (okButton != null && !okButton.isDisposed()) {
+            okButton.setEnabled(enable);
+        }
+    }
+
+    protected class SetValue {
+
+        private Object value;
+        private String errorMessage;
+
+        public SetValue(Object value, String errorMessage) {
+            this.value = value;
+            this.errorMessage = errorMessage;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+    }
 
     /**
      * Control listener to be used if the dialogue has required values that
@@ -153,7 +225,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
      * to be verified before enabling the OK button
      * 2. The value is required, and an empty or null value is not acceptable.
      */
-    abstract protected class ValidatedValueSelectionListener implements IControlSelectionListener {
+    protected abstract class ValidatedValueSelectionListener implements IControlSelectionListener {
 
         /**
          * User this only if values should not be initially marked as required
@@ -184,85 +256,6 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
             displayInvalidValueError(descriptor, event.getErrorMessage(), true);
         }
 
-        abstract protected void handleValidatedValue(ControlSelectionEvent event);
+        protected abstract void handleValidatedValue(ControlSelectionEvent event);
     }
-
-    protected void notifyValidValueSet(IDialogueControlDescriptor descriptor, Object value) {
-        invalidValues.remove(descriptor);
-
-        // Check if there are any remaining inValid values and display the next
-        // error
-        if (invalidValues != null) {
-
-            for (Entry<IDialogueControlDescriptor, SetValue> entry : invalidValues.entrySet()) {
-                if (entry.getValue().getValue() == null) {
-                    displayInvalidValueError(entry.getKey(), entry.getValue().getErrorMessage(), true);
-                    return;
-                }
-            }
-        }
-        setErrorMessage(null);
-        enableOKButton(true);
-    }
-
-    /**
-     * Checks if any required values are set with valid values before enabling
-     * the "OK" button.
-     */
-    protected void displayInvalidValueError(IDialogueControlDescriptor descriptor, String errorMessage, boolean displayErrorMessage) {
-
-        StringBuffer missingFields = new StringBuffer();
-
-        missingFields.append("Value (");
-        missingFields.append(descriptor.getLabel());
-        missingFields.append(')');
-        if (errorMessage != null && errorMessage.length() > 0) {
-            missingFields.append(':');
-            missingFields.append(' ');
-
-            missingFields.append(errorMessage);
-        } else {
-            missingFields.append(" is missing");
-        }
-
-        if (displayErrorMessage) {
-            setErrorMessage(missingFields.toString());
-        }
-        enableOKButton(false);
-    }
-
-    /**
-     * Should only be called once the button bars have been created for the
-     * dialogue
-     *
-     * @param enable
-     */
-    protected void enableOKButton(boolean enable) {
-        Button okButton = getButton(IDialogConstants.OK_ID);
-        if (okButton != null && !okButton.isDisposed()) {
-            okButton.setEnabled(enable);
-        }
-    }
-
-    protected class SetValue {
-
-        private Object value;
-
-        private String errorMessage;
-
-        public SetValue(Object value, String errorMessage) {
-            this.value = value;
-            this.errorMessage = errorMessage;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
-
-    }
-
 }

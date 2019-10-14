@@ -42,7 +42,7 @@ public class RelevanceRules implements IRelevanceRule {
     public static int DEFAULT_STARTING_RELEVANCE_VALUE = 1;
 
     @Deprecated
-    public static enum RelevanceRuleType {
+    public enum RelevanceRuleType {
         SOURCE_TYPE, ACCESSIBILITY, MODIFIERS, LIBRARY_TYPE, SIMILAR_PACKAGE
     }
 
@@ -274,7 +274,7 @@ public class RelevanceRules implements IRelevanceRule {
         enum LibraryType {
             JAVA("java"), JAVAX("javax"), GROOVY("groovy"), GROOVYX("groovyx");
 
-            private LibraryType(String value) {
+            LibraryType(String value) {
                 this.value = value.toCharArray();
             }
 

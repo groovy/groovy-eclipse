@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,10 +38,22 @@ import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolutionGenerator {
 
-    private static abstract class AbstractCompilerConfigurator extends WorkbenchMarkerResolution implements IMarkerResolution2 {
+    @Override
+    public IMarkerResolution[] getResolutions(IMarker marker) {
+        if (marker.getResource().getType() == IResource.PROJECT) {
+            return new IMarkerResolution[] {
+                new ConfigureCompilerLevelResolution(marker),
+                new SetToWorkspaceCompilerLevelResolution(marker),
+                new ConfigureWorksaceCompilerLevelResolution(marker),
+            };
+        }
+        return new IMarkerResolution[0];
+    }
+
+    private abstract static class AbstractCompilerConfigurator extends WorkbenchMarkerResolution implements IMarkerResolution2 {
         private final IMarker thisMarker;
 
-        public AbstractCompilerConfigurator(IMarker thisMarker) {
+        AbstractCompilerConfigurator(IMarker thisMarker) {
             this.thisMarker = thisMarker;
         }
 
@@ -59,7 +71,6 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             }
             return markerList.toArray(new IMarker[0]);
         }
-
     }
 
     private static class ConfigureCompilerLevelResolution extends AbstractCompilerConfigurator {
@@ -78,7 +89,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             IProject project = marker.getResource().getProject();
             PreferenceDialog propertyDialog = PreferencesUtil.createPropertyDialogOn(
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), project,
-                CompilerPreferencesPage.PROPERTY_ID, new String[] { CompilerPreferencesPage.PROPERTY_ID }, null);
+                CompilerPreferencesPage.PROPERTY_ID, new String[] {CompilerPreferencesPage.PROPERTY_ID}, null);
             propertyDialog.open();
         }
 
@@ -95,7 +106,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
 
     private static class ConfigureWorksaceCompilerLevelResolution extends AbstractCompilerConfigurator {
 
-        public ConfigureWorksaceCompilerLevelResolution(IMarker thisMarker) {
+        ConfigureWorksaceCompilerLevelResolution(IMarker thisMarker) {
             super(thisMarker);
         }
 
@@ -108,13 +119,14 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
         public void run(IMarker marker) {
             PreferenceDialog preferenceDialog = PreferencesUtil.createPreferenceDialogOn(
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), CompilerPreferencesPage.PREFERENCES_ID,
-                new String[] { CompilerPreferencesPage.PREFERENCES_ID }, null);
+                new String[] {CompilerPreferencesPage.PREFERENCES_ID}, null);
             preferenceDialog.open();
         }
 
         @Override
         public String getDescription() {
-            return "Opens the Groovy Compiler preferences for the workspace preferences.  From here, you can choose the Groovy compiler level for the workspace (restart required).";
+            return "Opens the Groovy Compiler preferences for the workspace preferences." +
+                "  From here, you can choose the Groovy compiler level for the workspace (restart required).";
         }
 
         @Override
@@ -125,7 +137,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
 
     private static class SetToWorkspaceCompilerLevelResolution extends AbstractCompilerConfigurator {
 
-        public SetToWorkspaceCompilerLevelResolution(IMarker thisMarker) {
+        SetToWorkspaceCompilerLevelResolution(IMarker thisMarker) {
             super(thisMarker);
         }
 
@@ -149,17 +161,5 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
         public Image getImage() {
             return JavaPluginImages.DESC_ELCL_CONFIGURE_BUILDPATH.createImage();
         }
-    }
-
-    @Override
-    public IMarkerResolution[] getResolutions(IMarker marker) {
-        if (marker.getResource().getType() == IResource.PROJECT) {
-            return new IMarkerResolution[] {
-                new ConfigureCompilerLevelResolution(marker),
-                new SetToWorkspaceCompilerLevelResolution(marker),
-                new ConfigureWorksaceCompilerLevelResolution(marker),
-            };
-        }
-        return new IMarkerResolution[0];
     }
 }

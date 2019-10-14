@@ -34,6 +34,7 @@ public abstract class JavaConstants {
                     AST.class.getDeclaredField("JLS11");
                     AST_LEVEL = 11;
                 } catch (NoSuchFieldException ignore11) {
+                    // AST_LEVEL is JLS10
                 }
             }
         }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -207,7 +207,7 @@ public class GroovyIndentationService {
      */
     public int computeIndentAfterNewline(IDocument d, int offset) throws BadLocationException {
         Token token = getTokenBefore(d, offset);
-        int line = (token == null ? 0 : getLine(token));
+        int line = (token == null ? 0 : getLineNumber(token));
         int orgIndentLevel = (token == null ? 0 : getLineIndentLevel(d, line));
 
         List<Token> tokens = getTokens(d, d.getLineOffset(line), offset);
@@ -243,7 +243,7 @@ public class GroovyIndentationService {
      *
      * @return 0-based index, as used by Eclipse IDocument interface.
      */
-    private int getLine(Token token) {
+    private int getLineNumber(Token token) {
         return token.getLine() - 1; // Antlr line numbers start at 1.
     }
 
@@ -280,8 +280,8 @@ public class GroovyIndentationService {
     public static String createIndentation(IFormatterPreferences pref, int spaces) {
         StringBuilder b = new StringBuilder();
 
-        int tab;
-        if (spaces > 0 && pref != null && pref.useTabs() && (tab = pref.getTabSize()) > 0) {
+        int tab = pref.getTabSize();
+        if (spaces > 0 && pref != null && pref.useTabs() && tab > 0) {
             while (spaces >= tab) {
                 b.append('\t');
                 spaces -= tab;
@@ -337,10 +337,11 @@ public class GroovyIndentationService {
     }
 
     private GroovyDocumentScanner getGroovyDocumentScanner(IDocument d) {
-        if (cachedScanner != null && cachedScanner.getDocument() == d)
-            return cachedScanner;
-        disposeScanner();
-        return (cachedScanner = new GroovyDocumentScanner(d));
+        if (cachedScanner == null || cachedScanner.getDocument() != d) {
+            disposeScanner();
+            cachedScanner = new GroovyDocumentScanner(d);
+        }
+        return cachedScanner;
     }
 
     /**
@@ -395,10 +396,11 @@ public class GroovyIndentationService {
      */
     public String getLineDelimiter(IDocument d, int lineNum) throws BadLocationException {
         String result = d.getLineDelimiter(lineNum);
-        if (result == null)
+        if (result == null) {
             return "";
-        else
+        } else {
             return result;
+        }
     }
 
     /**
@@ -475,14 +477,14 @@ public class GroovyIndentationService {
         int level = 0;
         for (int i = 0, n = lineText.length(); i < n; i += 1) {
             switch (lineText.charAt(i)) {
-                case ' ':
-                    level += 1;
-                    break;
-                case '\t':
-                    level += getPrefs().getTabSize();
-                    break;
-                default:
-                    return level;
+            case ' ':
+                level += 1;
+                break;
+            case '\t':
+                level += getPrefs().getTabSize();
+                break;
+            default:
+                return level;
             }
         }
         return level;

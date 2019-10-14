@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,7 +72,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
  */
 public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtension {
 
-    public final static Object TOGGLE_BREAKPOINT_FAMILY = new Object();
+    public static final Object TOGGLE_BREAKPOINT_FAMILY = new Object();
 
     protected static IResource getResource(IEditorPart editor) {
         IResource resource = Adapters.adapt(editor.getEditorInput(), IFile.class);
@@ -116,6 +116,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
             public boolean belongsTo(Object family) {
                 return (family == TOGGLE_BREAKPOINT_FAMILY);
             }
+
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 if (selection instanceof ITextSelection) {
@@ -209,7 +210,8 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                                 return Status.OK_STATUS;
                             }
                             if (resource != null) {
-                                int charStart = -1, charEnd = -1, hitCount = 0; boolean register = true;
+                                boolean register = true;
+                                int charStart = -1, charEnd = -1, hitCount = 0;
                                 IJavaLineBreakpoint breakpoint = JDIDebugModel.createLineBreakpoint(
                                     resource, typeName, lineNumber, charStart, charEnd, hitCount, register, attributes);
                                 new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();

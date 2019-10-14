@@ -43,7 +43,7 @@ public class ProposalProviderRegistry {
 
     private static final String PROPOSAL_FILTER_EXTENSION = "org.codehaus.groovy.eclipse.codeassist.completionProposalFilter"; //$NON-NLS-1$
 
-    private final static ProposalProviderRegistry DEFAULT = new ProposalProviderRegistry();
+    private static final ProposalProviderRegistry DEFAULT = new ProposalProviderRegistry();
 
     public static ProposalProviderRegistry getRegistry() {
         return DEFAULT;

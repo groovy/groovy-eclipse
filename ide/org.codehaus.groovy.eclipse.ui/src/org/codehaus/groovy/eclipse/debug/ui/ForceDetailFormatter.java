@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,10 +29,28 @@ import org.eclipse.jdt.internal.debug.ui.JavaDetailFormattersManager;
  */
 public class ForceDetailFormatter {
 
+    private boolean referenceAlreadyExists(String typeName) {
+        JavaDetailFormattersManager manager = JavaDetailFormattersManager.getDefault();
+        return manager.hasAssociatedDetailFormatter(new DetailType(typeName));
+    }
+
+    private void addFormatter(String typeName, String snippet) {
+        DetailFormatter formatter = new DetailFormatter(typeName, snippet, true);
+        JavaDetailFormattersManager manager = JavaDetailFormattersManager.getDefault();
+        manager.setAssociatedDetailFormatter(formatter);
+    }
+
+    public void forceReferenceFormatter() {
+        String typeName = "groovy.lang.Reference";
+        if (!referenceAlreadyExists(typeName)) {
+            addFormatter(typeName, "get()");
+        }
+    }
+
     class DetailType implements IJavaType {
         final String name;
 
-        public DetailType(String name) {
+        DetailType(String name) {
             this.name = name;
         }
 
@@ -64,24 +82,6 @@ public class ForceDetailFormatter {
         @Override
         public <T> T getAdapter(Class<T> adapter) {
             return null;
-        }
-    }
-
-    private boolean referenceAlreadyExists(String typeName) {
-        JavaDetailFormattersManager manager = JavaDetailFormattersManager.getDefault();
-        return manager.hasAssociatedDetailFormatter(new DetailType(typeName));
-    }
-
-    private void addFormatter(String typeName, String snippet) {
-        DetailFormatter formatter = new DetailFormatter(typeName, snippet, true);
-        JavaDetailFormattersManager manager = JavaDetailFormattersManager.getDefault();
-        manager.setAssociatedDetailFormatter(formatter);
-    }
-
-    public void forceReferenceFormatter() {
-        String typeName = "groovy.lang.Reference";
-        if (!referenceAlreadyExists(typeName)) {
-            addFormatter(typeName, "get()");
         }
     }
 }

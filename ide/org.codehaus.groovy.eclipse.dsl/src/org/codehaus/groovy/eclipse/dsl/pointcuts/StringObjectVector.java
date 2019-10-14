@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,6 @@ public final class StringObjectVector {
     }
 
     public void add(String newName, Object newElement) {
-
         if (this.size == this.maxSize) { // knows that size starts <= maxSize
             System.arraycopy(this.elements, 0, (this.elements = new Object[this.maxSize *= 2]), 0, this.size);
             System.arraycopy(this.names, 0, (this.names = new String[this.maxSize]), 0, this.size);
@@ -61,13 +60,17 @@ public final class StringObjectVector {
      */
     public boolean contains(Object element) {
         if (element == null) {
-            for (int i = this.size; --i >= 0;)
-                if (this.elements[i] == null)
+            for (int i = this.size; --i >= 0;) {
+                if (this.elements[i] == null) {
                     return true;
+                }
+            }
         } else {
-            for (int i = this.size; --i >= 0;)
-                if (element.equals(this.elements[i]))
+            for (int i = this.size; --i >= 0;) {
+                if (element.equals(this.elements[i])) {
                     return true;
+                }
+            }
         }
         return false;
     }
@@ -77,13 +80,17 @@ public final class StringObjectVector {
      */
     public boolean containsName(String name) {
         if (name == null) {
-            for (int i = this.size; --i >= 0;)
-                if (this.names[i] == null)
+            for (int i = this.size; --i >= 0;) {
+                if (this.names[i] == null) {
                     return true;
+                }
+            }
         } else {
-            for (int i = this.size; --i >= 0;)
-                if (name.equals(this.names[i]))
+            for (int i = this.size; --i >= 0;) {
+                if (name.equals(this.names[i])) {
                     return true;
+                }
+            }
         }
         return false;
     }
@@ -131,6 +138,7 @@ public final class StringObjectVector {
         System.arraycopy(this.elements, 0, res, 0, size);
         return res;
     }
+
     public String[] getNames() {
         String[] res = new String[size];
         System.arraycopy(this.names, 0, res, 0, size);
@@ -143,7 +151,7 @@ public final class StringObjectVector {
      * has no name.  Uses == , not {@link #equals(Object)}
      */
     public String nameOf(Object arg) {
-        for (int i = 0; i < size; i++ ) {
+        for (int i = 0; i < size; i += 1) {
             if (elements[i] == arg) {
                 return names[i];
             }
@@ -154,7 +162,7 @@ public final class StringObjectVector {
     Map<String, Object> asMap() {
         if (cachedMap == null) {
             cachedMap = new HashMap<>();
-            for (int i = 0; i < this.size; i++) {
+            for (int i = 0; i < this.size; i += 1) {
                 if (names[i] != null) {
                     cachedMap.put(names[i], elements[i]);
                 }
@@ -167,18 +175,17 @@ public final class StringObjectVector {
         String spaces = AbstractPointcut.spaces(indent);
         if (this.size > 0) {
             sb.append(spaces + "\n");
-            for (int i = 0; i < this.size; i++) {
+            for (int i = 0; i < this.size; i += 1) {
                 sb.append(spaces);
                 if (this.names[i] != null) {
                     sb.append(this.names[i]).append(" = ");
                 }
                 if (this.elements[i] instanceof AbstractPointcut) {
-                    ((AbstractPointcut) this.elements[i]).formatedString(sb, indent+2);
+                    ((AbstractPointcut) this.elements[i]).formatedString(sb, indent + 2);
                 } else {
                     sb.append(this.elements[i]);
                 }
             }
-        } else {
         }
     }
 }

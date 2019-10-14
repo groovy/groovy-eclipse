@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -70,7 +71,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     private static final String MODIFIER_PROTECTED = "protected";
     private static final String MODIFIER_PRIVATE = "private";
     private static final String MODIFIER_NONE = "none";
-    private final String[] possibleModifiers = { MODIFIER_DEF, MODIFIER_PROTECTED, MODIFIER_PRIVATE, MODIFIER_NONE};
+    private final String[] possibleModifiers = {MODIFIER_DEF, MODIFIER_PROTECTED, MODIFIER_PRIVATE, MODIFIER_NONE};
     private static final int DEFAULT_MODIFIER = 2;
 
     private Composite accessModifierComposite;
@@ -110,10 +111,8 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 
     private void initializeValues(int selectionIndex) {
         if (extractMethodRefactoring != null) {
-
             setModifier();
-
-            if(extractMethodRefactoring.getCallAndMethHeadParameters().length > 0){
+            if (extractMethodRefactoring.getCallAndMethHeadParameters().length > 0) {
                 tblParameters.removeAll();
                 for (Parameter param : extractMethodRefactoring.getCallAndMethHeadParameters()) {
                     TableItem tblItem = new TableItem(tblParameters, SWT.NONE);
@@ -146,10 +145,11 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 
     private void setVariableNameInTable(Parameter param, TableItem tblItem) {
         String variableName = param.getName();
-        if(renameVariablesMap.containsKey(variableName))
+        if (renameVariablesMap.containsKey(variableName)) {
             tblItem.setText(1, renameVariablesMap.get(variableName));
-        else
+        } else {
             tblItem.setText(1, variableName);
+        }
     }
 
     /**
@@ -157,9 +157,9 @@ public class ExtractMethodPageContent extends Composite implements Observer {
      */
     private void updateView() {
         String methodHead = extractMethodRefactoring.getMethodHead();
-        if(firstPreviewEver){
+        if (firstPreviewEver) {
             createDummyMethodHead(methodHead);
-        }else{
+        } else {
             txtPreviewCall.setText(methodHead);
         }
         RefactoringStatus status = validateGroovyIdentifiers();
@@ -168,9 +168,9 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void checkForDuplicateVariableNames(RefactoringStatus status) {
-        HashSet<String> uniquenessTestSet = new HashSet<>();
-        for (Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()){
-            if(!uniquenessTestSet.add(p.getName())){
+        Set<String> uniquenessTestSet = new HashSet<>();
+        for (Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()) {
+            if (!uniquenessTestSet.add(p.getName())) {
                 String errorMsg = MessageFormat.format(GroovyRefactoringMessages.ExtractMethodWizard_DuplicateVariableName, p.getName());
                 status.addFatalError(errorMsg);
             }
@@ -181,7 +181,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
         String dummyMethodName = GroovyRefactoringMessages.ExtractMethodWizard_DefaultMethodName;
         int paraStartPos = methodHead.indexOf('(');
         String partOne = methodHead.substring(0, paraStartPos);
-        String partTwo = methodHead.substring(paraStartPos,methodHead.length());
+        String partTwo = methodHead.substring(paraStartPos, methodHead.length());
         txtPreviewCall.setText(partOne + dummyMethodName + partTwo);
     }
 
@@ -189,7 +189,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
         List<String> variablesToCheck = new LinkedList<>();
         variablesToCheck.add(txtNewMethodName.getText());
 
-        for(Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()){
+        for (Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()) {
             variablesToCheck.add(p.getName());
         }
 
@@ -250,7 +250,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void createRadioButtons(MouseAdapter btnClick) {
-        for(String buttonName : possibleModifiers){
+        for (String buttonName : possibleModifiers) {
             Button btnModifier = new Button(accessModifierComposite, SWT.RADIO);
             btnModifier.setText(buttonName);
             btnModifier.addMouseListener(btnClick);
@@ -259,10 +259,10 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void enableAndSelectButtons(String buttonName, Button btnModifier) {
-        if(buttonName.equals(possibleModifiers[DEFAULT_MODIFIER])){
+        if (buttonName.equals(possibleModifiers[DEFAULT_MODIFIER])) {
             btnModifier.setSelection(true);
         }
-        if(buttonName.equals(MODIFIER_NONE)){
+        if (buttonName.equals(MODIFIER_NONE)) {
             btnModifier.setEnabled(extractMethodRefactoring.isStatic());
         }
     }
@@ -297,7 +297,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void createParameterComposite(Composite parent) {
-        if(extractMethodRefactoring.getCallAndMethHeadParameters().length > 0){
+        if (extractMethodRefactoring.getCallAndMethHeadParameters().length > 0) {
             GridLayout gridLayout;
             initParameterComposite(parent);
 
@@ -327,18 +327,17 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void createTableSelectionListener() {
-
         createTableEditor();
 
-        tblParameters.addSelectionListener(new SelectionAdapter(){
-
+        tblParameters.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
 
-                final int EDITABLECOLUMN = 1;// editing the second column
+                final int EDITABLECOLUMN = 1; // editing the second column
 
-                TableItem currentTableItem = ((TableItem)e.item);
-                if (currentTableItem == null) return;
+                TableItem currentTableItem = ((TableItem) e.item);
+                if (currentTableItem == null)
+                    return;
 
                 updateButtonsEnabled(tblParameters);
                 disposeTableEditor();
@@ -359,6 +358,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
                     public void modifyText(ModifyEvent e) {
                         saveRenamedVariable(EDITABLECOLUMN);
                     }
+
                     private void saveRenamedVariable(final int EDITABLECOLUMN) {
                         Text text = (Text) editor.getEditor();
                         int selectionIndex = tblParameters.getSelectionIndex();
@@ -391,12 +391,12 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 
     private void createDownButton(Composite buttonframe, GridData buttonData) {
         btnDown = createPushButton(buttonframe, buttonData, GroovyRefactoringMessages.ExtractMethodWizard_LB_BTN_Down, false, true);
-        btnDown.addMouseListener(new ExtractMethodMouseAdapter(this,ExtractMethodMouseAdapter.DOWNEVENT));
+        btnDown.addMouseListener(new ExtractMethodMouseAdapter(this, ExtractMethodMouseAdapter.DOWNEVENT));
     }
 
     private void createUpButton(Composite buttonframe, GridData buttonData) {
         btnUp = createPushButton(buttonframe, buttonData, GroovyRefactoringMessages.ExtractMethodWizard_LB_BTN_UP, false, true);
-        btnUp.addMouseListener(new ExtractMethodMouseAdapter(this,ExtractMethodMouseAdapter.UPEVENT));
+        btnUp.addMouseListener(new ExtractMethodMouseAdapter(this, ExtractMethodMouseAdapter.UPEVENT));
     }
 
     private void createParameterTable(Composite tableframe) {
@@ -492,13 +492,13 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     private void updateButtonsEnabled(Table tbl) {
         int lastElementIndex = extractMethodRefactoring.getCallAndMethHeadParameters().length - 1;
         int selectionIndex = tbl.getSelectionIndex();
-        if(tbl.getItemCount() == 1){
+        if (tbl.getItemCount() == 1) {
             btnDown.setEnabled(false);
             btnUp.setEnabled(false);
-        } else if(selectionIndex == 0){
+        } else if (selectionIndex == 0) {
             btnDown.setEnabled(true);
             btnUp.setEnabled(false);
-        } else if(selectionIndex == lastElementIndex){
+        } else if (selectionIndex == lastElementIndex) {
             btnDown.setEnabled(false);
             btnUp.setEnabled(true);
         } else {
@@ -506,7 +506,6 @@ public class ExtractMethodPageContent extends Composite implements Observer {
             btnUp.setEnabled(true);
         }
     }
-
 }
 
 class ExtractMethodMouseAdapter extends MouseAdapter{
@@ -518,7 +517,7 @@ class ExtractMethodMouseAdapter extends MouseAdapter{
     private final ExtractMethodPageContent wizard;
     private final int eventType;
 
-    public ExtractMethodMouseAdapter(ExtractMethodPageContent wizard, int eventtype){
+    ExtractMethodMouseAdapter(ExtractMethodPageContent wizard, int eventtype){
         this.wizard = wizard;
         this.eventType = eventtype;
     }
@@ -526,13 +525,13 @@ class ExtractMethodMouseAdapter extends MouseAdapter{
     @Override
     public void mouseUp(MouseEvent e) {
         super.mouseUp(e);
-        switch(eventType){
-            case DOWNEVENT:
-                wizard.handleUpDownEvent(false);
-                break;
-            case UPEVENT:
-                wizard.handleUpDownEvent(true);
-                break;
+        switch (eventType) {
+        case DOWNEVENT:
+            wizard.handleUpDownEvent(false);
+            break;
+        case UPEVENT:
+            wizard.handleUpDownEvent(true);
+            break;
         }
     }
 }

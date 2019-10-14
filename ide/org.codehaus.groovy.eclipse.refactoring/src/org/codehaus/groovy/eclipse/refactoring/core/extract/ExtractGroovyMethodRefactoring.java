@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -87,20 +87,6 @@ import org.eclipse.text.edits.TextEditGroup;
 
 public class ExtractGroovyMethodRefactoring extends Refactoring {
 
-    private class GroovyRefactoringObservable extends Observable {
-        @Override
-        protected synchronized void setChanged() {
-            super.setChanged();
-        }
-        @Override
-        public void notifyObservers(Object arg) {
-            super.notifyObservers(arg);
-            clearChanged();
-        }
-    }
-
-    private GroovyRefactoringObservable observable = new GroovyRefactoringObservable();
-
     private String newMethodName = "";
 
     private MethodNode newMethod;
@@ -121,7 +107,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private StatementFinder methodCodeFinder;
 
-    private boolean returnMustBeDeclared = false;
+    private boolean returnMustBeDeclared;
 
     /**
      * Two collections since the variables in the methodCall
@@ -148,6 +134,8 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private GroovyCompilationUnit unit;
 
     private CompilationUnitChange change;
+
+    private GroovyRefactoringObservable observable = new GroovyRefactoringObservable();
 
     public ExtractGroovyMethodRefactoring(GroovyCompilationUnit unit, int offset, int length, RefactoringStatus status) {
         this.unit = unit;
@@ -256,9 +244,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         if (tokenizer.hasMoreTokens())
             length = Integer.valueOf(tokenizer.nextToken()).intValue();
         if (offset < 0 || length < 0)
-            return RefactoringStatus.createFatalErrorStatus(Messages.format(
-                    RefactoringCoreMessages.InitializableRefactoring_illegal_argument, new Object[] { selection,
-                            JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION }));
+            return RefactoringStatus.createFatalErrorStatus(
+                Messages.format(RefactoringCoreMessages.InitializableRefactoring_illegal_argument,
+                    new Object[] {selection, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION}));
         selectedText = new Region(offset, length);
 
         final String handle = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
@@ -268,9 +256,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                     JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
 
         IJavaElement element = JavaRefactoringDescriptorUtil.handleToElement(arguments.getProject(), handle, false);
-        if (element == null || !element.exists() || element.getElementType() != IJavaElement.COMPILATION_UNIT
-                || !(element instanceof GroovyCompilationUnit))
+        if (element == null || !element.exists() || element.getElementType() != IJavaElement.COMPILATION_UNIT || !(element instanceof GroovyCompilationUnit)) {
             return JavaRefactoringDescriptorUtil.createInputFatalStatus(element, getName(), IJavaRefactorings.EXTRACT_METHOD);
+        }
         unit = (GroovyCompilationUnit) element;
 
         final String name = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME);
@@ -585,11 +573,10 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             }
             sb.append("}");
 
-            MethodNode newMethod = createNewMethodForValidation(sb.toString(), status);
-
+            MethodNode method = createNewMethodForValidation(sb.toString(), status);
             IDocument newMethodDocument = new Document(sb.toString());
-            if (newMethod != null && variablesToRename != null) {
-                MultiTextEdit edits = renameVariableInExtractedMethod(newMethod);
+            if (method != null && variablesToRename != null) {
+                MultiTextEdit edits = renameVariableInExtractedMethod(method);
                 edits.apply(newMethodDocument);
             }
 
@@ -727,15 +714,17 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private int calculateNewIndexAfterMove(boolean upEvent, int numberOfMoves, List<Variable> newParamList, int index) {
         int indexOfSelectedParam = index;
         if (upEvent) {
-            if (indexOfSelectedParam < 1)
+            if (indexOfSelectedParam < 1) {
                 indexOfSelectedParam = 0;
-            else
+            } else {
                 indexOfSelectedParam -= numberOfMoves;
+            }
         } else {
-            if (indexOfSelectedParam > newParamList.size() - 1)
+            if (indexOfSelectedParam > newParamList.size() - 1) {
                 indexOfSelectedParam = newParamList.size() - 1;
-            else
+            } else {
                 indexOfSelectedParam += numberOfMoves;
+            }
         }
         return indexOfSelectedParam;
     }
@@ -759,5 +748,18 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     public String getOriginalParameterName(int selectionIndex) {
         return originalParametersBeforeRename.get(selectionIndex).getName();
+    }
+
+    private class GroovyRefactoringObservable extends Observable {
+        @Override
+        protected synchronized void setChanged() {
+            super.setChanged();
+        }
+
+        @Override
+        public void notifyObservers(Object arg) {
+            super.notifyObservers(arg);
+            clearChanged();
+        }
     }
 }

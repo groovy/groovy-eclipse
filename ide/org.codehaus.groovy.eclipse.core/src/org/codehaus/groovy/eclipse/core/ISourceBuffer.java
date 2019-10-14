@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,19 +30,19 @@ public interface ISourceBuffer extends CharSequence {
      * @see CharSequence#charAt(int)
      */
     @Override
-    public char charAt(int offset);
+    char charAt(int offset);
 
     /**
      * @see CharSequence#length()
      */
     @Override
-    public int length();
+    int length();
 
     /**
      * @see CharSequence#subSequence(int, int)
      */
     @Override
-    public CharSequence subSequence(int start, int end);
+    CharSequence subSequence(int start, int end);
 
     /**
      * Convert from offset coordinates to line/column coordinates.
@@ -51,7 +51,7 @@ public interface ISourceBuffer extends CharSequence {
      * @throws IndexOutOfBoundsException
      * @return An integer array with values [line, column].
      */
-    public int[] toLineColumn(int offset);
+    int[] toLineColumn(int offset);
 
     /**
      * Convert from line/column coordinates to offset coordinates.
@@ -61,5 +61,5 @@ public interface ISourceBuffer extends CharSequence {
      * @throws IndexOutOfBoundsException
      * @return The offset represented by the line/column.
      */
-    public int toOffset(int line, int column);
+    int toOffset(int line, int column);
 }

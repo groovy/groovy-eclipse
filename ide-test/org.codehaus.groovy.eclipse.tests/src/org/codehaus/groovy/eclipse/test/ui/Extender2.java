@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,7 +62,6 @@ public class Extender2 implements IHighlightingExtender2, IProjectNature {
     public void deconfigure() throws CoreException {
     }
 
-    IProject p;
     @Override
     public IProject getProject() {
         return p;
@@ -73,27 +72,20 @@ public class Extender2 implements IHighlightingExtender2, IProjectNature {
         this.p = project;
     }
 
+    private IProject p;
+
     private static final class WordDetectorMock implements IWordDetector {
 
-//        CharacterBuffer word;
-
-        public WordDetectorMock(String word) {
-//            this.word = new CharacterBuffer(word);
+        WordDetectorMock(String word) {
         }
 
         @Override
         public boolean isWordStart(char c) {
-//            return c == word.charAt(0);
-          return false;
+            return false;
         }
 
         @Override
         public boolean isWordPart(char c) {
-//            for (int i = 0; i < word.length(); i++) {
-//                if (c == word.charAt(i)) {
-//                    return true;
-//                }
-//            }
             return false;
         }
     }

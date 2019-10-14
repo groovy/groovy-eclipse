@@ -42,7 +42,7 @@ public abstract class AbstractRule implements IRelevanceRule {
 
         private final double multiplier;
 
-        private TypeRelevanceCategory(double multiplier) {
+        TypeRelevanceCategory(double multiplier) {
             this.multiplier = multiplier;
         }
 

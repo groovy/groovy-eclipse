@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -90,10 +90,11 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
     public void addElement(Object element, RefactoringArguments args) {
         fElements.add(element);
         fArguments.add((RenameArguments) args);
-        if (element instanceof IJavaElement)
+        if (element instanceof IJavaElement) {
             fHandles.add(((IJavaElement) element).getHandleIdentifier());
-        else
+        } else {
             fHandles.add(((IResource) element).getFullPath().toString());
+        }
     }
 
     @Override
@@ -135,10 +136,11 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
     }
 
     public static void testNumberOfSimilarElements(int expected) {
-        if (expected == 0)
+        if (expected == 0) {
             Assert.assertTrue(fgInstance == null);
-        else
+        } else {
             Assert.assertEquals(expected, fgInstance.fSimilarToHandle.size());
+        }
     }
 
     public static void testSimilarElements(List<String> similarList, List<String> similarNewNameList, List<String> similarNewHandleList) {

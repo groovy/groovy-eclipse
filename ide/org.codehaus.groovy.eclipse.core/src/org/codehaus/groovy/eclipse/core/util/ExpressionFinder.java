@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
  * </ul>
  */
 public class ExpressionFinder {
+
     /**
      * Find an expression starting at the offset and working backwards.
      * The found expression is one that could possibly have completions.
@@ -95,7 +96,7 @@ public class ExpressionFinder {
             if (last != null) {
                 token = last;
             }
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException ignore) {
         }
         if (token != null) {
             return sourceBuffer.subSequence(token.startOffset, endOffset).toString();
@@ -186,37 +187,6 @@ public class ExpressionFinder {
             // fall through
         }
         return ret;
-    }
-
-    public static class NameAndLocation {
-        public final String name;
-
-        public final int location;
-
-        public NameAndLocation(String name, int locaiton) {
-            this.name = name;
-            this.location = locaiton;
-        }
-
-        public String toTypeName() {
-            StringBuilder sb = new StringBuilder();
-            int i = 0;
-            while (i < name.length() && Character.isJavaIdentifierPart(name.charAt(i))) {
-                sb.append(name.charAt(i++));
-            }
-            return sb.toString();
-        }
-
-        public int dims() {
-            int i = 0;
-            int dims = 0;
-            while (i < name.length()) {
-                if (name.charAt(i++) == ']') {
-                    dims += 1;
-                }
-            }
-            return dims;
-        }
     }
 
     public NameAndLocation findPreviousTypeNameToken(ISourceBuffer buffer, int start) {
@@ -397,6 +367,37 @@ public class ExpressionFinder {
             return stream.last();
         default:
             throw new ParseException(token);
+        }
+    }
+
+    public static class NameAndLocation {
+
+        public final String name;
+        public final int location;
+
+        public NameAndLocation(String name, int locaiton) {
+            this.name = name;
+            this.location = locaiton;
+        }
+
+        public String toTypeName() {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            while (i < name.length() && Character.isJavaIdentifierPart(name.charAt(i))) {
+                sb.append(name.charAt(i++));
+            }
+            return sb.toString();
+        }
+
+        public int dims() {
+            int i = 0;
+            int dims = 0;
+            while (i < name.length()) {
+                if (name.charAt(i++) == ']') {
+                    dims += 1;
+                }
+            }
+            return dims;
         }
     }
 }

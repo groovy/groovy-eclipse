@@ -232,15 +232,17 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                     checkNameRange(call);
                     checkGenerics(call.getType());
                 }
-            } else try {
-                int start = call.getStart() + "new ".length();
-                int until = call.getArguments().getStart() - 1;
+            } else {
+                try {
+                    int start = call.getStart() + "new ".length();
+                    int until = call.getArguments().getStart() - 1;
 
-                // check call name and generics
-                check(call.getType(), start, until);
-            } catch (VisitCompleteException e) {
-                result = call;
-                throw e;
+                    // check call name and generics
+                    check(call.getType(), start, until);
+                } catch (VisitCompleteException e) {
+                    result = call;
+                    throw e;
+                }
             }
             // in case of @Newify, "new" keyword is not present
             if (call.getStart() == call.getType().getStart() && !call.isUsingAnonymousInnerClass()) {
@@ -279,7 +281,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             Expression first = arguments.next();
             // named and positional arguments may be interleaved, so visit named arguments expression last
             if (!(first instanceof MapExpression) || first.getEnd() != expression.getEnd()) {
-                first.visit(this); first = null;
+                first.visit(this);
+                first = null;
             }
             while (arguments.hasNext()) {
                 arguments.next().visit(this);
@@ -394,7 +397,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         int offset = (type != null ? type.getEnd() : node.getNameEnd() + 1);
         String source, src = null;
         try {
-            source = (src = readClassDeclaration(node)).substring(offset - node.getStart());
+            src = readClassDeclaration(node);
+            source = src.substring(offset - node.getStart());
         } catch (Exception err) {
             GroovyCore.logException(String.format(
                 "Error checking super-types at offset %d in file / index %d of:%n%s%n%s",
@@ -427,16 +431,18 @@ public class ASTNodeFinder extends DepthFirstVisitor {
                     for (int j = i - 1; j >= 0; j -= 1) {
                         if (superTypes[j].getEnd() > 0) {
                             a = (superTypes[j].getEnd()) - offset;
-                            while ((c = source.charAt(a)) == ',' ||
-                                    Character.isWhitespace(c)) a += 1;
+                            while ((c = source.charAt(a)) == ',' || Character.isWhitespace(c)) {
+                                a += 1;
+                            }
                             break;
                         }
                     }
                     for (int j = i + 1; j < n; j += 1) {
                         if (superTypes[j].getStart() > 0) {
                             b = (superTypes[j].getStart() - 1) - offset;
-                            while ((c = source.charAt(b - 1)) == ',' ||
-                                    Character.isWhitespace(c)) b -= 1;
+                            while ((c = source.charAt(b - 1)) == ',' || Character.isWhitespace(c)) {
+                                b -= 1;
+                            }
                             break;
                         }
                     }

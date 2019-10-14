@@ -56,7 +56,7 @@ public class ASTVariableScanner {
 
     private Set<Variable> innerLoopAssignedVariables = new LinkedHashSet<>();
 
-    private boolean selectionIsInLoopOrClosure = false;
+    private boolean selectionIsInLoopOrClosure;
 
     /**
      * Constructor to initialize the Scanner
@@ -104,7 +104,8 @@ public class ASTVariableScanner {
     //--------------------------------------------------------------------------
 
     private class DefaultVisit extends ASTVisitorDecorator<ASTVariableScanner> {
-        public DefaultVisit(ASTVariableScanner container) {
+
+        DefaultVisit(ASTVariableScanner container) {
             super(container);
         }
 
@@ -194,7 +195,7 @@ public class ASTVariableScanner {
 
         protected Token operator;
 
-        public DefaultAssignementVisit(ASTVariableScanner container, Token token) {
+        DefaultAssignementVisit(ASTVariableScanner container, Token token) {
             super(container);
             this.operator = token;
         }
@@ -213,7 +214,8 @@ public class ASTVariableScanner {
     }
 
     private class InnerBlockVisit extends DefaultVisit {
-        public InnerBlockVisit(ASTVariableScanner container) {
+
+        InnerBlockVisit(ASTVariableScanner container) {
             super(container);
         }
 
@@ -233,7 +235,7 @@ public class ASTVariableScanner {
 
     private class RepeatableBlockVisit extends InnerBlockVisit {
 
-        public RepeatableBlockVisit(ASTVariableScanner container) {
+        RepeatableBlockVisit(ASTVariableScanner container) {
             super(container);
         }
 
@@ -273,13 +275,12 @@ public class ASTVariableScanner {
             ifElse.getIfBlock().visit(this);
             ifElse.getElseBlock().visit(this);
         }
-
     }
 
     private class AssignmentInRepeatableBlockVisit extends RepeatableBlockVisit {
         protected Token operator;
 
-        public AssignmentInRepeatableBlockVisit(ASTVariableScanner container, Token operator) {
+        AssignmentInRepeatableBlockVisit(ASTVariableScanner container, Token operator) {
             super(container);
             this.operator = operator;
         }
@@ -289,12 +290,11 @@ public class ASTVariableScanner {
             super.visitVariableExpression(expression);
             checkAssertedVariables(expression, operator.getType());
         }
-
     }
 
     private class ClosureVisit extends RepeatableBlockVisit {
 
-        public ClosureVisit(ASTVariableScanner container) {
+        ClosureVisit(ASTVariableScanner container) {
             super(container);
         }
 
@@ -306,14 +306,12 @@ public class ASTVariableScanner {
                 declaredInblockVariables.add(var);
             }
             super.visitVariableExpression(expression);
-
         }
 
         @Override
         public void visitBinaryExpression(BinaryExpression expression) {
             expression.getLeftExpression().visit(new AssignementInClosureVisit(container, expression.getOperation()));
             expression.getRightExpression().visit(this);
-
         }
 
         @Override
@@ -331,7 +329,7 @@ public class ASTVariableScanner {
 
         protected Token operator;
 
-        public AssignementInClosureVisit(ASTVariableScanner container, Token token) {
+        AssignementInClosureVisit(ASTVariableScanner container, Token token) {
             super(container);
             this.operator = token;
         }

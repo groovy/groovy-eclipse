@@ -81,7 +81,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         private Button addMultipleButton;
         private final Shell shell;
 
-        public CompletionFilterListEditor(String name, String labelText, Composite parent) {
+        CompletionFilterListEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
             this.shell = parent.getShell();
             setPreferenceName(GroovyContentAssist.FILTERED_DGMS);

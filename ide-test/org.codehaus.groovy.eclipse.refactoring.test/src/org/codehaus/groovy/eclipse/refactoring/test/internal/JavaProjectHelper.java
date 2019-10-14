@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -149,10 +149,10 @@ public class JavaProjectHelper {
     }
 
     public static void delete(IResource resource) throws CoreException {
-        for (int i= 0; i < MAX_RETRY; i++) {
+        for (int i = 0; i < MAX_RETRY; i += 1) {
             try {
                 resource.delete(true, null);
-                i= MAX_RETRY;
+                i = MAX_RETRY;
             } catch (CoreException e) {
                 if (i == MAX_RETRY - 1) {
                     JavaPlugin.log(e);
@@ -160,7 +160,7 @@ public class JavaProjectHelper {
                 }
                 try {
                     Thread.sleep(1000); // sleep a second
-                } catch (InterruptedException e1) {
+                } catch (InterruptedException ignore) {
                 }
             }
         }
@@ -177,8 +177,8 @@ public class JavaProjectHelper {
         ResourcesPlugin.getWorkspace().run(monitor -> {
             jproject.setRawClasspath(entries, null);
 
-            IResource[] resources= jproject.getProject().members();
-            for (int i= 0; i < resources.length; i++) {
+            IResource[] resources = jproject.getProject().members();
+            for (int i = 0; i < resources.length; i += 1) {
                 if (!resources[i].getName().startsWith(".")) {
                     delete(resources[i]);
                 }
@@ -248,28 +248,28 @@ public class JavaProjectHelper {
      * @throws CoreException Creation failed
      */
     public static IPackageFragmentRoot addSourceContainer(IJavaProject jproject, String containerName, IPath[] inclusionFilters, IPath[] exclusionFilters, String outputLocation) throws Exception {
-        IProject project= jproject.getProject();
-        IContainer container= null;
+        IProject project = jproject.getProject();
+        IContainer container = null;
         if (containerName == null || containerName.length() == 0) {
-            container= project;
+            container = project;
         } else {
-            IFolder folder= project.getFolder(containerName);
+            IFolder folder = project.getFolder(containerName);
             if (!folder.exists()) {
                 CoreUtility.createFolder(folder, false, true, null);
             }
-            container= folder;
+            container = folder;
         }
-        IPackageFragmentRoot root= jproject.getPackageFragmentRoot(container);
+        IPackageFragmentRoot root = jproject.getPackageFragmentRoot(container);
 
-        IPath outputPath= null;
+        IPath outputPath = null;
         if (outputLocation != null) {
-            IFolder folder= project.getFolder(outputLocation);
+            IFolder folder = project.getFolder(outputLocation);
             if (!folder.exists()) {
                 CoreUtility.createFolder(folder, false, true, null);
             }
-            outputPath= folder.getFullPath();
+            outputPath = folder.getFullPath();
         }
-        IClasspathEntry cpe= JavaCore.newSourceEntry(root.getPath(), inclusionFilters, exclusionFilters, outputPath);
+        IClasspathEntry cpe = JavaCore.newSourceEntry(root.getPath(), inclusionFilters, exclusionFilters, outputPath);
         addToClasspath(jproject, cpe);
         return root;
     }
@@ -281,7 +281,7 @@ public class JavaProjectHelper {
      * @throws CoreException Remove failed
      */
     public static void removeSourceContainer(IJavaProject jproject, String containerName) throws Exception {
-        IFolder folder= jproject.getProject().getFolder(containerName);
+        IFolder folder = jproject.getProject().getFolder(containerName);
         removeFromClasspath(jproject, folder.getFullPath());
         folder.delete(true, null);
     }
@@ -307,9 +307,9 @@ public class JavaProjectHelper {
      * @throws JavaModelException
      */
     public static IPackageFragmentRoot addLibrary(IJavaProject jproject, IPath path, IPath sourceAttachPath, IPath sourceAttachRoot) throws Exception {
-        IClasspathEntry cpe= JavaCore.newLibraryEntry(path, sourceAttachPath, sourceAttachRoot);
+        IClasspathEntry cpe = JavaCore.newLibraryEntry(path, sourceAttachPath, sourceAttachRoot);
         addToClasspath(jproject, cpe);
-        IResource workspaceResource= ResourcesPlugin.getWorkspace().getRoot().findMember(path);
+        IResource workspaceResource = ResourcesPlugin.getWorkspace().getRoot().findMember(path);
         if (workspaceResource != null) {
             return jproject.getPackageFragmentRoot(workspaceResource);
         }
@@ -345,18 +345,18 @@ public class JavaProjectHelper {
      * @throws CoreException
      */
     public static IPackageFragmentRoot addClassFolder(IJavaProject jproject, String containerName, IPath sourceAttachPath, IPath sourceAttachRoot) throws Exception {
-        IProject project= jproject.getProject();
-        IContainer container= null;
+        IProject project = jproject.getProject();
+        IContainer container = null;
         if (containerName == null || containerName.length() == 0) {
-            container= project;
+            container = project;
         } else {
-            IFolder folder= project.getFolder(containerName);
+            IFolder folder = project.getFolder(containerName);
             if (!folder.exists()) {
                 CoreUtility.createFolder(folder, false, true, null);
             }
-            container= folder;
+            container = folder;
         }
-        IClasspathEntry cpe= JavaCore.newLibraryEntry(container.getFullPath(), sourceAttachPath, sourceAttachRoot);
+        IClasspathEntry cpe = JavaCore.newLibraryEntry(container.getFullPath(), sourceAttachPath, sourceAttachRoot);
         addToClasspath(jproject, cpe);
         return jproject.getPackageFragmentRoot(container);
     }
@@ -372,9 +372,9 @@ public class JavaProjectHelper {
      * @throws JavaModelException
      */
     public static IPackageFragmentRoot addVariableEntry(IJavaProject jproject, IPath path, IPath sourceAttachPath, IPath sourceAttachRoot) throws Exception {
-        IClasspathEntry cpe= JavaCore.newVariableEntry(path, sourceAttachPath, sourceAttachRoot);
+        IClasspathEntry cpe = JavaCore.newVariableEntry(path, sourceAttachPath, sourceAttachRoot);
         addToClasspath(jproject, cpe);
-        IPath resolvedPath= JavaCore.getResolvedVariablePath(path);
+        IPath resolvedPath = JavaCore.getResolvedVariablePath(path);
         if (resolvedPath != null) {
             return jproject.getPackageFragmentRoot(resolvedPath.toString());
         }
@@ -388,44 +388,44 @@ public class JavaProjectHelper {
      * @throws JavaModelException Creation failed
      */
     public static void addRequiredProject(IJavaProject jproject, IJavaProject required) throws Exception {
-        IClasspathEntry cpe= JavaCore.newProjectEntry(required.getProject().getFullPath());
+        IClasspathEntry cpe = JavaCore.newProjectEntry(required.getProject().getFullPath());
         addToClasspath(jproject, cpe);
     }
 
     public static void removeFromClasspath(IJavaProject jproject, IPath path) throws Exception {
-        IClasspathEntry[] oldEntries= jproject.getRawClasspath();
-        int nEntries= oldEntries.length;
-        List<IClasspathEntry> list= new ArrayList<>(nEntries);
-        for (int i= 0 ; i < nEntries ; i++) {
-            IClasspathEntry curr= oldEntries[i];
+        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
+        int nEntries = oldEntries.length;
+        List<IClasspathEntry> list = new ArrayList<>(nEntries);
+        for (int i = 0; i < nEntries; i++) {
+            IClasspathEntry curr = oldEntries[i];
             if (!path.equals(curr.getPath())) {
                 list.add(curr);
             }
         }
-        IClasspathEntry[] newEntries= list.toArray(new IClasspathEntry[list.size()]);
+        IClasspathEntry[] newEntries = list.toArray(new IClasspathEntry[list.size()]);
         jproject.setRawClasspath(newEntries, null);
     }
 
     public static void addToClasspath(IJavaProject jproject, IClasspathEntry cpe) throws Exception {
-        IClasspathEntry[] oldEntries= jproject.getRawClasspath();
-        for (int i= 0; i < oldEntries.length; i++) {
+        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
+        for (int i = 0; i < oldEntries.length; i++) {
             if (oldEntries[i].equals(cpe)) {
                 return;
             }
         }
-        int nEntries= oldEntries.length;
-        IClasspathEntry[] newEntries= new IClasspathEntry[nEntries + 1];
+        int nEntries = oldEntries.length;
+        IClasspathEntry[] newEntries = new IClasspathEntry[nEntries + 1];
         System.arraycopy(oldEntries, 0, newEntries, 0, nEntries);
-        newEntries[nEntries]= cpe;
+        newEntries[nEntries] = cpe;
         jproject.setRawClasspath(newEntries, null);
     }
 
     private static void addNatureToProject(IProject proj, String natureId, IProgressMonitor monitor) throws Exception {
         IProjectDescription description = proj.getDescription();
-        String[] prevNatures= description.getNatureIds();
-        String[] newNatures= new String[prevNatures.length + 1];
+        String[] prevNatures = description.getNatureIds();
+        String[] newNatures = new String[prevNatures.length + 1];
         System.arraycopy(prevNatures, 0, newNatures, 0, prevNatures.length);
-        newNatures[prevNatures.length]= natureId;
+        newNatures[prevNatures.length] = natureId;
         description.setNatureIds(newNatures);
         proj.setDescription(description, monitor);
     }
@@ -451,7 +451,8 @@ public class JavaProjectHelper {
                 importResources(folder, bundle, path);
             } else {
                 URL url = bundle.getEntry(path);
-                URLConnection con = url.openConnection(); con.setUseCaches(false);
+                URLConnection con = url.openConnection();
+                con.setUseCaches(false);
                 importTarget.getFile(name).create(con.getInputStream(), true, null);
             }
         }
@@ -459,7 +460,6 @@ public class JavaProjectHelper {
 
     public static void emptyDisplayLoop() {
         boolean showDebugInfo = false;
-
         Display display = Display.getCurrent();
         if (display != null) {
             if (showDebugInfo) {
