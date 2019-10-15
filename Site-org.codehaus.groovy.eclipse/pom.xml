@@ -48,7 +48,7 @@
 						<executions>
 							<execution>
 								<configuration>
-									<name>Groovy Development Tools for ${dist.target}</name>
+									<name>{$dist.name} for ${dist.target}</name>
 									<sites>
 										<param>https://${dist.bucket}/${dist.type}/${dist.key}/${dist.version}/${dist.target}</param>
 									</sites>
