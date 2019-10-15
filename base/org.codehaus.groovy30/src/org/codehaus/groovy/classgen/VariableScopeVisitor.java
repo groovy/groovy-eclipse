@@ -552,6 +552,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             final Expression expression = field.getInitialExpression();
             pushState(field.isStatic());
             if (expression != null) {
+                // GRECLIPSE add -- GROOVY-6996
+                if (expression.isSynthetic())
+                // GRECLIPSE end
                 if (expression instanceof VariableExpression) {
                     VariableExpression vexp = (VariableExpression) expression;
                     if (vexp.getAccessedVariable() instanceof Parameter) {

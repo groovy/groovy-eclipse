@@ -1263,6 +1263,47 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAnonymousInnerClass26() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  interface I {\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def var = args\n" +
+            "    new I() {\n" +
+            "      def prop = var\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testAnonymousInnerClass26a() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C {\n" +
+            "  interface I {\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new I() {\n" +
+            "      def prop = args\n" + // MissingPropertyException: No such property: args for class: C
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off
         String[] sources = {
