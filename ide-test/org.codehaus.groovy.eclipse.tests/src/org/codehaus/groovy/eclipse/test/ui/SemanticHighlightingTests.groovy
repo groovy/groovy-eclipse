@@ -3480,7 +3480,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             @Override
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
-                visitor.DEBUG = true // enable checks
+                visitor.debug = true // enable checks
                 return visitor
             }
         }

@@ -97,7 +97,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 completionChars = typeName.replace('$', '.').toCharArray();
                 break;
             }
-            // falls through
+            // fall through
         case METHOD_CONTEXT:
             completionChars = context.getPerceivedCompletionNode().getText().replace('$', '.').toCharArray();
             break;

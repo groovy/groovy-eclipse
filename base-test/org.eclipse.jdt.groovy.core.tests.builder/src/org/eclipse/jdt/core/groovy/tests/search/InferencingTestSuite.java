@@ -272,7 +272,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         monitor.waitForCompletion(5);
 
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        visitor.DEBUG = true; // enable console output and post-visit assertions
+        visitor.debug = true; // enable console output and post-visit assertions
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);
         visitor.visitCompilationUnit(requestor);
         return requestor;

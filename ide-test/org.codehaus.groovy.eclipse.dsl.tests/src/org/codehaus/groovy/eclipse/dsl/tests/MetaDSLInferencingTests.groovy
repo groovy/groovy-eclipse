@@ -19,8 +19,7 @@ import static org.eclipse.jdt.core.JavaCore.createCompilationUnitFrom
 
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
-import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
+import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.junit.Before
 import org.junit.Test
 
@@ -28,7 +27,12 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Before
     void setUp() {
-        addJavaSource('import groovy.lang.*; public interface IPointcut { void accept(@DelegatesTo(value=IPointcut.class, strategy=Closure.DELEGATE_FIRST) Closure c); }', 'IPointcut', 'p')
+        addJavaSource('''\
+            |import groovy.lang.*;
+            |public interface IPointcut {
+            |  void accept(@DelegatesTo(value=IPointcut.class, strategy=Closure.DELEGATE_FIRST) Closure block);
+            |}
+            |'''.stripMargin(), 'IPointcut', 'p')
         addPlainText(getTestResourceContents('DSLD_meta_script.dsld'), 'DSLD_meta_script.dsld')
         buildProject()
     }
@@ -38,101 +42,49 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     private void assertDsldType(GroovyCompilationUnit unit, String expr) {
-        int start = unit.source.lastIndexOf(expr), until = start + expr.length()
-        String declType = InferencingTestSuite.doVisit(start, until, unit).declaringTypeName
+        String declType = inferType(unit, expr).declaringTypeName
         assert declType == 'p.IPointcut'
     }
 
-    private void assertDsldUnknown(GroovyCompilationUnit unit, String expr) {
-        int start = unit.source.lastIndexOf(expr), until = start + expr.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.confidence == TypeConfidence.UNKNOWN
+    private void assertUnknown(GroovyCompilationUnit unit, String expr) {
+        TypeLookupResult result = inferType(unit, expr).result
+        assert result.confidence == TypeLookupResult.TypeConfidence.UNKNOWN
     }
 
-    private void assertUnknown(String contents, String expr) {
-        assertUnknownConfidence(contents, contents.indexOf(expr), contents.indexOf(expr) + expr.length(), null)
-    }
-
-    //
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/638
-    void testBindings0() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            bind(methods: enclosingMethod()).accept {
-            }
-            '''.stripIndent())
-
-        int start = unit.source.indexOf('methods'), until = start + 'methods'.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.declaration instanceof ConstantExpression
-        assert result.type.name == 'java.lang.String'
-    }
-
-    @Test
-    void testBindings1() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            bind(types: currentType()).accept {
-              types
-            }
-            '''.stripIndent())
-
-        int offset = unit.source.lastIndexOf('types')
-        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection')
-    }
-
-    @Test
-    void testBindings2() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            contribute(bind(types: currentType())) {
-              types
-            }
-            '''.stripIndent())
-
-        int offset = unit.source.lastIndexOf('types')
-        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection')
-    }
-
-    @Test
-    void testBindings3() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            contribute(currentType(annos: annotatedBy(Deprecated))) {
-              annos
-            }
-            '''.stripIndent())
-
-        int offset = unit.source.lastIndexOf('annos')
-        InferencingTestSuite.assertType(unit, offset, offset + 'annos'.length(), 'java.util.Collection')
-    }
+    //--------------------------------------------------------------------------
 
     @Test
     void testMetaDSL1() {
-        GroovyCompilationUnit unit = addDsldSource('currentType')
-        InferencingTestSuite.assertType(unit, 0, 'currentType'.length(), 'p.IPointcut')
+        def unit = addDsldSource('assertVersion')
+
+        assert inferType(unit, 'assertVersion').typeName == 'java.lang.Void'
     }
 
     @Test
     void testMetaDSL2() {
-        GroovyCompilationUnit unit = addDsldSource('assertVersion')
-        InferencingTestSuite.assertType(unit, 0, 'assertVersion'.length(), 'java.lang.Void')
+        def unit = addDsldSource('supportsVersion')
+
+        assert inferType(unit, 'supportsVersion').typeName == 'java.lang.Boolean'
     }
 
     @Test
     void testMetaDSL3() {
-        GroovyCompilationUnit unit = addDsldSource('supportsVersion')
-        InferencingTestSuite.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Boolean')
+        def unit = addDsldSource('currentType()')
+
+        assert inferType(unit, 'currentType').typeName == 'p.IPointcut'
     }
 
     @Test
     void testMetaDSL4() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            currentType().accept {
-              method
-              wormhole
-              setDelegateType
-              delegatesToUseNamedArgs
-              delegatesTo
-            }
-            '''.stripIndent())
+        def unit = addDsldSource '''\
+            |currentType().accept {
+            |  method
+            |  wormhole
+            |  setDelegateType
+            |  delegatesToUseNamedArgs
+            |  delegatesTo
+            |}
+            |'''.stripMargin()
 
         assertDsldType(unit, 'method')
         assertDsldType(unit, 'wormhole')
@@ -141,134 +93,175 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         assertDsldType(unit, 'delegatesTo')
     }
 
-    @Test // object expression is not "this"
+    @Test
     void testMetaDSL5() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            currentType().accept {
-              String x = 'x'
-              x.method
-              x.wormhole
-              x.setDelegateType
-              x.delegatesToUseNamedArgs
-              x.delegatesTo
-            }
-            '''.stripIndent())
+        // object expression is not "this"
+        def unit = addDsldSource '''\
+            |currentType().accept {
+            |  String x = 'x'
+            |  x.method
+            |  x.wormhole
+            |  x.setDelegateType
+            |  x.delegatesToUseNamedArgs
+            |  x.delegatesTo
+            |}
+            |'''.stripMargin()
 
-        assertDsldUnknown(unit, 'method')
-        assertDsldUnknown(unit, 'wormhole')
-        assertDsldUnknown(unit, 'setDelegateType')
-        assertDsldUnknown(unit, 'delegatesToUseNamedArgs')
-        assertDsldUnknown(unit, 'delegatesTo')
+        assertUnknown(unit, 'method')
+        assertUnknown(unit, 'wormhole')
+        assertUnknown(unit, 'setDelegateType')
+        assertUnknown(unit, 'delegatesToUseNamedArgs')
+        assertUnknown(unit, 'delegatesTo')
     }
 
-    @Test // unknown outside contribution block
+    @Test
     void testMetaDSL6() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            method
-            wormhole
-            setDelegateType
-            delegatesToUseNamedArgs
-            delegatesTo
-            '''.stripIndent())
+        // unknown outside contribution block
+        def unit = addDsldSource '''\
+            |method
+            |wormhole
+            |setDelegateType
+            |delegatesToUseNamedArgs
+            |delegatesTo
+            |'''.stripMargin()
 
-        assertDsldUnknown(unit, 'method')
-        assertDsldUnknown(unit, 'wormhole')
-        assertDsldUnknown(unit, 'setDelegateType')
-        assertDsldUnknown(unit, 'delegatesTo')
-        assertDsldUnknown(unit, 'delegatesToUseNamedArgs')
+        assertUnknown(unit, 'method')
+        assertUnknown(unit, 'wormhole')
+        assertUnknown(unit, 'setDelegateType')
+        assertUnknown(unit, 'delegatesToUseNamedArgs')
+        assertUnknown(unit, 'delegatesTo')
     }
 
-    @Test // unknown within plain Groovy source
+    @Test
     void testMetaDSL7() {
-        String contents = '''\
-            currentType().accept {
-              method
-              wormhole
-              setDelegateType
-              delegatesTo
-              delegatesToUseNamedArgs
-            }
-            '''.stripIndent()
+        // unknown within plain Groovy source
+        def unit = addGroovySource '''\
+            |currentType().accept {
+            |  method
+            |  wormhole
+            |  setDelegateType
+            |  delegatesToUseNamedArgs
+            |  delegatesTo
+            |}
+            |'''.stripMargin()
 
-        assertUnknown(contents, 'currentType')
-        assertUnknown(contents, 'accept')
-        assertUnknown(contents, 'method')
-        assertUnknown(contents, 'wormhole')
-        assertUnknown(contents, 'setDelegateType')
-        assertUnknown(contents, 'delegatesTo')
-        assertUnknown(contents, 'delegatesToUseNamedArgs')
+        assertUnknown(unit, 'currentType')
+        assertUnknown(unit, 'accept')
+        assertUnknown(unit, 'method')
+        assertUnknown(unit, 'wormhole')
+        assertUnknown(unit, 'setDelegateType')
+        assertUnknown(unit, 'delegatesToUseNamedArgs')
+        assertUnknown(unit, 'delegatesTo')
     }
 
-    @Test // local declarations take precedence over meta-DSL contributions
+    @Test
     void testMetaDSL8() {
-        GroovyCompilationUnit unit = addDsldSource('''\
-            import org.codehaus.groovy.ast.*
-            contribute(bind(methods: enclosingMethod())) {
-              MethodNode mn = null
-              for (MethodNode method : methods) {
-                Parameter[] params = method.parameters
-                // ... if (...) {
-                mn = method
-                // }
-              }
-              method(name:'other', params: params(mn))
-            }
-            '''.stripIndent())
+        // local declarations take precedence over meta-DSL contributions
+        def unit = addDsldSource '''\
+            |import org.codehaus.groovy.ast.*
+            |contribute(bind(methods: enclosingMethod())) {
+            |  MethodNode mn = null
+            |  for (MethodNode method in methods) {
+            |    Parameter[] params = method.parameters
+            |    // ... if (...) {
+            |    mn = method
+            |    // }
+            |  }
+            |  method(name:'other', params: params(mn))
+            |}
+            |'''.stripMargin()
 
         // "method" in "Parameter[] params = method.parameters"
-        int start = unit.source.indexOf('method.'), until = start + 'method'.length()
-        def result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.type.toString(false) == 'org.codehaus.groovy.ast.MethodNode'
+        assert inferType(unit, 'method.', 'method'.length()).typeName == 'org.codehaus.groovy.ast.MethodNode'
 
         // "method()" in "method(name:'other', params: params(mn))"
-        start = unit.source.lastIndexOf('method'); until = start + 'method'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
+        assert inferType(unit, 'method').result.declaration instanceof org.codehaus.groovy.ast.MethodNode
 
         // "params" in "Parameter[] params = method.parameters"
-        start = unit.source.indexOf('params'); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.type.toString(false) == 'org.codehaus.groovy.ast.Parameter[]'
+        assert inferType(unit, 'params =', 'params'.length()).typeName == 'org.codehaus.groovy.ast.Parameter[]'
 
         // "params:" in "method(name:'other', params: params(mn))"
-        start = unit.source.indexOf('params:'); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.type.toString(false) == 'java.lang.String'
+        assert inferType(unit, 'params:', 'params'.length()).typeName == 'java.lang.String'
 
         // "params()" in "method(name:'other', params: params(mn))"
-        start = unit.source.indexOf('params('); until = start + 'params'.length()
-        result = InferencingTestSuite.doVisit(start, until, unit).result
-        assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
-        assert result.type.toString(false) == 'java.util.Map <java.lang.String, org.codehaus.groovy.ast.ClassNode>'
+        inferType(unit, 'params(', 'params'.length()).with {
+            assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
+            assert typeName == 'java.util.Map<java.lang.String,org.codehaus.groovy.ast.ClassNode>'
+        }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/638
+    void testBindings1() {
+        def unit = addDsldSource '''\
+            |bind(methods: enclosingMethod()).accept {
+            |}
+            |'''.stripMargin()
+
+        inferType(unit, 'methods').with {
+            assert typeName == 'java.lang.String'
+            assert result.declaration instanceof ConstantExpression
+        }
+    }
+
+    @Test
+    void testBindings2() {
+        def unit = addDsldSource '''\
+            |bind(types: currentType()).accept {
+            |  types
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'types').typeName == 'java.util.Collection'
+    }
+
+    @Test
+    void testBindings3() {
+        def unit = addDsldSource '''\
+            |contribute(bind(types: currentType())) {
+            |  types
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'types').typeName == 'java.util.Collection'
+    }
+
+    @Test
+    void testBindings4() {
+        def unit = addDsldSource '''\
+            |contribute(currentType(annos: annotatedBy(Deprecated))) {
+            |  annos
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'annos').typeName == 'java.util.Collection'
     }
 
     @Test
     void testRegisterPointcut1() {
-        def dsld = addDsldSource('registerPointcut')
-        InferencingTestSuite.assertType(dsld, 0, 'registerPointcut'.length(), 'java.lang.Void')
+        def unit = addDsldSource('registerPointcut')
+
+        assert inferType(unit, 'registerPointcut').typeName == 'java.lang.Void'
     }
 
     @Test
     void testRegisterPointcut2() {
-        def dsld = addDsldSource('''\
-            registerPointcut('pointcutName') {
-                log ""
-            }
-            '''.stripIndent())
-        def target = 'log'
-        int offset = dsld.source.lastIndexOf(target)
-        InferencingTestSuite.assertType(dsld, offset, offset + target.length(), 'java.lang.Object')
+        def unit = addDsldSource '''\
+            |registerPointcut('pointcutName') {
+            |  log ""
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'log').typeName == 'java.lang.Object'
     }
 
     @Test
     void testRegisterPointcut3() {
-        def dsld = addDsldSource('''\
-            registerPointcut('pointcutName') {
-                currentType
-            }
-            '''.stripIndent())
-        def target = 'currentType'
-        int offset = dsld.source.lastIndexOf(target)
-        InferencingTestSuite.assertType(dsld, offset, offset + target.length(), 'org.codehaus.groovy.ast.ClassNode')
+        def unit = addDsldSource '''\
+            |registerPointcut('pointcutName') {
+            |  currentType
+            |}
+            |'''.stripMargin()
+
+        assert inferType(unit, 'currentType').typeName == 'org.codehaus.groovy.ast.ClassNode'
     }
 }

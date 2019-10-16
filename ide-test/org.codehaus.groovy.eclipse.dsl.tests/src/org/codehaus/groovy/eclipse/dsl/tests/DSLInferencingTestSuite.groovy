@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.GroovyLogManager
@@ -35,8 +34,6 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.core.tests.util.Util
-import org.eclipse.jdt.groovy.core.util.GroovyUtils
-import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.After
 import org.junit.Before
 import org.osgi.framework.FrameworkUtil
@@ -108,83 +105,12 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected final void assertDeprecated(String contents, int exprStart, int exprUntil) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
-        assert requestor.node != null : 'Did not find expected ASTNode'
-        assert GroovyUtils.isDeprecated(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
-    }
-
-    protected final void assertType(String contents, int exprStart, int exprUntil, String expectedType) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.assertType(unit, exprStart, exprUntil, expectedType)
-    }
-
-    protected final void assertType(String contents, int exprStart, int exprUntil, String expectedType, String extraJavadoc) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.assertType(unit, exprStart, exprUntil, expectedType, extraJavadoc)
-    }
-
-    protected final void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType) {
-        assertDeclaringType(contents, exprStart, exprUntil, expectedDeclaringType, false)
-    }
-
-    protected final void assertDeclaringType(String contents, int exprStart, int exprUntil, String expectedDeclaringType, boolean expectingUnknown) {
-        def unit = addGroovySource(contents, nextUnitName())
-        def requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
-
-        assert requestor.node != null : 'Did not find expected ASTNode'
-        if (expectedDeclaringType != requestor.declaringTypeName) {
-            StringBuilder sb = new StringBuilder()
-            sb.append('Expected declaring type not found.\n')
-            sb.append('\tExpected: ').append(expectedDeclaringType).append('\n')
-            sb.append('\tFound type: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
-            sb.append('\tFound declaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
-            sb.append('\tASTNode: ').append(requestor.node)
-            fail(sb.toString())
-        }
-        if (expectingUnknown) {
-            if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
-                StringBuilder sb = new StringBuilder()
-                sb.append('Confidence: ').append(requestor.result.confidence).append(' (but expecting UNKNOWN)\n')
-                sb.append('\tExpected: ').append(expectedDeclaringType).append('\n')
-                sb.append('\tFound: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
-                sb.append('\tDeclaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
-                sb.append('\tASTNode: ').append(requestor.node)
-                fail(sb.toString())
-            }
-        } else {
-            if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
-                StringBuilder sb = new StringBuilder()
-                sb.append('Expected Confidence should not have been UNKNOWN, but it was.\n')
-                sb.append('\tExpected declaring type: ').append(expectedDeclaringType).append('\n')
-                sb.append('\tFound type: ').append(InferencingTestSuite.printTypeName(requestor.result.type)).append('\n')
-                sb.append('\tFound declaring type: ').append(InferencingTestSuite.printTypeName(requestor.result.declaringType)).append('\n')
-                sb.append('\tASTNode: ').append(requestor.node)
-                fail(sb.toString())
-            }
-        }
-    }
-
-    protected final void assertUnknownConfidence(String contents, int exprStart, int exprUntil, String expectedDeclaringType) {
-        GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
-        InferencingTestSuite.SearchRequestor requestor = InferencingTestSuite.doVisit(exprStart, exprUntil, unit)
-
-        assert requestor.node != null : 'Did not find expected ASTNode'
-        if (requestor.result.confidence != TypeConfidence.UNKNOWN) {
-            StringBuilder sb = new StringBuilder()
-            sb.append('Expecting unknown confidentce, but was ' + requestor.result.confidence + '.\n')
-            sb.append('Expected: ' + expectedDeclaringType + '\n')
-            sb.append('Found: ' + InferencingTestSuite.printTypeName(requestor.result.type) + '\n')
-            sb.append('Declaring type: ' + InferencingTestSuite.printTypeName(requestor.result.declaringType) + '\n')
-            sb.append('ASTNode: ' + requestor.node + '\n')
-            fail(sb.toString())
-        }
-    }
-
     protected final InferencingTestSuite.SearchRequestor inferType(String source, String target, int length = target.length()) {
-        int offset = source.lastIndexOf(target)
-        def unit = addGroovySource(source, nextUnitName())
+        inferType(addGroovySource(source, nextUnitName()), target, length)
+    }
+
+    protected final InferencingTestSuite.SearchRequestor inferType(GroovyCompilationUnit unit, String target, int length = target.length()) {
+        int offset = unit.source.lastIndexOf(target)
         InferencingTestSuite.doVisit(offset, offset + length, unit)
     }
 

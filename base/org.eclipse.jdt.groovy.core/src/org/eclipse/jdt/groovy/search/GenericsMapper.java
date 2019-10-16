@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -194,7 +195,7 @@ public class GenericsMapper {
     //--------------------------------------------------------------------------
 
     /** Keeps track of all type parameterization up the type hierarchy. */
-    private final LinkedList<Map<String, ClassNode>> allGenerics = new LinkedList<>();
+    private final Deque<Map<String, ClassNode>> allGenerics = new LinkedList<>();
 
     protected boolean hasGenerics() {
         return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();

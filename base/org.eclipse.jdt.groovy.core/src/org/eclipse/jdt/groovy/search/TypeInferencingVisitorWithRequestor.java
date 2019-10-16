@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -151,11 +152,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * Set to true if debug mode is desired. Any exceptions will be spit to syserr. Also, after a visit, there will be a sanity
      * check to ensure that all stacks are empty Only set to true if using a visitor that always visits the entire file
      */
-    public boolean DEBUG = false;
+    public boolean debug;
 
     private final GroovyCompilationUnit unit;
 
-    private final LinkedList<VariableScope> scopes = new LinkedList<>();
+    private final Deque<VariableScope> scopes = new LinkedList<>();
 
     // we are going to have to be very careful about the ordering of lookups
     // Simple type lookup must be last because it always returns an answer
@@ -176,26 +177,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * expression being visited. This stack is used so we can keep track of the
      * type of the object expressions in these property expressions.
      */
-    private final LinkedList<ASTNode> completeExpressionStack = new LinkedList<>();
+    private final Deque<ASTNode> completeExpressionStack = new LinkedList<>();
 
     /**
      * Tracks the declaring type of the current dependent expression. Dependent
      * expressions are dependent on a primary expression to find type information.
      * This field is only applicable for {@link PropertyExpression}s and {@link MethodCallExpression}s.
      */
-    private final LinkedList<Tuple> dependentDeclarationStack = new LinkedList<>();
+    private final Deque<Tuple> dependentDeclarationStack = new LinkedList<>();
 
     /**
      * Tracks the type of the type of the property field corresponding to each
      * frame of the property expression.
      */
-    private final LinkedList<ClassNode> dependentTypeStack = new LinkedList<>();
+    private final Deque<ClassNode> dependentTypeStack = new LinkedList<>();
 
     /**
      * Tracks the type of the object expression corresponding to each frame of
      * the property expression.
      */
-    private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<>();
+    private final Deque<ClassNode> primaryTypeStack = new LinkedList<>();
 
     private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
@@ -249,14 +250,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             // can ignore
         } catch (Exception e) {
             log(e, "Error visiting types for %s", unit.getElementName());
-            if (DEBUG) {
+            if (debug) {
                 System.err.println("Excpetion thrown from inferencing engine");
                 e.printStackTrace();
             }
         } finally {
             scopes.removeLast();
         }
-        if (DEBUG) {
+        if (debug) {
             postVisitSanityCheck();
         }
     }
@@ -557,7 +558,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             throw vc;
                         }
                     }
-                    //fallthrough
+                    // fall through
                 case CANCEL_MEMBER:
                     continue;
                 case CANCEL_BRANCH:
@@ -659,7 +660,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitAnnotation(AnnotationNode node) {
-        ClassNode type = node.getClassNode(); VariableScope scope = scopes.getLast();
+        ClassNode type = node.getClassNode();
+        VariableScope scope = scopes.getLast();
         TypeLookupResult noLookup = new TypeLookupResult(type, type, type, TypeConfidence.EXACT, scope);
 
         VisitStatus status = notifyRequestor(node, requestor, noLookup);
@@ -685,14 +687,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VariableScope scope = scopes.getLast();
         for (String name : node.getMembers().keySet()) {
             MethodNode meth = type.getMethod(name, NO_PARAMETERS);
-            ASTNode attr; TypeLookupResult noLookup;
+            TypeLookupResult noLookup;
+            ASTNode attr;
             if (meth != null) {
                 attr = meth; // no Groovy AST node exists for name
                 noLookup = new TypeLookupResult(meth.getReturnType(), type.redirect(), meth, TypeConfidence.EXACT, scope);
             } else {
                 attr = new ConstantExpression(name);
                 // this is very rough; it only works for an attribute that directly follows '('
-                attr.setStart(type.getEnd() + 1); attr.setEnd(attr.getStart() + name.length());
+                attr.setStart(type.getEnd() + 1);
+                attr.setEnd(attr.getStart() + name.length());
                 noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type.redirect(), null, TypeConfidence.UNKNOWN, scope);
             }
             noLookup.enclosingAnnotation = node; // set context for requestor
@@ -1131,7 +1135,7 @@ assert primaryExprType != null && dependentExprType != null;
                 if (init != null) {
                     init.visit(this);
                 }
-                //fallthrough
+                // fall through
             case CANCEL_BRANCH:
                 return;
             case CANCEL_MEMBER:
@@ -1223,7 +1227,8 @@ assert primaryExprType != null && dependentExprType != null;
             node.getBooleanExpression().visit(this);
 
             Map<String, ClassNode[]> types = inferInstanceOfType(node.getBooleanExpression(), scopes.getLast());
-            scopes.add(trueScope = new VariableScope(scopes.getLast(), node.getIfBlock(), false));
+            trueScope = new VariableScope(scopes.getLast(), node.getIfBlock(), false);
+            scopes.add(trueScope);
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
                     if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
@@ -1235,7 +1240,8 @@ assert primaryExprType != null && dependentExprType != null;
                 scopes.removeLast();
             }
 
-            scopes.add(falseScope = new VariableScope(scopes.getLast(), node.getElseBlock(), false));
+            falseScope = new VariableScope(scopes.getLast(), node.getElseBlock(), false);
+            scopes.add(falseScope);
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
                     if (entry.getValue().length > 1 && entry.getValue()[1] != null) {
@@ -1431,8 +1437,8 @@ assert primaryExprType != null && dependentExprType != null;
         node.getArguments().visit(this);
         scope.forgetEnclosingMethodCall();
 
-        ClassNode type;
-        if (isEnumInit(node) && GroovyUtils.isAnonymous(type = node.getType().redirect())) {
+        ClassNode type = node.getType().redirect();
+        if (isEnumInit(node) && GroovyUtils.isAnonymous(type)) {
             visitMethodOverrides(type);
         }
 
@@ -1837,7 +1843,8 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private boolean handleSimpleExpression(Expression node) {
-        ClassNode primaryType; boolean isStatic;
+        ClassNode primaryType;
+        boolean isStatic;
         VariableScope scope = scopes.getLast();
         if (!isDependentExpression(node)) {
             primaryType = null;
@@ -2026,7 +2033,7 @@ assert primaryExprType != null && dependentExprType != null;
                 if (jdtParamTypes == null) jdtParamTypes = NO_PARAMS;
 
                 Expression targetExpr; // append implicit parameter for @Category method
-                if ((method.getFlags() & Flags.AccStatic) == 0 && (targetExpr = findCategoryTarget(clazz)) != null) {
+                if (!Flags.isStatic(method.getFlags()) && (targetExpr = findCategoryTarget(clazz)) != null) {
                     TypeLookupResult result = lookupExpressionType(targetExpr, null, true, scopes.getLast());
                     ClassNode targetType = result.type.getGenericsTypes()[0].getType();
 
@@ -2547,6 +2554,7 @@ assert primaryExprType != null && dependentExprType != null;
         Assert.isTrue(completeExpressionStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Expression"));
         Assert.isTrue(dependentDeclarationStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Declaration"));
     }
+
     private static final String SANITY_CHECK_MESSAGE =
         "Inferencing engine in invalid state after visitor completed.  %s stack should be empty after visit completed.";
 
@@ -2645,14 +2653,15 @@ assert primaryExprType != null && dependentExprType != null;
     private static ClassNode findBinaryExpressionType(String operator, ClassNode lhs, ClassNode rhs) {
         switch (operator.charAt(0)) {
         case '<':
-            if (operator.equals("<=>")) {
+            if (operator.length() == 3 && operator.charAt(1) == '=' && operator.charAt(2) == '>') {
                 return VariableScope.INTEGER_CLASS_NODE;
             }
+            // fall through
         case '>':
         case '!':
             // includes "!=" and "!=="
         case 'i':
-            // includes "instanceof"
+            // includes "in" and "instanceof"
             return VariableScope.BOOLEAN_CLASS_NODE;
         case '=':
             if (operator.length() > 1) {
@@ -2707,7 +2716,7 @@ assert primaryExprType != null && dependentExprType != null;
         case '[':
             return "getAt"; // or "putAt"
         case 'i':
-            if (text.equals("in")) {
+            if (text.length() == 2 && text.charAt(1) == 'n') {
                 return "isCase";
             }
         }
@@ -2722,7 +2731,8 @@ assert primaryExprType != null && dependentExprType != null;
     private static Parameter findTargetParameter(Expression arg, MethodCallExpression call, MethodNode declaration, boolean isGroovyMethod) {
         // see ExpressionCompletionRequestor.getParameterPosition(ASTNode, MethodCallExpression)
         // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
-        String key = null; int pos = -1;
+        String key = null;
+        int pos = -1;
         if (call.getArguments() instanceof ArgumentListExpression) {
             int idx = -1;
             out: for (Expression exp : (ArgumentListExpression) call.getArguments()) {
@@ -2764,19 +2774,19 @@ assert primaryExprType != null && dependentExprType != null;
     private static String findUnaryOperatorName(String text) {
         switch (text.charAt(0)) {
         case '+':
-            if (text.equals("++")) {
+            if (text.length() == 2 && text.charAt(1) == '+') {
                 return "next";
             }
             return "positive";
         case '-':
-            if (text.equals("--")) {
+            if (text.length() == 2 && text.charAt(1) == '-') {
                 return "previous";
             }
             return "negative";
-        case ']':
-            return "putAt";
         case '~':
             return "bitwiseNegate";
+        case ']':
+            return "putAt";
         }
         return null;
     }
@@ -2837,12 +2847,11 @@ assert primaryExprType != null && dependentExprType != null;
             if (GeneralUtils.isOrImplements(lhs, VariableScope.LIST_CLASS_NODE)) {
                 return true;
             }
-            // falls through
+            // fall through
         case '*':
         case '/':
         case '%':
-            return VariableScope.STRING_CLASS_NODE.equals(lhs) ||
-                   VariableScope.NUMBER_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
+            return VariableScope.STRING_CLASS_NODE.equals(lhs) || VariableScope.NUMBER_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
         default:
             return false;
         }
@@ -2968,12 +2977,12 @@ assert primaryExprType != null && dependentExprType != null;
             String name = child.getElementName();
             switch (child.getElementType()) {
             case IJavaElement.METHOD: // exclude synthetic members for enums
-                if (!isEnum || !(name.indexOf('$') > -1 || ((name.equals("next") || name.equals("previous")) && ((IMethod) child).getNumberOfParameters() == 0))) {
+                if (!isEnum || !(name.indexOf('$') > -1 || (("next".equals(name) || "previous".equals(name)) && ((IMethod) child).getNumberOfParameters() == 0))) {
                     members.add((IMethod) child);
                 }
                 break;
             case IJavaElement.FIELD: // exclude synthetic members for enums
-                if (!isEnum || !(name.indexOf('$') > -1 || name.equals("MIN_VALUE") || name.equals("MAX_VALUE"))) {
+                if (!isEnum || !(name.indexOf('$') > -1 || "MIN_VALUE".equals(name) || "MAX_VALUE".equals(name))) {
                     members.add((IField) child);
                 }
                 break;

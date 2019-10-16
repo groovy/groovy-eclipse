@@ -183,8 +183,7 @@ public class ExpressionFinder {
             } else if (token0.isType(Token.Type.IDENT)) {
                 ret[0] = expression;
             }
-        } catch (IllegalStateException | TokenStreamException e) {
-            // fall through
+        } catch (IllegalStateException | TokenStreamException ignore) {
         }
         return ret;
     }

@@ -194,7 +194,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 VariableScope outer = declaringType.getNodeMetaData("outer.scope");
                 if (outer != null) {
                     List<ClassNode> types = outer.getMethodCallArgumentTypes();
-                    try { outer.setMethodCallArgumentTypes(scope.getMethodCallArgumentTypes());
+                    try {
+                        outer.setMethodCallArgumentTypes(scope.getMethodCallArgumentTypes());
                         return findTypeForVariable(new VariableExpression(new DynamicVariable(node.getText(), false)), outer, declaringType);
                     } finally {
                         outer.setMethodCallArgumentTypes(types);

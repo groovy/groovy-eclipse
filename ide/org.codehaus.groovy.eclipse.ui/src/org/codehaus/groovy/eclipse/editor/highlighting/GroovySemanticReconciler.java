@@ -474,12 +474,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         if (GET_HIGHLIGHTING != null) {
             try {
                 return (GET_HIGHLIGHTING.invoke(a) == GET_HIGHLIGHTING.invoke(b));
-            } catch (IllegalAccessException e) {
-                // fall through
-            } catch (IllegalArgumentException e) {
-                // fall through
-            } catch (InvocationTargetException e) {
-                // fall through
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ignore) {
             }
         }
         return true;
