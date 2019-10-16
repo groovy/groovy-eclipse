@@ -26,6 +26,7 @@ import org.apache.maven.project.MavenProject;
  * @goal  add-groovy-build-paths
  * @phase initialize
  * @since 2.6.0
+ * @threadSafe
  */
 public class AddGroovySourceFolders extends AbstractMojo {
 
