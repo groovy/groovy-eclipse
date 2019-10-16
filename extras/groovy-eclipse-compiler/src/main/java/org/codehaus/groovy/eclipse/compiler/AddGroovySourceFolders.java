@@ -18,23 +18,20 @@ package org.codehaus.groovy.eclipse.compiler;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
 /**
  * Adds <tt>src/main/groovy</tt> and <tt>src/test/groovy</tt> as source folders.
  *
- * @goal  add-groovy-build-paths
- * @phase initialize
  * @since 2.6.0
- * @threadSafe
  */
+@Mojo(name = "add-groovy-build-paths", defaultPhase = LifecyclePhase.INITIALIZE, requiresProject = true, threadSafe = true)
 public class AddGroovySourceFolders extends AbstractMojo {
 
-    /**
-     * @parameter property="project"
-     * @readonly
-     * @required
-     */
+    @Parameter(defaultValue = "${project}", readonly = true, required = true)
     private MavenProject project;
 
     @Override

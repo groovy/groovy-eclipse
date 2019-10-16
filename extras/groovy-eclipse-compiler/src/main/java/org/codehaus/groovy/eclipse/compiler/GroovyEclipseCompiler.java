@@ -288,7 +288,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 args.put("-target", target.trim());
             }
         }
-        // TODO: Maven 3.7.1: <multiReleaseOutput>
+        // TODO: Maven Compiler 3.7.1: <multiReleaseOutput>
 
         if (config.isShowDeprecation()) {
             args.put("-deprecation", null);
