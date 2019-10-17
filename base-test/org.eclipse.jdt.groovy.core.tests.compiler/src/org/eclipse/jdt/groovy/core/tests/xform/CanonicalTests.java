@@ -176,7 +176,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
                 "----------\n" +
                 "2. ERROR in Foo.groovy (at line 1)\n" +
                 "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t                            ^^^^^^^^^^^^^^^^^^\n" +
+                "\t                            ^^^^^^^^^^^^^^^^^\n" +
                 "The attribute doesNotExist is undefined for the annotation type Canonical\n" +
                 "----------\n" +
                 "3. ERROR in Foo.groovy (at line 1)\n" +
