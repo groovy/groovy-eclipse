@@ -1667,7 +1667,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return memberValuePairs.entrySet().stream().map(memberValuePair -> {
                 char[] name = memberValuePair.getKey().toCharArray();
                 // TODO: What to do when the value expression lacks source position information?
-                int start = Math.max(0, memberValuePair.getValue().getStart() - name.length - 1), until = memberValuePair.getValue().getEnd();
+                int start = Math.max(0, memberValuePair.getValue().getStart() - name.length - 1), until = memberValuePair.getValue().getEnd() - 1;
                 org.eclipse.jdt.internal.compiler.ast.Expression value = createAnnotationMemberExpression(memberValuePair.getValue(), null);
                 return new org.eclipse.jdt.internal.compiler.ast.MemberValuePair(name, start, until, value);
             }).toArray(org.eclipse.jdt.internal.compiler.ast.MemberValuePair[]::new);

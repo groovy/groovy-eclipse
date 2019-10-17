@@ -724,6 +724,36 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testBooleanLiteralAttributeValue() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@SuppressWarnings(value=\"nls\", unknown=false)\n" +
+            "class Main {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings(value=\"nls\", unknown=false)\n" +
+            "\t^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:'unknown'is not part of the annotation SuppressWarnings in @java.lang.SuppressWarnings\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings(value=\"nls\", unknown=false)\n" +
+            "\t                               ^^^^^^^^^^^^^\n" +
+            "The attribute unknown is undefined for the annotation type SuppressWarnings\n" +
+            "----------\n" +
+            "3. ERROR in Main.groovy (at line 1)\n" +
+            "\t@SuppressWarnings(value=\"nls\", unknown=false)\n" +
+            "\t                                       ^^^^^\n" +
+            "Groovy:Unexpected type java.lang.Object in @java.lang.SuppressWarnings\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testClassLiteralAttributeValue1() {
         //@formatter:off
         String[] sources = {
