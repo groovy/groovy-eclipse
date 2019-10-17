@@ -33,7 +33,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -114,7 +113,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
             try {
                 mainArgs.append(" \"${workspace_loc:").append(runType.getResource().getFullPath().toOSString().substring(1)).append("}\"");
             } catch (NullPointerException e) {
-                GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
+                GroovyCore.logException("Error running Groovy", new IllegalArgumentException("Could not find file to run for " + runType));
             }
         }
         return mainArgs.toString();
@@ -185,12 +184,12 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
             try {
                 types = unit.getAllTypes();
             } catch (JavaModelException e) {
-                GroovyCore.errorRunningGroovy(e);
+                GroovyCore.logException("Error running Groovy", e);
                 return;
             }
             runType = findClassToRun(types);
             if (runType == null) {
-                GroovyCore.errorRunningGroovy(new Exception(msg));
+                GroovyCore.logException("Error running Groovy", new Exception(msg));
                 return;
             }
         }
@@ -204,7 +203,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
             ILaunchConfiguration config = workingConfig.doSave();
             DebugUITools.launch(config, mode);
         } catch (CoreException e) {
-            GroovyCore.errorRunningGroovyFile((IFile) unit.getResource(), e);
+            GroovyCore.logException("Error running Groovy file: " + unit.getResource().getName(), e);
         }
     }
 

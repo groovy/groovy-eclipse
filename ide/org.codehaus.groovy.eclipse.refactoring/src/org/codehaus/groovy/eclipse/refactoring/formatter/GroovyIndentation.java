@@ -42,7 +42,7 @@ import org.eclipse.text.edits.TextEdit;
 
 public class GroovyIndentation {
 
-    private static boolean DEBUG = false;
+    private static boolean DEBUG = false; // TODO: Read value using Platform.getDebugOption
 
     private void debug(String msg) {
         if (DEBUG) {

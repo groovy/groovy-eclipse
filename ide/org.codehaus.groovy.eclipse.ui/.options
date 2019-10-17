@@ -1,2 +1,1 @@
-#enable tracing for the groovy plugin
-org.codehaus.groovy.eclipse/trace=true
+org.codehaus.groovy.eclipse.ui/debug=true

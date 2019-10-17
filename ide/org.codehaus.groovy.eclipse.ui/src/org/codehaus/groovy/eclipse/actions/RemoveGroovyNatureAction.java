@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,10 +36,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
-/**
- * RemoveGroovyNatureAction is responsible for removing the Groovy nature to a
- * Java project.
- */
 public class RemoveGroovyNatureAction implements IObjectActionDelegate {
     private List<IProject> currSelected = new LinkedList<>();
 
@@ -50,7 +46,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
     @Override
     public void run(final IAction action) {
         if (currSelected != null && currSelected.size() > 0) {
-            GroovyCore.trace("RemoveGroovySupportAction.run()");
+            GroovyCore.trace("RemoveGroovyNatureAction.run()");
 
             for (IProject project : currSelected) {
                 GroovyCore.trace("   to " + project.getName());

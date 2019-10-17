@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,6 @@ import org.codehaus.groovy.eclipse.editor.GroovyOutlineTools;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -55,18 +54,6 @@ public class GroovyPlugin extends AbstractUIPlugin {
         return plugin;
     }
 
-    private static Boolean trace;
-
-    public static void trace(String message) {
-        if (trace == null) {
-            String value = Platform.getDebugOption("org.codehaus.groovy.eclipse/trace");
-            GroovyPlugin.trace = Boolean.valueOf(value);
-        }
-        if (trace == Boolean.TRUE) {
-            plugin.logTraceMessage("trace: " + message);
-        }
-    }
-
     public static IWorkbenchPage getActiveWorkbenchPage() {
         IWorkbenchWindow window = getActiveWorkbenchWindow();
         if (window != null) return window.getActivePage();
@@ -94,6 +81,12 @@ public class GroovyPlugin extends AbstractUIPlugin {
             return null;
         }
         return workbench.getActiveWorkbenchWindow();
+    }
+
+    public static void trace(String message) {
+        if (plugin.isDebugging()) {
+            System.out.println(message);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -195,20 +188,19 @@ public class GroovyPlugin extends AbstractUIPlugin {
         return outlineTools;
     }
 
-    public void logError(String message, Throwable error) {
-        log(IStatus.ERROR, message, error);
+    public void logMessage(String message) {
+        log(IStatus.INFO, message, null);
     }
 
     public void logWarning(String message) {
         log(IStatus.WARNING, message, null);
     }
 
-    public void logTraceMessage(String message) {
-        log(IStatus.INFO, message, null);
+    public void logError(String message, Throwable error) {
+        log(IStatus.ERROR, message, error);
     }
 
     private void log(int severity, String message, Throwable cause) {
-        final IStatus status = new Status(severity, PLUGIN_ID, message, cause);
-        getLog().log(status);
+        getLog().log(new Status(severity, PLUGIN_ID, message, cause));
     }
 }

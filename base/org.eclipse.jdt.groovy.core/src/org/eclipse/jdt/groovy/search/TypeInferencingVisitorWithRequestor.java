@@ -113,6 +113,7 @@ import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IField;
@@ -152,7 +153,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * Set to true if debug mode is desired. Any exceptions will be spit to syserr. Also, after a visit, there will be a sanity
      * check to ensure that all stacks are empty Only set to true if using a visitor that always visits the entire file
      */
-    public boolean debug;
+    public boolean debug = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/typeinfo"));
 
     private final GroovyCompilationUnit unit;
 

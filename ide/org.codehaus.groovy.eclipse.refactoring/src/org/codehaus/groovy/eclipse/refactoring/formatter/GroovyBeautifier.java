@@ -47,7 +47,7 @@ import org.eclipse.text.edits.TextEdit;
 @SuppressWarnings("deprecation")
 public class GroovyBeautifier {
 
-    private static final boolean DEBUG_EDITS = false;
+    private static final boolean DEBUG_EDITS = false; // TODO: Read value using Platform.getDebugOption
 
     public final DefaultGroovyFormatter formatter;
     private final IFormatterPreferences preferences;

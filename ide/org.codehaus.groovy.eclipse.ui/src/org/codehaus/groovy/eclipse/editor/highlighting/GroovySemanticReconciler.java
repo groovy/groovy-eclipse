@@ -333,7 +333,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 }
                 update(monitor, 1);
             }
-        } catch (Exception e) {
+        } catch (Exception | LinkageError | AssertionError e) {
             GroovyCore.logException("Semantic highlighting failed", e);
         } finally {
             lock.release();

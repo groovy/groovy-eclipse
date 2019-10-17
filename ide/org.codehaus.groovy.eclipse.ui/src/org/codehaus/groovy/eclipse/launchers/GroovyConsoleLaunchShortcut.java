@@ -66,7 +66,7 @@ public class GroovyConsoleLaunchShortcut extends AbstractGroovyLaunchShortcut {
             try {
                 mainArgs.append(" \"${workspace_loc:").append(runType.getResource().getFullPath().toOSString().substring(1)).append("}\"");
             } catch (NullPointerException e) {
-                GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
+                GroovyCore.logException("Error running Groovy", new IllegalArgumentException("Could not find file to run for " + runType));
             }
         }
 

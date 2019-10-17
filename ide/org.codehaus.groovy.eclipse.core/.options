@@ -1,0 +1,11 @@
+org.codehaus.groovy.eclipse.core/debug=true
+
+org.codehaus.groovy.eclipse.core/debug/codegen=false
+
+org.codehaus.groovy.eclipse.core/debug/generics=false
+
+org.codehaus.groovy.eclipse.core/debug/resolver=false
+
+org.codehaus.groovy.eclipse.core/debug/tasktags=false
+
+org.codehaus.groovy.eclipse.core/debug/typeinfo=false

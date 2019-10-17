@@ -32,6 +32,7 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -62,7 +63,7 @@ import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
  */
 public class JDTResolver extends ResolveVisitor {
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/resolver"));
 
     /** Any type name that is equal to or shorter than this could be a primitive type. */
     private static final int BOOLEAN_LENGTH = "boolean".length();
@@ -99,8 +100,9 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     private void log(String string) {
-        System.err.printf("JDTResolver@%x[%d]: %s%n", System.identityHashCode(this), Thread.currentThread().getId(), string);
+        System.out.printf("JDTResolver@%x[%d]: %s%n", System.identityHashCode(this), Thread.currentThread().getId(), string);
     }
+
     private void log(String string, ClassNode type, boolean foundit) {
         log(string + " " + type.getName() + "? " + foundit);
     }
@@ -108,6 +110,7 @@ public class JDTResolver extends ResolveVisitor {
     // allow test cases to quiz a resolver
     public static boolean recordInstances;
     public static List<JDTResolver> instances;
+
     public static JDTClassNode getCachedNode(String name) {
         for (JDTResolver instance : instances) {
             JDTClassNode node = getCachedNode(instance, name);
@@ -115,6 +118,7 @@ public class JDTResolver extends ResolveVisitor {
         }
         return null;
     }
+
     public static JDTClassNode getCachedNode(JDTResolver instance, String name) {
         for (JDTClassNode nodeFromCache : instance.nodeCache.values()) {
             if (name.equals(String.valueOf(nodeFromCache.getJdtBinding().readableName()))) {

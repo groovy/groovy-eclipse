@@ -92,6 +92,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -168,11 +169,11 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 
-    private static final boolean DEBUG_CODE_GENERATION = false;
+    private static final boolean DEBUG_CODE_GENERATION = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/codegen"));
 
-    private static final boolean DEBUG_TASK_TAGS = false;
+    private static final boolean DEBUG_TASK_TAGS = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/tasktags"));
 
-    public static boolean defaultCheckGenerics = false;
+    public static boolean defaultCheckGenerics = Boolean.parseBoolean(Platform.getDebugOption("org.codehaus.groovy.eclipse.core/debug/generics"));
 
     private final CompilationUnit compilationUnit;
 
@@ -347,19 +348,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<GroovyClass> classes = compilationUnit.getClasses();
 
             if (DEBUG_CODE_GENERATION) {
-                log("Processing sourceUnit " + groovySourceUnit.getName());
+                System.out.println("Processing sourceUnit " + groovySourceUnit.getName());
             }
 
             for (GroovyClass groovyClass : classes) {
                 ClassNode classNode = groovyClass.getClassNode();
                 if (DEBUG_CODE_GENERATION) {
-                    log("Looking at class " + groovyClass.getName());
-                    log("ClassNode where it came from " + classNode);
+                    System.out.println("Looking at class " + groovyClass.getName());
+                    System.out.println("ClassNode where it came from " + classNode);
                 }
                 // Only care about those coming about because of this groovySourceUnit
                 if (groovyClass.getSourceUnit() == groovySourceUnit) {
                     if (DEBUG_CODE_GENERATION) {
-                        log("It is from this source unit");
+                        System.out.println("It is from this source unit");
                     }
                     // Worth continuing
                     SourceTypeBinding binding = null;
@@ -367,7 +368,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         binding = findBinding(types, groovyClass.getClassNode());
                     }
                     if (DEBUG_CODE_GENERATION) {
-                        log("Binding located? " + (binding != null));
+                        System.out.println("Binding located? " + (binding != null));
                     }
                     if (binding == null) {
                         // closures will be represented as InnerClassNodes
@@ -375,7 +376,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         while ((current = current.getOuterClass()) != null && binding == null) {
                             binding = findBinding(types, current);
                             if (DEBUG_CODE_GENERATION) {
-                                log("Had another look within enclosing class; found binding? " + (binding != null));
+                                System.out.println("Had another look within enclosing class; found binding? " + (binding != null));
                             }
                         }
                     }
@@ -408,10 +409,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
             }
         }
-    }
-
-    private static void log(String message) {
-        System.out.println(message);
     }
 
     private static SourceTypeBinding findBinding(TypeDeclaration[] typedeclarations, ClassNode cnode) {
@@ -651,7 +648,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 TaskEntry taskOne = allTasksInComment.get(t1);
                                 TaskEntry taskTwo = allTasksInComment.get(t2);
                                 if (DEBUG_TASK_TAGS) {
-                                    log("Comparing " + taskOne.toString() + " and " + taskTwo.toString());
+                                    System.out.println("Comparing " + taskOne.toString() + " and " + taskTwo.toString());
                                 }
                                 if ((taskOne.start + taskOne.taskTag.length() + 1) == taskTwo.start) {
                                     // Adjacent tags
@@ -660,12 +657,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                     if ((taskOne.getEnd() > taskTwo.start) && (taskOne.start < taskTwo.start)) {
                                         taskOne.setEnd(taskTwo.start - 1);
                                         if (DEBUG_TASK_TAGS) {
-                                            log("trim " + taskOne.toString() + " and " + taskTwo.toString());
+                                            System.out.println("trim " + taskOne.toString() + " and " + taskTwo.toString());
                                         }
                                     } else if (taskTwo.getEnd() > taskOne.start && taskTwo.start < taskOne.start) {
                                         taskTwo.setEnd(taskOne.start - 1);
                                         if (DEBUG_TASK_TAGS) {
-                                            log("trim " + taskOne.toString() + " and " + taskTwo.toString());
+                                            System.out.println("trim " + taskOne.toString() + " and " + taskTwo.toString());
                                         }
                                     }
                                 }
@@ -674,7 +671,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         for (TaskEntry taskEntry : allTasksInComment) {
                             problemReporter.referenceContext = this;
                             if (DEBUG_TASK_TAGS) {
-                                log("Adding task " + taskEntry.toString());
+                                System.out.println("Adding task " + taskEntry.toString());
                             }
                             problemReporter.task(taskEntry.taskTag, taskEntry.getText(), taskEntry.taskPriority, taskEntry.start, taskEntry.getEnd());
                         }

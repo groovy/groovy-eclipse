@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -39,14 +38,10 @@ public class GatherSemanticReferences {
 
     public Collection<HighlightedTypedPosition> findSemanticHighlightingReferences() {
         if (unit != null) {
-            try { // TODO: Time this tasks components and find opportunities to make it run faster.
-                SemanticHighlightingReferenceRequestor requestor = new SemanticHighlightingReferenceRequestor(unit);
-                TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-                visitor.visitCompilationUnit(requestor);
-                return requestor.typedPositions;
-            } catch (Exception | AssertionError e) {
-                GroovyCore.logException("Semantic highlighting failed", e);
-            }
+            SemanticHighlightingReferenceRequestor requestor = new SemanticHighlightingReferenceRequestor(unit);
+            TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+            visitor.visitCompilationUnit(requestor);
+            return requestor.typedPositions;
         }
         return Collections.emptySet();
     }

@@ -74,7 +74,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private char[] contents;
     private final GroovyCompilationUnit unit;
     private Position lastGString = NO_POSITION;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = false; // TODO: Read value using Platform.getDebugOption
 
     /** Positions of interesting syntax elements within {@link #unit} in increasing lexical order. */
     protected final SortedSet<HighlightedTypedPosition> typedPositions = new TreeSet<>((p1, p2) -> {
