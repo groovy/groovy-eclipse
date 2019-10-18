@@ -25,17 +25,17 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     public void testInnerTypeReferencing1() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
-            "class Script {\n" +
-            "  public static void main(String[] argv) {\n" +
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
             "    print Outer.Inner.VALUE\n" +
             "  }\n" +
             "}\n",
 
             "Outer.java",
-            "public class Outer {\n" +
-            "  public static class Inner {\n" +
-            "    public static final String VALUE = \"value\";\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "    static final String VALUE = \"value\";\n" +
             "  }\n" +
             "}\n",
         };
@@ -44,20 +44,43 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test // interface
+    @Test
     public void testInnerTypeReferencing2() {
         //@formatter:off
         String[] sources = {
-            "Script.groovy",
-            "class Script {\n" +
-            "  public static void main(String[] argv) {\n" +
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "  static main(args) {\n" +
+            "    print Inner.VALUE\n" +
+            "  }\n" +
+            "}\n",
+
+            "Outer.java",
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "    static final String VALUE = \"value\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testInnerTypeReferencing3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
             "    print Outer.Inner.VALUE\n" +
             "  }\n" +
             "}\n",
 
             "Outer.java",
-            "public interface Outer {\n" +
-            "  public interface Inner {\n" +
+            "interface Outer {\n" +
+            "  interface Inner {\n" +
             "    String VALUE = \"value\";\n" +
             "  }\n" +
             "}\n",
@@ -67,16 +90,39 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test // script
-    public void testInnerTypeReferencing3() {
+    @Test
+    public void testInnerTypeReferencing4() {
         //@formatter:off
         String[] sources = {
-            "script.groovy",
+            "Main.groovy",
+            "class Main implements Outer {\n" +
+            "  static main(args) {\n" +
+            "    print Inner.VALUE\n" +
+            "  }\n" +
+            "}\n",
+
+            "Outer.java",
+            "interface Outer {\n" +
+            "  interface Inner {\n" +
+            "    String VALUE = \"value\";\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testInnerTypeReferencing5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
             "print Outer.Inner.VALUE\n",
 
             "Outer.java",
-            "public interface Outer {\n" +
-            "  public interface Inner {\n" +
+            "interface Outer {\n" +
+            "  interface Inner {\n" +
             "    String VALUE = \"value\";\n" +
             "  }\n" +
             "}\n",

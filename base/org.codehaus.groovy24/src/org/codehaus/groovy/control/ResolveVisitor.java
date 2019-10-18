@@ -72,6 +72,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -296,16 +297,25 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    // GRECLIPSE private->protected
-    protected boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
+    private boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
+        /* GRECLIPSE edit -- GROOVY-9281
         // GROOVY-8531: Fail to resolve type defined in super class written in Java
         for (ClassNode enclosingClassNode = currentClass; ClassHelper.OBJECT_TYPE != enclosingClassNode && null != enclosingClassNode; enclosingClassNode = enclosingClassNode.getSuperClass()) {
             if(resolveToNested(enclosingClassNode, type)) return true;
         }
-
+        */
+        for (ClassNode enclosingClass = currentClass; enclosingClass != null && enclosingClass != type && enclosingClass != ClassHelper.OBJECT_TYPE; enclosingClass = enclosingClass.getSuperClass()) {
+            ClassNode nestedClass = new ConstructedNestedClass(enclosingClass, type.getName());
+            if (resolve(nestedClass) && (enclosingClass == currentClass || isVisibleNestedClass(nestedClass, currentClass))) {
+                type.setRedirect(nestedClass);
+                return true;
+            }
+        }
+        // GRECLIPSE end
         return false;
     }
 
+    /* GRECLIPSE edit
     private boolean resolveToNested(ClassNode enclosingType, ClassNode type) {
         if (type instanceof ConstructedNestedClass) return false;
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
@@ -336,6 +346,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         return false;
     }
+    */
 
     private void resolveOrFail(ClassNode type, String msg, ASTNode node) {
         if (resolve(type)) return;
@@ -1044,6 +1055,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return ret;
     }
 
+    /* GRECLIPSE edit -- GROOVY-9281
     private boolean isVisibleNestedClass(ClassNode type, ClassNode ceType) {
         if (!type.isRedirectNode()) return false;
         ClassNode redirect = type.redirect();
@@ -1055,6 +1067,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 ((classPackage == null && nestedPackage == null) ||
                         classPackage != null && nestedPackage != null && classPackage.getName().equals(nestedPackage.getName()));
     }
+    */
+    private static boolean isVisibleNestedClass(ClassNode innerType, ClassNode outerType) {
+        int modifiers = innerType.getModifiers();
+        return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)
+                || (!Modifier.isPrivate(modifiers) && Objects.equals(innerType.getPackageName(), outerType.getPackageName()));
+    }
+    // GRECLIPSE end
 
     private boolean directlyImplementsTrait(ClassNode trait) {
         ClassNode[] interfaces = currentClass.getInterfaces();
@@ -1124,11 +1143,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // In that case we change it to a LowerCaseClass to let the
                 // compiler skip the resolving at several places in this class.
                 if (Character.isLowerCase(name.charAt(0))) {
-                  t = new LowerCaseClass(name);
-                }
-                isClass = resolve(t);
-                if (!isClass) {
-                    isClass = resolveToNestedOfCurrentClassAndSuperClasses(t);
+                    t = new LowerCaseClass(name);
+                    isClass = resolve(t);
+                } else {
+                    isClass = resolve(t) || resolveToNestedOfCurrentClassAndSuperClasses(t);
                 }
             }
             if (isClass) {
