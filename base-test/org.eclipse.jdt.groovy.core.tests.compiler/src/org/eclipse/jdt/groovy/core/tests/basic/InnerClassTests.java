@@ -133,6 +133,32 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testInnerTypeReferencing6() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "  static main(args) {\n" +
+            "    new Main(Inner.VALUE)\n" +
+            "  }\n" +
+            "  Main(Inner inner) {\n" +
+            "    print inner.name()\n" +
+            "  }\n" +
+            "}\n",
+
+            "Outer.java",
+            "class Outer {\n" +
+            "  enum Inner {\n" +
+            "    VALUE;\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "VALUE");
+    }
+
+    @Test
     public void testInnerClass1() {
         //@formatter:off
         String[] sources = {

@@ -304,7 +304,7 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     @Override
-    protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
+    protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testNestedClasses) {
         String name = type.getName();
         if (name.indexOf('?') != -1) return false;
         if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
@@ -320,7 +320,7 @@ public class JDTResolver extends ResolveVisitor {
             return false;
         }
 
-        boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+        boolean b = super.resolve(type, testModuleImports, testDefaultImports, testNestedClasses);
         if (!b) {
             unresolvable.add(name);
         }
@@ -328,13 +328,23 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     @Override
-    protected boolean resolveFromModule(ClassNode type, boolean testModuleImports) {
-        boolean foundit = super.resolveFromModule(type, testModuleImports);
+    protected boolean resolveNestedClass(ClassNode type) {
+        boolean resolved = super.resolveNestedClass(type);
         recordDependency(type.getName());
         if (DEBUG) {
-            log("resolveFromModule", type, foundit);
+            log("resolveNestedClass", type, resolved);
         }
-        if (foundit) {
+        return resolved;
+    }
+
+    @Override
+    protected boolean resolveFromModule(ClassNode type, boolean testModuleImports) {
+        boolean resolved = super.resolveFromModule(type, testModuleImports);
+        recordDependency(type.getName());
+        if (DEBUG) {
+            log("resolveFromModule", type, resolved);
+        }
+        if (resolved) {
             if (type.redirect() instanceof JDTClassNode && ((JDTClassNode) type.redirect()).getJdtBinding().hasRestrictedAccess()) {
                 TypeBinding binding = ((JDTClassNode) type.redirect()).getJdtBinding();
                 AccessRestriction restriction = activeScope.environment().getAccessRestriction(binding.erasure());
@@ -344,37 +354,37 @@ public class JDTResolver extends ResolveVisitor {
                 }
             }
         }
-        return foundit;
+        return resolved;
     }
 
     @Override
     protected boolean resolveFromCompileUnit(ClassNode type) {
-        boolean foundit = super.resolveFromCompileUnit(type);
+        boolean resolved = super.resolveFromCompileUnit(type);
         recordDependency(type.getName());
         if (DEBUG) {
-            log("resolveFromCompileUnit", type, foundit);
+            log("resolveFromCompileUnit", type, resolved);
         }
-        return foundit;
+        return resolved;
     }
 
     @Override
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
-        boolean foundit = super.resolveFromDefaultImports(type, testDefaultImports);
+        boolean resolved = super.resolveFromDefaultImports(type, testDefaultImports);
         recordDependency(type.getName());
         if (DEBUG) {
-            log("resolveFromDefaultImports", type, foundit);
+            log("resolveFromDefaultImports", type, resolved);
         }
-        return foundit;
+        return resolved;
     }
 
     @Override
-    protected boolean resolveFromStaticInnerClasses(ClassNode type, boolean testStaticInnerClasses) {
-        boolean foundit = super.resolveFromStaticInnerClasses(type, testStaticInnerClasses);
+    protected boolean resolveFromStaticInnerClasses(ClassNode type, boolean testNestedClasses) {
+        boolean resolved = super.resolveFromStaticInnerClasses(type, testNestedClasses);
         recordDependency(type.getName());
         if (DEBUG) {
-            log("resolveFromStaticInnerClasses", type, foundit);
+            log("resolveFromStaticInnerClasses", type, resolved);
         }
-        return foundit;
+        return resolved;
     }
 
     @Override

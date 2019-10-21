@@ -70,19 +70,18 @@ import groovyjarjarasm.asm.Opcodes;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static org.codehaus.groovy.ast.CompileUnit.ConstructedOuterNestedClassNode;
 import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to
@@ -233,8 +232,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public ResolveVisitor(CompilationUnit cu) {
         compilationUnit = cu;
-        // GRECLIPSE edit -- fix for NPE
-        //this.classNodeResolver = new ClassNodeResolver();
+        /* GRECLIPSE edit -- fix for NPE
+        this.classNodeResolver = new ClassNodeResolver();
+        */
         setClassNodeResolver(new ClassNodeResolver() {
             public LookupResult findClassNode(String name, CompilationUnit compilationUnit) {
                 return compilationUnit == null ? null : super.findClassNode(name, compilationUnit);
@@ -315,32 +315,23 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             type.setName(name);
             if (resolve(type)) return true;
         }
-
+        /* GRECLIPSE edit -- GROOVY-9281, et al.
         if (resolveToNestedOfCurrentClassAndSuperClasses(type)) return true;
-
+        */
         type.setName(saved);
         return false;
     }
 
+    /* GRECLIPSE edit
     private boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
-        /* GRECLIPSE edit -- GROOVY-9281
         // GROOVY-8531: Fail to resolve type defined in super class written in Java
         for (ClassNode enclosingClassNode = currentClass; ClassHelper.OBJECT_TYPE != enclosingClassNode && null != enclosingClassNode; enclosingClassNode = enclosingClassNode.getSuperClass()) {
             if(resolveToNested(enclosingClassNode, type)) return true;
         }
-        */
-        for (ClassNode enclosingClass = currentClass; enclosingClass != null && enclosingClass != type && enclosingClass != ClassHelper.OBJECT_TYPE; enclosingClass = enclosingClass.getSuperClass()) {
-            ClassNode nestedClass = new ConstructedNestedClass(enclosingClass, type.getName());
-            if (resolve(nestedClass) && (enclosingClass == currentClass || isVisibleNestedClass(nestedClass, currentClass))) {
-                type.setRedirect(nestedClass);
-                return true;
-            }
-        }
-        // GRECLIPSE end
+
         return false;
     }
 
-    /* GRECLIPSE edit
     private boolean resolveToNested(ClassNode enclosingType, ClassNode type) {
         if (type instanceof ConstructedNestedClass) return false;
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
@@ -373,8 +364,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
         if (resolveToOuterNested(type)) return;
-        // GRECLIPSE edit
-        //addError("unable to resolve class " + type.getName() + " " + msg, node);
+        /* GRECLIPSE edit
+        addError("unable to resolve class " + type.getName() + " " + msg, node);
+        */
         addError("unable to resolve class " + type.toString(false) + msg, type.getEnd() > 0 ? type : node);
         // GRECLIPSE end
     }
@@ -502,15 +494,25 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             return true;
         }
 
+        /* GRECLIPSE edit
         return resolveNestedClass(type) ||
                 resolveFromModule(type, testModuleImports) ||
                 resolveFromCompileUnit(type) ||
                 resolveFromDefaultImports(type, testDefaultImports) ||
                 resolveFromStaticInnerClasses(type, testStaticInnerClasses) ||
                 resolveToOuter(type);
+        */
+        return (!type.hasPackageName() && resolveNestedClass(type)) ||
+                resolveFromModule(type, testModuleImports) ||
+                resolveFromCompileUnit(type) ||
+                (testDefaultImports && !type.hasPackageName() && resolveFromDefaultImports(type, true)) ||
+                (testStaticInnerClasses && type.hasPackageName() && resolveFromStaticInnerClasses(type, true)) ||
+                resolveToOuter(type);
+        // GRECLIPSE end
     }
 
-    private boolean resolveNestedClass(ClassNode type) {
+    // GRECLIPSE private->protected
+    protected boolean resolveNestedClass(ClassNode type) {
         if (type instanceof ConstructedNestedClass || type instanceof ConstructedClassWithPackage) return false;
         // we have for example a class name A, are in class X
         // and there is a nested class A$X. we want to be able 
@@ -518,9 +520,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // name in X.
         // GROOVY-4043: Do this check up the hierarchy, if needed
         Map<String, ClassNode> hierClasses = new LinkedHashMap<String, ClassNode>();
-        for(ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE;
-            classToCheck = classToCheck.getSuperClass()) {
-            if(classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
+        for (ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE; classToCheck = classToCheck.getSuperClass()) {
+            if (classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
             hierClasses.put(classToCheck.getName(), classToCheck);
         }
 
@@ -533,7 +534,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // qualifying it by A.B. A alone will work, since that
         // is the qualified (minus package) name of that class
         // anyway. 
-        
+        /* GRECLIPSE edit
         // That means if the current class is not an InnerClassNode
         // there is nothing to be done.
         if (!(currentClass instanceof InnerClassNode)) return false;
@@ -552,56 +553,35 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             outer = outer.getOuterClass();
         }
         // most outer class is now element 0
-        /* GRECLIPSE edit -- unroll setRedirect and insert resolution cache checks
         for (ClassNode testNode : outerClasses) {
             if (setRedirect(type, testNode)) return true;
         }
         */
-        if (type.getName().indexOf('.') < 0) {
-            for (ClassNode classToCheck : outerClasses) {
-                ClassNode val = new ConstructedNestedClass(classToCheck, type.getName());
-                if (!resolutionFailedCache.contains(val.getName())) {
-                    if (resolveFromCompileUnit(val)) {
-                        type.setRedirect(val);
-                        return true;
-                    }
-                }
-                resolutionFailedCache.add(val.getName());
+        List<ClassNode> outerClasses = currentClass.getOuterClasses();
+        if (!outerClasses.isEmpty()) {
+            // since we have B and want to get A we start with the most
+            // outer class, put them together and then see if that does
+            // already exist. In case of B from within A$B we are done
+            // after the first step already. In case of for example
+            // A.B.C.D.E.F and accessing E from F we test A$E=failed,
+            // A$B$E=failed, A$B$C$E=fail, A$B$C$D$E=success
 
-                // also check interfaces in case we have interfaces with nested classes
-                for (ClassNode next : classToCheck.getAllInterfaces()) {
-                    if (type.getName().contains(next.getName())) continue;
-                    val = new ConstructedNestedClass(next, type.getName());
-                    if (!resolutionFailedCache.contains(val.getName())) {
-                        if (resolve(val, false, false, false)) {
-                            type.setRedirect(val);
-                            return true;
-                        }
-                    }
-                    resolutionFailedCache.add(val.getName());
-                }
+            for (ListIterator<ClassNode> it = outerClasses.listIterator(outerClasses.size()); it.hasPrevious();) {
+                ClassNode outerClass = it.previous();
+                if (setRedirect(type, outerClass)) return true;
             }
         }
         // GRECLIPSE end
-
         return false;
     }
 
     private boolean setRedirect(ClassNode type, ClassNode classToCheck) {
+        /* GRECLIPSE edit
         ClassNode val = new ConstructedNestedClass(classToCheck, type.getName());
-        // GRECLIPSE add
-        String qualName = type.getName();
-        int dotIndex = qualName.indexOf('.'), dollarIndex = qualName.indexOf('$');
-        String firstComponent = (dotIndex == -1 && dollarIndex == -1 ? qualName : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex)));
-        if (existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
-        // GRECLIPSE end
         if (resolveFromCompileUnit(val)) {
             type.setRedirect(val);
             return true;
         }
-        // GRECLIPSE add
-        }
-        // GRECLIPSE end
         // also check interfaces in case we have interfaces with nested classes
         for (ClassNode next : classToCheck.getAllInterfaces()) {
             if (type.getName().contains(next.getName())) continue;
@@ -611,20 +591,42 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 return true;
             }
         }
-        return false;
-    }
+        */
+        String typeName = type.getName();
 
-    // GRECLIPSE add
-    private boolean existsAsInnerClass(ClassNode maybeEnclosing, String name) {
-        for (Iterator<InnerClassNode> innerClasses = maybeEnclosing.getInnerClasses(); innerClasses.hasNext();) {
-            InnerClassNode innerClass = innerClasses.next();
-            if (name.equals(innerClass.getName())) {
+        Predicate<ClassNode> resolver = (ClassNode maybeOuter) -> {
+            if (!typeName.equals(maybeOuter.getName())) {
+                ClassNode maybeNested = new ConstructedNestedClass(maybeOuter, typeName);
+                // GRECLIPSE add
+                if (!resolutionFailedCache.contains(maybeNested.getName())) {
+                // GRECLIPSE end
+                if (resolveFromCompileUnit(maybeNested) || resolveToOuter(maybeNested)) {
+                    type.setRedirect(maybeNested);
+                    return true;
+                }
+                // GRECLIPSE add
+                }
+                resolutionFailedCache.add(maybeNested.getName());
+                // GRECLIPSE end
+            }
+            return false;
+        };
+
+        if (resolver.test(classToCheck)) {
+            if (currentClass != classToCheck && !currentClass.getOuterClasses().contains(classToCheck) && !isVisibleNestedClass(type.redirect(), currentClass)) {
+                type.setRedirect(null);
+            } else {
                 return true;
             }
         }
+        for (ClassNode face : classToCheck.getAllInterfaces()) {
+            if (resolver.test(face)) {
+                return true;
+            }
+        }
+        // GRECLIPSE end
         return false;
     }
-    // GRECLIPSE end
 
     private static String replaceLastPointWithDollar(String name) {
         int lastPointIndex = name.lastIndexOf('.');
@@ -642,7 +644,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (type instanceof LowerCaseClass) return false;
 
         // try to resolve a public static inner class' name
+        /* GRECLIPSE edit
         testStaticInnerClasses &= type.hasPackageName();
+        */
         if (testStaticInnerClasses) {
             if (type instanceof ConstructedClassWithPackage) {
                 // we replace '.' only in the className part
@@ -670,7 +674,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE private->protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
         // test default imports
+        /* GRECLIPSE edit
         testDefaultImports &= !type.hasPackageName();
+        */
         // we do not resolve a vanilla name starting with a lower case letter
         // try to resolve against a default import, because we know that the
         // default packages do not contain classes like these
@@ -1150,9 +1156,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 type.setNameStart2(property.getStart());
                 // GRECLIPSE end
                 Expression ret = new ClassExpression(type);
-                // GRECLIPSE edit -- redundant
-                //ret.setSourcePosition(pe);
-                // GRECLIPSE end
+                /* GRECLIPSE edit -- redundant
+                ret.setSourcePosition(pe);
+                */
                 return ret;
             }
         }
@@ -1164,11 +1170,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 ClassNode type = new ConstructedNestedClass(classNode, pe.getPropertyAsString());
                 if (resolve(type, false, false, false)) {
                     if (classNode == ce.getType() || isVisibleNestedClass(type, ce.getType())) {
-                        Expression ret = new ClassExpression(type);
-                        // GRECLIPSE edit
+                        // GRECLIPSE add
                         type.setNameStart2(property.getStart());
-                        //ret.setSourcePosition(pe);
                         // GRECLIPSE end
+                        Expression ret = new ClassExpression(type);
+                        /* GRECLIPSE edit
+                        ret.setSourcePosition(ce);
+                        */
                         return ret;
                     }
                 }
@@ -1265,11 +1273,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // In that case we change it to a LowerCaseClass to let the
                 // compiler skip the resolving at several places in this class.
                 if (Character.isLowerCase(name.charAt(0))) {
-                    t = new LowerCaseClass(name);
-                    isClass = resolve(t);
-                } else {
-                    isClass = resolve(t) || resolveToNestedOfCurrentClassAndSuperClasses(t);
+                  t = new LowerCaseClass(name);
                 }
+                isClass = resolve(t);
+                /* GRECLIPSE edit
+                if(!isClass) {
+                    isClass = resolveToNestedOfCurrentClassAndSuperClasses(t);
+                }
+                */
             }
             if (isClass) {
                 // the name is a type so remove it from the scoping
@@ -1280,9 +1291,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     if (scope.removeReferencedClassVariable(ve.getName()) == null) break;
                 }
                 ClassExpression ce = new ClassExpression(t);
-                // GRECLIPSE edit
-                //ce.setSourcePosition(ve);
-                // GRECLIPSE end
+                /* GRECLIPSE edit
+                ce.setSourcePosition(ve);
+                */
                 return ce;
             }
         }
@@ -1461,8 +1472,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected Expression transformAnnotationConstantExpression(AnnotationConstantExpression ace) {
         AnnotationNode an = (AnnotationNode) ace.getValue();
         ClassNode type = an.getClassNode();
-        // GRECLIPSE edit
-        //resolveOrFail(type, ", unable to find class for annotation", an);
+        /* GRECLIPSE edit
+        resolveOrFail(type, ", unable to find class for annotation", an);
+        */
         resolveOrFail(type, " for annotation", an);
         // GRECLIPSE end
         for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
@@ -1482,8 +1494,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // skip built-in properties
             if (an.isBuiltIn()) continue;
             annType = an.getClassNode();
-            // GRECLIPSE edit
-            //resolveOrFail(annType, ",  unable to find class for annotation", an);
+            /* GRECLIPSE edit
+            resolveOrFail(annType, ",  unable to find class for annotation", an);
+            */
             resolveOrFail(annType, " for annotation", an);
             // GRECLIPSE end
             for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
