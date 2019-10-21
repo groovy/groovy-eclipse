@@ -1678,7 +1678,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return null;
             }
             Argument[] arguments = new Argument[parameters.length];
-            for (int i = 0; i < parameters.length; i++) {
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
                 Parameter parameter = parameters[i];
                 TypeReference parameterTypeReference = createTypeReferenceForClassNode(parameter.getType());
                 long pos;

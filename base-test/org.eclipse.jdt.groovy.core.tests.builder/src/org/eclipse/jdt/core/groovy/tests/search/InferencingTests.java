@@ -3047,4 +3047,53 @@ public final class InferencingTests extends InferencingTestSuite {
         MethodNode m = assertDeclaration(contents, offset, offset + "setValue".length(), "Face", "setValue", DeclarationKind.METHOD);
         assertEquals("Expected 'setValue(String,boolean)'", "boolean", m.getParameters()[1].getType().toString(false));
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/975
+    public void testMethodOverloadsArgumentMatching8() {
+        String contents =
+            "import java.util.Map.Entry\n" +
+            "class C {\n" +
+            "  void meth() {\n" +
+            "    Number n = 0\n" +
+            "  }\n" +
+            "  void meth(Entry entry) {\n" +
+            "    Number n = 1\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/975
+    public void testMethodOverloadsArgumentMatching8a() {
+        String contents =
+            "import java.util.Map.Entry\n" +
+            "class C {\n" +
+            "  void meth() {\n" +
+            "    Number n = 0\n" +
+            "  }\n" +
+            "  void meth(Set<Entry> entries) {\n" +
+            "    Number n = 1\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "n", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/975
+    public void testMethodOverloadsArgumentMatching9() {
+        String contents =
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "    Inner() {\n" +
+            "      Number n = 0\n" +
+            "    }\n" +
+            "    Inner(Inner that) {\n" +
+            "      Number n = 1\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "n", "java.lang.Number");
+    }
 }

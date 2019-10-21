@@ -2006,7 +2006,8 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                     inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
                         String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false, false);
-                        if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
+                        if (simpleGroovyClassType.equals(jdtParamTypes[i]) || (simpleGroovyClassType.indexOf('.') != -1 &&
+                                simpleGroovyClassType.replaceAll("(?<=Q)(\\w+\\.)+", "").equals(jdtParamTypes[i]))) {
                             continue inner;
                         }
                         String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true, false);
@@ -2054,7 +2055,8 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                     inner: for (int i = 0, n = jdtParamTypes.length; i < n; i += 1) {
                         String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false, false);
-                        if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
+                        if (simpleGroovyClassType.equals(jdtParamTypes[i]) || (simpleGroovyClassType.indexOf('.') != -1 &&
+                                simpleGroovyClassType.replaceAll("(?<=Q)(\\w+\\.)+", "").equals(jdtParamTypes[i]))) {
                             continue inner;
                         }
                         String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true, false);
