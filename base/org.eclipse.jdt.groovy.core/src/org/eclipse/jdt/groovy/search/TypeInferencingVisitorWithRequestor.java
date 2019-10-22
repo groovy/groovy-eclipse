@@ -2518,14 +2518,17 @@ assert primaryExprType != null && dependentExprType != null;
                 GeneralUtils.isOrImplements(result.declaringType, VariableScope.MAP_CLASS_NODE)) {
             ClassNode inferredType = VariableScope.OBJECT_CLASS_NODE;
             if (node instanceof ConstantExpression && node.getType().equals(VariableScope.STRING_CLASS_NODE)) {
-                List<MethodNode> putMethods = result.declaringType.getMethods("put"); // returns the value type
-                GenericsMapper mapper = GenericsMapper.gatherGenerics(result.declaringType, result.declaringType.redirect());
-                inferredType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(putMethods.get(0).getReturnType()));
+                for (ClassNode face : result.declaringType.getAllInterfaces()) {
+                    if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
+                        GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
+                        if (generics.length == 2) inferredType = generics[1].getType();
+                        break;
+                    }
+                }
             }
-            TypeLookupResult tlr = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope, result.extraDoc);
+            TypeLookupResult tlr = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED, result.scope);
             tlr.enclosingAnnotation = result.enclosingAnnotation;
             tlr.enclosingAssignment = result.enclosingAssignment;
-            tlr.isGroovy = result.isGroovy;
             result = tlr;
         }
         return result.resolveTypeParameterization(objExprType, isStatic);

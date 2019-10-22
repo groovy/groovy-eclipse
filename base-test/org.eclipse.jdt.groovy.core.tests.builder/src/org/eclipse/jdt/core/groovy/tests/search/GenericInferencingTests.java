@@ -49,8 +49,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        int offset = contents.indexOf("other");
-        assertType(contents, offset, offset + 5, "java.lang.Class<java.util.List<java.lang.String>>");
+        assertType(contents, "other", "java.lang.Class<java.util.List<java.lang.String>>");
     }
 
     @Test
@@ -58,8 +57,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = 9\n" +
             "def xxx = x..x\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "groovy.lang.Range<java.lang.Integer>");
+
+        assertType(contents, "xxx", "groovy.lang.Range<java.lang.Integer>");
     }
 
     @Test
@@ -67,88 +66,88 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = 9\n" +
             "def xxx = (x*1)..x\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "groovy.lang.Range<java.lang.Integer>");
+
+        assertType(contents, "xxx", "groovy.lang.Range<java.lang.Integer>");
     }
 
     @Test // GRECLIPSE-1040
     public void testList1() {
         String contents =
             "def xxx = new LinkedList()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.LinkedList");
+
+        assertType(contents, "xxx", "java.util.LinkedList");
     }
 
     @Test
     public void testList2() {
         String contents =
             "def xxx = new LinkedList<>()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.LinkedList");
+
+        assertType(contents, "xxx", "java.util.LinkedList");
     }
 
     @Test
     public void testList3() {
         String contents =
             "def xxx = new LinkedList<String>()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.LinkedList<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.LinkedList<java.lang.String>");
     }
 
     @Test
     public void testList4() {
         String contents =
             "def xxx = []\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Object>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Object>");
     }
 
     @Test
     public void testList5() {
         String contents =
             "def xxx = [ '' ]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.String>");
     }
 
     @Test
     public void testList6() {
         String contents =
             "def xxx = [ 123 ]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testList7() {
         String contents =
             "def xxx = [ 1 ].get(0)\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testList8() {
         String contents =
             "def xxx = [ 1 ].iterator()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Iterator<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.Iterator<java.lang.Integer>");
     }
 
     @Test
     public void testList9() {
         String contents =
             "def xxx = [ 1 ].iterator().next()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testList10() {
         String contents =
             "def xxx = [] << ''\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.String>");
     }
 
     @Test
@@ -156,8 +155,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = 9\n" +
             "def xxx = [x]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -165,8 +164,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = 9\n" +
             "def xxx = [x, '']\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -174,56 +173,56 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def x = 9\n" +
             "def xxx = [x + 9 * 8, '']\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test // GRECLIPSE-1040
     public void testSet1() {
         String contents =
             "def xxx = new HashSet()\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.HashSet");
+
+        assertType(contents, "xxx", "java.util.HashSet");
     }
 
     @Test
     public void testSet2() {
         String contents =
             "def xxx = new HashSet<>()\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.HashSet");
+
+        assertType(contents, "xxx", "java.util.HashSet");
     }
 
     @Test
     public void testSet3() {
         String contents =
             "def xxx = new HashSet<String>()\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.HashSet<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.HashSet<java.lang.String>");
     }
 
     @Test
     public void testSet4() {
         String contents =
             "def xxx = [] as Set\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.Set");
+
+        assertType(contents, "xxx", "java.util.Set");
     }
 
     @Test
     public void testSet5() {
         String contents =
             "def xxx = [ '' ] as Set\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.Set");
+
+        assertType(contents, "xxx", "java.util.Set");
     }
 
     @Test
     public void testSet6() {
         String contents =
             "def xxx = [ '' ] as Set<String>\n";
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 3, "java.util.Set<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.Set<java.lang.String>");
     }
 
     @Test
@@ -231,81 +230,81 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "SortedSet<Integer> ints = [1,2,3] as TreeSet\n" +
             "def xxx = ints*.shortValue()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Short>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Short>");
     }
 
     @Test
     public void testSet8() {
         String contents =
             "NavigableSet<Integer> ints = [1,2,3] as TreeSet\n" +
-            "def xxx = ints*.shortValue()";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Short>");
+            "def xxx = ints*.shortValue()\n";
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Short>");
     }
 
     @Test // GRECLIPSE-1040
     public void testMap1() {
         String contents =
             "def xxx = new HashMap()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.HashMap");
+
+        assertType(contents, "xxx", "java.util.HashMap");
     }
 
     @Test
     public void testMap2() {
         String contents =
             "def xxx = new HashMap<>()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.HashMap");
+
+        assertType(contents, "xxx", "java.util.HashMap");
     }
 
     @Test
     public void testMap3() {
         String contents =
             "def xxx = new HashMap<String,Integer>()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.HashMap<java.lang.String,java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.HashMap<java.lang.String,java.lang.Integer>");
     }
 
     @Test
     public void testMap4() {
         String contents =
             "def xxx = new HashMap<String,Integer>().keySet()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Set<java.lang.String>");
+
+        assertType(contents, "xxx", "java.util.Set<java.lang.String>");
     }
 
     @Test
     public void testMap5() {
         String contents =
             "def xxx = new HashMap<String,Integer>().values()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Collection<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.Collection<java.lang.Integer>");
     }
 
     @Test
     public void testMap6() {
         String contents =
             "def xxx = new HashMap<String,Integer>().entrySet()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Integer>>");
+
+        assertType(contents, "xxx", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Integer>>");
     }
 
     @Test
     public void testMap7() {
         String contents =
             "def xxx = new HashMap<String,Integer>().entrySet().iterator().next().key\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        assertType(contents, "xxx", "java.lang.String");
     }
 
     @Test
     public void testMap8() {
         String contents =
             "def xxx = new HashMap<String,Integer>().entrySet().iterator().next().value";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -313,24 +312,24 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<String,Integer> m\n" +
             "def xxx = m.entrySet().iterator().next().value\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
     public void testMap10() {
         String contents =
             "def xxx = [:]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Object,java.lang.Object>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
 
     @Test
     public void testMap11() {
         String contents =
             "def xxx = [ 1:1 ]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Integer>");
     }
 
     @Test
@@ -338,16 +337,16 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<Integer, Integer> m() {}\n" +
             "def xxx = m()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Integer,java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Integer>");
     }
 
     @Test
     public void testMap13() {
         String contents =
             "def xxx = [ 1:1 ].entrySet()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Set<java.util.Map$Entry<java.lang.Integer,java.lang.Integer>>");
+
+        assertType(contents, "xxx", "java.util.Set<java.util.Map$Entry<java.lang.Integer,java.lang.Integer>>");
     }
 
     @Test
@@ -356,8 +355,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def x = 9\n" +
             "def y = false\n" +
             "def xxx = [(x):y]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
 
     @Test
@@ -366,8 +365,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def x = 9\n" +
             "def y = false\n" +
             "def xxx = [(x+x):!y]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
 
     @Test
@@ -376,8 +375,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def x = 9\n" +
             "def y = false\n" +
             "def xxx = [(x+x):!y, a:'a', b:'b']\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+
+        assertType(contents, "xxx", "java.util.Map<java.lang.Integer,java.lang.Boolean>");
     }
 
     @Test
@@ -386,30 +385,16 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def x = 9\n" +
             "def y = false\n" +
             "def xxx = [[(x+x):!y, a:'a', b:'b']]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.util.Map<java.lang.Integer,java.lang.Boolean>>");
+
+        assertType(contents, "xxx", "java.util.List<java.util.Map<java.lang.Integer,java.lang.Boolean>>");
     }
 
     @Test
-    public void testListOfMap3() {
+    public void testListOfMap2() {
         String contents = "def x = [ ['a':11, 'b':12], ['a':21, 'b':22] ]\n" +
-            "def xxx = x*.a\n" +
-            "xxx";
-        String toFind = "xxx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
-    }
+            "def xxx = x*.a\n";
 
-    @Test
-    public void testMapOfMaps() {
-        String contents =
-            "def m = [ ['a':11, 'b':12] : ['a':21, 'b':22] ]\n" +
-            "def xxx = m\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Map<" +
-            "java.util.Map<java.lang.String,java.lang.Integer>,java.util.Map<java.lang.String,java.lang.Integer>" +
-            ">");
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -417,8 +402,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<String,List<Integer>> m\n" +
             "def xxx = m.entrySet().iterator().next().value\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.List<java.lang.Integer>");
+
+        assertType(contents, "xxx", "java.util.List<java.lang.Integer>");
     }
 
     @Test
@@ -426,8 +411,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<String,List<Integer>> m\n" +
             "def xxx = m.entrySet().iterator().next().value.iterator().next()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -435,8 +420,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def m = [1: [1]]\n" +
             "def xxx = m.entrySet().iterator().next().key\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -444,8 +429,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def m = [1: [1]]\n" +
             "def xxx = m.entrySet().iterator().next().value.iterator().next()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -453,8 +438,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "def m = [1: [1]]\n" +
             "def xxx = m.entrySet().iterator().next().value.iterator().next()\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.lang.Integer");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
@@ -462,8 +447,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<String, Map<Integer, List<Date>>> m\n" +
             "def xxx = m.get('foo').get(5).get(2)\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Date");
+
+        assertType(contents, "xxx", "java.util.Date");
     }
 
     @Test // GRECLIPSE-941
@@ -471,8 +456,28 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "Map<String, Map<Integer, List<Date>>> m\n" +
             "def xxx = m['foo'][5][2]\n";
-        int offset = contents.indexOf("xxx");
-        assertType(contents, offset, offset + 3, "java.util.Date");
+
+        assertType(contents, "xxx", "java.util.Date");
+    }
+
+    @Test
+    public void testMapOfMaps() {
+        String contents =
+            "def m = [ ['a':11, 'b':12] : ['a':21, 'b':22] ]\n" +
+            "def xxx = m\n";
+
+        assertType(contents, "xxx", "java.util.Map<java.util.Map<java.lang.String,java.lang.Integer>,java.util.Map<java.lang.String,java.lang.Integer>>");
+    }
+
+    @Test
+    public void testTypeExtendsMap() {
+        String contents =
+            "interface Config extends Map<String, Number> {}\n" +
+            "void meth(Config config) {\n" +
+            "  def xxx = config.whatever\n" +
+            "}\n";
+
+        assertType(contents, "xxx", "java.lang.Number");
     }
 
     @Test
