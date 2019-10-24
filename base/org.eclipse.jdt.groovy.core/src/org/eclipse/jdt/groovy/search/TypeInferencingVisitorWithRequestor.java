@@ -724,7 +724,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryTypeStack.removeLast();
         }
 
-        boolean isAssignment = Types.ofType(node.getOperation().getType(), Types.ASSIGNMENT_OPERATOR);
+        boolean isAssignment = node.getOperation().isA(Types.ASSIGNMENT_OPERATOR);
         BinaryExpression oldEnclosingAssignment = enclosingAssignment;
         if (isAssignment) {
             enclosingAssignment = node;
@@ -2830,11 +2830,14 @@ assert primaryExprType != null && dependentExprType != null;
             if (nsbe != null) {
                 be = nsbe;
             }
-            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF && be.getLeftExpression() instanceof VariableExpression) {
+            if (isInstanceOf(be) && be.getLeftExpression() instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) be.getLeftExpression();
                 VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
                 if (vi != null && vi.type != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
-                    return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
+                    return Collections.singletonMap(vi.name, be.getOperation().getType() == Types.KEYWORD_INSTANCEOF
+                        ? new ClassNode[] {be.getRightExpression().getType(), null} // instanceof
+                        : new ClassNode[] {null, be.getRightExpression().getType()} // !instanceof
+                    );
                 }
             }
         } else if (expression instanceof BooleanExpression) {
@@ -2842,12 +2845,13 @@ assert primaryExprType != null && dependentExprType != null;
             if (!types.isEmpty()) {
                 // check for "if (!(x instanceof y)) { ... } else { ... }"
                 if (expression instanceof NotExpression) {
-                    /*for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
-                        entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
-                    }*/
-                } else {
-                    return types;
+                    for (ClassNode[] value : types.values()) {
+                        ClassNode type = value[0];
+                        value[0] = value[1];
+                        value[1] = type;
+                    }
                 }
+                return types;
             }
         }
         return Collections.emptyMap();
@@ -2886,6 +2890,17 @@ assert primaryExprType != null && dependentExprType != null;
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {
         return (node.getOwnerType().isEnum() && node.getMethodAsString().equals("$INIT"));
+    }
+
+    private static boolean isInstanceOf(BinaryExpression node) {
+        // Groovy 3+: return node.getOperation().isA(Types.INSTANCEOF_OPERATOR);
+        switch (node.getOperation().getType()) {
+        case Types.KEYWORD_INSTANCEOF:
+        case 130/*NOT_INSTANCEOF*/:
+            return true;
+        default:
+            return false;
+        }
     }
 
     private static boolean isLazy(FieldNode fieldNode) {

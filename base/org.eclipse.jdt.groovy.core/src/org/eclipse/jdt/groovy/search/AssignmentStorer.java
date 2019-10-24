@@ -58,7 +58,7 @@ public class AssignmentStorer {
      * @param rhsType inferred type of the right-hand side (right expression of {@code exp})
      */
     public void storeAssignment(BinaryExpression exp, VariableScope scope, ClassNode rhsType) {
-        assert Types.ofType(exp.getOperation().getType(), Types.ASSIGNMENT_OPERATOR);
+        assert exp.getOperation().isA(Types.ASSIGNMENT_OPERATOR);
 
         if (exp instanceof DeclarationExpression) {
             DeclarationExpression decl = (DeclarationExpression) exp;

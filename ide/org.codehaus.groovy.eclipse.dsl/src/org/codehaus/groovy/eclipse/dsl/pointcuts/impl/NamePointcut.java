@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,7 +66,7 @@ public class NamePointcut extends FilteringPointcut<Object> {
                 return ((Variable) object).getName();
             } else if (object instanceof BinaryExpression &&
                 ((BinaryExpression) object).getLeftExpression() instanceof Variable &&
-                Types.ofType(((BinaryExpression) object).getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
+                ((BinaryExpression) object).getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
                 return ((Variable) ((BinaryExpression) object).getLeftExpression()).getName();
             } else if (object instanceof Expression) {
                 return ((Expression) object).getText();

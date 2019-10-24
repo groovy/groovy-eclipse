@@ -290,7 +290,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private boolean isLeftValue(IASTFragment fragment) {
         return (fragment.kind() == ASTFragmentKind.BINARY &&
-            Types.ofType(((BinaryExpressionFragment) fragment).getToken().getType(), Types.ASSIGNMENT_OPERATOR));
+            ((BinaryExpressionFragment) fragment).getToken().isA(Types.ASSIGNMENT_OPERATOR));
     }
 
     private List<IASTFragment> getMatchingExpressions() {

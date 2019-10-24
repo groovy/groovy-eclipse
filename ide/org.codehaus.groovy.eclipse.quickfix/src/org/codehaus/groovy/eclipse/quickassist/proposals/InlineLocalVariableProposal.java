@@ -92,9 +92,9 @@ public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
         boolean needsParens = false;
         if (valueExpression instanceof BinaryExpression) {
             BinaryExpression expr = (BinaryExpression) valueExpression;
-        if (expr.getOperation().getType() != Types.LEFT_SQUARE_BRACKET)
-            if (expr.getStart() == startOffset(expr.getLeftExpression()) ||
-                    expr.getEnd() == endOffset(expr.getRightExpression())) {
+            if (expr.getOperation().getType() != Types.LEFT_SQUARE_BRACKET && (
+                  expr.getStart() == startOffset(expr.getLeftExpression()) ||
+                    expr.getEnd() == endOffset(expr.getRightExpression()))) {
                 needsParens = true;
             }
         } else if (valueExpression instanceof TernaryExpression) {
@@ -208,7 +208,7 @@ public class InlineLocalVariableProposal extends GroovyQuickAssistProposal2 {
             public void visitBinaryExpression(BinaryExpression expression) {
                 if (expression != variableDeclaration && expression.getLeftExpression() instanceof VariableExpression &&
                         ((VariableExpression) expression.getLeftExpression()).getAccessedVariable() == variableExpr &&
-                        Types.ofType(expression.getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
+                        expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
                     throw new IllegalStateException();
                 }
                 super.visitBinaryExpression(expression);

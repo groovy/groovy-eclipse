@@ -103,7 +103,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ImportResolver;
-import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jface.text.BadLocationException;
@@ -873,9 +872,8 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     public void visitBinaryExpression(BinaryExpression expression) {
         boolean writeParanthesis = false;
         preVisitExpression(expression);
-        Token operation = expression.getOperation();
 
-        if (operation.getType() == Types.LEFT_SQUARE_BRACKET) {
+        if (expression.getOperation().getType() == Types.LEFT_SQUARE_BRACKET) {
             expression.getLeftExpression().visit(this);
             groovyCode.append("[");
             expression.getRightExpression().visit(this);
@@ -894,7 +892,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
             expression.getLeftExpression().visit(this);
             if (!"null".equals(expression.getRightExpression().getText())) {
                 groovyCode.append(" ");
-                groovyCode.append(operation.getText());
+                groovyCode.append(expression.getOperation().getText());
                 groovyCode.append(" ");
                 expression.getRightExpression().visit(this);
             }

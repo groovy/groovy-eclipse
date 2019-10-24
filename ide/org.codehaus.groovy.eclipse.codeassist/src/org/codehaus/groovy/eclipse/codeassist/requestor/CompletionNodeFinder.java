@@ -491,17 +491,17 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
-        if (Types.ofType(expression.getOperation().getType(), Types.ASSIGNMENT_OPERATOR)) {
+        if (expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
             lhsNode = expression.getLeftExpression();
             super.visitBinaryExpression(expression);
             lhsNode = null;
         } else {
             super.visitBinaryExpression(expression);
-        }
 
-        // check for an array access expression
-        if (expression.getOperation().getType() == Types.LEFT_SQUARE_BRACKET && check(expression)) {
-            createContext(expression, blockStack.getLast(), expressionOrStatement());
+            // check for an array access expression
+            if (expression.getOperation().getType() == Types.LEFT_SQUARE_BRACKET && check(expression)) {
+                createContext(expression, blockStack.getLast(), expressionOrStatement());
+            }
         }
     }
 
