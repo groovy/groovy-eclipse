@@ -73,7 +73,7 @@ public class FormatterPreferencesPage extends FieldEditorOverlayPage implements 
         PreferenceLinkArea area = new PreferenceLinkArea(getFieldEditorParent(),
             SWT.WRAP,
             "org.eclipse.jdt.ui.preferences.CodeFormatterPreferencePage", //$NON-NLS-1$
-            "\n" + "Tab and space related preferences are inherited from the <a>Java Formatter</a>",
+            "\n" + "Tab and space related preferences are inherited from the <a>Java > Code Style > Formatter</a>",
             (IWorkbenchPreferenceContainer) getContainer(),
             null);
         GridDataFactory.swtDefaults().align(SWT.FILL, SWT.TOP).grab(false, false).span(2, 1).applyTo(area.getControl());

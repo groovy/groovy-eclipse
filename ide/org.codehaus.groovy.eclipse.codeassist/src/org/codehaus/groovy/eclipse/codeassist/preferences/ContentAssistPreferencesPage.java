@@ -221,7 +221,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
         //
         insertPageLink("org.eclipse.jdt.ui.preferences.CodeAssistPreferencePage",
-            "Additional preferences are inherited from <a>Java Content Assist</a>");
+            "Additional preferences are inherited from <a>Java > Editor > Content Assist</a>");
     }
 
     private Composite createFieldGroup(String label) {
