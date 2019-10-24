@@ -2697,7 +2697,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testInstanceOf10() {
         String contents =
             "def val\n" +
-            "def str = !(val instanceof String) ? val.toString : val\n" +
+            "def str = !(val instanceof String) ? val.toString() : val\n" +
             "val";
 
         int start = contents.indexOf("val");
@@ -2753,6 +2753,29 @@ public final class InferencingTests extends InferencingTestSuite {
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.io.Serializable");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/977
+    public void testInstanceOf12() {
+        String contents =
+            "class C {\n" +
+            "  private Number value = 42\n" +
+            "  boolean equals(Object that) {\n" +
+            "    that instanceof C && this.value.equals(that.value)\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that instanceof");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("value.equals");
+        assertType(contents, offset, offset + 5, "java.lang.Number");
+
+        offset = contents.lastIndexOf("that");
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.lastIndexOf("value");
+        assertType(contents, offset, offset + 5, "java.lang.Number");
     }
 
     @Test

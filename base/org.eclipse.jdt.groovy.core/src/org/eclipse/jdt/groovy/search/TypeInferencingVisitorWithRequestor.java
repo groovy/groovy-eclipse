@@ -744,17 +744,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         ClassNode primaryExprType;
+        VariableScope trueScope = null;
         try {
             toVisitPrimary.visit(this);
 
             primaryExprType = primaryTypeStack.removeLast();
             if (isAssignment) {
                 assignmentStorer.storeAssignment(node, scopes.getLast(), primaryExprType);
+
+            } else if (node.getOperation().getType() == Types.LOGICAL_AND) { // check for instanceof guard
+                Map<String, ClassNode[]> types = inferInstanceOfType(toVisitPrimary, scopes.getLast());
+                if (!types.isEmpty()) {
+                    trueScope = new VariableScope(scopes.getLast(), toVisitPrimary, false);
+                    for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                        if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
+                            trueScope.updateVariableSoft(entry.getKey(), entry.getValue()[0]);
+                        }
+                    }
+                    scopes.add(trueScope);
+                }
             }
 
             toVisitDependent.visit(this);
         } finally {
             completeExpressionStack.removeLast();
+            if (trueScope != null)
+                scopes.removeLast().bubbleUpdates();
         }
         ClassNode completeExprType = primaryExprType;
         ClassNode dependentExprType = primaryTypeStack.removeLast();
@@ -2805,35 +2820,37 @@ assert primaryExprType != null && dependentExprType != null;
         return methodNode.getParameters();
     }
 
-    private static Map<String, ClassNode[]> inferInstanceOfType(BooleanExpression condition, VariableScope scope) {
+    private static Map<String, ClassNode[]> inferInstanceOfType(Expression expression, VariableScope scope) {
         // check for "if (x instanceof y) { ... }" flow typing
-        if (condition.getExpression() instanceof BinaryExpression) {
-            BinaryExpression be = (BinaryExpression) condition.getExpression();
+        if (expression instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) expression;
             // check for "if (x == null || x instanceof y) { .. }" or
             //  "if (x != null && x instanceof y) { .. }" flow typing
             BinaryExpression nsbe = nullSafeBinaryExpression(be);
             if (nsbe != null) {
                 be = nsbe;
             }
-            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
-                    be.getLeftExpression() instanceof VariableExpression) {
+            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF && be.getLeftExpression() instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) be.getLeftExpression();
                 VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
                 if (vi != null && vi.type != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
                     return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
                 }
             }
-        }/* else if (condition.getExpression() instanceof NotExpression) {
-            // check for "if (!(x instanceof y)) { ... } else { ... }"
-            Map<String, ClassNode[]> types = inferInstanceOfType((NotExpression) condition.getExpression(), scope);
+        } else if (expression instanceof BooleanExpression) {
+            Map<String, ClassNode[]> types = inferInstanceOfType(((BooleanExpression) expression).getExpression(), scope);
             if (!types.isEmpty()) {
-                for (Map.Entry<String, ClassNode[]>entry : types.entrySet()) {
-                    entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
+                // check for "if (!(x instanceof y)) { ... } else { ... }"
+                if (expression instanceof NotExpression) {
+                    /*for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                        entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
+                    }*/
+                } else {
+                    return types;
                 }
-                return types;
             }
-        }*/
-        return Collections.EMPTY_MAP;
+        }
+        return Collections.emptyMap();
     }
 
     /**
