@@ -32,7 +32,9 @@ import java.util.Arrays;
 import static java.beans.Introspector.decapitalize;
 
 /**
- * Facilitates the generation of statically-compiled bytecode for property access.
+ * Contains helper methods aimed at facilitating the generation of statically compiled bytecode for property access.
+ *
+ * @since 2.4.0
  */
 public abstract class StaticPropertyAccessHelper {
 

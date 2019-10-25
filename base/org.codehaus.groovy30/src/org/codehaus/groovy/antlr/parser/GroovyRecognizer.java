@@ -220,14 +220,9 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
-        // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
         parser.lexer = lexer;
         lexer.parser = parser;
         parser.getASTFactory().setASTNodeClass(GroovySourceAST.class);
-        parser.warningList = new ArrayList();
-        // GRECLIPSE add
-        parser.errorList = new ArrayList();
-        // GRECLIPSE end
         return parser;
     }
     // Create a scanner that reads from the input stream passed to us...
@@ -237,13 +232,13 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
     @SuppressWarnings("unused")
-    private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
+    private static GroovySourceAST dummyVariableToForceClassLoaderToFindASTClass = new GroovySourceAST();
 
-    List warningList;
+    List warningList = new ArrayList();
     public List getWarningList() { return warningList; }
 
     // GRECLIPSE add
-    List errorList;
+    List errorList = new ArrayList();
     public List getErrorList() { return errorList; }
 
     List<Comment> comments = new ArrayList<>();
@@ -252,20 +247,17 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
 
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
-    public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+    public void setFilename(String f) { lexer.setFilename(f); super.setFilename(f); }
 
-    @SuppressWarnings("unused")
-    private SourceBuffer sourceBuffer;
+    @Deprecated
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
-        this.sourceBuffer = sourceBuffer;
     }
 
-    /** Create an AST node with the token type and text passed in, but
-     *  with the same background information as another supplied Token (e.g.&nbsp;line numbers).
+    /**
+     * Creates an AST node with the token type and text passed in, but
+     * with the same background information as another supplied Token (e.g.&nbsp;line numbers).
      * To be used in place of antlr tree construction syntax,
      * i.e. #[TOKEN,"text"]  becomes  create(TOKEN,"text",anotherToken)
-     *
-     * todo - change antlr.ASTFactory to do this instead...
      */
     public AST create(int type, String txt, AST first) {
         AST t = astFactory.create(type,txt);
@@ -336,7 +328,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return node;
     }
 
-    private Stack<Integer> commentStartPositions = new Stack<>();
+    private LinkedList<Integer> commentStartPositions = new LinkedList<>();
 
     public void startComment(int line, int column) {
         commentStartPositions.push((line << 16) + column);
@@ -392,7 +384,6 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         clone.setColumn(t.getColumn());
         return clone;
     }
-
 
     // stuff to adjust ANTLR's tracing machinery
     public static boolean tracing = false;  // only effective if antlr.Tool is run with -traceParser
@@ -545,23 +536,6 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
 
         if (x == null || x.getType() != IDENT)  return false;  // cannot happen?
         return cname.equals(x.getText());
-    }
-
-    @SuppressWarnings("unused")
-    private void dumpTree(AST ast, String offset) {
-        dump(ast, offset);
-        for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
-            dumpTree(node, offset+"\t");
-        }
-    }
-
-    private void dump(AST node, String offset) {
-        System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
-    }
-
-    private String getTokenName(AST node) {
-        if (node == null) return "null";
-        return getTokenName(node.getType());
     }
 
     // Scratch variable for last 'sep' token.
@@ -1036,10 +1010,12 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             packageDefinition_AST = (AST)currentAST.root;
             
+            // GRECLIPSE add
             if (id_AST == null) {
             id_AST = missingIdentifier(LT(0), null);
-            reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn()-1);
+            reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn() - 1);
             }
+            // GRECLIPSE end
             packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
             
             currentAST.root = packageDefinition_AST;
@@ -1927,7 +1903,7 @@ inputState.guessing--;
         {
             match(LITERAL_static);
             if ( inputState.guessing==0 ) {
-                isStatic=true;
+                isStatic = true;
             }
             break;
         }
@@ -1975,9 +1951,11 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             importStatement_AST = (AST)currentAST.root;
             
+            // GRECLIPSE add
             if (is_AST == null) {
             is_AST = missingIdentifier(LT(0), null);
             }
+            // GRECLIPSE end
             if (!isStatic) {
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
             } else {
@@ -5647,7 +5625,7 @@ inputState.guessing--;
                 reportError(e);
                 classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
                 currentAST.root = classBlock_AST;
-                currentAST.child = classBlock_AST != null && classBlock_AST.getFirstChild() != null ? classBlock_AST.getFirstChild() : classBlock_AST;
+                currentAST.child = Optional.ofNullable(classBlock_AST).map(AST::getFirstChild).orElse(classBlock_AST);
                 currentAST.advanceChildToEnd();
                 
             } else {
@@ -6627,8 +6605,7 @@ inputState.guessing--;
                 }
                 if ( inputState.guessing==0 ) {
                     annotationField_AST = (AST)currentAST.root;
-                    annotationField_AST =
-                    (AST)astFactory.make( (new ASTArray(5)).add(create(ANNOTATION_FIELD_DEF,"ANNOTATION_FIELD_DEF",first,LT(1))).add(mods_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))).add(i_AST).add(amvi_AST));
+                    annotationField_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(ANNOTATION_FIELD_DEF,"ANNOTATION_FIELD_DEF",first,LT(1))).add(mods_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))).add(i_AST).add(amvi_AST));
                     currentAST.root = annotationField_AST;
                     currentAST.child = annotationField_AST!=null &&annotationField_AST.getFirstChild()!=null ?
                         annotationField_AST.getFirstChild() : annotationField_AST;
@@ -8347,6 +8324,7 @@ inputState.guessing--;
                 constructorBody_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(SLIST,"{",first,LT(0))).add(eci_AST).add(bb1_AST));
                 else
                 constructorBody_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(0))).add(bb2_AST));
+                
                 currentAST.root = constructorBody_AST;
                 currentAST.child = constructorBody_AST!=null &&constructorBody_AST.getFirstChild()!=null ?
                     constructorBody_AST.getFirstChild() : constructorBody_AST;
@@ -9077,7 +9055,7 @@ inputState.guessing--;
             isPathExpr = (head_AST == lastPathExpression);
         }
         {
-        if (((_tokenSet_82.member(LA(1))) && (_tokenSet_57.member(LA(2))))&&(LA(1)!=LITERAL_else && isPathExpr /*&& #head.getType()==METHOD_CALL*/)) {
+        if (((_tokenSet_82.member(LA(1))) && (_tokenSet_57.member(LA(2))))&&(LA(1)!=LITERAL_else && isPathExpr)) {
             commandArgumentsGreedy(head_AST);
             cmd_AST = (AST)returnAST;
             if ( inputState.guessing==0 ) {
@@ -9589,8 +9567,10 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             openOrClosableBlock_AST = (AST)currentAST.root;
             
-            if (cp_AST == null)    openOrClosableBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
-            else                openOrClosableBlock_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(CLOSABLE_BLOCK,"{",first,LT(1))).add(cp_AST).add(bb_AST));
+            if (cp_AST == null)
+            openOrClosableBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(SLIST,"{",first,LT(1))).add(bb_AST));
+            else
+            openOrClosableBlock_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(CLOSABLE_BLOCK,"{",first,LT(1))).add(cp_AST).add(bb_AST));
             
             currentAST.root = openOrClosableBlock_AST;
             currentAST.child = openOrClosableBlock_AST!=null &&openOrClosableBlock_AST.getFirstChild()!=null ?
@@ -13048,8 +13028,7 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             stringConstructorExpression_AST = (AST)currentAST.root;
             ce_AST.setType(STRING_LITERAL);
-            stringConstructorExpression_AST =
-            (AST)astFactory.make( (new ASTArray(2)).add(create(STRING_CONSTRUCTOR,"STRING_CONSTRUCTOR",first,LT(1))).add(stringConstructorExpression_AST));
+            stringConstructorExpression_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(STRING_CONSTRUCTOR,"STRING_CONSTRUCTOR",first,LT(1))).add(stringConstructorExpression_AST));
             
             currentAST.root = stringConstructorExpression_AST;
             currentAST.child = stringConstructorExpression_AST!=null &&stringConstructorExpression_AST.getFirstChild()!=null ?

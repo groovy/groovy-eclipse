@@ -25,6 +25,7 @@ import groovyjarjarantlr.NoViableAltException;
 import groovyjarjarantlr.NoViableAltForCharException;
 import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.io.FileReaderSource;
@@ -256,10 +257,9 @@ public class SourceUnit extends ProcessingUnit {
         try {
             this.ast = parserPlugin.buildAST(this, this.classLoader, this.cst);
             this.ast.setDescription(this.name);
-        }
-        catch (SyntaxException e) {
+        } catch (SyntaxException e) {
             if (this.ast == null) {
-                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
+                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
                 this.ast = new ModuleNode(this);
             }
             getErrorCollector().addError(new SyntaxErrorMessage(e, this));
@@ -349,6 +349,29 @@ public class SourceUnit extends ProcessingUnit {
      */
     public void addError(SyntaxException se) throws CompilationFailedException {
         getErrorCollector().addError(se, this);
+    }
+
+    /**
+     * Convenience wrapper for {@link ErrorCollector#addFatalError(org.codehaus.groovy.control.messages.Message)}.
+     *
+     * @param msg the error message
+     * @param node the AST node
+     * @throws CompilationFailedException on error
+     * @since 3.0.0
+     */
+    public void addFatalError(String msg, ASTNode node) throws CompilationFailedException {
+        getErrorCollector().addFatalError(
+                new SyntaxErrorMessage(
+                        new SyntaxException(
+                                msg,
+                                node.getLineNumber(),
+                                node.getColumnNumber(),
+                                node.getLastLineNumber(),
+                                node.getLastColumnNumber()
+                        ),
+                        this
+                )
+        );
     }
 
     public void addErrorAndContinue(SyntaxException se) throws CompilationFailedException {

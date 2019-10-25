@@ -278,7 +278,7 @@ public class GroovyLexer extends groovyjarjarantlr.CharScanner implements Groovy
         };
     }
 
-        // stuff to adjust ANTLR's tracing machinery
+    // stuff to adjust ANTLR's tracing machinery
     public static boolean tracing = false;  // only effective if antlr.Tool is run with -traceLexer
     public void traceIn(String rname) throws CharStreamException {
         if (!GroovyLexer.tracing)  return;
@@ -315,8 +315,7 @@ public class GroovyLexer extends groovyjarjarantlr.CharScanner implements Groovy
         if (!z && parser!=null)  parser.requireFailed(problem, solution);
         if (!z) {
             int lineNum = inputState.getLine(), colNum = inputState.getColumn();
-            throw new SemanticException(problem + ";\n   solution: " + solution,
-                                        getFilename(), lineNum, colNum);
+            throw new SemanticException(problem + ";\n   solution: " + solution, getFilename(), lineNum, colNum);
         }
     }
 public GroovyLexer(InputStream in) {
@@ -1765,9 +1764,11 @@ tryAgain:
         } while (true);
         }
         if ( inputState.guessing==0 ) {
+            
+            // GRECLIPSE add
             if (parser != null) parser.endComment(0, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
             // GRECLIPSE end
-            if (!whitespaceIncluded)  _ttype = Token.SKIP;
+            if (!whitespaceIncluded) _ttype = Token.SKIP;
             
         }
         if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
@@ -1827,8 +1828,11 @@ inputState.guessing--;
         }
         match("*/");
         if ( inputState.guessing==0 ) {
+            
+            // GRECLIPSE add
             if (parser != null) parser.endComment(1, inputState.getLine(), inputState.getColumn(), String.valueOf(text.getBuffer(), _begin, text.length() - _begin));
-            if (!whitespaceIncluded)  _ttype = Token.SKIP;
+            // GRECLIPSE end
+            if (!whitespaceIncluded) _ttype = Token.SKIP;
             
         }
         if ( _createToken && _token==null && _ttype!=Token.SKIP ) {

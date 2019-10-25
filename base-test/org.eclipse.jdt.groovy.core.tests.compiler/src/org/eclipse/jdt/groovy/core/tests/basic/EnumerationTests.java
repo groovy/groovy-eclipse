@@ -33,7 +33,7 @@ import org.junit.Test;
 public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testEnums1() {
+    public void testEnum1() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -50,7 +50,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums2() {
+    public void testEnum2() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -68,7 +68,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums3() {
+    public void testEnum3() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -98,7 +98,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums3b() {
+    public void testEnum3b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -113,7 +113,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums4() {
+    public void testEnum4() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -133,7 +133,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums4a() {
+    public void testEnum4a() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -153,7 +153,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums4b() {
+    public void testEnum4b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -173,7 +173,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums5() {
+    public void testEnum5() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -195,7 +195,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums5a() {
+    public void testEnum5a() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -217,7 +217,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test @Ignore("not supported by either parser")
-    public void testEnums5b() {
+    public void testEnum5b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -239,7 +239,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums6() {
+    public void testEnum6() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -260,7 +260,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums7() {
+    public void testEnum7() {
         //@formatter:off
         String[] sources = {
             "Cards.groovy",
@@ -287,7 +287,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums8() {
+    public void testEnum8() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -306,7 +306,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums9() {
+    public void testEnum9() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -325,7 +325,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums10() {
+    public void testEnum10() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -344,7 +344,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums11() {
+    public void testEnum11() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -386,7 +386,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums12() {
+    public void testEnum12() {
         try {
             JDTResolver.recordInstances = true;
             //@formatter:off
@@ -438,7 +438,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnumStatic_GRE974() {
+    public void testEnum13() {
         //@formatter:off
         String[] sources = {
             "be/flow/A.groovy",
@@ -708,5 +708,35 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "\t             ^^^^^\n" +
             "Groovy:Modifier 'static' not allowed here.\n" +
             "----------\n");
+    }
+
+    @Test // GROOVY-8444
+    public void testSwitchCasesWithoutQualifier() {
+        assumeTrue(isAtLeastGroovy(30));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "enum Move { ROCK, PAPER, SCISSORS }\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void make(Move move) {\n" +
+            "  switch (move) {\n" +
+            "   case ROCK:\n" +
+            "    print 'rock'; break\n" +
+            "   case PAPER:\n" +
+            "    print 'paper'; break\n" +
+            "   case SCISSORS:\n" +
+            "    print 'scissors'; break\n" +
+            "   default:\n" +
+            "    throw new AssertionError(move);\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "make(Move.ROCK)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "rock");
     }
 }

@@ -72,6 +72,11 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     @Override
+    protected SourceUnit getSourceUnit() {
+        return this.source;
+    }
+
+    @Override
     public void visitClass(ClassNode node) {
         AnnotationConstantsVisitor acv = new AnnotationConstantsVisitor();
         acv.visitClass(node, this.source);
@@ -151,9 +156,16 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             addError("Annotations are not supported in the current runtime. " + JVM_ERROR_MESSAGE, node);
             return;
         }
-        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<String, List<AnnotationNode>>();
+        Map<String, List<AnnotationNode>> nonSourceAnnotations = new LinkedHashMap<>();
         for (AnnotationNode unvisited : node.getAnnotations()) {
-            AnnotationNode visited = visitAnnotation0(unvisited);
+            AnnotationNode visited;
+            {
+                ErrorCollector errorCollector = new ErrorCollector(source.getConfiguration());
+                AnnotationVisitor visitor = new AnnotationVisitor(source, errorCollector);
+                visited = visitor.visit(unvisited);
+                source.getErrorCollector().addCollectorContents(errorCollector);
+            }
+
             String name = visited.getClassNode().getName();
             if (!visited.hasSourceRetention()) {
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
@@ -200,8 +212,8 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                     AnnotationNode collector = new AnnotationNode(repeatable);
                     /* GRECLIPSE edit -- GROOVY-9095
                     if (repeatable.isResolved()) {
-                        Class repeatableType = repeatable.getTypeClass();
-                        Retention retAnn = (Retention) repeatableType.getAnnotation(Retention.class);
+                        Class<?> repeatableType = repeatable.getTypeClass();
+                        Retention retAnn = repeatableType.getAnnotation(Retention.class);
                         collector.setRuntimeRetention(retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME));
                     } else if (repeatable.redirect() != null) {
                         for (AnnotationNode annotationNode : repeatable.redirect().getAnnotations()) {
@@ -315,20 +327,6 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     }
 
     /**
-     * Resolve metadata and details of the annotation.
-     *
-     * @param unvisited the node to visit
-     * @return the visited node
-     */
-    private AnnotationNode visitAnnotation0(AnnotationNode unvisited) {
-        ErrorCollector errorCollector = new ErrorCollector(this.source.getConfiguration());
-        AnnotationVisitor visitor = new AnnotationVisitor(this.source, errorCollector);
-        AnnotationNode visited = visitor.visit(unvisited);
-        this.source.getErrorCollector().addCollectorContents(errorCollector);
-        return visited;
-    }
-
-    /**
      * Check if the current runtime allows Annotation usage.
      *
      * @return true if running on a 1.5+ runtime
@@ -336,24 +334,4 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
     protected boolean isAnnotationCompatible() {
         return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
-
-    /* GRECLIPSE edit
-    public void addError(String msg, ASTNode expr) {
-        this.source.getErrorCollector().addErrorAndContinue(
-                new SyntaxErrorMessage(
-                        new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), this.source)
-        );
-    }
-    */
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return this.source;
-    }
-
-    /* GRECLIPSE edit
-    public void visitGenericType(GenericsType genericsType) {
-
-    }
-    */
 }

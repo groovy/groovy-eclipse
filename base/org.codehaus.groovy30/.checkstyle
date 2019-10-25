@@ -46,7 +46,6 @@
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/VariableScopeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BytecodeHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
@@ -70,7 +69,6 @@
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LazyASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/MethodCallExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/AbstractExtensionMethodCache.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />

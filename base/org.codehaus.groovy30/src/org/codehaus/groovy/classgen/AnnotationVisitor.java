@@ -140,6 +140,7 @@ public class AnnotationVisitor {
         ClassNode classNode = node.getClassNode();
         for (MethodNode mn : classNode.getMethods()) {
             String methodName = mn.getName();
+            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
             // GRECLIPSE edit
             //if (mn.getCode() == null && !attributes.containsKey(methodName)) {
             if (!mn.hasAnnotationDefault() && !attributes.containsKey(methodName)) {

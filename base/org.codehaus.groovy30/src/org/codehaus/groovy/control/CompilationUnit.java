@@ -19,13 +19,12 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyRuntimeException;
 import groovy.transform.CompilationUnitAware;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
@@ -43,6 +42,7 @@ import org.codehaus.groovy.control.io.InputStreamReaderSource;
 import org.codehaus.groovy.control.io.ReaderSource;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
@@ -53,7 +53,6 @@ import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
 
 import javax.tools.JavaFileObject;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -102,6 +101,7 @@ public class CompilationUnit extends ProcessingUnit {
     protected ProgressCallback progressCallback;  // A callback for use during compile()
     protected ResolveVisitor resolveVisitor;
     protected StaticImportVisitor staticImportVisitor;
+    protected DefaultTransformer defaultTransformer;
     protected OptimizerVisitor optimizer;
     protected ClassNodeResolver classNodeResolver;
 
@@ -173,6 +173,7 @@ public class CompilationUnit extends ProcessingUnit {
         this.verifier = new Verifier();
         this.resolveVisitor = new ResolveVisitor(this);
         this.staticImportVisitor = new StaticImportVisitor();
+        this.defaultTransformer = new DefaultTransformer();
         this.optimizer = new OptimizerVisitor(this);
 
         initPhaseOperations();
@@ -286,6 +287,8 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }, Phases.INSTRUCTION_SELECTION);
+
+        addPhaseOperation(defaultTransform, Phases.INSTRUCTION_SELECTION);
     }
 
     private void applyCompilationCustomizers() {
@@ -517,9 +520,9 @@ public class CompilationUnit extends ProcessingUnit {
      * for each primary and inner class.  Use setClassgenCallback() before
      * running compile() to set your callback.
      */
-    // TODO: Convert to functional interface?
-    public abstract static class ClassgenCallback {
-        public abstract void call(ClassVisitor writer, ClassNode node) throws CompilationFailedException;
+    @FunctionalInterface
+    public interface ClassgenCallback {
+        void call(ClassVisitor writer, ClassNode node) throws CompilationFailedException;
     }
 
     /**
@@ -540,9 +543,9 @@ public class CompilationUnit extends ProcessingUnit {
      * ProcessingUnit and a phase indicator.  Use setProgressCallback()
      * before running compile() to set your callback.
      */
-    // TODO: Convert to functional interface?
-    public abstract static class ProgressCallback {
-        public abstract void call(ProcessingUnit context, int phase) throws CompilationFailedException;
+    @FunctionalInterface
+    public interface ProgressCallback {
+        void call(ProcessingUnit context, int phase) throws CompilationFailedException;
     }
 
     /**
@@ -699,6 +702,12 @@ public class CompilationUnit extends ProcessingUnit {
         }
     };
 
+    private PrimaryClassNodeOperation defaultTransform = new PrimaryClassNodeOperation() {
+        public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+            defaultTransformer.visitClass(classNode, source);
+        }
+    };
+
     /**
      * Runs convert() on a single SourceUnit.
      */
@@ -797,24 +806,31 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Run the Verifier on the outer class
             //
+            GroovyClassVisitor visitor = verifier;
             try {
-                verifier.visitClass(classNode);
-            } catch (GroovyRuntimeException rpe) {
-                ASTNode node = rpe.getNode();
-                getErrorCollector().addError(
-                        new SyntaxException(rpe.getMessage(), node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()),
-                        source
-                );
+                visitor.visitClass(classNode);
+            } catch (RuntimeParserException rpe) {
+                getErrorCollector().addError(new SyntaxException(rpe.getMessage(), rpe.getNode()), source);
             }
 
-            LabelVerifier lv = new LabelVerifier(source);
-            lv.visitClass(classNode);
+            visitor = new LabelVerifier(source);
+            visitor.visitClass(classNode);
 
-            ClassCompletionVerifier completionVerifier = new ClassCompletionVerifier(source);
-            completionVerifier.visitClass(classNode);
+            visitor = new InstanceOfVerifier() {
+                @Override
+                protected SourceUnit getSourceUnit() {
+                    return source;
+                }
+            };
+            visitor.visitClass(classNode);
 
-            ExtendedVerifier xverifier = new ExtendedVerifier(source);
-            xverifier.visitClass(classNode);
+            visitor = new ClassCompletionVerifier(source);
+            visitor.visitClass(classNode);
+
+            visitor = new ExtendedVerifier(source);
+            visitor.visitClass(classNode);
+
+            visitor = null;
 
             // because the class may be generated even if a error was found
             // and that class may have an invalid format we fail here if needed
@@ -823,14 +839,14 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Prep the generator machinery
             //
-            ClassVisitor visitor = createClassVisitor();
+            ClassVisitor classVisitor = createClassVisitor();
 
             String sourceName = (source == null ? classNode.getModule().getDescription() : source.getName());
             // only show the file name and its extension like javac does in its stacktraces rather than the full path
             // also takes care of both \ and / depending on the host compiling environment
             if (sourceName != null)
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
-            AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
+            AsmClassGenerator generator = new AsmClassGenerator(source, context, classVisitor, sourceName);
 
             // GRECLIPSE add -- if there are errors, don't generate code
             // code gen can fail unexpectedly if there was an earlier error
@@ -842,14 +858,14 @@ public class CompilationUnit extends ProcessingUnit {
             //
             generator.visitClass(classNode);
 
-            byte[] bytes = ((ClassWriter) visitor).toByteArray();
+            byte[] bytes = ((ClassWriter) classVisitor).toByteArray();
             generatedClasses.add(new GroovyClass(classNode.getName(), bytes/*GRECLIPSE add*/, classNode, source/*GRECLIPSE end*/));
 
             //
             // Handle any callback that's been set
             //
             if (CompilationUnit.this.classgenCallback != null) {
-                classgenCallback.call(visitor, classNode);
+                classgenCallback.call(classVisitor, classNode);
             }
 
             //

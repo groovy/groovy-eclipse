@@ -19,6 +19,8 @@
 package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyClassLoader;
+import groovy.lang.Tuple;
+import groovy.lang.Tuple3;
 import groovy.transform.CompilationUnitAware;
 import org.codehaus.groovy.GroovyException;
 import org.codehaus.groovy.ast.ASTNode;
@@ -30,6 +32,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.ASTTransformationsContext;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -56,7 +59,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -158,11 +160,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             transforms = new HashMap<ASTNode, List<ASTTransformation>>();
             for (Map.Entry<Class<? extends ASTTransformation>, Set<ASTNode>> entry : baseTransforms.entrySet()) {
                 for (ASTNode node : entry.getValue()) {
-                    List<ASTTransformation> list = transforms.get(node);
-                    if (list == null)  {
-                        list = new ArrayList<ASTTransformation>();
-                        transforms.put(node, list);
-                    }
+                    List<ASTTransformation> list = transforms.computeIfAbsent(node, k -> new ArrayList<>());
                     list.add(transformInstances.get(entry.getKey()));
                 }
             }
@@ -217,12 +215,49 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
      */
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
-        for (AnnotationNode annotation : node.getAnnotations()) {
+        for (AnnotationNode annotation : distinctAnnotations(node)) {
             if (transforms.containsKey(annotation)) {
                 targetNodes.add(new ASTNode[]{annotation, node});
             }
         }
     }
+
+    private static final Tuple3<String, String, String> COMPILEDYNAMIC_AND_COMPILESTATIC_AND_TYPECHECKED =
+            Tuple.tuple("groovy.transform.CompileDynamic", "groovy.transform.CompileStatic", "groovy.transform.TypeChecked");
+
+    // GROOVY-9215
+    // `StaticTypeCheckingVisitor` visits multi-times because `node` has duplicated `CompileStatic` and `TypeChecked`
+    // If annotation with higher priority appears, annotation with lower priority will be ignored
+    // Priority: CompileDynamic > CompileStatic > TypeChecked
+    private List<AnnotationNode> distinctAnnotations(AnnotatedNode node) {
+        List<AnnotationNode> result = new LinkedList<>();
+        AnnotationNode resultAnnotationNode = null;
+        int resultIndex = -1;
+
+        for (AnnotationNode annotationNode : node.getAnnotations()) {
+            int index = COMPILEDYNAMIC_AND_COMPILESTATIC_AND_TYPECHECKED.indexOf(annotationNode.getClassNode().getName());
+            if (-1 != index) {
+                if (1 == index) { // CompileStatic
+                    Expression value = annotationNode.getMember("value");
+                    if (null != value && "groovy.transform.TypeCheckingMode.SKIP".equals(value.getText())) {
+                        index = 0; // `CompileStatic` with "SKIP" `value` is actually `CompileDynamic`
+                    }
+                }
+
+                if (null == resultAnnotationNode || index < resultIndex) {
+                    resultAnnotationNode = annotationNode;
+                    resultIndex = index;
+                }
+                continue;
+            }
+            result.add(annotationNode);
+        }
+
+        if (null != resultAnnotationNode) result.add(resultAnnotationNode);
+
+        return result;
+    }
+
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         final ASTTransformationsContext context = compilationUnit.getASTTransformationsContext();
@@ -345,14 +380,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
             addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         } else {
-            Iterator<Map.Entry<String, URL>> it = transformNames.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<String, URL> entry = it.next();
-                if (!context.getGlobalTransformNames().add(entry.getKey())) {
-                    // phase operations for this transform class have already been added before, so remove from current scan cycle
-                    it.remove();
-                }
-            }
+            // phase operations for this transform class have already been added before, so remove from current scan cycle
+            transformNames.entrySet().removeIf(entry -> !context.getGlobalTransformNames().add(entry.getKey()));
             addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         }
     }

@@ -252,10 +252,7 @@ public class ExpressionUtils {
                         Field field = type.redirect().getTypeClass().getField(pe.getPropertyAsString());
                         if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
                             ConstantExpression ce3 = new ConstantExpression(field.get(null), true);
-                            // GRECLIPSE edit
-                            //ce3.setSourcePosition(exp);
                             configure(exp, ce3);
-                            // GRECLIPSE end
                             return ce3;
                         }
                     } catch(Exception e) {

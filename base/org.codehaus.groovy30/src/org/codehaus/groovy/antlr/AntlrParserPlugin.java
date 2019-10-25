@@ -132,12 +132,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
  */
+@Deprecated
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 
     private static class AnonymousInnerClassCarrier extends Expression {
@@ -1359,6 +1361,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // GRECLIPSE end
             node = node.getNextSibling();
         }
+
         if (classNode.isInterface()) {
             modifiers |= Opcodes.ACC_STATIC | Opcodes.ACC_FINAL;
             if ((modifiers & (Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) == 0) {
@@ -1446,32 +1449,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
+    @Deprecated
     public static Expression getDefaultValueForPrimitive(ClassNode type) {
-        if (type == ClassHelper.int_TYPE) {
-            return new ConstantExpression(0);
-        }
-        if (type == ClassHelper.long_TYPE) {
-            return new ConstantExpression(0L);
-        }
-        if (type == ClassHelper.double_TYPE) {
-            return new ConstantExpression(0.0);
-        }
-        if (type == ClassHelper.float_TYPE) {
-            return new ConstantExpression(0.0F);
-        }
-        if (type == ClassHelper.boolean_TYPE) {
-            return ConstantExpression.FALSE;
-        }
-        if (type == ClassHelper.short_TYPE) {
-            return new ConstantExpression((short) 0);
-        }
-        if (type == ClassHelper.byte_TYPE) {
-            return new ConstantExpression((byte) 0);
-        }
-        if (type == ClassHelper.char_TYPE) {
-            return new ConstantExpression((char) 0);
-        }
-        return null;
+        return PrimitiveHelper.getDefaultValueForPrimitive(type);
     }
 
     protected ClassNode[] interfaces(AST node) {
@@ -1842,7 +1822,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (node != null) {
             messageExpression = expression(node);
         } else {
-            messageExpression = ConstantExpression.NULL;
+            messageExpression = nullX();
         }
         AssertStatement assertStatement = new AssertStatement(booleanExpression, messageExpression);
         configureAST(assertStatement, assertNode);
@@ -2031,7 +2011,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         //if (exprNode == null) {
         //    exprNode = node.getNextSibling();
         //}
-        Expression expression = exprNode == null ? ConstantExpression.NULL : expression(exprNode);
+        Expression expression = exprNode == null ? nullX() : expression(exprNode);
         ReturnStatement returnStatement = new ReturnStatement(expression);
         configureAST(returnStatement, node);
         return returnStatement;
@@ -2054,8 +2034,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 tmpDefaultStatement = statement(child.getNextSibling());
             }
-            if (tmpDefaultStatement != EmptyStatement.INSTANCE) {
-                if (defaultStatement == EmptyStatement.INSTANCE) {
+            if (!(tmpDefaultStatement instanceof EmptyStatement)) {
+                if (defaultStatement instanceof EmptyStatement) {
                     defaultStatement = tmpDefaultStatement;
                 } else {
                     throw new ASTRuntimeException(switchNode, "The default case is already defined.");
@@ -3394,7 +3374,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected Expression blockExpression(AST node) {
         AST codeNode = node.getFirstChild();
-        if (codeNode == null) return ConstantExpression.NULL;
+        if (codeNode == null) return nullX();
         if (codeNode.getType() == EXPR && codeNode.getNextSibling() == null) {
             // Simplify common case of {expr} to expr.
             return expression(codeNode);

@@ -59,6 +59,7 @@ public abstract class ParserPluginFactory {
      * creates the ANTLR 2.7 parser
      * @return the factory for the parser
      */
+    @Deprecated
     public static ParserPluginFactory antlr2() {
         // GRECLIPSE edit
         //return new AntlrParserPluginFactory();

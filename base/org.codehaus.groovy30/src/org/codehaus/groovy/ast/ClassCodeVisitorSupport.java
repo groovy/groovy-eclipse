@@ -43,11 +43,9 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.transform.ErrorCollecting;
 
-import java.util.List;
-import java.util.Set;
-
 public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport implements ErrorCollecting, GroovyClassVisitor {
 
+    @Override
     public void visitClass(ClassNode node) {
         visitAnnotations(node);
         visitPackage(node.getPackage());
@@ -56,9 +54,38 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         visitObjectInitializerStatements(node);
     }
 
-    protected void visitObjectInitializerStatements(ClassNode node) {
-        for (Statement element : node.getObjectInitializerStatements()) {
-            element.visit(this);
+    public void visitAnnotations(AnnotatedNode node) {
+        /* GRECLIPSE edit
+        for (AnnotationNode annotation : node.getAnnotations()) {
+            // skip built-in properties
+            if (!annotation.isBuiltIn()) {
+                visitAnnotation(annotation);
+            }
+        }
+        */
+        visitAnnotations(node.getAnnotations());
+        // GRECLIPSE end
+    }
+
+    // GRECLIPSE add
+    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+        for (AnnotationNode node : nodes) {
+            // skip built-in properties
+            if (node.isBuiltIn()) continue;
+
+            java.util.Set<AnnotationNode> originals =
+                node.getNodeMetaData("AnnotationCollector");
+            if (originals != null && !originals.isEmpty()) {
+                visitAnnotations(originals);
+            }
+            visitAnnotation(node);
+        }
+    }
+    // GRECLIPSE end
+
+    protected void visitAnnotation(AnnotationNode node) {
+        for (Expression expr : node.getMembers().values()) {
+            expr.visit(this);
         }
     }
 
@@ -90,49 +117,62 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         }
     }
 
-    public void visitAnnotations(AnnotatedNode node) {
-        List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        /* GRECLIPSE edit
-        for (AnnotationNode an : annotations) {
-            // skip built-in properties
-            if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                member.getValue().visit(this);
-            }
+    @Override
+    public void visitConstructor(ConstructorNode node) {
+        visitConstructorOrMethod(node, true);
+    }
+
+    @Override
+    public void visitMethod(MethodNode node) {
+        visitConstructorOrMethod(node, false);
+    }
+
+    protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
+        visitAnnotations(node);
+        visitClassCodeContainer(node.getCode());
+        for (Parameter param : node.getParameters()) {
+            visitAnnotations(param);
         }
     }
 
-    public void visitBlockStatement(BlockStatement block) {
-        visitStatement(block);
-        super.visitBlockStatement(block);
+    @Override
+    public void visitField(FieldNode node) {
+        visitAnnotations(node);
+        Expression init = node.getInitialExpression();
+        if (init != null) init.visit(this);
     }
-        */
-        visitAnnotations(annotations);
-        // GRECLIPSE end
+
+    @Override
+    public void visitProperty(PropertyNode node) {
+        visitAnnotations(node);
+        Statement statement = node.getGetterBlock();
+        visitClassCodeContainer(statement);
+
+        statement = node.getSetterBlock();
+        visitClassCodeContainer(statement);
+
+        Expression init = node.getInitialExpression();
+        if (init != null) init.visit(this);
+    }
+
+    protected void visitClassCodeContainer(Statement code) {
+        if (code != null) code.visit(this);
+    }
+
+    protected void visitObjectInitializerStatements(ClassNode node) {
+        for (Statement statement : node.getObjectInitializerStatements()) {
+            statement.visit(this);
+        }
+    }
+
+    @Override
+    public void visitDeclarationExpression(DeclarationExpression expression) {
+        visitAnnotations(expression);
+        super.visitDeclarationExpression(expression);
     }
 
     // GRECLIPSE add
-    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
-        for (AnnotationNode node : nodes) {
-            // skip built-in properties
-            if (node.isBuiltIn()) continue;
-
-            Set<AnnotationNode> originals =
-                node.getNodeMetaData("AnnotationCollector");
-            if (originals != null && !originals.isEmpty()) {
-                visitAnnotations(originals);
-            }
-            visitAnnotation(node);
-        }
-    }
-
-    protected void visitAnnotation(AnnotationNode node) {
-        for (Expression expr : node.getMembers().values()) {
-            expr.visit(this);
-        }
-    }
-
+    @Override
     public void visitConstantExpression(ConstantExpression expression) {
         // check for inlined constant (see ExpressionUtils.transformInlineConstants)
         Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
@@ -156,50 +196,119 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     public static final String ORIGINAL_EXPRESSION = "OriginalExpression";
     // GRECLIPSE end
 
-    protected void visitClassCodeContainer(Statement code) {
-        if (code != null) code.visit(this);
+    //--------------------------------------------------------------------------
+
+    @Override
+    public void visitAssertStatement(AssertStatement statement) {
+        visitStatement(statement);
+        super.visitAssertStatement(statement);
     }
 
-    public void visitDeclarationExpression(DeclarationExpression expression) {
-        visitAnnotations(expression);
-        super.visitDeclarationExpression(expression);
+    @Override
+    public void visitBlockStatement(BlockStatement statement) {
+        visitStatement(statement);
+        super.visitBlockStatement(statement);
     }
 
-    protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
-        visitAnnotations(node);
-        visitClassCodeContainer(node.getCode());
-        for (Parameter param : node.getParameters()) {
-            visitAnnotations(param);
-        }
+    @Override
+    public void visitBreakStatement(BreakStatement statement) {
+        visitStatement(statement);
+        super.visitBreakStatement(statement);
     }
 
-    public void visitConstructor(ConstructorNode node) {
-        visitConstructorOrMethod(node, true);
+    @Override
+    public void visitCaseStatement(CaseStatement statement) {
+        visitStatement(statement);
+        super.visitCaseStatement(statement);
     }
 
-    public void visitMethod(MethodNode node) {
-        visitConstructorOrMethod(node, false);
+    @Override
+    public void visitCatchStatement(CatchStatement statement) {
+        visitStatement(statement);
+        super.visitCatchStatement(statement);
     }
 
-    public void visitField(FieldNode node) {
-        visitAnnotations(node);
-        Expression init = node.getInitialExpression();
-        if (init != null) init.visit(this);
+    @Override
+    public void visitContinueStatement(ContinueStatement statement) {
+        visitStatement(statement);
+        super.visitContinueStatement(statement);
     }
 
-    public void visitProperty(PropertyNode node) {
-        visitAnnotations(node);
-        Statement statement = node.getGetterBlock();
-        visitClassCodeContainer(statement);
-
-        statement = node.getSetterBlock();
-        visitClassCodeContainer(statement);
-
-        Expression init = node.getInitialExpression();
-        if (init != null) init.visit(this);
+    @Override
+    public void visitDoWhileLoop(DoWhileStatement statement) {
+        visitStatement(statement);
+        super.visitDoWhileLoop(statement);
     }
 
-    public void addError(String msg, ASTNode node) {
+    @Override
+    public void visitExpressionStatement(ExpressionStatement statement) {
+        visitStatement(statement);
+        super.visitExpressionStatement(statement);
+    }
+
+    @Override
+    public void visitForLoop(ForStatement statement) {
+        visitStatement(statement);
+        super.visitForLoop(statement);
+    }
+
+    @Override
+    public void visitIfElse(IfStatement statement) {
+        visitStatement(statement);
+        super.visitIfElse(statement);
+    }
+
+    @Override
+    public void visitReturnStatement(ReturnStatement statement) {
+        visitStatement(statement);
+        super.visitReturnStatement(statement);
+    }
+
+    @Override
+    public void visitSwitch(SwitchStatement statement) {
+        visitStatement(statement);
+        super.visitSwitch(statement);
+    }
+
+    @Override
+    public void visitSynchronizedStatement(SynchronizedStatement statement) {
+        visitStatement(statement);
+        super.visitSynchronizedStatement(statement);
+    }
+
+    @Override
+    public void visitThrowStatement(ThrowStatement statement) {
+        visitStatement(statement);
+        super.visitThrowStatement(statement);
+    }
+
+    @Override
+    public void visitTryCatchFinally(TryCatchStatement statement) {
+        visitStatement(statement);
+        super.visitTryCatchFinally(statement);
+    }
+
+    @Override
+    public void visitWhileLoop(WhileStatement statement) {
+        visitStatement(statement);
+        super.visitWhileLoop(statement);
+    }
+
+    //--------------------------------------------------------------------------
+
+    protected void visitStatement(Statement statement) {
+    }
+
+    /* GRECLIPSE edit
+    protected abstract SourceUnit getSourceUnit();
+    */
+    protected SourceUnit getSourceUnit() {
+        return null;
+    }
+    // GRECLIPSE end
+
+    @Override
+    public void addError(String error, ASTNode node) {
         // GRECLIPSE add
         int start, end;
         if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0) {
@@ -212,7 +321,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
                 end = offset;
             }
         } else if (node instanceof DeclarationExpression) {
-            addError(msg, ((DeclarationExpression) node).getLeftExpression());
+            addError(error, ((DeclarationExpression) node).getLeftExpression());
             return;
         } else if (node instanceof AnnotationNode) {
             start = node.getStart();
@@ -224,102 +333,11 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         // GRECLIPSE end
         SourceUnit source = getSourceUnit();
         source.getErrorCollector().addErrorAndContinue(
-                // GRECLIPSE edit
-                //new SyntaxErrorMessage(new SyntaxException(msg + '\n', node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()), source)
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', node.getLineNumber(), node.getColumnNumber(), start, end), source)
+                /* GRECLIPSE edit
+                new SyntaxErrorMessage(new SyntaxException(error + '\n', node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()), source)
+                */
+                new SyntaxErrorMessage(new PreciseSyntaxException(error + '\n', node.getLineNumber(), node.getColumnNumber(), start, end), source)
                 // GRECLIPSE end
         );
-    }
-
-    // GRECLIPSE edit
-    //protected abstract SourceUnit getSourceUnit();
-    protected SourceUnit getSourceUnit() {
-        return null;
-    }
-    // GRECLIPSE end
-
-    protected void visitStatement(Statement statement) {
-    }
-
-    public void visitAssertStatement(AssertStatement statement) {
-        visitStatement(statement);
-        super.visitAssertStatement(statement);
-    }
-
-    // GRECLIPSE move
-    public void visitBlockStatement(BlockStatement block) {
-        visitStatement(block);
-        super.visitBlockStatement(block);
-    }
-    // GRECLIPSE end
-
-    public void visitBreakStatement(BreakStatement statement) {
-        visitStatement(statement);
-        super.visitBreakStatement(statement);
-    }
-
-    public void visitCaseStatement(CaseStatement statement) {
-        visitStatement(statement);
-        super.visitCaseStatement(statement);
-    }
-
-    public void visitCatchStatement(CatchStatement statement) {
-        visitStatement(statement);
-        super.visitCatchStatement(statement);
-    }
-
-    public void visitContinueStatement(ContinueStatement statement) {
-        visitStatement(statement);
-        super.visitContinueStatement(statement);
-    }
-
-    public void visitDoWhileLoop(DoWhileStatement loop) {
-        visitStatement(loop);
-        super.visitDoWhileLoop(loop);
-    }
-
-    public void visitExpressionStatement(ExpressionStatement statement) {
-        visitStatement(statement);
-        super.visitExpressionStatement(statement);
-    }
-
-    public void visitForLoop(ForStatement forLoop) {
-        visitStatement(forLoop);
-        super.visitForLoop(forLoop);
-    }
-
-    public void visitIfElse(IfStatement ifElse) {
-        visitStatement(ifElse);
-        super.visitIfElse(ifElse);
-    }
-
-    public void visitReturnStatement(ReturnStatement statement) {
-        visitStatement(statement);
-        super.visitReturnStatement(statement);
-    }
-
-    public void visitSwitch(SwitchStatement statement) {
-        visitStatement(statement);
-        super.visitSwitch(statement);
-    }
-
-    public void visitSynchronizedStatement(SynchronizedStatement statement) {
-        visitStatement(statement);
-        super.visitSynchronizedStatement(statement);
-    }
-
-    public void visitThrowStatement(ThrowStatement statement) {
-        visitStatement(statement);
-        super.visitThrowStatement(statement);
-    }
-
-    public void visitTryCatchFinally(TryCatchStatement statement) {
-        visitStatement(statement);
-        super.visitTryCatchFinally(statement);
-    }
-
-    public void visitWhileLoop(WhileStatement loop) {
-        visitStatement(loop);
-        super.visitWhileLoop(loop);
     }
 }

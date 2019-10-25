@@ -26,32 +26,54 @@ import java.util.List;
  * held within itself.
  */
 public class SourceBuffer {
-    // GRECLIPSE edit
-    private final List<StringBuilder> lines = new ArrayList<>();
+    // GRECLIPSE add
     private final List<Integer> lineEndings = new ArrayList<>();
-    private StringBuilder current = new StringBuilder();
-    // GRECLIPSE-805: Support for unicode escape sequences
-    private UnicodeEscapingReader unescaper = new NoEscaper();
     // GRECLIPSE end
+    private final List<StringBuilder> lines = new ArrayList<>();
+    private StringBuilder current = new StringBuilder();
 
     public SourceBuffer() {
-        // GRECLIPSE edit
-        lines.add(current);
+        // GRECLIPSE add
         lineEndings.add(0);
         // GRECLIPSE end
+        lines.add(current);
     }
 
+    // GRECLIPSE add -- GRECLIPSE-805: Support for unicode escape sequences
+    private UnicodeEscapingReader unescaper = new UnicodeEscapingReader(null, null) {
+        @Override public int getUnescapedUnicodeColumnCount() { return 0; }
+        @Override public int getUnescapedUnicodeOffsetCount() { return 0; }
+    };
+
+    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
+        this.unescaper = unicodeEscapingReader;
+    }
+
+    public LocationSupport getLocationSupport() {
+        lineEndings.add(column + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out
+        int[] lineEndingsArray = new int[lineEndings.size()];
+        for (int i = 0, max = lineEndings.size(); i < max; i += 1) {
+            lineEndingsArray[i] = lineEndings.get(i).intValue();
+        }
+        return new LocationSupport(lineEndingsArray);
+    }
+    // GRECLIPSE end
+
     /**
-     * Obtains a snippet of the source code within the bounds specified
-     * @param start (inclusive line/ inclusive column)
-     * @param end (inclusive line / exclusive column)
+     * Obtains a snippet of the source code within the bounds specified.
+     *
+     * @param start (inclusive line / inclusive column)
+     * @param end   (inclusive line / exclusive column)
      * @return specified snippet of source code as a String, or null if no source available
      */
     public String getSnippet(LineColumn start, LineColumn end) {
         // preconditions
-        if (start == null || end == null) { return null; } // no text to return
-        if (start.equals(end)) { return null; } // no text to return
-        if (lines.size() == 1 && current.length() == 0) { return null; } // buffer hasn't been filled yet
+        if (start == null || end == null || start.equals(end)) {
+            return null; // no text to return
+        }
+        if (lines.size() == 1 && current.length() == 0) {
+            return null; // buffer hasn't been filled yet
+        }
 
         // working variables
         int startLine = start.getLine();
@@ -60,24 +82,46 @@ public class SourceBuffer {
         int endColumn = end.getColumn();
 
         // reset any out of bounds requests
-        if (startLine < 1) { startLine = 1;}
-        if (endLine < 1) { endLine = 1;}
-        if (startColumn < 1) { startColumn = 1;}
-        if (endColumn < 1) { endColumn = 1;}
-        if (startLine > lines.size()) { startLine = lines.size(); }
-        if (endLine > lines.size()) { endLine = lines.size(); }
+        if (startLine < 1) {
+            startLine = 1;
+        }
+        if (endLine < 1) {
+            endLine = 1;
+        }
+        if (startColumn < 1) {
+            startColumn = 1;
+        }
+        if (endColumn < 1) {
+            endColumn = 1;
+        }
+        if (startLine > lines.size()) {
+            startLine = lines.size();
+        }
+        if (endLine > lines.size()) {
+            endLine = lines.size();
+        }
 
         // obtain the snippet from the buffer within specified bounds
         StringBuilder snippet = new StringBuilder();
-        for (int i = startLine - 1; i < endLine;i++) {
-            String line = ((StringBuilder)lines.get(i)).toString();
+        for (int i = startLine - 1; i < endLine; i += 1) {
+            String line = lines.get(i).toString();
             if (startLine == endLine) {
                 // reset any out of bounds requests (again)
-                if (startColumn > line.length()) { startColumn = line.length();}
-                if (startColumn < 1) { startColumn = 1;}
-                if (endColumn > line.length()) { endColumn = line.length() + 1;}
-                if (endColumn < 1) { endColumn = 1;}
-                if (endColumn < startColumn) { endColumn = startColumn;}
+                if (startColumn > line.length()) {
+                    startColumn = line.length();
+                }
+                if (startColumn < 1) {
+                    startColumn = 1;
+                }
+                if (endColumn > line.length()) {
+                    endColumn = line.length() + 1;
+                }
+                if (endColumn < 1) {
+                    endColumn = 1;
+                }
+                if (endColumn < startColumn) {
+                    endColumn = startColumn;
+                }
 
                 line = line.substring(startColumn - 1, endColumn - 1);
             } else {
@@ -88,7 +132,7 @@ public class SourceBuffer {
                 }
                 if (i == endLine - 1) {
                     if (endColumn - 1 < line.length()) {
-                        line = line.substring(0,endColumn - 1);
+                        line = line.substring(0, endColumn - 1);
                     }
                 }
             }
@@ -98,15 +142,14 @@ public class SourceBuffer {
     }
 
     /**
-     * Writes the specified character into the buffer
-     * @param c
+     * Writes the specified character into the buffer.
      */
     public void write(int c) {
         if (c != -1) {
             // GRECLIPSE add
-            col += 1;
+            column += 1;
             // GRECLIPSE end
-            current.append((char)c);
+            current.append((char) c);
         }
         if (c == '\n') {
             current = new StringBuilder();
@@ -120,15 +163,14 @@ public class SourceBuffer {
                 lines.get(lines.size() - 1).append('\n');
                 lineEndings.remove(lineEndings.size() - 1);
             }
-            lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
+            lineEndings.add(column + unescaper.getUnescapedUnicodeOffsetCount());
             // GRECLIPSE end
         }
         // GRECLIPSE add
-        // handle carriage returns as well as newlines
         if (c == '\r') {
             current = new StringBuilder();
             lines.add(current);
-            lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
+            lineEndings.add(column + unescaper.getUnescapedUnicodeOffsetCount());
             // this may be a \r\n, but may not be
             prevWasCarriageReturn = true;
         } else {
@@ -136,35 +178,8 @@ public class SourceBuffer {
         }
         // GRECLIPSE end
     }
-    private int col;
+    // GRECLIPSE add
+    private int column;
     private boolean prevWasCarriageReturn;
-
-    public LocationSupport getLocationSupport() {
-        lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out
-        int[] lineEndingsArray = new int[lineEndings.size()];
-        for (int i = 0, max = lineEndings.size(); i < max; i += 1) {
-            lineEndingsArray[i] = lineEndings.get(i).intValue();
-        }
-        return new LocationSupport(lineEndingsArray);
-    }
-
-    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
-        this.unescaper = unicodeEscapingReader;
-    }
     // GRECLIPSE end
-}
-
-/**
- * GRECLIPSE-805: Support for unicode escape sequences
- */
-class NoEscaper extends UnicodeEscapingReader {
-    public NoEscaper() {
-        super(null, null);
-    }
-    public int getUnescapedUnicodeColumnCount() {
-        return 0;
-    }
-    public int getUnescapedUnicodeOffsetCount() {
-        return 0;
-    }
 }

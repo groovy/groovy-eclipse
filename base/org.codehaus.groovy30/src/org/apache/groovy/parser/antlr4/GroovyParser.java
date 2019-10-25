@@ -1,4 +1,4 @@
-// Generated from GroovyParser.g4 by ANTLR 4.7.3
+// Generated from GroovyParser.g4 by ANTLR 4.7.4
 package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
@@ -218,6 +218,21 @@ public class GroovyParser extends AbstractParser {
 
 	@Override
 	public String getSerializedATN() { return _serializedATN; }
+
+	@NotNull
+	private FailedPredicateException createFailedPredicateException() {
+		return createFailedPredicateException(null);
+	}
+
+	@NotNull
+	private FailedPredicateException createFailedPredicateException(@Nullable String predicate) {
+		return createFailedPredicateException(predicate, null);
+	}
+
+	@NotNull
+	protected FailedPredicateException createFailedPredicateException(@Nullable String predicate, @Nullable String message) {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 
 
@@ -1570,7 +1585,7 @@ public class GroovyParser extends AbstractParser {
 			case 1:
 				{
 				setState(442);
-				if (!( 3 != _localctx.t )) throw new FailedPredicateException(this, " 3 != $t ");
+				if (!( 3 != _localctx.t )) throw createFailedPredicateException(" 3 != $t ");
 				setState(444);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,21,_ctx) ) {
@@ -1589,7 +1604,7 @@ public class GroovyParser extends AbstractParser {
 				case 1:
 					{
 					setState(447);
-					if (!( 2 != _localctx.t )) throw new FailedPredicateException(this, " 2 != $t ");
+					if (!( 2 != _localctx.t )) throw createFailedPredicateException(" 2 != $t ");
 					setState(457);
 					_errHandler.sync(this);
 					switch ( getInterpreter().adaptivePredict(_input,23,_ctx) ) {
@@ -1605,7 +1620,7 @@ public class GroovyParser extends AbstractParser {
 						case 1:
 							{
 							setState(450);
-							if (!(1 == _localctx.t)) throw new FailedPredicateException(this, "1 == $t");
+							if (!(1 == _localctx.t)) throw createFailedPredicateException("1 == $t");
 							setState(451);
 							_localctx.scs = typeList();
 							}
@@ -1637,7 +1652,7 @@ public class GroovyParser extends AbstractParser {
 				case 1:
 					{
 					setState(462);
-					if (!(1 != _localctx.t)) throw new FailedPredicateException(this, "1 != $t");
+					if (!(1 != _localctx.t)) throw createFailedPredicateException("1 != $t");
 					setState(468);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
@@ -1739,7 +1754,7 @@ public class GroovyParser extends AbstractParser {
 			case 1:
 				{
 				setState(480);
-				if (!( 2 == _localctx.t )) throw new FailedPredicateException(this, " 2 == $t ");
+				if (!( 2 == _localctx.t )) throw createFailedPredicateException(" 2 == $t ");
 				setState(482);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,28,_ctx) ) {
@@ -2195,7 +2210,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(546);
-				if (!( 3 == _localctx.ct )) throw new FailedPredicateException(this, " 3 == $ct ");
+				if (!( 3 == _localctx.ct )) throw createFailedPredicateException(" 3 == $ct ");
 				setState(547);
 				returnType(_localctx.ct);
 				setState(548);
@@ -2386,7 +2401,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(584);
-				if (!( 3 != _localctx.ct )) throw new FailedPredicateException(this, " 3 != $ct ");
+				if (!( 3 != _localctx.ct )) throw createFailedPredicateException(" 3 != $ct ");
 				setState(585);
 				match(VOID);
 				}
@@ -5555,7 +5570,7 @@ public class GroovyParser extends AbstractParser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(954);
-			if (!( !SemanticPredicates.isInvalidLocalVariableDeclaration(_input) )) throw new FailedPredicateException(this, " !SemanticPredicates.isInvalidLocalVariableDeclaration(_input) ");
+			if (!( !SemanticPredicates.isInvalidLocalVariableDeclaration(_input) )) throw createFailedPredicateException(" !SemanticPredicates.isInvalidLocalVariableDeclaration(_input) ");
 			setState(955);
 			variableDeclaration(0);
 			}
@@ -5604,7 +5619,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(957);
-				if (!( 0 == _localctx.t )) throw new FailedPredicateException(this, " 0 == $t ");
+				if (!( 0 == _localctx.t )) throw createFailedPredicateException(" 0 == $t ");
 				setState(958);
 				variableModifiers();
 				}
@@ -5614,7 +5629,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(959);
-				if (!( 1 == _localctx.t )) throw new FailedPredicateException(this, " 1 == $t ");
+				if (!( 1 == _localctx.t )) throw createFailedPredicateException(" 1 == $t ");
 				setState(960);
 				modifiers();
 				}
@@ -6979,7 +6994,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 15);
 				{
 				setState(1126);
-				if (!( !SemanticPredicates.isInvalidMethodDeclaration(_input) )) throw new FailedPredicateException(this, " !SemanticPredicates.isInvalidMethodDeclaration(_input) ");
+				if (!( !SemanticPredicates.isInvalidMethodDeclaration(_input) )) throw createFailedPredicateException(" !SemanticPredicates.isInvalidMethodDeclaration(_input) ");
 				setState(1127);
 				methodDeclaration(3, 9);
 				}
@@ -8819,7 +8834,7 @@ public class GroovyParser extends AbstractParser {
 						((PowerExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1276);
-						if (!(precpred(_ctx, 17))) throw new FailedPredicateException(this, "precpred(_ctx, 17)");
+						if (!(precpred(_ctx, 17))) throw createFailedPredicateException("precpred(_ctx, 17)");
 						setState(1277);
 						((PowerExprAltContext)_localctx).op = match(POWER);
 						setState(1278);
@@ -8835,7 +8850,7 @@ public class GroovyParser extends AbstractParser {
 						((MultiplicativeExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1281);
-						if (!(precpred(_ctx, 15))) throw new FailedPredicateException(this, "precpred(_ctx, 15)");
+						if (!(precpred(_ctx, 15))) throw createFailedPredicateException("precpred(_ctx, 15)");
 						setState(1282);
 						nls();
 						setState(1283);
@@ -8864,7 +8879,7 @@ public class GroovyParser extends AbstractParser {
 						((AdditiveExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1287);
-						if (!(precpred(_ctx, 14))) throw new FailedPredicateException(this, "precpred(_ctx, 14)");
+						if (!(precpred(_ctx, 14))) throw createFailedPredicateException("precpred(_ctx, 14)");
 						setState(1288);
 						((AdditiveExprAltContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
@@ -8891,7 +8906,7 @@ public class GroovyParser extends AbstractParser {
 						((ShiftExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1292);
-						if (!(precpred(_ctx, 13))) throw new FailedPredicateException(this, "precpred(_ctx, 13)");
+						if (!(precpred(_ctx, 13))) throw createFailedPredicateException("precpred(_ctx, 13)");
 						setState(1293);
 						nls();
 						setState(1304);
@@ -8968,7 +8983,7 @@ public class GroovyParser extends AbstractParser {
 						((RelationalExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1309);
-						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
+						if (!(precpred(_ctx, 11))) throw createFailedPredicateException("precpred(_ctx, 11)");
 						setState(1310);
 						nls();
 						setState(1311);
@@ -8997,7 +9012,7 @@ public class GroovyParser extends AbstractParser {
 						((EqualityExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1315);
-						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
+						if (!(precpred(_ctx, 10))) throw createFailedPredicateException("precpred(_ctx, 10)");
 						setState(1316);
 						nls();
 						setState(1317);
@@ -9026,7 +9041,7 @@ public class GroovyParser extends AbstractParser {
 						((RegexExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1321);
-						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
+						if (!(precpred(_ctx, 9))) throw createFailedPredicateException("precpred(_ctx, 9)");
 						setState(1322);
 						nls();
 						setState(1323);
@@ -9055,7 +9070,7 @@ public class GroovyParser extends AbstractParser {
 						((AndExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1327);
-						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
+						if (!(precpred(_ctx, 8))) throw createFailedPredicateException("precpred(_ctx, 8)");
 						setState(1328);
 						nls();
 						setState(1329);
@@ -9073,7 +9088,7 @@ public class GroovyParser extends AbstractParser {
 						((ExclusiveOrExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1333);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+						if (!(precpred(_ctx, 7))) throw createFailedPredicateException("precpred(_ctx, 7)");
 						setState(1334);
 						nls();
 						setState(1335);
@@ -9091,7 +9106,7 @@ public class GroovyParser extends AbstractParser {
 						((InclusiveOrExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1339);
-						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
+						if (!(precpred(_ctx, 6))) throw createFailedPredicateException("precpred(_ctx, 6)");
 						setState(1340);
 						nls();
 						setState(1341);
@@ -9109,7 +9124,7 @@ public class GroovyParser extends AbstractParser {
 						((LogicalAndExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1345);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						if (!(precpred(_ctx, 5))) throw createFailedPredicateException("precpred(_ctx, 5)");
 						setState(1346);
 						nls();
 						setState(1347);
@@ -9127,7 +9142,7 @@ public class GroovyParser extends AbstractParser {
 						((LogicalOrExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1351);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+						if (!(precpred(_ctx, 4))) throw createFailedPredicateException("precpred(_ctx, 4)");
 						setState(1352);
 						nls();
 						setState(1353);
@@ -9145,7 +9160,7 @@ public class GroovyParser extends AbstractParser {
 						((ConditionalExprAltContext)_localctx).con = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1357);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						if (!(precpred(_ctx, 3))) throw createFailedPredicateException("precpred(_ctx, 3)");
 						setState(1358);
 						nls();
 						setState(1368);
@@ -9189,7 +9204,7 @@ public class GroovyParser extends AbstractParser {
 						((RelationalExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1372);
-						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
+						if (!(precpred(_ctx, 12))) throw createFailedPredicateException("precpred(_ctx, 12)");
 						setState(1373);
 						nls();
 						setState(1374);
@@ -9218,7 +9233,7 @@ public class GroovyParser extends AbstractParser {
 						((AssignmentExprAltContext)_localctx).left = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
 						setState(1378);
-						if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
+						if (!(precpred(_ctx, 1))) throw createFailedPredicateException("precpred(_ctx, 1)");
 						setState(1379);
 						nls();
 						setState(1380);
@@ -9388,7 +9403,7 @@ public class GroovyParser extends AbstractParser {
 			case 1:
 				{
 				setState(1402);
-				if (!( !SemanticPredicates.isFollowingArgumentsOrClosure(_localctx.expression) )) throw new FailedPredicateException(this, " !SemanticPredicates.isFollowingArgumentsOrClosure($expression.ctx) ");
+				if (!( !SemanticPredicates.isFollowingArgumentsOrClosure(_localctx.expression) )) throw createFailedPredicateException(" !SemanticPredicates.isFollowingArgumentsOrClosure($expression.ctx) ");
 				setState(1403);
 				argumentList();
 				}
@@ -10695,7 +10710,7 @@ public class GroovyParser extends AbstractParser {
 			case 1:
 				{
 				setState(1561);
-				if (!(0 == _localctx.t || 1 == _localctx.t)) throw new FailedPredicateException(this, "0 == $t || 1 == $t");
+				if (!(0 == _localctx.t || 1 == _localctx.t)) throw createFailedPredicateException("0 == $t || 1 == $t");
 				setState(1562);
 				nls();
 				setState(1563);
@@ -10716,7 +10731,7 @@ public class GroovyParser extends AbstractParser {
 			case 2:
 				{
 				setState(1567);
-				if (!(0 == _localctx.t)) throw new FailedPredicateException(this, "0 == $t");
+				if (!(0 == _localctx.t)) throw createFailedPredicateException("0 == $t");
 				setState(1573); 
 				_errHandler.sync(this);
 				_alt = 1;
@@ -10751,7 +10766,7 @@ public class GroovyParser extends AbstractParser {
 			case 3:
 				{
 				setState(1579);
-				if (!(0 == _localctx.t)) throw new FailedPredicateException(this, "0 == $t");
+				if (!(0 == _localctx.t)) throw createFailedPredicateException("0 == $t");
 				setState(1580);
 				dims();
 				setState(1581);
@@ -11462,7 +11477,7 @@ public class GroovyParser extends AbstractParser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(1660);
-				if (!( DOT == _input.LT(2).getType() )) throw new FailedPredicateException(this, " DOT == _input.LT(2).getType() ");
+				if (!( DOT == _input.LT(2).getType() )) throw createFailedPredicateException(" DOT == _input.LT(2).getType() ");
 				setState(1661);
 				match(STATIC);
 				}

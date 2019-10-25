@@ -75,6 +75,7 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.PARAMETER_TYPE;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
@@ -258,7 +259,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                     }
                 }
             }
-            ArgumentListExpression newArgs = new ArgumentListExpression(target.isStatic()?new ConstantExpression(null):fixedReceiver);
+            ArgumentListExpression newArgs = new ArgumentListExpression(target.isStatic() ? nullX() : fixedReceiver);
             for (Expression expression : args.getExpressions()) {
                 newArgs.addExpression(expression);
             }
@@ -552,10 +553,10 @@ public class StaticInvocationWriter extends InvocationWriter {
     // GRECLIPSE end
 
     private static boolean isNullConstant(final Expression expression) {
-        return (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression());
+        return (expression instanceof ConstantExpression && ((ConstantExpression) expression).getValue() == null);
     }
 
-    private static boolean compatibleArgumentType(ClassNode argumentType, ClassNode paramType) {
+    private boolean compatibleArgumentType(ClassNode argumentType, ClassNode paramType) {
         if (argumentType == null) return false;
         if (ClassHelper.getWrapper(argumentType).equals(ClassHelper.getWrapper(paramType))) return true;
         if (paramType.isInterface()) return argumentType.implementsInterface(paramType);

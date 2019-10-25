@@ -127,6 +127,7 @@ public class ClassHelper {
 
     void_WRAPPER_TYPE = makeCached(Void.class), METACLASS_TYPE = makeCached(MetaClass.class),
             Iterator_TYPE = makeCached(Iterator.class),
+            AUTOCLOSEABLE_TYPE = makeCached(AutoCloseable.class),
 
     Enum_Type = makeWithoutCaching(Enum.class),
             Annotation_TYPE = makeCached(Annotation.class),
@@ -467,15 +468,11 @@ public class ClassHelper {
             return found;
 
         } else {
-
-            List<MethodNode> methods = type.getAbstractMethods();
             MethodNode found = null;
-            if (methods != null) {
-                for (MethodNode mi : methods) {
-                    if (!hasUsableImplementation(type, mi)) {
-                        if (found != null) return null;
-                        found = mi;
-                    }
+            for (MethodNode mi : type.getAbstractMethods()) {
+                if (!hasUsableImplementation(type, mi)) {
+                    if (found != null) return null;
+                    found = mi;
                 }
             }
             return found;

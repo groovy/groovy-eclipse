@@ -223,19 +223,6 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return ve;
     }
 
-    /**
-     * Set the source position of toSet including its property expression if it has one.
-     *
-     * @param toSet resulting node
-     * @param origNode original node
-     */
-    private static void setSourcePosition(Expression toSet, Expression origNode) {
-        toSet.setSourcePosition(origNode);
-        if (toSet instanceof PropertyExpression) {
-            ((PropertyExpression) toSet).getProperty().setSourcePosition(origNode);
-        }
-    }
-
     protected Expression transformMethodCallExpression(MethodCallExpression mce) {
         Expression args = transform(mce.getArguments());
         Expression method = transform(mce.getMethod());
@@ -522,7 +509,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             ImportNode importNode = starImports.get(currentClass.getName());
             starImportType = importNode == null ? null : importNode.getType();
             expression = findStaticMethod(starImportType, name, args);
-            if (expression != null) return expression;
+            return expression;
         } else {
             for (ImportNode importNode : starImports.values()) {
                 starImportType = importNode == null ? null : importNode.getType();

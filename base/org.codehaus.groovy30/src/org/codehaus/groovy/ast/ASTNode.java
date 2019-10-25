@@ -18,8 +18,8 @@
  */
 package org.codehaus.groovy.ast;
 
+import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Base class for any AST node. This class supports basic information used in all nodes of the AST:
@@ -27,15 +27,15 @@ import java.util.Objects;
  * <li> line and column number information. Usually a node represents a certain
  * area in a text file determined by a starting position and an ending position.
  * For nodes that do not represent this, this information will be -1. A node can
- * also be configured in its line/col information using another node through 
+ * also be configured in its line/col information using another node through
  * setSourcePosition(otherNode).</li>
- * <li> every node can store meta data. A phase operation or transform can use 
- * this to transport arbitrary information to another phase operation or 
+ * <li> every node can store meta data. A phase operation or transform can use
+ * this to transport arbitrary information to another phase operation or
  * transform. The only requirement is that the other phase operation or transform
- * runs after the part storing the information. If the information transport is 
- * done it is strongly recommended to remove that meta data.</li> 
+ * runs after the part storing the information. If the information transport is
+ * done it is strongly recommended to remove that meta data.</li>
  * <li> a text representation of this node trough getText(). This was in the
- * past used for assertion messages. Since the usage of power asserts this 
+ * past used for assertion messages. Since the usage of power asserts this
  * method will not be called for this purpose anymore and might be removed in
  * future versions of Groovy</li>
  * </ul>
@@ -48,6 +48,7 @@ public class ASTNode implements NodeMetaDataHandler {
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
+
     private Map metaDataMap;
 
     public void visit(GroovyCodeVisitor visitor) {
@@ -112,8 +113,8 @@ public class ASTNode implements NodeMetaDataHandler {
      * Sets the source position using another ASTNode.
      * The sourcePosition consists of a line/column pair for
      * the start and a line/column pair for the end of the
-     * expression or statement 
-     * 
+     * expression or statement
+     *
      * @param node - the node used to configure the position information
      */
     public void setSourcePosition(ASTNode node) {
@@ -144,15 +145,8 @@ public class ASTNode implements NodeMetaDataHandler {
         this.metaDataMap = metaDataMap;
     }
 
-    /* GRECLIPSE edit
-    @Override
-    public boolean equals(Object o) {
-        return this == o;
-    }
-    */
-
     @Override
     public int hashCode() {
-        return Objects.hash(lineNumber, columnNumber, lastLineNumber, lastColumnNumber);
+        return Arrays.hashCode(new int[] {lineNumber, columnNumber, lastLineNumber, lastColumnNumber});
     }
 }

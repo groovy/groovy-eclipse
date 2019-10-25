@@ -123,10 +123,6 @@ public class CompilerConfiguration {
     public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
     // GRECLIPSE end
 
-    /* GRECLIPSE edit
-    private static final String GROOVY_ANTLR4_OPT = "groovy.antlr4";
-    */
-
     /**
      * The default source encoding
      */
@@ -459,8 +455,8 @@ public class CompilerConfiguration {
     private void handleOptimizationOption(Map<String, Boolean> options, String optionName, String sysOptionName) {
         String propValue = getSystemPropertySafe(sysOptionName);
         boolean optionEnabled = propValue == null
-                ? (DEFAULT == null ? false : Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(optionName)))
-                : Boolean.valueOf(propValue);
+                ? (DEFAULT != null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(optionName)))
+                : Boolean.parseBoolean(propValue);
 
         if (optionEnabled) {
             options.put(optionName, Boolean.TRUE);
@@ -470,8 +466,8 @@ public class CompilerConfiguration {
     private void handleJointCompilationOption(Map<String, Object> options, String optionName, String sysOptionName) {
         String propValue = getSystemPropertySafe(sysOptionName);
         boolean optionEnabled = propValue == null
-                ? (DEFAULT == null ? false : Boolean.TRUE.equals(DEFAULT.getJointCompilationOptions().get(optionName)))
-                : Boolean.valueOf(propValue);
+                ? (DEFAULT != null && Boolean.TRUE.equals(DEFAULT.getJointCompilationOptions().get(optionName)))
+                : Boolean.parseBoolean(propValue);
 
         if (optionEnabled) {
             options.put(optionName, Boolean.TRUE);
