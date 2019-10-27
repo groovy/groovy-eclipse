@@ -522,8 +522,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7996() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -534,7 +532,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  def propertyMissing(String name) {\n" +
             "    return 'stuff'\n" +
             "  }\n" +
-            "  def build(Closure block) {\n" +
+            "  def build(Closure<?> block) {\n" +
             "    return this.with(block)\n" +
             "  }\n" +
             "}\n",
@@ -542,7 +540,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Bar.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
-            "  protected List bars = []\n" +
+            "  protected List<?> bars = []\n" +
             "  boolean doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
@@ -557,8 +555,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7996a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -569,7 +565,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  def propertyMissing(String name) {\n" +
             "    return 'stuff'\n" +
             "  }\n" +
-            "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure block) {\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
             "    return this.with(block)\n" +
             "  }\n" +
             "}\n",
@@ -577,7 +573,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Bar.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
-            "  protected List bars = []\n" +
+            "  protected List<?> bars = []\n" +
             "  boolean doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
@@ -592,8 +588,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7996b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -604,7 +598,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  def propertyMissing(String name) {\n" +
             "    return 'stuff'\n" +
             "  }\n" +
-            "  def build(@DelegatesTo(value=Foo, strategy=Closure.OWNER_FIRST) Closure block) {\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.OWNER_FIRST) Closure<?> block) {\n" +
             "    block.delegate = this\n" +
             "    return block.call()\n" +
             "  }\n" +
@@ -613,10 +607,76 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Bar.groovy",
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
-            "  protected List bars = []\n" +
+            "  protected List<?> bars = []\n" +
             "  boolean doStuff() {\n" +
             "    new Foo().build {\n" +
-            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "      return bars.isEmpty()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic7996c() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new Bar().doStuff()\n",
+
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
+            "  }\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
+            "    return this.with(block)\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  protected List<?> bars = []\n" +
+            "  boolean doStuff() {\n" +
+            "    new Foo().build {\n" +
+            "      return owner.bars.isEmpty()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic7996d() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "print new Bar().doStuff()\n",
+
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
+            "  }\n" +
+            "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
+            "    return this.with(block)\n" +
+            "  }\n" +
+            "}\n",
+
+            "Bar.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  protected List<?> bars = []\n" +
+            "  boolean doStuff() {\n" +
+            "    new Foo().build {\n" +
+            "      return thisObject.bars.isEmpty()\n" +
             "    }\n" +
             "  }\n" +
             "}\n",
@@ -2522,7 +2582,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  public String field = 'foo'\n" +
             "}\n" +
@@ -2549,7 +2608,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  public String field = 'foo'\n" +
             "}\n" +
@@ -2576,7 +2634,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  private String field = 'foo'\n" +
             "}\n" +
@@ -2594,10 +2651,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Script.groovy (at line 9)\n" +
+            "1. ERROR in Script.groovy (at line 8)\n" +
             "\tfield\n" +
             "\t^\n" +
-            "Groovy:Access to Foo#field is forbidden @ line 9, column 7.\n" +
+            "Groovy:Access to Foo#field is forbidden @ line 8, column 7.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9136c() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  private String field = 'foo'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  def doIt(Foo foo) {\n" +
+            "    foo.with {\n" +
+            "      delegate.field\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 8)\n" +
+            "\tdelegate.field\n" +
+            "\t^^^^^^^^\n" +
+            "Groovy:Access to Foo#field is forbidden @ line 8, column 7.\n" +
             "----------\n");
     }
 
@@ -2673,5 +2761,54 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9283() {
+        //@formatter:off
+        String[] sources = {
+            "Groovy9283.groovy",
+            "class Groovy9283 {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance().enter {\n" +
+            "      nest {\n" +
+            "        nest {\n" +
+            "          nest {\n" +
+            "            print \"${delegate.class.simpleName}${delegate.index}\"\n" +
+            "          }\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  \n" +
+            "  void enter(@DelegatesTo(value=Outer, strategy=Closure.DELEGATE_FIRST) Closure closure) {\n" +
+            "    new Outer().with(closure)\n" +
+            "  }\n" +
+            "  \n" +
+            "  abstract static class Node {\n" +
+            "    private static int count\n" +
+            "    final int index\n" +
+            "    \n" +
+            "    Node() {\n" +
+            "      index = count++\n" +
+            "    }\n" +
+            "    \n" +
+            "    void nest(@DelegatesTo(value=Inner, strategy=Closure.DELEGATE_FIRST) Closure closure) {\n" +
+            "      print \"${getClass().simpleName}${index} > \"\n" +
+            "      new Inner().with(closure)\n" +
+            "    }\n" +
+            "  }\n" +
+            "  \n" +
+            "  static class Outer extends Node {\n" +
+            "  }\n" +
+            "  \n" +
+            "  static class Inner extends Node {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer0 > Inner1 > Inner2 > Inner3"); // OWNER_FIRST results in "Outer0 > Outer0 > Outer0 > Inner3"
     }
 }
