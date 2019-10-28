@@ -520,7 +520,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "hello world");
     }
 
-    @Test
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
     public void testCompileStatic7996() {
         //@formatter:off
         String[] sources = {
@@ -529,11 +529,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo {\n" +
-            "  def propertyMissing(String name) {\n" +
-            "    return 'stuff'\n" +
-            "  }\n" +
             "  def build(Closure<?> block) {\n" +
             "    return this.with(block)\n" +
+            "  }\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
             "  }\n" +
             "}\n",
 
@@ -541,7 +541,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  protected List<?> bars = []\n" +
-            "  boolean doStuff() {\n" +
+            "  def doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
             "    }\n" +
@@ -553,7 +553,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "true");
     }
 
-    @Test
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
     public void testCompileStatic7996a() {
         //@formatter:off
         String[] sources = {
@@ -562,11 +562,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo {\n" +
-            "  def propertyMissing(String name) {\n" +
-            "    return 'stuff'\n" +
-            "  }\n" +
             "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
             "    return this.with(block)\n" +
+            "  }\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
             "  }\n" +
             "}\n",
 
@@ -574,16 +574,16 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  protected List<?> bars = []\n" +
-            "  boolean doStuff() {\n" +
+            "  def doStuff() {\n" +
             "    new Foo().build {\n" +
-            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "      return bars.toString()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
             "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "true");
+        runConformTest(sources, "stuff");
     }
 
     @Test
@@ -595,12 +595,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo {" +
-            "  def propertyMissing(String name) {\n" +
-            "    return 'stuff'\n" +
-            "  }\n" +
             "  def build(@DelegatesTo(value=Foo, strategy=Closure.OWNER_FIRST) Closure<?> block) {\n" +
             "    block.delegate = this\n" +
             "    return block.call()\n" +
+            "  }\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
             "  }\n" +
             "}\n",
 
@@ -608,7 +608,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  protected List<?> bars = []\n" +
-            "  boolean doStuff() {\n" +
+            "  def doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return bars.isEmpty()\n" +
             "    }\n" +
@@ -629,11 +629,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo {\n" +
-            "  def propertyMissing(String name) {\n" +
-            "    return 'stuff'\n" +
-            "  }\n" +
             "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
             "    return this.with(block)\n" +
+            "  }\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
             "  }\n" +
             "}\n",
 
@@ -641,7 +641,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  protected List<?> bars = []\n" +
-            "  boolean doStuff() {\n" +
+            "  def doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return owner.bars.isEmpty()\n" +
             "    }\n" +
@@ -662,11 +662,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo {\n" +
-            "  def propertyMissing(String name) {\n" +
-            "    return 'stuff'\n" +
-            "  }\n" +
             "  def build(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_FIRST) Closure<?> block) {\n" +
             "    return this.with(block)\n" +
+            "  }\n" +
+            "  def propertyMissing(String name) {\n" +
+            "    return 'stuff'\n" +
             "  }\n" +
             "}\n",
 
@@ -674,7 +674,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  protected List<?> bars = []\n" +
-            "  boolean doStuff() {\n" +
+            "  def doStuff() {\n" +
             "    new Foo().build {\n" +
             "      return thisObject.bars.isEmpty()\n" +
             "    }\n" +
