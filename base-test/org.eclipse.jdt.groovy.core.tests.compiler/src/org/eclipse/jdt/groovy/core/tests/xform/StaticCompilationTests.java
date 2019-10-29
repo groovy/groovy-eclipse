@@ -553,8 +553,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "true");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
+    @Test
     public void testCompileStatic7996a() {
+        assumeTrue(isAtLeastGroovy(30));
+
         //@formatter:off
         String[] sources = {
             "Main.groovy",
