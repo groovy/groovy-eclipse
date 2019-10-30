@@ -223,6 +223,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 if (!isDeclaration && (end - start) < ((StaticMethodCallExpression) node).getMethod().length() && skipPseudoProperties) {
                     start = 0;
                     end = 0;
+                } else if (end < 1 && isDeclaration && ((MethodNode) node).isStatic() && "main".equals(methodName)) {
+                    end = 1;
                 }
 
             // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.

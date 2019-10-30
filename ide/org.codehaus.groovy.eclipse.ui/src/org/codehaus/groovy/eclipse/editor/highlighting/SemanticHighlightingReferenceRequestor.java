@@ -356,7 +356,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private HighlightedTypedPosition handleMethodReference(ConstructorCallExpression expr) {
         if (expr.isSpecialCall()) return null; // handled by GroovyTagScanner
 
-        // name start works most of the time (incl. @Newify); name start 2 is for qualified types
+        // nameStart works most of the time (incl. @Newify); nameStart2 is for qualified types
         int offset = Math.max(expr.getNameStart(), expr.getType().getNameStart2()),
             length = expr.getNameEnd() - offset + 1;
 

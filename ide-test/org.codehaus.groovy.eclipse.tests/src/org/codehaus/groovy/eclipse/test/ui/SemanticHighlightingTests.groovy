@@ -2331,12 +2331,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testNumberRange() {
+    void testIntRange1() {
         String contents = ' 0..<100 '
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('100'), 3, NUMBER))
+    }
+
+    @Test
+    void testIntRange2() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void x() {
+            |  for (z in 1..2) {
+            |    z
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('z'), 1, VARIABLE))
     }
 
     @Test // GRECLIPSE-878

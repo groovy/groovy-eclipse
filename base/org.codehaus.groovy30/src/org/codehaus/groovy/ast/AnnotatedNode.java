@@ -33,8 +33,8 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
     private ClassNode declaringClass;
     private boolean synthetic;
     // GRECLIPSE add
-    private int nameStart;
-    private int nameStop;
+    private int nameStart = 0;
+    private int nameStop = -1;
     // GRECLIPSE end
 
     public List<AnnotationNode> getAnnotations() {
