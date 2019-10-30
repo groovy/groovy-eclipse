@@ -1237,8 +1237,17 @@ public class AsmClassGenerator extends ClassGenerator {
         return false;
     }
 
-    private static boolean isGroovyObject(Expression objectExpression) {
+    private boolean isGroovyObject(Expression objectExpression) {
+        /* GRECLIPSE edit -- GROOVY-9195, GROOVY-9288, et al.
         return isThisExpression(objectExpression) || objectExpression.getType().isDerivedFromGroovyObject() && !(objectExpression instanceof ClassExpression);
+        */
+        if (isThisExpression(objectExpression)) return true;
+        if (objectExpression instanceof ClassExpression) return false;
+
+        ClassNode objectExpressionType = controller.getTypeChooser().resolveType(objectExpression, controller.getClassNode());
+        if (objectExpressionType.equals(ClassHelper.OBJECT_TYPE)) objectExpressionType = objectExpression.getType();
+        return objectExpressionType.isDerivedFromGroovyObject();
+        // GRECLIPSE end
     }
 
     public void visitFieldExpression(FieldExpression expression) {

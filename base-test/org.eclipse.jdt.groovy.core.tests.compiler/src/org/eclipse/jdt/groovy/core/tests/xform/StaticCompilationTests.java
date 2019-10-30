@@ -1296,11 +1296,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  E.ONE.name\n" +
-            "}\n",
+            "  print E.ONE.name\n" +
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: name for class: E");
+        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 6)\n" +
@@ -1308,6 +1311,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t^^^^^\n" +
             "Groovy:Access to E#name is forbidden @ line 6, column 3.\n" +
             "----------\n");
+        */
     }
 
     @Test
@@ -1320,11 +1324,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
-            "  E.ONE.ordinal\n" +
-            "}\n",
+            "  print E.ONE.ordinal\n" +
+            "}\n" +
+            "test()\n",
         };
         //@formatter:on
 
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: ordinal for class: E");
+        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 6)\n" +
@@ -1332,6 +1339,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t^^^^^\n" +
             "Groovy:Access to E#ordinal is forbidden @ line 6, column 3.\n" +
             "----------\n");
+        */
     }
 
     @Test
@@ -1460,7 +1468,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
+    @Test
     public void testCompileStatic9043_staticInnerToPackage2() {
         //@formatter:off
         String[] sources = {
@@ -1480,6 +1488,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: value for class: Main");
+        /* TODO: GROOVY-9093
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Main.groovy (at line 6)\n" +
@@ -1487,6 +1497,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^\n" +
             "Groovy:...\n" +
             "----------\n");
+        */
     }
 
     @Test
@@ -1822,7 +1833,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
+    @Test
     public void testCompileStatic9043_subToPackage2() {
         //@formatter:off
         String[] sources = {
@@ -1843,6 +1854,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        runConformTest(sources, "");
+        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in q\\More.groovy (at line 5)\n" +
@@ -1850,6 +1863,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^\n" +
             "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
             "----------\n");
+        */
     }
 
     @Test
@@ -1970,7 +1984,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9093")
+    @Test
     public void testCompileStatic9043_subToPrivate2() {
         //@formatter:off
         String[] sources = {
@@ -1991,6 +2005,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        runConformTest(sources, "");
+        /* TODO: https://issues.apache.org/jira/browse/GROOVY-9093
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in q\\More.groovy (at line 5)\n" +
@@ -1998,6 +2014,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^\n" +
             "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
             "----------\n");
+        */
     }
 
     @Test
@@ -2591,7 +2608,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "class Bar {\n" +
             "  def doIt(Foo foo) {\n" +
             "    'baz'.with {\n" +
-            "      print foo.field\n" + // Access to Foo#foo is forbidden at line: -1, column: -1
+            "      print foo.field\n" + // Access to Foo#foo is forbidden
             "      return 'bar'\n" +
             "    }\n" +
             "  }\n" +
@@ -2616,7 +2633,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
             "  def doIt(Foo foo) {\n" +
-            "    print foo.field\n" + // TODO: https://issues.apache.org/jira/browse/GROOVY-9195 -- Access to Foo#foo is forbidden
+            "    print foo.field\n" + // Access to Foo#foo is forbidden
             "    return 'bar'\n" +
             "  }\n" +
             "}\n" +
@@ -2631,8 +2648,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9136b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -2643,27 +2658,21 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "class Bar {\n" +
             "  def doIt(Foo foo) {\n" +
             "    foo.with {\n" +
-            "      field\n" +
+            "      field\n" + // Access to Foo#field is forbidden
             "    }\n" +
             "  }\n" +
             "}\n" +
-            "\n",
+            "\n" +
+            "def bar = new Bar()\n" +
+            "print bar.doIt(new Foo())\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Script.groovy (at line 8)\n" +
-            "\tfield\n" +
-            "\t^\n" +
-            "Groovy:Access to Foo#field is forbidden @ line 8, column 7.\n" +
-            "----------\n");
+        runConformTest(sources, "foo");
     }
 
     @Test
     public void testCompileStatic9136c() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -2674,21 +2683,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "class Bar {\n" +
             "  def doIt(Foo foo) {\n" +
             "    foo.with {\n" +
-            "      delegate.field\n" +
+            "      delegate.field\n" + // Access to Foo#field is forbidden
             "    }\n" +
             "  }\n" +
             "}\n" +
-            "\n",
+            "\n" +
+            "def bar = new Bar()\n" +
+            "print bar.doIt(new Foo())\n",
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Script.groovy (at line 8)\n" +
-            "\tdelegate.field\n" +
-            "\t^^^^^^^^\n" +
-            "Groovy:Access to Foo#field is forbidden @ line 8, column 7.\n" +
-            "----------\n");
+        runConformTest(sources, "foo");
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9151")

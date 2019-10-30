@@ -1352,15 +1352,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (propertyName == null) return false;
 
         Expression objectExpression = pexp.getObjectExpression();
-        final ClassNode objectExpressionType = getType(objectExpression);
-
+        ClassNode objectExpressionType = getType(objectExpression);
+        // GRECLIPSE add
+        List<ClassNode> enclosingTypes = typeCheckingContext.getEnclosingClassNodes();
+        // GRECLIPSE end
         boolean staticOnlyAccess = isClassClassNodeWrappingConcreteType(objectExpressionType);
         if ("this".equals(propertyName) && staticOnlyAccess) {
             // Outer.this for any level of nesting
             ClassNode outerNode = objectExpressionType.getGenericsTypes()[0].getType();
+            /* GRECLIPSE edit
             List<ClassNode> candidates = typeCheckingContext.getEnclosingClassNodes();
+            */
             ClassNode found = null;
-            for (ClassNode current : candidates) {
+            for (ClassNode current : enclosingTypes) {
                 if (!current.isStaticClass() && current instanceof InnerClassNode && outerNode.equals(current.getOuterClass())) {
                     found = current;
                     break;
@@ -1372,6 +1376,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
 
+        /* GRECLIPSE edit -- GROOVY-9294
         if (objectExpressionType.isArray() && "length".equals(pexp.getPropertyAsString())) {
             storeType(pexp, int_TYPE);
             if (visitor != null) {
@@ -1380,6 +1385,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             return true;
         }
+        */
 
         boolean foundGetterOrSetter = false;
         List<Receiver<String>> receivers = new LinkedList<Receiver<String>>();
@@ -1391,6 +1397,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         HashSet<ClassNode> handledNodes = new HashSet<ClassNode>();
         for (Receiver<String> receiver : receivers) {
             ClassNode testClass = receiver.getType();
+            // GRECLIPSE add
+            if (testClass.isArray() && "length".equals(propertyName)) {
+                storeType(pexp, int_TYPE);
+                if (visitor != null) {
+                    PropertyNode length = new PropertyNode("length", Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, int_TYPE, testClass, null, null, null);
+                    visitor.visitProperty(length);
+                }
+                return true;
+            }
+            // GRECLIPSE end
             LinkedList<ClassNode> queue = new LinkedList<ClassNode>();
             queue.add(testClass);
             if (isPrimitiveType(testClass)) {
@@ -1428,18 +1444,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (storeField(field, isThisExpression, pexp, receiver.getType(), visitor, receiver.getData(), !readMode))
                     return true;
                 */
+                // skip property/accessor checks for "x.@field"
                 if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
                 }
 
-                boolean isThisExpression = objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()
-                        && (objectExpressionType.equals(current) || (objectExpressionType.isDerivedFrom(current) && hasAccessToField(field, objectExpressionType)));
-
-                if (storeField(field, isThisExpression, pexp, receiver.getType(), visitor, receiver.getData(), !readMode)) {
+                // skip property/accessor checks for "field", "this.field", "this.with { field }", etc. in declaring class of field
+                if (storeField(field, enclosingTypes.contains(current), pexp, receiver.getType(), visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
                 }
+
+                boolean isThisExpression = enclosingTypes.contains(objectExpressionType);
                 // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
@@ -1497,8 +1514,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             pexp.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);
                         }
                         return true;
+                    /* GRECLIPSE edit -- GROOVY-9127
                     } else if (getter != null && propertyNode == null) {
                         pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+                    */
+                    } else if (propertyNode == null) {
+                        if (field != null && hasAccessToField(typeCheckingContext.getEnclosingClassNode(), field)) {
+                            pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
+                        } else if (getter != null) {
+                            pexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, Boolean.TRUE);
+                        }
+                    // GRECLIPSE end
                     }
                 }
                 foundGetterOrSetter = foundGetterOrSetter || !setters.isEmpty() || getter != null;
@@ -1560,17 +1586,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     // GRECLIPSE add
-    private static boolean hasAccessToField(FieldNode field, ClassNode objectExpressionType) {
-        if (field != null) {
-            if (field.isPublic() || field.isProtected()) {
-                return true;
-            }
-            if ((Opcodes.ACC_PRIVATE & field.getModifiers()) == 0 &&
-                    Objects.equals(objectExpressionType.getPackageName(), field.getDeclaringClass().getPackageName())) {
-                return true;
-            }
+    private static boolean hasAccessToField(ClassNode accessor, FieldNode field) {
+        if (field.isPublic() || accessor.equals(field.getDeclaringClass())) {
+            return true;
         }
-        return false;
+        if (field.isProtected()) {
+            return accessor.isDerivedFrom(field.getDeclaringClass());
+        } else {
+            return !Modifier.isPrivate(field.getModifiers()) && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
+        }
     }
     // GRECLIPSE end
 
