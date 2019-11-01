@@ -1799,7 +1799,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Main.groovy (at line 7)\n" +
             "\tprint Main.VALUE\n" +
             "\t      ^^^^\n" +
-            "Groovy:Access to Main#VALUE is forbidden @ line 7, column 11.\n" +
+            "Groovy:Access to Main#VALUE is forbidden\n" +
             "----------\n");
     }
 
@@ -1829,7 +1829,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\More.groovy (at line 5)\n" +
             "\tprint VALUE\n" +
             "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "Groovy:Access to q.More#VALUE is forbidden\n" +
             "----------\n");
     }
 
@@ -1896,7 +1896,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\Test.groovy (at line 5)\n" +
             "\tp.More.VALUE\n" +
             "\t^^^^^^\n" +
-            "Groovy:Access to p.More#VALUE is forbidden @ line 5, column 5.\n" +
+            "Groovy:Access to p.More#VALUE is forbidden\n" +
             "----------\n");
     }
 
@@ -1980,7 +1980,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in q\\More.groovy (at line 5)\n" +
             "\tprint VALUE\n" +
             "\t      ^^^^^\n" +
-            "Groovy:Access to q.More#VALUE is forbidden @ line 5, column 11.\n" +
+            "Groovy:Access to q.More#VALUE is forbidden\n" +
             "----------\n");
     }
 

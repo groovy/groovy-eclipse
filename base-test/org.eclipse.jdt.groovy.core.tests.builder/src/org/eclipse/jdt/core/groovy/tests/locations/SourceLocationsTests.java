@@ -713,7 +713,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         IPath path = env.addGroovyClass(root, "", "Hello", source);
         incrementalBuild();
         expectingSpecificProblemFor(root, new Problem("p/Hello",
-            "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
+            "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 
     @Test

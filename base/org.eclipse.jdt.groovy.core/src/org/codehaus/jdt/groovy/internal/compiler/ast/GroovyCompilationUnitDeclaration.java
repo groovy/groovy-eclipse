@@ -229,29 +229,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 return true;
             }
-        } catch (MultipleCompilationErrorsException mce) {
-            fixGroovyRuntimeException(mce);
+        } catch (MultipleCompilationErrorsException e) {
+            fixGroovyRuntimeException(e);
 
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.COMPILER, mce.getMessage());
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getMessage());
             }
 
-            ErrorCollector collector = mce.getErrorCollector();
-            if (collector.getErrorCount() == 1 && mce.getErrorCollector().getError(0) instanceof ExceptionMessage) {
-                Exception cause = ((ExceptionMessage) mce.getErrorCollector().getError(0)).getCause();
+            ErrorCollector collector = e.getErrorCollector();
+            if (collector.getErrorCount() == 1 && e.getErrorCollector().getError(0) instanceof ExceptionMessage) {
+                Exception cause = ((ExceptionMessage) e.getErrorCollector().getError(0)).getCause();
                 if (cause instanceof AbortCompilation) {
                     throw (AbortCompilation) cause;
                 }
             }
-
-            recordProblems(mce.getErrorCollector().getErrors());
-        } catch (GroovyBugError gbe) {
+            recordProblems(e.getErrorCollector().getErrors());
+        } catch (GroovyBugError e) {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.COMPILER, gbe.getBugText());
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
             }
 
-            if (gbe.getCause() instanceof AbortCompilation) {
-                AbortCompilation abort = (AbortCompilation) gbe.getCause();
+            if (e.getCause() instanceof AbortCompilation) {
+                AbortCompilation abort = (AbortCompilation) e.getCause();
                 if (!abort.isSilent) {
                     if (abort.problem != null) {
                         problemReporter.record(abort.problem, compilationResult, this, true);
@@ -259,20 +258,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         throw abort;
                     }
                 }
-            } else if (alreadyHasErrors) {
-                Util.log(new Status(IStatus.INFO, Activator.PLUGIN_ID,
-                    "Ignoring GroovyBugError since it is likely caused by earlier issues", gbe));
-            } else {
-                Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", gbe));
-
-                // Need to record these problems as compiler errors since some users will not think to check the log.
-                // This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBE is thrown when it is really just a syntax problem.
-                SyntaxErrorMessage syntaxError = new SyntaxErrorMessage(new SyntaxException("Groovy compiler error: " + gbe.getBugText(), gbe, 1, 0), groovySourceUnit);
+            } else if (!alreadyHasErrors) {
+                Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
+                // GRECLIPSE-1420: Need to record these problems as compiler errors since some users will not think to check the log.
+                // This is mostly a fix for problems where a GroovyBugError is thrown when it is really just a malformed syntax problem.
                 ErrorCollector collector = groovySourceUnit.getErrorCollector();
-                collector.addError(syntaxError);
-
+                collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getBugText(), e, 1, 1), groovySourceUnit));
                 recordProblems(collector.getErrors());
             }
+        } catch (AssertionError | LinkageError e) {
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getMessage());
+            }
+            if (!alreadyHasErrors) {
+                Util.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Groovy compiler error", e));
+            }
+            // probably an AST transform compiled against a different Groovy
+            ErrorCollector collector = groovySourceUnit.getErrorCollector();
+            collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getMessage(), e, 1, 1), groovySourceUnit));
+            recordProblems(collector.getErrors());
         } finally {
             problemReporter.referenceContext = referenceContext;
         }
@@ -433,8 +437,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             i += 1;
         }
 
-        // FIXASC Prefixed to indicate where it came from...
-        message = "Groovy:" + message.substring(i).split("\n")[0];
+        // FIXASC: Prefixed to indicate where it came from...
+        message = "Groovy:" + (i < 1 ? "" : " ") + message.substring(i).split("\n| (?:@|at) line\\b")[0];
 
         if (message.endsWith(" Possible causes:")) {
             message = message.substring(0, message.length() - 17);

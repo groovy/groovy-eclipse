@@ -58,7 +58,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\tdef err {\n" +
             "\t    ^\n" +
-            "Groovy:unexpected token: err @ line 4, column 9.\n" +
+            "Groovy:unexpected token: err\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -88,7 +88,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tint err = \n" +
             "\t         ^\n" +
-            "Groovy:unexpected token:  @ line 1, column 10.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -120,7 +120,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\terr = \n" +
             "\t     ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 6.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -152,7 +152,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\terr *= \n" +
             "\t      ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 7.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -184,7 +184,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\terr **= \n" +
             "\t       ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 8.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -217,7 +217,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 3, column 1.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -247,7 +247,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 5)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 5, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -280,7 +280,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 4, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -317,7 +317,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t\"\n" +
             "    }\n" +
             "\t ^\n" +
-            "Groovy:expecting anything but ''\\n''; got it anyway @ line 4, column 8.\n" +
+            "Groovy:expecting anything but ''\\n''; got it anyway\n" +
             "----------\n");
 
         /*checkGCUDeclaration("X.groovy",
@@ -361,7 +361,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\tif (f.\n" +
             "\t     ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 6.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -384,7 +384,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t0..\n\n" +
             "\t   ^\n" +
-            "Groovy:unexpected token:  @ line 1, column 4.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -416,7 +416,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\t0..<\n\n" +
             "\t    ^\n" +
-            "Groovy:unexpected token:  @ line 1, column 5.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -448,7 +448,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tfor (i in 0..) ;\n" +
             "\t             ^\n" +
-            "Groovy:unexpected token: ) @ line 1, column 14.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -480,7 +480,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tfor (i in 0..<) ;\n" +
             "\t              ^\n" +
-            "Groovy:unexpected token: ) @ line 1, column 15.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -515,7 +515,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 4, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -546,7 +546,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 4, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -577,7 +577,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tfor (i in 0..) ;\n" +
             "\t             ^\n" +
-            "Groovy:unexpected token: ) @ line 3, column 18.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -608,7 +608,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tfor (i in 0..<) ;\n" +
             "\t              ^\n" +
-            "Groovy:unexpected token: ) @ line 3, column 19.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -639,7 +639,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 4, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         assertFalse(getModuleNode("X.groovy").encounteredUnrecoverableError());
@@ -673,7 +673,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\tprintln x.;\n" +
             "\t          ^\n" +
-            "Groovy:unexpected token: ; @ line 4, column 15.\n" +
+            "Groovy:unexpected token: ;\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -700,7 +700,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tTest.\n" +
             "\t    ^\n" +
-            "Groovy:unexpected token:  @ line 1, column 5.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -732,7 +732,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 9)\n" +
             "\tprintln(variable.)\n" +
             "\t                 ^\n" +
-            "Groovy:unexpected token: ) @ line 9, column 26.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -760,7 +760,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 6)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 6, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -793,7 +793,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 5)\n" +
             "\tfoo:\"abc\",\n" +
             "\t    ^\n" +
-            "Groovy:unexpected token: abc @ line 5, column 9.\n" +
+            "Groovy:unexpected token: abc\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -826,7 +826,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 5)\n" +
             "\tfoo:,\n" +
             "\t    ^\n" +
-            "Groovy:unexpected token: , @ line 5, column 9.\n" +
+            "Groovy:unexpected token: ,\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -859,7 +859,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 6)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 6, column 2.\n" +
+            "Groovy:unexpected token: " + "}\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -887,13 +887,13 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\tif (f.)\n" +
             "\t      ^\n" +
-            "Groovy:unexpected token: ) @ line 2, column 7.\n" +
+            "Groovy:unexpected token: )\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 2)\n" +
             "\tif (f.)\n" +
             "\n" +
             "\t       ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 8.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
     }
 
@@ -914,7 +914,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\tif (f.\n" +
             "\n" +
             "\t      ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 7.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
     }
 
@@ -935,13 +935,13 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\tpanel.add (textField, BorderLayout.\n" +
             "\n" +
             "\t                                   ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 36.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 2)\n" +
             "\tpanel.add (textField, BorderLayout.\n" +
             "\n" +
             "\t                                   ^\n" +
-            "Groovy:expecting \')\', found \'\' @ line 2, column 36.\n" +
+            "Groovy:expecting \')\', found \'\'\n" +
             "----------\n");
     }
 
@@ -962,13 +962,13 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\tString s = (\'foo\' + BorderLayout.\n" +
             "\n" +
             "\t                                 ^\n" +
-            "Groovy:unexpected token:  @ line 2, column 34.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 2)\n" +
             "\tString s = (\'foo\' + BorderLayout.\n" +
             "\n" +
             "\t                                 ^\n" +
-            "Groovy:expecting \')\', found \'\' @ line 2, column 34.\n" +
+            "Groovy:expecting \')\', found \'\'\n" +
             "----------\n");
     }
 
@@ -994,7 +994,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in foo\\X.groovy (at line 6)\n" +
             "\tdo {\n" +
             "\t^\n" +
-            "Groovy:unexpected token: do @ line 6, column 5.\n" +
+            "Groovy:unexpected token: do\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1031,7 +1031,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in foo\\X.groovy (at line 7)\n" +
             "\tdo {\n" +
             "\t^\n" +
-            "Groovy:unexpected token: do @ line 7, column 5.\n" +
+            "Groovy:unexpected token: do\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1064,7 +1064,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\tint y()\n" +
             "\t^\n" +
-            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract. @ line 2, column 2.\n" +
+            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract.\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1096,7 +1096,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
@@ -1133,7 +1133,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
@@ -1166,7 +1166,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tnew\n" +
             "\t^\n" +
-            "Groovy:missing type for constructor call @ line 1, column 1.\n" +
+            "Groovy:missing type for constructor call\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1205,7 +1205,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 7.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
@@ -1215,7 +1215,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "3. ERROR in X.groovy (at line 4)\n" +
             "\tnew Air\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 4, column 10.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "4. ERROR in X.groovy (at line 4)\n" +
             "\tnew Air\n" +
@@ -1225,12 +1225,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "5. ERROR in X.groovy (at line 5)\n" +
             "\tnew\n" +
             "\t^\n" +
-            "Groovy:missing type for constructor call @ line 5, column 5.\n" +
+            "Groovy:missing type for constructor call\n" +
             "----------\n" +
             "6. ERROR in X.groovy (at line 6)\n" +
             "\tnew Fire\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 6, column 6.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "7. ERROR in X.groovy (at line 6)\n" +
             "\tnew Fire\n" +
@@ -1267,7 +1267,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tnew\n" +
             "\t^\n" +
-            "Groovy:missing type for constructor call @ line 3, column 1.\n" +
+            "Groovy:missing type for constructor call\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1296,7 +1296,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 2)\n" +
             "\tdef x = new A\n" +
             "\t            ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 2, column 15.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 2)\n" +
             "\tdef x = new A\n" +
@@ -1328,7 +1328,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
             "\t    ^\n" +
-            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression @ line 3, column 5.\n" +
+            "Groovy:expecting \'(\' or \'[\' after type name to continue new expression\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 3)\n" +
             "\tnew Earth\n" +
@@ -1390,7 +1390,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\t}\n" +
             "\n" +
             "\t ^\n" +
-            "Groovy:unexpected token:  @ line 8, column 5.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1424,7 +1424,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 7)\n" +
             "\tasdf\n" +
             "\t^\n" +
-            "Groovy:unexpected token: asdf @ line 7, column 4.\n" +
+            "Groovy:unexpected token: asdf\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1457,7 +1457,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 4)\n" +
             "\tbelo\n" +
             "\t^\n" +
-            "Groovy:unexpected token: belo @ line 4, column 1.\n" +
+            "Groovy:unexpected token: belo\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1577,7 +1577,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\timport com.\n" +
             "\t       ^\n" +
-            "Groovy:Invalid import @ line 1, column 8.\n" +
+            "Groovy:Invalid import\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1605,7 +1605,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\timport static com.\n" +
             "\t              ^\n" +
-            "Groovy:Invalid import @ line 1, column 15.\n" +
+            "Groovy:Invalid import\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 1)\n" +
             "\timport static com.\n" +
@@ -1683,7 +1683,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 8)\n" +
             "\tSet<Integer> s = []\n" +
             "\t           ^\n" +
-            "Groovy:unexpected token: > @ line 8, column 16.\n" +
+            "Groovy:unexpected token: >\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1707,7 +1707,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tclass X {int y()}\n" +
             "\t         ^\n" +
-            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract. @ line 1, column 10.\n" +
+            "Groovy:You defined a method without a body. Try adding a body, or declare it abstract.\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1733,7 +1733,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 1)\n" +
             "\tclass X { int y() {}\n\n" +
             "\t                    ^\n" +
-            "Groovy:unexpected token:  @ line 1, column 21.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1762,7 +1762,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 1)\n" +
             "\tdo\nprintln 123\n" +
             "\t  ^\n" +
-            "Groovy:expecting '{', found '<newline>' @ line 1, column 3.\n" +
+            "Groovy:expecting '{', found '<newline>'\n" +
             "----------\n");
     }
 
@@ -1783,13 +1783,13 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tpublic void foo(XMLConstants\n" +
             "\t                ^\n" +
-            "Groovy:unexpected token: XMLConstants @ line 3, column 17.\n" +
+            "Groovy:unexpected token: XMLConstants\n" +
             "----------\n" +
             "2. ERROR in X.groovy (at line 4)\n" +
             "\t}\n" +
             "\n" +
             "\t ^\n" +
-            "Groovy:unexpected token:  @ line 4, column 2.\n" +
+            "Groovy:unexpected token: \n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1818,7 +1818,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 5)\n" +
             "\t}\n" +
             "\t^\n" +
-            "Groovy:unexpected token: " + "} @ line 5, column 3.\n" +
+            "Groovy:unexpected token: }\n" +
             "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1848,7 +1848,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\tdef x=\"\n" +
             "}\n" +
             "\t       ^\n" +
-            "Groovy:expecting anything but \'\'\\n\'\'; got it anyway @ line 2, column 10.\n" +
+            "Groovy:expecting anything but \'\'\\n\'\'; got it anyway\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1871,7 +1871,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "1. ERROR in X.groovy (at line 3)\n" +
             "\tdef foo(Nuthin\n" +
             "\t        ^\n" +
-            "Groovy:unexpected token: Nuthin @ line 3, column 9.\n" +
+            "Groovy:unexpected token: Nuthin\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");

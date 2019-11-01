@@ -3186,9 +3186,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         incrementalBuild(paths[0]);
         expectingProblemsFor(class1, Arrays.asList(
-            "Problem : Groovy:expecting EOF, found 'abstract' @ line 3, column 3." +
+            "Problem : Groovy:expecting EOF, found 'abstract'" +
             " [ resource : </Project/src/test/Class1.groovy> range : <39,40> category : <60> severity : <2>]",
-            "Problem : Groovy:unexpected token: abstract @ line 3, column 3." +
+            "Problem : Groovy:unexpected token: abstract" +
             " [ resource : </Project/src/test/Class1.groovy> range : <39,40> category : <60> severity : <2>]"));
         expectingProblemsFor(class2, Arrays.asList(
             "Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces" +

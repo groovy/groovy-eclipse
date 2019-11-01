@@ -90,8 +90,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tabc()\n" +
             "\t^" + (!isParrotParser() ? "" : "^^^^") + "\n" +
             "Groovy:" + (!isParrotParser()
-                ? "unexpected token: abc @ line 12, column 3.\n"
-                : "You defined a method[abc] without a body. Try adding a method body, or declare it abstract @ line 12, column 3.\n") +
+                ? "unexpected token: abc\n"
+                : "You defined a method[abc] without a body. Try adding a method body, or declare it abstract\n") +
             "----------\n");
     }
 
@@ -596,8 +596,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\thttpClientControl.demand.generalConnection(1..1) = {->\n" +
             "\t" + (isParrotParser() ? "" : "                                                 ") + "^\n" +
             "Groovy:" + (isParrotParser()
-                ? "The LHS of an assignment should be a variable or a field accessing expression @ line 1, column 1.\n"
-                : "\"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression at line: 1 column: 50. File: A.groovy @ line 1, column 50.\n") +
+                ? "The LHS of an assignment should be a variable or a field accessing expression\n"
+                : " \"httpClientControl.demand.generalConnection((1..1))\" is a method call expression, but it should be a variable expression\n") +
             "----------\n");
     }
 
@@ -656,7 +656,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in A.groovy (at line 1)\n" +
             "\thello \\u\n" +
             "\t      ^\n" +
-            "Groovy:Did not find four digit hex character code. line: 1 col:7 @ line 1, column 7.\n" +
+            "Groovy:Did not find four digit hex character code. line: 1 col:7\n" +
             "----------\n");
     }
 
@@ -1357,8 +1357,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tabstract def meth() {\n" +
             "\t^\n" +
             "Groovy:" + (!isParrotParser()
-                ? "Abstract methods do not define a body. at line: 1 column: 1. File: Script.groovy @ line 1, column 1.\n"
-                : "You cannot define an abstract method[meth] in the script. Try removing the 'abstract' @ line 1, column 1.\n") +
+                ? "Abstract methods do not define a body.\n"
+                : "You cannot define an abstract method[meth] in the script. Try removing the 'abstract'\n") +
             "----------\n");
     }
 
@@ -1381,7 +1381,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 "1. ERROR in Main.groovy (at line 2)\n" +
                 "\tabstract def meth() {\n" +
                 "\t^\n" +
-                "Groovy:Abstract methods do not define a body. at line: 2 column: 3. File: Main.groovy @ line 2, column 3.\n" +
+                "Groovy:Abstract methods do not define a body.\n" +
                 "----------\n");
         } else {
             runNegativeTest(sources,
@@ -1882,7 +1882,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^^^^\n" +
             "Groovy:" + (!isParrotParser()
                 ? "the break statement with named label is only allowed inside loops\n"
-                : "break statement is only allowed inside loops or switches @ line 2, column 3.\n") +
+                : "break statement is only allowed inside loops or switches\n") +
             "----------\n");
     }
 
@@ -1906,7 +1906,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^^\n" +
             "Groovy:" + (!isParrotParser()
                 ? "the continue statement is only allowed inside loops\n"
-                : "continue statement is only allowed inside loops @ line 3, column 5.\n") +
+                : "continue statement is only allowed inside loops\n") +
             "----------\n");
     }
 
@@ -1929,7 +1929,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in DibDabs.groovy (at line 7)\n" +
             "\tint i        \n" +
             "\t            ^\n" +
-            "Groovy:expecting \'}\', found \'\' @ line 7, column 17.\n" +
+            "Groovy:expecting \'}\', found \'\'\n" +
             "----------\n");
     }
 
@@ -1953,7 +1953,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "\tint i        \n" +
             "\n" +
             "\t             ^\n" +
-            "Groovy:expecting \'}\', found \'\' @ line 7, column 18.\n" +
+            "Groovy:expecting \'}\', found \'\'\n" +
             "----------\n");
     }
 
@@ -3414,7 +3414,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in T.groovy (at line 3)\n" +
             "\tthis \"\"\n" +
             "\t     ^^\n" +
-            "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 10. File: T.groovy @ line 3, column 10.\n" +
+            "Groovy:Constructor call must be the first statement in a constructor.\n" +
             "----------\n");
     }
 
@@ -4380,7 +4380,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in Foo.groovy (at line 1)\n" +
             "\tprint Coolio!\n" +
             "\t            ^\n" +
-            "Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" +
+            "Groovy:expecting EOF, found \'!\'\n" +
             "----------\n");
     }
 
@@ -4752,7 +4752,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "1. ERROR in p\\C.groovy (at line 3)\n" +
             "\tList<String> class;\n" +
             "\t^\n" +
-            "Groovy:unexpected token: List @ line 3, column 3.\n" +
+            "Groovy:unexpected token: List\n" +
             "----------\n");
     }
 
@@ -4986,7 +4986,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "2. ERROR in A.groovy (at line 3)\n" +
             "\tclass BBB extends Fo\n" +
             "\t                   ^\n" +
-            "Groovy:Malformed class declaration @ line 3, column 20.\n" +
+            "Groovy:Malformed class declaration\n" +
             "----------\n");
 
         // missing end curly, but that shouldn't cause us to discard what we successfully parsed

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -158,8 +158,8 @@ public class CompilerUtils {
         try {
             SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
-            marker.setAttribute(IMarker.MESSAGE, "Groovy: compiler mismatch Project level is: " +
-                projectLevel.toReadableVersionString() + " Workspace level is " + workspaceLevel.toReadableVersionString() +
+            marker.setAttribute(IMarker.MESSAGE, "Groovy: compiler mismatch: project level is " +
+                projectLevel.toReadableVersionString() + ", workspace level is " + workspaceLevel.toReadableVersionString() +
                 "\nGroovy compiler level expected by the project does not match workspace compiler level. " +
                 "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);

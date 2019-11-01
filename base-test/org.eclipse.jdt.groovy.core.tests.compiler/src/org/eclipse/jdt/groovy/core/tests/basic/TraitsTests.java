@@ -895,12 +895,12 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "1. ERROR in Sample.groovy (at line 4)\n" +
             "\tx++\n" +
             "\t ^\n" +
-            "Groovy:Postfix expressions on trait fields/properties  are not supported in traits. @ line 4, column 6.\n" +
+            "Groovy:Postfix expressions on trait fields/properties  are not supported in traits.\n" +
             "----------\n" +
             "2. ERROR in Sample.groovy (at line 7)\n" +
             "\t--x\n" +
             "\t^\n" +
-            "Groovy:Prefix expressions on trait fields/properties are not supported in traits. @ line 7, column 5.\n" +
+            "Groovy:Prefix expressions on trait fields/properties are not supported in traits.\n" +
             "----------\n");
     }
 
