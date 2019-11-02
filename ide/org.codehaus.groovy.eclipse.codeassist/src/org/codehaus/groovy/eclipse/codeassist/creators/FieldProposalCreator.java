@@ -136,6 +136,11 @@ public class FieldProposalCreator extends AbstractProposalCreator {
     private void findStaticFavoriteProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
         for (String favoriteStaticMember : favoriteStaticMembers) {
             int pos = favoriteStaticMember.lastIndexOf('.');
+
+            if (pos <= 0) {
+                continue;
+            }
+
             String typeName = favoriteStaticMember.substring(0, pos);
             String fieldName = favoriteStaticMember.substring(pos + 1);
             ClassNode typeNode = tryResolveClassNode(typeName, module);
