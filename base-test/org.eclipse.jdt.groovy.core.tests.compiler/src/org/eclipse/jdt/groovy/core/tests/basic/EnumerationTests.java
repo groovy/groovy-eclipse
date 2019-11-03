@@ -27,30 +27,12 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testEnum1() {
-        //@formatter:off
-        String[] sources = {
-            "Script.groovy",
-            "import p.E\n" +
-            "print E.F\n",
-
-            "p/E.java",
-            "package p;\n" +
-            "enum E { F, G; }\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "F");
-    }
-
-    @Test
-    public void testEnum2() {
+    public void testEnum0() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -68,7 +50,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum3() {
+    public void testEnum1() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -83,7 +65,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnums3a() {
+    public void testEnum1a() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -98,7 +80,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum3b() {
+    public void testEnum1b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -113,7 +95,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum4() {
+    public void testEnum2() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -133,7 +115,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum4a() {
+    public void testEnum2a() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -153,7 +135,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum4b() {
+    public void testEnum2b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -173,7 +155,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum5() {
+    public void testEnum3() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -195,7 +177,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testEnum5a() {
+    public void testEnum3a() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -216,8 +198,8 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "[Landscape, Portrait]");
     }
 
-    @Test @Ignore("not supported by either parser")
-    public void testEnum5b() {
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9301
+    public void testEnum3b() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -239,6 +221,171 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testEnum4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait')\n" +
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  private String string\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    return string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnum4a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait');\n" + // semicolon
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  private String string\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    return string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnum4b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  private String string\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnum5() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait')\n" +
+            "  \n" +
+            "  private String string\n" +
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    return string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnum5a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait');\n" + // semicolon
+            "  \n" +
+            "  private String string\n" +
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    return string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
+    public void testEnum5b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Orientation.values()\n",
+
+            "Orientation.groovy",
+            "enum Orientation {\n" +
+            "  LANDSCAPE('Landscape'), PORTRAIT('Portrait'),\n" + // trailing comma
+            "  \n" +
+            "  private String string\n" +
+            "  \n" +
+            "  Orientation(String string) {\n" +
+            "    this.string = string\n" +
+            "  }\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String toString() {\n" +
+            "    string\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[Landscape, Portrait]");
+    }
+
+    @Test
     public void testEnum6() {
         //@formatter:off
         String[] sources = {
@@ -249,6 +396,48 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "enum NonFinal {\n" +
             "  One(1), Two(2)\n" +
             "  Object value\n" + // different parsing without leading keyword
+            "  NonFinal(value) {\n" +
+            "    this.value = value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[One, Two]");
+    }
+
+    @Test
+    public void testEnum6a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println NonFinal.values()\n",
+
+            "NonFinal.groovy",
+            "enum NonFinal {\n" +
+            "  One(1), Two(2);\n" +
+            "  Object value\n" +
+            "  NonFinal(value) {\n" +
+            "    this.value = value\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[One, Two]");
+    }
+
+    @Test
+    public void testEnum6b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println NonFinal.values()\n",
+
+            "NonFinal.groovy",
+            "enum NonFinal {\n" +
+            "  One(1), Two(2),\n" +
+            "  Object value\n" +
             "  NonFinal(value) {\n" +
             "    this.value = value\n" +
             "  }\n" +
@@ -539,8 +728,6 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
     @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-4438
     public void testEnum4438() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Outer.groovy",
@@ -550,6 +737,23 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "  enum Inner {\n" +
             "    X,\n" +
             "    Y\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test(timeout = 1500) // https://issues.apache.org/jira/browse/GROOVY-8507
+    public void testEnum8507() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "enum Outer {\n" +
+            "  A,\n" +
+            "  enum Inner {\n" +
+            "    X,\n" +
             "  }\n" +
             "}\n",
         };
