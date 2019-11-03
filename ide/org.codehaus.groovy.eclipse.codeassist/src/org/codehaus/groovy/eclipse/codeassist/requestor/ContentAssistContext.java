@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -176,9 +178,8 @@ public class ContentAssistContext {
         if (favoriteStaticMembers == null) {
             String serializedFavorites = PreferenceConstants.getPreferenceStore().getString(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS);
             if (serializedFavorites != null && serializedFavorites.length() > 0) {
-                favoriteStaticMembers = new TreeSet<>();
-                Collections.addAll(favoriteStaticMembers,
-                    serializedFavorites.split(";"));
+                favoriteStaticMembers = Arrays.stream(serializedFavorites.split(";"))
+                    .filter(it -> it.indexOf('.') != -1).collect(Collectors.toCollection(TreeSet::new));
             } else {
                 favoriteStaticMembers = Collections.emptySet();
             }

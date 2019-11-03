@@ -1028,6 +1028,13 @@ final class FieldCompletionTests extends CompletionTestSuite {
             '''.stripIndent())
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/984
+    void testFavoriteStaticField4() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'zzz')
+
+        assert createProposalsAtOffset('zz', 2).length == 0
+    }
+
     @Test
     void testRangeExpressionCompletion1() {
         String contents = '''\

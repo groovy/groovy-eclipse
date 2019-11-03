@@ -677,6 +677,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
             '''.stripIndent())
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/984
+    void testFavoriteStaticMethod4() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'zzz')
+
+        assert createProposalsAtOffset('zz', 2).length == 0
+    }
+
     @Test
     void testMethodPointer0() {
         String contents = 'class Foo { public static Foo instance }\nFoo.&in'
