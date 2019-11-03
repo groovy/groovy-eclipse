@@ -413,6 +413,56 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7300() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private String field = 'value'\n" +
+            "  String getField() { return field }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  @Override\n" +
+            "  String getField() {\n" +
+            "    return super.field\n" +
+            "  }\n" +
+            "}\n" +
+            "print new B().field\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7300") // see org.codehaus.groovy.classgen.asm.sc.StaticPropertyAccessHelper.PoppingMethodCallExpression
+    public void testCompileStatic7300a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private String field = 'value'\n" +
+            "  String getField() { return field }\n" +
+            "  void setField(String value) { field = value }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  @Override\n" +
+            "  String getField() {\n" +
+            "    super.field = 'reset'\n" +
+            "    return super.field\n" +
+            "  }\n" +
+            "}\n" +
+            "print new B().field\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "reset");
+    }
+
+    @Test
     public void testCompileStatic7687() {
         assumeTrue(isAtLeastGroovy(25));
 
