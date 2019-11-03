@@ -168,7 +168,7 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
                 ?
                 "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
                 "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:Annotation collector got unmapped names [doesNotExist]. @ line 1, column 1.\n"
+                "Groovy:Annotation collector got unmapped names [doesNotExist].\n"
                 :
                 "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
                 "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
