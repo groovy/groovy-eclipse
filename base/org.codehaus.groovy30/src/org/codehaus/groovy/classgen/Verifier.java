@@ -1390,8 +1390,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     private static boolean extractImplicitThis$0StmtIfInnerClassFromExpression(final List<Statement> stmts, final Statement bstmt) {
         Expression expr = ((ExpressionStatement) bstmt).getExpression();
-        // GRECLIPSE edit -- avoid transforming CompareIdentity and CompareToNull
-        if (/*expr instanceof BinaryExpression*/expr != null && expr.getClass() == BinaryExpression.class) {
+        if (expr instanceof BinaryExpression) {
             Expression lExpr = ((BinaryExpression) expr).getLeftExpression();
             if (lExpr instanceof FieldExpression) {
                 if ("this$0".equals(((FieldExpression) lExpr).getFieldName())) {
