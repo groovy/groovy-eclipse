@@ -60,12 +60,12 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jdt.core.formatter.IndentManipulation;
+import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.manipulation.util.Strings;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddUnimplementedConstructorsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddUnimplementedMethodsOperation;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
-import org.eclipse.jdt.internal.corext.dom.IASTSharedValues;
 import org.eclipse.jdt.internal.corext.dom.TokenScanner;
 import org.eclipse.jdt.internal.corext.refactoring.TypeContextChecker;
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
@@ -189,10 +189,11 @@ public class GroovyTypeBuilder {
                 }
                 String unitContent = CodeGeneration.getCompilationUnitContent(cu, fileComment, typeComment, typeContent, lineDelimiter);
                 if (unitContent != null) {
-                    ASTParser parser = ASTParser.newParser(IASTSharedValues.SHARED_AST_LEVEL);
+                    ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
                     parser.setKind(ASTParser.K_COMPILATION_UNIT);
                     parser.setProject(pack.getJavaProject());
                     parser.setSource(unitContent.toCharArray());
+                    parser.setUnitName(cu.getPath().toString());
                     CompilationUnit unit = (CompilationUnit) parser.createAST(null);
                     if ((pack.isDefaultPackage() || unit.getPackage() != null) && !unit.types().isEmpty()) {
                         buffer.setContents(unitContent);
@@ -523,7 +524,7 @@ public class GroovyTypeBuilder {
     }
 
     private void captureImports(ICompilationUnit cu) {
-        ASTParser parser = ASTParser.newParser(IASTSharedValues.SHARED_AST_LEVEL);
+        ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setResolveBindings(true);
         parser.setFocalPosition(0);

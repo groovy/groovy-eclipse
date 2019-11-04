@@ -16,11 +16,13 @@
 package org.eclipse.jdt.core.groovy.tests.locations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.NodeFinder;
@@ -35,15 +37,6 @@ import org.junit.Test;
 public final class ASTConverterTests {
 
     private static void checkJavaName(String contents, String expectedName) {
-        int start = contents.lastIndexOf(expectedName);
-        int length = expectedName.length();
-        SimpleName name = (SimpleName) findJavaNodeAt(contents, start, length);
-        assertEquals(expectedName, name.getIdentifier());
-        assertEquals("Invalid start position", start, name.getStartPosition());
-        assertEquals("Invalid length position", length, name.getLength());
-    }
-
-    private static ASTNode findJavaNodeAt(String contents, int start, int length) {
         ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTION_Source, "1.5");
@@ -51,17 +44,17 @@ public final class ASTConverterTests {
         parser.setSource(contents.toCharArray());
         parser.setStatementsRecovery(true);
         CompilationUnit unit = (CompilationUnit) parser.createAST(null);
-        assertEquals("Compilation unit should not have any problems:\n" + printProblems(unit), 0, unit.getProblems().length);
-        return NodeFinder.perform(unit, start, length);
-    }
 
-    private static String printProblems(CompilationUnit unit) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < unit.getProblems().length; i++) {
-            sb.append(unit.getProblems()[i]);
-            sb.append("\n");
+        if (unit.getProblems().length > 0) {
+            fail("Compilation unit should not have any problems:\n" +
+                Arrays.stream(unit.getProblems()).map(Object::toString).collect(Collectors.joining("\n")));
         }
-        return sb.toString();
+
+        int start = contents.lastIndexOf(expectedName), length = expectedName.length();
+        SimpleName name = (SimpleName) NodeFinder.perform(unit, start, length);
+        assertEquals(expectedName, name.getIdentifier());
+        assertEquals("Invalid start position", start, name.getStartPosition());
+        assertEquals("Invalid length position", length, name.getLength());
     }
 
     //--------------------------------------------------------------------------
