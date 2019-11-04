@@ -463,6 +463,58 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7300b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private String field = 'value'\n" +
+            "  String getField() { return field }\n" +
+            "  void setField(String value) { field = value }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  @Override\n" +
+            "  String getField() {\n" +
+            "    super.@field = 'reset'\n" +
+            "    return super.field\n" +
+            "  }\n" +
+            "}\n" +
+            "print new B().field\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "reset");
+    }
+
+    @Test
+    public void testCompileStatic7300c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private String field = 'value'\n" +
+            "  String getField() { return field }\n" +
+            "  void setField(String value) { field = value }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  @Override\n" +
+            "  String getField() {\n" +
+            "    super.setField('reset')\n" +
+            "    return super.field\n" +
+            "  }\n" +
+            "}\n" +
+            "print new B().field\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "reset");
+    }
+
+    @Test
     public void testCompileStatic7687() {
         assumeTrue(isAtLeastGroovy(25));
 
