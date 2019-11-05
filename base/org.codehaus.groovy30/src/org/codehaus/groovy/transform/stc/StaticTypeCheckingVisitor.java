@@ -1702,7 +1702,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
             // GROOVY-7996: check if receiver implements get(String)/set(String,Object) or propertyMissing(String)
             if (!testClass.isArray() && !isPrimitiveType(getUnwrapper(testClass))
-                    && objectExpression instanceof VariableExpression && typeCheckingContext.getEnclosingClosure() != null) {
+                    && objectExpression instanceof VariableExpression && typeCheckingContext.getEnclosingClosure() != null
+                    && !isParameterReference((VariableExpression) objectExpression, typeCheckingContext.getEnclosingClosure().getClosureExpression())) {
                 MethodNode mopMethod;
                 if (readMode) {
                     mopMethod = testClass.getMethod("get", new Parameter[]{new Parameter(STRING_TYPE, "name")});
@@ -1753,6 +1754,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else {
             return !field.isPrivate() && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
         }
+    }
+
+    private static boolean isParameterReference(VariableExpression ve, ClosureExpression ce) {
+        return Arrays.asList(getParametersSafe(ce)).contains(ve.getAccessedVariable());
     }
 
     private MethodNode findGetter(ClassNode current, String name, boolean searchOuterClasses) {
