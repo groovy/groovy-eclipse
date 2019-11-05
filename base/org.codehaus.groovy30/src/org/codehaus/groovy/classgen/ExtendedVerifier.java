@@ -43,16 +43,20 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the
@@ -170,18 +174,17 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             if (!visited.hasSourceRetention()) {
                 List<AnnotationNode> seen = nonSourceAnnotations.get(name);
                 if (seen == null) {
-                    seen = new ArrayList<AnnotationNode>();
+                    seen = new ArrayList<>();
                 }
                 seen.add(visited);
                 nonSourceAnnotations.put(name, seen);
             }
-            boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
 
             // Check if the annotation target is correct, unless it's the target annotating an annotation definition
             // defining on which target elements the annotation applies
+            boolean isTargetAnnotation = name.equals("java.lang.annotation.Target");
             if (!isTargetAnnotation && !visited.isTargetAllowed(target)) {
-                addError("Annotation @" + name + " is not allowed on element "
-                        + AnnotationNode.targetToName(target), visited);
+                addError("Annotation @" + name + " is not allowed on element " + AnnotationNode.targetToName(target), visited);
             }
             visitDeprecation(node, visited);
             visitOverride(node, visited);
@@ -194,47 +197,37 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
             if (next.getValue().size() > 1) {
                 ClassNode repeatable = null;
                 AnnotationNode repeatee = next.getValue().get(0);
-                List<AnnotationNode> repeateeAnnotations = repeatee.getClassNode().getAnnotations();
-                for (AnnotationNode anno : repeateeAnnotations) {
-                    ClassNode annoClassNode = anno.getClassNode();
-                    if (annoClassNode.getName().equals("java.lang.annotation.Repeatable")) {
+                for (AnnotationNode anno : repeatee.getClassNode().getAnnotations()) {
+                    if (anno.getClassNode().getName().equals("java.lang.annotation.Repeatable")) {
                         Expression value = anno.getMember("value");
-                        if (value instanceof ClassExpression) {
-                            ClassExpression ce = (ClassExpression) value;
-                            if (ce.getType() != null && ce.getType().isAnnotationDefinition()) {
-                                repeatable = ce.getType();
-                                break;
-                            }
+                        if (value instanceof ClassExpression && value.getType().isAnnotationDefinition()) {
+                            repeatable = value.getType();
+                            break;
                         }
                     }
                 }
                 if (repeatable != null) {
                     AnnotationNode collector = new AnnotationNode(repeatable);
-                    /* GRECLIPSE edit -- GROOVY-9095
-                    if (repeatable.isResolved()) {
+                    if (repeatee.hasRuntimeRetention()) {
+                        collector.setRuntimeRetention(true);
+                    } else if (repeatable.redirect().hasClass()) {
                         Class<?> repeatableType = repeatable.getTypeClass();
-                        Retention retAnn = repeatableType.getAnnotation(Retention.class);
-                        collector.setRuntimeRetention(retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME));
-                    } else if (repeatable.redirect() != null) {
-                        for (AnnotationNode annotationNode : repeatable.redirect().getAnnotations()) {
-                            if (!annotationNode.getClassNode().getName().equals("java.lang.annotation.Retention"))
-                                continue;
-                            String value = annotationNode.getMember("value").getText();
-                            collector.setRuntimeRetention(value.equals(RetentionPolicy.RUNTIME.name()) ||
-                                    value.equals(RetentionPolicy.class.getName() + "." + RetentionPolicy.RUNTIME.name()));
+                        Retention retention = repeatableType.getAnnotation(Retention.class);
+                        collector.setRuntimeRetention(retention != null && retention.value().equals(RetentionPolicy.RUNTIME));
+                    } else {
+                        for (AnnotationNode annotation : repeatable.getAnnotations()) {
+                            if (annotation.getClassNode().getName().equals("java.lang.annotation.Retention")) {
+                                Expression value = annotation.getMember("value"); assert value != null;
+                                Object retention = evaluateExpression(value, source.getConfiguration());
+                                collector.setRuntimeRetention(retention != null && retention.toString().equals("RUNTIME"));
+                                break;
+                            }
                         }
                     }
-                    */
-                    collector.setClassRetention(repeatee.hasClassRetention());
-                    collector.setRuntimeRetention(repeatee.hasRuntimeRetention());
-                    // GRECLIPSE end
-                    List<Expression> annos = new ArrayList<Expression>();
-                    for (AnnotationNode an : next.getValue()) {
-                        annos.add(new AnnotationConstantExpression(an));
-                    }
-                    collector.addMember("value", new ListExpression(annos));
-                    node.addAnnotation(collector);
+                    collector.addMember("value", new ListExpression(next.getValue().stream()
+                        .map(AnnotationConstantExpression::new).collect(Collectors.toList())));
                     node.getAnnotations().removeAll(next.getValue());
+                    node.addAnnotation(collector);
                 }
             }
         }
@@ -257,8 +250,8 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
 
     // TODO GROOVY-5011 handle case of @Override on a property
     private void visitOverride(AnnotatedNode node, AnnotationNode visited) {
-        ClassNode annotationClassNode = visited.getClassNode();
-        if (annotationClassNode.isResolved() && annotationClassNode.getName().equals("java.lang.Override")) {
+        ClassNode annotationType = visited.getClassNode();
+        if (annotationType.isResolved() && annotationType.getName().equals("java.lang.Override")) {
             if (node instanceof MethodNode && !Boolean.TRUE.equals(node.getNodeMetaData(Verifier.DEFAULT_PARAMETER_GENERATED))) {
                 boolean override = false;
                 MethodNode origMethod = (MethodNode) node;
@@ -295,7 +288,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                 MethodNode found = getDeclaredMethodCorrected(genericsSpec, mn, correctedNext);
                 if (found != null) break;
             }
-            List<ClassNode> ifaces = new ArrayList<ClassNode>(Arrays.asList(next.getInterfaces()));
+            List<ClassNode> ifaces = new ArrayList<>(Arrays.asList(next.getInterfaces()));
             while (!ifaces.isEmpty()) {
                 ClassNode origInterface = ifaces.remove(0);
                 if (!origInterface.equals(ClassHelper.OBJECT_TYPE)) {

@@ -124,7 +124,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             */
             Class[] transformClasses = null;
             String[] transformClassNames = null;
-            if (annotation.getClassNode().hasClass()) {
+            if (annotation.getClassNode().redirect().hasClass()) {
                 Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
                 if (transformClassAnnotation != null) {
                     try {

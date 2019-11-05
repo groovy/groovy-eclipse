@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.CompileUnit;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
 import org.codehaus.groovy.classgen.asm.util.TypeUtil;
 import org.codehaus.groovy.reflection.ReflectionCache;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
@@ -52,25 +51,17 @@ public class BytecodeHelper implements Opcodes {
     private static String DTT_CLASSNAME = BytecodeHelper.getClassInternalName(DefaultTypeTransformation.class.getName());
 
     public static String getClassInternalName(ClassNode t) {
+        /* GRECLIPSE edit
         if (t.isPrimaryClassNode() || t instanceof DecompiledClassNode) {
             if (t.isArray()) return "[L"+getClassInternalName(t.getComponentType())+";";
             return getClassInternalName(t.getName());
         }
-        // GRECLIPSE edit
-        //return getClassInternalName(t.getTypeClass());
-        // don't call getTypeClass() unless necessary; decide if this can ever get into trouble?
-        // the second part of the if was added because of FindInSource.groovy which refered to
-        // GroovyModel but that could not be found so we were left with an unresolved import and
-        // node in the code - crashed whilst doing the code gen
-        String name = t.getClassInternalName();
-        if (name == null) {
-            if (t.hasClass()) {
-                name = getClassInternalName(t.getTypeClass());
-            } else {
-                name = getClassInternalName(t.getName());
-            }
+        return getClassInternalName(t.getTypeClass());
+        */
+        if (t.isArray()) {
+            return TypeUtil.getDescriptionByType(t);
         }
-        return name;
+        return getClassInternalName(t.getName());
         // GRECLIPSE end
     }
 

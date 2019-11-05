@@ -40,25 +40,15 @@ public class BytecodeHelper implements Opcodes {
     private static String DTT_CLASSNAME = BytecodeHelper.getClassInternalName(DefaultTypeTransformation.class.getName());
 
     public static String getClassInternalName(ClassNode t) {
+        /* GRECLIPSE edit
         if (t.isPrimaryClassNode()) {
             if (t.isArray()) return "[L"+getClassInternalName(t.getComponentType())+";";
             return getClassInternalName(t.getName());
         }
-        // GRECLIPSE edit
-        //return getClassInternalName(t.getTypeClass());
-        // don't call getTypeClass() unless necessary
-        // GRECLIPSE decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
-        // refered to GroovyModel but that could not be found so we were left with an unresolved import and node in the code - crashed
-        // whilst doing the code gen
-        String name = t.getClassInternalName();
-        if (name == null) {
-            if (t.hasClass()) {
-                name = getClassInternalName(t.getTypeClass());
-            } else {
-                name = getClassInternalName(t.getName());
-            }
-        }
-        return name;
+        return getClassInternalName(t.getTypeClass());
+        */
+        if (t.isArray()) return getTypeDescription(t);
+        return getClassInternalName(t.getName());
         // GRECLIPSE end
     }
 

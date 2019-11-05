@@ -466,11 +466,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     //--------------------------------------------------------------------------
 
     @Override
-    public String getClassInternalName() {
-        return getName().replace('.', '/');
-    }
-
-    @Override
     public List<AnnotationNode> getAnnotations() {
         if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
             synchronized (this) {

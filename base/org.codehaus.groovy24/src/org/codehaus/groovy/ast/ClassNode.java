@@ -1653,10 +1653,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     // GRECLIPSE add
-    public String getClassInternalName() {
-        return (isRedirectNode() ? redirect().getClassInternalName() : null);
-    }
-
     public boolean hasClass() {
         return (clazz != null || redirect().clazz != null);
     }
