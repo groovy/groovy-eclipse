@@ -268,8 +268,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * Constructor used by {@code makeArray()} if no real class is available.
      */
     private ClassNode(ClassNode componentType) {
-        // GRECLIPSE edit
-        this(/*componentType.getName() + "[]"*/computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        /* GRECLIPSE edit
+        this(componentType.getName() + "[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        */
+        this(computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         // GRECLIPSE end
         this.componentType = componentType.redirect();
         isPrimaryNode = false;
@@ -279,45 +281,29 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /**
      * For a given component type compute the right 'name'.  Rules are as follows:
      * <ul>
-     * <li> primitive component types: result is a name like "[I" or "[Z"
-     * <li> array component types: follow the pattern for the component, if it starts '[' add another leading. if it ends with '[]' then do that
-     * <li> reference types: Create [Lcom.foo.Bar; - this isn't quite right really as it should have '/' in...
+     * <li> primitive component types: result is a name like "[B" or "[Z"
+     * <li> reference component types: create "[Lfoo.bar.Baz;" - this isn't quite right really as it should have '/' instead of '.'
+     * <li> array component types: follow the pattern for the component, if it starts '[' add another leading; if it ends with '[]' then do that
      * </ul>
      */
     private static String computeArrayName(ClassNode componentType) {
         String componentName = componentType.getName();
         if (componentType.isPrimitive()) {
-            int len = componentName.length();
-            if (len == 7) {
-                return "[Z"; //boolean
-            } else if (len == 6) {
-                return "[D"; //double
-            } else if (len == 5) {
-                if (componentName.charAt(0) == 'f') {
-                    return "[F"; //float
-                } else {
-                    return "[S"; //short
-                }
-            } else if (len == 4) {
-                 switch (componentName.charAt(0)) {
-                 case 'b': return "[B"; //byte
-                 case 'c': return "[C"; //char
-                 default:  return "[J"; //long
-                 }
-            } else {
-                return "[I"; //int
+            switch (componentName.charAt(0)) {
+            case 'b': return componentName.charAt(1) == 'y' ? "[B" : "[Z"; // byte or boolean
+            case 'c': return "[C"; // char
+            case 'd': return "[D"; // double
+            case 'f': return "[F"; // float
+            case 'i': return "[I"; // int
+            case 'l': return "[J"; // long
+            case 's': return "[S"; // short
             }
-        } else if (componentType.isArray()) {
-            // follow the pattern:
-            if (componentName.charAt(0) == '[') {
-                return new StringBuilder("[").append(componentName).toString();
-            } else {
-                return new StringBuilder(componentName).append("[]").toString();
-            }
-        } else {
-            // reference type:
-            return new StringBuilder("[L").append(componentType.getName()).append(";").toString();
+        } else if (!componentType.isArray()) {
+            return "[L" + componentName + ";";
+        } else if (componentName.startsWith("[")) {
+            return "[" + componentName;
         }
+        return componentName + "[]"; // TODO: What code still creates array types like this?
     }
     // GRECLIPSE end
 
