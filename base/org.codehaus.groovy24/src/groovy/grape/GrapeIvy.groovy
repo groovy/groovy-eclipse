@@ -358,6 +358,7 @@ class GrapeIvy implements GrapeEngine {
         for (IvyGrabRecord grabRecord : grabRecords) {
             def conf = grabRecord.conf ?: ['*']
             DefaultDependencyDescriptor dd = md.dependencies.find {it.dependencyRevisionId.equals(grabRecord.mrid)}
+            /* GRECLIPSE edit -- GROOVY-8372
             if (dd) {
                 createAndAddDependencyArtifactDescriptor(dd, grabRecord, conf)
             } else {
@@ -367,6 +368,21 @@ class GrapeIvy implements GrapeEngine {
                 createAndAddDependencyArtifactDescriptor(dd, grabRecord, conf)
                 md.addDependency(dd)
             }
+            */
+            if (!dd) {
+                dd = new DefaultDependencyDescriptor(md, grabRecord.mrid, grabRecord.force, grabRecord.changing, grabRecord.transitive)
+                conf.each { dd.addDependencyConfiguration('default', it) }
+                md.addDependency(dd)
+            }
+
+            if (grabRecord.classifier != null
+                    || (grabRecord.ext != null && grabRecord.ext != 'jar')
+                    || (grabRecord.type != null && grabRecord.type != 'jar')) {
+                // add artifact descriptor to dependency descriptor
+                def dad = new DefaultDependencyArtifactDescriptor(dd, grabRecord.mrid.name, grabRecord.type ?: 'jar', grabRecord.ext ?: 'jar', null, grabRecord.classifier ? [classifier: grabRecord.classifier] : null)
+                conf.each { dd.addDependencyArtifact(it, dad) }
+            }
+            // GRECLIPSE end
         }
 
        // resolve grab and dependencies
