@@ -70,20 +70,26 @@ public class STCTypeLookup implements ITypeLookup {
                     if (vexp.isThisExpression() || vexp.isSuperExpression()) {
                         declaration = (ClassNode) inferredType;
                     } else {
-                        Variable accessedVariable = vexp.getAccessedVariable();
-                        if (accessedVariable instanceof AnnotatedNode) {
-                            declaration = (AnnotatedNode) accessedVariable;
-                            declaringType = ((AnnotatedNode) declaration).getDeclaringClass();
-
-                            if (VariableScope.isPlainClosure((ClassNode) inferredType)) {
-                                VariableInfo info = scope.lookupName(accessedVariable.getName());
-                                if (info != null && VariableScope.isParameterizedClosure(info.type)) {
-                                    inferredType = info.type; // Closure --> Closure<String>
-                                }
-                            }
+                        Object methodTarget = vexp.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                        if (methodTarget instanceof MethodNode) {
+                            declaration = (MethodNode) methodTarget;
+                            declaringType = ((MethodNode) methodTarget).getDeclaringClass();
                         } else {
-                            // defer to other type lookup impls
-                            confidence = TypeConfidence.UNKNOWN;
+                            Variable accessedVariable = vexp.getAccessedVariable();
+                            if (accessedVariable instanceof AnnotatedNode) {
+                                declaration = (AnnotatedNode) accessedVariable;
+                                declaringType = ((AnnotatedNode) declaration).getDeclaringClass();
+
+                                if (VariableScope.isPlainClosure((ClassNode) inferredType)) {
+                                    VariableInfo info = scope.lookupName(accessedVariable.getName());
+                                    if (info != null && VariableScope.isParameterizedClosure(info.type)) {
+                                        inferredType = info.type; // Closure --> Closure<String>
+                                    }
+                                }
+                            } else {
+                                // defer to other type lookup impls
+                                confidence = TypeConfidence.UNKNOWN;
+                            }
                         }
                     }
                 } else if (expr instanceof MethodCall) {

@@ -262,6 +262,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.resolv
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.toMethodParametersString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodArgumentWithGenerics;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodsWithGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
 
 /**
  * The main class code visitor responsible for static type checking. It will perform various inspections like checking
@@ -731,6 +732,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (val != null) vexp.putNodeMetaData(StaticTypesMarker.READONLY_PROPERTY, val);
             val = pe.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
             if (val != null) vexp.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, val);
+            // GRECLIPSE add
+            val = pe.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (val != null) vexp.putNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET, val);
+            // GRECLIPSE end
             return true;
         }
         return false;

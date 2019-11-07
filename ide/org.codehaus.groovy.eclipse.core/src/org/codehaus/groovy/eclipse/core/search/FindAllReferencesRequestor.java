@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -83,11 +84,14 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
 
-            if (maybeDeclaration instanceof PropertyNode && ((PropertyNode) maybeDeclaration).getField() != null) {
-                maybeDeclaration = ((PropertyNode) maybeDeclaration).getField();
+            if (maybeDeclaration instanceof PropertyNode) {
+                FieldNode maybeField = ((PropertyNode) maybeDeclaration).getField();
+                if (maybeField != null && !(maybeField.isDynamicTyped() && maybeField.hasNoRealSourcePosition())) {
+                    maybeDeclaration = maybeField;
+                }
             }
 
-            if (isEquivalent(maybeDeclaration)) {
+            if (isEquivalent(maybeDeclaration, result.isGroovy)) {
                 int flag = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment) ? F_WRITE_OCCURRENCE : F_READ_OCCURRENCE;
                 references.put(node, flag);
             }
@@ -99,7 +103,7 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
     public static final int F_WRITE_OCCURRENCE = 1;
     public static final int F_READ_OCCURRENCE  = 2;
 
-    private boolean isEquivalent(ASTNode maybeDeclaration) {
+    private boolean isEquivalent(ASTNode maybeDeclaration, boolean isCategory) {
         if (maybeDeclaration == declaration) {
             return true;
         }
@@ -112,6 +116,13 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             return maybeMethod.getName().equals(method.getName()) &&
                 maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) &&
                 checkParams(maybeMethod.getOriginal().getParameters(), method.getParameters());
+        } else if (maybeDeclaration instanceof PropertyNode && declaration instanceof MethodNode) {
+            MethodNode method = (MethodNode) declaration;
+            AccessorSupport accessorKind = AccessorSupport.findAccessorKind(method, isCategory);
+            if (accessorKind.isAccessor()) {
+                PropertyNode maybeProperty = (PropertyNode) maybeDeclaration;
+                return method.getName().equals(accessorKind.createAccessorName(maybeProperty.getName()));
+            }
         }
         // check for inner class nodes
         if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode) ||

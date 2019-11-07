@@ -629,13 +629,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
                 if (enclosingBinaryExpression != null) {
                     Expression leftExpression = enclosingBinaryExpression.getLeftExpression();
-                    Expression rightExpression = enclosingBinaryExpression.getRightExpression();
                     SetterInfo setterInfo = removeSetterInfo(leftExpression);
                     if (setterInfo != null) {
+                        Expression rightExpression = enclosingBinaryExpression.getRightExpression();
                         if (!ensureValidSetter(vexp, leftExpression, rightExpression, setterInfo)) {
                             return;
                         }
-
                     }
                 }
             }
@@ -732,25 +731,28 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private boolean tryVariableExpressionAsProperty(final VariableExpression vexp, final String dynName) {
-        VariableExpression implicitThis = varX("this");
-        PropertyExpression pe = new PropertyExpression(implicitThis, dynName);
-        pe.setImplicitThis(true);
-        if (visitPropertyExpressionSilent(pe, vexp)) {
-            ClassNode previousIt = vexp.getNodeMetaData(INFERRED_TYPE);
-            vexp.copyNodeMetaData(implicitThis);
-            vexp.putNodeMetaData(INFERRED_TYPE, previousIt);
-            storeType(vexp, getType(pe));
-            Object val = pe.getNodeMetaData(READONLY_PROPERTY);
+        PropertyExpression pexp = new PropertyExpression(varX("this"), dynName);
+        pexp.setImplicitThis(true);
+        if (visitPropertyExpressionSilent(pexp, vexp)) {
+            ClassNode propertyType = getType(pexp);
+            pexp.removeNodeMetaData(INFERRED_TYPE);
+
+            vexp.copyNodeMetaData(pexp.getObjectExpression());
+            Object val = pexp.getNodeMetaData(READONLY_PROPERTY);
             if (val != null) vexp.putNodeMetaData(READONLY_PROPERTY, val);
-            val = pe.getNodeMetaData(IMPLICIT_RECEIVER);
+            val = pexp.getNodeMetaData(IMPLICIT_RECEIVER);
             if (val != null) vexp.putNodeMetaData(IMPLICIT_RECEIVER, val);
+            val = pexp.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+            if (val != null) vexp.putNodeMetaData(DIRECT_METHOD_CALL_TARGET, val);
+
+            storeType(vexp, propertyType);
             return true;
         }
         return false;
     }
 
     private boolean visitPropertyExpressionSilent(PropertyExpression pe, Expression lhsPart) {
-        return (existsProperty(pe, !isLHSOfEnclosingAssignment(lhsPart)));
+        return existsProperty(pe, !isLHSOfEnclosingAssignment(lhsPart));
     }
 
     @Override

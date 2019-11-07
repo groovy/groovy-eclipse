@@ -146,41 +146,158 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testFindProperty() {
+    void testFindField() {
         //@formatter:off
         String contents = '''\
-            class X {
-              def foo
+            class Foo {
+              public def bar
             }
-            new X().foo
-            new X().foo()
+            new Foo().bar
+            new Foo().bar()
             '''.stripIndent()
         //@formatter:on
 
-        int length = 'foo'.length()
-        int first  = contents.indexOf('foo')
-        int second = contents.indexOf('foo', first + 1)
-        int third  = contents.indexOf('foo', second + 1)
+        int length = 'bar'.length()
+        int first  = contents.indexOf('bar')
+        int second = contents.indexOf('bar', first + 1)
+        int third  = contents.indexOf('bar', second + 1)
         doTest(contents, second, length, first, length, second, length, third, length)
     }
 
     @Test
-    void testFindField() {
+    void testFindProperty() {
         //@formatter:off
         String contents = '''\
-            class X {
-              public def foo
+            class Foo {
+              def bar
             }
-            new X().foo
-            new X().foo()
+            new Foo().bar
+            new Foo().bar()
             '''.stripIndent()
         //@formatter:on
 
         int length = 'foo'.length()
-        int first  = contents.indexOf('foo')
-        int second = contents.indexOf('foo', first + 1)
-        int third  = contents.indexOf('foo', second + 1)
+        int first  = contents.indexOf('bar')
+        int second = contents.indexOf('bar', first + 1)
+        int third  = contents.indexOf('bar', second + 1)
         doTest(contents, second, length, first, length, second, length, third, length)
+    }
+
+    @Test
+    void testFindPseudoProperty1() {
+        //@formatter:off
+        String contents = '''\
+            class Foo {
+              def getBar() {
+              }
+              void doBaz() {
+                bar
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('getBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/986
+    void testFindPseudoProperty1a() {
+        //@formatter:off
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class Foo {
+              def getBar() {
+              }
+              void doBaz() {
+                bar
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('getBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
+    }
+
+    @Test
+    void testFindPseudoProperty2() {
+        //@formatter:off
+        String contents = '''\
+            class Foo {
+              void setBar(value) {
+              }
+              void doBaz() {
+                bar = null
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('setBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/986
+    void testFindPseudoProperty2a() {
+        //@formatter:off
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class Foo {
+              void setBar(value) {
+              }
+              void doBaz() {
+                bar = null
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('setBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
+    }
+
+    @Test
+    void testFindPseudoProperty3() {
+        //@formatter:off
+        String contents = '''\
+            class Foo {
+              void setBar(value) {
+              }
+              void doBaz() {
+                bar // ambiguous reference
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('setBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/986
+    void testFindPseudoProperty3a() {
+        //@formatter:off
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class Foo {
+              void setBar(value) {
+              }
+              void doBaz() {
+                bar // ambiguous reference
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('setBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
     }
 
     @Test
@@ -229,6 +346,26 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         int third  = contents.indexOf('i', second + 1)
         int fourth = contents.indexOf('i', third + 1)
         doTest(contents, decl, 1, decl, length, first, length, second, length, third, length, fourth, length)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/986
+    void testFindGStringOccurrences3() {
+        //@formatter:off
+        String contents = '''\
+            @groovy.transform.CompileStatic
+            class Foo {
+              def getBar() {
+              }
+              String toString() {
+                return "$bar"
+              }
+            }
+            '''.stripIndent()
+        //@formatter:on
+
+        int first  = contents.indexOf('getBar')
+        int second = contents.indexOf('bar', first + 1)
+        doTest(contents, first, 6, first, 6, second, 3)
     }
 
     @Test // GRECLIPSE-1031
