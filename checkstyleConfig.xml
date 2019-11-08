@@ -91,7 +91,7 @@
         <module name="RightCurly">
             <message key="line.alone" value="Closing ''{0}'' should be alone on a line" />
             <message key="line.new"   value="Closing ''{0}'' should be alone on a line" />
-            <property name="option" value="alone" /><!-- TODO: Consider "alone_or_singleline". -->
+            <property name="option" value="alone_or_singleline" />
             <property name="tokens" value="CLASS_DEF,METHOD_DEF,CTOR_DEF,STATIC_INIT,INSTANCE_INIT,LITERAL_FOR,LITERAL_WHILE,LITERAL_FINALLY" />
         </module>
         <module name="RightCurly">
