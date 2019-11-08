@@ -89,7 +89,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "f = 9\n" +
             "f.xxx\n" +  // invalid reference
             "f = new SubClass()\n" +
-            "f.xxx()");  // here
+            "f.xxx()\n");  // here
     }
 
     @Test
@@ -122,7 +122,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  def method2() {\n" +
             "    def nothing = this.xxx()\n" +  // yes
             "  }\n" +
-            "}");
+            "}\n");
     }
 
     @Test
@@ -145,7 +145,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    xxx = xxx\n" +  // no, no
             "    def nothing = super.xxx()\n" +  // yes
             "  }\n" +
-            "}");
+            "}\n");
     }
 
     @Test
@@ -155,7 +155,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "interface First {\n" +
             "    void xxx()\n" +
             "    void xxx(a)\n" +
-            "}",
+            "}\n",
             "public class Second implements First {\n" +
             "    public void other() {\n" +
             "        xxx()\n" + //yes
@@ -166,7 +166,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    void xxx(a) {\n" +
             "        xxx(a,b)\n" + //yes
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -177,7 +177,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "interface First {\n" +
             "    void xxx(a)\n" +
             "    void xxx()\n" +
-            "}",
+            "}\n",
             "public class Second implements First {\n" +
             "    public void other() {\n" +
             "        xxx(a)\n" + //yes
@@ -188,7 +188,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    void xxx(a) {\n" +
             "        xxx(a,b)\n" + //yes
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -198,12 +198,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         createUnit("Sub",
             "interface Sub extends First {\n" +
             "    void xxx(a)\n" +
-            "}");
+            "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
             "    void xxx(a)\n" +
             "    void xxx()\n" +
-            "}",
+            "}\n",
             "public class Second implements Sub {\n" +
             "    public void other() {\n" +
             "        xxx(a)\n" + //yes
@@ -214,7 +214,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    void xxx(a) {\n" +
             "        xxx(a,b)\n" + //yes
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -225,12 +225,12 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "interface Sub extends First {\n" +
             "    void xxx(a)\n" +
             "    void xxx(a,b,c)\n" +
-            "}");
+            "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
             "    void xxx(a,b)\n" +
             "    void xxx(a)\n" +
-            "}",
+            "}\n",
             "public class Second implements Sub {\n" +
             "    public void other() {\n" +
             "        First f\n" +
@@ -247,7 +247,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "        Sub s\n" +
             "        s.xxx(a,b)\n" + //yes
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -257,7 +257,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class First {\n" +
             "  URL doSomething(String s, URL u) {}\n" + // search for references
             "  URL doSomething(Integer i, URL u) {}\n" +
-            "}",
+            "}\n",
             "class Second {\n" +
             "  First first\n" +
             "  def other\n" +
@@ -267,7 +267,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    first.doSomething(1, u)\n" + //no!
             "    first.&doSomething\n" + //yes
             "  }\n" +
-            "}",
+            "}\n",
             true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
     }
 
@@ -277,7 +277,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class First {\n" +
             "  URL doSomething(String s, URL u) {}\n" + // search for references
             "  URL doSomething(Integer i, URL u) {}\n" +
-            "}",
+            "}\n",
             "class Second {\n" +
             "  First first\n" +
             "  def other\n" +
@@ -287,7 +287,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    first.doSomething(1L, u)\n" + //no!
             "    first.&doSomething\n" + //yes
             "  }\n" +
-            "}",
+            "}\n",
             true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
     }
 
@@ -297,7 +297,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class First {\n" +
             "  URL doSomething(Integer i, URL u) {}\n" + // search for references
             "  URL doSomething(String s, URL u) {}\n" +
-            "}",
+            "}\n",
             "class Second {\n" +
             "  First first\n" +
             "  def other\n" +
@@ -307,7 +307,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    first.doSomething('', u)\n" + //no!
             "    first.&doSomething\n" + //yes
             "  }\n" +
-            "}",
+            "}\n",
             true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
     }
 
@@ -317,7 +317,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class First {\n" +
             "    void xxx(a, b = 9) {}\n" +
             "    void xxx(a, b, c) {}\n" +
-            "}",
+            "}\n",
             "class Second {\n" +
             "    void other0() {\n" +
             "        First f\n" +
@@ -331,7 +331,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "        First f\n" +
             "        f.xxx(a,b)\n" +
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -341,7 +341,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class First {\n" +
             "    void xxx(a, b = 9) {}\n" +
             "    void xxx(a, b, c) {}\n" +
-            "}",
+            "}\n",
             "class Second {\n" +
             "    void other0() {\n" +
             "        First f\n" +
@@ -355,7 +355,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "        First f\n" +
             "        f.&xxx\n" +
             "    }\n" +
-            "}",
+            "}\n",
             false, 0, "xxx");
     }
 
@@ -366,7 +366,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class Bar {\n" +
             "  void doSomething() {}\n" +
             "  void doSomething(String one, String two = 'x') {}\n" +
-            "}");
+            "}\n");
         createUnit("foo", "Baz",
             "package foo;\n" +
             "public class Baz {\n" +
@@ -375,7 +375,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    bar.doSomething(\"one\");\n" + //yes
             "    bar.doSomething(\"one\", \"two\");\n" + //yes
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[1];
         new SearchEngine().search(
@@ -400,7 +400,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class Bar {\n" +
             "  void doSomething() {}\n" +
             "  void doSomething(String one, String two = 'x') {}\n" +
-            "}");
+            "}\n");
         createJavaUnit("foo", "Baz",
             "package foo;\n" +
             "public class Baz {\n" +
@@ -409,7 +409,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    bar.doSomething(\"one\");\n" + //no! (want to be yes)
             "    bar.doSomething(\"one\", \"two\");\n" + //yes
             "  }\n" +
-            "}");
+            "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[1];
         new SearchEngine().search(
@@ -455,7 +455,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  static String string\n" +
             "  static String getString() {\n" +
             "  }\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "import static foo.Bar.getString as blah\n" + // potential
@@ -465,9 +465,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "str = Bar.string\n" + // potential
             "str = Bar.@string\n" +
             "fun = Bar.&getString\n" + // potential
-            "str = blah()\n" + // potential
-            "str = s\n" + // potential
-            "");
+            "str = blah()\n" + // exact
+            "str = s\n"); // exact
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         new SearchEngine().search(
@@ -492,9 +491,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.string") + 4, matches.get(4).getOffset());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&getString") + 5, matches.get(5).getOffset());
-        assertEquals(SearchMatch.A_INACCURATE, matches.get(6).getAccuracy());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(6).getOffset());
-        assertEquals(SearchMatch.A_INACCURATE, matches.get(7).getAccuracy());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(7).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("s"), matches.get(7).getOffset());
     }
 
@@ -505,7 +504,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "class Bar {\n" +
             "  String string\n" +
             "  String getString() {}\n" +
-            "}");
+            "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
             "new Bar().with {\n" +
@@ -513,8 +512,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "  str = getString()\n" + // exact
             "  str = 'getString'()\n" + // exact
             "  def fun = delegate.&getString\n" + // potential
-            "}\n" +
-            "");
+            "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
         new SearchEngine().search(
@@ -534,6 +532,62 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).indexOf("'getString'"), matches.get(2).getOffset());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("getString"), matches.get(3).getOffset());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/988
+    public void testExplicitPropertyGetterSearch3() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Bar {\n" +
+            "  int getValue() {\n" + // search
+            "    return 42\n" +
+            "  }\n" +
+            "  String toString() {\n" +
+            "    \"{value: $value\"}\n" + // exact
+            "  }\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Baz {\n" +
+            "  void meth(List<Bar> bars) {\n" +
+            "    for (bar in bars) {\n" +
+            "      int val = bar.value\n" + // exact
+            "    }\n" +
+            "    bars.each {\n" +
+            "      int val = it.value\n" + // exact
+            "    }\n" +
+            "  }\n" +
+            "}\n");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+        SearchMatch match;
+        int offset;
+
+        assertEquals(3, matches.size());
+
+        match = matches.get(0);
+        assertEquals(SearchMatch.A_ACCURATE, match.getAccuracy());
+        offset = String.valueOf(bar.getContents()).lastIndexOf("value");
+        assertEquals(offset, match.getOffset());
+
+        match = matches.get(1);
+        assertEquals(SearchMatch.A_ACCURATE, match.getAccuracy());
+        offset = String.valueOf(baz.getContents()).indexOf("value");
+        assertEquals(offset, match.getOffset());
+
+        match = matches.get(2);
+        assertEquals(SearchMatch.A_ACCURATE, match.getAccuracy());
+        offset = String.valueOf(baz.getContents()).lastIndexOf("value");
+        assertEquals(offset, match.getOffset());
     }
 
     @Test

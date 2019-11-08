@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -220,20 +219,20 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
                 // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
-                if (!isDeclaration && (end - start) < ((StaticMethodCallExpression) node).getMethod().length() && skipPseudoProperties) {
+                if (!isDeclaration && skipPseudoProperties && (end - start) < ((StaticMethodCallExpression) node).getMethod().length()) {
                     start = 0;
                     end = 0;
                 } else if (end < 1 && isDeclaration && ((MethodNode) node).isStatic() && "main".equals(methodName)) {
                     end = 1;
                 }
 
-            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
-            } else if (methodName.equals(node.getText()) || (isNotSynthetic(node.getText(), result.declaringType, (MethodNode) result.declaration) && !skipPseudoProperties)) {
+            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "bar" to generated "getBar()", "isBar()" or "setBar(...)"
+            } else if (methodName.equals(node.getText()) || (!skipPseudoProperties && !((MethodNode) result.declaration).isSynthetic())) {
                 start = node.getStart();
                 end = node.getEnd();
             }
 
-        // check for pseudo-properties on behalf of SyntheticAccessorsRenameParticipant
+        // check for pseudo-property match on behalf of SyntheticAccessorsRenameParticipant
         } else if ((node instanceof ConstantExpression || node instanceof VariableExpression) && methodName.equals(node.getText())) {
             if (parameterTypesMatch((MethodNode) result.declaration)) {
                 start = node.getStart();
@@ -419,8 +418,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private int getAccuracy(TypeConfidence confidence) {
-        //                                        improves call hierarchy and prevents "possible matches" warnings in refactoring wizard
-        if (confidence == TypeConfidence.EXACT || ACCURATE_REQUESTOR.matcher(requestor.getClass().getName()).find()) {
+        //                                                   improves call hierarchy and prevents "possible matches" warnings in refactoring wizard
+        if (confidence.isAtLeast(TypeConfidence.INFERRED) || ACCURATE_REQUESTOR.matcher(requestor.getClass().getName()).find()) {
             return SearchMatch.A_ACCURATE;
         }
         return SearchMatch.A_INACCURATE;
@@ -429,20 +428,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     private static final Pattern ACCURATE_REQUESTOR = Pattern.compile("\\.(?:callhierarchy|refactoring)\\.");
 
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
-        return !(Flags.isPrivate(method.getFlags()) || Flags.isStatic(method.getFlags()));
-    }
-
-    private static boolean isNotSynthetic(String name, ClassNode type, MethodNode method) {
-        if (!method.isSynthetic()) {
-            if (type.getField(name) != null) {
-                return true;
-            }
-            PropertyNode prop = type.getProperty(name);
-            if (prop != null && !prop.isSynthetic()) {
-                return true;
-            }
-        }
-        return false;
+        int flags = method.getFlags();
+        return !Flags.isPrivate(flags) && !Flags.isStatic(flags);
     }
 
     private static boolean equal(char[] arr, CharSequence seq) {

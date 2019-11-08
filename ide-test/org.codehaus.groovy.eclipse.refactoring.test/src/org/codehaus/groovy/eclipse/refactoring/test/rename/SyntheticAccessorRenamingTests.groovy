@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -783,12 +783,18 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 package p
                 class First {
                   void setFoo(value) {}
+                  void doSomething() {
+                    foo // ambiguous reference
+                  }
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
                   void setFooBar(value) {}
+                  void doSomething() {
+                    fooBar // ambiguous reference
+                  }
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -796,13 +802,56 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package q
                 def m(p.First f) {
-                  f.foo // potential match
+                  f.foo // ambiguous reference
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package q
                 def m(p.First f) {
-                  f.fooBar // potential match
+                  f.fooBar // ambiguous reference
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testSetterOnly2a() {
+        performRefactoringAndUndo('setFooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                @groovy.transform.CompileStatic
+                class First {
+                  void setFoo(value) {}
+                  void doSomething() {
+                    foo // ambiguous reference
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                @groovy.transform.CompileStatic
+                class First {
+                  void setFooBar(value) {}
+                  void doSomething() {
+                    fooBar // ambiguous reference
+                  }
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                @groovy.transform.CompileStatic
+                def m(p.First f) {
+                  f.foo // ambiguous reference
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                @groovy.transform.CompileStatic
+                def m(p.First f) {
+                  f.fooBar // ambiguous reference
                 }
                 '''.stripIndent()
         ))
@@ -1219,14 +1268,63 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
+                @groovy.transform.CompileStatic
                 class First {
                   static void setFoo(value) {}
+                  static void doSomething() {
+                    foo // ambiguous reference
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                @groovy.transform.CompileStatic
+                class First {
+                  static void setFooBar(value) {}
+                  static void doSomething() {
+                    fooBar // ambiguous reference
+                  }
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                @groovy.transform.CompileStatic
+                def m() {
+                  p.First.foo // ambiguous reference
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                @groovy.transform.CompileStatic
+                def m() {
+                  p.First.fooBar // ambiguous reference
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testStaticSetterOnly4a() {
+        performRefactoringAndUndo('setFooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static void setFoo(value) {}
+                  static void doSomething() {
+                    foo // ambiguous reference
+                  }
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
                   static void setFooBar(value) {}
+                  static void doSomething() {
+                    fooBar // ambiguous reference
+                  }
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -1234,13 +1332,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package q
                 def m() {
-                  p.First.foo // potential match
+                  p.First.foo // ambiguous reference
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package q
                 def m() {
-                  p.First.fooBar // potential match
+                  p.First.fooBar // ambiguous reference
                 }
                 '''.stripIndent()
         ))

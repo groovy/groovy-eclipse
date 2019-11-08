@@ -99,26 +99,38 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                 start = node.getEnd() - fieldName.length();
                 end = node.getEnd();
             }
-        } else if (node instanceof VariableExpression) {
-            if (fieldName.equals(((VariableExpression) node).getName()) &&
-                    (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode)) {
-                doCheck = true;
-                isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
-                start = node.getStart();
-                end = node.getEnd();
-            }
         } else if (node instanceof ConstantExpression) {
             if (fieldName.equals(((ConstantExpression) node).getText())) {
                 if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode || result.confidence == TypeConfidence.UNKNOWN) {
                     doCheck = true;
                     isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                } else if (result.declaration instanceof MethodNode) {
+                    MethodNode methodNode = (MethodNode) result.declaration;
+                    // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
+                    if (methodNode.isSynthetic()) {
+                        doCheck = true;
+                        isAssignment = methodNode.getName().startsWith("set");
+                    }
+                }
+                if (doCheck) {
                     start = node.getStart();
                     end = node.getEnd();
-
-                // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
-                } else if (result.declaration instanceof MethodNode && (((MethodNode) result.declaration).isSynthetic())) {
+                }
+            }
+        } else if (node instanceof VariableExpression) {
+            if (fieldName.equals(((VariableExpression) node).getName())) {
+                if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
                     doCheck = true;
-                    isAssignment = ((MethodNode) result.declaration).getName().startsWith("set");
+                    isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                } else if (result.declaration instanceof MethodNode) {
+                    MethodNode methodNode = (MethodNode) result.declaration;
+                    // check for "bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
+                    if (methodNode.isSynthetic()) {
+                        doCheck = true;
+                        isAssignment = methodNode.getName().startsWith("set");
+                    }
+                }
+                if (doCheck) {
                     start = node.getStart();
                     end = node.getEnd();
                 }
