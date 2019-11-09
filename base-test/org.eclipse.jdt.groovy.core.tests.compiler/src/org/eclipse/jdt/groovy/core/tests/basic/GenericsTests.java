@@ -1549,14 +1549,100 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "@groovy.transform.TypeChecked\n" +
             "class Main implements AttributeConverter<String,Object> {\n" +
             "  @Override\n" +
-            "  Object encode(String s) { return null; }\n" +
+            "  Object encode(String s) {}\n" +
             "  @Override\n" +
-            "  String decode(Object o) { return null; }\n" +
+            "  String decode(Object o) {}\n" +
             "}",
         };
         //@formatter:on
 
         runWarningFreeTest(sources);
+    }
+
+    /**
+     * https://issues.apache.org/jira/browse/GROOVY-7722
+     *
+     * java.lang.StackOverflowError
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:358)
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
+     *    ...
+     */
+    @Test
+    public void testExtendingGenerics_GroovyExtendsJava19() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "new OnSubscribe<List>() {\n" +
+            "  @Override\n" +
+            "  void call(Subscriber<? super List> sub) {\n" +
+            "    println 'works'\n" +
+            "  }\n" +
+            "}.call(null)\n",
+
+            "OnSubscribe.java",
+            "interface Action1<T> {\n" +
+            "  void call(T t);\n" +
+            "}\n" +
+            "abstract class Subscriber<T> {\n" +
+            "}\n" +
+            "interface OnSubscribe<T> extends Action1<Subscriber<? super T>> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    /**
+     * https://issues.apache.org/jira/browse/GROOVY-7864
+     *
+     * java.lang.StackOverflowError
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:358)
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
+     *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
+     *    ...
+     */
+    @Test
+    public void testExtendingGenerics_GroovyExtendsJava20() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "RxObservable.create(new RxObservable.OnSubscribe() {\n" +
+            "  @Override\n" +
+            "  void call(Subscriber subscriber) {\n" +
+            "    //...\n" +
+            "  }\n" +
+            "})\n" +
+            "println 'works'\n",
+
+            "RxObservable.java",
+            "// from RxJava 1.x\n" +
+            "class RxObservable<T> {\n" +
+            "  interface OnSubscribe<T> extends Action1<Subscriber<? super T>> {\n" +
+            "  }\n" +
+            "  static <T> RxObservable<T> create(OnSubscribe<T> f) {\n" +
+            "    return new RxObservable<T>(/*RxJavaHooks.onCreate(f)*/);\n" +
+            "  }\n" +
+            "}\n" +
+            "abstract class Subscriber<T> implements RxObserver<T>, Subscription {\n" +
+            "}\n" +
+            "interface Action1<T> /*extends Action*/ {\n" +
+            "  void call(T t);\n" +
+            "}\n" +
+            "interface RxObserver<T> {\n" +
+            "  void onNext(T t);\n" +
+            "  void onCompleted();\n" +
+            "  void onError(Throwable t);\n" +
+            "}\n" +
+            "interface Subscription {\n" +
+            "  void unsubscribe();\n" +
+            "  boolean isUnsubscribed();\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test
