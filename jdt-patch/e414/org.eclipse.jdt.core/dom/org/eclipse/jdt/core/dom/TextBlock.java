@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.dom;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
@@ -240,45 +241,34 @@ public class TextBlock extends Expression {
 	 * @exception IllegalArgumentException if the literal value cannot be converted
 	 */
 	public String getLiteralValue() {
-		String s = getEscapedValue();
-		int len = s.length();
-		if (len < 2 || s.indexOf("\"\"\"") != 0 || !s.substring(len-3, len).equals("\"\"\"") ) { //$NON-NLS-1$ //$NON-NLS-2$
+		char[] escaped = getEscapedValue().toCharArray();
+		int len = escaped.length;
+		if (len < 7) {
 			throw new IllegalArgumentException();
 		}
 		
-		boolean newLineFound = false;
-		for (int i = 3; i < s.length(); i++) {
-			char c = s.charAt(i);
-			while (ScannerHelper.isWhitespace(c)) {
+		int start = -1;
+		loop: for (int i = 3; i < len; i++) {
+			char c = escaped[i];
+			if (ScannerHelper.isWhitespace(c)) {
 				switch (c) {
 					case 10 : /* \ u000a: LINE FEED               */
 					case 13 : /* \ u000d: CARRIAGE RETURN         */
-						newLineFound =  true;
-						break;
+						start =  i + 1;
+						break loop;
 					default:
 						break;
 				}
+			} else {
+				break loop;
 			}
 		}
-		if (!newLineFound) {
+		if (start == -1) {
 			throw new IllegalArgumentException();
 		}
-		
-		Scanner scanner = this.ast.scanner;
-		char[] source = s.toCharArray();
-		scanner.setSource(source);
-		scanner.resetTo(0, source.length);
-		try {
-			int tokenType = scanner.getNextToken();
-			switch(tokenType) {
-				case TerminalTokens.TokenNameTextBlock:
-					return scanner.getCurrentStringLiteral();
-				default:
-					throw new IllegalArgumentException();
-			}
-		} catch(InvalidInputException e) {
-			throw new IllegalArgumentException();
-		}
+		return new String(
+				CharOperation.subarray(escaped, start, len - 3)
+				);
 	}
 
 

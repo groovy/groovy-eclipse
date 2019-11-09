@@ -11067,6 +11067,14 @@ public void invalidPackageReference(int problem, PackageVisibilityStatement ref)
 			ref.pkgRef.sourceStart,
 			ref.pkgRef.sourceEnd);
 }
+public void exportingForeignPackage(PackageVisibilityStatement ref, ModuleBinding enclosingModule) {
+	String[] arguments = new String[] { CharOperation.charToString(ref.pkgName), CharOperation.charToString(enclosingModule.moduleName) };
+	this.handle(IProblem.ExportingForeignPackage,
+			arguments,
+			arguments,
+			ref.pkgRef.sourceStart,
+			ref.pkgRef.sourceEnd);
+}
 public void duplicateModuleReference(int problem, ModuleReference ref) {
 	this.handle(problem, 
 		NoArgument, new String[] { CharOperation.charToString(ref.moduleName) },

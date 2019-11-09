@@ -6507,5 +6507,111 @@ public void testBug543526b() {
 	};
 	runner.runConformTest();
 }
+public void testBug552388() {
+	runNegativeTest(
+		new String[] {
+			"A.java",
+			"import java.util.ArrayList;\n" + 
+			"import java.util.List;\n" + 
+			"\n" + 
+			"public class A<T extends B> {\n" + 
+			"    protected List<C> list = new ArrayList<C>();\n" + 
+			"\n" + 
+			"    class C {}\n" + 
+			"\n" + 
+			"    public void createIO() {\n" + 
+			"        A<? extends B> x = null;\n" + 
+			"        List<A<? extends B>.C> y = x.list;\n" + 
+			"    }\n" + 
+			"}\n" + 
+			"\n" + 
+			"class B {\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in A.java (at line 11)\n" + 
+		"	List<A<? extends B>.C> y = x.list;\n" + 
+		"	                           ^^^^^^\n" + 
+		"Type mismatch: cannot convert from List<A<capture#1-of ? extends B>.C> to List<A<? extends B>.C>\n" + 
+		"----------\n");
+}
+public void testBug552388b() {
+	String output = this.complianceLevel > ClassFileConstants.JDK1_6 ?
+			"----------\n" + 
+			"1. ERROR in A.java (at line 17)\n" + 
+			"	foo(l);\n" + 
+			"	^^^\n" + 
+			"The method foo(List<A<?>.C>) in the type A<T> is not applicable for the arguments (List<A<T>.C>)\n" + 
+			"----------\n" + 
+			"2. ERROR in A.java (at line 33)\n" + 
+			"	foo2(l); \n" + 
+			"	^^^^\n" + 
+			"The method foo2(List<A<?>>) in the type A<T> is not applicable for the arguments (List<A<T>>)\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. ERROR in A.java (at line 16)\n" + 
+			"	List<C> l = new ArrayList<>();\n" + 
+			"	                ^^^^^^^^^\n" + 
+			"\'<>\' operator is not allowed for source level below 1.7\n" + 
+			"----------\n" + 
+			"2. ERROR in A.java (at line 17)\n" + 
+			"	foo(l);\n" + 
+			"	^^^\n" + 
+			"The method foo(List<A<?>.C>) in the type A<T> is not applicable for the arguments (List<A<T>.C>)\n" + 
+			"----------\n" + 
+			"3. ERROR in A.java (at line 32)\n" + 
+			"	List<A<T>> l = new ArrayList<>();\n" + 
+			"	                   ^^^^^^^^^\n" + 
+			"\'<>\' operator is not allowed for source level below 1.7\n" + 
+			"----------\n" + 
+			"4. ERROR in A.java (at line 33)\n" + 
+			"	foo2(l); \n" + 
+			"	^^^^\n" + 
+			"The method foo2(List<A<?>>) in the type A<T> is not applicable for the arguments (List<A<T>>)\n" + 
+			"----------\n";
+	runNegativeTest(
+		new String[] {
+			"A.java",
+			"import java.util.*;\n" + 
+			"class A<T> {\n" + 
+			"    class C {\n" + 
+			"        T f;\n" + 
+			"    }\n" + 
+			"    C c = new C();\n" + 
+			"    A(T t) {\n" + 
+			"        c = new C();\n" + 
+			"        c.f = t;\n" + 
+			"    }\n" + 
+			"    void foo(List<A<?>.C> list) {\n" + 
+			"        list.add(new A<String>(\"\").c);\n" + 
+			"        list.add(new A<Number>(3).c);\n" + 
+			"    }\n" + 
+			"    T test() {\n" + 
+			"        List<C> l = new ArrayList<>();\n" + 
+			"        foo(l);\n" + 
+			"        return l.get(0).f;\n" + 
+			"    }\n" + 
+			"    public static void main(String... args) {\n" + 
+			"//         Number n = new A<Number>(1).test();\n" + 
+			"//         System.out.print(n.intValue());\n" + 
+			"        Number n = new A<Number>(1).test2();\n" + 
+			"        System.out.print(n.intValue());\n" + 
+			"    }\n" + 
+			"     \n" + 
+			"    void foo2(List<A<?>> list) {\n" + 
+			"        list.add(new A<String>(\"\"));\n" + 
+			"        list.add(new A<Number>(3));\n" + 
+			"    }\n" + 
+			"    T test2() {\n" + 
+			"        List<A<T>> l = new ArrayList<>();\n" + 
+			"        foo2(l); \n" + 
+			"        return l.get(0).c.f;\n" + 
+			"    }\n" + 
+			" \n" + 
+			"}\n"
+		},
+		output);
+}
 }
 

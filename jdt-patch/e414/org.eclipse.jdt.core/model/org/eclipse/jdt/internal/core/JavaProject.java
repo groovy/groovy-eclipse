@@ -3837,6 +3837,12 @@ public class JavaProject
 		return null;
 	}
 
+	@Override
+	public IModuleDescription getOwnModuleDescription() throws JavaModelException {
+		JavaProjectElementInfo info = (JavaProjectElementInfo) getElementInfo();
+		return info.getModule();
+	}
+
 	public List<String> getPatchedModules(IClasspathEntry cpEntry) {
 		String patchModules = ClasspathEntry.getExtraAttribute(cpEntry, IClasspathAttribute.PATCH_MODULE);
 		if (patchModules != null) {

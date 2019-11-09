@@ -26,8 +26,16 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import static java.lang.Math.abs;
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 import junit.framework.Test;
 
@@ -52591,7 +52599,7 @@ public void testBug541772_typeannotations() {
  */
 public void testBug543480BasedOnTest2FromComment4ToSameSameOptimization() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		final long durationFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+		final List<Duration> durationsFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
 			new String[] {
 				"Test2_2.java",
 				"public class Test2_2 {\n" + 
@@ -52612,7 +52620,7 @@ public void testBug543480BasedOnTest2FromComment4ToSameSameOptimization() {
 				"interface R1<T1> {}\n" + 
 				"interface R2<T1, T2> {}\n"
 			}));
-		final long durationFor11TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+		final List<Duration> durationsFor11TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
 				new String[] {
 					"Test2_11.java",
 					"public class Test2_11 {\n" + 
@@ -52662,7 +52670,7 @@ public void testBug543480BasedOnTest2FromComment4ToSameSameOptimization() {
 				}));
 		// Time complexity should grow roughly linearly, not O(2^n)
 		// To make the test robust, it tests for the same order of magnitude only, i.e. factor 10.
-		assertCompileTimes(durationFor2TypeParameters, 10, durationFor11TypeParameters);
+		assertCompileTimes(durationsFor2TypeParameters, 10, durationsFor11TypeParameters);
 	}
 }
 /**
@@ -52670,7 +52678,7 @@ public void testBug543480BasedOnTest2FromComment4ToSameSameOptimization() {
  */
 public void testBug543480WithSameSubSuperOptimization() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
-		final long durationFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+		final List<Duration> durationsFor2TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
 			new String[] {
 					"WithParameterizedDependencies_2.java",
 					"abstract class WithParameterizedDependencies_2 {\n" + 
@@ -52686,7 +52694,7 @@ public void testBug543480WithSameSubSuperOptimization() {
 					"    Type1(final Type1<T1, T2> l) {}" +
 					"}\n"
 			}));
-		final long durationFor12TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
+		final List<Duration> durationsFor12TypeParameters = compileTimesAfterWarmup(() -> runConformTest(
 				new String[] {
 					"WithParameterizedDependencies_12.java",
 					"abstract class WithParameterizedDependencies_12 {\n" + 
@@ -52704,7 +52712,7 @@ public void testBug543480WithSameSubSuperOptimization() {
 				}));
 		// Time complexity should grow roughly linearly, not O(2^n).
 		// To make the test robust, it tests for the same order of magnitude only, i.e. factor 10.
-		assertCompileTimes(durationFor2TypeParameters, 10, durationFor12TypeParameters);
+		assertCompileTimes(durationsFor2TypeParameters, 10, durationsFor12TypeParameters);
 	}
 }
 /**
@@ -52734,26 +52742,83 @@ public void testBug543480WithoutNullPointerExceptionDuringBytecodeGeneration() {
 	}
 }
 
-protected void assertCompileTimes(final long shortTime, final double factor, final long longTime) {
-	assertTrue(longTime + " should be less than " + factor + "x the compile time of " + shortTime,
-			longTime < factor*shortTime);
+protected void assertCompileTimes(final List<Duration> shortTimes, final double factor, final List<Duration> longTimes) {
+	final double shortTimesAverage = averageExcludingBoundaries(shortTimes);
+	final double longTimesAverage = averageExcludingBoundaries(longTimes);
+	final String message = "Potential fluctuation of a performance test: average long compile time "
+			+ longTimesAverage + "ms should be less than " + factor + "x the average short compile time " + shortTimesAverage +"ms\n"
+			+ "long compile times: "+longTimes+"\n"
+			+ "short compile times: "+shortTimes;
+	assertTrue(message,longTimesAverage < factor*shortTimesAverage);
+	System.out.println(message);
 }
 
-protected long compileTimesAfterWarmup(final Runnable compileTask) {
+protected double averageExcludingBoundaries(final List<Duration> durations) {
+	return durations.stream()
+			.filter(duration -> !duration.isExcluded)
+			.mapToLong(duration -> duration.durationMs)
+			.average().orElse(-1);
+}
+
+protected List<Duration> compileTimesAfterWarmup(final Runnable compileTask) {
 	// warm up
 	duration(compileTask);
-	// average 
-	return (duration(compileTask) + duration(compileTask) +
-			  duration(compileTask) + duration(compileTask) +
-			  duration(compileTask) + duration(compileTask)) / 6;
+	runGarbageCollection();
+	// draw samples, exclude boundaries i.e. exclude potential outliers
+	final int numberOfSamples = 10;
+	final int boundarySize = 2;
+	return IntStream.rangeClosed(1, numberOfSamples)
+			.mapToObj(duration(compileTask))
+			.sorted()
+			.peek(markExcludedBoundaries(boundarySize, numberOfSamples))
+			.collect(toList());
 }
 
-protected long duration(final Runnable runnable) {
-	final long startMs = System.currentTimeMillis();
-	runnable.run();
-	final long endMs = System.currentTimeMillis();
-	final long duration = endMs-startMs;
-	return duration;
+protected static IntFunction<Duration> duration(final Runnable runnable) {
+	return index -> {
+		final long startMs = System.currentTimeMillis();
+		runnable.run();
+		final long endMs = System.currentTimeMillis();
+		final long duration = endMs-startMs;
+		return new Duration(index, duration);
+	};
+}
+
+protected static Consumer<Duration> markExcludedBoundaries(final int boundarySize, final int numberOfSamples) {
+	final AtomicInteger seenSamples = new AtomicInteger(0);
+	return duration -> {
+		final int indexFromBottom = seenSamples.get();
+		final int indexFromTop = abs(seenSamples.get() - numberOfSamples);
+		if(indexFromBottom < boundarySize) {
+			// a sample within the lower boundary
+			duration.isExcluded = true;
+		} else if(indexFromTop <= boundarySize) {
+			// a sample within the upper boundary
+			duration.isExcluded = true;
+		}
+		seenSamples.incrementAndGet();
+	};
+}
+
+protected static class Duration implements Comparable<Duration> {
+	protected final int index;
+	protected final long durationMs;
+	protected boolean isExcluded = false;
+	
+	public Duration(final int index, final long durationMs) {
+		this.index = index;
+		this.durationMs = durationMs;
+	}
+
+	@Override
+	public int compareTo(Duration other) {
+		return (int)(this.durationMs - other.durationMs);
+	}
+
+	@Override
+	public String toString() {
+		return "#"+index + " " + durationMs + "ms" + (isExcluded?" (excluded)":"");
+	}
 }
 
 }

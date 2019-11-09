@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -99,6 +99,11 @@ public interface ITerminalSymbols {
 	int TokenNameDoubleLiteral = 43;
 	int TokenNameCharacterLiteral = 44;
 	int TokenNameStringLiteral = 45;
+	/**
+	 * @since 3.20
+	 * @noreference This class is not intended to be referenced by clients as it is a part of Java preview feature.
+	 */
+	int TokenNameTextBlock = 46;
 	int TokenNamePLUS_PLUS = 1;
 	int TokenNameMINUS_MINUS = 2;
 	int TokenNameEQUAL_EQUAL = 35;
@@ -184,6 +189,5 @@ public interface ITerminalSymbols {
 	 * @since 3.10
 	 */
 	int TokenNameCOLON_COLON = 406;
-	
 	
 }

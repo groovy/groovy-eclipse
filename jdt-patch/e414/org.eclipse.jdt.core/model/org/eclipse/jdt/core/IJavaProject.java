@@ -610,7 +610,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	IProject getProject();
 
 	/**
-	 * Returns the <code>IModuleDescription</code> this project represents or 
+	 * Returns the {@link IModuleDescription} this project represents or 
 	 * null if the Java project doesn't represent any named module. A Java 
 	 * project is said to represent a module if any of its source package 
 	 * fragment roots (see {@link IPackageFragmentRoot#K_SOURCE}) contains a 
@@ -620,12 +620,28 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * In the latter case the corresponding module description of the
 	 * location referenced by that classpath entry is returned.
 	 * 
-	 * @return the <code>IModule</code> this project represents.
+	 * @return the {@link IModuleDescription} this project represents.
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource
 	 * @since 3.14
 	 */
 	IModuleDescription getModuleDescription() throws JavaModelException;
+
+	/**
+	 * Returns the <code>IModuleDescription</code> owned by this project or 
+	 * null if the Java project doesn't own a valid Java module descriptor. 
+	 * This method considers only module descriptions contained in any of the
+	 * project's source package fragment roots (see {@link IPackageFragmentRoot#K_SOURCE}).
+	 * In particular any {@link IClasspathAttribute#PATCH_MODULE} attribute
+	 * is not considered.
+	 * 
+	 * @return the {@link IModuleDescription} this project owns.
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource
+	 * @throws JavaModelException
+	 * @since 3.20
+	 */
+	IModuleDescription getOwnModuleDescription() throws JavaModelException;
 
 	/**
 	 * Returns the raw classpath for the project, as a list of classpath

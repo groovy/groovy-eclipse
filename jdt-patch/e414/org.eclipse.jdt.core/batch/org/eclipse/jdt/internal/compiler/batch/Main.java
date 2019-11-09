@@ -2830,7 +2830,7 @@ public void configure(String[] argv) {
 				mode = DEFAULT;
 				continue;
 			case INSIDE_RELEASE:
-				// If release is < 9, the following are diasllowed:
+				// If release is < 9, the following are disallowed:
 				// bootclasspath, -Xbootclasspath, -Xbootclasspath/a:, -Xbootclasspath/p:, 
 				// -endorseddirs, -Djava.endorsed.dirs, -extdirs, -Djava.ext.dirs
 

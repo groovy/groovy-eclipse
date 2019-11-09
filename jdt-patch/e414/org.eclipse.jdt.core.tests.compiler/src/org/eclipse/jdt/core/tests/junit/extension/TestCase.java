@@ -778,14 +778,7 @@ public void assertPerformance() {
 	super.assertPerformance();
 }
 
-
-/**
- * Clean test before run it.
- * Currently, clean only performs a gc.
- */
-protected void clean() {
-	//System.out.println("Clean test "+getName());
-	// Run gc
+protected void runGarbageCollection() {
 	int iterations = 0;
 	long delta=0, free=0;
 	for (int i=0; i<MAX_GC; i++) {
@@ -830,7 +823,7 @@ protected void setUp() throws Exception {
 	this.first = false;
 	boolean isFirstTestRun = CURRENT_CLASS == null;
 	if (isFirstTestRun || CURRENT_CLASS != getClass()) {
-		if (CURRENT_CLASS != null && RUN_GC) clean();
+		if (CURRENT_CLASS != null && RUN_GC) runGarbageCollection();
 		CURRENT_CLASS = getClass();
 		this.first = true;
 		CURRENT_CLASS_NAME = getClass().getName();
@@ -839,7 +832,7 @@ protected void setUp() throws Exception {
 
 	// Memory storage if specified
 	if (STORE_MEMORY != null && MEM_LOG_FILE != null) {
-		if (isFirstTestRun) clean();
+		if (isFirstTestRun) runGarbageCollection();
 		if (ALL_TESTS_LOG && MEM_LOG_FILE.exists()) {
 			PrintStream stream = new PrintStream(new FileOutputStream(MEM_LOG_FILE, true));
 			stream.print(CURRENT_CLASS_NAME);

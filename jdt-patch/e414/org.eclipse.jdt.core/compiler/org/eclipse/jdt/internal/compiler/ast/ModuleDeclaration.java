@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2018 IBM Corporation and others.
+ * Copyright (c) 2015, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -314,6 +314,14 @@ public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 				continue;
 			if (pb.hasCompilationUnit(true))
 				continue;
+			for (ModuleBinding req : this.binding.getAllRequiredModules()) {
+				for (PlainPackageBinding exported : req.getExports()) {
+					if (CharOperation.equals(pb.compoundName, exported.compoundName)) {
+						skope.problemReporter().exportingForeignPackage(stat, req);
+						return;
+					}
+				}
+			}
 			skope.problemReporter().invalidPackageReference(IProblem.PackageDoesNotExistOrIsEmpty, stat);
 		}
 	}

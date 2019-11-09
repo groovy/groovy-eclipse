@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -41,6 +41,7 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 	*/
 	public long sourceLevel;
 	public long complianceLevel;
+	public boolean previewEnabled;
 
 	// 1.4 feature
 	public boolean useAssertAsAnIndentifier = false;
@@ -114,6 +115,7 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 
 	public static final String NULL_SOURCE_STRING = "Null_Source_String"; //$NON-NLS-1$
 	public static final String UNTERMINATED_STRING = "Unterminated_String"; //$NON-NLS-1$
+	public static final String UNTERMINATED_TEXT_BLOCK = "Unterminated_Text_Block"; //$NON-NLS-1$
 	public static final String UNTERMINATED_COMMENT = "Unterminated_Comment"; //$NON-NLS-1$
 	public static final String INVALID_CHAR_IN_STRING = "Invalid_Char_In_String"; //$NON-NLS-1$
 	public static final String INVALID_DIGIT = "Invalid_Digit"; //$NON-NLS-1$
@@ -201,6 +203,9 @@ public class PublicScanner implements IScanner, ITerminalSymbols {
 	public static final int HIGH_SURROGATE_MAX_VALUE = 0xDBFF;
 	public static final int LOW_SURROGATE_MAX_VALUE = 0xDFFF;
 
+	// text block support - 13
+	/* package */ int rawStart = -1;
+
 public PublicScanner() {
 	this(false /*comment*/, false /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 }
@@ -214,12 +219,33 @@ public PublicScanner(
 		char[][] taskTags,
 		char[][] taskPriorities,
 		boolean isTaskCaseSensitive) {
+			this(tokenizeComments,
+				tokenizeWhiteSpace,
+				checkNonExternalizedStringLiterals,
+				sourceLevel,
+				complianceLevel,
+				taskTags,
+				taskPriorities,
+				isTaskCaseSensitive,
+				true);
+}
+public PublicScanner(
+		boolean tokenizeComments,
+		boolean tokenizeWhiteSpace,
+		boolean checkNonExternalizedStringLiterals,
+		long sourceLevel,
+		long complianceLevel,
+		char[][] taskTags,
+		char[][] taskPriorities,
+		boolean isTaskCaseSensitive,
+		boolean previewEnabled) {
 
 	this.eofPosition = Integer.MAX_VALUE;
 	this.tokenizeComments = tokenizeComments;
 	this.tokenizeWhiteSpace = tokenizeWhiteSpace;
 	this.sourceLevel = sourceLevel;
 	this.complianceLevel = complianceLevel;
+	this.previewEnabled = previewEnabled;
 	this.checkNonExternalizedStringLiterals = checkNonExternalizedStringLiterals;
 	if (taskTags != null) {
 		int taskTagsLength = taskTags.length;
@@ -511,6 +537,46 @@ public char[] getCurrentTokenSourceString() {
 			length);
 	}
 	return result;
+}
+protected final boolean scanForTextBlockBeginning() {
+	if (this.complianceLevel < ClassFileConstants.JDK13 || !this.previewEnabled) {
+		return false;
+	}
+	try {
+		// Don't change the position and current character unless we are certain
+		// to be dealing with a text block. For producing all errors like before
+		// in case of a valid """ but missing \r or \n, just return false and not
+		// throw any error.
+		int temp = this.currentPosition;
+		if ((this.source[temp++] == '\"' && this.source[temp++] == '\"')) {
+			char c = this.source[temp++];
+			while (ScannerHelper.isWhitespace(c)) {
+				switch (c) {
+					case 10 : /* \ u000a: LINE FEED               */
+					case 13 : /* \ u000d: CARRIAGE RETURN         */
+						this.currentCharacter = c;
+						this.currentPosition = temp;
+						return true;
+					default:
+						break;
+				}
+				c = this.source[temp++];
+			}
+		}
+	} catch(IndexOutOfBoundsException e) {
+		//let it return false;
+	}
+	return false;
+}
+protected final boolean scanForTextBlockClose() throws InvalidInputException {
+	try {
+		if (this.source[this.currentPosition] == '\"' && this.source[this.currentPosition + 1] == '\"') {
+			return true;
+		}
+	} catch(IndexOutOfBoundsException e) {
+		//let it return false;
+	}
+	return false;
 }
 public final String getCurrentStringLiteral() {
 	//return the token REAL source (aka unicodes are precomputed).
@@ -1423,26 +1489,53 @@ public int getNextToken() throws InvalidInputException {
 					}
 					throw new InvalidInputException(INVALID_CHARACTER_CONSTANT);
 				case '"' :
+					boolean isTextBlock = false;
+					int lastQuotePos = 0;
 					try {
 						// consume next character
 						this.unicodeAsBackSlash = false;
 						boolean isUnicode = false;
-						if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
-							&& (this.source[this.currentPosition] == 'u')) {
-							getNextUnicodeChar();
-							isUnicode = true;
-						} else {
-							if (this.withoutUnicodePtr != 0) {
-								unicodeStore();
+						isTextBlock = scanForTextBlockBeginning();
+						if (!isTextBlock) {
+							if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
+									&& (this.source[this.currentPosition] == 'u')) {
+								getNextUnicodeChar();
+								isUnicode = true;
+							} else {
+								if (this.withoutUnicodePtr != 0) {
+									unicodeStore();
+								}
 							}
 						}
-
-						while (this.currentCharacter != '"') {
-							if (this.currentPosition >= this.eofPosition) {
-								throw new InvalidInputException(UNTERMINATED_STRING);
+						this.rawStart = this.currentPosition - this.startPosition;
+						int terminators = 0;
+						while (this.currentPosition <= this.eofPosition) {
+							if (this.currentCharacter == '"') {
+								if (!isTextBlock) {
+									return ITerminalSymbols.TokenNameStringLiteral;
+								}
+								lastQuotePos = this.currentPosition;
+								// look for text block delimiter
+								if (scanForTextBlockClose()) {
+									// Account for just the snippet being passed around
+									// If already at the EOF, bail out.
+									if (this.currentPosition + 2 < this.source.length && this.source[this.currentPosition + 2] == '"') {
+										terminators++;
+										if (terminators > 2)
+											throw new InvalidInputException(UNTERMINATED_TEXT_BLOCK);
+									} else {
+										this.currentPosition += 2;
+										return ITerminalSymbols.TokenNameTextBlock;
+									}
+								}
+								if (this.withoutUnicodePtr != 0) {
+									unicodeStore();
+								}
+							} else {
+								terminators = 0;
 							}
 							/**** \r and \n are not valid in string literals ****/
-							if ((this.currentCharacter == '\n') || (this.currentCharacter == '\r')) {
+							if (!isTextBlock &&  (this.currentCharacter == '\n') || (this.currentCharacter == '\r')) {
 								// relocate if finding another quote fairly close: thus unicode '/u000D' will be fully consumed
 								if (isUnicode) {
 									int start = this.currentPosition;
@@ -1496,22 +1589,39 @@ public int getNextToken() throws InvalidInputException {
 								}
 							}
 							// consume next character
+							if (this.currentPosition >= this.eofPosition) {
+								break;
+							}
 							this.unicodeAsBackSlash = false;
 							if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
-								&& (this.source[this.currentPosition] == 'u')) {
+									&& (this.source[this.currentPosition] == 'u')) {
 								getNextUnicodeChar();
 								isUnicode = true;
 							} else {
 								isUnicode = false;
+								if (isTextBlock && this.currentCharacter == '"')
+									continue;
 								if (this.withoutUnicodePtr != 0) {
 									unicodeStore();
 								}
 							}
-
+						}
+						if (isTextBlock) {
+							if (lastQuotePos > 0)
+								this.currentPosition = lastQuotePos;
+							this.currentPosition = (lastQuotePos > 0) ? lastQuotePos : this.startPosition + this.rawStart;
+							throw new InvalidInputException(UNTERMINATED_TEXT_BLOCK);
+						} else {
+							throw new InvalidInputException(UNTERMINATED_STRING);
 						}
 					} catch (IndexOutOfBoundsException e) {
-						this.currentPosition--;
-						throw new InvalidInputException(UNTERMINATED_STRING);
+						if (isTextBlock) {
+							this.currentPosition = (lastQuotePos > 0) ? lastQuotePos : this.startPosition + this.rawStart;
+							throw new InvalidInputException(UNTERMINATED_TEXT_BLOCK);
+						} else {
+							this.currentPosition--;
+							throw new InvalidInputException(UNTERMINATED_STRING);
+						}
 					} catch (InvalidInputException e) {
 						if (e.getMessage().equals(INVALID_ESCAPE)) {
 							// relocate if finding another quote fairly close: thus unicode '/u000D' will be fully consumed
@@ -1529,7 +1639,6 @@ public int getNextToken() throws InvalidInputException {
 						}
 						throw e; // rethrow
 					}
-					return TokenNameStringLiteral;
 				case '/' :
 					if (!this.skipComments) {
 						int test = getNextChar('/', '*');
@@ -1929,23 +2038,57 @@ public final void jumpOverMethodBody() {
 						break NextToken;
 					}
 				case '"' :
+					boolean isTextBlock = false;
+					int firstClosingBrace = 0;
 					try {
 						try { // consume next character
-							this.unicodeAsBackSlash = false;
-							if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
-									&& (this.source[this.currentPosition] == 'u')) {
-								getNextUnicodeChar();
-							} else {
-								if (this.withoutUnicodePtr != 0) {
-									unicodeStore();
+							isTextBlock = scanForTextBlockBeginning();
+							if (!isTextBlock) {
+								this.unicodeAsBackSlash = false;
+								if (((this.currentCharacter = this.source[this.currentPosition++]) == '\\')
+										&& (this.source[this.currentPosition] == 'u')) {
+									getNextUnicodeChar();
+								} else {
+									if (this.withoutUnicodePtr != 0) {
+										unicodeStore();
+									}
 								}
 							}
 						} catch (InvalidInputException ex) {
 								// ignore
 						}
-						while (this.currentCharacter != '"') {
-							if (this.currentPosition >= this.eofPosition) {
-								return;
+						Inner: while (this.currentPosition <= this.eofPosition) {
+							if (isTextBlock) {
+								switch (this.currentCharacter) {
+									case '"':
+										// look for text block delimiter
+										if (scanForTextBlockClose()) {
+											this.currentPosition += 2;
+											this.currentCharacter = this.source[this.currentPosition];
+											isTextBlock = false;
+											break Inner;
+										}
+										break;
+									case '}':
+										if (firstClosingBrace == 0)
+											firstClosingBrace = this.currentPosition;
+										break;
+									case '\r' :
+										if (this.source[this.currentPosition] == '\n') 
+											this.currentPosition++;
+										//$FALL-THROUGH$
+									case '\n' :
+										pushLineSeparator();
+										//$FALL-THROUGH$
+									default:
+										if (this.currentCharacter == '\\' && this.source[this.currentPosition++] == '"') {
+											this.currentPosition++;
+										}
+										this.currentCharacter = this.source[this.currentPosition++];
+										continue Inner;
+								}
+							} else if (this.currentCharacter == '"') {
+								break Inner;
 							}
 							if (this.currentCharacter == '\r'){
 								if (this.source[this.currentPosition] == '\n') this.currentPosition++;
@@ -1989,7 +2132,13 @@ public final void jumpOverMethodBody() {
 							}
 						}
 					} catch (IndexOutOfBoundsException e) {
-						return;
+						if(isTextBlock) {
+							// Pull it back to the first closing brace after the beginning
+							// of the unclosed text block and let recovery take over.
+							if (firstClosingBrace > 0) {
+								this.currentPosition = firstClosingBrace - 1;
+							}
+						}
 					}
 					break NextToken;
 				case '/' :
@@ -4076,6 +4225,7 @@ public static boolean isLiteral(int token) {
 		case TerminalTokens.TokenNameFloatingPointLiteral:
 		case TerminalTokens.TokenNameDoubleLiteral:
 		case TerminalTokens.TokenNameStringLiteral:
+		case TerminalTokens.TokenNameTextBlock:
 		case TerminalTokens.TokenNameCharacterLiteral:
 			return true;
 		default:

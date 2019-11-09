@@ -533,6 +533,14 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 			}
 		}
 		
+		if (currentScope.compilerOptions().analyseResourceLeaks) {
+			if (this.haveReceiver && CharOperation.equals(this.selector, TypeConstants.CLOSE)) {
+				FakedTrackingVariable trackingVariable = FakedTrackingVariable.getCloseTrackingVariable(this.lhs, flowInfo, flowContext);
+				if (trackingVariable != null) { // null happens if target is not a local variable or not an AutoCloseable
+					trackingVariable.markClosedInNestedMethod(); // there is a close()-call, but we don't know if it will be invoked
+				}
+			}
+		}
 		manageSyntheticAccessIfNecessary(currentScope, flowInfo);
 		return flowInfo;
 	}

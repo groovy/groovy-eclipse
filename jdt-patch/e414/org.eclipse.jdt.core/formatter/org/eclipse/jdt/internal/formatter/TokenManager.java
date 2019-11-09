@@ -13,10 +13,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter;
 
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_BLOCK;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_JAVADOC;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_LINE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameNotAToken;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameStringLiteral;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameTextBlock;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -252,9 +252,16 @@ public class TokenManager implements Iterable<Token> {
 			}
 			if (traversed.getAlign() > 0)
 				this.counter = traversed.getAlign();
-			List<Token> internalStructure = traversed.getInternalStructure();
-			if (internalStructure != null && !internalStructure.isEmpty()) {
-				assert traversed.tokenType == TokenNameCOMMENT_BLOCK || traversed.tokenType == TokenNameCOMMENT_JAVADOC;
+			if (traversed.tokenType == TokenNameTextBlock) {
+				List<Token> lines = traversed.getInternalStructure();
+				if (lines == null) {
+					this.counter = getLength(traversed, 0);
+				} else {
+					this.counter = traversed.getIndent() + lines.get(1).getIndent();
+					this.counter += getLength(lines.get(lines.size() - 1), this.counter);
+				}
+			} else if (traversed.isComment()) {
+				assert traversed.tokenType != TokenNameCOMMENT_LINE;
 				this.counter = TokenManager.this.commentWrapper.wrapMultiLineComment(traversed, this.counter, true,
 						this.isNLSTagInLine);
 			} else {

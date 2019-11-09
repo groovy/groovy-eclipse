@@ -3282,7 +3282,7 @@ class ASTConverter {
 	}
 
 	public Statement convert(org.eclipse.jdt.internal.compiler.ast.YieldStatement statement) {
-		if (this.ast.apiLevel != AST.JLS13_INTERNAL) {
+		if (!this.ast.isPreviewEnabled()) {
 			return createFakeEmptyStatement(statement);		
 		}
 		YieldStatement yieldStatement = new YieldStatement(this.ast);

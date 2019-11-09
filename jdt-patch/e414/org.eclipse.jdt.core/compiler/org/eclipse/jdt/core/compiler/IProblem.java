@@ -1965,6 +1965,9 @@ void setSourceStart(int sourceStart);
 	int IllegalModifierForModule = ModuleRelated + 1318;
 	/** @since 3.18 */
 	int UndefinedModuleAddReads = ModuleRelated + 1319;
+	/** @since 3.20 */
+	int ExportingForeignPackage = ModuleRelated + 1320;
+
 
 	/** @since 3.14 */
 	int DuplicateResource = Internal + 1251;

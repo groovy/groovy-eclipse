@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2019 GK Software AG and others.
+ * Copyright (c) 2011, 2019 GK Software SE and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -5665,6 +5665,41 @@ public void testBug542707_003() {
 		"	Zork();\n" + 
 		"	^^^^\n" + 
 		"The method Zork() is undefined for the type X\n" + 
+		"----------\n",
+		options);
+}
+public void testBug486506() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // uses switch expression
+	Map options = getCompilerOptions();
+	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
+	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
+	runLeakTest(
+		new String[] {
+			"LogMessage.java",
+			"import java.util.stream.*;\n" +
+			"import java.io.*;\n" +
+			"import java.nio.file.*;\n" +
+			"import java.nio.charset.*;\n" +
+			"class LogMessage {\n" +
+			"  LogMessage(Path path, String message) {}\n" +
+			"  public static Stream<LogMessage> streamSingleLineLogMessages(Path path) {\n" +
+			"    try {\n" +
+			"        Stream<String> lineStream = Files.lines(path, StandardCharsets.ISO_8859_1);\n" +
+			"        Stream<LogMessage> logMessageStream =\n" +
+			"                lineStream.map(message -> new LogMessage(path, message));\n" +
+			"        logMessageStream.onClose(lineStream::close);\n" +
+			"        return logMessageStream;\n" +
+			"    } catch (IOException e) {\n" +
+			"        throw new RuntimeException(e);\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in LogMessage.java (at line 13)\n" +
+		"	return logMessageStream;\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Potential resource leak: \'lineStream\' may not be closed at this location\n" +
 		"----------\n",
 		options);
 }

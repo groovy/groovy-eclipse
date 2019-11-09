@@ -1355,7 +1355,7 @@ public boolean isTypeArgumentContainedBy(TypeBinding otherType) {
 						if (TypeBinding.notEquals(enclosing, otherEnclosing))
 							return false;
 					} else {
-						if (!enclosing.isEquivalentTo(otherParamType.enclosingType()))
+						if (!enclosing.isTypeArgumentContainedBy(otherParamType.enclosingType()))
 							return false;
 					}
 				}
