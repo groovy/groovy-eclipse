@@ -263,7 +263,7 @@ public class GroovyUtils {
     }
 
     public static ClassNode getWrapperTypeIfPrimitive(ClassNode type) {
-        if (ClassHelper.isPrimitiveType(type) && !ClassHelper.VOID_TYPE.equals(type)) {
+        if (type != null && ClassHelper.isPrimitiveType(type) && !ClassHelper.VOID_TYPE.equals(type)) {
             return ClassHelper.getWrapper(type);
         }
         return type;

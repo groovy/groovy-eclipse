@@ -979,6 +979,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMultiAssign1() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void meth() {
+            |  def (Integer i, String s) = [123, 'abc']
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Integer'), 7, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('i,'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('s)'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('123'), 3, NUMBER))
+    }
+
+    @Test
     void testCatchParam() {
         // don't want PARAMETER
         String contents = '''\

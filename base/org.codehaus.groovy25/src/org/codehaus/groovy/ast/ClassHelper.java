@@ -355,6 +355,9 @@ public class ClassHelper {
      * @see #make(String)
      */
     public static boolean isStaticConstantInitializerType(ClassNode cn) {
+        // GRECLIPSE add
+        cn = cn.redirect();
+        // GRECLIPSE end
         return cn == int_TYPE ||
                 cn == float_TYPE ||
                 cn == long_TYPE ||
@@ -367,6 +370,9 @@ public class ClassHelper {
     }
 
     public static boolean isNumberType(ClassNode cn) {
+        // GRECLIPSE add
+        cn = cn.redirect();
+        // GRECLIPSE end
         return cn == Byte_TYPE ||
                 cn == Short_TYPE ||
                 cn == Integer_TYPE ||
