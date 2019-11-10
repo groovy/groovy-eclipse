@@ -436,7 +436,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "value");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7300") // see org.codehaus.groovy.classgen.asm.sc.StaticPropertyAccessHelper.PoppingMethodCallExpression
+    @Test
     public void testCompileStatic7300a() {
         //@formatter:off
         String[] sources = {

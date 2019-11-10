@@ -29,8 +29,6 @@ import org.codehaus.groovy.transform.sc.TemporaryVariableExpression;
 
 import java.util.Arrays;
 
-import static java.beans.Introspector.decapitalize;
-
 /**
  * Facilitates the generation of statically-compiled bytecode for property access.
  */
@@ -104,10 +102,7 @@ public abstract class StaticPropertyAccessHelper {
         private final TemporaryVariableExpression tmp;
 
         public PoppingMethodCallExpression(final Expression receiver, final MethodNode setterMethod, final TemporaryVariableExpression tmp) {
-            // GRECLIPSE edit -- retaian property semantics on the method expression
-            super(receiver, decapitalize(setterMethod.getName().substring(3)), tmp);
-            //super(receiver, setterMethod.getName(), tmp);
-            // GRECLIPSE end
+            super(receiver, setterMethod.getName(), tmp);
             this.receiver = receiver;
             this.setter = setterMethod;
             this.tmp = tmp;

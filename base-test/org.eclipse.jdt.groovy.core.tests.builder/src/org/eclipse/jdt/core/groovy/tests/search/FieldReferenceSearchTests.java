@@ -180,32 +180,6 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         assertLocation(searchRequestor.getMatch(2), contents.lastIndexOf("flag"), "flag".length());
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/935
-    public void testFieldReferencesInClass7() throws Exception {
-        GroovyCompilationUnit pogo = createUnit("Pogo",
-            "class Pogo {\n" +
-            "  boolean flag\n" +
-            "}\n");
-
-        String contents =
-            "@groovy.transform.CompileStatic\n" +
-            "class C {\n" +
-            "  void meth(Pogo pogo) {\n" +
-            "    pogo.flag = false\n" +
-            "  }\n" +
-            "}\n";
-
-        IField field = findType("Pogo", pogo).getField("flag");
-        GroovyCompilationUnit unit = createUnit("C", contents);
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 1 matches, but found:\n" + searchRequestor.printMatches(), 1, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("flag"), "flag".length());
-    }
-
     @Test // https://github.com/groovy/groovy-eclipse/issues/939
     public void testFieldReferencesInClosure() throws Exception {
         String contents =
