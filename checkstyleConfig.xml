@@ -495,14 +495,6 @@
         </module>
 
 
-        <!-- Size checks ~ https://checkstyle.org/config_sizes.html -->
-        <module name="LineLength">
-            <message key="maxLineLen" value="Line should be no longer than {0,number,integer} characters" />
-            <property name="ignorePattern" value="^$" />
-            <property name="max" value="160" />
-        </module>
-
-
         <!-- Whitespace checks ~ https://checkstyle.org/config_whitespace.html -->
         <module name="NoLineWrap">
             <message key="no.line.wrap" value="{0} statement should be on a single line" />
@@ -620,6 +612,14 @@
         </module>
 
     </module><!--TreeWalker-->
+
+
+    <!-- Size checks ~ https://checkstyle.org/config_sizes.html -->
+    <module name="LineLength">
+        <message key="maxLineLen" value="Line should be no longer than {0,number,integer} characters" />
+        <property name="ignorePattern" value="^$" />
+        <property name="max" value="160" />
+    </module>
 
 
     <!-- Whitespace checks -->
