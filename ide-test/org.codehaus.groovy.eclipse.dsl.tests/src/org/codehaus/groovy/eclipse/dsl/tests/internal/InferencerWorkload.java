@@ -42,55 +42,25 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 
     private static final Map<String, String> DEFAULT_ALIASES = new HashMap<>();
     static {
-       DEFAULT_ALIASES.put("B", "java.lang.Byte");
-       DEFAULT_ALIASES.put("C", "java.lang.Character");
-       DEFAULT_ALIASES.put("D", "java.lang.Double");
-       DEFAULT_ALIASES.put("F", "java.lang.Float");
-       DEFAULT_ALIASES.put("I", "java.lang.Integer");
-       DEFAULT_ALIASES.put("L", "java.lang.Long");
-       DEFAULT_ALIASES.put("S", "java.lang.Short");
-       DEFAULT_ALIASES.put("V", "java.lang.Void");
-       DEFAULT_ALIASES.put("Z", "java.lang.Boolean");
-       DEFAULT_ALIASES.put("STR", "java.lang.String");
-       DEFAULT_ALIASES.put("LIST", "java.util.List");
-       DEFAULT_ALIASES.put("MAP", "java.util.Map");
-       DEFAULT_ALIASES.put("O", "java.lang.Object");
+        DEFAULT_ALIASES.put("B", "java.lang.Byte");
+        DEFAULT_ALIASES.put("C", "java.lang.Character");
+        DEFAULT_ALIASES.put("D", "java.lang.Double");
+        DEFAULT_ALIASES.put("F", "java.lang.Float");
+        DEFAULT_ALIASES.put("I", "java.lang.Integer");
+        DEFAULT_ALIASES.put("L", "java.lang.Long");
+        DEFAULT_ALIASES.put("S", "java.lang.Short");
+        DEFAULT_ALIASES.put("V", "java.lang.Void");
+        DEFAULT_ALIASES.put("Z", "java.lang.Boolean");
+        DEFAULT_ALIASES.put("STR", "java.lang.String");
+        DEFAULT_ALIASES.put("LIST", "java.util.List");
+        DEFAULT_ALIASES.put("MAP", "java.util.Map");
+        DEFAULT_ALIASES.put("O", "java.lang.Object");
     }
 
-    /**
-     * Represents a single inferencing 'task' in a workload. Contains information
-     * about the location we want to inference the type for and the expected result
-     * for that location.
-     */
-    public class InferencerTask {
-        public final int start;
-        public final int end;
-        public final String expectedResultType;
-        public final String expectedDeclaringType;
-
-        public InferencerTask(int start, int end, String expectResultType, String expectDeclaringType) {
-            this.start = start;
-            this.end = end;
-            this.expectedResultType = expectResultType;
-            this.expectedDeclaringType = expectDeclaringType;
-        }
-
-        /**
-         * Contents of the file in which we are trying to do inference.
-         */
-        public String getContents() {
-            return InferencerWorkload.this.getContents();
-        }
-        @Override
-        public String toString() {
-            return "Type: " + expectedResultType + "\nDeclaring: " + expectedDeclaringType + "\nContents: " + getContents().substring(start, end);
-        }
-    }
-
-    private List<InferencerTask> tasks;
     private String contents;
-    private final Map<String,String> aliases;
-    private boolean aliasesLocked = false; //Set to true when we start parsing the workloadDefinition
+    private List<InferencerTask> tasks;
+    private final Map<String, String> aliases;
+    private boolean aliasesLocked; //Set to true when we start parsing the workloadDefinition
 
     public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
         this(ResourceGroovyMethods.getText(workloadDefinitionFile), extraAliases);
@@ -111,20 +81,20 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
      */
     public InferencerWorkload(String workloadDefinition, String ... extraAliases) {
         aliases = new HashMap<>(DEFAULT_ALIASES);
-        for (int i = 0; i < extraAliases.length; i++) {
-            defAlias(extraAliases[i++], extraAliases[i]);
+        for (int i = 0, n = extraAliases.length; i < n; i += 2) {
+            defAlias(extraAliases[i], extraAliases[i + 1]);
         }
 
         aliasesLocked = true; // Should allow changing aliases anymore from here onward.
         StringBuilder stripped = new StringBuilder(); // The contents of the file minus the tags.
         tasks = new ArrayList<>();
         int readPos = 0; //Boundary between processed and unprocessed input in workloadDefinition
-        while (readPos >= 0 && readPos < workloadDefinition.length() ) {
+        while (readPos >= 0 && readPos < workloadDefinition.length()) {
             int headStart = workloadDefinition.indexOf(BEG_MARK_START, readPos);
             int separator = -1;
             int headEnd = -1;
             int tail = -1;
-            if (headStart>=0) {
+            if (headStart >= 0) {
                 separator = workloadDefinition.indexOf(BEG_MARK_SEPARATOR, headStart);
                 headEnd = workloadDefinition.indexOf(BEG_MARK_END, headStart);
                 tail = workloadDefinition.indexOf(END_MARK, headStart);
@@ -133,7 +103,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
             //Well formatted tag looks like this:
             // <**resultType:declType**>expression<***>
             //So if one was found, then the various positions of found markers must be in a specific order:
-            if (headStart>=0 && separator>headStart && headEnd>separator && tail>headEnd) {
+            if (headStart >= 0 && separator > headStart && headEnd > separator && tail > headEnd) {
                 //Copy text in front of tag into 'stripped' contents buffer
                 int start = readPos;
                 int end = headStart;
@@ -151,7 +121,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
                 }
 
                 //Extract declType
-                start = separator+BEG_MARK_SEPARATOR.length();
+                start = separator + BEG_MARK_SEPARATOR.length();
                 end = headEnd;
                 String declType = workloadDefinition.substring(start, end);
                 if (aliases.containsKey(declType)) {
@@ -162,7 +132,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
                 }
 
                 //Extract expression
-                start = headEnd+BEG_MARK_END.length();
+                start = headEnd + BEG_MARK_END.length();
                 end = tail;
                 String expression = workloadDefinition.substring(start, end);
 
@@ -187,8 +157,8 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
     protected void defAlias(String name, String expansion) {
         Assert.assertTrue("Aliases must be defined *before* parsing the workload", !aliasesLocked);
         String existing = aliases.get(name);
-        if (existing!=null) {
-            Assert.fail("Multiple definitions for alias "+name+" first = "+expansion+" second = "+expansion);
+        if (existing != null) {
+            Assert.fail("Multiple definitions for alias " + name + " first = " + expansion + " second = " + expansion);
         } else {
             aliases.put(name, expansion);
         }
@@ -236,5 +206,36 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 
     public void perform(GroovyCompilationUnit unit) throws Exception {
         perform(unit, false);
+    }
+
+    /**
+     * Represents a single inferencing 'task' in a workload. Contains information
+     * about the location we want to inference the type for and the expected result
+     * for that location.
+     */
+    public class InferencerTask {
+        public final int start;
+        public final int end;
+        public final String expectedResultType;
+        public final String expectedDeclaringType;
+
+        public InferencerTask(int start, int end, String expectResultType, String expectDeclaringType) {
+            this.start = start;
+            this.end = end;
+            this.expectedResultType = expectResultType;
+            this.expectedDeclaringType = expectDeclaringType;
+        }
+
+        /**
+         * Contents of the file in which we are trying to do inference.
+         */
+        public String getContents() {
+            return InferencerWorkload.this.getContents();
+        }
+
+        @Override
+        public String toString() {
+            return "Type: " + expectedResultType + "\nDeclaring: " + expectedDeclaringType + "\nContents: " + getContents().substring(start, end);
+        }
     }
 }

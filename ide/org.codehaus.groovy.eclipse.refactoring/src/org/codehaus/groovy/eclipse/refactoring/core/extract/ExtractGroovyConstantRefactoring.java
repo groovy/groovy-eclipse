@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -107,7 +108,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     public ExtractGroovyConstantRefactoring(JavaRefactoringArguments arguments, RefactoringStatus status) {
         super(arguments, status);
-        start = length = -1;
+        length = -1;
+        start = -1;
     }
 
     public ExtractGroovyConstantRefactoring(GroovyCompilationUnit unit, int offset, int length) {
@@ -177,7 +179,6 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     public RefactoringStatus checkFinalConditions(IProgressMonitor pm) throws CoreException {
         try {
             RefactoringStatus result = new RefactoringStatus();
-
             CompilationUnitChange change = new CompilationUnitChange("Extract Groovy Constant", getCu());
             change.setEdit(new MultiTextEdit());
             TextEditGroup group = createConstantDeclaration();
@@ -185,17 +186,13 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
             for (TextEdit edit : group.getTextEdits()) {
                 change.addEdit(edit);
             }
-
             group = replaceExpressionsWithConstant();
             change.addChangeGroup(new TextEditChangeGroup(change, group));
             for (TextEdit edit : group.getTextEdits()) {
                 change.addEdit(edit);
             }
-
             setChange(change);
-
             return result;
-
         } catch (MalformedTreeException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (BadLocationException e) {
@@ -227,11 +224,10 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private TextEditGroup createConstantDeclaration() throws MalformedTreeException, BadLocationException {
-        String constantText = getConstantText();
-
+        String constant = getConstantText();
         TextEditGroup msg = new TextEditGroup(RefactoringCoreMessages.ExtractConstantRefactoring_declare_constant);
         int insertLocation = findInsertLocation();
-        msg.addTextEdit(new InsertEdit(insertLocation, constantText));
+        msg.addTextEdit(new InsertEdit(insertLocation, constant));
         return msg;
     }
 
@@ -241,13 +237,12 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
             if (node.isScript()) {
                 int statementStart = node.getModule().getStatementBlock().getStart();
                 int methodStart;
-                if (node.getModule().getMethods().size() > 0) {
+                if (!node.getModule().getMethods().isEmpty()) {
                     methodStart = node.getModule().getMethods().get(0).getStart();
                 } else {
                     methodStart = Integer.MAX_VALUE;
                 }
                 return Math.min(methodStart, statementStart);
-
             } else {
                 return CharOperation.indexOf('{', getCu().getContents(), node.getNameEnd()) + 1;
             }
@@ -325,7 +320,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private ExtractConstantDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<>();
+        Map<String, String> arguments = new HashMap<>();
         String project = null;
         IJavaProject javaProject = getCu().getJavaProject();
         if (javaProject != null)
@@ -333,8 +328,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         int flags = JavaRefactoringDescriptor.JAR_REFACTORING | JavaRefactoringDescriptor.JAR_SOURCE_ATTACHMENT | RefactoringDescriptor.STRUCTURAL_CHANGE;
 
         String expression = createExpressionText();
-        final String description = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(constantName));
-        final String header = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description, new String[] {
+        String description = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(constantName));
+        String header = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description, new String[] {
             BasicElementLabels.getJavaElementName(constantName), BasicElementLabels.getJavaCodeString(expression)
         });
         final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
@@ -347,12 +342,12 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         if (getQualifyReferencesWithDeclaringClassName()) {
             comment.addSetting(RefactoringCoreMessages.ExtractConstantRefactoring_qualify_references);
         }
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, getCu()));
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, constantName);
-        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, String.valueOf(start) + " " + new Integer(length).toString());
-        arguments.put("replace", Boolean.valueOf(getReplaceAllOccurrences()).toString());
-        arguments.put("qualify", Boolean.valueOf(getQualifyReferencesWithDeclaringClassName()).toString());
-        arguments.put("visibility", new Integer(JdtFlags.getVisibilityCode(getVisibility())).toString());
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, String.valueOf(start) + " " + String.valueOf(length));
+        arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, getCu()));
+        arguments.put("replace", Boolean.toString(getReplaceAllOccurrences()));
+        arguments.put("qualify", Boolean.toString(getQualifyReferencesWithDeclaringClassName()));
+        arguments.put("visibility", Integer.toString(JdtFlags.getVisibilityCode(getVisibility())));
 
         ExtractConstantDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractConstantDescriptor(project, description, comment.asString(), arguments, flags);
         return descriptor;
@@ -404,9 +399,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     private RefactoringStatus checkSelection(IProgressMonitor monitor) throws JavaModelException {
         monitor.beginTask("", 2);
 
-        IASTFragment selectedFragment = getSelectedFragment();
-
-        if (selectedFragment == null) {
+        IASTFragment astFragment = getSelectedFragment();
+        if (astFragment == null) {
             String message = RefactoringCoreMessages.ExtractConstantRefactoring_select_expression;
             return RefactoringStatus.createFatalErrorStatus(message, createContext());
         }
@@ -423,8 +417,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private RefactoringStatus checkFragment() throws JavaModelException {
         RefactoringStatus result = new RefactoringStatus();
-        IASTFragment selectedFragment = getSelectedFragment();
-        result.merge(checkExpressionFragmentIsRValue(selectedFragment));
+        IASTFragment astFragment = getSelectedFragment();
+        result.merge(checkExpressionFragmentIsRValue(astFragment));
         if (result.hasFatalError())
             return result;
         checkAllStaticFinal();
@@ -432,7 +426,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
             result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_not_load_time_constant));
         }
 
-        Expression expression = selectedFragment.getAssociatedExpression();
+        Expression expression = astFragment.getAssociatedExpression();
 
         if ((expression instanceof ConstantExpression) && ((ConstantExpression) expression).isNullExpression()) {
             result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_null_literals));
@@ -490,7 +484,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         Expression e = getSelectedFragment().getAssociatedExpression();
         if (e != null) {
             String name = e.getType().getNameWithoutPackage();
-            if (!name.equals("Object")) {
+            if (!"Object".equals(name)) {
                 return name + " ";
             }
         }
@@ -526,7 +520,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private String[] getExcludedVariableNames() {
         if (fExcludedVariableNames == null) {
-            HashSet<String> usedNames = new HashSet<>();
+            Set<String> usedNames = new HashSet<>();
             for (ClassNode classNode : unit.getModuleNode().getClasses()) {
                 for (FieldNode fieldNode : classNode.getFields()) {
                     usedNames.add(fieldNode.getName());
@@ -537,7 +531,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         return fExcludedVariableNames;
     }
 
-    private static final String[] KNOWN_METHOD_NAME_PREFIXES = { "get", "is", "to", "set" };
+    private static final String[] KNOWN_METHOD_NAME_PREFIXES = {"get", "set", "is", "to"};
 
     private static String getBaseNameFromExpression(IJavaProject project, IASTFragment assignedFragment, int variableKind) {
         if (assignedFragment == null) {
@@ -608,7 +602,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         }
 
         if (name != null) {
-            for (int i = 0; i < KNOWN_METHOD_NAME_PREFIXES.length; i++) {
+            for (int i = 0, n = KNOWN_METHOD_NAME_PREFIXES.length; i < n; i += 1) {
                 String curr = KNOWN_METHOD_NAME_PREFIXES[i];
                 if (name.startsWith(curr)) {
                     if (name.equals(curr)) {

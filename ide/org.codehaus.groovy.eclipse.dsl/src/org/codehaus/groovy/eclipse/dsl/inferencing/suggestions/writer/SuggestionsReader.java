@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,54 +51,48 @@ public class SuggestionsReader {
     }
 
     public ProjectSuggestions read() {
+        if (absoluteFile != null && projectSuggestions != null) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder parser = factory.newDocumentBuilder();
+                Reader reader = new BufferedReader(new FileReader(absoluteFile));
 
-        try {
-            if (absoluteFile == null || projectSuggestions == null) {
-                return null;
-            }
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder parser = factory.newDocumentBuilder();
-            Reader reader = new BufferedReader(new FileReader(absoluteFile));
+                Document document = parser.parse(new InputSource(reader));
 
-            Document document = parser.parse(new InputSource(reader));
+                if (document != null) {
 
-            if (document != null) {
+                    // register a new project selection
+                    projectSuggestions = projectSuggestions.registerNewProjectSuggestion();
 
-                // register a new project selection
-                projectSuggestions = projectSuggestions.registerNewProjectSuggestion();
+                    NodeList list = document.getChildNodes();
 
-                NodeList list = document.getChildNodes();
+                    // There should only be one root element
 
-                // There should only be one root element
+                    if (list.getLength() > 0) {
+                        Node node = list.item(0);
+                        if (node instanceof Element) {
+                            Element element = (Element) node;
+                            if (element.getNodeName().equals(SuggestionElementStatics.ROOT)) {
 
-                if (list.getLength() > 0) {
-                    Node node = list.item(0);
-                    if (node instanceof Element) {
-                        Element element = (Element) node;
-                        if (element.getNodeName().equals(SuggestionElementStatics.ROOT)) {
-
-                            // Next should be all the declaring types
-                            NodeList declaringTypeList = element.getChildNodes();
-                            if (declaringTypeList != null) {
-                                handleDeclaringTypeNodes(declaringTypeList);
+                                // Next should be all the declaring types
+                                NodeList declaringTypeList = element.getChildNodes();
+                                if (declaringTypeList != null) {
+                                    handleDeclaringTypeNodes(declaringTypeList);
+                                }
                             }
                         }
                     }
                 }
+                return projectSuggestions;
+            } catch (IOException | SAXException | ParserConfigurationException e) {
+                GroovyDSLCoreActivator.logException(e);
             }
-            return projectSuggestions;
-        } catch (ParserConfigurationException e) {
-            GroovyDSLCoreActivator.logException(e);
-        } catch (IOException e) {
-            GroovyDSLCoreActivator.logException(e);
-        } catch (SAXException e) {
-            GroovyDSLCoreActivator.logException(e);
         }
         return null;
     }
 
     protected void handleDeclaringTypeNodes(NodeList list) {
-        for (int i = 0; i < list.getLength(); i++) {
+        for (int i = 0, n = list.getLength(); i < n; i += 1) {
             Node node = list.item(i);
             if (node instanceof Element) {
                 Element element = (Element) node;
@@ -120,12 +114,12 @@ public class SuggestionsReader {
     }
 
     protected SuggestionDescriptor getSuggestionDescriptor(Element element, String declaringTypeName) {
-        if (element.getNodeName().equals(SuggestionElementStatics.METHOD)
-                || element.getNodeName().equals(SuggestionElementStatics.PROPERTY)) {
+        if (element.getNodeName().equals(SuggestionElementStatics.METHOD) ||
+                element.getNodeName().equals(SuggestionElementStatics.PROPERTY)) {
             String suggestionName = element.getAttribute(SuggestionElementStatics.NAME_ATT);
             String suggestionType = element.getAttribute(SuggestionElementStatics.TYPE_ATT);
-            boolean isStatic = new Boolean(element.getAttribute(SuggestionElementStatics.IS_STATIC_ATT)).booleanValue();
-            boolean isActive = new Boolean(element.getAttribute(SuggestionElementStatics.IS_ACTIVE)).booleanValue();
+            boolean isStatic = Boolean.parseBoolean(element.getAttribute(SuggestionElementStatics.IS_STATIC_ATT));
+            boolean isActive = Boolean.parseBoolean(element.getAttribute(SuggestionElementStatics.IS_ACTIVE));
             NodeList docNodes = element.getElementsByTagName(SuggestionElementStatics.DOC);
             String doc = null;
             // There should only be one doc node
@@ -143,8 +137,7 @@ public class SuggestionsReader {
                 Element parametersElement = getParametersElement(element);
                 boolean useNameArguments = false;
                 if (parametersElement != null) {
-                    useNameArguments = new Boolean(parametersElement.getAttribute(SuggestionElementStatics.USE_NAMED_ARGUMENTS_ATT))
-                            .booleanValue();
+                    useNameArguments = Boolean.parseBoolean(parametersElement.getAttribute(SuggestionElementStatics.USE_NAMED_ARGUMENTS_ATT));
                 }
                 List<MethodParameter> modelParameters = getParameters(parametersElement);
                 descriptor = new SuggestionDescriptor(declaringTypeName, isStatic, suggestionName, doc, suggestionType,
@@ -164,19 +157,16 @@ public class SuggestionsReader {
             return (Element) node;
         }
         return null;
-
     }
 
     protected List<MethodParameter> getParameters(Element parametersElement) {
         if (parametersElement == null) {
             return null;
         }
-
         List<MethodParameter> parameters = new ArrayList<>();
         NodeList parametersNodeList = parametersElement.getChildNodes();
-
         if (parametersNodeList != null) {
-            for (int i = 0; i < parametersNodeList.getLength(); i++) {
+            for (int i = 0, n = parametersNodeList.getLength(); i < n; i += 1) {
                 Node paramNode = parametersNodeList.item(i);
                 if (paramNode instanceof Element && paramNode.getNodeName().equals(SuggestionElementStatics.PARAMETER)) {
                     Element paramElement = (Element) paramNode;
@@ -186,7 +176,6 @@ public class SuggestionsReader {
                 }
             }
         }
-
         return parameters;
     }
 }

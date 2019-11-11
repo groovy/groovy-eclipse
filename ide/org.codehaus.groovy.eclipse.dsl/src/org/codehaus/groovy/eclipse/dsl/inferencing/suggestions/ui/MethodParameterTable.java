@@ -135,7 +135,6 @@ public class MethodParameterTable extends AbstractControlManager {
                     handleButtonSelection(descriptor);
                 }
             }
-
         });
         return button;
     }
@@ -225,14 +224,15 @@ public class MethodParameterTable extends AbstractControlManager {
     }
 
     protected void setTableProviders(final TableViewer viewer) {
-
         viewer.setContentProvider(new IStructuredContentProvider() {
             @Override
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
             }
+
             @Override
             public void dispose() {
             }
+
             @Override
             public Object[] getElements(Object inputElement) {
                 if (inputElement instanceof List) {
@@ -255,9 +255,8 @@ public class MethodParameterTable extends AbstractControlManager {
                 if (element instanceof MethodParameter) {
                     ColumnTypes[] values = ColumnTypes.values();
                     if (index >= 0 && index < values.length) {
-                        ColumnTypes type = values[index];
                         MethodParameter arg = (MethodParameter) element;
-
+                        ColumnTypes type = values[index];
                         switch (type) {
                         case NAME:
                             text = arg.getName();
@@ -265,7 +264,6 @@ public class MethodParameterTable extends AbstractControlManager {
                         case TYPE:
                             text = arg.getType();
                             break;
-
                         }
                     }
                 }
@@ -298,12 +296,9 @@ public class MethodParameterTable extends AbstractControlManager {
     protected void addElement() {
         MethodParameterDialogue dialogue = new MethodParameterDialogue(getShell(), project, null, parameters);
         if (dialogue.open() == Window.OK) {
-
             MethodParameter parameter = dialogue.getMethodParameter();
             if (parameter != null) {
-
                 int selectionIndex = viewer.getTable().getSelectionIndex();
-
                 // Add element at given selection index
                 if (selectionIndex >= 0) {
                     parameters.add(selectionIndex, parameter);
@@ -311,10 +306,8 @@ public class MethodParameterTable extends AbstractControlManager {
                     parameters.add(parameter);
                 }
             }
-
             refreshTable();
         }
-
     }
 
     protected void editElement() {
@@ -363,7 +356,6 @@ public class MethodParameterTable extends AbstractControlManager {
         MethodParameter arg = null;
         if (element instanceof MethodParameter) {
             arg = (MethodParameter) element;
-
         } else if (element instanceof TableItem) {
             TableItem item = (TableItem) element;
             Object dataOb = item.getData();
@@ -397,10 +389,9 @@ public class MethodParameterTable extends AbstractControlManager {
             public void widgetSelected(SelectionEvent e) {
                 Object obj = e.getSource();
                 if (obj instanceof Button) {
-                    notifyControlChange(new Boolean(((Button) obj).getSelection()), (Button) obj);
+                    notifyControlChange(((Button) obj).getSelection(), (Button) obj);
                 }
             }
-
         });
         return button;
     }
@@ -413,9 +404,9 @@ public class MethodParameterTable extends AbstractControlManager {
 
         Map<Control, IDialogueControlDescriptor> allControls = new HashMap<>();
 
-        TableViewer viewer = createTableViewer(viewerArea);
-        if (viewer != null) {
-            allControls.put(viewer.getTable(), ControlTypes.PARAMETERS);
+        TableViewer tableViewer = createTableViewer(viewerArea);
+        if (tableViewer != null) {
+            allControls.put(tableViewer.getTable(), ControlTypes.PARAMETERS);
         }
 
         Map<Control, IDialogueControlDescriptor> buttonControls = createOperationButtonArea(viewerArea);
