@@ -4043,6 +4043,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected void storeType(Expression exp, ClassNode cn) {
+        /* GRECLIPSE edit
         if (exp instanceof VariableExpression && ((VariableExpression) exp).isClosureSharedVariable() && isPrimitiveType(cn)) {
             cn = getWrapper(cn);
         } else if (exp instanceof MethodCallExpression && ((MethodCallExpression) exp).isSafe() && isPrimitiveType(cn)) {
@@ -4050,6 +4051,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else if (exp instanceof PropertyExpression && ((PropertyExpression) exp).isSafe() && isPrimitiveType(cn)) {
             cn = getWrapper(cn);
         }
+        */
+        if (cn != null && isPrimitiveType(cn)) {
+            if (exp instanceof VariableExpression && ((VariableExpression) exp).isClosureSharedVariable()) {
+                cn = getWrapper(cn);
+            } else if (exp instanceof MethodCallExpression && ((MethodCallExpression) exp).isSafe()) {
+                cn = getWrapper(cn);
+            } else if (exp instanceof PropertyExpression && ((PropertyExpression) exp).isSafe()) {
+                cn = getWrapper(cn);
+            }
+        }
+        // GRECLIPSE end
         if (cn == UNKNOWN_PARAMETER_TYPE) {
             // this can happen for example when "null" is used in an assignment or a method parameter.
             // In that case, instead of storing the virtual type, we must "reset" type information
