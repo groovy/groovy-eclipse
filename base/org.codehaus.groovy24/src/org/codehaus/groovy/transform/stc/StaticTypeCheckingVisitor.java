@@ -75,6 +75,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CaseStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -2061,6 +2062,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             returnAdder.visitMethod(node);
         }
         typeCheckingContext.popEnclosingMethod();
+    }
+
+    @Override
+    public void visitExpressionStatement(ExpressionStatement statement) {
+        typeCheckingContext.pushTemporaryTypeInfo();
+        super.visitExpressionStatement(statement);
+        typeCheckingContext.popTemporaryTypeInfo();
     }
 
     @Override

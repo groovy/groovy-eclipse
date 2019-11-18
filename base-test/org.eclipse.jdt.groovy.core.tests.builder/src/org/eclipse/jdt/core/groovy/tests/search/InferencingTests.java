@@ -1925,7 +1925,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // CommandRegistry.commands() returns List<Command>
     public void testGetAt8() {
-        assumeFalse(isAtLeastGroovy(25));
+        assumeFalse(isAtLeastGroovy(25)); // requires subproject groovy-groovysh
+
         String contents =
             "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
             "def registry = new CommandRegistry()\n" +
@@ -1935,7 +1936,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // CommandRegistry.iterator() returns Iterator
     public void testGetAt9() {
-        assumeFalse(isAtLeastGroovy(25));
+        assumeFalse(isAtLeastGroovy(25)); // requires subproject groovy-groovysh
+
         String contents =
             "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
             "def registry = new CommandRegistry()\n" +
