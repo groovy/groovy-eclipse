@@ -89,8 +89,14 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
      * @param node the node to process
      */
     public void visitAnnotations(AnnotatedNode node) {
+        // GRECLIPSE add
+        if (node.getAnnotations().isEmpty()) return;
+        // GRECLIPSE end
         super.visitAnnotations(node);
 
+        // GRECLIPSE add -- GROOVY-9238
+        for (;;) {
+        // GRECLIPSE end
         Map<Integer, List<AnnotationNode>> existing = new TreeMap<Integer, List<AnnotationNode>>();
         Map<Integer, List<AnnotationNode>> replacements = new LinkedHashMap<Integer, List<AnnotationNode>>();
         Map<Integer, AnnotationCollectorMode> modes = new LinkedHashMap<Integer, AnnotationCollectorMode>();
@@ -109,9 +115,15 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         for (List<AnnotationNode> next : existing.values()) {
             mergedList.addAll(next);
         }
+        // GRECLIPSE add
+        if (mergedList.equals(node.getAnnotations())) break;
+        // GRECLIPSE end
 
         node.getAnnotations().clear();
         node.getAnnotations().addAll(mergedList);
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
 
         for (AnnotationNode annotation : node.getAnnotations()) {
             /* GRECLIPSE edit
