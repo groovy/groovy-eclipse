@@ -210,7 +210,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport {
                     AnnotationNode collector = new AnnotationNode(repeatable);
                     if (repeatee.hasRuntimeRetention()) {
                         collector.setRuntimeRetention(true);
-                    } else if (repeatable.redirect().hasClass()) {
+                    } else if (repeatable.hasClass()) {
                         Class<?> repeatableType = repeatable.getTypeClass();
                         Retention retention = repeatableType.getAnnotation(Retention.class);
                         collector.setRuntimeRetention(retention != null && retention.value().equals(RetentionPolicy.RUNTIME));

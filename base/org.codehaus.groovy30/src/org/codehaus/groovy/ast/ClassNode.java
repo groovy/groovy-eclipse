@@ -1627,7 +1627,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     // GRECLIPSE add
     public boolean hasClass() {
-        return (clazz != null || redirect().clazz != null);
+        return (clazz != null || (redirect != null && redirect.hasClass()));
     }
 
     public boolean isPrimitive() {
@@ -1635,7 +1635,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean mightHaveInners() {
-        return (hasClass() ? true : getInnerClasses().hasNext());
+        return (hasClass() || getInnerClasses().hasNext());
     }
 
     /**

@@ -648,7 +648,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             if (transformLoader != null) {
                 try {
                     clazz = Class.forName(getName(), false, transformLoader);
-                } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                } catch (ReflectiveOperationException | LinkageError e) {
                     unfindable = true;
                 }
             }
