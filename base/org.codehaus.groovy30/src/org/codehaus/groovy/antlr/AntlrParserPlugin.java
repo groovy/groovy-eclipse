@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.antlr;
 
+import groovy.transform.Trait;
 import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
@@ -123,6 +124,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.lang.annotation.Annotation;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -139,7 +141,6 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
  */
-@Deprecated
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 
     private static class AnonymousInnerClassCarrier extends Expression {
@@ -401,7 +402,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     runMethod.setEnd(last.getEnd());
                     runMethod.setLastLineNumber(last.getLastLineNumber());
                     runMethod.setLastColumnNumber(last.getLastColumnNumber());
-                    runMethod.addAnnotation(makeAnnotationNode("java.lang.Override"));
+                    runMethod.addAnnotation(makeAnnotationNode(Override.class));
                 }
             }
             output.putNodeMetaData(LocationSupport.class, locations);
@@ -864,7 +865,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (isType(TRAIT_DEF, classDef)) {
             // GRECLIPSE edit
             //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
-            annotations.add(makeAnnotationNode("groovy.transform.Trait"));
+            annotations.add(makeAnnotationNode(Trait.class));
             // GRECLIPSE end
         }
 
@@ -3893,8 +3894,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-    protected static AnnotationNode makeAnnotationNode(String name) {
-        AnnotationNode node = new AnnotationNode(ClassHelper.make(name));
+    protected static AnnotationNode makeAnnotationNode(Class<? extends Annotation> type) {
+        AnnotationNode node = new AnnotationNode(ClassHelper.make(type));
         node.getClassNode().setStart(-1);
         node.getClassNode().setEnd(-2);
         node.setStart(-1);

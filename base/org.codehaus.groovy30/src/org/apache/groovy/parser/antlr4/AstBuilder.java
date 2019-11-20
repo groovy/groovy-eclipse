@@ -19,6 +19,7 @@
 package org.apache.groovy.parser.antlr4;
 
 import groovy.lang.Tuple2;
+import groovy.transform.Trait;
 import groovyjarjarantlr4.v4.runtime.ANTLRErrorListener;
 import groovyjarjarantlr4.v4.runtime.CharStream;
 import groovyjarjarantlr4.v4.runtime.CharStreams;
@@ -128,12 +129,12 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -141,7 +142,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -354,6 +354,7 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.WhileStmtAltConte
 /* GRECLIPSE edit
 import static org.apache.groovy.parser.antlr4.util.PositionConfigureUtils.configureAST;
 */
+import static org.codehaus.groovy.classgen.asm.util.TypeUtil.isPrimitiveType;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
@@ -574,7 +575,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 runMethod.setEnd(omega.getEnd());
                 runMethod.setLastLineNumber(omega.getLastLineNumber());
                 runMethod.setLastColumnNumber(omega.getLastColumnNumber());
-                runMethod.addAnnotation(makeAnnotationNode("java.lang.Override"));
+                runMethod.addAnnotation(makeAnnotationNode(Override.class));
             }
         }
         moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
@@ -770,8 +771,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     // GRECLIPSE add
-    private static AnnotationNode makeAnnotationNode(String name) {
-        AnnotationNode node = new AnnotationNode(ClassHelper.make(name));
+    private static AnnotationNode makeAnnotationNode(Class<? extends Annotation> type) {
+        AnnotationNode node = new AnnotationNode(ClassHelper.make(type));
         node.getClassNode().setStart(-1);
         node.getClassNode().setEnd(-2);
         node.setStart(-1);
@@ -1518,7 +1519,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private void attachTraitAnnotation(ClassNode classNode) {
         // GRECLIPSE edit
         //attachAnnotation(classNode, GROOVY_TRANSFORM_TRAIT);
-        classNode.addAnnotation(makeAnnotationNode(GROOVY_TRANSFORM_TRAIT));
+        classNode.addAnnotation(makeAnnotationNode(Trait.class));
         // GRECLIPSE end
     }
 
@@ -2741,7 +2742,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 String baseExprText = baseExpr.getText();
                 if (VOID_STR.equals(baseExprText)) { // e.g. void()
                     return configureAST(createCallMethodCallExpression(this.createConstantExpression(baseExpr), argumentsExpr), ctx);
-                } else if (PRIMITIVE_TYPE_SET.contains(baseExprText)) { // e.g. int(), long(), float(), etc.
+                } else if (isPrimitiveType(baseExprText)) { // e.g. int(), long(), float(), etc.
                     throw createParsingFailedException("Primitive type literal: " + baseExprText + " cannot be used as a method name", ctx);
                 }
             }
@@ -3911,7 +3912,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // statements like `foo(String a)` is invalid
         MethodCallExpression methodCallExpression = (MethodCallExpression) expression;
         String methodName = methodCallExpression.getMethodAsString();
-        if (methodCallExpression.isImplicitThis() && Character.isUpperCase(methodName.codePointAt(0)) || PRIMITIVE_TYPE_SET.contains(methodName)) {
+        if (methodCallExpression.isImplicitThis() && Character.isUpperCase(methodName.codePointAt(0)) || isPrimitiveType(methodName)) {
             throw createParsingFailedException("Invalid method declaration", ctx);
         }
     }
@@ -5293,10 +5294,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static final String PACKAGE_INFO = "package-info";
     private static final String PACKAGE_INFO_FILE_NAME = PACKAGE_INFO + ".groovy";
-
+    /* GRECLIPSE edit
     private static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
     private static final Set<String> PRIMITIVE_TYPE_SET = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("boolean", "char", "byte", "short", "int", "long", "float", "double")));
-
+    */
     private static final String INSIDE_PARENTHESES_LEVEL = "_INSIDE_PARENTHESES_LEVEL";
 
     private static final String IS_INSIDE_INSTANCEOF_EXPR = "_IS_INSIDE_INSTANCEOF_EXPR";
