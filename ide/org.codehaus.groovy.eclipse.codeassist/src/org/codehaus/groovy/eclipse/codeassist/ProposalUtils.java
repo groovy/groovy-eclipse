@@ -251,7 +251,7 @@ public class ProposalUtils {
     }
 
     public static boolean matches(String pattern, String candidate, boolean camelCaseMatch, boolean substringMatch) {
-        if (pattern == null || pattern.isEmpty()) {
+        if (pattern.isEmpty()) {
             return true;
         }
         if (camelCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {

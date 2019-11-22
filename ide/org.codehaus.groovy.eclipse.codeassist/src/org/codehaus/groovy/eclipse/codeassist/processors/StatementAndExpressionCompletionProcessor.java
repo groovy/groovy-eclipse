@@ -244,7 +244,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private List<IProposalCreator> chooseProposalCreators(ContentAssistContext context) {
         String fullCompletionExpression = context.fullCompletionExpression;
-        if (fullCompletionExpression == null) fullCompletionExpression = "";
 
         if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
             return Collections.singletonList(new FieldProposalCreator());
