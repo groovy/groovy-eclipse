@@ -1036,32 +1036,33 @@ public long getAnnotationTagBits() {
 	if (!isPrototype())
 		return this.prototype.getAnnotationTagBits();
 	
-	if ((this.tagBits & TagBits.EndHierarchyCheck) == 0) {
-		CompilationUnitScope pkgCUS = this.scope.compilationUnitScope();
-		boolean current = pkgCUS.connectingHierarchy;
-		pkgCUS.connectingHierarchy = true;
-		try {
-			return internalGetAnnotationTagBits();
-		} finally {
-			pkgCUS.connectingHierarchy = current;
-		}
-	}
-	return internalGetAnnotationTagBits();
-}
-private long internalGetAnnotationTagBits() {
 	if ((this.tagBits & TagBits.AnnotationResolved) == 0 && this.scope != null) {
-		TypeDeclaration typeDecl = this.scope.referenceContext;
-		boolean old = typeDecl.staticInitializerScope.insideTypeAnnotation;
-		try {
-			typeDecl.staticInitializerScope.insideTypeAnnotation = true;
-			ASTNode.resolveAnnotations(typeDecl.staticInitializerScope, typeDecl.annotations, this);
-		} finally {
-			typeDecl.staticInitializerScope.insideTypeAnnotation = old;
+		if ((this.tagBits & TagBits.EndHierarchyCheck) == 0) {
+			CompilationUnitScope pkgCUS = this.scope.compilationUnitScope();
+			boolean current = pkgCUS.connectingHierarchy;
+			pkgCUS.connectingHierarchy = true;
+			try {
+				initAnnotationTagBits();
+			} finally {
+				pkgCUS.connectingHierarchy = current;
+			}
+		} else {
+			initAnnotationTagBits();
 		}
-		if ((this.tagBits & TagBits.AnnotationDeprecated) != 0)
-			this.modifiers |= ClassFileConstants.AccDeprecated;
 	}
 	return this.tagBits;
+}
+private void initAnnotationTagBits() {
+	TypeDeclaration typeDecl = this.scope.referenceContext;
+	boolean old = typeDecl.staticInitializerScope.insideTypeAnnotation;
+	try {
+		typeDecl.staticInitializerScope.insideTypeAnnotation = true;
+		ASTNode.resolveAnnotations(typeDecl.staticInitializerScope, typeDecl.annotations, this);
+	} finally {
+		typeDecl.staticInitializerScope.insideTypeAnnotation = old;
+	}
+	if ((this.tagBits & TagBits.AnnotationDeprecated) != 0)
+		this.modifiers |= ClassFileConstants.AccDeprecated;
 }
 public MethodBinding[] getDefaultAbstractMethods() {
 	if (!isPrototype())

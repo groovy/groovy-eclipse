@@ -547,6 +547,14 @@ public static int getIrritant(int problemID) {
 		case IProblem.JavadocInvalidThrowsClassName:
 		case IProblem.JavadocDuplicateThrowsClassName:
 		case IProblem.JavadocMissingThrowsClassName:
+		case IProblem.JavadocDuplicateProvidesTag:
+		case IProblem.JavadocDuplicateUsesTag:
+		case IProblem.JavadocInvalidUsesClass:
+		case IProblem.JavadocInvalidUsesClassName:
+		case IProblem.JavadocInvalidProvidesClass:
+		case IProblem.JavadocInvalidProvidesClassName:
+		case IProblem.JavadocMissingProvidesClassName:
+		case IProblem.JavadocMissingUsesClassName:
 		case IProblem.JavadocMissingSeeReference:
 		case IProblem.JavadocInvalidValueReference:
 		case IProblem.JavadocUndefinedField:
@@ -590,8 +598,10 @@ public static int getIrritant(int problemID) {
 			return CompilerOptions.InvalidJavadoc;
 
 		case IProblem.JavadocMissingParamTag:
+		case IProblem.JavadocMissingProvidesTag:
 		case IProblem.JavadocMissingReturnTag:
 		case IProblem.JavadocMissingThrowsTag:
+		case IProblem.JavadocMissingUsesTag:
 			return CompilerOptions.MissingJavadocTags;
 
 		case IProblem.JavadocMissing:
@@ -5248,6 +5258,9 @@ public void javadocDuplicatedParamTag(char[] token, int sourceStart, int sourceE
 			sourceEnd);
 	}
 }
+public void javadocDuplicatedProvidesTag(int sourceStart, int sourceEnd){
+	this.handle(IProblem.JavadocDuplicateProvidesTag, NoArgument, NoArgument, sourceStart, sourceEnd);
+}
 public void javadocDuplicatedReturnTag(int sourceStart, int sourceEnd){
 	this.handle(IProblem.JavadocDuplicateReturnTag, NoArgument, NoArgument, sourceStart, sourceEnd);
 }
@@ -5273,6 +5286,11 @@ public void javadocDuplicatedThrowsClassName(TypeReference typeReference, int mo
 			typeReference.sourceStart,
 			typeReference.sourceEnd);
 	}
+}
+public void javadocDuplicatedUsesTag(
+		
+		int sourceStart, int sourceEnd){
+	this.handle(IProblem.JavadocDuplicateUsesTag, NoArgument, NoArgument, sourceStart, sourceEnd);
 }
 public void javadocEmptyReturnTag(int sourceStart, int sourceEnd, int modifiers) {
 	int severity = computeSeverity(IProblem.JavadocEmptyReturnTag);
@@ -5721,6 +5739,24 @@ public void javadocInvalidParamTagName(int sourceStart, int sourceEnd) {
 public void javadocInvalidParamTypeParameter(int sourceStart, int sourceEnd) {
 	this.handle(IProblem.JavadocInvalidParamTagTypeParameter, NoArgument, NoArgument, sourceStart, sourceEnd);
 }
+public void javadocInvalidProvidesClass(int sourceStart, int sourceEnd) {
+	this.handle(IProblem.JavadocInvalidProvidesClass, NoArgument, NoArgument, sourceStart, sourceEnd);
+}
+
+public void javadocInvalidProvidesClassName(TypeReference typeReference, int modifiers) {
+	int severity = computeSeverity(IProblem.JavadocInvalidProvidesClassName);
+	if (severity == ProblemSeverities.Ignore) return;
+	if (javadocVisibility(this.options.reportInvalidJavadocTagsVisibility, modifiers)) {
+		String[] arguments = new String[] {String.valueOf(typeReference.resolvedType.sourceName())};
+		this.handle(
+			IProblem.JavadocInvalidProvidesClassName,
+			arguments,
+			arguments,
+			severity,
+			typeReference.sourceStart,
+			typeReference.sourceEnd);
+	}
+}
 public void javadocInvalidReference(int sourceStart, int sourceEnd) {
 	this.handle(IProblem.JavadocInvalidSeeReference, NoArgument, NoArgument, sourceStart, sourceEnd);
 }
@@ -5799,6 +5835,24 @@ public void javadocInvalidType(ASTNode location, TypeBinding type, int modifiers
 			location.sourceEnd);
 	}
 }
+public void javadocInvalidUsesClass(int sourceStart, int sourceEnd) {
+	this.handle(IProblem.JavadocInvalidUsesClass, NoArgument, NoArgument, sourceStart, sourceEnd);
+}
+
+public void javadocInvalidUsesClassName(TypeReference typeReference, int modifiers) {
+	int severity = computeSeverity(IProblem.JavadocInvalidUsesClassName);
+	if (severity == ProblemSeverities.Ignore) return;
+	if (javadocVisibility(this.options.reportInvalidJavadocTagsVisibility, modifiers)) {
+		String[] arguments = new String[] {String.valueOf(typeReference.resolvedType.sourceName())};
+		this.handle(
+			IProblem.JavadocInvalidUsesClassName,
+			arguments,
+			arguments,
+			severity,
+			typeReference.sourceStart,
+			typeReference.sourceEnd);
+	}
+}
 public void javadocInvalidValueReference(int sourceStart, int sourceEnd, int modifiers) {
 	if (javadocVisibility(this.options.reportInvalidJavadocTagsVisibility, modifiers))
 		this.handle(IProblem.JavadocInvalidValueReference, NoArgument, NoArgument, sourceStart, sourceEnd);
@@ -5827,6 +5881,20 @@ public void javadocMissing(int sourceStart, int sourceEnd, int severity, int mod
 				sourceStart,
 				sourceEnd);
 		}
+	}
+}
+public void javadocModuleMissing(int sourceStart, int sourceEnd, int severity){
+	if (severity == ProblemSeverities.Ignore) return;
+	boolean report = this.options.getSeverity(CompilerOptions.MissingJavadocComments) != ProblemSeverities.Ignore;
+	if (report) {
+			String[] arguments = new String[] { "module" }; //$NON-NLS-1$
+			this.handle(
+				IProblem.JavadocMissing,
+				arguments,
+				arguments,
+				severity,
+				sourceStart,
+				sourceEnd);
 	}
 }
 public void javadocMissingHashCharacter(int sourceStart, int sourceEnd, String ref){
@@ -5859,6 +5927,26 @@ public void javadocMissingParamTag(char[] name, int sourceStart, int sourceEnd, 
 		String[] arguments = new String[] { String.valueOf(name) };
 		this.handle(
 			IProblem.JavadocMissingParamTag,
+			arguments,
+			arguments,
+			severity,
+			sourceStart,
+			sourceEnd);
+	}
+}
+public void javadocMissingProvidesClassName(int sourceStart, int sourceEnd, int modifiers){
+	if (javadocVisibility(this.options.reportInvalidJavadocTagsVisibility, modifiers)) {
+		this.handle(IProblem.JavadocMissingProvidesClassName, NoArgument, NoArgument, sourceStart, sourceEnd);
+	}
+}
+public void javadocMissingProvidesTag(TypeReference typeRef, int sourceStart, int sourceEnd, int modifiers){
+	int severity = computeSeverity(IProblem.JavadocMissingProvidesTag);
+	if (severity == ProblemSeverities.Ignore) return;
+	boolean report = this.options.getSeverity(CompilerOptions.MissingJavadocTags) != ProblemSeverities.Ignore;
+	if (report) {
+		String[] arguments = new String[] { String.valueOf(typeRef.resolvedType.sourceName()) };
+		this.handle(
+			IProblem.JavadocMissingProvidesTag,
 			arguments,
 			arguments,
 			severity,
@@ -5914,6 +6002,27 @@ public void javadocMissingThrowsTag(TypeReference typeRef, int modifiers){
 			severity,
 			typeRef.sourceStart,
 			typeRef.sourceEnd);
+	}
+}
+public void javadocMissingUsesClassName(int sourceStart, int sourceEnd, int modifiers){
+	if (javadocVisibility(this.options.reportInvalidJavadocTagsVisibility, modifiers)) {
+		this.handle(IProblem.JavadocMissingUsesClassName, NoArgument, NoArgument, sourceStart, sourceEnd);
+	}
+}
+
+public void javadocMissingUsesTag(TypeReference typeRef, int sourceStart, int sourceEnd, int modifiers){
+	int severity = computeSeverity(IProblem.JavadocMissingUsesTag);
+	if (severity == ProblemSeverities.Ignore) return;
+	boolean report = this.options.getSeverity(CompilerOptions.MissingJavadocTags) != ProblemSeverities.Ignore;
+	if (report) {
+		String[] arguments = new String[] { String.valueOf(typeRef.resolvedType.sourceName()) };
+		this.handle(
+			IProblem.JavadocMissingUsesTag,
+			arguments,
+			arguments,
+			severity,
+			sourceStart,
+			sourceEnd);
 	}
 }
 public void javadocUndeclaredParamTagName(char[] token, int sourceStart, int sourceEnd, int modifiers) {

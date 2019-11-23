@@ -1192,6 +1192,29 @@ void setSourceStart(int sourceStart);
 	int JavadocUnexpectedText = Javadoc + Internal + 518;
 	/** @since 3.1 */
 	int JavadocInvalidParamTagName = Javadoc + Internal + 519;
+	/*
+	 * IDs for module errors in Javadoc
+	 */
+	/** @since 3.20 */
+	int JavadocMissingUsesTag = Javadoc + Internal + 1800;
+	/** @since 3.20 */
+	int JavadocDuplicateUsesTag = Javadoc + Internal + 1801;
+	/** @since 3.20 */
+	int JavadocMissingUsesClassName = Javadoc + Internal + 1802;
+	/** @since 3.20 */
+	int JavadocInvalidUsesClassName = Javadoc + Internal + 1803;
+	/** @since 3.20 */
+	int JavadocInvalidUsesClass = Javadoc + Internal + 1804;
+	/** @since 3.20 */
+	int JavadocMissingProvidesTag = Javadoc + Internal + 1805;
+	/** @since 3.20 */
+	int JavadocDuplicateProvidesTag = Javadoc + Internal + 1806;
+	/** @since 3.20 */
+	int JavadocMissingProvidesClassName = Javadoc + Internal + 1807;
+	/** @since 3.20 */
+	int JavadocInvalidProvidesClassName = Javadoc + Internal + 1808;
+	/** @since 3.20 */
+	int JavadocInvalidProvidesClass = Javadoc + Internal + 1809;
 
 	/**
 	 * Generics

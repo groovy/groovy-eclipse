@@ -229,6 +229,7 @@ public class DefaultCodeFormatterOptions {
 	public boolean comment_align_tags_names_descriptions;
 	public boolean comment_align_tags_descriptions_grouped;
 	public boolean comment_insert_empty_line_before_root_tags;
+	public boolean comment_insert_empty_line_between_different_tags;
 	public boolean comment_insert_new_line_for_parameter;
 	public boolean comment_preserve_white_space_between_code_and_line_comments;
 	public int comment_line_length;
@@ -326,6 +327,7 @@ public class DefaultCodeFormatterOptions {
 	public boolean insert_space_after_comma_in_type_parameters;
 	public boolean insert_space_after_ellipsis;
 	public boolean insert_space_after_lambda_arrow;
+	public boolean insert_space_after_not_operator;
 	public boolean insert_space_after_opening_angle_bracket_in_parameterized_type_reference;
 	public boolean insert_space_after_opening_angle_bracket_in_type_arguments;
 	public boolean insert_space_after_opening_angle_bracket_in_type_parameters;
@@ -600,6 +602,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS, this.comment_align_tags_names_descriptions ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED, this.comment_align_tags_descriptions_grouped ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_INSERT_EMPTY_LINE_BEFORE_ROOT_TAGS, this.comment_insert_empty_line_before_root_tags ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_INSERT_EMPTY_LINE_BETWEEN_DIFFERENT_TAGS, this.comment_insert_empty_line_between_different_tags ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_INSERT_NEW_LINE_FOR_PARAMETER, this.comment_insert_new_line_for_parameter ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_PRESERVE_WHITE_SPACE_BETWEEN_CODE_AND_LINE_COMMENT, this.comment_preserve_white_space_between_code_and_line_comments ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_COMMENT_LINE_LENGTH, Integer.toString(this.comment_line_length));
@@ -709,6 +712,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACKET_IN_ARRAY_ALLOCATION_EXPRESSION, this.insert_space_after_opening_bracket_in_array_allocation_expression? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ELLIPSIS, this.insert_space_after_ellipsis ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_LAMBDA_ARROW, this.insert_space_after_lambda_arrow ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_NOT_OPERATOR, this.insert_space_after_not_operator? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_ANGLE_BRACKET_IN_PARAMETERIZED_TYPE_REFERENCE, this.insert_space_after_opening_angle_bracket_in_parameterized_type_reference? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS, this.insert_space_after_opening_angle_bracket_in_type_arguments? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_ANGLE_BRACKET_IN_TYPE_PARAMETERS, this.insert_space_after_opening_angle_bracket_in_type_parameters? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
@@ -1479,6 +1483,8 @@ public class DefaultCodeFormatterOptions {
 		if (commentInsertEmptyLineBeforeRootTagsOption != null) {
 			this.comment_insert_empty_line_before_root_tags = JavaCore.INSERT.equals(commentInsertEmptyLineBeforeRootTagsOption);
 		}
+		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_COMMENT_INSERT_EMPTY_LINE_BETWEEN_DIFFERENT_TAGS, JavaCore.INSERT,
+				v -> this.comment_insert_empty_line_between_different_tags = v);
 		final Object commentInsertNewLineForParameterOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_COMMENT_INSERT_NEW_LINE_FOR_PARAMETER);
 		if (commentInsertNewLineForParameterOption != null) {
 			this.comment_insert_new_line_for_parameter = JavaCore.INSERT.equals(commentInsertNewLineForParameterOption);
@@ -1774,6 +1780,8 @@ public class DefaultCodeFormatterOptions {
 		if (insertSpaceAfterLambdaArrowOption != null) {
 			this.insert_space_after_lambda_arrow = JavaCore.INSERT.equals(insertSpaceAfterLambdaArrowOption);
 		}
+		setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_NOT_OPERATOR, JavaCore.INSERT,
+				v -> this.insert_space_after_not_operator = v);
 		final Object insertSpaceAfterOpeningAngleBracketInParameterizedTypeReferenceOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_ANGLE_BRACKET_IN_PARAMETERIZED_TYPE_REFERENCE);
 		if (insertSpaceAfterOpeningAngleBracketInParameterizedTypeReferenceOption != null) {
 			this.insert_space_after_opening_angle_bracket_in_parameterized_type_reference = JavaCore.INSERT.equals(insertSpaceAfterOpeningAngleBracketInParameterizedTypeReferenceOption);
@@ -2787,6 +2795,10 @@ public class DefaultCodeFormatterOptions {
 			setInt(settings, DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BEFORE_METHOD,
 					v -> this.blank_lines_before_abstract_method = v);
 		}
+		if (!settings.containsKey(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_NOT_OPERATOR)) {
+			setBoolean(settings, DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_UNARY_OPERATOR, JavaCore.INSERT,
+					v -> this.insert_space_after_not_operator = v);
+		}
 	}
 
 	public void setDefaultSettings() {
@@ -2869,6 +2881,7 @@ public class DefaultCodeFormatterOptions {
 		this.comment_align_tags_names_descriptions = false;
 		this.comment_align_tags_descriptions_grouped = false;
 		this.comment_insert_empty_line_before_root_tags = true;
+		this.comment_insert_empty_line_between_different_tags = false;
 		this.comment_insert_new_line_for_parameter = true;
 		this.comment_new_lines_at_block_boundaries = true;
 		this.comment_new_lines_at_javadoc_boundaries = true;
@@ -2978,6 +2991,7 @@ public class DefaultCodeFormatterOptions {
 		this.insert_space_after_comma_in_type_parameters = true;
 		this.insert_space_after_ellipsis = true;
 		this.insert_space_after_lambda_arrow = true;
+		this.insert_space_after_not_operator = false;
 		this.insert_space_after_opening_angle_bracket_in_parameterized_type_reference = false;
 		this.insert_space_after_opening_angle_bracket_in_type_arguments = false;
 		this.insert_space_after_opening_angle_bracket_in_type_parameters = false;
@@ -3234,6 +3248,7 @@ public class DefaultCodeFormatterOptions {
 		this.comment_align_tags_names_descriptions = false;
 		this.comment_align_tags_descriptions_grouped = true;
 		this.comment_insert_empty_line_before_root_tags = true;
+		this.comment_insert_empty_line_between_different_tags = false;
 		this.comment_insert_new_line_for_parameter = false;
 		this.comment_new_lines_at_block_boundaries = true;
 		this.comment_new_lines_at_javadoc_boundaries = true;
@@ -3341,6 +3356,7 @@ public class DefaultCodeFormatterOptions {
 		this.insert_space_after_comma_in_type_parameters = true;
 		this.insert_space_after_ellipsis = true;
 		this.insert_space_after_lambda_arrow = true;
+		this.insert_space_after_not_operator = false;
 		this.insert_space_after_opening_angle_bracket_in_parameterized_type_reference = false;
 		this.insert_space_after_opening_angle_bracket_in_type_arguments = false;
 		this.insert_space_after_opening_angle_bracket_in_type_parameters = false;
