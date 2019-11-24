@@ -302,12 +302,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof StaticMethodCallExpression) {
             List<MethodNode> candidates = new LinkedList<>();
             java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
+                // concrete types (without mixins/traits) return all methods from getMethods(String)
                 if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
-                    LinkedHashSet<ClassNode> abstractTypes = new LinkedHashSet<>();
-                    VariableScope.findAllInterfaces(classNode, abstractTypes, false);
-                    for (ClassNode abstractType : abstractTypes) {
-                        candidates.addAll(abstractType.getMethods(methodName));
-                    }
+                    LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
+                    VariableScope.createTypeHierarchy(classNode, hierarchy, false);
+                    hierarchy.forEach(type -> candidates.addAll(type.getMethods(methodName)));
                 } else {
                     candidates.addAll(classNode.getMethods(methodName));
                 }

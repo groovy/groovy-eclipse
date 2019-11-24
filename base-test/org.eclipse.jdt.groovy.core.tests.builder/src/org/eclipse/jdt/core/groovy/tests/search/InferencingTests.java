@@ -1064,6 +1064,57 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testStaticMethod10() throws Exception {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}");
+
+        String contents =
+            "import static foo.Bar.*\n" +
+            "import static java.util.regex.Pattern.*\n" +
+            "meth(compile('abc'))";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticMethod11() throws Exception {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticMethod12() throws Exception {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "class Foo {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n" +
+            "abstract class Bar extends Foo {\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
     public void testStaticThisAndSuper1() {
         String contents =
             "class A {\n" +
