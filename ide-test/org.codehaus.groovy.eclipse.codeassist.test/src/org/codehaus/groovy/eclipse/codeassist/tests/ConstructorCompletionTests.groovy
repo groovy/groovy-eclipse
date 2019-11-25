@@ -1182,6 +1182,23 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'aaa : __', 0)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/991
+    void testNamedArgs18() {
+        String contents = '''\
+            class Foo {
+              String abc
+            }
+            new Foo(abc: "xyz")
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'abc: '))
+        /* java.lang.NullPointerException
+            at org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor.doTypeCompletion(TypeCompletionProcessor.java:133)
+            at org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor.generateProposals(TypeCompletionProcessor.java:71)
+            at org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer.computeCompletionProposals(GroovyCompletionProposalComputer.java:221)
+        */
+    }
+
     @Test // explicit no-arg and tuple constructors exist
     void testNoNamedArgs() {
         String contents = '''\
