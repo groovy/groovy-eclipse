@@ -3320,6 +3320,33 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
+    @Test // GROOVY-8648
+    public void testReferencingFields_DirectAccess4() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "new Account().with {\n" +
+            "  deposit(42)\n" +
+            "  println balance\n" +
+            "}\n",
+
+            "Account.groovy",
+            "class Account {\n" +
+            "  private int balance = 0\n" +
+            "  int getBalance() {\n" +
+            "    return balance\n" +
+            "  }\n" +
+            "  void deposit(int amount) {\n" +
+            "    assert amount > 0\n" +
+            "    this.@balance += amount\n" + // ASM error for LHS attribute expression
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
     @Test
     public void testGroovyObjectsAreGroovyAtCompileTime() {
         //@formatter:off
