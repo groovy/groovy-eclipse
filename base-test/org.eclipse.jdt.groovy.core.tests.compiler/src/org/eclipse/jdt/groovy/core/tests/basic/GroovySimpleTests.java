@@ -3347,6 +3347,37 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "42");
     }
 
+    @Test // GROOVY-6183
+    public void testReferencingFields_DirectAccess5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "B.directAccess()\n" +
+            "assert B.x == 2\n" +
+            "assert !B.isSetterCalled()\n",
+
+            "A.groovy",
+            "public class A {\n" +
+            "  static boolean setterCalled\n" +
+            "  static protected int x\n" +
+            "  static void setX(int a) {\n" +
+            "    setterCalled = true\n" +
+            "    x = a\n" +
+            "  }\n" +
+            "}\n",
+
+            "B.groovy",
+            "class B extends A {\n" +
+            "  static void directAccess() {\n" +
+            "    this.@x = 2\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
     @Test
     public void testGroovyObjectsAreGroovyAtCompileTime() {
         //@formatter:off
