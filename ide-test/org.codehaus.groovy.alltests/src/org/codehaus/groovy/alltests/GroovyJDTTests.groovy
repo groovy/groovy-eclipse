@@ -36,6 +36,7 @@ import org.junit.runners.Suite
 
     // Xform tests
     org.eclipse.jdt.groovy.core.tests.xform.AnnotationCollectorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.AutoCloneTests,
     org.eclipse.jdt.groovy.core.tests.xform.CanonicalTests,
     org.eclipse.jdt.groovy.core.tests.xform.CategoryTests,
     org.eclipse.jdt.groovy.core.tests.xform.DelegateTests,
