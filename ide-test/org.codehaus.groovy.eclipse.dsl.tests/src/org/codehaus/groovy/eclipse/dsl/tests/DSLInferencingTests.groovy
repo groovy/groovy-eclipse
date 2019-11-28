@@ -305,6 +305,26 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
+    void testContiribution6() {
+        createDsls('contribute(currentType("Foo")) { method name:"<init>", type:void, declaringType:Foo }')
+
+        String contents = '''\
+            |class Foo {
+            |  Number bar() {
+            |  }
+            |  def baz() {
+            |    new Foo().bar()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        inferType(contents, 'bar').with {
+            assert declaringTypeName == 'Foo'
+            assert typeName == 'java.lang.Number'
+        }
+    }
+
+    @Test
     void testDelegatesTo1() {
         createDsls('contribute(currentType("Foo")) { delegatesTo "Other" }')
 

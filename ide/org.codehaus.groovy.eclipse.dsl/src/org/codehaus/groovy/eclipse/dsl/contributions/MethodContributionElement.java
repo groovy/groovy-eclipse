@@ -118,7 +118,10 @@ public class MethodContributionElement implements IContributionElement {
     @Override
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
         if (name.equals(methodName)) {
-            return new TypeAndDeclaration(returnType(resolver), toMethod(declaringType, resolver), declaringType(declaringType, resolver), doc);
+            MethodNode node = toMethod(declaringType, resolver);
+            ClassNode type = (node instanceof ConstructorNode
+                ? node.getDeclaringClass() : node.getReturnType());
+            return new TypeAndDeclaration(type, node, node.getDeclaringClass(), doc);
         }
         return null;
     }
@@ -218,8 +221,9 @@ public class MethodContributionElement implements IContributionElement {
         if (pcs == null) {
             ps = Parameter.EMPTY_ARRAY;
         } else {
-            ps = new Parameter[pcs.length];
-            for (int i = 0; i < pcs.length; i++) {
+            int n = pcs.length;
+            ps = new Parameter[n];
+            for (int i = 0; i < n; i += 1) {
                 ps[i] = pcs[i].toParameter(resolver);
             }
         }
