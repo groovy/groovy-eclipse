@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -202,16 +203,30 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 }
 
-                // short-circuit if object expression is part of direct field access (aka AttributeExpression)
+                // short-circuit if expression is direct field access (aka AttributeExpression)
                 if (scope.getEnclosingNode() instanceof AttributeExpression) {
                     ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
-                    FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
-                    if (!isCompatible(field, isStaticObjectExpression)) {
-                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
-                    } else {
-                        boolean isPrivateSuperField = Flags.isPrivate(field.getModifiers()) && isSuperObjectExpression(scope);
-                        return new TypeLookupResult(field.getType(), clazz, field, !isPrivateSuperField ? confidence : TypeConfidence.UNKNOWN, scope);
+                    FieldNode field = null;
+                    if (!isSuperObjectExpression(scope)) {
+                        field = clazz.getDeclaredField(node.getText());
+                        // no access checks; even private is allowed
+                        clazz = clazz.getSuperClass();
                     }
+                    while (field == null && clazz != null) {
+                        field = clazz.getDeclaredField(node.getText());
+                        if (field != null && (field.isPrivate() || (!field.isPublic() && !field.isProtected() &&
+                                !Objects.equals(clazz.getPackage(), scope.getEnclosingTypeDeclaration().getPackage())))) {
+                            field = null; // field is inaccessible; continue searching for accessible field
+                        }
+                        clazz = clazz.getSuperClass();
+                    }
+
+                    if (isCompatible(field, isStaticObjectExpression)) {
+                        return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
+                    } else if (!isSuperObjectExpression(scope)) {
+                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
+                    }
+                    // "super.@value" prefers fields but supports general Groovy property access; see AsmClassGenerator#visitAttributeExpression
                 }
 
                 boolean isLhsExpression = (scope.getWormhole().remove("lhs") == node);
@@ -384,7 +399,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     FieldNode field = (FieldNode) declaration;
                     if (isStaticObjectExpression && !field.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (Flags.isPrivate(field.getModifiers())) {
+                    } else if (field.isPrivate()) {
                         // "super.field" reference to private field yields MissingMethodException
                         if (isSuperObjectExpression(scope)) {
                             confidence = TypeConfidence.UNKNOWN;
@@ -492,17 +507,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
-                    } else if (Flags.isPrivate(field.getModifiers()) && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
+                    } else if (field.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
+                    MethodNode method = (MethodNode) candidate;
                     // check for call "method(1,2,3)" matched to decl "method(int)"
                     List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
-                    Parameter[] parameterNodes = ((MethodNode) candidate).getParameters();
-                    if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
+                    if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if ((((MethodNode) candidate).isPrivate()) && isNotThisOrOuterClass(resolvedDeclaringType, ((MethodNode) candidate).getDeclaringClass())) {
+                    if (method.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, method.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
