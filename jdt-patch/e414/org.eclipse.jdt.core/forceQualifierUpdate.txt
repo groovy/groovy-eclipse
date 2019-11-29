@@ -6,3 +6,4 @@ Bug 408447 - compiler (log message) needs updating for copyright and bundle_qual
 Several bundles changed and need to be touched
 Bug 418646 - org.eclipse.jdt.core does not provide an artifact with classifier 'antadapter'
 Bug 436266 - Use RC3 (plus) version of JDT compiler to build RC4
+Bug 551547 - The library org.eclipse.jdt.core.compiler.batch_*.jar should be signed
