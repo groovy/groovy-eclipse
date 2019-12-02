@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +51,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
+import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
@@ -283,6 +283,24 @@ public class GroovyUtils {
         return importNodes;
     }
 
+    public static MethodNode getAnnotationMethod(ClassNode annotationType, String methodName) {
+        MethodNode meth = annotationType.getMethod(methodName, Parameter.EMPTY_ARRAY);
+        if (meth != null) {
+            return meth;
+        }
+
+        if (getAnnotations(annotationType.redirect(), "groovy.transform.AnnotationCollector").findFirst().isPresent()) {
+            for (AnnotationNode aliasedNode : AnnotationCollectorTransform.getMeta(annotationType.redirect())) {
+                meth = getAnnotationMethod(aliasedNode.getClassNode(), methodName);
+                if (meth != null) {
+                    return meth;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static MethodNode getMethod(ClassNode declaringType, String methodName, Parameter... parameters) {
         MethodNode meth = declaringType.getMethod(methodName, parameters);
         if (meth != null) {
@@ -291,7 +309,7 @@ public class GroovyUtils {
         // concrete types (without mixins/traits) return all methods from getMethod(String, Parameter[])
         if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
             Set<ClassNode> done = new HashSet<>(Collections.singleton(declaringType));
-            Queue<ClassNode> todo = new LinkedList<>();
+            LinkedList<ClassNode> todo = new LinkedList<>();
             ClassNode type = declaringType;
             do {
                 ClassNode supa = type.getSuperClass();

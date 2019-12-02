@@ -302,7 +302,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
             String name = pair.getKey();
             Expression expr = pair.getValue();
-            check(annotation.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY),
+            check(GroovyUtils.getAnnotationMethod(annotation.getClassNode(), name),
                 start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
             /*expr.visit(this);*/
             start = expr.getEnd() + 1;

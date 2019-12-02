@@ -39,19 +39,41 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
         addJavaSource '''\
             |import java.lang.annotation.*;
             |@Target(ElementType.TYPE)
-            |@interface Anno {
+            |@interface A {
             |  String one();
             |  String two();
             |}
-            |'''.stripMargin(), 'Anno'
+            |'''.stripMargin(), 'A'
 
         String source = '''\
-            |@Anno(one='1')
+            |@A(one='1')
             |class C {
             |}
             |'''.stripMargin()
 
         def elem = assertCodeSelect([source], 'one')
+        assert elem.inferredElement instanceof MethodNode
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testCodeSelectOnAttributeName3() {
+        addGroovySource '''\
+            |@groovy.transform.EqualsAndHashCode
+            |@groovy.transform.AnnotationCollector
+            |@interface A {
+            |}
+            |'''.stripMargin(), 'A'
+
+        buildProject()
+
+        String source = '''\
+            |@A(excludes='temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        def elem = assertCodeSelect([source], 'excludes')
         assert elem.inferredElement instanceof MethodNode
     }
 

@@ -674,12 +674,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         ClassNode type = node.getClassNode();
         VariableScope scope = scopes.getLast();
         for (String name : node.getMembers().keySet()) {
-            MethodNode meth = type.getMethod(name, NO_PARAMETERS);
-            TypeLookupResult noLookup;
             ASTNode attr;
+            TypeLookupResult noLookup;
+            MethodNode meth = GroovyUtils.getAnnotationMethod(type, name);
             if (meth != null) {
                 attr = meth; // no Groovy AST node exists for name
-                noLookup = new TypeLookupResult(meth.getReturnType(), type, meth, TypeConfidence.EXACT, scope);
+                noLookup = new TypeLookupResult(meth.getReturnType(), meth.getDeclaringClass(), meth, TypeConfidence.EXACT, scope);
             } else {
                 attr = new ConstantExpression(name);
                 // this is very rough; it only works for an attribute that directly follows '('
@@ -688,7 +688,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type, null, TypeConfidence.UNKNOWN, scope);
             }
             noLookup.enclosingAnnotation = node; // set context for requestor
-            if (notifyRequestor(attr, requestor, noLookup) != VisitStatus.CONTINUE) break;
+            VisitStatus status = notifyRequestor(attr, requestor, noLookup);
+            if (status != VisitStatus.CONTINUE) break;
         }
     }
 

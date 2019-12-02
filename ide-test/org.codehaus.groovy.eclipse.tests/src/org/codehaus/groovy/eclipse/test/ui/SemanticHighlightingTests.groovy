@@ -1744,6 +1744,50 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testAnnoElems7() {
+        String contents = '''\
+            |@groovy.transform.EqualsAndHashCode
+            |@groovy.transform.AnnotationCollector
+            |@interface A {
+            |}
+            |@A(excludes = 'temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('A '), 1, ANNOTATION),
+            new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testAnnoElems8() {
+        addGroovySource '''\
+            |@groovy.transform.EqualsAndHashCode
+            |@groovy.transform.AnnotationCollector
+            |@interface A {
+            |}
+            |'''.stripMargin(), 'A'
+
+        buildProject()
+
+        String contents = '''\
+            |@A(excludes = 'temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
     @Test
     void testGString1() {
         String contents = '''\
