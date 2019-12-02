@@ -650,7 +650,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitAnnotation(AnnotationNode node) {
         ClassNode type = node.getClassNode();
         VariableScope scope = scopes.getLast();
-        TypeLookupResult noLookup = new TypeLookupResult(type, type, type, TypeConfidence.EXACT, scope);
+        TypeLookupResult noLookup = new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
 
         VisitStatus status = notifyRequestor(node, requestor, noLookup);
         switch (status) {

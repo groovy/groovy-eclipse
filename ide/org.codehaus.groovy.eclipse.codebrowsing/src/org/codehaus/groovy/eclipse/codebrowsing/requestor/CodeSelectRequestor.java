@@ -186,7 +186,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         } else if (requestedNode instanceof ImportNode) {
             ImportNode importNode = (ImportNode) requestedNode;
-            requestedNode = Optional.ofNullable(importNode.getType()).map(ClassNode::redirect).get();
+            if (importNode.getType() != null) {
+                requestedNode = importNode.getType().redirect();
+            }
         }
 
         if (requestedNode != null) {
@@ -222,14 +224,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (start < until) {
                     String pack = gunit.getSource().substring(start, until).replaceFirst("^import\\s+", "");
                     for (IPackageFragmentRoot root : gunit.getJavaProject().getPackageFragmentRoots()) {
-                        IPackageFragment frag = root.getPackageFragment(pack);
-                        if (frag != null && frag.exists()) {
-                            requestedElement = frag;
+                        IPackageFragment fragment = root.getPackageFragment(pack);
+                        if (fragment != null && fragment.exists()) {
+                            requestedElement = fragment;
                             break;
                         }
                     }
                 }
-                requestedNode = nodeToLookFor;
 
             } else {
                 String qualifier = checkQualifiedType(result, enclosingElement);
