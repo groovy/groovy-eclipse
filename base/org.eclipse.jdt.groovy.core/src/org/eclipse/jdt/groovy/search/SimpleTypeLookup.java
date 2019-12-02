@@ -39,7 +39,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -97,12 +96,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     @Override
     public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
         return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final ImportNode node, final VariableScope scope) {
-        ClassNode baseType = Optional.ofNullable(node.getType()).orElse(VariableScope.NULL_TYPE);
-        return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     @Override

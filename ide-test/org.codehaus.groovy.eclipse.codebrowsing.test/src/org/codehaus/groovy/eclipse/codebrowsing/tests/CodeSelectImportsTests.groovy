@@ -51,8 +51,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
             |Pattern p = ~/123/
             |'''.stripMargin()
 
-        def elem = assertCodeSelect([source], 'State')
-        assert elem.inferredElement instanceof ClassNode
+        assertCodeSelect([source], 'State')
     }
 
     @Test

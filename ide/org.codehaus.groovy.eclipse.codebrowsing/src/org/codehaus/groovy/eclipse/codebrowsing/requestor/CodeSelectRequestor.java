@@ -184,6 +184,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
             } else {
                 requestedNode = ((ConstructorNode) requestedNode).getDeclaringClass();
             }
+        } else if (requestedNode instanceof ImportNode) {
+            ImportNode importNode = (ImportNode) requestedNode;
+            requestedNode = Optional.ofNullable(importNode.getType()).map(ClassNode::redirect).get();
         }
 
         if (requestedNode != null) {
@@ -214,8 +217,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     requestedElement = root.getPackageFragment(pack);
                 }
 
-            } else if (nodeToLookFor instanceof ImportNode &&
-                    ((ImportNode) nodeToLookFor).isStar() && !((ImportNode) nodeToLookFor).isStatic()) {
+            } else if (nodeToLookFor instanceof ImportNode && ((ImportNode) nodeToLookFor).isStar() && !((ImportNode) nodeToLookFor).isStatic()) {
                 int start = nodeToLookFor.getStart(), until = selectRegion.getEnd();
                 if (start < until) {
                     String pack = gunit.getSource().substring(start, until).replaceFirst("^import\\s+", "");
@@ -227,7 +229,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         }
                     }
                 }
-                requestedNode = nodeToLookFor; // result.declaration should be java.lang.Object here
+                requestedNode = nodeToLookFor;
 
             } else {
                 String qualifier = checkQualifiedType(result, enclosingElement);
@@ -297,12 +299,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private String checkQualifiedType(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {
         if (result.declaration instanceof ClassNode ||
+            result.declaration instanceof ImportNode ||
             result.declaration instanceof ConstructorNode /*||
             result.declaration instanceof DeclarationExpression*/) {
 
             ClassNode type = result.type;
-            if (type == null) type = result.declaringType;
-            if (type == null) type = (ClassNode) result.declaration;
+            if (result.declaration instanceof ImportNode)
+                type = ((ImportNode) result.declaration).getType();
             int typeStart = startOffset(type), typeEnd = endOffset(type);
             type = GroovyUtils.getBaseType(type); // unpack type now that position is known
 
@@ -364,6 +367,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
             declaringType = ((MethodNode) result.declaration).getDeclaringClass();
         } else if (result.declaration instanceof PropertyNode) {
             declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
+        } else if (result.declaration instanceof ImportNode) {
+            declaringType = ((ImportNode) result.declaration).getType();
         } else if (result.declaration instanceof DeclarationExpression) {
             declaringType = GroovyUtils.getBaseType(((DeclarationExpression) result.declaration).getLeftExpression().getType());
         }

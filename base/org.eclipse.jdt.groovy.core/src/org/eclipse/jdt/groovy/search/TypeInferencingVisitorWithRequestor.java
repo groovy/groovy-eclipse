@@ -468,8 +468,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             IJavaElement oldEnclosing = enclosingElement;
             enclosingElement = unit.getPackageDeclaration(node.getName().substring(0, node.getName().length() - 1));
             try {
-                TypeLookupResult result = new TypeLookupResult(null, null, node, TypeConfidence.EXACT, null);
-                VisitStatus status = notifyRequestor(node, requestor, result);
+                TypeLookupResult noLookup = new TypeLookupResult(null, null, node, TypeConfidence.EXACT, null);
+                VisitStatus status = notifyRequestor(node, requestor, noLookup);
                 if (status == VisitStatus.STOP_VISIT) {
                     throw new VisitCompleted(status);
                 }
@@ -517,24 +517,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
             }
 
+            VariableScope scope = scopes.getLast();
+            assignmentStorer.storeImport(imp, scope);
             try {
-                TypeLookupResult result = null;
-                VariableScope scope = scopes.getLast();
-                scope.setPrimaryNode(false);
-                assignmentStorer.storeImport(imp, scope);
-                for (ITypeLookup lookup : lookups) {
-                    TypeLookupResult candidate = lookup.lookupType(imp, scope);
-                    if (candidate != null) {
-                        if (result == null || result.confidence.isLessThan(candidate.confidence)) {
-                            result = candidate;
-                        }
-                        if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
-                            break;
-                        }
-                    }
-                }
-                VisitStatus status = notifyRequestor(imp, requestor, result);
-
+                TypeLookupResult noLookup = new TypeLookupResult(null, null, imp, TypeConfidence.EXACT, scope);
+                VisitStatus status = notifyRequestor(imp, requestor, noLookup);
                 switch (status) {
                 case CONTINUE:
                     try {
@@ -670,10 +657,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         case CONTINUE:
             // visit annotation label
             visitClassReference(type);
-            // visit attribute values
-            super.visitAnnotation(node);
             // visit attribute labels
             visitAnnotationKeys(node);
+            // visit attribute values
+            super.visitAnnotation(node);
             break;
         case CANCEL_BRANCH:
             return;
@@ -692,13 +679,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             ASTNode attr;
             if (meth != null) {
                 attr = meth; // no Groovy AST node exists for name
-                noLookup = new TypeLookupResult(meth.getReturnType(), type.redirect(), meth, TypeConfidence.EXACT, scope);
+                noLookup = new TypeLookupResult(meth.getReturnType(), type, meth, TypeConfidence.EXACT, scope);
             } else {
                 attr = new ConstantExpression(name);
                 // this is very rough; it only works for an attribute that directly follows '('
                 attr.setStart(type.getEnd() + 1);
                 attr.setEnd(attr.getStart() + name.length());
-                noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type.redirect(), null, TypeConfidence.UNKNOWN, scope);
+                noLookup = new TypeLookupResult(VariableScope.VOID_CLASS_NODE, type, null, TypeConfidence.UNKNOWN, scope);
             }
             noLookup.enclosingAnnotation = node; // set context for requestor
             if (notifyRequestor(attr, requestor, noLookup) != VisitStatus.CONTINUE) break;
