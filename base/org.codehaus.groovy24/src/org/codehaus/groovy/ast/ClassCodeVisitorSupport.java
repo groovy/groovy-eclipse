@@ -42,6 +42,8 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -92,24 +94,26 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
         // GRECLIPSE edit
-        if (!annotations.isEmpty())
-            visitAnnotations(annotations);
+        if (!annotations.isEmpty()) visitAnnotations(annotations);
         // GRECLIPSE end
     }
 
     // GRECLIPSE add
     protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+        Set<AnnotationNode> aliases = null;
         for (AnnotationNode node : nodes) {
             // skip built-in properties
             if (node.isBuiltIn()) continue;
 
-            Set<AnnotationNode> originals =
-                node.getNodeMetaData("AnnotationCollector");
-            if (originals != null && !originals.isEmpty()) {
-                visitAnnotations(originals);
-            }
             visitAnnotation(node);
+
+            Iterable<AnnotationNode> original = node.getNodeMetaData("AnnotationCollector");
+            if (original != null) {
+                if (aliases == null) aliases = new HashSet<>();
+                original.forEach(aliases::add);
+            }
         }
+        if (aliases != null) visitAnnotations(aliases);
     }
 
     protected void visitAnnotation(AnnotationNode node) {

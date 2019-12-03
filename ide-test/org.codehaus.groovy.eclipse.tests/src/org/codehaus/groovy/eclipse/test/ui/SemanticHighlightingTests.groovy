@@ -1758,7 +1758,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('A '), 1, ANNOTATION),
+            new HighlightedTypedPosition(contents.indexOf('A '), 1, isAtLeastGroovy(25) ? ANNOTATION : CLASS),
             new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('C '), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
@@ -1777,6 +1777,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
         String contents = '''\
             |@A(excludes = 'temporary')
+            |class C {
+            |  def temporary
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/959
+    void testAnnoElems9() {
+        String contents = '''\
+            |@groovy.transform.AutoExternalize(excludes = 'temporary')
             |class C {
             |  def temporary
             |}

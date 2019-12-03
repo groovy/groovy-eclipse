@@ -51,7 +51,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
-import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
@@ -283,15 +282,16 @@ public class GroovyUtils {
         return importNodes;
     }
 
-    public static MethodNode getAnnotationMethod(ClassNode annotationType, String methodName) {
-        MethodNode meth = annotationType.getMethod(methodName, Parameter.EMPTY_ARRAY);
+    public static MethodNode getAnnotationMethod(AnnotationNode node, String methodName) {
+        MethodNode meth = node.getClassNode().getMethod(methodName, Parameter.EMPTY_ARRAY);
         if (meth != null) {
             return meth;
         }
 
-        if (getAnnotations(annotationType.redirect(), "groovy.transform.AnnotationCollector").findFirst().isPresent()) {
-            for (AnnotationNode aliasedNode : AnnotationCollectorTransform.getMeta(annotationType.redirect())) {
-                meth = getAnnotationMethod(aliasedNode.getClassNode(), methodName);
+        List<AnnotationNode> nodes = node.getNodeMetaData("AnnotationCollectorTransform");
+        if (nodes != null) {
+            for (AnnotationNode aliased : nodes) {
+                meth = getAnnotationMethod(aliased, methodName);
                 if (meth != null) {
                     return meth;
                 }

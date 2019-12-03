@@ -671,17 +671,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitAnnotationKeys(AnnotationNode node) {
-        ClassNode type = node.getClassNode();
         VariableScope scope = scopes.getLast();
         for (String name : node.getMembers().keySet()) {
             ASTNode attr;
             TypeLookupResult noLookup;
-            MethodNode meth = GroovyUtils.getAnnotationMethod(type, name);
+            MethodNode meth = GroovyUtils.getAnnotationMethod(node, name);
             if (meth != null) {
                 attr = meth; // no Groovy AST node exists for name
                 noLookup = new TypeLookupResult(meth.getReturnType(), meth.getDeclaringClass(), meth, TypeConfidence.EXACT, scope);
             } else {
                 attr = new ConstantExpression(name);
+                ClassNode type = node.getClassNode();
                 // this is very rough; it only works for an attribute that directly follows '('
                 attr.setStart(type.getEnd() + 1);
                 attr.setEnd(attr.getStart() + name.length());

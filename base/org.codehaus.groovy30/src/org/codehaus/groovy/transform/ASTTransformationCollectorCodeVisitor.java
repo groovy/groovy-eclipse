@@ -44,13 +44,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -296,16 +294,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                     act = new AnnotationCollectorTransform();
                 }
                 if (act != null) {
-                    // GRECLIPSE edit
+                    // GRECLIPSE edit -- retain reference to aliasNode
                     //replacements.put(index, act.visit(annotation, aliasNode, origin, source));
-                    // original annotation added to metadata to prevent import organizer from deleting its import
                     List<AnnotationNode> visitResult = act.visit(annotation, aliasNode, origin, source);
                     for (AnnotationNode annotationNode : visitResult) {
-                        Set<AnnotationNode> aliases = annotationNode.getNodeMetaData("AnnotationCollector");
-                        if (aliases == null) annotationNode.setNodeMetaData("AnnotationCollector", (aliases = new HashSet<>(1)));
-
-                        aliases.add(aliasNode);
+                        annotationNode.getNodeMetaData("AnnotationCollector", x -> new ArrayList<>(1)).add(aliasNode);
                     }
+                    aliasNode.setNodeMetaData("AnnotationCollectorTransform", visitResult);
                     replacements.put(index, visitResult);
                     // GRECLIPSE end
                     return;
