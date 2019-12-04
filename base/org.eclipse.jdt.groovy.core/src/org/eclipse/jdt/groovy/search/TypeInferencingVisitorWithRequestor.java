@@ -102,6 +102,7 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
+import org.codehaus.groovy.transform.sc.TemporaryVariableExpression;
 import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
@@ -139,7 +140,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
 
-    private static void log(Throwable t, String form, Object... args) {
+    private static void log(final Throwable t, final String form, final Object... args) {
         String m = "Groovy-Eclipse Type Inferencing: " + String.format(form, args);
         Status s = new Status(IStatus.ERROR, Activator.PLUGIN_ID, m, t);
         Util.log(s);
@@ -204,7 +205,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     /**
      * Use factory to instantiate
      */
-    TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
+    TypeInferencingVisitorWithRequestor(final GroovyCompilationUnit unit, final ITypeLookup[] lookups) {
         this.unit = unit;
         this.lookups = lookups;
 
@@ -221,7 +222,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     //--------------------------------------------------------------------------
 
-    public void visitCompilationUnit(ITypeRequestor requestor) {
+    public void visitCompilationUnit(final ITypeRequestor requestor) {
         if (enclosingModule == null) {
             // no module node, can't do anything
             return;
@@ -263,7 +264,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    public void visitJDT(IType type, ITypeRequestor requestor) {
+    public void visitJDT(final IType type, final ITypeRequestor requestor) {
         ClassNode node = findClassNode(createName(type));
         if (node == null) {
             // probably some AST transformation is making this node invisible
@@ -401,7 +402,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    public void visitJDT(IField field, ITypeRequestor requestor) {
+    public void visitJDT(final IField field, final ITypeRequestor requestor) {
         FieldNode fieldNode = findFieldNode(field);
         if (fieldNode == null) {
             // probably some sort of AST transformation is making this node invisible
@@ -434,7 +435,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    public void visitJDT(IMethod method, ITypeRequestor requestor) {
+    public void visitJDT(final IMethod method, final ITypeRequestor requestor) {
         MethodNode methodNode = findMethodNode(method);
         if (methodNode == null) {
             // probably some sort of AST transformation is making this node invisible
@@ -461,7 +462,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     //
 
     @Override
-    public void visitPackage(PackageNode node) {
+    public void visitPackage(final PackageNode node) {
         if (node != null) {
             visitAnnotations(node);
 
@@ -480,7 +481,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
-    public void visitImports(ModuleNode node) {
+    public void visitImports(final ModuleNode node) {
         for (ImportNode imp : GroovyUtils.getAllImportNodes(node)) {
             IJavaElement oldEnclosingElement = enclosingElement;
 
@@ -561,12 +562,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitClassReference(ClassNode node) {
+    private void visitClassReference(final ClassNode node) {
         TypeLookupResult result = null;
-        node = GroovyUtils.getBaseType(node);
         VariableScope scope = scopes.getLast();
+        ClassNode type = GroovyUtils.getBaseType(node);
         for (ITypeLookup lookup : lookups) {
-            TypeLookupResult candidate = lookup.lookupType(node, scope);
+            TypeLookupResult candidate = lookup.lookupType(type, scope);
             if (candidate != null) {
                 if (result == null || result.confidence.isLessThan(candidate.confidence)) {
                     result = candidate;
@@ -578,11 +579,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
         scope.setPrimaryNode(false);
 
-        VisitStatus status = notifyRequestor(node, requestor, result);
+        VisitStatus status = notifyRequestor(type, requestor, result);
         switch (status) {
         case CONTINUE:
-            if (!node.isEnum()) {
-                visitGenericTypes(node);
+            if (!type.isEnum()) {
+                visitGenericTypes(type);
             }
             // fall through
         case CANCEL_BRANCH:
@@ -593,7 +594,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitFieldInternal(FieldNode node) {
+    private void visitFieldInternal(final FieldNode node) {
         try {
             visitField(node);
         } catch (VisitCompleted vc) {
@@ -603,7 +604,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitMethodInternal(MethodNode node) {
+    private void visitMethodInternal(final MethodNode node) {
         scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
@@ -622,7 +623,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     /**
      * @param node anonymous inner class for enum constant
      */
-    private void visitMethodOverrides(ClassNode node) {
+    private void visitMethodOverrides(final ClassNode node) {
         assert node.isEnum() && node.getEnclosingMethod() == null;
         ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
         IJavaElement enclosingElement0 = enclosingElement; // enum
@@ -647,7 +648,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     //
 
     @Override
-    public void visitAnnotation(AnnotationNode node) {
+    public void visitAnnotation(final AnnotationNode node) {
         ClassNode type = node.getClassNode();
         VariableScope scope = scopes.getLast();
         TypeLookupResult noLookup = new TypeLookupResult(type, type, node, TypeConfidence.EXACT, scope);
@@ -670,7 +671,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitAnnotationKeys(AnnotationNode node) {
+    private void visitAnnotationKeys(final AnnotationNode node) {
         VariableScope scope = scopes.getLast();
         for (String name : node.getMembers().keySet()) {
             ASTNode attr;
@@ -694,7 +695,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
-    public void visitArrayExpression(ArrayExpression node) {
+    public void visitArrayExpression(final ArrayExpression node) {
         handleSimpleExpression(node, () -> {
             visitClassReference(node.getType());
             super.visitArrayExpression(node);
@@ -702,12 +703,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
-    public void visitAttributeExpression(AttributeExpression node) {
+    public void visitAttributeExpression(final AttributeExpression node) {
         visitPropertyExpression(node);
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression node) {
+    public void visitBinaryExpression(final BinaryExpression node) {
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -811,12 +812,12 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitBitwiseNegationExpression(BitwiseNegationExpression node) {
+    public void visitBitwiseNegationExpression(final BitwiseNegationExpression node) {
         visitUnaryExpression(node, node.getExpression(), "~");
     }
 
     @Override
-    public void visitBlockStatement(BlockStatement block) {
+    public void visitBlockStatement(final BlockStatement block) {
         VariableScope scope = new VariableScope(scopes.getLast(), block, false);
         scope.setCurrentNode(block);
         scopes.add(scope);
@@ -833,35 +834,25 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitBooleanExpression(BooleanExpression node) {
-        handleSimpleExpression(node, () -> {
-            super.visitBooleanExpression(node);
-        });
+    public void visitBooleanExpression(final BooleanExpression node) {
+        visitUnaryExpression(node, node.getExpression(), "!!");
     }
 
     @Override
-    public void visitBytecodeExpression(BytecodeExpression node) {
+    public void visitBytecodeExpression(final BytecodeExpression node) {
         handleSimpleExpression(node, () -> {
             super.visitBytecodeExpression(node);
         });
     }
 
     @Override
-    public void visitCastExpression(CastExpression node) {
-        handleSimpleExpression(node, () -> {
-            visitClassReference(node.getType());
-
-            completeExpressionStack.add(node);
-            try {
-                super.visitCastExpression(node);
-            } finally {
-                completeExpressionStack.removeLast();
-            }
-        });
+    public void visitCastExpression(final CastExpression node) {
+        visitClassReference(node.getType());
+        visitUnaryExpression(node, node.getExpression(), "as");
     }
 
     @Override
-    public void visitCatchStatement(CatchStatement node) {
+    public void visitCatchStatement(final CatchStatement node) {
         scopes.add(new VariableScope(scopes.getLast(), node, false));
         try {
             Parameter param = node.getVariable();
@@ -875,7 +866,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitClassExpression(ClassExpression node) {
+    public void visitClassExpression(final ClassExpression node) {
         handleSimpleExpression(node, () -> {
             visitClassReference(node.getType());
             super.visitClassExpression(node);
@@ -883,7 +874,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitClosureExpression(ClosureExpression node) {
+    public void visitClosureExpression(final ClosureExpression node) {
         VariableScope parent = scopes.getLast();
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
@@ -951,14 +942,14 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitClosureListExpression(ClosureListExpression node) {
+    public void visitClosureListExpression(final ClosureListExpression node) {
         handleSimpleExpression(node, () -> {
             super.visitClosureListExpression(node);
         });
     }
 
     @Override
-    public void visitConstantExpression(ConstantExpression node) {
+    public void visitConstantExpression(final ConstantExpression node) {
         if (node instanceof AnnotationConstantExpression) {
             // visit annotation label
             visitClassReference(node.getType());
@@ -974,7 +965,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitConstructorCallExpression(ConstructorCallExpression node) {
+    public void visitConstructorCallExpression(final ConstructorCallExpression node) {
         handleSimpleExpression(node, () -> {
             final ClassNode type = node.getType();
             if (node.isUsingAnonymousInnerClass()) {
@@ -991,8 +982,8 @@ assert primaryExprType != null && dependentExprType != null;
             if (node.getArguments() instanceof TupleExpression) {
                 TupleExpression tuple = (TupleExpression) node.getArguments();
                 if (isNotEmpty(tuple.getExpressions())) {
-                    if ((tuple.getExpressions().size() == 1 && tuple.getExpressions().get(0) instanceof MapExpression) ||
-                            tuple.getExpression(tuple.getExpressions().size() - 1) instanceof NamedArgumentListExpression) {
+                    if ((tuple.getExpressions().size() == 1 && tuple.getExpression(0) instanceof MapExpression) ||
+                            DefaultGroovyMethods.last(tuple.getExpressions()) instanceof NamedArgumentListExpression) {
                         // remember this is a map ctor call, so that field names can be inferred when visiting the map
                         enclosingConstructorCall = node;
                     }
@@ -1039,7 +1030,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
+    public void visitConstructorOrMethod(final MethodNode node, final boolean isConstructor) {
         TypeLookupResult result = null;
         VariableScope scope = scopes.getLast();
         for (ITypeLookup lookup : lookups) {
@@ -1087,19 +1078,21 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitEmptyExpression(EmptyExpression node) {
-        handleSimpleExpression(node);
+    public void visitEmptyExpression(final EmptyExpression node) {
+        handleSimpleExpression(node, () -> {
+            super.visitEmptyExpression(node);
+        });
     }
 
     @Override
-    public void visitFieldExpression(FieldExpression node) {
+    public void visitFieldExpression(final FieldExpression node) {
         handleSimpleExpression(node, () -> {
             super.visitFieldExpression(node);
         });
     }
 
     @Override
-    public void visitField(FieldNode node) {
+    public void visitField(final FieldNode node) {
         VariableScope scope = new VariableScope(scopes.getLast(), node, node.isStatic());
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         assignmentStorer.storeField(node, scope);
@@ -1153,7 +1146,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitForLoop(ForStatement node) {
+    public void visitForLoop(final ForStatement node) {
         completeExpressionStack.add(node);
         try {
             node.getCollectionExpression().visit(this);
@@ -1181,13 +1174,11 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private void visitGenericTypes(ClassNode node) {
-        if (node.isUsingGenerics()) {
-            visitGenericTypes(node.getGenericsTypes(), node.getName());
-        }
+    private void visitGenericTypes(final ClassNode node) {
+        visitGenericTypes(node.getGenericsTypes(), node.getName());
     }
 
-    private void visitGenericTypes(GenericsType[] generics, String typeName) {
+    private void visitGenericTypes(final GenericsType[] generics, final String typeName) {
         if (generics == null) return;
         for (GenericsType gt : generics) {
             if (gt.getType() != null && gt.getName().charAt(0) != '?') {
@@ -1208,7 +1199,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitGStringExpression(GStringExpression node) {
+    public void visitGStringExpression(final GStringExpression node) {
         scopes.getLast().setCurrentNode(node);
         handleSimpleExpression(node, () -> {
             super.visitGStringExpression(node);
@@ -1217,7 +1208,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitIfElse(IfStatement node) {
+    public void visitIfElse(final IfStatement node) {
         scopes.add(new VariableScope(scopes.getLast(), node, false) {
             @Override
             public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
@@ -1268,11 +1259,11 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitListExpression(ListExpression node) {
+    public void visitListExpression(final ListExpression node) {
+        scopes.getLast().setCurrentNode(node);
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
-        scopes.getLast().setCurrentNode(node);
         completeExpressionStack.add(node);
         ClassNode itemType;
         try {
@@ -1297,11 +1288,11 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitMapEntryExpression(MapEntryExpression node) {
+    public void visitMapEntryExpression(final MapEntryExpression node) {
+        scopes.getLast().setCurrentNode(node);
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
-        scopes.getLast().setCurrentNode(node);
         completeExpressionStack.add(node);
         ClassNode keyType, valType;
         try {
@@ -1313,18 +1304,13 @@ assert primaryExprType != null && dependentExprType != null;
         } finally {
             completeExpressionStack.removeLast();
         }
-        ClassNode exprType;
-        if (isPrimaryExpression(node)) {
-            exprType = createParameterizedMap(keyType, valType);
-        } else {
-            exprType = VariableScope.OBJECT_CLASS_NODE;
-        }
+        ClassNode exprType = createParameterizedMap(keyType, valType);
         handleCompleteExpression(node, exprType, null);
         scopes.getLast().forgetCurrentNode();
     }
 
     @Override
-    public void visitMapExpression(MapExpression node) {
+    public void visitMapExpression(final MapExpression node) {
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1393,9 +1379,10 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitMethodCallExpression(MethodCallExpression node) {
+    public void visitMethodCallExpression(final MethodCallExpression node) {
         VariableScope scope = scopes.getLast();
         scope.setCurrentNode(node);
+
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1485,13 +1472,12 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitMethodPointerExpression(MethodPointerExpression node) {
+    public void visitMethodPointerExpression(final MethodPointerExpression node) {
         handleSimpleExpression(node, () -> {
-            completeExpressionStack.add(node);
             scopes.getLast().setCurrentNode(node);
+            completeExpressionStack.add(node);
             try {
                 super.visitMethodPointerExpression(node);
-                scopes.getLast().forgetCurrentNode();
             } finally {
                 completeExpressionStack.removeLast();
             }
@@ -1503,30 +1489,28 @@ assert primaryExprType != null && dependentExprType != null;
                 GroovyUtils.updateClosureWithInferredTypes(primaryTypeStack.getLast(),
                     returnType, ((MethodNode) callParamTypes.declaration).getParameters());
             }
+            scopes.getLast().forgetCurrentNode();
         });
     }
 
     @Override
-    public void visitNotExpression(NotExpression node) {
-        handleSimpleExpression(node, () -> {
-            super.visitNotExpression(node);
-        });
+    public void visitNotExpression(final NotExpression node) {
+        visitUnaryExpression(node, node.getExpression(), "!");
     }
 
     @Override
-    public void visitPostfixExpression(PostfixExpression node) {
+    public void visitPostfixExpression(final PostfixExpression node) {
         visitUnaryExpression(node, node.getExpression(), node.getOperation().getText());
     }
 
     @Override
-    public void visitPrefixExpression(PrefixExpression node) {
+    public void visitPrefixExpression(final PrefixExpression node) {
         visitUnaryExpression(node, node.getExpression(), node.getOperation().getText());
     }
 
     @Override
-    public void visitPropertyExpression(PropertyExpression node) {
+    public void visitPropertyExpression(final PropertyExpression node) {
         scopes.getLast().setCurrentNode(node);
-
         completeExpressionStack.add(node);
         ClassNode preSpreadType = null;
         try {
@@ -1549,16 +1533,15 @@ assert primaryExprType != null && dependentExprType != null;
             exprType = createSpreadResult(exprType, preSpreadType);
         }
         handleCompleteExpression(node, exprType, null);
-
         scopes.getLast().forgetCurrentNode();
     }
 
     @Override
-    public void visitRangeExpression(RangeExpression node) {
+    public void visitRangeExpression(final RangeExpression node) {
+        scopes.getLast().setCurrentNode(node);
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
-        scopes.getLast().setCurrentNode(node);
         completeExpressionStack.add(node);
         try {
             super.visitRangeExpression(node);
@@ -1571,7 +1554,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitReturnStatement(ReturnStatement node) {
+    public void visitReturnStatement(final ReturnStatement node) {
         boolean shouldContinue = handleStatement(node);
         if (shouldContinue) {
             ClosureExpression closure = scopes.getLast().getEnclosingClosure();
@@ -1594,7 +1577,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitShortTernaryExpression(ElvisOperatorExpression node) {
+    public void visitShortTernaryExpression(final ElvisOperatorExpression node) {
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1613,21 +1596,17 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitSpreadExpression(SpreadExpression node) {
-        handleSimpleExpression(node, () -> {
-            super.visitSpreadExpression(node);
-        });
+    public void visitSpreadExpression(final SpreadExpression node) {
+        visitUnaryExpression(node, node.getExpression(), "*");
     }
 
     @Override
-    public void visitSpreadMapExpression(SpreadMapExpression node) {
-        handleSimpleExpression(node, () -> {
-            super.visitSpreadMapExpression(node);
-        });
+    public void visitSpreadMapExpression(final SpreadMapExpression node) {
+        visitUnaryExpression(node, node.getExpression(), "*");
     }
 
     @Override
-    public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
+    public void visitStaticMethodCallExpression(final StaticMethodCallExpression node) {
         ClassNode type = node.getOwnerType();
         if (isPrimaryExpression(node)) {
             visitMethodCallExpression(new MethodCallExpression(new ClassExpression(type), node.getMethod(), node.getArguments()));
@@ -1649,7 +1628,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     @Override
-    public void visitTernaryExpression(TernaryExpression node) {
+    public void visitTernaryExpression(final TernaryExpression node) {
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1703,59 +1682,69 @@ assert primaryExprType != null && dependentExprType != null;
      * </ul>
      */
     @Override
-    public void visitTupleExpression(TupleExpression node) {
-        handleSimpleExpression(node, () -> {
-            // prevent revisit of statically-compiled chained assignment nodes
-            if (isNotEmpty(node.getExpressions()) && (node instanceof ArgumentListExpression ||
-                    node.getExpression(node.getExpressions().size() - 1) instanceof NamedArgumentListExpression)) {
-                super.visitTupleExpression(node);
+    public void visitTupleExpression(final TupleExpression node) {
+        completeExpressionStack.add(node);
+        try {
+            if (isNotEmpty(node.getExpressions())) {
+                for (Expression expr : node) {
+                    // prevent revisit of statically-compiled chained assignment nodes
+                    if (!(expr instanceof TemporaryVariableExpression)) {
+                        expr.visit(this);
+                    }
+                }
             }
-        });
+        } finally {
+            completeExpressionStack.removeLast();
+        }
+        handleCompleteExpression(node, VariableScope.VOID_CLASS_NODE, null);
     }
 
-    private void visitUnaryExpression(Expression node, Expression operand, String operation) {
-        scopes.getLast().setCurrentNode(node);
-        completeExpressionStack.add(node);
+    private void visitUnaryExpression(final Expression node, final Expression operand, final String operation) {
+        VariableScope scope = scopes.getLast();
+        scope.setCurrentNode(node);
+
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
+        completeExpressionStack.add(node);
         ClassNode exprType;
         try {
             operand.visit(this);
 
-            ClassNode primaryType = primaryTypeStack.removeLast();
-            // now infer the type of the (possibly overloaded) operator
+            ClassNode operandType = primaryTypeStack.removeLast();
+            // infer the type of the (possibly overloaded) operator
             String associatedMethod = findUnaryOperatorName(operation);
-            if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE) ||
-                ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
-                exprType = primaryType;
-            } else {
-                // there is an overloadable method associated with this operation
-                // convert to a constant expression and infer type
-                VariableScope scope = scopes.getLast();
+            if (associatedMethod != null && !operandType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
                 scope.setMethodCallArgumentTypes(Collections.emptyList());
-                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryType, false, scope);
+                TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), operandType, false, scope);
 
-                exprType = result.type;
+                exprType = result.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED) ? result.type : operandType;
+            } else if (node instanceof BooleanExpression) {
+                exprType = VariableScope.BOOLEAN_CLASS_NODE;
+            } else if (node instanceof CastExpression) {
+                exprType = node.getType();
+            } else {
+                exprType = operandType;
             }
         } finally {
             completeExpressionStack.removeLast();
         }
         handleCompleteExpression(node, exprType, null);
+        scope.forgetCurrentNode();
     }
 
     @Override
-    public void visitUnaryMinusExpression(UnaryMinusExpression node) {
+    public void visitUnaryMinusExpression(final UnaryMinusExpression node) {
         visitUnaryExpression(node, node.getExpression(), "-");
     }
 
     @Override
-    public void visitUnaryPlusExpression(UnaryPlusExpression node) {
+    public void visitUnaryPlusExpression(final UnaryPlusExpression node) {
         visitUnaryExpression(node, node.getExpression(), "+");
     }
 
     @Override
-    public void visitVariableExpression(VariableExpression node) {
+    public void visitVariableExpression(final VariableExpression node) {
         // check for transformed expression (see MethodCallExpressionTransformer.transformToMopSuperCall)
         Expression orig = node.getNodeMetaData(ORIGINAL_EXPRESSION);
         if (orig != null) {
@@ -1765,7 +1754,7 @@ assert primaryExprType != null && dependentExprType != null;
         scopes.getLast().setCurrentNode(node);
         visitAnnotations(node);
         if (node.getAccessedVariable() == node) {
-            // this is a declaration
+            // this is a local variable declaration
             visitClassReference(node.getOriginType());
         }
         handleSimpleExpression(node);
@@ -1774,7 +1763,7 @@ assert primaryExprType != null && dependentExprType != null;
 
     //--------------------------------------------------------------------------
 
-    private boolean handleStatement(Statement node) {
+    private boolean handleStatement(final Statement node) {
         VariableScope scope = scopes.getLast();
         ClassNode declaring = scope.getDelegateOrThis();
 
@@ -1801,7 +1790,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private boolean handleParameterList(Parameter[] params) {
+    private boolean handleParameterList(final Parameter[] params) {
         if (params != null) {
             VariableScope scope = scopes.getLast();
             scope.setPrimaryNode(false);
@@ -1846,7 +1835,7 @@ assert primaryExprType != null && dependentExprType != null;
         return true;
     }
 
-    private boolean handleSimpleExpression(Expression node) {
+    private boolean handleSimpleExpression(final Expression node) {
         ClassNode primaryType;
         boolean isStatic;
         VariableScope scope = scopes.getLast();
@@ -1873,7 +1862,7 @@ assert primaryExprType != null && dependentExprType != null;
         return handleRequestor(node, primaryType, result);
     }
 
-    private void    handleSimpleExpression(Expression node, Runnable continuation) {
+    private void    handleSimpleExpression(final Expression node, final Runnable continuation) {
         if (handleSimpleExpression(node)) {
             try {
                 continuation.run();
@@ -1889,13 +1878,13 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private void    handleCompleteExpression(Expression node, ClassNode exprType, ClassNode declaringType) {
+    private void    handleCompleteExpression(final Expression node, final ClassNode exprType, final ClassNode declaringType) {
         VariableScope scope = scopes.getLast();
         scope.setPrimaryNode(false);
         handleRequestor(node, declaringType, new TypeLookupResult(exprType, declaringType, node, TypeConfidence.EXACT, scope));
     }
 
-    private boolean handleRequestor(Expression node, ClassNode primaryType, TypeLookupResult result) {
+    private boolean handleRequestor(final Expression node, final ClassNode primaryType, final TypeLookupResult result) {
         result.enclosingAssignment = enclosingAssignment;
         VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
         VariableScope scope = scopes.getLast();
@@ -1926,7 +1915,7 @@ assert primaryExprType != null && dependentExprType != null;
 
     //
 
-    private Optional<IType> findAnonType(ClassNode type, IJavaElement enclosing) {
+    private Optional<IType> findAnonType(final ClassNode type, final IJavaElement enclosing) {
         try {
             for (IJavaElement child : ((IMember) enclosing).getChildren()) {
                 if (child instanceof IType && ((IType) child).isAnonymous() &&
@@ -1961,7 +1950,7 @@ assert primaryExprType != null && dependentExprType != null;
         return Optional.empty();
     }
 
-    private ClassNode findClassNode(String name) {
+    private ClassNode findClassNode(final String name) {
         for (ClassNode clazz : enclosingModule.getClasses()) {
             if (clazz.getNameWithoutPackage().equals(name)) {
                 return clazz;
@@ -1970,7 +1959,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private FieldNode findFieldNode(IField field) {
+    private FieldNode findFieldNode(final IField field) {
         ClassNode clazz = findClassNode(createName(field.getDeclaringType()));
         FieldNode fieldNode = clazz.getField(field.getElementName());
         if (fieldNode == null) {
@@ -1980,7 +1969,7 @@ assert primaryExprType != null && dependentExprType != null;
         return fieldNode;
     }
 
-    private MethodNode findMethodNode(IMethod method) {
+    private MethodNode findMethodNode(final IMethod method) {
         ClassNode clazz = findClassNode(createName(method.getDeclaringType()));
         try {
             if (method.isConstructor()) {
@@ -2086,7 +2075,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private List<MethodNode> findMethods(ClassNode classNode, String methodName) {
+    private List<MethodNode> findMethods(final ClassNode classNode, final String methodName) {
         List<MethodNode> methods = classNode.getMethods(methodName);
         if (methods.isEmpty()) {
             if (isNotEmpty(GroovyUtils.getAnnotations(classNode, "org.spockframework.runtime.model.SpecMetadata"))) {
@@ -2099,7 +2088,7 @@ assert primaryExprType != null && dependentExprType != null;
         return methods;
     }
 
-    private MethodNode findLazyMethod(String fieldName) {
+    private MethodNode findLazyMethod(final String fieldName) {
         ClassNode classNode = (ClassNode) enclosingDeclarationNode;
         return classNode.getDeclaredMethod("get" + MetaClassHelper.capitalize(fieldName), NO_PARAMETERS);
     }
@@ -2178,7 +2167,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private GenericsType[] getMethodCallGenericsTypes(ASTNode node) {
+    private GenericsType[] getMethodCallGenericsTypes(final ASTNode node) {
         GenericsType[] generics = null;
         if (node instanceof MethodCallExpression) {
             generics = ((MethodCallExpression) node).getGenericsTypes();
@@ -2190,7 +2179,7 @@ assert primaryExprType != null && dependentExprType != null;
         return generics;
     }
 
-    private ClassNode[] inferClosureParamTypes(ClosureExpression node, VariableScope scope) {
+    private ClassNode[] inferClosureParamTypes(final ClosureExpression node, final VariableScope scope) {
         if (node.getParameters() == null) { // i.e. "{ -> ... }"
             return ClassNode.EMPTY_ARRAY;
         }
@@ -2265,14 +2254,14 @@ assert primaryExprType != null && dependentExprType != null;
         return inferredTypes;
     }
 
-    private ClassNode isCategoryDeclaration(MethodCallExpression node, VariableScope scope) {
+    private ClassNode isCategoryDeclaration(final MethodCallExpression node, final VariableScope scope) {
         if ("use".equals(node.getMethodAsString())) {
             if (node.getArguments() instanceof ArgumentListExpression) {
                 ArgumentListExpression args = (ArgumentListExpression) node.getArguments();
-                if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
+                if (args.getExpressions().size() >= 2 && args.getExpression(1) instanceof ClosureExpression) {
                     // really, should be doing inference on the first expression and seeing if it
                     // is a class node, but looking up in scope is good enough for now
-                    Expression expr = args.getExpressions().get(0);
+                    Expression expr = args.getExpression(0);
                     if (expr instanceof ClassExpression) {
                         return expr.getType();
                     } else if (expr instanceof VariableExpression && expr.getText() != null) {
@@ -2303,7 +2292,7 @@ assert primaryExprType != null && dependentExprType != null;
      *
      * @return true iff the expression is a dependent expression in an expression group
      */
-    private boolean isDependentExpression(Expression expr) {
+    private boolean isDependentExpression(final Expression expr) {
         if (!completeExpressionStack.isEmpty()) {
             ASTNode node = completeExpressionStack.getLast();
             if (node instanceof PropertyExpression) {
@@ -2338,7 +2327,7 @@ assert primaryExprType != null && dependentExprType != null;
      *
      * @return true iff the expression is a primary expression in an expression group
      */
-    private boolean isPrimaryExpression(Expression expr) {
+    private boolean isPrimaryExpression(final Expression expr) {
         if (!completeExpressionStack.isEmpty()) {
             boolean[] result = new boolean[1];
             completeExpressionStack.getLast().visit(new GroovyCodeVisitorAdapter() {
@@ -2358,6 +2347,14 @@ assert primaryExprType != null && dependentExprType != null;
                 }
 
                 @Override public void visitBitwiseNegationExpression(BitwiseNegationExpression expression) {
+                    result[0] = (expr == expression.getExpression());
+                }
+
+                @Override public void visitBooleanExpression(BooleanExpression expression) {
+                    result[0] = (expr == expression.getExpression());
+                }
+
+                @Override public void visitCastExpression(CastExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
@@ -2395,6 +2392,14 @@ assert primaryExprType != null && dependentExprType != null;
 
                 @Override public void visitRangeExpression(RangeExpression expression) {
                     result[0] = (expr == expression.getFrom());
+                }
+
+                @Override public void visitSpreadExpression(SpreadExpression expression) {
+                    result[0] = (expr == expression.getExpression());
+                }
+
+                @Override public void visitSpreadMapExpression(SpreadMapExpression expression) {
+                    result[0] = (expr == expression.getExpression());
                 }
 
                 @Override public void visitTernaryExpression(TernaryExpression expression) {
@@ -2450,7 +2455,7 @@ assert primaryExprType != null && dependentExprType != null;
      * ValueRecorder.record is defined as: <code>public Object record(int index, Object value)</code>.
      * So, we want to save the inferred type of the last argument so it can be used as the return type.
      */
-    private boolean isSpockValueRecorderArgument(Expression expr) {
+    private boolean isSpockValueRecorderArgument(final Expression expr) {
         VariableScope.CallAndType cat = scopes.getLast().getEnclosingMethodCallExpression();
         if (cat != null && cat.declaration instanceof MethodNode && cat.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
             ArgumentListExpression args = (ArgumentListExpression) cat.call.getArguments();
@@ -2467,7 +2472,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return true iff the object expression associated with node is a static reference to a class declaration
      */
-    private boolean hasStaticObjectExpression(Expression node, ClassNode primaryType) {
+    private boolean hasStaticObjectExpression(final Expression node, final ClassNode primaryType) {
         boolean staticObjectExpression = false;
         if (!completeExpressionStack.isEmpty()) {
             ASTNode complete = completeExpressionStack.getLast();
@@ -2499,7 +2504,7 @@ assert primaryExprType != null && dependentExprType != null;
         return staticObjectExpression;
     }
 
-    private TypeLookupResult lookupExpressionType(Expression node, ClassNode objExprType, boolean isStatic, VariableScope scope) {
+    private TypeLookupResult lookupExpressionType(final Expression node, final ClassNode objExprType, final boolean isStatic, final VariableScope scope) {
         TypeLookupResult result = null;
         for (ITypeLookup lookup : lookups) {
             TypeLookupResult candidate;
@@ -2537,12 +2542,12 @@ assert primaryExprType != null && dependentExprType != null;
         return result.resolveTypeParameterization(objExprType, isStatic);
     }
 
-    private VisitStatus notifyRequestor(ASTNode node, ITypeRequestor requestor, TypeLookupResult result) {
+    private VisitStatus notifyRequestor(final ASTNode node, final ITypeRequestor requestor, final TypeLookupResult result) {
         // result is never null because SimpleTypeLookup always returns non-null
         return requestor.acceptASTNode(node, result, enclosingElement);
     }
 
-    private void postVisit(Expression node, ClassNode type, ClassNode declaringType, ASTNode declaration) {
+    private void postVisit(final Expression node, final ClassNode type, final ClassNode declaringType, final ASTNode declaration) {
         if (isPrimaryExpression(node)) {
             assert type != null;
             primaryTypeStack.add(type);
@@ -2574,7 +2579,7 @@ assert primaryExprType != null && dependentExprType != null;
      * necessary because a non-default working copy owner implies that this may be a search related to refactoring and therefore,
      * the ModuleNode must be based on the most recent working copies.
      */
-    private static ModuleNodeInfo createModuleNode(GroovyCompilationUnit unit) {
+    private static ModuleNodeInfo createModuleNode(final GroovyCompilationUnit unit) {
         if (unit.getOwner() == null || unit.owner == DefaultWorkingCopyOwner.PRIMARY) {
             return unit.getModuleInfo(true);
         } else {
@@ -2610,7 +2615,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return a list type parameterized by {@code t}
      */
-    private static ClassNode createParameterizedList(ClassNode t) {
+    private static ClassNode createParameterizedList(final ClassNode t) {
         ClassNode list = VariableScope.clonedList();
         list.getGenericsTypes()[0].setType(t);
         list.getGenericsTypes()[0].setName(t.getName());
@@ -2620,7 +2625,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return a map type parameterized by {@code k} and {@code v}
      */
-    private static ClassNode createParameterizedMap(ClassNode k, ClassNode v) {
+    private static ClassNode createParameterizedMap(final ClassNode k, final ClassNode v) {
         ClassNode map = VariableScope.clonedMap();
         map.getGenericsTypes()[0].setType(k);
         map.getGenericsTypes()[0].setName(k.getName());
@@ -2632,7 +2637,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return a range type parameterized by {@code t}
      */
-    private static ClassNode createParameterizedRange(ClassNode t) {
+    private static ClassNode createParameterizedRange(final ClassNode t) {
         ClassNode range = VariableScope.clonedRange();
         range.getGenericsTypes()[0].setType(t);
         range.getGenericsTypes()[0].setName(t.getName());
@@ -2642,7 +2647,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @see org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#adjustTypeForSpreading
      */
-    private static ClassNode createSpreadResult(ClassNode t, ClassNode objExprType) {
+    private static ClassNode createSpreadResult(ClassNode t, final ClassNode objExprType) {
         ClassNode elementType = VariableScope.extractElementType(objExprType);
         if (GeneralUtils.isOrImplements(elementType, VariableScope.COLLECTION_CLASS_NODE)) {
             // TODO: clone elementType and replace deepest Collection's generic type with t
@@ -2659,7 +2664,7 @@ assert primaryExprType != null && dependentExprType != null;
      * @param rhs the type of the rhs of the binary expression
      * @return the determined type of the binary expression
      */
-    private static ClassNode findBinaryExpressionType(String operator, ClassNode lhs, ClassNode rhs) {
+    private static ClassNode findBinaryExpressionType(final String operator, final ClassNode lhs, final ClassNode rhs) {
         switch (operator.charAt(0)) {
         case '<':
             if (operator.length() == 3 && operator.charAt(1) == '=' && operator.charAt(2) == '>') {
@@ -2688,7 +2693,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return the method name associated with this binary operator
      */
-    private static String findBinaryOperatorName(String text) {
+    private static String findBinaryOperatorName(final String text) {
         switch (text.charAt(0)) {
         case '+':
             return "plus";
@@ -2732,12 +2737,12 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    public static Expression findCategoryTarget(ClassNode node) {
+    public static Expression findCategoryTarget(final ClassNode node) {
         return GroovyUtils.getAnnotations(node, "groovy.lang.Category")
             .findFirst().map(an -> an.getMember("value")).orElse(null);
     }
 
-    private static Parameter findTargetParameter(Expression arg, MethodCallExpression call, MethodNode declaration, boolean isGroovyMethod) {
+    private static Parameter findTargetParameter(final Expression arg, final MethodCallExpression call, final MethodNode declaration, final boolean isGroovyMethod) {
         // see ExpressionCompletionRequestor.getParameterPosition(ASTNode, MethodCallExpression)
         // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
         String key = null;
@@ -2780,7 +2785,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * @return the method name associated with this unary operator
      */
-    private static String findUnaryOperatorName(String text) {
+    private static String findUnaryOperatorName(final String text) {
         switch (text.charAt(0)) {
         case '+':
             if (text.length() == 2 && text.charAt(1) == '+') {
@@ -2800,7 +2805,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private static Parameter[] getPositionalParameters(MethodNode methodNode) {
+    private static Parameter[] getPositionalParameters(final MethodNode methodNode) {
         if (Arrays.stream(methodNode.getClass().getInterfaces()).anyMatch(face -> face.getSimpleName().equals("MethodNodeWithNamedParams"))) {
             Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getPositionalParams", methodNode);
             return parameters;
@@ -2808,7 +2813,7 @@ assert primaryExprType != null && dependentExprType != null;
         return methodNode.getParameters();
     }
 
-    private static Map<String, ClassNode[]> inferInstanceOfType(Expression expression, VariableScope scope) {
+    private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
         // check for "if (x instanceof y) { ... }" flow typing
         if (expression instanceof BinaryExpression) {
             BinaryExpression be = (BinaryExpression) expression;
@@ -2849,12 +2854,10 @@ assert primaryExprType != null && dependentExprType != null;
      * Makes assumption that no one has overloaded the basic arithmetic operations on numbers.
      * These operations will bypass the mop in most situations anyway.
      */
-    private static boolean isArithmeticOperationOnNumberOrStringOrList(String text, ClassNode lhs, ClassNode rhs) {
+    private static boolean isArithmeticOperationOnNumberOrStringOrList(final String text, final ClassNode lhs, final ClassNode rhs) {
         if (text.length() != 1) {
             return false;
         }
-
-        lhs = ClassHelper.getWrapper(lhs);
 
         switch (text.charAt(0)) {
         case '+':
@@ -2866,21 +2869,21 @@ assert primaryExprType != null && dependentExprType != null;
         case '*':
         case '/':
         case '%':
-            return VariableScope.STRING_CLASS_NODE.equals(lhs) || VariableScope.NUMBER_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
+            return lhs.equals(VariableScope.STRING_CLASS_NODE) || ClassHelper.getWrapper(lhs).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
         default:
             return false;
         }
     }
 
-    private static boolean isEnumInit(MethodCallExpression node) {
+    private static boolean isEnumInit(final MethodCallExpression node) {
         return (node.getType().isEnum() && node.getMethodAsString().equals("$INIT"));
     }
 
-    private static boolean isEnumInit(StaticMethodCallExpression node) {
+    private static boolean isEnumInit(final StaticMethodCallExpression node) {
         return (node.getOwnerType().isEnum() && node.getMethodAsString().equals("$INIT"));
     }
 
-    private static boolean isInstanceOf(BinaryExpression node) {
+    private static boolean isInstanceOf(final BinaryExpression node) {
         // Groovy 3+: return node.getOperation().isA(Types.INSTANCEOF_OPERATOR);
         switch (node.getOperation().getType()) {
         case Types.KEYWORD_INSTANCEOF:
@@ -2891,23 +2894,23 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private static boolean isLazy(FieldNode fieldNode) {
+    private static boolean isLazy(final FieldNode fieldNode) {
         return isNotEmpty(GroovyUtils.getAnnotations(fieldNode, "groovy.lang.Lazy"));
     }
 
-    private static boolean isMetaAnnotation(ClassNode classNode) {
+    private static boolean isMetaAnnotation(final ClassNode classNode) {
         return isNotEmpty(GroovyUtils.getAnnotations(classNode, "groovy.transform.AnnotationCollector"));
     }
 
-    private static boolean isNotEmpty(List<?> list) {
+    private static boolean isNotEmpty(final List<?> list) {
         return (list != null && !list.isEmpty());
     }
 
-    private static boolean isNotEmpty(Stream<?> stream) {
+    private static boolean isNotEmpty(final Stream<?> stream) {
         return (stream != null && stream.anyMatch(x -> true));
     }
 
-    private static VariableExpression isNotNullTest(Expression node) {
+    private static VariableExpression isNotNullTest(final Expression node) {
         if (node instanceof CompareToNullExpression) {
             CompareToNullExpression expr = (CompareToNullExpression) node;
             if (expr.getOperation().getText().equals("!=") &&
@@ -2931,7 +2934,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private static VariableExpression isNullTest(Expression node) {
+    private static VariableExpression isNullTest(final Expression node) {
         if (node instanceof CompareToNullExpression) {
             CompareToNullExpression expr = (CompareToNullExpression) node;
             if (expr.getOperation().getText().equals("==") &&
@@ -2958,7 +2961,7 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * Checks for "x == null || x ..." or "x != null && x ..."
      */
-    private static BinaryExpression nullSafeBinaryExpression(BinaryExpression node) {
+    private static BinaryExpression nullSafeBinaryExpression(final BinaryExpression node) {
         Expression left = node.getLeftExpression();
         Expression rght = node.getRightExpression();
         if (node.getOperation().getType() == Types.LOGICAL_OR) {
@@ -2995,7 +2998,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private static List<IMember> membersOf(IType type, boolean isScript) throws JavaModelException {
+    private static List<IMember> membersOf(final IType type, final boolean isScript) throws JavaModelException {
         boolean isEnum = type.isEnum();
         List<IMember> members = new ArrayList<>();
 
@@ -3037,7 +3040,7 @@ assert primaryExprType != null && dependentExprType != null;
         ClassNode declaringType;
         ASTNode declaration;
 
-        Tuple(ClassNode declaringType, ASTNode declaration) {
+        Tuple(final ClassNode declaringType, final ASTNode declaration) {
             this.declaringType = declaringType;
             this.declaration = declaration;
         }
@@ -3048,7 +3051,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         public final VisitStatus status;
 
-        public VisitCompleted(VisitStatus status) {
+        public VisitCompleted(final VisitStatus status) {
             this.status = status;
         }
     }

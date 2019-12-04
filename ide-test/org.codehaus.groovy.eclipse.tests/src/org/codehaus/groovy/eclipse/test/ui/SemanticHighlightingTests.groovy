@@ -2459,6 +2459,32 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testSpread() {
+        String contents = '''\
+            |list = []
+            |meth(*list)
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('list'), 4, VARIABLE))
+    }
+
+    @Test
+    void testSpreadMap() {
+        String contents = '''\
+            |map1 = [:]
+            |map2 = [*:map1]
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('map1'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('map2'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('map1'), 4, VARIABLE))
+    }
+
+    @Test
     void testUseBlock() {
         String contents = '''\
             |use (groovy.time.TimeCategory) {

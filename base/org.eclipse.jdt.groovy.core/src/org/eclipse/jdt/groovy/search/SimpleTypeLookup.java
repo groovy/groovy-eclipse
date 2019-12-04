@@ -47,6 +47,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -58,7 +59,6 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -246,24 +246,27 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // return String not GString so that DGMs will apply
             return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 
-        } else if (node instanceof BitwiseNegationExpression) {
-            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
-            // check for ~/.../ (a.k.a. Pattern literal)
-            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
-                return new TypeLookupResult(VariableScope.PATTERN_CLASS_NODE, null, null, confidence, scope);
-            }
-            return new TypeLookupResult(type, null, null, confidence, scope);
+        } else if (node instanceof CastExpression) {
+            return new TypeLookupResult(node.getType(), null, null, confidence, scope);
+
+        } else if (node instanceof ClassExpression) {
+            ClassNode classType = VariableScope.newClassClassNode(node.getType());
+            classType.setSourcePosition(node);
+
+            return new TypeLookupResult(classType, null, node.getType(), confidence, scope);
 
         } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
             ClassNode returnType = node.getNodeMetaData("returnType");
             if (returnType != null && !VariableScope.isVoidOrObject(returnType))
                 GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
 
-        } else if (node instanceof ClassExpression) {
-            ClassNode classType = VariableScope.newClassClassNode(node.getType());
-            classType.setSourcePosition(node);
-
-            return new TypeLookupResult(classType, null, node.getType(), TypeConfidence.EXACT, scope);
+        } else if (node instanceof BitwiseNegationExpression) {
+            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
+            // check for ~/.../ (a.k.a. Pattern literal)
+            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
+                type = VariableScope.PATTERN_CLASS_NODE;
+            }
+            return new TypeLookupResult(type, null, null, confidence, scope);
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression call = (ConstructorCallExpression) node;
@@ -352,7 +355,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (!(node instanceof TupleExpression) && VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
+        if (VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
             confidence = TypeConfidence.UNKNOWN;
         }
 
