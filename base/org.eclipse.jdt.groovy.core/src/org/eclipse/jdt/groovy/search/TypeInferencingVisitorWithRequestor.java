@@ -770,9 +770,9 @@ assert primaryExprType != null && dependentExprType != null;
             // type of RHS of binary expression
             // find the type of the complete expression
             String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
-            if (isArithmeticOperationOnNumberOrStringOrList(node.getOperation().getText(), primaryExprType, dependentExprType)) {
+            if (isArithmeticOperationOnListOrNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
                 // in 1.8 and later, Groovy will not go through the MOP for standard arithmetic operations on numbers
-                completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
+                completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) || dependentExprType.equals(VariableScope.GSTRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
             } else if (associatedMethod != null) {
                 scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
                 // there is an overloadable method associated with this operation; convert to a constant expression and look it up
@@ -1473,24 +1473,28 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitMethodPointerExpression(final MethodPointerExpression node) {
-        handleSimpleExpression(node, () -> {
-            scopes.getLast().setCurrentNode(node);
-            completeExpressionStack.add(node);
-            try {
-                super.visitMethodPointerExpression(node);
-            } finally {
-                completeExpressionStack.removeLast();
-            }
-            ClassNode returnType = dependentTypeStack.removeLast();
-            Tuple callParamTypes = dependentDeclarationStack.removeLast();
+        scopes.getLast().setCurrentNode(node);
 
-            // try to set Closure generics
-            if (!primaryTypeStack.isEmpty() && callParamTypes.declaration instanceof MethodNode) {
-                GroovyUtils.updateClosureWithInferredTypes(primaryTypeStack.getLast(),
-                    returnType, ((MethodNode) callParamTypes.declaration).getParameters());
-            }
-            scopes.getLast().forgetCurrentNode();
-        });
+        if (isDependentExpression(node)) {
+            primaryTypeStack.removeLast();
+        }
+        completeExpressionStack.add(node);
+        try {
+            super.visitMethodPointerExpression(node);
+        } finally {
+            completeExpressionStack.removeLast();
+        }
+
+        Tuple t = dependentDeclarationStack.removeLast();
+        if (!(t.declaration instanceof MethodNode)) {
+            dependentTypeStack.removeLast(); // unused type
+            handleCompleteExpression(node, node.getType(), null);
+        } else {
+            ClassNode returnType = dependentTypeStack.removeLast();
+            handleCompleteExpression(node, createParameterizedClosure(returnType), t.declaringType);
+        }
+
+        scopes.getLast().forgetCurrentNode();
     }
 
     @Override
@@ -2613,12 +2617,20 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
+     * @return a closure type parameterized by {@code t}
+     */
+    private static ClassNode createParameterizedClosure(final ClassNode t) {
+        ClassNode closure = VariableScope.clonedClosure();
+        resetType(closure.getGenericsTypes()[0], t);
+        return closure;
+    }
+
+    /**
      * @return a list type parameterized by {@code t}
      */
     private static ClassNode createParameterizedList(final ClassNode t) {
         ClassNode list = VariableScope.clonedList();
-        list.getGenericsTypes()[0].setType(t);
-        list.getGenericsTypes()[0].setName(t.getName());
+        resetType(list.getGenericsTypes()[0], t);
         return list;
     }
 
@@ -2627,10 +2639,8 @@ assert primaryExprType != null && dependentExprType != null;
      */
     private static ClassNode createParameterizedMap(final ClassNode k, final ClassNode v) {
         ClassNode map = VariableScope.clonedMap();
-        map.getGenericsTypes()[0].setType(k);
-        map.getGenericsTypes()[0].setName(k.getName());
-        map.getGenericsTypes()[1].setType(v);
-        map.getGenericsTypes()[1].setName(v.getName());
+        resetType(map.getGenericsTypes()[0], k);
+        resetType(map.getGenericsTypes()[1], v);
         return map;
     }
 
@@ -2639,8 +2649,7 @@ assert primaryExprType != null && dependentExprType != null;
      */
     private static ClassNode createParameterizedRange(final ClassNode t) {
         ClassNode range = VariableScope.clonedRange();
-        range.getGenericsTypes()[0].setType(t);
-        range.getGenericsTypes()[0].setName(t.getName());
+        resetType(range.getGenericsTypes()[0], t);
         return range;
     }
 
@@ -2653,7 +2662,7 @@ assert primaryExprType != null && dependentExprType != null;
             // TODO: clone elementType and replace deepest Collection's generic type with t
             t = GenericsUtils.nonGeneric(elementType);
         }
-        return createParameterizedList(ClassHelper.getWrapper(t));
+        return createParameterizedList(t);
     }
 
     /**
@@ -2854,7 +2863,7 @@ assert primaryExprType != null && dependentExprType != null;
      * Makes assumption that no one has overloaded the basic arithmetic operations on numbers.
      * These operations will bypass the mop in most situations anyway.
      */
-    private static boolean isArithmeticOperationOnNumberOrStringOrList(final String text, final ClassNode lhs, final ClassNode rhs) {
+    private static boolean isArithmeticOperationOnListOrNumberOrString(final String text, final ClassNode lhs, final ClassNode rhs) {
         if (text.length() != 1) {
             return false;
         }
@@ -2869,7 +2878,7 @@ assert primaryExprType != null && dependentExprType != null;
         case '*':
         case '/':
         case '%':
-            return lhs.equals(VariableScope.STRING_CLASS_NODE) || ClassHelper.getWrapper(lhs).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE);
+            return ClassHelper.getWrapper(lhs).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) || lhs.equals(VariableScope.STRING_CLASS_NODE) || lhs.equals(VariableScope.GSTRING_CLASS_NODE);
         default:
             return false;
         }
@@ -3032,6 +3041,12 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         return members;
+    }
+
+    private static void resetType(final GenericsType gt, final ClassNode t) {
+        ClassNode type = GroovyUtils.getWrapperTypeIfPrimitive(t);
+        gt.setName(type.getName());
+        gt.setType(type);
     }
 
     //--------------------------------------------------------------------------

@@ -649,7 +649,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testSpread14() {
         String contents = "def strings = [[['1','2','3']]]\n" +
             "def result = strings*.length()\n";
-        assertType(contents, "result", "java.util.List<java.util.List<E extends java.lang.Object>>");
+        assertType(contents, "result", "java.util.List<java.util.List>");
     }
 
     @Test // CommandRegistry.iterator() lacks generics
