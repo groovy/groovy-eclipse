@@ -336,7 +336,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testNumberPlusString1() throws Exception {
+    public void testNumberPlusString() throws Exception {
         String contents =
             "def xxx = 1 + ''\n" +
             "xxx";
@@ -345,7 +345,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     }
 
     @Test
-    public void testNumberPlusString2() throws Exception {
+    public void testNumberPlusGString() throws Exception {
         String contents =
             "def xxx = 1 + \"${this}\"\n" +
             "xxx";

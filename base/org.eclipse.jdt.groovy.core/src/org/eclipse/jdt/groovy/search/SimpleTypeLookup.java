@@ -243,8 +243,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
 
         } else if (node instanceof GStringExpression) {
-            // return String not GString so that DGMs will apply
-            return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
+            return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
 
         } else if (node instanceof CastExpression) {
             return new TypeLookupResult(node.getType(), null, null, confidence, scope);

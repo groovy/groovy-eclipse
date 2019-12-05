@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.Flags
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry
+import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -36,13 +37,11 @@ import org.junit.runners.Parameterized.Parameters
 final class ExtractMethodTests extends GroovyEclipseTestSuite {
 
     @Parameters
-    static Iterable<Object[]> params() {
+    static params() {
         URL url = Platform.getBundle('org.codehaus.groovy.eclipse.refactoring.test').getEntry('/resources/ExtractMethod')
-        new File(FileLocator.toFileURL(url).getFile()).listFiles({ File dir, String item ->
+        new File(FileLocator.toFileURL(url).file).listFiles({ File dir, String item ->
             item ==~ /ExtractMethod_Test_.*/
-        } as FilenameFilter).collect {
-            [it] as Object[]
-        }
+        } as FilenameFilter)
     }
 
     ExtractMethodTests(File file) {
@@ -66,7 +65,7 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
 
         String actual = String.valueOf(unit.contents)
         String expect = spec.expected.get()
-        assert actual == expect
+        Assert.assertEquals(expect, actual)
     }
 
     private void preAction() {
@@ -75,12 +74,13 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
         int offset = spec.userSelection.offset
         int length = spec.userSelection.length
         RefactoringStatus status = new RefactoringStatus()
-        printf 'Attempting to extract new method from [%d,%d):%n %s%n', offset, offset + length, String.valueOf(unit.contents).substring(offset, offset + length)
+        printf 'Attempting to extract new method from [%d,%d):%n %s%n',
+            offset, offset + length, String.valueOf(unit.contents).substring(offset, offset + length)
 
         refactoring = new ExtractGroovyMethodRefactoring(unit, offset, length, status)
         refactoring.setPreferences(TestPrefInitializer.initializePreferences(spec.properties as HashMap, unit.javaProject))
 
-        assert status.getSeverity() == RefactoringStatus.OK : "Bad refactoring status on init: $status"
+        assert status.severity == RefactoringStatus.OK : "Bad refactoring status on init: $status"
     }
 
     private RefactoringStatus checkInitialCondition() {
@@ -121,13 +121,13 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
         String variableToRename = spec.properties['variableToRename']
         if (variableToRename != null && variableToRename.trim().length() > 0) {
             Map<String, String> variablesToRename = [:]
-            for (String renameMapping : variableToRename.split(';')) {
+            for (renameMapping in variableToRename.split(';')) {
                 String[] singleRenames = renameMapping.split(':')
                 if (singleRenames.length == 2) {
                     variablesToRename.put(singleRenames[0], singleRenames[1])
                 }
             }
-            refactoring.setParameterRename(variablesToRename)
+            refactoring.parameterRename = variablesToRename
         }
     }
 
@@ -136,11 +136,11 @@ final class ExtractMethodTests extends GroovyEclipseTestSuite {
     }
 
     private boolean analyseRefactoringStatus(RefactoringStatus state) {
-        RefactoringStatusEntry[] entries = state.getEntries()
+        RefactoringStatusEntry[] entries = state.entries
         if (spec.shouldFail) {
             assert entries.length > 0 : "Should fail: ${spec.properties['failMessage']}"
         }
-        for (int i = 0; i < entries.length; i++) {
+        for (int i = 0; i < entries.length; i += 1) {
             RefactoringStatusEntry entry = entries[i]
             if ((entry.isError() || entry.isFatalError()) && !spec.shouldFail) {
                 // error was not expected
