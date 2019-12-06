@@ -1068,7 +1068,6 @@ public class JavadocParser extends AbstractCommentParser {
 	}
 
 	protected boolean pushUsesReference(Object typeRef) {
-		// TODO Auto-generated method stub
 		if (this.usesReferencesPtr == -1l) {
 			this.usesReferencesStack = new TypeReference[10];
 		}
@@ -1104,7 +1103,6 @@ public class JavadocParser extends AbstractCommentParser {
 	}
 
 	protected boolean pushProvidesReference(Object typeRef) {
-		// TODO Auto-generated method stub
 		if (this.providesReferencesPtr == -1l) {
 			this.providesReferencesStack = new TypeReference[10];
 		}

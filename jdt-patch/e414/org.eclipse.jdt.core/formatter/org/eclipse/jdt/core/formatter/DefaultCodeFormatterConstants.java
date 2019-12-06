@@ -1914,7 +1914,7 @@ public class DefaultCodeFormatterConstants {
 	 * @see #INDENT_BY_ONE
 	 * @see #INDENT_DEFAULT
 	 * @see #INDENT_ON_COLUMN
-	 * @since 3.19
+	 * @since 3.20
 	 */
 	public static final String FORMATTER_TEXT_BLOCK_INDENTATION = JavaCore.PLUGIN_ID + ".formatter.text_block_indentation"; //$NON-NLS-1$
 
@@ -5103,7 +5103,7 @@ public class DefaultCodeFormatterConstants {
 	 * <pre>
 	 * FORMATTER / Indentation is not touched, it's preserved from original source.
 	 * </pre>
-	 * @since 3.19
+	 * @since 3.20
 	 */
 	public static final int INDENT_PRESERVE = 3;
 
