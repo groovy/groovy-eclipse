@@ -22,6 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -1468,6 +1470,46 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
+    @Test
+    public void testParsingRecovery_GRE495() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "class Bar {}\n" +
+            "class Foo extends Bar { }\n" +
+            "class BBB extends Fo",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 3)\n" +
+            "\tclass BBB extends Fo\n" +
+            "\t                  ^^\n" +
+            "Groovy:unable to resolve class Fo\n" +
+            "----------\n" +
+            "2. ERROR in A.groovy (at line 3)\n" +
+            "\tclass BBB extends Fo\n" +
+            "\t                   ^\n" +
+            "Groovy:Malformed class declaration\n" +
+            "----------\n");
+
+        // missing end curly, but that shouldn't cause us to discard what we successfully parsed
+        ModuleNode mn = getModuleNode("A.groovy");
+        assertNotNull(mn);
+        List<ClassNode> l = mn.getClasses();
+        for (int i = 0; i < l.size(); i++) {
+            System.out.println(l.get(i));
+        }
+        assertFalse(mn.encounteredUnrecoverableError());
+        ClassNode cn = mn.getClasses().get(2);
+        assertNotNull(cn);
+        assertEquals("Foo", cn.getName());
+        cn = mn.getClasses().get(1);
+        assertNotNull(cn);
+        assertEquals("BBB", cn.getName());
+    }
+
     @Test // variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
     public void testParsingRecovery_Imports1() {
         //@formatter:off
@@ -1829,6 +1871,24 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void someMethod() {\n" +
             "  }\n" +
             "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_ScriptWithError() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "print Coolio!",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tprint Coolio!\n" +
+            "\t            ^\n" +
+            "Groovy:expecting EOF, found \'!\'\n" +
+            "----------\n");
     }
 
     @Test

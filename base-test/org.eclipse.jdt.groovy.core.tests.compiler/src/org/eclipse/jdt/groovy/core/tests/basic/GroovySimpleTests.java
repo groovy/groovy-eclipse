@@ -19,18 +19,14 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -3427,6 +3423,37 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testSuperCallWithPrivateMethod() {
+        //@formatter:off
+        String[] sources = {
+            "AandC.groovy",
+            "abstract class A {\n" +
+            "  private x() {\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C extends A {\n" +
+            "  private y() {\n" +
+            "    x()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in AandC.groovy (at line 8)\n" +
+            "\tx()\n" +
+            (!isAtLeastGroovy(30)
+                ? "\t^\n" +
+                "Groovy:Cannot call private method A#x from class C\n"
+                : "\t^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method C#x(). Please check if the declared type is correct and if the method exists.\n"
+            ) +
+            "----------\n");
+    }
+
+    @Test
     public void testSuperCallWithStaticMethod() {
         //@formatter:off
         String[] sources = {
@@ -4425,24 +4452,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testScriptWithError() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "print Coolio!",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tprint Coolio!\n" +
-            "\t            ^\n" +
-            "Groovy:expecting EOF, found \'!\'\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testConfigScriptWithError() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
@@ -5021,46 +5030,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertFalse((tds[1].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
-    }
-
-    @Test
-    public void testParsingIncompleteClassDeclaration_495() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "class Bar {}\n" +
-            "class Foo extends Bar { }\n" +
-            "class BBB extends Fo",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 3)\n" +
-            "\tclass BBB extends Fo\n" +
-            "\t                  ^^\n" +
-            "Groovy:unable to resolve class Fo\n" +
-            "----------\n" +
-            "2. ERROR in A.groovy (at line 3)\n" +
-            "\tclass BBB extends Fo\n" +
-            "\t                   ^\n" +
-            "Groovy:Malformed class declaration\n" +
-            "----------\n");
-
-        // missing end curly, but that shouldn't cause us to discard what we successfully parsed
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        List<ClassNode> l = mn.getClasses();
-        for (int i = 0; i < l.size(); i++) {
-            System.out.println(l.get(i));
-        }
-        assertFalse(mn.encounteredUnrecoverableError());
-        ClassNode cn = mn.getClasses().get(2);
-        assertNotNull(cn);
-        assertEquals("Foo", cn.getName());
-        cn = mn.getClasses().get(1);
-        assertNotNull(cn);
-        assertEquals("BBB", cn.getName());
     }
 
     @Test

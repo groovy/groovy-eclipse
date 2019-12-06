@@ -3069,7 +3069,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             selector = objectNode.getNextSibling();
         } else {
             implicitThis = true;
+            /* GRECLIPSE edit
             objectExpression = VariableExpression.THIS_EXPRESSION;
+            */
+            objectExpression = new VariableExpression("this");
+            objectExpression.setLineNumber(node.getLine());
+            objectExpression.setColumnNumber(node.getColumn());
+            // GRECLIPSE end
             selector = node;
         }
 

@@ -2869,7 +2869,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // e.g.  m { return 1; }
             MethodCallExpression methodCallExpression =
                     new MethodCallExpression(
+                            /* GRECLIPSE edit
                             VariableExpression.THIS_EXPRESSION,
+                            */
+                            new VariableExpression("this"),
+                            // GRECLIPSE end
 
                             (baseExpr instanceof VariableExpression)
                                     ? this.createConstantExpression(baseExpr)
@@ -2880,6 +2884,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                     closureExpression)
                     );
 
+            // GRECLIPSE add
+            methodCallExpression.getObjectExpression().setLineNumber(baseExpr.getLineNumber());
+            methodCallExpression.getObjectExpression().setColumnNumber(baseExpr.getColumnNumber());
+            // GRECLIPSE end
 
             return configureAST(methodCallExpression, ctx);
         }
@@ -4808,6 +4816,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     // e.g. m(1, 2) or m 1, 2
     private MethodCallExpression createMethodCallExpression(Expression baseExpr, Expression arguments) {
+        /* GRECLIPSE edit
         return new MethodCallExpression(
                 VariableExpression.THIS_EXPRESSION,
 
@@ -4817,6 +4826,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
                 arguments
         );
+        */
+        MethodCallExpression callExpr = new MethodCallExpression(
+                new VariableExpression("this"),
+                (baseExpr instanceof VariableExpression
+                        ? this.createConstantExpression(baseExpr)
+                        : baseExpr),
+                arguments
+        );
+        callExpr.getObjectExpression().setLineNumber(baseExpr.getLineNumber());
+        callExpr.getObjectExpression().setColumnNumber(baseExpr.getColumnNumber());
+        return callExpr;
+        // GRECLIPSE end
     }
 
     private Parameter processFormalParameter(GroovyParserRuleContext ctx,
