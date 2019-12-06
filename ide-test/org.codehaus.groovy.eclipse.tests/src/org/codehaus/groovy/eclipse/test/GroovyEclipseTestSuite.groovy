@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.codehaus.jdt.groovy.model.GroovyNature
+import org.eclipse.core.internal.utils.UniversalUniqueIdentifier
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ProjectScope
@@ -130,10 +131,8 @@ abstract class GroovyEclipseTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private static final Random salt = new Random(System.currentTimeMillis())
-
     protected static final String nextUnitName() {
-        "TestUnit${salt.nextInt(999999)}"
+        "TestUnit_${new UniversalUniqueIdentifier()}"
     }
 
     protected final void setJavaPreference(String key, String val) {
@@ -175,7 +174,7 @@ abstract class GroovyEclipseTestSuite {
         testProject.addClasspathEntry(JavaCore.newContainerEntry(path, true))
     }
 
-    protected final void addJUnit(int n) { assert n >= 3 && n <= 5
+    protected final void addJUnit(int n) { assert n in 3..5
         addClasspathContainer(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/$n"))
     }
 
