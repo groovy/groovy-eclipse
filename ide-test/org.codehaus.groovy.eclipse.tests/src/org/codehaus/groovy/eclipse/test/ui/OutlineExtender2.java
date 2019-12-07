@@ -35,38 +35,36 @@ public class OutlineExtender2 extends OutlineExtender1 {
     public static final String NATURE = "org.codehaus.groovy.eclipse.tests.testNature2";
 
     @Override
-    public boolean appliesTo(GroovyCompilationUnit unit) {
+    public boolean appliesTo(final GroovyCompilationUnit unit) {
         return CharOperation.contains('Y', unit.getFileName());
     }
 
     @Override
-    public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
+    public GroovyOutlinePage getGroovyOutlinePageForEditor(final String contextMenuID, final GroovyEditor editor) {
         TCompilationUnit2 ounit = new TCompilationUnit2(this, editor.getGroovyCompilationUnit());
         return new TGroovyOutlinePage(null, editor, ounit);
     }
 
     public static class TCompilationUnit2 extends TCompilationUnit {
 
-        public TCompilationUnit2(OutlineExtender2 outlineExtender, GroovyCompilationUnit unit) {
-            super(outlineExtender, unit);
+        public TCompilationUnit2(final OutlineExtender2 extender, final GroovyCompilationUnit unit) {
+            super(extender, unit);
         }
 
         @Override
         public IMember[] refreshChildren() {
             type = new TType(this, getElementName().substring(0, getElementName().indexOf('.')));
-
             ModuleNode moduleNode = (ModuleNode) getNode();
             if (moduleNode != null) {
                 new Finder(moduleNode, type).execute();
             }
-            return new IMember[] { type };
+            return new IMember[] {type};
         }
 
         @Override
         public void refresh() {
             super.refresh();
         }
-
     }
 
     public static class Finder extends ASTNodeFinder {
@@ -74,7 +72,7 @@ public class OutlineExtender2 extends OutlineExtender1 {
         private ModuleNode moduleNode;
         private Stack<TType> methodStack = new Stack<>();
 
-        public Finder(ModuleNode moduleNode, TType rootType) {
+        public Finder(final ModuleNode moduleNode, final TType rootType) {
             super(new Region(moduleNode));
             this.moduleNode = moduleNode;
             methodStack.push(rootType);
@@ -85,22 +83,7 @@ public class OutlineExtender2 extends OutlineExtender1 {
         }
 
         @Override
-        public void visitMethodCallExpression(MethodCallExpression methodCall) {
-            if (methodCall.getLineNumber() < 0) {
-                super.visitMethodCallExpression(methodCall);
-                return;
-            }
-
-            TType parentType = methodStack.peek();
-            TType t = parentType.addTestType(methodCall.getMethodAsString());
-
-            methodStack.push(t);
-            super.visitMethodCallExpression(methodCall);
-            methodStack.pop();
-        }
-
-        @Override
-        public void visitMethod(MethodNode method) {
+        public void visitMethod(final MethodNode method) {
             if (method.getLineNumber() > 1) {
                 TType parentType = methodStack.peek();
                 parentType.addTestMethod(method.getName(), method.getReturnType().getNameWithoutPackage());
@@ -110,8 +93,22 @@ public class OutlineExtender2 extends OutlineExtender1 {
         }
 
         @Override
-        public void visitVariableExpression(VariableExpression variable) {
-            if (variable.getLineNumber() >= 0) {
+        public void visitMethodCallExpression(final MethodCallExpression methodCall) {
+            if (methodCall.getEnd() > 0) {
+                TType parentType = methodStack.peek();
+                TType t = parentType.addTestType(methodCall.getMethodAsString());
+
+                methodStack.push(t);
+            }
+            super.visitMethodCallExpression(methodCall);
+            if (methodCall.getEnd() > 0) {
+                methodStack.pop();
+            }
+        }
+
+        @Override
+        public void visitVariableExpression(final VariableExpression variable) {
+            if (variable.getEnd() > 0) {
                 TType parentType = methodStack.peek();
                 parentType.addTestField(variable.getName(), GroovyUtils.getTypeSignature(variable.getType(), false, false));
             }

@@ -44,31 +44,32 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
     public void deconfigure() throws CoreException {
     }
 
-    IProject p;
+    private IProject project;
+
+    @Override
+    public void setProject(final IProject project) {
+        this.project = project;
+    }
 
     @Override
     public IProject getProject() {
-        return p;
+        return project;
     }
 
     @Override
-    public void setProject(IProject project) {
-        this.p = project;
-    }
-
-    @Override
-    public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
+    public GroovyOutlinePage getGroovyOutlinePageForEditor(final String contextMenuID, final GroovyEditor editor) {
         TCompilationUnit ounit = new TCompilationUnit(this, editor.getGroovyCompilationUnit());
         return new TGroovyOutlinePage(null, editor, ounit);
     }
 
     @Override
-    public boolean appliesTo(GroovyCompilationUnit unit) {
+    public boolean appliesTo(final GroovyCompilationUnit unit) {
         return CharOperation.contains('X', unit.getFileName());
     }
 
     public static class TGroovyOutlinePage extends GroovyOutlinePage {
-        public TGroovyOutlinePage(String contextMenuID, GroovyEditor editor, OCompilationUnit unit) {
+
+        public TGroovyOutlinePage(final String contextMenuID, final GroovyEditor editor, final OCompilationUnit unit) {
             super(contextMenuID, editor, unit);
         }
 
@@ -82,26 +83,26 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
         public OutlineExtender1 outlineExtender;
         public TType type;
 
-        public TCompilationUnit(OutlineExtender1 outlineExtender, GroovyCompilationUnit unit) {
+        public TCompilationUnit(final OutlineExtender1 extender, final GroovyCompilationUnit unit) {
             super(unit);
-            this.outlineExtender = outlineExtender;
+            this.outlineExtender = extender;
+        }
+
+        @Override
+        public IMember getOutlineElementAt(final int caretOffset) {
+            return type;
         }
 
         @Override
         public IMember[] refreshChildren() {
             type = new TType(this, getElementName());
-            return new IMember[] { type };
-        }
-
-        @Override
-        public IMember getOutlineElementAt(int caretOffset) {
-            return type;
+            return new IMember[] {type};
         }
     }
 
     public static class TType extends OType {
 
-        public TType(IOJavaElement parent, String name) {
+        public TType(final IOJavaElement parent, final String name) {
             super(parent, new ConstantExpression(name), name);
             this.name = name;
         }
@@ -111,22 +112,22 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
             return getNode();
         }
 
-        public TType addTestType(String name) {
+        public TType addTestType(final String name) {
             TType t = new TType(this, name);
             addChild(t);
             return t;
         }
 
-        public TMethod addTestMethod(String name, String returnType) {
+        public TField addTestField(final String name, final String type) {
+            TField f = new TField(this, name, type);
+            addChild(f);
+            return f;
+        }
+
+        public TMethod addTestMethod(final String name, final String returnType) {
             TMethod m = new TMethod(this, name, returnType);
             addChild(m);
             return m;
-        }
-
-        public TField addTestField(String name, String typeSignature) {
-            TField f = new TField(this, name, typeSignature);
-            addChild(f);
-            return f;
         }
     }
 
@@ -134,7 +135,7 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
         private String returnType;
 
-        public TMethod(OType parent, String name, String returnType) {
+        public TMethod(final OType parent, final String name, final String returnType) {
             super(parent, new ConstantExpression(name), name);
             this.name = name;
             this.returnType = returnType;
@@ -155,7 +156,7 @@ public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
         private String typeSignature;
 
-        public TField(OType parent, String name, String typeSignature) {
+        public TField(final OType parent, final String name, final String typeSignature) {
             super(parent, new ConstantExpression(name), name);
             this.name = name;
             this.typeSignature = typeSignature;
