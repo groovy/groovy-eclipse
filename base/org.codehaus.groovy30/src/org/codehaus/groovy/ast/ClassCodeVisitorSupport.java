@@ -43,7 +43,6 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.transform.ErrorCollecting;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 

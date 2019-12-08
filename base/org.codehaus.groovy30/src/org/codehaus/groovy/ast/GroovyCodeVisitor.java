@@ -117,7 +117,8 @@ public interface GroovyCodeVisitor {
 
     void visitCatchStatement(CatchStatement statement);
 
-    default void visitEmptyStatement(EmptyStatement statement) {}
+    default void visitEmptyStatement(EmptyStatement statement) {
+    }
 
     //--------------------------------------------------------------------------
     // expressions
@@ -202,21 +203,10 @@ public interface GroovyCodeVisitor {
 
     void visitBytecodeExpression(BytecodeExpression expression);
 
-    default void visitEmptyExpression(EmptyExpression expression) {}
+    default void visitEmptyExpression(EmptyExpression expression) {
+    }
 
     default void visitListOfExpressions(List<? extends Expression> list) {
-        if (list == null) return;
-        /* GRECLIPSE edit
-        for (Expression expression : list) {
-            if (expression instanceof SpreadExpression) {
-                Expression spread = ((SpreadExpression) expression).getExpression();
-                spread.visit(this);
-            } else {
-                expression.visit(this);
-            }
-        }
-        */
-        list.forEach(expr -> expr.visit(this));
-        // GRECLIPSE end
+        if (list != null) list.forEach(expr -> expr.visit(this));
     }
 }

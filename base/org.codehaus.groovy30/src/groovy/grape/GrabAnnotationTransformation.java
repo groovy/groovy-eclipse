@@ -202,13 +202,9 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             }
         }
 
-        // GRECLIPSE - if this is a list and not a set then you can duplicates when multiple classes
-        // are visited in the same source file. The same grabs are accumulated. There is maybe a
-        // better fix but this is easy.  If there are duplicates it will work but we are calling
-        // grab with unnecessary dup info.
-        Collection<Map<String,Object>> grabMaps = new LinkedHashSet<Map<String,Object>>();
-        List<Map<String,Object>> grabMapsInit = new ArrayList<Map<String,Object>>();
-        List<Map<String,Object>> grabExcludeMaps = new ArrayList<Map<String,Object>>();
+        Collection<Map<String,Object>> grabMaps = new LinkedHashSet<>();
+        Collection<Map<String,Object>> grabMapsInit = new ArrayList<>();
+        Collection<Map<String,Object>> grabExcludeMaps = new ArrayList<>();
 
         for (ClassNode classNode : sourceUnit.getAST().getClasses()) {
             grabAnnotations = new ArrayList<AnnotationNode>();
@@ -414,7 +410,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         }
     }
 
-    private void callGrabAsStaticInitIfNeeded(ClassNode classNode, ClassNode grapeClassNode, List<Map<String,Object>> grabMapsInit, List<Map<String, Object>> grabExcludeMaps) {
+    private void callGrabAsStaticInitIfNeeded(ClassNode classNode, ClassNode grapeClassNode, Collection<Map<String,Object>> grabMapsInit, Collection<Map<String, Object>> grabExcludeMaps) {
         List<Statement> grabInitializers = new ArrayList<Statement>();
         MapExpression basicArgs = new MapExpression();
         if (autoDownload != null)  {
@@ -427,7 +423,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
         if (systemProperties != null && !systemProperties.isEmpty()) {
             BlockStatement block = new BlockStatement();
-            for(Map.Entry e : systemProperties.entrySet()) {
+            for(Map.Entry<String, String> e : systemProperties.entrySet()) {
                 block.addStatement(stmt(callX(SYSTEM_CLASSNODE, "setProperty", args(constX(e.getKey()), constX(e.getValue())))));
             }
             StaticMethodCallExpression enabled = callX(SYSTEM_CLASSNODE, "getProperty", args(constX("groovy.grape.enable"), constX("true")));

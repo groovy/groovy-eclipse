@@ -358,15 +358,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     protected void addDefaultConstructor(ClassNode node) {
         if (!node.getDeclaredConstructors().isEmpty()) return;
 
-        BlockStatement empty = new BlockStatement();
-        // GRECLIPSE edit -- no source positions for synthetic default constructors
-        //empty.setSourcePosition(node);
-        ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, empty);
-        //constructor.setSourcePosition(node);
-        // GRECLIPSE end
+        ConstructorNode constructor = new ConstructorNode(ACC_PUBLIC, new BlockStatement());
         constructor.setHasNoRealSourcePosition(true);
-        node.addConstructor(constructor);
         markAsGenerated(node, constructor);
+        node.addConstructor(constructor);
     }
 
     private void addStaticMetaClassField(final ClassNode node, final String classInternalName) {

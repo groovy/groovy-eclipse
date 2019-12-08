@@ -378,28 +378,12 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitLabeledStmtAlt(@NotNull GroovyParser.LabeledStmtAltContext ctx);
 
 	/**
-	 * Visit a parse tree produced by the {@code importStmtAlt}
-	 * labeled alternative in {@link GroovyParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitImportStmtAlt(@NotNull GroovyParser.ImportStmtAltContext ctx);
-
-	/**
 	 * Visit a parse tree produced by the {@code assertStmtAlt}
 	 * labeled alternative in {@link GroovyParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	Result visitAssertStmtAlt(@NotNull GroovyParser.AssertStmtAltContext ctx);
-
-	/**
-	 * Visit a parse tree produced by the {@code typeDeclarationStmtAlt}
-	 * labeled alternative in {@link GroovyParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitTypeDeclarationStmtAlt(@NotNull GroovyParser.TypeDeclarationStmtAltContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code localVariableDeclarationStmtAlt}
@@ -473,11 +457,18 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitCompilationUnit(@NotNull GroovyParser.CompilationUnitContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#statements}.
+	 * Visit a parse tree produced by {@link GroovyParser#scriptStatements}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitStatements(@NotNull GroovyParser.StatementsContext ctx);
+	Result visitScriptStatements(@NotNull GroovyParser.ScriptStatementsContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#scriptStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitScriptStatement(@NotNull GroovyParser.ScriptStatementContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#packageDeclaration}.

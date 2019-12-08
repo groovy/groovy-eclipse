@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -61,8 +62,6 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.security.Permission;
 import java.util.List;
-
-import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 
 /**
  * java 5 based functions
@@ -364,8 +363,7 @@ public class Java5 implements VMPlugin {
     }
 
     private static void setMethodDefaultValue(MethodNode mn, Method m) {
-        Object defaultValue = m.getDefaultValue();
-        ConstantExpression cExp = defaultValue != null ? new ConstantExpression(defaultValue) : nullX();
+        ConstantExpression cExp = new ConstantExpression(m.getDefaultValue());
         mn.setCode(new ReturnStatement(cExp));
         mn.setAnnotationDefault(true);
     }
@@ -411,7 +409,8 @@ public class Java5 implements VMPlugin {
                 Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), getConstructorParameterAnnotations(ctor), ctor);
                 // GRECLIPSE end
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                ConstructorNode cn = classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                setAnnotationMetaData(ctor.getAnnotations(), cn);
             }
 
             Class sc = clazz.getSuperclass();
@@ -630,8 +629,13 @@ public class Java5 implements VMPlugin {
     }
 
     @Override
-    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod, Class<?>[] params, Class<?> caller) {
+    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod, Class<?> caller) {
         return metaMethod;
+    }
+
+    @Override
+    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod) {
+        return transformMetaMethod(metaClass, metaMethod, null);
     }
 
     private static final Permission ACCESS_PERMISSION = new ReflectPermission("suppressAccessChecks");
