@@ -337,9 +337,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
+        String prev = null;
         for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
             String key = entry.getKey();
-            if (startsWithHyphen(key)) {
+            if (key.startsWith("-")) {
                 if ("-javaAgentClass".equals(key)) {
                     setJavaAgentClass(entry.getValue());
                 } else if (!key.startsWith("-J")) {
@@ -347,9 +348,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 } else {
                     vmArgs.add(key.substring(2));
                 }
-            } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
-                args.put("-" + key, entry.getValue());
+                prev = (entry.getValue() == null ? key : null);
+            } else {
+                if (prev != null && entry.getValue() == null) {
+                    args.put(prev, key);
+                } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
+                    args.put("-" + key, entry.getValue());
+                }
+                prev = null;
             }
+        }
+        if (args.remove("--patch-module") != null) { // https://github.com/groovy/groovy-eclipse/issues/987
+            if (verbose) getLogger().info("Skipping unsupported command-line argument \"--patch-module\"");
         }
 
         args.putAll(composeSourceFiles(sourceFiles));
@@ -654,10 +664,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     private static boolean isNotBlank(String str) {
         return !isBlank(str);
-    }
-
-    private static boolean startsWithHyphen(Object key) {
-        return (key instanceof CharSequence && ((CharSequence) key).charAt(0) == '-');
     }
 
     /**
