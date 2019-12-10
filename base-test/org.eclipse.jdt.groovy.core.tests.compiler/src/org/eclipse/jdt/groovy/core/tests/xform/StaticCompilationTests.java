@@ -2988,4 +2988,53 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "Outer0 > Inner1 > Inner2 > Inner3"); // OWNER_FIRST results in "Outer0 > Outer0 > Outer0 > Inner3"
     }
+
+    @Test
+    public void testCompileStatic9328() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  static main(args) {\n" +
+            "    new Outer().test()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def inner = new Inner()\n" +
+            "    print inner.innerMethod()\n" +
+            "  }\n" +
+            "  class Inner {\n" +
+            "    @groovy.transform.CompileStatic\n" +
+            "    String innerMethod() { outerMethod() }\n" +
+            "  }\n" +
+            "  private String outerMethod() { 'works' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9328a() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  static main(args) {\n" +
+            "    new Outer().test()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def callable = new java.util.concurrent.Callable<String>() {\n" +
+            "      @groovy.transform.CompileStatic\n" +
+            "      @Override String call() { outerMethod() }\n" +
+            "    }\n" +
+            "    print callable.call()\n" +
+            "  }\n" +
+            "  private String outerMethod() { 'works' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
