@@ -3444,7 +3444,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in AandC.groovy (at line 8)\n" +
             "\tx()\n" +
-            (!isAtLeastGroovy(30)
+            (!isAtLeastGroovy(25)
                 ? "\t^\n" +
                 "Groovy:Cannot call private method A#x from class C\n"
                 : "\t^^^\n" +
