@@ -1237,6 +1237,43 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('it'), 2, GROOVY_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    void testLambdaParams1() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def f = p -> p * "string"'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf(    'p'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('p'), 1, PARAMETER))
+    }
+
+    @Test
+    void testLambdaParams2() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def f = (p) -> { p * "string" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf(    'p'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('p'), 1, PARAMETER))
+    }
+
+    @Test
+    void testLambdaParams3() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def f = (Object p) -> { p * "string" }'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf(    'p'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('p'), 1, PARAMETER))
+    }
+
     @Test
     void testVarKeyword1() {
         String contents = '''\

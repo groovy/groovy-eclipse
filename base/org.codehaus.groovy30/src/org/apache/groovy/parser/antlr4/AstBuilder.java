@@ -4025,6 +4025,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Parameter[] visitStandardLambdaParameters(StandardLambdaParametersContext ctx) {
         if (asBoolean(ctx.variableDeclaratorId())) {
+            /* GRECLIPSE edit
             return new Parameter[]{
                     configureAST(
                             new Parameter(
@@ -4034,6 +4035,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             ctx.variableDeclaratorId()
                     )
             };
+            */
+            VariableExpression variable = this.visitVariableDeclaratorId(ctx.variableDeclaratorId());
+            Parameter parameter = new Parameter(ClassHelper.OBJECT_TYPE, variable.getName());
+            parameter.setNameStart(variable.getStart());
+            parameter.setNameEnd(variable.getEnd());
+            configureAST(parameter, variable);
+            return new Parameter[]{parameter};
+            // GRECLIPSE end
         }
 
         Parameter[] parameters = this.visitFormalParameters(ctx.formalParameters());
@@ -4108,7 +4117,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             // GRECLIPSE edit
                             //.map(this::visitFormalParameter)
                             .map(formalParameterContext -> {
-                                Parameter parameter = visitFormalParameter(formalParameterContext);
+                                Parameter parameter = this.visitFormalParameter(formalParameterContext);
                                 ASTNode nameNode = configureAST(new ConstantExpression(parameter.getName()), formalParameterContext.variableDeclaratorId());
                                 parameter.setNameStart(nameNode.getStart());
                                 parameter.setNameEnd(nameNode.getEnd());
