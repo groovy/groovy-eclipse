@@ -146,22 +146,27 @@ public class Java5 implements VMPlugin {
     private ClassNode configureWildcardType(WildcardType wildcardType) {
         ClassNode base = ClassHelper.makeWithoutCaching("?");
         base.setRedirect(ClassHelper.OBJECT_TYPE);
-        //TODO: more than one lower bound for wildcards?
+
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
+        /* GRECLIPSE edit
         ClassNode lower = null;
-        // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
-        // GRECLIPSE edit -- want <?> like JDT does, not <? extends Object>
-        //ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
-        ClassNode[] upper = wildcardType.toString().equals("?") ? null : configureTypes(wildcardType.getUpperBounds());
-        // GRECLIPSE end
+        ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
         GenericsType t = new GenericsType(base, upper, lower);
+        */
+        ClassNode[] uppers = configureTypes(wildcardType.getUpperBounds());
+        // beware of [Object] upper bounds; often it's <?> or <? super T>
+        if (lowers != null || wildcardType.getTypeName().equals("?")) {
+            uppers = null;
+        }
+
+        GenericsType t = new GenericsType(base, uppers, lowers != null ? lowers[0] : null);
+        // GRECLIPSE end
         t.setWildcard(true);
 
         ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
         ref.setGenericsTypes(new GenericsType[]{t});
-
         return ref;
     }
 
