@@ -43,6 +43,7 @@
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
@@ -66,6 +67,7 @@
         <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/AbstractExtensionMethodCache.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingSupport.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/SuperCallTraitTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/TraitComposer.java" include-pattern="false" />
