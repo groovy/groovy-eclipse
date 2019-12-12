@@ -385,8 +385,6 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(Expression expr, TypeLookupResult result, boolean isStaticImport) {
-        if (((MethodNode) result.declaration).isSynthetic() && result.declaringType.isEnum()) return null;
-
         HighlightKind kind = HighlightKind.METHOD_CALL;
         if (result.isGroovy) {
             kind = HighlightKind.GROOVY_CALL;

@@ -1630,6 +1630,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1004
+    void testEnumMethod() {
+        String contents = '''\
+            |enum X {
+            |  Y
+            |}
+            |X.Y.next().name()
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.indexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('X'), 1, ENUMERATION),
+            new HighlightedTypedPosition(contents.lastIndexOf('Y'), 1, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('next'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('name'), 4, METHOD_CALL))
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/938
     void testEnumValues() {
         setJavaPreference(CompilerOptions.OPTION_AnnotationBasedNullAnalysis, CompilerOptions.ENABLED)
