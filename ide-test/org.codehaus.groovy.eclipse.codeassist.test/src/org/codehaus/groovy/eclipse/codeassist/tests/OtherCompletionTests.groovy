@@ -204,6 +204,37 @@ final class OtherCompletionTests extends CompletionTestSuite {
         checkReplacementString(proposals, 'xx', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1004
+    void testEnumCompletion1() {
+        String contents = 'enum E {F,G}\nE.F.n'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'n'))
+        checkReplacementString(proposals, 'next()', 2)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1004
+    void testEnumCompletion2() {
+        String contents = 'enum E {F,G}\nE.F.p'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'p'))
+        checkReplacementString(proposals, 'previous()', 2)
+    }
+
+    @Test
+    void testEnumCompletion3() {
+        String contents = 'enum E {F,G}\nE.v'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'v'))
+        checkReplacementString(proposals, 'values()', 1)
+        checkReplacementString(proposals, 'valueOf(name)', 1)
+        checkReplacementString(proposals, 'valueOf(enumType, name)', 1)
+    }
+
+    @Test
+    void testEnumCompletion4() {
+        String contents = 'enum E {F,G}\nE.M'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'M'))
+        checkReplacementString(proposals, 'MIN_VALUE', 1)
+        checkReplacementString(proposals, 'MAX_VALUE', 1)
+    }
+
     @Test
     void testListCompletion1() {
         String contents = '[].'
