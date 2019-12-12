@@ -2245,11 +2245,14 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         if (inferredTypes[0] == null) {
-            int i = 0; MethodNode sam; // check for SAM-type coercion of closure expression
+            int i = 0;
+            MethodNode sam;
+            // check for SAM-type coercion of closure/lambda expression
             if (primaryType != null && (sam = ClassHelper.findSAM(primaryType)) != null) {
+                GenericsMapper m = GenericsMapper.gatherGenerics(primaryType, primaryType.redirect());
                 for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
                     if (i == inferredTypes.length) break;
-                    inferredTypes[i++] = t;
+                    inferredTypes[i++] = VariableScope.resolveTypeParameterization(m, t);
                 }
             }
             Arrays.fill(inferredTypes, i, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);

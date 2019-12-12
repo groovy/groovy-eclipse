@@ -63,7 +63,7 @@ public class GenericsMapper {
             GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
             int n = ugts.length;
-            if (n > 0 && rgts.length < 1) {
+            if (n > 0 && rgts.length == 0) {
                 rgts = new GenericsType[n]; // assume rCandidate is a raw type
                 for (int i = 0; i < n; i += 1) {
                     rgts[i] = new GenericsType(Optional.ofNullable(ugts[i].getUpperBounds()).map(bounds -> bounds[0]).orElse(VariableScope.OBJECT_CLASS_NODE));
@@ -160,7 +160,16 @@ public class GenericsMapper {
      */
     public ClassNode resolveParameter(GenericsType topGT, int depth) {
         if (allGenerics.isEmpty()) {
-            return topGT.getType();
+            if (!topGT.isWildcard()) {
+                return topGT.getType();
+            }
+            if (topGT.getLowerBound() != null) {
+                return topGT.getLowerBound();
+            }
+            if (topGT.getUpperBounds() != null) {
+                return topGT.getUpperBounds()[0];
+            }
+            return VariableScope.OBJECT_CLASS_NODE;
         }
 
         if (depth > 10) {

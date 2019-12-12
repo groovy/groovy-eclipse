@@ -959,6 +959,29 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertType(contents, "z", "java.util.regex.Pattern");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1000
+    public void testCoercedClosure3() {
+        createUnit("Face",
+            //@formatter:off
+            "interface Face<T> {\n" +
+            "  boolean test(T t)\n" +
+            "}");
+            //@formatter:on
+
+        //@formatter:off
+        String contents =
+            "class C<E> {\n" + // like Collection
+            "  boolean meth(Face<? super E> f) {\n" + // like removeIf
+            "    f.test(null)\n" +
+            "  }\n" +
+            "}\n" +
+            "def c = new C<Integer>()\n" +
+            "def result = c.meth { e -> e }\n";
+        //@formatter:on
+
+        assertType(contents, "e", "java.lang.Integer");
+    }
+
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
         String contents =
