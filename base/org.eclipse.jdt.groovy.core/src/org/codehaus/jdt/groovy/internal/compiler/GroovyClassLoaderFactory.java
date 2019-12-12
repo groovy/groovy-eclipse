@@ -272,6 +272,7 @@ public final class GroovyClassLoaderFactory {
                             Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false, true);
 
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
+                            Collections.addAll(objectCategories, (Class[]) dgm.getField("ADDITIONAL_CLASSES").get(dgm));
 
                             staticCategories.add(dgsm);
 
@@ -286,7 +287,7 @@ public final class GroovyClassLoaderFactory {
 
                             defaultCategories = objectCategories;
                             defaultStaticCategories = staticCategories;
-                        } catch (Exception | NoClassDefFoundError e) {
+                        } catch (ReflectiveOperationException | LinkageError e) {
                             defaultCategories = Collections.EMPTY_SET;
                             defaultStaticCategories = Collections.EMPTY_SET;
 

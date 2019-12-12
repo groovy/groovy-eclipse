@@ -960,7 +960,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
     public void testDGSMDeclaring1() {
-        assumeFalse(isAtLeastGroovy(25));
+        assumeFalse(isAtLeastGroovy(25)); // parse is deprecated
 
         String contents = "Date.parse('format', 'value')";
         assertDeclType(contents, "parse", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
@@ -989,6 +989,12 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGSMDeclaring5() {
         String contents = "java.util.regex.Matcher.getLastMatcher()";
         assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGSMDeclaring6() {
+        String contents = "1.minus(0)";
+        assertDeclType(contents, "minus", "org.codehaus.groovy.runtime.dgmimpl.NumberNumberMinus");
     }
 
     @Test
