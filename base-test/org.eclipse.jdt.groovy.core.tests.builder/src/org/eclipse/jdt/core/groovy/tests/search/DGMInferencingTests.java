@@ -17,6 +17,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Comparator;
 import java.util.List;
@@ -995,6 +996,20 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGSMDeclaring6() {
         String contents = "1.minus(0)";
         assertDeclType(contents, "minus", "org.codehaus.groovy.runtime.dgmimpl.NumberNumberMinus");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGSMDeclaring7() {
+        String contents = "new StringBuilder().size()";
+        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGSMDeclaring8() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        String contents = "['x','y','z'].stream().toList()";
+        assertDeclType(contents, "toList", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test

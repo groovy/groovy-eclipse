@@ -274,7 +274,11 @@ public final class GroovyClassLoaderFactory {
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
                             Collections.addAll(objectCategories, (Class[]) dgm.getField("ADDITIONAL_CLASSES").get(dgm));
 
-                            staticCategories.add(dgsm);
+                            Class vmpf = loadClass("org.codehaus.groovy.vmplugin.VMPluginFactory", false, true);
+                            @SuppressWarnings("unchecked") Object vmp = vmpf.getMethod("getPlugin").invoke(vmpf);
+
+                            Collections.addAll(objectCategories, (Class[]) vmp.getClass().getMethod("getPluginDefaultGroovyMethods").invoke(vmp));
+                            Collections.addAll(staticCategories, (Class[]) vmp.getClass().getMethod("getPluginStaticGroovyMethods").invoke(vmp));
 
                             new ExtensionModuleScanner(module -> {
                                 if (module instanceof SimpleExtensionModule) {
@@ -283,6 +287,7 @@ public final class GroovyClassLoaderFactory {
                                 }
                             }, this).scanClasspathModules();
 
+                            staticCategories.add(dgsm);
                             objectCategories.addAll(staticCategories);
 
                             defaultCategories = objectCategories;
