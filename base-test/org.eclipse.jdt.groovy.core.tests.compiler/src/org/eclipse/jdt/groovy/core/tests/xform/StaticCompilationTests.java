@@ -319,6 +319,85 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic12() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def list = new LinkedList<String>([1,2,3])\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Generics.groovy (at line 3)\n" +
+            "\tdef list = new LinkedList<String>([1,2,3])\n" +
+            "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.LinkedList <String>#<init>(java.util.Collection <? extends java.lang.String>) with arguments [java.util.List <java.lang.Integer>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic13() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<?> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  meth(String.class)" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
+
+    @Test
+    public void testCompileStatic14() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<? extends CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  meth(String.class)" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
+
+    @Test
+    public void testCompileStatic15() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<? extends CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = (Class<?>) String.class\n" +
+            "  meth(c)" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -625,6 +704,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -655,6 +736,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691a() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -687,6 +770,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691b() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -713,6 +798,45 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testCompileStatic7985() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Pairs.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Pair<L, R> implements Serializable {\n" +
+            "  public final L left\n" +
+            "  public final R right\n" +
+            "  \n" +
+            "  private Pair(final L left, final R right) {\n" +
+            "    this.left = left\n" +
+            "    this.right = right\n" +
+            "  }\n" +
+            "  \n" +
+            "  static <L, R> Pair<L, R> of(final L left, final R right) {\n" +
+            "    return new Pair<>(left, right)\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "Pair<Pair<String, Integer>, Pair<String, Integer>> doSmething() {\n" +
+            "  def one = (Pair<String, Integer>) Pair.of('a', 1)\n" +
+            "  def two = (Pair<String, Integer>) Pair.of('b', 2)\n" +
+            "  return Pair.of(one, two)\n" +
+            "}\n" +
+            "\n" +
+            "assert doSmething().left.left == 'a'\n" +
+            "assert doSmething().left.right == 1\n" +
+            "assert doSmething().right.left == 'b'\n" +
+            "assert doSmething().right.right == 2\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
@@ -966,6 +1090,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8562() {
+        assumeTrue(isAtLeastGroovy(25));
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",

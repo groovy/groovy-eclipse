@@ -1324,7 +1324,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the string representing the generic type
      */
     private String genericTypeAsString(GenericsType genericsType) {
+        /* GRECLIPSE edit
         StringBuilder ret = new StringBuilder(genericsType.getName());
+        */
+        StringBuilder ret = new StringBuilder(genericsType.isWildcard() ? "?" : genericsType.getName());
+        // GRECLIPSE end
         if (genericsType.getUpperBounds() != null) {
             ret.append(" extends ");
             for (int i = 0; i < genericsType.getUpperBounds().length; i++) {
