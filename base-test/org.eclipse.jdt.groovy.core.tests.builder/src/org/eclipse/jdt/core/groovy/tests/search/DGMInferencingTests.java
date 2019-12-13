@@ -959,6 +959,32 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertDeclType(contents, "leftShift", "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGMDeclaring4() {
+        String contents = "1.minus(0)";
+        assertDeclType(contents, "minus", "org.codehaus.groovy.runtime.dgmimpl.NumberNumberMinus");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGMDeclaring5() {
+        String contents = "new StringBuilder().size()";
+        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGMDeclaring6() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        String contents = "['x','y','z'].stream().toList()";
+        assertDeclType(contents, "toList", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
+    public void testDGMDeclaring7() {
+        String contents = "Thread.State.NEW.next().name()";
+        assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
     public void testDGSMDeclaring1() {
         assumeFalse(isAtLeastGroovy(25)); // parse is deprecated
@@ -990,26 +1016,6 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGSMDeclaring5() {
         String contents = "java.util.regex.Matcher.getLastMatcher()";
         assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
-    public void testDGSMDeclaring6() {
-        String contents = "1.minus(0)";
-        assertDeclType(contents, "minus", "org.codehaus.groovy.runtime.dgmimpl.NumberNumberMinus");
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
-    public void testDGSMDeclaring7() {
-        String contents = "new StringBuilder().size()";
-        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1002
-    public void testDGSMDeclaring8() {
-        assumeTrue(isAtLeastGroovy(25));
-
-        String contents = "['x','y','z'].stream().toList()";
-        assertDeclType(contents, "toList", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
 
     @Test
