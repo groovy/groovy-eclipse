@@ -378,26 +378,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic15() {
-        //@formatter:off
-        String[] sources = {
-            "Generics.groovy",
-            "void meth(Class<? extends CharSequence> c) {\n" +
-            "  print c.simpleName\n" +
-            "}\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "void test() {\n" +
-            "  def c = (Class<?>) String.class\n" +
-            "  meth(c)" +
-            "}\n" +
-            "test()",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -490,6 +470,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic6095() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "Map<String, ? extends Number> numbers() {\n" +
+            "  [a: 1, b: 2, c: 3d]\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  numbers().each { String key, Number val ->\n" +
+            "    print val\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123.0");
     }
 
     @Test
@@ -1548,24 +1550,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "import groovy.transform.*\n" +
-            "\n" +
-            "@CompileStatic\n" +
-            "class DelegatesToMap implements Map<String,Object> {\n" +
-            "  \n" +
-            "  @Delegate protected Map<String,Object> target\n" +
-            "  \n" +
-            "  DelegatesToMap() {\n" +
-            "    target = new HashMap<>()\n" +
-            "  }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class DelegatesToMap {\n" +
+            "  @Delegate protected Map<String, Object> target = new HashMap<>()\n" +
             "}\n" +
-            "\n" +
-            "@CompileStatic\n" +
+            "@groovy.transform.CompileStatic\n" +
             "class TaskConfig extends DelegatesToMap implements Cloneable {\n" +
-            "  \n" +
-            "  TaskConfig() {\n" +
-            "  }\n" +
-            "  \n" +
             "  @Override\n" +
             "  TaskConfig clone() {\n" +
             "    def copy = (TaskConfig) super.clone()\n" +
@@ -1573,7 +1563,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    return copy\n" +
             "  }\n" +
             "}\n" +
-            "\n" +
             "new TaskConfig().clone()\n",
         };
         //@formatter:on
@@ -3351,5 +3340,57 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "3");
+    }
+
+    @Test
+    public void testCompileStatic9338() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<? extends CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = (Class<?>) String.class\n" +
+            "  meth(c)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Generics.groovy (at line 7)\n" +
+            "\tmeth(c)\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Generics#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9338a() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<? super CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = (Class<?>) String.class\n" +
+            "  meth(c)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Generics.groovy (at line 7)\n" +
+            "\tmeth(c)\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Generics#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "----------\n");
     }
 }
