@@ -3275,7 +3275,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9332() {
-        assumeTrue(isParrotParser());
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -3321,7 +3321,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9332b() {
-        assumeTrue(isParrotParser());
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -3342,11 +3342,154 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "3");
     }
 
+    @Test @Ignore("java.lang.ExceptionInInitializerError")
+    public void testCompileStatic9332c() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "7");
+    }
+
+    @Test
+    public void testCompileStatic9333() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    Consumer<C> c = (C thisParameter) -> {\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test
+    public void testCompileStatic9333a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    def c = { C thisParameter ->\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9332?focusedCommentId=16994038&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-16994038")
+    public void testCompileStatic9333b() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    Consumer<C> c1 = (C thisParameter1) -> {\n" +
+            "      Consumer<C> c2 = (C thisParameter2) -> {\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2.accept(thisParameter1)\n" +
+            "    }\n" +
+            "    c1.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
+    }
+
+    @Test
+    public void testCompileStatic9333c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    def c1 = { C thisParameter1 ->\n" +
+            "      def c2 = { C thisParameter2 ->\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2(thisParameter1)\n" +
+            "    }\n" +
+            "    c1(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
+    }
+
     @Test
     public void testCompileStatic9338() {
         //@formatter:off
         String[] sources = {
-            "Generics.groovy",
+            "Script.groovy",
             "void meth(Class<? extends CharSequence> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -3361,10 +3504,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Generics.groovy (at line 7)\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Generics#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
             "----------\n");
     }
 
@@ -3372,7 +3515,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic9338a() {
         //@formatter:off
         String[] sources = {
-            "Generics.groovy",
+            "Script.groovy",
             "void meth(Class<? super CharSequence> c) {\n" +
             "  print c.simpleName\n" +
             "}\n" +
@@ -3387,10 +3530,10 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Generics.groovy (at line 7)\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot call Generics#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
             "----------\n");
     }
 }

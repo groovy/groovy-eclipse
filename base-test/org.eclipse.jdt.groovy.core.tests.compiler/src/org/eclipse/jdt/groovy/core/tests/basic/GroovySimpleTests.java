@@ -44,7 +44,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testClosuresBasic() {
         //@formatter:off
         String[] sources = {
-            "Coroutine.groovy",
+            "Script.groovy",
             "def iterate(n, closure) {\n" +
             "  1.upto(n) {\n" +
             "    closure(it)\n" +
@@ -60,10 +60,64 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testClosureScope1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  void test() {\n" +
+            "    def c = { thisParameter ->\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test
+    public void testClosureScope2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  void test() {\n" +
+            "    def c1 = { thisParameter1 ->\n" +
+            "      def c2 = { thisParameter2 ->\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2(thisParameter1)\n" +
+            "    }\n" +
+            "    c1(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
+    }
+
+    @Test
     public void testClosureSyntax() {
         //@formatter:off
         String[] sources = {
-            "Foo.groovy",
+            "Script.groovy",
             "class A {\n" +
             "  A(Closure<?> closure) {\n" +
             "    closure()\n" +
@@ -82,7 +136,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Foo.groovy (at line 12)\n" +
+            "1. ERROR in Script.groovy (at line 12)\n" +
             "\tabc()\n" +
             "\t^" + (!isParrotParser() ? "" : "^^^^") + "\n" +
             "Groovy:" + (!isParrotParser()
@@ -109,6 +163,91 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testLambdaBasic() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "Supplier<String> s = () -> 'hello'\n" +
+            "print s.get()\n" +
+            "\n" +
+            "Consumer<String> c = x -> print x;\n" +
+            "c.accept(' ')\n" +
+            "\n" +
+            "Function<Integer, String> f = (Integer i) -> { 'world' }\n" +
+            "print f(42)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello world");
+    }
+
+    @Test // GROOVY-9333
+    public void testLambdaScope1() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  void test() {\n" +
+            "    Consumer<C> c = thisParameter -> {\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test // GROOVY-9333
+    public void testLambdaScope2() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  void test() {\n" +
+            "    Consumer<C> c1 = thisParameter1 -> {\n" +
+            "      Consumer<C> c2 = thisParameter2 -> {\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2.accept(thisParameter1)\n" +
+            "    }\n" +
+            "    c1.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
     }
 
     @Test
@@ -1390,7 +1529,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 "2. ERROR in Main.groovy (at line 1)\n" +
                 "\tclass Main {\n" +
                 "\t      ^^^^\n" +
-                "Groovy:Can't have an abstract method in a non-abstract class. The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must be implemented.\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class." +
+                " The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must be implemented.\n" +
                 "----------\n" +
                 "3. ERROR in Main.groovy (at line 2)\n" +
                 "\tabstract def meth() {\n" +
@@ -1405,7 +1545,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 "5. ERROR in Main.groovy (at line 2)\n" +
                 "\tabstract def meth() {\n" +
                 "\t             ^^^^^^\n" +
-                "Groovy:Can't have an abstract method in a non-abstract class. The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must not be abstract.\n" +
+                "Groovy:Can't have an abstract method in a non-abstract class." +
+                " The class 'Main' must be declared abstract or the method 'java.lang.Object meth()' must not be abstract.\n" +
                 "----------\n");
         }
     }
@@ -4801,8 +4942,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    // FIXASC poor positional error for invalid field name - this test needs sorting out
-    @Test
+    @Test // TODO: poor positional error for invalid field name
     public void testFieldPositions2() {
         //@formatter:off
         String[] sources = {
