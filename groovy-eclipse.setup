@@ -69,7 +69,7 @@
   <setupTask
       xsi:type="setup:VariableTask"
       name="eclipse.target.platform"
-      defaultValue="2019-09"
+      defaultValue="2019-12"
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
@@ -128,7 +128,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2019-12) (scope.product.version.name=latest))">
+      filter="(| (scope.product.version.name=2019-12) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -136,7 +136,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2019-09) (scope.product.version.name=latest.released))">
+      filter="(scope.product.version.name=2019-09)">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -291,7 +291,7 @@
         <repository
             url="https://download.eclipse.org/releases/2019-12"/>
         <repository
-            url="https://download.eclipse.org/eclipse/updates/4.14milestones"/>
+            url="https://download.eclipse.org/eclipse/updates/4.14"/>
       </repositoryList>
       <repositoryList
           name="2019-09">
