@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -133,7 +134,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     private void recalculateStaleFiles(final CompilerConfiguration config) throws CompilerException {
         config.setSourceFiles(null);
 
-        long staleMillis = 0; // Can we do better than using 0?
+        long staleMillis = TimeUnit.DAYS.toMillis(1);
 
         Set<String> includes = config.getIncludes();
         if (includes == null || includes.isEmpty()) {
