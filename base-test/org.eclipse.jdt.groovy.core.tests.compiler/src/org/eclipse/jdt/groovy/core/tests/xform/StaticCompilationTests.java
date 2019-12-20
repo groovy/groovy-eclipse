@@ -3515,6 +3515,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9340() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance().test()\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    java.util.function.Consumer<Main> consumer = main -> print 'works'\n" + // A transform used a generics containing ClassNode Main for the method ...
+            "    consumer.accept(this)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic9342() {
         assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
 
@@ -3529,6 +3552,52 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  static int acc = 0\n" +
             "  static {\n" +
             "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9347() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach(i -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9347a() {
+        assumeTrue(isAtLeastJava(JDK8));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach { i -> acc += i }\n" +
             "  }\n" +
             "}\n",
         };

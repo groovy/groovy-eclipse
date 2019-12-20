@@ -2811,6 +2811,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // First we try to get as much information about the declaration
         // class through the receiver
         Map<GenericsTypeName, GenericsType> targetMethodDeclarationClassConnections = new HashMap<GenericsTypeName, GenericsType>();
+        // GRECLIPSE add -- GROOVY-9347
+        for (ClassNode face : receiver.getAllInterfaces()) {
+            extractGenericsConnections(targetMethodDeclarationClassConnections, StaticTypeCheckingSupport.getCorrectedClassNode(receiver, face, true), face.redirect());
+        }
+        if (!receiver.isInterface())
+        // GRECLIPSE end
         extractGenericsConnections(targetMethodDeclarationClassConnections, receiver, receiver.redirect());
         // then we use the method with the SAM parameter to get more information about the declaration
         Parameter[] parametersOfMethodContainingSAM = methodWithSAMParameter.getParameters();

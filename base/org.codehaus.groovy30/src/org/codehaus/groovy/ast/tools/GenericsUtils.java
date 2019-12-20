@@ -999,7 +999,20 @@ public class GenericsUtils {
             GenericsType declaringGenericsType = entry.getKey();
 
             if (placeholderName.equals(declaringGenericsType.getName())) {
+                /* GRECLIPSE edit -- GROOVY-9340, GROOVY-9347
                 return entry.getValue().getType().redirect();
+                */
+                GenericsType gt = entry.getValue();
+                if (gt.isWildcard()) {
+                    if (gt.getLowerBound() != null) {
+                        return gt.getLowerBound();
+                    }
+                    if (gt.getUpperBounds() != null) {
+                        return gt.getUpperBounds()[0];
+                    }
+                }
+                return gt.getType();
+                // GRECLIPSE end
             }
         }
 
