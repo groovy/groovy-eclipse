@@ -3342,29 +3342,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "3");
     }
 
-    @Test @Ignore("java.lang.ExceptionInInitializerError")
-    public void testCompileStatic9332c() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
-
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class Main {\n" +
-            "  static main(args) {\n" +
-            "    print acc\n" +
-            "  }\n" +
-            "  static int acc = 0\n" +
-            "  static {\n" +
-            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "7");
-    }
-
     @Test
     public void testCompileStatic9333() {
         assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
@@ -3421,8 +3398,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1f2f3f4f");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9332?focusedCommentId=16994038&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-16994038")
-    public void testCompileStatic9333b() {
+    @Test
+    public void testCompileStatic9333and9341() {
         assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
 
         //@formatter:off
@@ -3535,5 +3512,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9342() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
     }
 }
