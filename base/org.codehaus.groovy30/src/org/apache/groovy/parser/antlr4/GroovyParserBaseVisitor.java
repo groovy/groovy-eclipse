@@ -384,23 +384,7 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitImportStmtAlt(@NotNull GroovyParser.ImportStmtAltContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public Result visitAssertStmtAlt(@NotNull GroovyParser.AssertStmtAltContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public Result visitTypeDeclarationStmtAlt(@NotNull GroovyParser.TypeDeclarationStmtAltContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -480,7 +464,15 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitStatements(@NotNull GroovyParser.StatementsContext ctx) { return visitChildren(ctx); }
+	@Override public Result visitScriptStatements(@NotNull GroovyParser.ScriptStatementsContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public Result visitScriptStatement(@NotNull GroovyParser.ScriptStatementContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

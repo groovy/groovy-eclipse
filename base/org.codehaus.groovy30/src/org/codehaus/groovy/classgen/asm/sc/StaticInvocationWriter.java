@@ -86,6 +86,7 @@ import static groovyjarjarasm.asm.Opcodes.IFNULL;
 import static groovyjarjarasm.asm.Opcodes.INVOKESTATIC;
 
 public class StaticInvocationWriter extends InvocationWriter {
+
     private static final ClassNode INVOKERHELPER_CLASSNODE = ClassHelper.make(InvokerHelper.class);
     private static final Expression INVOKERHELPER_RECEIVER = new ClassExpression(INVOKERHELPER_CLASSNODE);
     private static final MethodNode INVOKERHELPER_INVOKEMETHOD = INVOKERHELPER_CLASSNODE.getMethod(
@@ -460,16 +461,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             // varg call
             // first parameters as usual
             for (int i = 0; i < para.length - 1; i++) {
-                /* GRECLIPSE edit
-                Expression expression = argumentList.get(i);
-                expression.putNodeMetaData(PARAMETER_TYPE, para[i].getType());
-                expression.visit(acg);
-                if (!isNullConstant(expression)) {
-                    operandStack.doGroovyCast(para[i].getType());
-                }
-                */
                 visitArgument(argumentList.get(i), para[i].getType());
-                // GRECLIPSE end
             }
             // last parameters wrapped in an array
             List<Expression> lastParams = new LinkedList<Expression>();
@@ -490,16 +482,7 @@ public class StaticInvocationWriter extends InvocationWriter {
             }
         } else if (argumentListSize == para.length) {
             for (int i = 0; i < argumentListSize; i++) {
-                /* GRECLIPSE edit
-                Expression expression = argumentList.get(i);
-                expression.putNodeMetaData(PARAMETER_TYPE, para[i].getType());
-                expression.visit(acg);
-                if (!isNullConstant(expression)) {
-                    operandStack.doGroovyCast(para[i].getType());
-                }
-                */
                 visitArgument(argumentList.get(i), para[i].getType());
-                // GRECLIPSE end
             }
         } else {
             // method call with default arguments
@@ -526,31 +509,21 @@ public class StaticInvocationWriter extends InvocationWriter {
                 }
             }
             for (int i = 0; i < arguments.length; i++) {
-                /* GRECLIPSE edit
-                Expression expression = arguments[i];
-                expression.putNodeMetaData(PARAMETER_TYPE, para[i].getType());
-                expression.visit(acg);
-                if (!isNullConstant(expression)) {
-                    operandStack.doGroovyCast(para[i].getType());
-                }
-                */
                 visitArgument(arguments[i], para[i].getType());
-                // GRECLIPSE end
             }
         }
     }
 
-    // GRECLIPSE add
     private void visitArgument(Expression argumentExpr, ClassNode parameterType) {
-        if (!argumentExpr.getClass().getSimpleName().equals("StaticConstantExpression")) {
-            argumentExpr.putNodeMetaData(PARAMETER_TYPE, parameterType);
-        }
+        // GRECLIPSE add
+        if (!argumentExpr.getClass().getSimpleName().equals("StaticConstantExpression"))
+        // GRECLIPSE end
+        argumentExpr.putNodeMetaData(PARAMETER_TYPE, parameterType);
         argumentExpr.visit(controller.getAcg());
         if (!isNullConstant(argumentExpr)) {
             controller.getOperandStack().doGroovyCast(parameterType);
         }
     }
-    // GRECLIPSE end
 
     private static boolean isNullConstant(final Expression expression) {
         return (expression instanceof ConstantExpression && ((ConstantExpression) expression).getValue() == null);
@@ -685,14 +658,12 @@ public class StaticInvocationWriter extends InvocationWriter {
             mv.visitInsn(ACONST_NULL);
             mv.visitLabel(endof);
         } else {
-            if ((adapter == AsmClassGenerator.getGroovyObjectField
-                    || adapter == AsmClassGenerator.getField ) && origin instanceof AttributeExpression) {
-                String pname = ((PropertyExpression) origin).getPropertyAsString();
+            if (origin instanceof AttributeExpression && (adapter == AsmClassGenerator.getField || adapter == AsmClassGenerator.getGroovyObjectField)) {
                 CallSiteWriter callSiteWriter = controller.getCallSiteWriter();
-                if (pname!=null && callSiteWriter instanceof StaticTypesCallSiteWriter) {
-                    StaticTypesCallSiteWriter stcsw = (StaticTypesCallSiteWriter) callSiteWriter;
-                    TypeChooser typeChooser = controller.getTypeChooser();
-                    if (stcsw.makeGetField(receiver, typeChooser.resolveType(receiver, controller.getClassNode()), pname, safe, false)) {
+                String fieldName = ((AttributeExpression) origin).getPropertyAsString();
+                if (fieldName != null && callSiteWriter instanceof StaticTypesCallSiteWriter) {
+                    ClassNode receiverType = controller.getTypeChooser().resolveType(receiver, controller.getClassNode());
+                    if (((StaticTypesCallSiteWriter) callSiteWriter).makeGetField(receiver, receiverType, fieldName, safe, false)) {
                         return;
                     }
                 }

@@ -582,7 +582,7 @@ public class ToolFactory {
 	 * @return a scanner
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 *
-	 * @since 3.14
+	 * @since 3.20
 	 */
 	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel, String complianceLevel, boolean enablePreview) {

@@ -68,16 +68,13 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         if (expression.isEmpty() || ILLEGAL_CHARS.matcher(expression).find()) {
             return false;
         }
-        if (context.location == ContentAssistLocation.GENERICS &&
-                context.completionNode instanceof GenericsType) {
+        if (context.location == ContentAssistLocation.GENERICS && context.completionNode instanceof GenericsType) {
             return false;
         }
         // check for parameter name completion
-        if (context.location == ContentAssistLocation.PARAMETER &&
-                context.completionNode instanceof AnnotatedNode) {
+        if (context.location == ContentAssistLocation.PARAMETER && context.completionNode instanceof AnnotatedNode) {
             AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
-            if (completionNode.getStart() < completionNode.getNameStart() &&
-                    context.completionLocation >= completionNode.getNameStart()) {
+            if (completionNode.getStart() < completionNode.getNameStart() && context.completionLocation >= completionNode.getNameStart()) {
                 return false;
             }
         }

@@ -61,8 +61,9 @@ public abstract class ParserPluginFactory {
      */
     @Deprecated
     public static ParserPluginFactory antlr2() {
-        // GRECLIPSE edit
-        //return new AntlrParserPluginFactory();
+        /* GRECLIPSE edit
+        return new AntlrParserPluginFactory();
+        */
         return new org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory();
         // GRECLIPSE end
     }

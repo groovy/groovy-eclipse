@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -101,6 +102,14 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 	protected Object[] astStack;
 	protected int astLengthPtr;
 	protected int[] astLengthStack;
+
+	// Uses stack
+	protected int usesReferencesPtr = -1;
+	protected TypeReference[] usesReferencesStack;
+
+	// Provides stack
+	protected int providesReferencesPtr = -1;
+	protected TypeReference[] providesReferencesStack;
 
 
 	protected AbstractCommentParser(Parser sourceParser) {
@@ -501,7 +510,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 		return Util.getLineNumber(position, this.lineEnds, 0, this.lineEnds.length-1);
 	}
 
-	private int getTokenEndPosition() {
+	protected int getTokenEndPosition() {
 		if (this.scanner.getCurrentTokenEndPosition() > this.lineEnd) {
 			return this.lineEnd;
 		} else {

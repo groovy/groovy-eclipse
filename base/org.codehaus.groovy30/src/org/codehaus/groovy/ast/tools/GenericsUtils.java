@@ -21,9 +21,6 @@ package org.codehaus.groovy.ast.tools;
 import groovy.lang.Tuple2;
 import groovy.transform.stc.IncorrectTypeHintException;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.antlr.AntlrParserPlugin;
-import org.codehaus.groovy.antlr.parser.GroovyLexer;
-import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -31,16 +28,16 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.ParserPlugin;
 import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.memoize.ConcurrentSoftCache;
 import org.codehaus.groovy.runtime.memoize.EvictableCache;
-import org.codehaus.groovy.syntax.ParserException;
-import org.codehaus.groovy.syntax.Reduction;
 
-import java.io.StringReader;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -503,12 +500,6 @@ public class GenericsUtils {
                         type = redirect;
                     } else {
                         // "T" or "T extends Thing" or "T super Thing"
-
-                        // check for the rare case "T extends Thing -> Thing<X>"
-                        if (redirect.isRedirectNode() && redirect.redirect().isUsingGenerics()) {
-                            // GROOVY-8815: don't produce "T -> Thing<X>" as "X" is unresolved
-                        }
-
                         type = ClassHelper.makeWithoutCaching(name);
                         type.setGenericsPlaceHolder(true);
                         type.setRedirect(redirect);
@@ -607,42 +598,20 @@ public class GenericsUtils {
         }
     }
 
-    public static ClassNode[] parseClassNodesFromString(
-            final String option,
-            final SourceUnit sourceUnit,
-            final CompilationUnit compilationUnit,
-            final MethodNode mn,
-            final ASTNode usage) {
-
+    public static ClassNode[] parseClassNodesFromString(final String option, final SourceUnit sourceUnit, final CompilationUnit compilationUnit, final MethodNode mn, final ASTNode usage) {
         try {
-            /* GRECLIPSE edit
-            // for parsing just class names old and new parser should be the same but let's stick to the correct parser any way
-            boolean oldParserEnabled = compilationUnit.getConfiguration().getPluginFactory() instanceof AntlrParserPluginFactory;
-            ClassNode parsedNode = oldParserEnabled ?
-                    Antlr2Utils.parse("DummyNode<" + option + ">") :
-                    Antlr4Utils.parse("DummyNode<" + option + ">", compilationUnit.getConfiguration());
-            */
-            GroovyRecognizer recognizer = GroovyRecognizer.make(new GroovyLexer(new StringReader("DummyNode<" + option + ">")));
-            recognizer.classOrInterfaceType(true);
-            ClassNode[] result = new ClassNode[1];
-            new AntlrParserPlugin() {
-                @Override
-                public ModuleNode buildAST(SourceUnit sourceUnit, ClassLoader classLoader, Reduction cst) throws ParserException {
-                    result[0] = makeTypeWithArguments(recognizer.getAST());
-                    return null;
-                }
-            }.buildAST(null, null, null);
-            ClassNode parsedNode = result[0];
-            // GRECLIPSE end
+            ModuleNode moduleNode = ParserPlugin.buildAST("Dummy<" + option + "> dummy;", compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), null);
+            DeclarationExpression dummyDeclaration = (DeclarationExpression) ((ExpressionStatement) moduleNode.getStatementBlock().getStatements().get(0)).getExpression();
 
             // the returned node is DummyNode<Param1, Param2, Param3, ...)
-            GenericsType[] parsedNodeGenericsTypes = parsedNode.getGenericsTypes();
-            if (parsedNodeGenericsTypes == null) {
+            ClassNode dummyNode = dummyDeclaration.getLeftExpression().getType();
+            GenericsType[] dummyNodeGenericsTypes = dummyNode.getGenericsTypes();
+            if (dummyNodeGenericsTypes == null) {
                 return null;
             }
-            ClassNode[] signature = new ClassNode[parsedNodeGenericsTypes.length];
-            for (int i = 0, n = parsedNodeGenericsTypes.length; i < n; i += 1) {
-                GenericsType genericsType = parsedNodeGenericsTypes[i];
+            ClassNode[] signature = new ClassNode[dummyNodeGenericsTypes.length];
+            for (int i = 0, n = dummyNodeGenericsTypes.length; i < n; i += 1) {
+                final GenericsType genericsType = dummyNodeGenericsTypes[i];
                 signature[i] = resolveClassNode(sourceUnit, compilationUnit, mn, usage, genericsType.getType());
             }
             return signature;
@@ -696,23 +665,14 @@ public class GenericsUtils {
                 throw new GroovyBugError("Given generics type " + old + " must be a placeholder!");
             ClassNode fromSpec = genericsSpec.get(old.getName());
             if (fromSpec != null) {
-                /* GRECLIPSE edit
-                if (fromSpec.isGenericsPlaceHolder()) {
-                    ClassNode[] upper = new ClassNode[]{fromSpec.redirect()};
-                    newTypes[i] = new GenericsType(fromSpec, upper, null);
-                } else {
-                    newTypes[i] = new GenericsType(fromSpec);
-                }
-                */
                 newTypes[i] = fromSpec.asGenericsType();
-                // GRECLIPSE end
             } else {
                 ClassNode[] upper = old.getUpperBounds();
                 ClassNode[] newUpper = upper;
                 if (upper != null && upper.length > 0) {
                     ClassNode[] upperCorrected = new ClassNode[upper.length];
-                    for (int j = 0; j < upper.length; j++) {
-                        upperCorrected[i] = correctToGenericsSpecRecurse(genericsSpec, upper[j]);
+                    for (ClassNode classNode : upper) {
+                        upperCorrected[i] = correctToGenericsSpecRecurse(genericsSpec, classNode);
                     }
                     upper = upperCorrected;
                 }

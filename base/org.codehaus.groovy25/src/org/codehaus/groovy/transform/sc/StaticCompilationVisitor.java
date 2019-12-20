@@ -56,13 +56,11 @@ import org.codehaus.groovy.classgen.asm.TypeChooser;
 import org.codehaus.groovy.classgen.asm.WriterControllerFactory;
 import org.codehaus.groovy.classgen.asm.sc.StaticCompilationMopWriter;
 import org.codehaus.groovy.classgen.asm.sc.StaticTypesTypeChooser;
-import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,6 +79,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.extractSuperClassGenerics;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.BINARY_EXP_TARGET;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.COMPONENT_TYPE;
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.DYNAMIC_OUTER_NODE_CALLBACK;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_FIELDS_ACCESSORS;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_FIELDS_MUTATORS;
@@ -147,6 +146,7 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
     }
 
     private void addDynamicOuterClassAccessorsCallback(final ClassNode outer) {
+        /* GRECLIPSE edit -- GROOVY-9328
         if (outer != null && !isStaticallyCompiled(outer)
                 && outer.getNodeMetaData(StaticCompilationMetadataKeys.DYNAMIC_OUTER_NODE_CALLBACK) == null) {
             outer.putNodeMetaData(StaticCompilationMetadataKeys.DYNAMIC_OUTER_NODE_CALLBACK, new CompilationUnit.PrimaryClassNodeOperation() {
@@ -159,6 +159,22 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 }
             });
         }
+        */
+        if (outer != null) {
+            if (!isStaticallyCompiled(outer) && outer.getNodeMetaData(DYNAMIC_OUTER_NODE_CALLBACK) == null) {
+                outer.putNodeMetaData(DYNAMIC_OUTER_NODE_CALLBACK, new CompilationUnit.PrimaryClassNodeOperation() {
+                    @Override
+                    public void call(final SourceUnit source, final GeneratorContext context, final ClassNode classNode) {
+                        if (classNode == outer) {
+                            addPrivateBridgeMethods(classNode);
+                            addPrivateFieldsAccessors(classNode);
+                        }
+                    }
+                });
+            }
+            addDynamicOuterClassAccessorsCallback(outer.getOuterClass());
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -242,7 +258,7 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
         int acc = -1;
         privateFieldAccessors = accessedFields != null ? new HashMap<String, MethodNode>() : null;
         privateFieldMutators = mutatedFields != null ? new HashMap<String, MethodNode>() : null;
-        final int access = Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
+        final int access = ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC;
         for (FieldNode fieldNode : node.getFields()) {
             boolean generateAccessor = accessedFields != null && accessedFields.contains(fieldNode);
             boolean generateMutator = mutatedFields != null && mutatedFields.contains(fieldNode);
@@ -295,7 +311,7 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
         }
         privateBridgeMethods = new HashMap<MethodNode, MethodNode>();
         int i=-1;
-        final int access = Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
+        final int access = ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC;
         for (MethodNode method : methods) {
             if (accessedMethods.contains(method)) {
                 List<String> methodSpecificGenerics = methodSpecificGenerics(method);

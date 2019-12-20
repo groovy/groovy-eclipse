@@ -221,7 +221,9 @@ public class AnnotationCollectorTransform {
         List<AnnotationNode> ret = new ArrayList<AnnotationNode>();
         for (Expression e : memberList) {
             AnnotationNode toAdd = new AnnotationNode(e.getType());
+            /* GRECLIPSE edit
             toAdd.setSourcePosition(aliasAnnotationUsage);
+            */
             ret.add(toAdd);
         }
         return ret;
@@ -239,7 +241,9 @@ public class AnnotationCollectorTransform {
         for (AnnotationNode an : orig) {
             AnnotationNode newAn = new AnnotationNode(an.getClassNode());
             copyMembers(an, newAn);
+            /* GRECLIPSE edit
             newAn.setSourcePosition(aliasAnnotationUsage);
+            */
             ret.add(newAn);
         }
         return ret;

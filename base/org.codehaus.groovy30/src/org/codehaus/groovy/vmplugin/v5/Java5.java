@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -61,8 +62,6 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.security.Permission;
 import java.util.List;
-
-import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 
 /**
  * java 5 based functions
@@ -155,22 +154,27 @@ public class Java5 implements VMPlugin {
     private ClassNode configureWildcardType(WildcardType wildcardType) {
         ClassNode base = ClassHelper.makeWithoutCaching("?");
         base.setRedirect(ClassHelper.OBJECT_TYPE);
-        //TODO: more than one lower bound for wildcards?
+
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
+        /* GRECLIPSE edit
         ClassNode lower = null;
-        // TODO: is it safe to remove this? What was the original intention?
         if (lowers != null) lower = lowers[0];
 
-        // GRECLIPSE edit -- want <?> like JDT does, not <? extends Object>
-        //ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
-        ClassNode[] upper = wildcardType.toString().equals("?") ? null : configureTypes(wildcardType.getUpperBounds());
-        // GRECLIPSE end
+        ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
         GenericsType t = new GenericsType(base, upper, lower);
+        */
+        ClassNode[] uppers = configureTypes(wildcardType.getUpperBounds());
+        // beware of [Object] upper bounds; often it's <?> or <? super T>
+        if (lowers != null || wildcardType.getTypeName().equals("?")) {
+            uppers = null;
+        }
+
+        GenericsType t = new GenericsType(base, uppers, lowers != null ? lowers[0] : null);
+        // GRECLIPSE end
         t.setWildcard(true);
 
         ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
         ref.setGenericsTypes(new GenericsType[]{t});
-
         return ref;
     }
 
@@ -364,8 +368,7 @@ public class Java5 implements VMPlugin {
     }
 
     private static void setMethodDefaultValue(MethodNode mn, Method m) {
-        Object defaultValue = m.getDefaultValue();
-        ConstantExpression cExp = defaultValue != null ? new ConstantExpression(defaultValue) : nullX();
+        ConstantExpression cExp = new ConstantExpression(m.getDefaultValue());
         mn.setCode(new ReturnStatement(cExp));
         mn.setAnnotationDefault(true);
     }
@@ -411,7 +414,8 @@ public class Java5 implements VMPlugin {
                 Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), getConstructorParameterAnnotations(ctor), ctor);
                 // GRECLIPSE end
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                ConstructorNode cn = classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                setAnnotationMetaData(ctor.getAnnotations(), cn);
             }
 
             Class sc = clazz.getSuperclass();
@@ -630,8 +634,13 @@ public class Java5 implements VMPlugin {
     }
 
     @Override
-    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod, Class<?>[] params, Class<?> caller) {
+    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod, Class<?> caller) {
         return metaMethod;
+    }
+
+    @Override
+    public MetaMethod transformMetaMethod(MetaClass metaClass, MetaMethod metaMethod) {
+        return transformMetaMethod(metaClass, metaMethod, null);
     }
 
     private static final Permission ACCESS_PERMISSION = new ReflectPermission("suppressAccessChecks");

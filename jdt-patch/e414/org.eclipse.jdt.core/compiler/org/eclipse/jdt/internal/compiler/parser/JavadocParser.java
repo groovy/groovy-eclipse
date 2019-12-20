@@ -17,7 +17,23 @@ import java.util.List;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.IJavadocTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Javadoc;
+import org.eclipse.jdt.internal.compiler.ast.JavadocAllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.JavadocArgumentExpression;
+import org.eclipse.jdt.internal.compiler.ast.JavadocArrayQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocArraySingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocFieldReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocImplicitTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocMessageSend;
+import org.eclipse.jdt.internal.compiler.ast.JavadocQualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocReturnStatement;
+import org.eclipse.jdt.internal.compiler.ast.JavadocSingleNameReference;
+import org.eclipse.jdt.internal.compiler.ast.JavadocSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -27,6 +43,7 @@ import org.eclipse.jdt.internal.compiler.util.Util;
 public class JavadocParser extends AbstractCommentParser {
 	private static final JavadocSingleNameReference[] NO_SINGLE_NAME_REFERENCE = new JavadocSingleNameReference[0];
 	private static final JavadocSingleTypeReference[] NO_SINGLE_TYPE_REFERENCE = new JavadocSingleTypeReference[0];
+	private static final JavadocQualifiedTypeReference[] NO_QUALIFIED_TYPE_REFERENCE = new JavadocQualifiedTypeReference[0];
 	private static final TypeReference[] NO_TYPE_REFERENCE = new TypeReference[0];
 	private static final Expression[] NO_EXPRESSION = new Expression[0];
 
@@ -629,7 +646,9 @@ public class JavadocParser extends AbstractCommentParser {
 					}
 				} else if (length == TAG_PROVIDES_LENGTH && CharOperation.equals(TAG_PROVIDES, tagName, 0, length)) {
 					this.tagValue = TAG_PROVIDES_VALUE;
-					this.tagWaitingForDescription = this.tagValue;
+					if (!this.inlineTagStarted) {
+						valid = parseProvidesReference();
+					}
 				}
 				break;
 			case 'r':
@@ -677,7 +696,9 @@ public class JavadocParser extends AbstractCommentParser {
 			case 'u':
 				if (length == TAG_USES_LENGTH && CharOperation.equals(TAG_USES, tagName, 0, length)) {
 					this.tagValue = TAG_USES_VALUE;
-					this.tagWaitingForDescription = this.tagValue;
+					if (!this.inlineTagStarted) {
+						valid = parseUsesReference();
+					}
 				}
 				break;
 			case 'v':
@@ -951,6 +972,18 @@ public class JavadocParser extends AbstractCommentParser {
 			System.arraycopy(this.invalidParamReferencesStack, 0, this.docComment.invalidParameters, 0, this.invalidParamReferencesPtr+1);
 		}
 
+		this.docComment.usesReferences = this.usesReferencesPtr >= 0 ? new IJavadocTypeReference[this.usesReferencesPtr+1] : NO_QUALIFIED_TYPE_REFERENCE;
+		for (int i = 0; i <= this.usesReferencesPtr; ++i) {
+			TypeReference ref = this.usesReferencesStack[i];
+			this.docComment.usesReferences[i] = (IJavadocTypeReference)ref; 
+		}
+
+		this.docComment.providesReferences = this.providesReferencesPtr >= 0 ? new IJavadocTypeReference[this.providesReferencesPtr+1] : NO_QUALIFIED_TYPE_REFERENCE;
+		for (int i = 0; i <= this.providesReferencesPtr; ++i) {
+			TypeReference ref = this.providesReferencesStack[i];
+			this.docComment.providesReferences[i] = (IJavadocTypeReference)ref; 
+		}
+
 		// If no nodes stored return
 		if (this.astLengthPtr == -1) {
 			return;
@@ -1013,4 +1046,76 @@ public class JavadocParser extends AbstractCommentParser {
 			System.arraycopy(this.docComment.paramTypeParameters, paramTypeParamPtr, this.docComment.paramTypeParameters = new JavadocSingleTypeReference[size - paramTypeParamPtr], 0, size - paramTypeParamPtr);
 		}
 	}
+
+	/*
+	 * Parse @uses tag declaration
+	 */
+	protected boolean parseUsesReference() {
+		int start = this.scanner.currentPosition;
+		try {
+			Object typeRef = parseQualifiedName(true);
+			if (this.abort) return false; // May be aborted by specialized parser
+			if (typeRef == null) {
+				if (this.reportProblems)
+					this.sourceParser.problemReporter().javadocMissingUsesClassName(this.tagSourceStart, this.tagSourceEnd, this.sourceParser.modifiers);
+			} else {
+				return pushUsesReference(typeRef);
+			}
+		} catch (InvalidInputException ex) {
+			if (this.reportProblems) this.sourceParser.problemReporter().javadocInvalidUsesClass(start, getTokenEndPosition());
+		}
+		return false;
+	}
+
+	protected boolean pushUsesReference(Object typeRef) {
+		if (this.usesReferencesPtr == -1l) {
+			this.usesReferencesStack = new TypeReference[10];
+		}
+		int stackLength = this.usesReferencesStack.length;
+		if (++this.usesReferencesPtr >= stackLength) {
+			System.arraycopy(
+				this.usesReferencesStack, 0,
+				this.usesReferencesStack = new TypeReference[stackLength + AST_STACK_INCREMENT], 0,
+				stackLength);
+		}
+		this.usesReferencesStack[this.usesReferencesPtr] = (TypeReference)typeRef;
+		return true;
+	}
+
+	/*
+	 * Parse @uses tag declaration
+	 */
+	protected boolean parseProvidesReference() {
+		int start = this.scanner.currentPosition;
+		try {
+			Object typeRef = parseQualifiedName(true);
+			if (this.abort) return false; // May be aborted by specialized parser
+			if (typeRef == null) {
+				if (this.reportProblems)
+					this.sourceParser.problemReporter().javadocMissingProvidesClassName(this.tagSourceStart, this.tagSourceEnd, this.sourceParser.modifiers);
+			} else {
+				return pushProvidesReference(typeRef);
+			}
+		} catch (InvalidInputException ex) {
+			if (this.reportProblems) this.sourceParser.problemReporter().javadocInvalidProvidesClass(start, getTokenEndPosition());
+		}
+		return false;
+	}
+
+	protected boolean pushProvidesReference(Object typeRef) {
+		if (this.providesReferencesPtr == -1l) {
+			this.providesReferencesStack = new TypeReference[10];
+		}
+		int stackLength = this.providesReferencesStack.length;
+		if (++this.providesReferencesPtr >= stackLength) {
+			System.arraycopy(
+				this.providesReferencesStack, 0,
+				this.providesReferencesStack = new TypeReference[stackLength + AST_STACK_INCREMENT], 0,
+				stackLength);
+		}
+		this.providesReferencesStack[this.providesReferencesPtr] = (TypeReference)typeRef;
+		return true;
+
+	}
+
 }

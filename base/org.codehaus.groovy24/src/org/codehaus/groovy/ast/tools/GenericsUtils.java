@@ -163,6 +163,9 @@ public class GenericsUtils {
         GenericsType[] redirectGenericsTypes = node.redirect().getGenericsTypes();
         if (redirectGenericsTypes==null) redirectGenericsTypes = parameterized;
         if (parameterized.length != redirectGenericsTypes.length) return;
+        // GRECLIPSE add -- GROOVY-7985
+        List<GenericsType> values = new ArrayList<>();
+        // GRECLIPSE end
         for (int i = 0; i < redirectGenericsTypes.length; i++) {
             GenericsType redirectType = redirectGenericsTypes[i];
             if (redirectType.isPlaceholder()) {
@@ -170,6 +173,7 @@ public class GenericsUtils {
                 if (!map.containsKey(name)) {
                     GenericsType value = parameterized[i];
                     map.put(name, value);
+                    /* GRECLIPSE edit
                     if (value.isWildcard()) {
                         ClassNode lowerBound = value.getLowerBound();
                         if (lowerBound!=null) {
@@ -184,9 +188,30 @@ public class GenericsUtils {
                     } else if (!value.isPlaceholder()) {
                         extractPlaceholders(value.getType(), map);
                     }
+                    */
+                    values.add(value);
+                    // GRECLIPSE end
                 }
             }
         }
+        // GRECLIPSE add
+        for (GenericsType value : values) {
+            if (value.isWildcard()) {
+                ClassNode lowerBound = value.getLowerBound();
+                if (lowerBound != null) {
+                    extractPlaceholders(lowerBound, map);
+                }
+                ClassNode[] upperBounds = value.getUpperBounds();
+                if (upperBounds != null) {
+                    for (ClassNode upperBound : upperBounds) {
+                        extractPlaceholders(upperBound, map);
+                    }
+                }
+            } else if (!value.isPlaceholder()) {
+                extractPlaceholders(value.getType(), map);
+            }
+        }
+        // GRECLIPSE end
     }
 
     /**

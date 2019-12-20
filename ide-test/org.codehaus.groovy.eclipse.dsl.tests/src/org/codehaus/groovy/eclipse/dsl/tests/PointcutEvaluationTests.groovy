@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -378,7 +378,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
 
     @Test
     void testFileExtension1() {
-        doTestOfLastMatch('2', 'fileExtension("groovy")', 'src/p/TestUnit\\d+.groovy')
+        doTestOfLastMatch('2', 'fileExtension("groovy")', 'src/p/TestUnit_[0-9a-f]{32}.groovy')
     }
 
     @Test
@@ -424,7 +424,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) | ' +
             'bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
-            new BindingResult('c', 'src/p/TestUnit\\d+.groovy'))
+            new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
@@ -432,7 +432,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         doTestOfLastBindingSet('2', 'bind( b : nature("org.eclipse.jdt.groovy.core.groovyNature") ) & ' +
             'bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'org.eclipse.jdt.groovy.core.groovyNature'),
-            new BindingResult('c', 'src/p/TestUnit\\d+.groovy'))
+            new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
@@ -452,7 +452,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testNamedBinding6a() {
         doTestOfLastBindingSet('2', 'bind( b : nature("invalid") ) | ' +
             'bind( c : fileExtension("groovy") )',
-            new BindingResult('c', 'src/p/TestUnit\\d+.groovy'))
+            new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test
@@ -474,7 +474,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             'bind( b : currentType("java.lang.Integer") ) | ' +
             'bind( c : fileExtension("groovy") )',
             new BindingResult('b', 'java.lang.Integer'),
-            new BindingResult('c', 'src/p/TestUnit\\d+.groovy'))
+            new BindingResult('c', 'src/p/TestUnit_[0-9a-f]{32}.groovy'))
     }
 
     @Test

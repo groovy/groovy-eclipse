@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -283,6 +282,25 @@ public class GroovyUtils {
         return importNodes;
     }
 
+    public static MethodNode getAnnotationMethod(AnnotationNode node, String methodName) {
+        MethodNode meth = node.getClassNode().getMethod(methodName, Parameter.EMPTY_ARRAY);
+        if (meth != null) {
+            return meth;
+        }
+
+        List<AnnotationNode> nodes = node.getNodeMetaData("AnnotationCollectorTransform");
+        if (nodes != null) {
+            for (AnnotationNode aliased : nodes) {
+                meth = getAnnotationMethod(aliased, methodName);
+                if (meth != null) {
+                    return meth;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static MethodNode getMethod(ClassNode declaringType, String methodName, Parameter... parameters) {
         MethodNode meth = declaringType.getMethod(methodName, parameters);
         if (meth != null) {
@@ -291,7 +309,7 @@ public class GroovyUtils {
         // concrete types (without mixins/traits) return all methods from getMethod(String, Parameter[])
         if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
             Set<ClassNode> done = new HashSet<>(Collections.singleton(declaringType));
-            Queue<ClassNode> todo = new LinkedList<>();
+            LinkedList<ClassNode> todo = new LinkedList<>();
             ClassNode type = declaringType;
             do {
                 ClassNode supa = type.getSuperClass();

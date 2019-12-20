@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -42,8 +42,9 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.2</version>
+				<version>3.8.1</version>
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>
 					<!--compilerArgs>
@@ -78,17 +79,6 @@
 
 
 	<pluginRepositories>
-		<pluginRepository>
-			<id>bintray</id>
-			<name>Groovy Bintray</name>
-			<url>https://dl.bintray.com/groovy/maven</url>
-			<releases>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
 		<!--pluginRepository>
 			<id>codehaus-staging</id>
 			<name>codehaus-staging</name>

@@ -97,7 +97,7 @@ public class CompilerConfiguration {
     public static final String PRE_JDK5 = JDK4;
 
     /**
-     * JDK version to bytecode version mapping
+     * JDK version to bytecode version mapping.
      */
     public static final Map<String, Integer> JDK_TO_BYTECODE_VERSION_MAP = Maps.of(
             JDK4, Opcodes.V1_4,
@@ -113,18 +113,17 @@ public class CompilerConfiguration {
             JDK14, Opcodes.V14
     );
 
-    /* GRECLIPSE edit
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-    /** An array of the valid targetBytecode values * /
-    public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(EMPTY_STRING_ARRAY);
-    */
-    /** The valid targetBytecode values. */
+    /**
+     * The valid targetBytecode values.
+     */
     public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
-    // GRECLIPSE end
+
+    /* GRECLIPSE edit
+    public static final int ASM_API_VERSION = Opcodes.ASM7;
+    */
 
     /**
-     * The default source encoding
+     * The default source encoding.
      */
     public static final String DEFAULT_SOURCE_ENCODING = "UTF-8";
 
@@ -309,7 +308,7 @@ public class CompilerConfiguration {
     /**
      * Classpath for use during compilation
      */
-    private LinkedList<String> classpath;
+    private List<String> classpath;
 
     /**
      * If true, the compiler should produce action information
@@ -388,10 +387,6 @@ public class CompilerConfiguration {
     private Set<String> disabledGlobalASTTransformations;
 
     private BytecodeProcessor bytecodePostprocessor;
-
-    /* GRECLIPSE edit
-    public static final int ASM_API_VERSION = Opcodes.ASM7;
-    */
 
     /**
      * Sets the compiler flags/settings to default values.
@@ -1057,7 +1052,7 @@ public class CompilerConfiguration {
      */
     public CompilerConfiguration addCompilationCustomizers(CompilationCustomizer... customizers) {
         if (customizers == null) throw new IllegalArgumentException("provided customizers list must not be null");
-        compilationCustomizers.addAll(Arrays.asList(customizers));
+        Collections.addAll(compilationCustomizers, customizers);
         return this;
     }
 
@@ -1132,6 +1127,6 @@ public class CompilerConfiguration {
      */
     public boolean isMemStubEnabled() {
         Object memStubEnabled = getJointCompilationOptions().get(MEM_STUB);
-        return Optional.ofNullable(memStubEnabled).map(value -> "true".equals(value.toString())).orElse(Boolean.FALSE).booleanValue();
+        return Optional.ofNullable(memStubEnabled).map(value -> Boolean.parseBoolean(value.toString())).orElse(Boolean.FALSE).booleanValue();
     }
 }

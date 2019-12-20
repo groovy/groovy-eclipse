@@ -1324,7 +1324,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the string representing the generic type
      */
     private String genericTypeAsString(GenericsType genericsType) {
+        /* GRECLIPSE edit
         StringBuilder ret = new StringBuilder(genericsType.getName());
+        */
+        StringBuilder ret = new StringBuilder(genericsType.isWildcard() ? "?" : genericsType.getName());
+        // GRECLIPSE end
         if (genericsType.getUpperBounds() != null) {
             ret.append(" extends ");
             for (int i = 0; i < genericsType.getUpperBounds().length; i++) {
@@ -1336,12 +1340,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 }
                 if (i + 1 < genericsType.getUpperBounds().length) ret.append(" & ");
             }
-        } else if (genericsType.getLowerBound() !=null) {
+        } else if (genericsType.getLowerBound() != null) {
             ClassNode classNode = genericsType.getLowerBound();
             if (classNode.equals(this)) {
                 ret.append(" super ").append(classNode.getName());
             } else {
-                ret.append(" super ").append(classNode);
+                ret.append(" super ").append(classNode.toString(false));
             }
         }
         return ret.toString();

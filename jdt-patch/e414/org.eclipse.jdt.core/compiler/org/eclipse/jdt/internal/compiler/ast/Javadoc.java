@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -33,6 +33,8 @@ public class Javadoc extends ASTNode {
 	public TypeReference[] exceptionReferences; // @throws, @exception
 	public JavadocReturnStatement returnStatement; // @return
 	public Expression[] seeReferences; // @see
+	public IJavadocTypeReference[] usesReferences; // @uses
+	public IJavadocTypeReference[] providesReferences; // @provides
 	public long[] inheritedPositions = null;
 	// bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=51600
 	// Store param references for tag with invalid syntax
@@ -262,8 +264,8 @@ public class Javadoc extends ASTNode {
 			return;
 		}
 		// Do nothing - This is to mimic the SDK's javadoc tool behavior, which neither
-		// sanity checks nor generates documentation using comments at the CU scope 
-		// (unless the unit happens to be package-info.java - in which case we don't come here.) 
+		// sanity checks nor generates documentation using comments at the CU scope
+		// (unless the unit happens to be package-info.java - in which case we don't come here.)
 	}
 
 	/*
@@ -318,7 +320,7 @@ public class Javadoc extends ASTNode {
 								MethodBinding current = methDecl.binding;
 								// work 'against' better inference in 1.8 (otherwise comparing (G<T> with G<Object>) would fail):
 								if (methScope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8
-									&& current.typeVariables != Binding.NO_TYPE_VARIABLES) 
+									&& current.typeVariables != Binding.NO_TYPE_VARIABLES)
 								{
 									current = current.asRawMethod(methScope.environment());
 								}
@@ -326,7 +328,7 @@ public class Javadoc extends ASTNode {
 									superRef = true;
 								}
 							}
-						}						
+						}
 					}
 				}
 			}
@@ -384,6 +386,11 @@ public class Javadoc extends ASTNode {
 		int length = this.invalidParameters == null ? 0 : this.invalidParameters.length;
 		for (int i = 0; i < length; i++) {
 			this.invalidParameters[i].resolve(methScope, false, false);
+		}
+
+		if (methScope.isModuleScope()) {
+			resolveUsesTags(methScope, reportMissing);
+			resolveProvidesTags(methScope, reportMissing);
 		}
 	}
 
@@ -561,6 +568,148 @@ public class Javadoc extends ASTNode {
 	}
 
 	/*
+	 * Resolve @uses tags while block scope
+	 */
+	private void resolveUsesTags(BlockScope scope, boolean reportMissing) {
+		ModuleDeclaration moduleDecl = (ModuleDeclaration)scope.referenceContext();
+		int usesTagsSize = this.usesReferences == null ? 0 : this.usesReferences.length;
+
+		// If no referenced module then report a problem for each uses tag
+		if (moduleDecl == null) {
+			for (int i = 0; i < usesTagsSize; i++) {
+				IJavadocTypeReference uses = this.usesReferences[i];
+				scope.problemReporter().javadocUnexpectedTag(uses.getTagSourceStart(), uses.getTagSourceEnd());
+			}
+			return;
+		}
+
+		// If no uses tags then report a problem for each uses reference
+		int usesSize = moduleDecl.usesCount;
+		if (usesTagsSize == 0) {
+			if (reportMissing) {
+				for (int i = 0; i < usesSize; i++) {
+					UsesStatement uses = moduleDecl.uses[i];
+					scope.problemReporter().javadocMissingUsesTag(uses.serviceInterface, uses.sourceStart, uses.sourceEnd, moduleDecl.binding.modifiers);
+				}
+			}
+		} else {
+			TypeBinding[] bindings = new TypeBinding[usesTagsSize];
+			int maxBindings = 0;
+
+			// Scan all @uses tags
+			for (int i = 0; i < usesTagsSize; i++) {
+				TypeReference usesRef = (TypeReference)this.usesReferences[i];
+				try {
+					usesRef.resolve(scope);
+					if (usesRef.resolvedType != null && usesRef.resolvedType.isValidBinding()) {
+						// Verify duplicated tags
+						boolean found = false;
+						for (int j = 0; j < maxBindings && !found; j++) {
+							if (bindings[j].equals(usesRef.resolvedType)) {
+								scope.problemReporter().javadocDuplicatedUsesTag(usesRef.sourceStart, usesRef.sourceEnd);
+								found = true;
+							}
+						}
+						if (!found) {
+							bindings[maxBindings++] = usesRef.resolvedType;
+						}
+					}
+				} catch (Exception e) {
+					scope.problemReporter().javadocInvalidUsesClass(usesRef.sourceStart, usesRef.sourceEnd);
+				}
+			}
+
+			// Look for undocumented uses
+			if (reportMissing) {
+				for (int i = 0; i < usesSize; i++) {
+					UsesStatement uses = moduleDecl.uses[i];
+					boolean found = false;
+					for (int j = 0; j < maxBindings && !found; j++) {
+						TypeBinding binding = bindings[j];
+						if (uses.serviceInterface.getTypeBinding(scope).equals(binding)) {
+							found = true;
+						}
+					}
+					if (!found) {
+						scope.problemReporter().javadocMissingUsesTag(uses.serviceInterface, uses.sourceStart, uses.sourceEnd, moduleDecl.binding.modifiers);
+					}
+				}
+			}
+		}
+	}
+
+	/*
+	 * Resolve @provides tags while block scope
+	 */
+	private void resolveProvidesTags(BlockScope scope, boolean reportMissing) {
+		ModuleDeclaration moduleDecl = (ModuleDeclaration)scope.referenceContext();
+		int providesTagsSize = this.providesReferences == null ? 0 : this.providesReferences.length;
+
+		// If no referenced module then report a problem for each uses tag
+		if (moduleDecl == null) {
+			for (int i = 0; i < providesTagsSize; i++) {
+				IJavadocTypeReference provides = this.providesReferences[i];
+				scope.problemReporter().javadocUnexpectedTag(provides.getTagSourceStart(), provides.getTagSourceEnd());
+			}
+			return;
+		}
+
+		// If no uses tags then report a problem for each uses reference
+		int providesSize = moduleDecl.servicesCount;
+		if (providesTagsSize == 0) {
+			if (reportMissing) {
+				for (int i = 0; i < providesSize; i++) {
+					ProvidesStatement provides = moduleDecl.services[i];
+					scope.problemReporter().javadocMissingProvidesTag(provides.serviceInterface, provides.sourceStart, provides.sourceEnd, moduleDecl.binding.modifiers);
+				}
+			}
+		} else {
+			TypeBinding[] bindings = new TypeBinding[providesTagsSize];
+			int maxBindings = 0;
+
+			// Scan all @provides tags
+			for (int i = 0; i < providesTagsSize; i++) {
+				TypeReference providesRef = (TypeReference)this.providesReferences[i];
+				try {
+					providesRef.resolve(scope);
+					if (providesRef.resolvedType != null && providesRef.resolvedType.isValidBinding()) {
+						// Verify duplicated tags
+						boolean found = false;
+						for (int j = 0; j < maxBindings && !found; j++) {
+							if (bindings[j].equals(providesRef.resolvedType)) {
+								scope.problemReporter().javadocDuplicatedProvidesTag(providesRef.sourceStart, providesRef.sourceEnd);
+								found = true;
+							}
+						}
+						if (!found) {
+							bindings[maxBindings++] = providesRef.resolvedType;
+						}
+					}
+				} catch (Exception e) {
+					scope.problemReporter().javadocInvalidProvidesClass(providesRef.sourceStart, providesRef.sourceEnd);
+				}
+			}
+
+			// Look for undocumented uses
+			if (reportMissing) {
+				for (int i = 0; i < providesSize; i++) {
+					ProvidesStatement provides = moduleDecl.services[i];
+					boolean found = false;
+					for (int j = 0; j < maxBindings && !found; j++) {
+						TypeBinding binding = bindings[j];
+						if (provides.serviceInterface.getTypeBinding(scope).equals(binding)) {
+							found = true;
+						}
+					}
+					if (!found) {
+						scope.problemReporter().javadocMissingProvidesTag(provides.serviceInterface, provides.sourceStart, provides.sourceEnd, moduleDecl.binding.modifiers);
+					}
+				}
+			}
+		}
+	}
+
+	/*
 	 * Resolve @param tags for type parameters
 	 */
 	private void resolveTypeParameterTags(Scope scope, boolean reportMissing) {
@@ -604,7 +753,7 @@ public class Javadoc extends ASTNode {
 
 		// If no param tags then report a problem for each declaration type parameter
 		if (parameters != null) {
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, avoid secondary errors when <= 1.4 
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=324850, avoid secondary errors when <= 1.4
 			reportMissing = reportMissing && scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
 			int typeParametersLength = parameters.length;
 			if (paramTypeParamLength == 0) {
@@ -830,7 +979,7 @@ public class Javadoc extends ASTNode {
 								mainLoop: for (int i=0; i<length; i++) {
 									char[][] compoundName = imports[i].compoundName;
 									int compoundNameLength = compoundName.length;
-									if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1) 
+									if ((imports[i].onDemand && compoundNameLength == computedCompoundName.length-1)
 											|| (compoundNameLength == computedCompoundName.length)) {
 										for (int j = compoundNameLength; --j >= 0;) {
 											if (CharOperation.equals(imports[i].compoundName[j], computedCompoundName[j])) {

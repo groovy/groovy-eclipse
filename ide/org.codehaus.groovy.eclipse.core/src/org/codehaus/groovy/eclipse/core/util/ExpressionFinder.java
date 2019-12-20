@@ -160,7 +160,7 @@ public class ExpressionFinder {
     public String[] splitForCompletionNoTrim(String expression) {
         String[] ret = {"", null};
 
-        if (expression == null || expression.trim().length() < 1) {
+        if (expression.trim().isEmpty()) {
             return ret;
         }
 

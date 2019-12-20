@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -96,12 +97,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     private int newMethodModifier = Flags.AccDefault;
 
     /**
-     * Text that will be replaced by the refactoring
+     * Text that will be replaced by the refactoring.
      */
     private Region replaceScope;
 
     /**
-     * Text that is currently selected
+     * Text that is currently selected.
      */
     private Region selectedText;
 
@@ -109,20 +110,13 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private boolean returnMustBeDeclared;
 
-    /**
-     * Two collections since the variables in the methodCall
-     * and in the signature of the method can be different
-     */
     private List<Variable> actualParameters;
 
     private List<ClassNode> inferredTypeOfActualParameters;
 
     private List<Variable> originalParametersBeforeRename;
 
-    /**
-     * Although we can determine if there are multiple return parameters
-     * we only support on return parameter
-     */
+    // Although we can determine if there are multiple return parameters we only support on return parameter.
     private Set<Variable> returnParameters;
 
     private List<ClassNode> inferredReturnTypes;
@@ -135,21 +129,21 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private CompilationUnitChange change;
 
-    private GroovyRefactoringObservable observable = new GroovyRefactoringObservable();
+    private final GroovyRefactoringObservable observable = new GroovyRefactoringObservable();
 
-    public ExtractGroovyMethodRefactoring(GroovyCompilationUnit unit, int offset, int length, RefactoringStatus status) {
+    public ExtractGroovyMethodRefactoring(final GroovyCompilationUnit unit, final int offset, final int length, final RefactoringStatus status) {
         this.unit = unit;
         this.selectedText = new Region(offset, length);
         this.refactoringPreferences = Activator.getDefault().getPreferenceStore();
         initializeExtractedStatements(status);
     }
 
-    public ExtractGroovyMethodRefactoring(JavaRefactoringArguments arguments, RefactoringStatus status) {
+    public ExtractGroovyMethodRefactoring(final JavaRefactoringArguments arguments, final RefactoringStatus status) {
         status.merge(initialize(arguments));
         initializeExtractedStatements(status);
     }
 
-    private void initializeExtractedStatements(RefactoringStatus status) {
+    private void initializeExtractedStatements(final RefactoringStatus status) {
         try {
             methodCodeFinder = new StatementFinder(selectedText, unit.getModuleNode());
             createBlockStatement();
@@ -162,7 +156,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
+    public RefactoringStatus checkInitialConditions(final IProgressMonitor monitor) throws CoreException, OperationCanceledException {
         RefactoringStatus status = new RefactoringStatus();
         monitor.beginTask("Checking initial conditions for extract method", 100);
 
@@ -192,9 +186,9 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     @Override
-    public RefactoringStatus checkFinalConditions(IProgressMonitor pm) throws CoreException, OperationCanceledException {
+    public RefactoringStatus checkFinalConditions(final IProgressMonitor monitor) throws CoreException, OperationCanceledException {
         RefactoringStatus stat = new RefactoringStatus();
-        stat.merge(checkDuplicateMethod(pm));
+        stat.merge(checkDuplicateMethod(monitor));
 
         change = new CompilationUnitChange(GroovyRefactoringMessages.ExtractMethodRefactoring, unit);
         change.setEdit(new MultiTextEdit());
@@ -212,7 +206,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     @Override
-    public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
+    public Change createChange(final IProgressMonitor monitor) throws CoreException, OperationCanceledException {
         return change;
     }
 
@@ -224,11 +218,11 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     /**
      * For testing, override actual preferences with test-specific ones
      */
-    public void setPreferences(IPreferenceStore preferences) {
+    public void setPreferences(final IPreferenceStore preferences) {
         this.refactoringPreferences = preferences;
     }
 
-    private RefactoringStatus initialize(JavaRefactoringArguments arguments) {
+    private RefactoringStatus initialize(final JavaRefactoringArguments arguments) {
         final String selection = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION);
         if (selection == null) {
             return RefactoringStatus.createFatalErrorStatus(Messages.format(
@@ -280,11 +274,11 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         }
     }
 
-    public void addObserver(Observer observer) {
+    public void addObserver(final Observer observer) {
         observable.addObserver(observer);
     }
 
-    public void setNewMethodname(String newMethodname) {
+    public void setNewMethodname(final String newMethodname) {
         this.newMethodName = newMethodname;
         updateMethod();
         observable.setChanged();
@@ -295,7 +289,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return newMethodName;
     }
 
-    public void setModifier(int modifier) {
+    public void setModifier(final int modifier) {
         this.newMethodModifier = modifier;
         updateMethod();
         observable.setChanged();
@@ -306,7 +300,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return newMethodModifier;
     }
 
-    private void setCallAndMethHeadParameters(List<Variable> params) {
+    private void setCallAndMethHeadParameters(final List<Variable> params) {
         actualParameters = params;
         inferredTypeOfActualParameters.clear();
         for (Variable variable : params) {
@@ -332,13 +326,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      * @return String containing the call
      */
     public String getMethodCall() {
-
         Expression objExp = new VariableExpression("this");
         ArgumentListExpression arguments = new ArgumentListExpression();
 
         for (Variable param : originalParametersBeforeRename) {
             arguments.addExpression(new VariableExpression(param.getName(),
-                    param.getOriginType() == null ? ClassHelper.DYNAMIC_TYPE : param.getOriginType()));
+                Optional.ofNullable(param.getOriginType()).orElse(VariableScope.OBJECT_CLASS_NODE)));
         }
 
         MethodCallExpression newMethodCall = new MethodCallExpression(objExp, newMethodName, arguments);
@@ -354,7 +347,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return writer.getGroovyCode();
     }
 
-    private void visitExpressionsForReturnStmt(MethodCallExpression newMethodCall, ASTWriter astw) {
+    private void visitExpressionsForReturnStmt(final MethodCallExpression newMethodCall, final ASTWriter astw) {
         Assert.isTrue(!returnParameters.isEmpty());
         Variable retVar = returnParameters.iterator().next();
         if (returnMustBeDeclared) {
@@ -367,11 +360,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         }
     }
 
-    /**
-     * Return a method head for preview
-     *
-     * @return
-     */
     public String getMethodHead() {
         updateMethod();
 
@@ -383,19 +371,15 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return head.substring(0, headEndPos + 1).trim();
     }
 
-    /**
-     * create the method node with all given parameters
-     */
     private void updateMethod() {
         // rearrange parameters if necessary
         if (!block.getStatements().isEmpty()) {
             Parameter[] params = getCallAndMethHeadParameters();
-            ClassNode returnType = ClassHelper.DYNAMIC_TYPE;
+            ClassNode returnType;
             if (!returnParameters.isEmpty()) {
                 returnType = inferredReturnTypes.get(0);
-                if (returnType.equals(VariableScope.OBJECT_CLASS_NODE)) {
-                    returnType = ClassHelper.DYNAMIC_TYPE;
-                }
+            } else {
+                returnType = VariableScope.OBJECT_CLASS_NODE;
             }
             newMethod = new MethodNode(newMethodName, 0, returnType, params, null, block);
 
@@ -467,42 +451,41 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         }
 
         // now try to infer the variable types
-        InferParameterAndReturnTypesRequestor inferRequestor = new InferParameterAndReturnTypesRequestor(actualParameters,
-                returnParameters, selectedText);
+        InferParameterAndReturnTypesRequestor requestor = new InferParameterAndReturnTypesRequestor(actualParameters, returnParameters, selectedText);
         TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
-        visitor.visitCompilationUnit(inferRequestor);
+        visitor.visitCompilationUnit(requestor);
 
-        Map<Variable, ClassNode> inferredTypes = inferRequestor.getInferredTypes();
+        Map<Variable, ClassNode> inferredTypes = requestor.getInferredTypes();
         for (Variable variable : actualParameters) {
-            if (inferredTypes.containsKey(variable)) {
-                ClassNode type = inferredTypes.get(variable);
-                if (type == null || VariableScope.isVoidOrObject(type)) {
-                    inferredTypeOfActualParameters.add(ClassHelper.DYNAMIC_TYPE);
-                } else {
-                    // force using a cached type so that getUnwrapper will work
-                    inferredTypeOfActualParameters.add(maybeConvertToPrimitiveType(type));
-                }
-            } else {
-                inferredTypeOfActualParameters.add(ClassHelper.DYNAMIC_TYPE);
-            }
+            ClassNode type = Optional.ofNullable(inferredTypes.get(variable)).filter(t -> !VariableScope.isVoidOrObject(t))
+                .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
+                .orElse(VariableScope.OBJECT_CLASS_NODE);
+            inferredTypeOfActualParameters.add(type);
         }
 
         for (Variable variable : returnParameters) {
-            if (inferredTypes.containsKey(variable)) {
-                // force using a cached type so that getUnwrapper will work
-                inferredReturnTypes.add(maybeConvertToPrimitiveType(inferredTypes.get(variable)));
-            } else {
-                inferredReturnTypes.add(variable.getOriginType());
-            }
+            ClassNode type = Optional.ofNullable(inferredTypes.get(variable))
+                .map(ExtractGroovyMethodRefactoring::normalizeInferredType)
+                .orElse(VariableScope.OBJECT_CLASS_NODE);
+            inferredReturnTypes.add(type);
         }
     }
 
-    private ClassNode maybeConvertToPrimitiveType(ClassNode type) {
-        return ClassHelper.getUnwrapper(type).getPlainNodeReference();
+    private static ClassNode normalizeInferredType(final ClassNode t) {
+        if (t.equals(VariableScope.GSTRING_CLASS_NODE)) {
+            return VariableScope.STRING_CLASS_NODE;
+        }
+        if (VariableScope.isVoidOrObject(t)) {
+            return t.redirect();
+        }
+        if (ClassHelper.isPrimitiveType(t)) {
+            return t;
+        }
+        return ClassHelper.getUnwrapper(t).getPlainNodeReference();
     }
 
-    private RefactoringStatus checkDuplicateMethod(IProgressMonitor monitor) {
-        monitor = SubMonitor.convert(monitor, "Checking for duplicate methods", 25);
+    private RefactoringStatus checkDuplicateMethod(final IProgressMonitor monitor) {
+        SubMonitor.convert(monitor, "Checking for duplicate methods", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (getMethodNames().contains(newMethodName)) {
             Object[] message = {newMethodName, getClassName()};
@@ -512,8 +495,8 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return stat;
     }
 
-    private RefactoringStatus checkExtractFromConstructor(IProgressMonitor monitor) {
-        monitor = SubMonitor.convert(monitor, "Checking for constructor calls", 25);
+    private RefactoringStatus checkExtractFromConstructor(final IProgressMonitor monitor) {
+        SubMonitor.convert(monitor, "Checking for constructor calls", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (methodCodeFinder.isInConstructor()) {
             if (new ExtractConstructorTest().containsConstructorCall(newMethod)) {
@@ -524,8 +507,8 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return stat;
     }
 
-    private RefactoringStatus checkStatementSelection(IProgressMonitor monitor) {
-        monitor = SubMonitor.convert(monitor, "Checking statement selection", 25);
+    private RefactoringStatus checkStatementSelection(final IProgressMonitor monitor) {
+        SubMonitor.convert(monitor, "Checking statement selection", 25);
         RefactoringStatus stat = new RefactoringStatus();
         int selectionLength = selectedText.getLength();
         if (block.isEmpty() && selectionLength >= 0) {
@@ -534,8 +517,8 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return stat;
     }
 
-    private RefactoringStatus checkNrOfReturnValues(IProgressMonitor monitor) {
-        monitor = SubMonitor.convert(monitor, "Checking number of return values", 25);
+    private RefactoringStatus checkNrOfReturnValues(final IProgressMonitor monitor) {
+        SubMonitor.convert(monitor, "Checking number of return values", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (returnParameters != null && returnParameters.size() > 1) {
             StringBuilder retValues = new StringBuilder();
@@ -551,7 +534,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     /**
      * Returns the Code of the new Method as a formated IDocument.
      */
-    private String createCopiedMethodCode(RefactoringStatus status) {
+    private String createCopiedMethodCode(final RefactoringStatus status) {
         IDocument unitDocument = new Document(String.valueOf(unit.getContents()));
         String lineDelimiter = TextUtilities.getDefaultLineDelimiter(unitDocument);
 
@@ -593,7 +576,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     /**
      * @return may return null if there is a parse problem
      */
-    private MethodNode createNewMethodForValidation(String methodText, RefactoringStatus status) {
+    private MethodNode createNewMethodForValidation(final String methodText, final RefactoringStatus status) {
         try {
             GroovySnippetParser parser = new GroovySnippetParser();
             ModuleNode module = parser.parse(methodText);
@@ -642,12 +625,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return defaultIndentation;
     }
 
-    private MultiTextEdit renameVariableInExtractedMethod(MethodNode method) {
+    private MultiTextEdit renameVariableInExtractedMethod(final MethodNode method) {
         VariableRenamer renamer = new VariableRenamer();
         return renamer.rename(method, variablesToRename);
     }
 
-    private ASTWriter writeReturnStatements(IDocument document) {
+    private ASTWriter writeReturnStatements(final IDocument document) {
         ASTWriter astw = new ASTWriter(unit.getModuleNode(), document);
         for (Variable var : returnParameters) {
             ReturnStatement ret = new ReturnStatement(new VariableExpression(var));
@@ -657,7 +640,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return astw;
     }
 
-    private InsertEdit createMethodDeclarationEdit(RefactoringStatus status) {
+    private InsertEdit createMethodDeclarationEdit(final RefactoringStatus status) {
         return new InsertEdit(methodCodeFinder.getSelectedDeclaration().getEnd(), createCopiedMethodCode(status));
     }
 
@@ -674,12 +657,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     /**
-     * @param variName
+     * @param variName TODO
      * @param upEvent true if the move is upwards
      * @param numberOfMoves mostly 1, can be more for tests
      * @return the index of the selected variable in the collection
      */
-    public int setMoveParameter(String variName, boolean upEvent, int numberOfMoves) {
+    public int setMoveParameter(final String variName, final boolean upEvent, final int numberOfMoves) {
         Parameter[] originalParams = getCallAndMethHeadParameters();
         List<Variable> newParamList = new ArrayList<>();
 
@@ -698,7 +681,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return indexOfSelectedParam;
     }
 
-    private int reorderParameters(boolean upEvent, int numberOfMoves, List<Variable> newParamList, int index) {
+    private int reorderParameters(final boolean upEvent, final int numberOfMoves, final List<Variable> newParamList, final int index) {
         int indexOfSelectedParam = index;
         // also reorder in originals!
         Variable variToMove = newParamList.remove(indexOfSelectedParam);
@@ -711,7 +694,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return indexOfSelectedParam;
     }
 
-    private int calculateNewIndexAfterMove(boolean upEvent, int numberOfMoves, List<Variable> newParamList, int index) {
+    private int calculateNewIndexAfterMove(final boolean upEvent, final int numberOfMoves, final List<Variable> newParamList, final int index) {
         int indexOfSelectedParam = index;
         if (upEvent) {
             if (indexOfSelectedParam < 1) {
@@ -729,7 +712,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return indexOfSelectedParam;
     }
 
-    public void setParameterRename(Map<String, String> variablesToRename) {
+    public void setParameterRename(final Map<String, String> variablesToRename) {
         this.variablesToRename = variablesToRename;
         List<Variable> newParamList = new ArrayList<>();
 
@@ -746,7 +729,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         observable.notifyObservers();
     }
 
-    public String getOriginalParameterName(int selectionIndex) {
+    public String getOriginalParameterName(final int selectionIndex) {
         return originalParametersBeforeRename.get(selectionIndex).getName();
     }
 

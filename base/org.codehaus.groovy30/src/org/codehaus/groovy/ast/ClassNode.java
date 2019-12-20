@@ -300,10 +300,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         } else if (!componentType.isArray()) {
             return "[L" + componentName + ";";
-        } else if (componentName.startsWith("[")) {
-            return "[" + componentName;
         }
-        return componentName + "[]"; // TODO: What code still creates array types like this?
+        assert componentName.startsWith("[");
+        return "[" + componentName;
     }
     // GRECLIPSE end
 

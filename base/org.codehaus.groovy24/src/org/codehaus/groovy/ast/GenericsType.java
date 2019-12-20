@@ -445,6 +445,15 @@ public class GenericsType extends ASTNode {
                                                     gt = classNodePlaceholders.get(gt.getName());
                                                 }
                                             }
+                                            // GRECLIPSE add -- GROOVY-9338
+                                            if (classNodeType.isWildcard()) {
+                                                if (classNodeType.getLowerBound() != null || classNodeType.getUpperBounds() != null) {
+                                                    match = classNodeType.new GenericsTypeMatcher().checkGenerics(gt.getType());
+                                                } else {
+                                                    match = false; // "?" (from Comparable<?>) does not satisfy anything
+                                                }
+                                            } else
+                                            // GRECLIPSE end
                                             match = implementsInterfaceOrIsSubclassOf(gt.getType(), classNodeType.getType());
                                         }
                                         if (match && redirectBoundType.upperBounds!=null) {
@@ -457,8 +466,21 @@ public class GenericsType extends ASTNode {
                                                         gt = classNodePlaceholders.get(gt.getName());
                                                     }
                                                 }
+                                                // GRECLIPSE add -- GROOVY-9338
+                                                if (classNodeType.isWildcard()) {
+                                                    if (classNodeType.getLowerBound() != null) {
+                                                        match = gt.new GenericsTypeMatcher().checkGenerics(classNodeType.getLowerBound());
+                                                    } else if (classNodeType.getUpperBounds() != null) {
+                                                        match = gt.new GenericsTypeMatcher().checkGenerics(classNodeType.getUpperBounds()[0]);
+                                                    } else {
+                                                        match = false; // "?" (from Comparable<?>) does not satisfy anything
+                                                    }
+                                                } else
+                                                // GRECLIPSE end
                                                 match = implementsInterfaceOrIsSubclassOf(classNodeType.getType(), gt.getType())
+                                                /* GRECLIPSE edit
                                                          || classNodeType.isCompatibleWith(gt.getType()); // workaround for GROOVY-6095
+                                                */;
                                                 if (!match) break;
                                             }
                                         }

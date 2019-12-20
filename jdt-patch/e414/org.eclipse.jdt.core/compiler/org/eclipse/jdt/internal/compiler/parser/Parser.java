@@ -5936,6 +5936,9 @@ protected void consumeModuleHeader() {
 }
 protected void consumeModuleDeclaration() {
 	// ModuleDeclaration ::= ModuleHeader ModuleBody
+	this.compilationUnit.javadoc = this.javadoc;
+	this.javadoc = null;
+
 	int length = this.astLengthStack[this.astLengthPtr--];
 	int[] flag = new int[length + 1]; //plus one -- see <HERE>
 	int size1 = 0, size2 = 0, size3 = 0, size4 = 0, size5 = 0;

@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,7 +51,6 @@ import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -84,15 +84,15 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return javaAgentClass;
     }
 
-    public void setJavaAgentClass(String javaAgentClass) {
+    public void setJavaAgentClass(final String javaAgentClass) {
         this.javaAgentClass = javaAgentClass;
     }
 
     @Override
-    public CompilerResult performCompile(CompilerConfiguration config) throws CompilerException {
+    public CompilerResult performCompile(final CompilerConfiguration config) throws CompilerException {
         // groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
         try {
-            Class.forName("org.eclipse.jdt.core.compiler.CompilationProgress");
+            Class.forName("org.eclipse.jdt.core.compiler.batch.BatchCompiler");
         } catch (Exception e) {
             throw new CompilerException("Could not find groovy-eclipse-batch artifact. Must add this artifact as an explicit dependency in the pom.");
         }
@@ -131,33 +131,26 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
 
-    private File[] recalculateStaleFiles(CompilerConfiguration config) throws CompilerException {
+    private void recalculateStaleFiles(final CompilerConfiguration config) throws CompilerException {
         config.setSourceFiles(null);
 
-        long staleMillis = 0; // Can we do better than using 0?
+        long staleMillis = TimeUnit.DAYS.toMillis(1);
 
         Set<String> includes = config.getIncludes();
         if (includes == null || includes.isEmpty()) {
             includes = Collections.singleton("**/*");
         }
 
-        Set<File> staleSources = computeStaleSources(config, new StaleSourceScanner(staleMillis, includes, config.getExcludes()));
-
-        config.setSourceFiles(staleSources);
-
-        return staleSources.toArray(new File[staleSources.size()]);
-    }
-
-    private Set<File> computeStaleSources(CompilerConfiguration compilerConfiguration, SourceInclusionScanner scanner) throws CompilerException {
+        SourceInclusionScanner scanner = new StaleSourceScanner(staleMillis, includes, config.getExcludes());
         scanner.addSourceMapping(new SuffixMapping(".groovy", ".class"));
         scanner.addSourceMapping(new SuffixMapping(".java", ".class"));
 
-        File outputDirectory = new File(compilerConfiguration.getOutputLocation());
+        File outputDirectory = new File(config.getOutputLocation());
         Set<File> staleSources = new TreeSet<>();
 
-        for (String sourceRoot : compilerConfiguration.getSourceLocations()) {
+        for (String sourceRoot : config.getSourceLocations()) {
             File sourcePath = new File(sourceRoot);
-            if (!sourcePath.isDirectory() || sourcePath.equals(compilerConfiguration.getGeneratedSourcesDirectory())) {
+            if (!sourcePath.isDirectory() || sourcePath.equals(config.getGeneratedSourcesDirectory())) {
                 continue;
             }
 
@@ -171,10 +164,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
-        return staleSources;
+        config.setSourceFiles(staleSources);
     }
 
-    private CompilerMessage formatFailure(int globalErrorsCount, int globalWarningsCount) {
+    private CompilerMessage formatFailure(final int globalErrorsCount, final int globalWarningsCount) {
         Kind kind;
         if (globalErrorsCount > 0) {
             kind = Kind.ERROR;
@@ -189,16 +182,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and " + globalWarningsCount + " " + warning + ".", kind);
     }
 
-    private Map<String,String> composeSourceFiles(File[] sourceFiles) {
-        Map<String, String> sources = new DeduplicatingHashMap<>(getLogger(), sourceFiles.length);
-        for (File sourceFile : sourceFiles) {
-            sources.put(sourceFile.getPath(), null);
-        }
-        return sources;
-    }
-
     @Override
-    public String[] createCommandLine(CompilerConfiguration config) throws CompilerException {
+    public String[] createCommandLine(final CompilerConfiguration config) throws CompilerException {
         File destinationDir = new File(config.getOutputLocation());
         if (!destinationDir.exists()) {
             destinationDir.mkdirs();
@@ -223,16 +208,25 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         // recalculate stale files since they were not properly calculated in super
-        File[] sourceFiles = recalculateStaleFiles(config);
-        if (sourceFiles.length == 0) {
+        recalculateStaleFiles(config);
+        int sourceFilesCount = config.getSourceFiles().size();
+        if (sourceFilesCount < 1) {
             return new String[0];
         }
 
         getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
-        getLogger().debug(String.format("Compiling %d source file%s to %s", sourceFiles.length, (sourceFiles.length == 1 ? "" : "s"), destinationDir.getAbsolutePath()));
+        if (getLogger().isDebugEnabled()) getLogger().debug(String.format("Compiling %d source file%s to %s", sourceFilesCount, (sourceFilesCount == 1 ? "" : "s"), destinationDir.getAbsolutePath()));
 
-
-        Map<String, String> args = new DeduplicatingHashMap<>(getLogger());
+        Map<String, String> args = new LinkedHashMap<String, String>() {
+            private static final long serialVersionUID = 5695257757307065197L;
+            @Override
+            public String put(String k, String v) {
+                if (containsKey(k) && getLogger().isDebugEnabled()) {
+                    getLogger().debug(String.format("Replacing compiler argument \"%s\" old value: %s with: %s", k, get(k), v));
+                }
+                return super.put(k, v);
+            }
+        };
 
         verbose = config.isVerbose();
         if (verbose) {
@@ -337,9 +331,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
+        String prev = null;
         for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
             String key = entry.getKey();
-            if (startsWithHyphen(key)) {
+            if (key.startsWith("-")) {
                 if ("-javaAgentClass".equals(key)) {
                     setJavaAgentClass(entry.getValue());
                 } else if (!key.startsWith("-J")) {
@@ -347,17 +342,28 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 } else {
                     vmArgs.add(key.substring(2));
                 }
-            } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
-                args.put("-" + key, entry.getValue());
+                prev = (entry.getValue() == null ? key : null);
+            } else {
+                if (prev != null && entry.getValue() == null) {
+                    args.put(prev, key);
+                } else if (!"org.osgi.framework.system.packages".equals(key)) { // GRECLIPSE-1418: ignore the system packages option
+                    args.put("-" + key, entry.getValue());
+                }
+                prev = null;
             }
         }
+        if (args.remove("--patch-module") != null) { // https://github.com/groovy/groovy-eclipse/issues/987
+            if (verbose) getLogger().info("Skipping unsupported command-line argument \"--patch-module\"");
+        }
 
-        args.putAll(composeSourceFiles(sourceFiles));
+        for (File sourceFile : config.getSourceFiles()) {
+            args.put(sourceFile.getPath(), null);
+        }
 
         return flattenArgumentsMap(args);
     }
 
-    private CompilerResult compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args) throws CompilerException {
+    private CompilerResult compileOutOfProcess(final CompilerConfiguration config, final String executable, final String groovyEclipseLocation, final String[] args) throws CompilerException {
         Commandline cli = new Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
@@ -426,7 +432,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return new CompilerResult(returnCode == 0, messages);
     }
 
-    private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) {
+    private List<CompilerMessage> parseMessages(final int exitCode, final String input, final boolean showWarnings) {
         List<CompilerMessage> parsedMessages = new ArrayList<>();
 
         for (String msg : input.split(PROBLEM_SEPARATOR)) {
@@ -477,7 +483,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @param force produce {@link CompilerMessage} even if parsing fails
      * @return parsed message and severity
      */
-    private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
+    private CompilerMessage parseMessage(final String msgText, final boolean showWarning, final boolean force) {
         Matcher m = Pattern.compile("^\\d+\\. (ERROR|WARNING|INFO) in (.+?) \\(at line (\\d+)\\)").matcher(msgText);
         boolean isNormal = m.find();
         Kind kind = Kind.NOTE;
@@ -523,7 +529,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @return the temporary file wth the arguments
      * @throws IOException if create fails
      */
-    private File createFileWithArguments(String[] args, String outputDirectory) throws IOException {
+    private File createFileWithArguments(final String[] args, final String outputDirectory) throws IOException {
         File tempFile;
         if (getLogger().isDebugEnabled()) {
             tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), ".txt", new File(outputDirectory));
@@ -553,7 +559,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return getClassLocation("org.eclipse.jdt.internal.compiler.batch.Main");
     }
 
-    private String getClassLocation(String className) throws CompilerException {
+    private String getClassLocation(final String className) throws CompilerException {
         Class<?> cls;
         try {
             cls = Class.forName(className);
@@ -630,7 +636,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @param args Map to be converted
      * @return Array with {@code args} converted to an array
      */
-    private static String[] flattenArgumentsMap(Map<String, String> args) {
+    private static String[] flattenArgumentsMap(final Map<String, String> args) {
         List<String> argsList = new ArrayList<>(args.size() * 2);
 
         for (Map.Entry<String, String> entry : args.entrySet()) {
@@ -648,50 +654,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return argsList.toArray(new String[0]);
     }
 
-    private static boolean isBlank(String str) {
+    private static boolean isBlank(final String str) {
         return str == null || str.trim().length() == 0;
     }
 
-    private static boolean isNotBlank(String str) {
+    private static boolean isNotBlank(final String str) {
         return !isBlank(str);
-    }
-
-    private static boolean startsWithHyphen(Object key) {
-        return (key instanceof CharSequence && ((CharSequence) key).charAt(0) == '-');
-    }
-
-    /**
-     * Linked Hash Map implementation that logs replaced entries.
-     */
-    private static class DeduplicatingHashMap<K, V> extends LinkedHashMap<K, V> {
-
-        private static final long serialVersionUID = -589299605523895999L;
-
-        private Logger logger;
-
-        public DeduplicatingHashMap(Logger logger) {
-            super();
-            this.logger = logger;
-        }
-
-        public DeduplicatingHashMap(Logger logger, int initialCapacity) {
-            super(initialCapacity);
-            this.logger = logger;
-        }
-
-        @Override
-        public V put(K k, V v) {
-            if (this.containsKey(k) && logger.isDebugEnabled()) {
-                logger.debug("Replacing compiler argument \"" + k + "\" old value: " + get(k) + " with: " + v);
-            }
-            return super.put(k, v);
-        }
-
-        @Override
-        public void putAll(Map<? extends K, ? extends V> m) {
-            for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-                put(e.getKey(), e.getValue());
-            }
-        }
     }
 }

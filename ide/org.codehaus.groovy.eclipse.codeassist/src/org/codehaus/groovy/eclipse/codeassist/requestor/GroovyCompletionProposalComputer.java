@@ -295,10 +295,11 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
     }
 
     protected String findCompletionText(IDocument doc, int offset) {
+        String result = null;
         try {
             if (offset > 0) {
                 ISourceBuffer buffer = new DocumentSourceBuffer(doc);
-                return new ExpressionFinder().findForCompletions(buffer, offset - 1);
+                result = new ExpressionFinder().findForCompletions(buffer, offset - 1);
             }
         } catch (ParseException e) {
             // can ignore; probably just invalid code that is being completed at
@@ -306,7 +307,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                 GroovyLogManager.manager.logException(TraceCategory.CONTENT_ASSIST, e);
             }
         }
-        return "";
+        return (result != null ? result : "");
     }
 
     private int findCompletionEnd(IDocument doc, int offset) {

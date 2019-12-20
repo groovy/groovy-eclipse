@@ -667,12 +667,12 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public boolean isPrimitive() {
-        return false; // FIXASC (M3) verify always true. Think it is a jdtReferenceBinding is a reference binding and not a typebinding
+        return false;
     }
 
     @Override
     public boolean isResolved() {
-        return true; // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized upon creation)
+        return true; // JDTClassNode created because of a JDT ReferenceBinding, so it is always "resolved" (although not initialized upon creation)
     }
 
     @Override

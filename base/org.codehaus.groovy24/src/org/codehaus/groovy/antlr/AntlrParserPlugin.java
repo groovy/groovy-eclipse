@@ -2644,6 +2644,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression right = expression(listNode);
         SpreadExpression spreadExpression = new SpreadExpression(right);
         configureAST(spreadExpression, node);
+        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
+        setSourceEnd(spreadExpression, right);
+        // GRECLIPSE end
         return spreadExpression;
     }
 
@@ -2652,6 +2655,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression expr = expression(exprNode);
         SpreadMapExpression spreadMapExpression = new SpreadMapExpression(expr);
         configureAST(spreadMapExpression, node);
+        // GRECLIPSE add -- sloc for node only covers the operator; must include the expression
+        setSourceEnd(spreadMapExpression, expr);
+        // GRECLIPSE end
         return spreadMapExpression;
     }
 
@@ -3023,7 +3029,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             selector = objectNode.getNextSibling();
         } else {
             implicitThis = true;
+            /* GRECLIPSE edit
             objectExpression = VariableExpression.THIS_EXPRESSION;
+            */
+            objectExpression = new VariableExpression("this");
+            objectExpression.setLineNumber(node.getLine());
+            objectExpression.setColumnNumber(node.getColumn());
+            // GRECLIPSE end
             selector = node;
         }
 
@@ -3040,8 +3052,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 objectExpression = VariableExpression.SUPER_EXPRESSION;
             }
         } else if (isPrimitiveTypeLiteral(selector)) {
-            throw new ASTRuntimeException(selector, "Primitive type literal: " + selector.getText()
-                    + " cannot be used as a method name");
+            throw new ASTRuntimeException(selector, "Primitive type literal: " + selector.getText() + " cannot be used as a method name");
         } else if (isType(SELECT_SLOT, selector)) {
             Expression field = expression(selector.getFirstChild(), true);
             AttributeExpression attributeExpression = new AttributeExpression(objectExpression, field, node.getType() != DOT);
@@ -3051,8 +3062,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             setTypeArgumentsOnMethodCallExpression(expression, typeArgumentList);
             configureAST(expression, methodCallNode);
             return expression;
-        } else if (!implicitThis || isType(DYNAMIC_MEMBER, selector) || isType(IDENT, selector) ||
-                isType(STRING_CONSTRUCTOR, selector) || isType(STRING_LITERAL, selector)) {
+        } else if (!implicitThis || isType(DYNAMIC_MEMBER, selector) || isType(IDENT, selector) || isType(STRING_CONSTRUCTOR, selector) || isType(STRING_LITERAL, selector)) {
             name = expression(selector, true);
         } else {
             implicitThis = false;

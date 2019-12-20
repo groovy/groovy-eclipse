@@ -6,7 +6,6 @@
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-2.0/
  *
- * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     Mateusz Matela <mateusz.matela@gmail.com> - [formatter] Formatter does not format Java code correctly, especially when max line width is set - https://bugs.eclipse.org/303519
@@ -812,8 +811,13 @@ public class SpacePreparator extends ASTVisitor {
 			handleOperator(operator.toString(), node.getOperand(),
 					this.options.insert_space_before_prefix_operator,
 					this.options.insert_space_after_prefix_operator);
+		} else if (operator.equals(PrefixExpression.Operator.NOT)) {
+			handleOperator(operator.toString(), node.getOperand(),
+					this.options.insert_space_before_unary_operator,
+					this.options.insert_space_after_not_operator);
 		} else {
-			handleOperator(operator.toString(), node.getOperand(), this.options.insert_space_before_unary_operator,
+			handleOperator(operator.toString(), node.getOperand(),
+					this.options.insert_space_before_unary_operator,
 					this.options.insert_space_after_unary_operator);
 		}
 		return true;

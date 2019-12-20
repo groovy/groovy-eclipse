@@ -167,7 +167,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 if (memberType.isArray()) memberType = memberType.getComponentType();
                 if (memberType.isEnum()) {
                     completionTypes.add(memberType);
-                    if (context.fullCompletionExpression.length() == 0) {
+                    if (context.fullCompletionExpression.isEmpty()) {
                         proposals.add(newEnumTypeProposal(memberType));
                     }
                 }

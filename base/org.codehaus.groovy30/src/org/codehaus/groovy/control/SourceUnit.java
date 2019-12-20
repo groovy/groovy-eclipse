@@ -277,11 +277,7 @@ public class SourceUnit extends ProcessingUnit {
         // GRECLIPSE end
 
         /* GRECLIPSE edit
-        String property = (String) AccessController.doPrivileged(new PrivilegedAction() {
-            public Object run() {
-                return System.getProperty("groovy.ast");
-            }
-        });
+        String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
 
         if ("xml".equals(property)) {
             saveAsXML(name, ast);

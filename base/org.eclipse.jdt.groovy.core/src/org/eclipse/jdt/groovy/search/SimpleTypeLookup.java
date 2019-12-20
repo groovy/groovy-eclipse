@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,7 +39,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -47,6 +47,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -58,7 +59,6 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -96,12 +96,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     @Override
     public TypeLookupResult lookupType(final MethodNode node, final VariableScope scope) {
         return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
-    }
-
-    @Override
-    public TypeLookupResult lookupType(final ImportNode node, final VariableScope scope) {
-        ClassNode baseType = Optional.ofNullable(node.getType()).orElse(VariableScope.NULL_TYPE);
-        return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     @Override
@@ -202,16 +196,30 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 }
 
-                // short-circuit if object expression is part of direct field access (aka AttributeExpression)
+                // short-circuit if expression is direct field access (aka AttributeExpression)
                 if (scope.getEnclosingNode() instanceof AttributeExpression) {
                     ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
-                    FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
-                    if (!isCompatible(field, isStaticObjectExpression)) {
-                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
-                    } else {
-                        boolean isPrivateSuperField = Flags.isPrivate(field.getModifiers()) && isSuperObjectExpression(scope);
-                        return new TypeLookupResult(field.getType(), clazz, field, !isPrivateSuperField ? confidence : TypeConfidence.UNKNOWN, scope);
+                    FieldNode field = null;
+                    if (!isSuperObjectExpression(scope)) {
+                        field = clazz.getDeclaredField(node.getText());
+                        // no access checks; even private is allowed
+                        clazz = clazz.getSuperClass();
                     }
+                    while (field == null && clazz != null) {
+                        field = clazz.getDeclaredField(node.getText());
+                        if (field != null && (field.isPrivate() || (!field.isPublic() && !field.isProtected() &&
+                                !Objects.equals(clazz.getPackage(), scope.getEnclosingTypeDeclaration().getPackage())))) {
+                            field = null; // field is inaccessible; continue searching for accessible field
+                        }
+                        clazz = clazz.getSuperClass();
+                    }
+
+                    if (isCompatible(field, isStaticObjectExpression)) {
+                        return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
+                    } else if (!isSuperObjectExpression(scope)) {
+                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
+                    }
+                    // "super.@value" prefers fields but supports general Groovy property access; see AsmClassGenerator#visitAttributeExpression
                 }
 
                 boolean isLhsExpression = (scope.getWormhole().remove("lhs") == node);
@@ -235,27 +243,29 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
 
         } else if (node instanceof GStringExpression) {
-            // return String not GString so that DGMs will apply
-            return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
+            return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
 
-        } else if (node instanceof BitwiseNegationExpression) {
-            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
-            // check for ~/.../ (a.k.a. Pattern literal)
-            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
-                return new TypeLookupResult(VariableScope.PATTERN_CLASS_NODE, null, null, confidence, scope);
-            }
-            return new TypeLookupResult(type, null, null, confidence, scope);
+        } else if (node instanceof CastExpression) {
+            return new TypeLookupResult(node.getType(), null, null, confidence, scope);
+
+        } else if (node instanceof ClassExpression) {
+            ClassNode classType = VariableScope.newClassClassNode(node.getType());
+            classType.setSourcePosition(node);
+
+            return new TypeLookupResult(classType, null, node.getType(), confidence, scope);
 
         } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
             ClassNode returnType = node.getNodeMetaData("returnType");
             if (returnType != null && !VariableScope.isVoidOrObject(returnType))
                 GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
 
-        } else if (node instanceof ClassExpression) {
-            ClassNode classType = VariableScope.newClassClassNode(node.getType());
-            classType.setSourcePosition(node);
-
-            return new TypeLookupResult(classType, null, node.getType(), TypeConfidence.EXACT, scope);
+        } else if (node instanceof BitwiseNegationExpression) {
+            ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
+            // check for ~/.../ (a.k.a. Pattern literal)
+            if (VariableScope.STRING_CLASS_NODE.equals(type)) {
+                type = VariableScope.PATTERN_CLASS_NODE;
+            }
+            return new TypeLookupResult(type, null, null, confidence, scope);
 
         } else if (node instanceof ConstructorCallExpression) {
             ConstructorCallExpression call = (ConstructorCallExpression) node;
@@ -302,12 +312,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof StaticMethodCallExpression) {
             List<MethodNode> candidates = new LinkedList<>();
             java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
+                // concrete types (without mixins/traits) return all methods from getMethods(String)
                 if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
-                    LinkedHashSet<ClassNode> abstractTypes = new LinkedHashSet<>();
-                    VariableScope.findAllInterfaces(classNode, abstractTypes, false);
-                    for (ClassNode abstractType : abstractTypes) {
-                        candidates.addAll(abstractType.getMethods(methodName));
-                    }
+                    LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
+                    VariableScope.createTypeHierarchy(classNode, hierarchy, false);
+                    hierarchy.forEach(type -> candidates.addAll(type.getMethods(methodName)));
                 } else {
                     candidates.addAll(classNode.getMethods(methodName));
                 }
@@ -345,7 +354,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (!(node instanceof TupleExpression) && VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
+        if (VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
             confidence = TypeConfidence.UNKNOWN;
         }
 
@@ -385,7 +394,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     FieldNode field = (FieldNode) declaration;
                     if (isStaticObjectExpression && !field.isStatic()) {
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (Flags.isPrivate(field.getModifiers())) {
+                    } else if (field.isPrivate()) {
                         // "super.field" reference to private field yields MissingMethodException
                         if (isSuperObjectExpression(scope)) {
                             confidence = TypeConfidence.UNKNOWN;
@@ -493,17 +502,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
-                    } else if (Flags.isPrivate(field.getModifiers()) && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
+                    } else if (field.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
+                    MethodNode method = (MethodNode) candidate;
                     // check for call "method(1,2,3)" matched to decl "method(int)"
                     List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
-                    Parameter[] parameterNodes = ((MethodNode) candidate).getParameters();
-                    if (argumentTypes != null && isLooseMatch(argumentTypes, parameterNodes)) {
+                    if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if ((((MethodNode) candidate).isPrivate()) && isNotThisOrOuterClass(resolvedDeclaringType, ((MethodNode) candidate).getDeclaringClass())) {
+                    if (method.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, method.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }

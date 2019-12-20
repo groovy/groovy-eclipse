@@ -649,7 +649,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testSpread14() {
         String contents = "def strings = [[['1','2','3']]]\n" +
             "def result = strings*.length()\n";
-        assertType(contents, "result", "java.util.List<java.util.List<E extends java.lang.Object>>");
+        assertType(contents, "result", "java.util.List<java.util.List>");
     }
 
     @Test // CommandRegistry.iterator() lacks generics
@@ -1064,6 +1064,57 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testStaticMethod10() throws Exception {
+        createUnit("foo", "Bar", "package foo\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}");
+
+        String contents =
+            "import static foo.Bar.*\n" +
+            "import static java.util.regex.Pattern.*\n" +
+            "meth(compile('abc'))";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticMethod11() throws Exception {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "abstract class Bar {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticMethod12() throws Exception {
+        String contents =
+            "import static java.util.regex.Pattern.*\n" +
+            "import java.util.regex.*\n" +
+            "class Foo {\n" +
+            "  static Object meth(Object o) { return o;}\n" +
+            "  static Pattern meth(Pattern p) { return p;}\n" +
+            "  static Collection meth(Collection c) { return c;}\n" +
+            "}\n" +
+            "abstract class Bar extends Foo {\n" +
+            "  static main(args) {\n" +
+            "    meth(compile('abc'))\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "meth", "java.util.regex.Pattern");
+    }
+
+    @Test
     public void testStaticThisAndSuper1() {
         String contents =
             "class A {\n" +
@@ -1095,11 +1146,67 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testSuperFieldReference1() {
         String contents =
             "class A {\n" +
-            "  Number field\n" +
+            "  public Number field\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def method() {\n" +
             "    field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference1a() {
+        String contents =
+            "class A {\n" +
+            "  public Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference1b() {
+        String contents =
+            "class A {\n" +
+            "  public Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.@field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference1c() {
+        String contents =
+            "class A {\n" +
+            "  public Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference1d() {
+        String contents =
+            "class A {\n" +
+            "  public Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.@field\n" +
             "  }\n" +
             "}";
         assertType(contents, "field", "java.lang.Number");
@@ -1114,6 +1221,62 @@ public final class InferencingTests extends InferencingTestSuite {
             "class B extends A {\n" +
             "  def method() {\n" +
             "    field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference2a() {
+        String contents =
+            "class A {\n" +
+            "  protected Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference2b() {
+        String contents =
+            "class A {\n" +
+            "  protected Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.@field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference2c() {
+        String contents =
+            "class A {\n" +
+            "  protected Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.field\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "field", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperFieldReference2d() {
+        String contents =
+            "class A {\n" +
+            "  protected Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.@field\n" +
             "  }\n" +
             "}";
         assertType(contents, "field", "java.lang.Number");
@@ -1137,7 +1300,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testSuperFieldReference3a() {
         String contents =
             "class A {\n" +
-            "  private String field\n" +
+            "  private Number field\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def method() {\n" +
@@ -1151,7 +1314,21 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testSuperFieldReference3b() {
         String contents =
             "class A {\n" +
-            "  private String field\n" +
+            "  private Number field\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.@field\n" +
+            "  }\n" +
+            "}";
+        assertUnknown(contents, "field");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/815
+    public void testSuperFieldReference3c() {
+        String contents =
+            "class A {\n" +
+            "  private Number field\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def method() {\n" +
@@ -1162,10 +1339,10 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/815
-    public void testSuperFieldReference3c() {
+    public void testSuperFieldReference3d() {
         String contents =
             "class A {\n" +
-            "  private String field\n" +
+            "  private Number field\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def method() {\n" +
@@ -1246,6 +1423,76 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         assertType(contents, "CONST", "java.lang.Integer");
+    }
+
+    @Test
+    public void testSuperPropertyReference1() {
+        String contents =
+            "class A {\n" +
+            "  Number value\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    value\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "value", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperPropertyReference2() {
+        String contents =
+            "class A {\n" +
+            "  Number value\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.value\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "value", "java.lang.Number");
+    }
+
+    @Test
+    public void testSuperPropertyReference3() {
+        String contents =
+            "class A {\n" +
+            "  Number value\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    this.@value\n" + // no such field
+            "  }\n" +
+            "}";
+        assertUnknown(contents, "value");
+    }
+
+    @Test
+    public void testSuperPropertyReference4() {
+        String contents =
+            "class A {\n" +
+            "  Number value\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.value\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "value", "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/996
+    public void testSuperPropertyReference5() {
+        String contents =
+            "class A {\n" +
+            "  Number value\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def method() {\n" +
+            "    super.@value\n" + // special case access
+            "  }\n" +
+            "}";
+        assertType(contents, "value", "java.lang.Number");
     }
 
     @Test

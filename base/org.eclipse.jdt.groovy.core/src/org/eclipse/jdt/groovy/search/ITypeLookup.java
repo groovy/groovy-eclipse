@@ -17,7 +17,6 @@ package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -82,17 +81,6 @@ public interface ITypeLookup {
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
     default TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
-        return null;
-    }
-
-    /**
-     * Determine the type for an import node.
-     *
-     * @param node the AST Node to determine the type for
-     * @param scope the variable scope available at this location
-     * @return the type for the node and confidence in that type, or null if cannot determine
-     */
-    default TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         return null;
     }
 

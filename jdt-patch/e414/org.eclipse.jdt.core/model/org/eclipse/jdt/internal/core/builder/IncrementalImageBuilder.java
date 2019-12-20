@@ -966,6 +966,15 @@ protected boolean writeClassFileCheck(IFile file, String fileName, byte[] newByt
 			addDependentsOf(new Path(fileName), true);
 			this.newState.wasStructurallyChanged(fileName);
 		}
+	} catch (JavaModelException jme) {
+		Throwable e = jme.getCause();
+		if (e instanceof CoreException) {
+			// assuming a ResourceException during IFile.getContents(), treat it like a corrupt file
+			addDependentsOf(new Path(fileName), true);
+			this.newState.wasStructurallyChanged(fileName);
+		} else {
+			throw jme;
+		}
 	} catch (ClassFormatException e) {
 		addDependentsOf(new Path(fileName), true);
 		this.newState.wasStructurallyChanged(fileName);

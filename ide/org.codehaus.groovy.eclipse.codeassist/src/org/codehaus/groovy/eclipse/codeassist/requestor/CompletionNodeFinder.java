@@ -15,8 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -69,11 +71,11 @@ import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
  */
 public class CompletionNodeFinder extends DepthFirstVisitor {
 
-    private int completionEnd;
-    private int completionOffset;
-    private int supportingNodeEnd;
-    private String completionExpression;
-    private String fullCompletionExpression;
+    private final int completionEnd;
+    private final int completionOffset;
+    private final int supportingNodeEnd;
+    private final String completionExpression;
+    private final String fullCompletionExpression;
 
     private GroovyCompilationUnit unit;
     private ContentAssistContext context;
@@ -83,16 +85,16 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
      */
     private ASTNode lhsNode;
 
-    private final LinkedList<ASTNode> blockStack = new LinkedList<>();
+    private final Deque<ASTNode> blockStack = new LinkedList<>();
 
-    private final LinkedList<AnnotatedNode> declarationStack = new LinkedList<>();
+    private final Deque<AnnotatedNode> declarationStack = new LinkedList<>();
 
     /**
      * Tracks the current argument list expressions so that we can know if a
      * completion of a MapExpression is actually an argument and therefore
      * named parameters should be available.
      */
-    private final LinkedList<TupleExpression> argumentListStack = new LinkedList<>();
+    private final Deque<TupleExpression> argumentListStack = new LinkedList<>();
 
     public CompletionNodeFinder(
         int completionOffset,
@@ -104,8 +106,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         this.completionOffset = completionOffset;
         this.completionEnd = completionEnd;
         this.supportingNodeEnd = supportingNodeEnd;
-        this.completionExpression = completionExpression;
-        this.fullCompletionExpression = fullCompletionExpression;
+        this.completionExpression = Objects.requireNonNull(completionExpression);
+        this.fullCompletionExpression = Objects.requireNonNull(fullCompletionExpression);
     }
 
     //--------------------------------------------------------------------------
@@ -331,8 +333,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
      */
     @Override
     protected void visitVariable(Variable var) {
-        assert !(var instanceof DynamicVariable ||
-                 var instanceof VariableExpression);
+        assert !(var instanceof DynamicVariable || var instanceof VariableExpression);
 
         if (var instanceof ASTNode) {
             lhsNode = (ASTNode) var;
@@ -461,7 +462,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
                         expression = getRightMost(expression);
                     }
                     if (expression != null) {
-                        if (supportingNodeEnd > 0 && fullCompletionExpression.endsWith(".") && completionExpression.equals("")) {
+                        if (supportingNodeEnd > 0 && fullCompletionExpression.endsWith(".") && completionExpression.isEmpty()) {
                             createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
                         } else {
                             createContextForCallContext(expression, expression, expression.getText());

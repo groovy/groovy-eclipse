@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -31,6 +31,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -121,6 +123,9 @@ public class ClasspathEntry implements IClasspathEntry {
 	public static final String TAG_NON_ACCESSIBLE = "nonaccessible"; //$NON-NLS-1$
 	public static final String TAG_DISCOURAGED = "discouraged"; //$NON-NLS-1$
 	public static final String TAG_IGNORE_IF_BETTER = "ignoreifbetter"; //$NON-NLS-1$
+
+	// common index location for all workspaces
+	private static String SHARED_INDEX_LOCATION = System.getProperty("jdt.core.sharedIndexLocation"); //$NON-NLS-1$
 
 	/**
 	 * Describes the kind of classpath entry - one of
@@ -1757,6 +1762,18 @@ public class ClasspathEntry implements IClasspathEntry {
 	public URL getLibraryIndexLocation() {
 		switch(getEntryKind()) {
 			case IClasspathEntry.CPE_LIBRARY :
+				if (SHARED_INDEX_LOCATION != null) {
+					try {
+						String pathString = getPath().toPortableString();
+						CRC32 checksumCalculator = new CRC32();
+						checksumCalculator.update(pathString.getBytes());
+						String fileName = Long.toString(checksumCalculator.getValue()) + ".index"; //$NON-NLS-1$
+						return new URL("file", null, Paths.get(SHARED_INDEX_LOCATION, fileName).toString()); //$NON-NLS-1$
+					} catch (MalformedURLException e1) {
+						Util.log(e1); // should not happen if protocol known (eg. 'file')
+					}
+				}
+				break;
 			case IClasspathEntry.CPE_VARIABLE :
 				break;
 			default :
@@ -2522,5 +2539,16 @@ public class ClasspathEntry implements IClasspathEntry {
 			}
 		}
 		return JavaModelStatus.VERIFIED_OK;
+	}
+
+	/*
+	 * For testing shared index location in JavaIndexTests only
+	 */
+	public static void setSharedIndexLocation(String value, Class<?> clazz) throws IllegalArgumentException{
+		if (clazz != null && "org.eclipse.jdt.core.tests.model.JavaIndexTests".equals(clazz.getName())) { //$NON-NLS-1$
+			SHARED_INDEX_LOCATION = value;
+		} else {
+			throw new IllegalArgumentException("Cannot set index location for specified test class"); //$NON-NLS-1$
+		}
 	}
 }

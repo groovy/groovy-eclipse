@@ -14,7 +14,8 @@
  *     Stephan Herrmann  - Contribution for bug 295551
  *     Jesper S Moller   - Contributions for
  *							  Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
- *     Frits Jalvingh    - contributions for bug 533830.             
+ *     Frits Jalvingh    - contributions for bug 533830.
+ *     Red Hat Inc.	     - add module-info Javadoc support
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -23,6 +24,7 @@ import java.util.Comparator;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -346,7 +348,7 @@ public void finalizeProblems() {
 														String key = CompilerOptions.optionKeyFromIrritant(id);
 														this.scope.problemReporter().problemNotAnalysed(inits[iToken], key);
 													} else {
-														this.scope.problemReporter().unusedWarningToken(inits[iToken]);														
+														this.scope.problemReporter().unusedWarningToken(inits[iToken]);
 													}
 												}
 											}
@@ -558,7 +560,7 @@ private boolean isLambdaExpressionCopyContext(ReferenceContext context) {
 	if (context instanceof LambdaExpression && context != ((LambdaExpression) context).original())
 		return true; // Do not record from copies. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=441929
 	Scope cScope = context instanceof AbstractMethodDeclaration ? ((AbstractMethodDeclaration) context).scope :
-		context instanceof TypeDeclaration ? ((TypeDeclaration) context).scope : 
+		context instanceof TypeDeclaration ? ((TypeDeclaration) context).scope :
 		context instanceof LambdaExpression ? ((LambdaExpression) context).scope :
 			null;
 	return cScope != null ? isLambdaExpressionCopyContext(cScope.parent.referenceContext()) : false;
@@ -566,7 +568,7 @@ private boolean isLambdaExpressionCopyContext(ReferenceContext context) {
 public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd, ReferenceContext context) {
 	if (isLambdaExpressionCopyContext(context))
 		return; // Do not record from copies. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=441929
-		
+
 	if (this.suppressWarningIrritants == null) {
 		this.suppressWarningIrritants = new IrritantSet[3];
 		this.suppressWarningAnnotations = new Annotation[3];
@@ -604,7 +606,7 @@ public void record(LocalTypeBinding localType) {
 }
 
 /*
- * Keep track of all lambda/method reference expressions, so as to be able to look it up later without 
+ * Keep track of all lambda/method reference expressions, so as to be able to look it up later without
  * having to traverse AST. Return the "ordinal" returned by the enclosing type.
  */
 public int record(FunctionalExpression expression) {
@@ -620,6 +622,7 @@ public int record(FunctionalExpression expression) {
 public void resolve() {
 	int startingTypeIndex = 0;
 	boolean isPackageInfo = isPackageInfo();
+	boolean isModuleInfo = isModuleInfo();
 	if (this.types != null && isPackageInfo) {
 		// resolve synthetic type declaration
 		final TypeDeclaration syntheticTypeDeclaration = this.types[0];
@@ -638,6 +641,17 @@ public void resolve() {
 			this.javadoc.resolve(syntheticTypeDeclaration.staticInitializerScope);
 		}
 		startingTypeIndex = 1;
+	} else if (this.moduleDeclaration != null && isModuleInfo) {
+		if (this.javadoc != null) {
+			this.javadoc.resolve((MethodScope)this.moduleDeclaration.scope);
+		} else if (this.moduleDeclaration.binding != null) {
+			ProblemReporter reporter = this.scope.problemReporter();
+			int severity = reporter.computeSeverity(IProblem.JavadocMissing);
+			if (severity != ProblemSeverities.Ignore) {
+				reporter.javadocModuleMissing(this.moduleDeclaration.declarationSourceStart, this.moduleDeclaration.bodyStart,
+						severity);
+			}
+		}
 	} else {
 		// resolve compilation unit javadoc package if any
 		if (this.javadoc != null) {

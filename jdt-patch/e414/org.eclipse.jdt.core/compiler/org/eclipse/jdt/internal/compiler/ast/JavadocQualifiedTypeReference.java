@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2019 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -25,7 +25,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 
-public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
+public class JavadocQualifiedTypeReference extends QualifiedTypeReference implements IJavadocTypeReference {
 
 	public int tagSourceStart, tagSourceEnd;
 	public PackageBinding packageBinding;
@@ -72,7 +72,7 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 	protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers());
 	}
-	
+
 	@Override
 	protected void reportDeprecatedType(TypeBinding type, Scope scope, int index) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers(), index);
@@ -106,5 +106,15 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
+	}
+
+	@Override
+	public int getTagSourceStart() {
+		return this.tagSourceStart;
+	}
+
+	@Override
+	public int getTagSourceEnd() {
+		return this.tagSourceEnd;
 	}
 }

@@ -47,76 +47,6 @@ import org.eclipse.swt.graphics.Image;
  * non-static fields with an initializer of a closure.
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
-    public static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
-        NewGroovyFieldCompletionProposal(String fieldName,
-                int replacementOffset, int replacementLength, int relevance,
-                boolean isStatic, boolean useKeywordBeforeReplacement, String typeName) {
-            super(createReplacementString(fieldName, typeName, isStatic),
-                    replacementOffset, replacementLength,
-                    createImage(isStatic), createDisplayString(fieldName, typeName,
-                            isStatic, useKeywordBeforeReplacement), relevance);
-        }
-
-        // can we do better with the initializer?
-        static String createReplacementString(String fieldName, String typeName, boolean isStatic) {
-            if (isStatic) {
-                if (typeName != null) {
-                    return "static " + typeName + fieldName + " = null";
-                } else {
-                    return "static " + fieldName + " = null";
-                }
-            } else if (typeName != null) {
-                return typeName + fieldName;
-            } else {
-                return "def " + fieldName;
-            }
-        }
-
-        static Image createImage(boolean isStatic) {
-            CompletionProposal dummy = CompletionProposal.create(CompletionProposal.FIELD_REF, -1);
-            if (isStatic) {
-                dummy.setFlags(Flags.AccStatic);
-            }
-            return ProposalUtils.getImage(dummy);
-        }
-
-        static StyledString createDisplayString(String fieldName, String typeName,
-                boolean isStatic, boolean useKeywordBeforeReplacement) {
-            StyledString ss = new StyledString();
-
-            // use a different styled string depending on the completion context
-            // if the context completion node is a field, then must include the field modifier
-            // if not, then don't include it.
-            // this is because the display string must match the replacement otherwise no
-            // replacement occurs.
-            if (useKeywordBeforeReplacement) {
-                if (isStatic) {
-                    ss.append("static ", StyledString
-                            .createColorRegistryStyler(
-                                    JFacePreferences.HYPERLINK_COLOR, null));
-                    if (typeName != null) {
-                        ss.append(typeName);
-                    }
-                } else {
-                    if (typeName == null) {
-                        ss.append("def ", StyledString.createColorRegistryStyler(JFacePreferences.HYPERLINK_COLOR, null));
-                    } else {
-                        ss.append(typeName);
-                    }
-                }
-            }
-
-            if (isStatic) {
-                ss.append(fieldName);
-                ss.append(" - New static property",
-                        StyledString.QUALIFIER_STYLER);
-            } else {
-                ss.append(fieldName);
-                ss.append(" - New property", StyledString.QUALIFIER_STYLER);
-            }
-            return ss;
-        }
-    }
 
     public NewFieldCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
@@ -132,24 +62,18 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
             for (String fieldName : unimplementedFieldNames) {
                 proposals.add(createProposal(fieldName, context, enclosingType));
             }
-            // next check to see if we are at a partially completed field
-            // declaration,
-            // ie- is the type specified, but the name is not (or is only
-            // partially specified)?
+            // next check to see if we are at a partially completed field declaration, ie- is the type specified, but the name is not (or is only partially specified)?
             NameAndLocation nameAndLocation = findCompletionTypeName(context.unit, context.completionLocation);
             if (nameAndLocation != null) {
                 String typeName = nameAndLocation.toTypeName();
-                if (typeName.equals("def")) {
+                if ("def".equals(typeName)) {
                     typeName = "value";
                 }
-                String[] suggestedNames = NamingConventions.suggestVariableNames(NamingConventions.VK_INSTANCE_FIELD,
-                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, typeName, context.unit.getJavaProject(),
-                        nameAndLocation.dims(), null, true);
+                String[] suggestedNames = NamingConventions.suggestVariableNames(NamingConventions.VK_INSTANCE_FIELD, InternalNamingConventions.BK_SIMPLE_TYPE_NAME, typeName, context.unit.getJavaProject(), nameAndLocation.dims(), null, true);
                 if (suggestedNames != null) {
                     for (String suggestedName : suggestedNames) {
                         if (suggestedName.startsWith(context.completionExpression)) {
-                            proposals.add(createProposal(suggestedName, nameAndLocation.name, context, enclosingType, false, true,
-                                    nameAndLocation.location, context.completionLocation - nameAndLocation.location));
+                            proposals.add(createProposal(suggestedName, nameAndLocation.name, context, enclosingType, false, true, nameAndLocation.location, context.completionLocation - nameAndLocation.location));
                         }
                     }
                 }
@@ -184,45 +108,96 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
         return allNewFieldNames;
     }
 
-    private ICompletionProposal createProposal(String fieldName,
-            ContentAssistContext context, IType enclosingType) {
+    private ICompletionProposal createProposal(String fieldName, ContentAssistContext context, IType enclosingType) {
         boolean isStatic;
         if (fieldName.startsWith(IProposalProvider.NONSTATIC_FIELD)) {
-            fieldName = fieldName.substring(IProposalProvider.NONSTATIC_FIELD
-                    .length());
+            fieldName = fieldName.substring(IProposalProvider.NONSTATIC_FIELD.length());
             isStatic = false;
         } else {
             isStatic = true;
         }
 
         // use keyword replacement if the def/static keyword is completely or partially present
-        boolean useKeywordBeforeReplacement = context.completionExpression
-                .length() > 0
-                && ((context.completionNode instanceof FieldNode)
-                        || "def".startsWith(context.completionExpression) || "static"
-                        .startsWith(context.completionExpression));
+        boolean useKeywordBeforeReplacement = !context.completionExpression.isEmpty() && ((context.completionNode instanceof FieldNode) || "def".startsWith(context.completionExpression) || "static".startsWith(context.completionExpression));
         // replace start is either the start of the field node (if using keyword
         // replacement),
         // or it is the completion location - the length of the existing part of
         // the expression
-        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode.getStart()
-                : context.completionLocation - context.completionExpression.length();
+        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode.getStart() : context.completionLocation - context.completionExpression.length();
         // the completion length is the length of the bit of text that will be
         // replaced
         // this is either the completion expression length or the difference
         // between the
         // start of the field node and the completion location
-        int replaceLength = context.completionNode instanceof FieldNode ? context.completionLocation - replaceStart
-                : context.completionExpression.length();
+        int replaceLength = context.completionNode instanceof FieldNode ? context.completionLocation - replaceStart : context.completionExpression.length();
 
-        return createProposal(fieldName, null, context, enclosingType, isStatic, useKeywordBeforeReplacement, replaceStart,
-                replaceLength);
+        return createProposal(fieldName, null, context, enclosingType, isStatic, useKeywordBeforeReplacement, replaceStart, replaceLength);
     }
 
+    private ICompletionProposal createProposal(String fieldName, String typeName, ContentAssistContext context, IType enclosingType, boolean isStatic, boolean useKeywordBeforeReplacement, int replaceStart, int replaceLength) {
+        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart, replaceLength, Relevance.VERY_HIGH.getRelevance(), isStatic, useKeywordBeforeReplacement, typeName);
+    }
 
-    private ICompletionProposal createProposal(String fieldName, String typeName, ContentAssistContext context,
-            IType enclosingType, boolean isStatic, boolean useKeywordBeforeReplacement, int replaceStart, int replaceLength) {
-        int relevance = Relevance.VERY_HIGH.getRelevance();
-        return new NewGroovyFieldCompletionProposal(fieldName, replaceStart, replaceLength, relevance, isStatic, useKeywordBeforeReplacement, typeName);
+    private static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
+
+        private NewGroovyFieldCompletionProposal(String fieldName, int replacementOffset, int replacementLength, int relevance, boolean isStatic, boolean useKeywordBeforeReplacement, String typeName) {
+            super(createReplacementString(fieldName, typeName, isStatic), replacementOffset, replacementLength, createImage(isStatic), createDisplayString(fieldName, typeName, isStatic, useKeywordBeforeReplacement), relevance);
+        }
+
+        // can we do better with the initializer?
+        private static String createReplacementString(String fieldName, String typeName, boolean isStatic) {
+            if (isStatic) {
+                if (typeName != null) {
+                    return "static " + typeName + fieldName + " = null";
+                } else {
+                    return "static " + fieldName + " = null";
+                }
+            } else if (typeName != null) {
+                return typeName + fieldName;
+            } else {
+                return "def " + fieldName;
+            }
+        }
+
+        private static Image createImage(boolean isStatic) {
+            CompletionProposal dummy = CompletionProposal.create(CompletionProposal.FIELD_REF, -1);
+            if (isStatic) {
+                dummy.setFlags(Flags.AccStatic);
+            }
+            return ProposalUtils.getImage(dummy);
+        }
+
+        private static StyledString createDisplayString(String fieldName, String typeName, boolean isStatic, boolean useKeywordBeforeReplacement) {
+            StyledString ss = new StyledString();
+
+            // use a different styled string depending on the completion context
+            // if the context completion node is a field, then must include the field modifier
+            // if not, then don't include it.
+            // this is because the display string must match the replacement otherwise no
+            // replacement occurs.
+            if (useKeywordBeforeReplacement) {
+                if (isStatic) {
+                    ss.append("static ", StyledString.createColorRegistryStyler(JFacePreferences.HYPERLINK_COLOR, null));
+                    if (typeName != null) {
+                        ss.append(typeName);
+                    }
+                } else {
+                    if (typeName == null) {
+                        ss.append("def ", StyledString.createColorRegistryStyler(JFacePreferences.HYPERLINK_COLOR, null));
+                    } else {
+                        ss.append(typeName);
+                    }
+                }
+            }
+
+            if (isStatic) {
+                ss.append(fieldName);
+                ss.append(" - New static property", StyledString.QUALIFIER_STYLER);
+            } else {
+                ss.append(fieldName);
+                ss.append(" - New property", StyledString.QUALIFIER_STYLER);
+            }
+            return ss;
+        }
     }
 }

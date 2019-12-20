@@ -297,17 +297,21 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
     @Override
     protected void visitAnnotation(AnnotationNode annotation) {
-        check(annotation.getClassNode());
-        int start = annotation.getClassNode().getEnd() + 1;
-        for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
-            String name = pair.getKey();
-            Expression expr = pair.getValue();
-            check(annotation.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY),
-                start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
-            /*expr.visit(this);*/
-            start = expr.getEnd() + 1;
+        if (sloc.regionIsCoveredByNode(annotation)) {
+            check(annotation.getClassNode());
+
+            int start = annotation.getClassNode().getEnd() + 1;
+            for (Map.Entry<String, Expression> pair : annotation.getMembers().entrySet()) {
+                String name = pair.getKey();
+                Expression expr = pair.getValue();
+                check(GroovyUtils.getAnnotationMethod(annotation, name),
+                    start/*expr.getStart() - name.length() - 1*/, expr.getStart() - 1);
+                /*expr.visit(this);*/
+                start = expr.getEnd() + 1;
+            }
+
+            super.visitAnnotation(annotation);
         }
-        super.visitAnnotation(annotation);
     }
 
     @Override

@@ -27,10 +27,10 @@
 			tycho ecj compiler. These two properties define what compiler will be used
 			for those bundles.
 		-->
-		<groovy-eclipse-compiler-version>3.6.0-01</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
 
 		<!-- This should align with the oldest supported Groovy version. -->
-		<groovy-eclipse-batch-version>2.4.17-02</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.4.17-03</groovy-eclipse-batch-version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -120,7 +120,7 @@
 				<repository>
 					<id>eclipse</id>
 					<layout>p2</layout>
-					<url>https://download.eclipse.org/eclipse/updates/4.14milestones</url>
+					<url>https://download.eclipse.org/eclipse/updates/4.14</url>
 				</repository>
 			</repositories>
 			<modules>

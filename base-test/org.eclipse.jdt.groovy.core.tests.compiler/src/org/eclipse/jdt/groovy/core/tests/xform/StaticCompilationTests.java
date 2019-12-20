@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
@@ -318,6 +319,65 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic12() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def list = new LinkedList<String>([1,2,3])\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Generics.groovy (at line 3)\n" +
+            "\tdef list = new LinkedList<String>([1,2,3])\n" +
+            "\t           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.LinkedList <String>#<init>(java.util.Collection <? extends java.lang.String>) with arguments [java.util.List <java.lang.Integer>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic13() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<?> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  meth(String.class)" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
+
+    @Test
+    public void testCompileStatic14() {
+        //@formatter:off
+        String[] sources = {
+            "Generics.groovy",
+            "void meth(Class<? extends CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  meth(String.class)" +
+            "}\n" +
+            "test()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -410,6 +470,28 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic6095() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "Map<String, ? extends Number> numbers() {\n" +
+            "  [a: 1, b: 2, c: 3d]\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  numbers().each { String key, Number val ->\n" +
+            "    print val\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123.0");
     }
 
     @Test
@@ -620,6 +702,141 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "hello world");
+    }
+
+    @Test
+    public void testCompileStatic7691() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
+            "  protected final S number;\n" +
+            "  \n" +
+            "  AbstractNumberWrapper(S number) {\n" +
+            "    this.number = number\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
+            "  LongWrapper(S longNumber) {\n" +
+            "    super(longNumber)\n" +
+            "  }\n" +
+            "  \n" +
+            "  S getValue() {\n" +
+            "    return number\n" + // field of type S
+            "  }\n" +
+            "}\n" +
+            "print new LongWrapper<Long>(42L).value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testCompileStatic7691a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
+            "  protected final S number;\n" +
+            "  \n" +
+            "  AbstractNumberWrapper(S number) {\n" +
+            "    this.number = number\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
+            "  LongWrapper(S longNumber) {\n" +
+            "    super(longNumber)\n" +
+            "  }\n" +
+            "  \n" +
+            "  S getValue() {\n" +
+            "    return { ->" +
+            "      return number\n" + // field of type S from closure
+            "    }()" +
+            "  }\n" +
+            "}\n" +
+            "print new LongWrapper<Long>(42L).value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testCompileStatic7691b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
+            "  final S number;\n" +
+            "  \n" +
+            "  AbstractNumberWrapper(S number) {\n" +
+            "    this.number = number\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
+            "  LongWrapper(S longNumber) {\n" +
+            "    super(longNumber)\n" +
+            "  }\n" +
+            "  \n" +
+            "  S getValue() {\n" +
+            "    return number\n" + // property of type S
+            "  }\n" +
+            "}\n" +
+            "print new LongWrapper<Long>(42L).value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testCompileStatic7985() {
+        //@formatter:off
+        String[] sources = {
+            "Pairs.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Pair<L, R> implements Serializable {\n" +
+            "  public final L left\n" +
+            "  public final R right\n" +
+            "  \n" +
+            "  private Pair(final L left, final R right) {\n" +
+            "    this.left = left\n" +
+            "    this.right = right\n" +
+            "  }\n" +
+            "  \n" +
+            "  static <L, R> Pair<L, R> of(final L left, final R right) {\n" +
+            "    return new Pair<>(left, right)\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "Pair<Pair<String, Integer>, Pair<String, Integer>> doSmething() {\n" +
+            "  def one = (Pair<String, Integer>) Pair.of('a', 1)\n" +
+            "  def two = (Pair<String, Integer>) Pair.of('b', 2)\n" +
+            "  return Pair.of(one, two)\n" +
+            "}\n" +
+            "\n" +
+            "assert doSmething().left.left == 'a'\n" +
+            "assert doSmething().left.right == 1\n" +
+            "assert doSmething().right.left == 'b'\n" +
+            "assert doSmething().right.right == 2\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
@@ -848,35 +1065,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileStatic8638() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class Foo {\n" +
-            "  protected void bar(Multimap<String, Integer> mmap) {\n" +
-            "    Map<String, Collection<Integer>> map = mmap.asMap()\n" +
-            "    Set<Map.Entry<String, Collection<Integer>>> entrySet = map.entrySet()\n" +
-            "    Iterator<Map.Entry<String, Collection<Integer>>> iter = entrySet.iterator()\n" +
-            "    while (iter.hasNext()) {\n" +
-            "      Map.Entry<String, Collection<Integer>> group = iter.next()\n" +
-            "      Collection<Integer> values = group.value\n" +
-            "    }\n" +
-            "  }\n" +
-            "}\n",
-
-            "Multimap.java",
-            "import java.util.*;\n" +
-            "interface Multimap<K, V> {\n" +
-            "  Map<K, Collection<V>> asMap();\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
     public void testCompileStatic8509() {
         //@formatter:off
         String[] sources = {
@@ -898,6 +1086,37 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic8562() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  void test() {\n" +
+            "    print exec(new D()) {\n" +
+            "      return x\n" +
+            "    }\n" +
+            "  }\n" +
+            "  public <T> T exec(D d, @DelegatesTo(value=D, strategy=Closure.DELEGATE_ONLY) Closure<T> block) {\n" +
+            "    block.resolveStrategy = Closure.DELEGATE_ONLY\n" +
+            "    block.delegate = d\n" +
+            "    block()\n" +
+            "  }\n" +
+            "  def x = 'owner'\n" +
+            "}\n" +
+            "class D {\n" +
+            "  def x = 'delegate'\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "delegate");
     }
 
     @Test
@@ -1072,6 +1291,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t                 ^^^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method A#getFirstRecord(java.util.ArrayList <HashMap>). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic8638() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  protected void bar(Multimap<String, Integer> mmap) {\n" +
+            "    Map<String, Collection<Integer>> map = mmap.asMap()\n" +
+            "    Set<Map.Entry<String, Collection<Integer>>> entrySet = map.entrySet()\n" +
+            "    Iterator<Map.Entry<String, Collection<Integer>>> iter = entrySet.iterator()\n" +
+            "    while (iter.hasNext()) {\n" +
+            "      Map.Entry<String, Collection<Integer>> group = iter.next()\n" +
+            "      Collection<Integer> values = group.value\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+
+            "Multimap.java",
+            "import java.util.*;\n" +
+            "interface Multimap<K, V> {\n" +
+            "  Map<K, Collection<V>> asMap();\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -1302,24 +1550,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "import groovy.transform.*\n" +
-            "\n" +
-            "@CompileStatic\n" +
-            "class DelegatesToMap implements Map<String,Object> {\n" +
-            "  \n" +
-            "  @Delegate protected Map<String,Object> target\n" +
-            "  \n" +
-            "  DelegatesToMap() {\n" +
-            "    target = new HashMap<>()\n" +
-            "  }\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class DelegatesToMap {\n" +
+            "  @Delegate protected Map<String, Object> target = new HashMap<>()\n" +
             "}\n" +
-            "\n" +
-            "@CompileStatic\n" +
+            "@groovy.transform.CompileStatic\n" +
             "class TaskConfig extends DelegatesToMap implements Cloneable {\n" +
-            "  \n" +
-            "  TaskConfig() {\n" +
-            "  }\n" +
-            "  \n" +
             "  @Override\n" +
             "  TaskConfig clone() {\n" +
             "    def copy = (TaskConfig) super.clone()\n" +
@@ -1327,7 +1563,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "    return copy\n" +
             "  }\n" +
             "}\n" +
-            "\n" +
             "new TaskConfig().clone()\n",
         };
         //@formatter:on
@@ -2987,5 +3222,318 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Outer0 > Inner1 > Inner2 > Inner3"); // OWNER_FIRST results in "Outer0 > Outer0 > Outer0 > Inner3"
+    }
+
+    @Test
+    public void testCompileStatic9328() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  static main(args) {\n" +
+            "    new Outer().test()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def inner = new Inner()\n" +
+            "    print inner.innerMethod()\n" +
+            "  }\n" +
+            "  class Inner {\n" +
+            "    @groovy.transform.CompileStatic\n" +
+            "    String innerMethod() { outerMethod() }\n" +
+            "  }\n" +
+            "  private String outerMethod() { 'works' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9328a() {
+        //@formatter:off
+        String[] sources = {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  static main(args) {\n" +
+            "    new Outer().test()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    def callable = new java.util.concurrent.Callable<String>() {\n" +
+            "      @groovy.transform.CompileStatic\n" +
+            "      @Override String call() { outerMethod() }\n" +
+            "    }\n" +
+            "    print callable.call()\n" +
+            "  }\n" +
+            "  private String outerMethod() { 'works' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9332() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print list\n" +
+            "  }\n" +
+            "  static list\n" +
+            "  static final int one = 1\n" +
+            "  static {\n" +
+            "    list = [1, 2, 3].stream().map(i -> i + one).toList()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[2, 3, 4]");
+    }
+
+    @Test
+    public void testCompileStatic9332a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print list\n" +
+            "  }\n" +
+            "  static list\n" +
+            "  static final int one = 1\n" +
+            "  static {\n" +
+            "    list = [1, 2, 3].collect { i -> i + one }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[2, 3, 4]");
+    }
+
+    @Test
+    public void testCompileStatic9332b() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print last\n" +
+            "  }\n" +
+            "  static int last = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach((Integer i) -> last = i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3");
+    }
+
+    @Test @Ignore("java.lang.ExceptionInInitializerError")
+    public void testCompileStatic9332c() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "7");
+    }
+
+    @Test
+    public void testCompileStatic9333() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    Consumer<C> c = (C thisParameter) -> {\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test
+    public void testCompileStatic9333a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    def c = { C thisParameter ->\n" +
+            "      print '1' + thisParameter.field\n" +
+            "      print '2' + thisObject.field\n" +
+            "      print '3' + this.field\n" +
+            "      print '4' + field\n" +
+            "    }\n" +
+            "    c(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1f2f3f4f");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9332?focusedCommentId=16994038&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-16994038")
+    public void testCompileStatic9333b() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.*\n" +
+            "\n" +
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    Consumer<C> c1 = (C thisParameter1) -> {\n" +
+            "      Consumer<C> c2 = (C thisParameter2) -> {\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2.accept(thisParameter1)\n" +
+            "    }\n" +
+            "    c1.accept(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
+    }
+
+    @Test
+    public void testCompileStatic9333c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  public String field = 'f'\n" +
+            "  \n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    def c1 = { C thisParameter1 ->\n" +
+            "      def c2 = { C thisParameter2 ->\n" +
+            "        print '0' + thisParameter2.field\n" +
+            "        print '1' + thisParameter1.field\n" +
+            "        print '2' + thisObject.field\n" +
+            "        print '3' + this.field\n" +
+            "        print '4' + field\n" +
+            "      }\n" +
+            "      c2(thisParameter1)\n" +
+            "    }\n" +
+            "    c1(this)\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0f1f2f3f4f");
+    }
+
+    @Test
+    public void testCompileStatic9338() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void meth(Class<? extends CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = (Class<?>) String.class\n" +
+            "  meth(c)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
+            "\tmeth(c)\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? extends java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9338a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void meth(Class<? super CharSequence> c) {\n" +
+            "  print c.simpleName\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def c = (Class<?>) String.class\n" +
+            "  meth(c)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
+            "\tmeth(c)\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "----------\n");
     }
 }
