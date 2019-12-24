@@ -3225,6 +3225,56 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9327() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def runner = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      unknown\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tunknown\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9327a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def runner = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      unknown\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tunknown\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic9328() {
         //@formatter:off
         String[] sources = {
