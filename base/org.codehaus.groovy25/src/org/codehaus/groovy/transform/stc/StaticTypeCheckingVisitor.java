@@ -400,6 +400,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             visitClass(innerClassNode);
         }
         typeCheckingContext.alreadyVisitedMethods = oldVisitedMethod;
+        // GRECLIPSE add
+        typeCheckingContext.popEnclosingClassNode();
+        if (type != null) {
+            typeCheckingContext.popErrorCollector();
+        }
+        // GRECLIPSE end
         node.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, node);
         // mark all methods as visited. We can't do this in visitMethod because the type checker
         // works in a two pass sequence and we don't want to skip the second pass
@@ -413,6 +419,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected boolean shouldSkipClassNode(final ClassNode node) {
+        // GRECLIPSE add
+        if (Boolean.TRUE.equals(node.getNodeMetaData(StaticTypeCheckingVisitor.class))) return true;
+        // GRECLIPSE end
         if (isSkipMode(node)) return true;
         return false;
     }
@@ -2256,6 +2265,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (node != null) storeTargetMethod(call, node);
             }
+            // GRECLIPSE add -- GROOVY-9327: check for AIC in STC method with non-STC enclosing class
+            if (call.isUsingAnonymousInnerClass()) {
+                Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
+                if (!methods.isEmpty()) { // indicates specific methods have STC
+                    typeCheckingContext.methodsToBeVisited = Collections.emptySet();
+    
+                    ClassNode anonType = call.getType();
+                    visitClass(anonType); // visit anon. inner class inline with method
+                    anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+    
+                    typeCheckingContext.methodsToBeVisited = methods;
+                }
+            }
+            // GRECLIPSE end
             extension.afterMethodCall(call);
         } finally {
             typeCheckingContext.popEnclosingConstructorCall();
