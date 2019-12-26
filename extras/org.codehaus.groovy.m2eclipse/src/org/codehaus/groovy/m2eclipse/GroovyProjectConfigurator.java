@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,16 +15,17 @@
  */
 package org.codehaus.groovy.m2eclipse;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecution;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.JavaCore;
@@ -37,14 +38,25 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
 
+    // copy from org.codehaus.jdt.groovy.model.GroovyNature
+    private static final String GROOVY_NATURE = "org.eclipse.jdt.groovy.core.groovyNature";
+
+    // copy from org.codehaus.groovy.eclipse.core.model.GroovyRuntime
+    private static final IPath DSLD_CONTAINER_ID = new Path("GROOVY_DSL_SUPPORT");
+
     @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
-            addNature(request.getProject(), GroovyNature.GROOVY_NATURE, monitor);
+            addNature(request.getProject(), GROOVY_NATURE, monitor);
         } else {
-            GroovyRuntime.removeGroovyNature(request.getProject());
+            IProjectDescription description = request.getProject().getDescription();
+            if (description.hasNature(GROOVY_NATURE)) {
+                description.setNatureIds(Arrays.stream(description.getNatureIds())
+                    .filter(n -> !n.equals(GROOVY_NATURE)).toArray(String[]::new));
+                request.getProject().setDescription(description, null);
+            }
         }
     }
 
@@ -57,9 +69,9 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
     public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
-            if (isAbsent(classpath, GroovyRuntime.DSLD_CONTAINER_ID) && isAddDslSupport()) {
+            if (isAbsent(classpath, DSLD_CONTAINER_ID) && isAddDslSupport()) {
                 classpath.addEntry(JavaCore.newContainerEntry(
-                    GroovyRuntime.DSLD_CONTAINER_ID,
+                    DSLD_CONTAINER_ID,
                     null, // access rules
                     new IClasspathAttribute[] {JavaCore.newClasspathAttribute("maven.pomderived", "true")},
                     false // exported
