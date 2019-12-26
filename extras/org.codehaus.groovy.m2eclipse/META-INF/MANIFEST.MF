@@ -5,8 +5,10 @@ Bundle-Name: Groovy m2e integration
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.6.0.qualifier
 Import-Package: org.eclipse.ui.preferences
-Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="3.6.0",
- org.eclipse.m2e.jdt,
+Require-Bundle: org.eclipse.core.resources,
+ org.eclipse.core.runtime,
+ org.eclipse.jdt.core,
  org.eclipse.m2e.core,
+ org.eclipse.m2e.jdt,
  org.eclipse.m2e.maven.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
