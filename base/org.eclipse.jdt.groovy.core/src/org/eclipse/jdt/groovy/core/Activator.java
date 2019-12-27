@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +15,18 @@
  */
 package org.eclipse.jdt.groovy.core;
 
+import static org.eclipse.core.runtime.Platform.getAdapterManager;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.IAdapterFactory;
+import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -61,10 +66,20 @@ public class Activator extends Plugin {
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
+
+        factory = new GroovyResourceAdapter();
+        IAdapterManager manager = getAdapterManager();
+        manager.registerAdapters(factory, IResource.class);
     }
+
+    private IAdapterFactory factory;
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        IAdapterManager manager = getAdapterManager();
+        manager.unregisterAdapters(factory);
+        factory = null;
+
         super.stop(context);
     }
 

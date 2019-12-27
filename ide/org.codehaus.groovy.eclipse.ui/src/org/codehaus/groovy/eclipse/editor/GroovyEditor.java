@@ -21,6 +21,8 @@ import java.util.Stack;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.debug.ui.RunToLineAdapter;
+import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter;
 import org.codehaus.groovy.eclipse.editor.actions.ExpandSelectionAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyTabAction;
 import org.codehaus.groovy.eclipse.editor.highlighting.GroovySemanticReconciler;
@@ -48,6 +50,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.ui.actions.IRunToLineTarget;
+import org.eclipse.debug.ui.actions.IToggleBreakpointsTarget;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.ISourceRange;
@@ -760,11 +764,11 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     @Override @SuppressWarnings("unchecked")
     public <T> T getAdapter(Class<T> required) {
-        if (IResource.class.equals(required) || IFile.class.equals(required)) {
+        if (IFile.class.equals(required) || IResource.class.equals(required)) {
             return (T) this.getFile();
         }
 
-        if (GroovyCompilationUnit.class.equals(required) || ICompilationUnit.class.equals(required) || CompilationUnit.class.equals(required)) {
+        if (GroovyCompilationUnit.class.equals(required) || CompilationUnit.class.equals(required) || ICompilationUnit.class.equals(required)) {
             return (T) super.getInputJavaElement();
         }
 
@@ -775,10 +779,18 @@ public class GroovyEditor extends CompilationUnitEditor {
         // new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline
         // (it must fail the isCalledByOutline() test but I haven't investigated deeply)
         if (IContentOutlinePage.class.equals(required)) {
-            if (fOutlinePage == null && getSourceViewer() != null)
+            if (fOutlinePage == null && getSourceViewer() != null) {
                 fOutlinePage = createOutlinePage();
+            }
             return (T) fOutlinePage;
         }
+        if (IRunToLineTarget.class.equals(required)) {
+            return (T) new RunToLineAdapter();
+        }
+        if (IToggleBreakpointsTarget.class.equals(required)) {
+            return (T) new ToggleBreakpointAdapter();
+        }
+
         return super.getAdapter(required);
     }
 
