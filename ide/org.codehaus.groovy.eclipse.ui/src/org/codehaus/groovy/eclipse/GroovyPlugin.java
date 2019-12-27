@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse;
 
+import org.codehaus.groovy.eclipse.adapters.ClassFileEditorAdapterFactory;
+import org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont;
 import org.codehaus.groovy.eclipse.debug.ui.GroovyDebugOptionsEnforcer;
@@ -23,14 +25,19 @@ import org.codehaus.groovy.eclipse.editor.GroovyAwareFoldingStructureProvider;
 import org.codehaus.groovy.eclipse.editor.GroovyOutlineTools;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.refactoring.actions.DelegatingCleanUpPostSaveListener;
+import org.eclipse.core.runtime.IAdapterManager;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.debug.core.IJavaStackFrame;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor;
 import org.eclipse.jdt.internal.ui.text.folding.JavaFoldingStructureProviderRegistry;
 import org.eclipse.jdt.ui.text.folding.DefaultJavaFoldingStructureProvider;
 import org.eclipse.jdt.ui.text.folding.IJavaFoldingStructureProvider;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -67,7 +74,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         }
         Shell shell = window.getShell();
         if (shell == null) {
-            shell = plugin.getWorkbench().getDisplay().getActiveShell();
+            shell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
         }
         return shell;
     }
@@ -76,7 +83,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         if (plugin == null) {
             return null;
         }
-        IWorkbench workbench = plugin.getWorkbench();
+        IWorkbench workbench = PlatformUI.getWorkbench();
         if (workbench == null) {
             return null;
         }
@@ -109,8 +116,11 @@ public class GroovyPlugin extends AbstractUIPlugin {
         setStructureProviderRegistry();
         DelegatingCleanUpPostSaveListener.installCleanUp();
 
+        IAdapterManager adapterManager = Platform.getAdapterManager();
+        adapterManager.registerAdapters(new ClassFileEditorAdapterFactory(), ClassFileEditor.class);
         // register our own stack frame label provider so that groovy stack frames are shown differently
-        GroovyJavaDebugElementAdapterFactory.connect();
+        adapterManager.registerAdapters(new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame.class);
+        adapterManager.registerAdapters(new GroovyIFileEditorInputAdapterFactory(), IFileEditorInput.class);
 
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
             new GroovyDebugOptionsEnforcer().maybeForce(getPreferenceStore());
@@ -148,7 +158,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private void removeMonospaceFontListener() {
         try {
-            if (!getWorkbench().isClosing()) {
+            if (!PlatformUI.getWorkbench().isClosing()) {
                 getActiveWorkbenchPage().removePartListener(junitMono);
             }
         } catch (RuntimeException e) {

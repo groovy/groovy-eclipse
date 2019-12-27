@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,9 +37,28 @@ import org.eclipse.jdt.internal.debug.ui.variables.JavaDebugElementAdapterFactor
  */
 public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
 
-    JavaDebugElementAdapterFactory containedFactory = new JavaDebugElementAdapterFactory();
+    private final JavaDebugElementAdapterFactory delegateFactory = new JavaDebugElementAdapterFactory();
 
-    static final GroovyJavaStackFrameLabelProvider fgLPFrame = new GroovyJavaStackFrameLabelProvider();
+    private final GroovyJavaStackFrameLabelProvider stackFrameLabelProvider = new GroovyJavaStackFrameLabelProvider();
+
+    public GroovyJavaDebugElementAdapterFactory() {
+        // first remove the JDI adapter if one exists
+        try {
+            List<IAdapterFactory> factories = ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
+            for (Iterator<IAdapterFactory> iterator = factories.iterator(); iterator.hasNext();) {
+                if (iterator.next().getClass().getName().equals("org.eclipse.core.internal.adapter.AdapterFactoryProxy")) {
+                    iterator.remove();
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            GroovyCore.logException("Exception removing JDI Adapter", e);
+        }
+
+        stackFrameLabelProvider.connect();
+    }
+
+    // TODO: stackFrameLabelProvider.disconnect();
 
     @Override
     public Class<?>[] getAdapterList() {
@@ -50,38 +69,9 @@ public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
     public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
         if (IElementLabelProvider.class.equals(adapterType)) {
             if (adaptableObject instanceof IJavaStackFrame) {
-                return (T) fgLPFrame;
+                return (T) stackFrameLabelProvider;
             }
         }
-        return containedFactory.getAdapter(adaptableObject, adapterType);
-    }
-
-    public static void connect() {
-        // first remove the JDI adapter if one exists.
-        removeJDIAdapter();
-        Platform.getAdapterManager().registerAdapters(new GroovyJavaDebugElementAdapterFactory(), IJavaStackFrame.class);
-        fgLPFrame.connect();
-    }
-
-    public static void removeJDIAdapter() {
-        // a little dicey, so wrap in try/catch
-        try {
-            List<IAdapterFactory> factories = ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
-
-            for (Iterator<IAdapterFactory> iterator = factories.iterator(); iterator.hasNext();) {
-                IAdapterFactory factory = iterator.next();
-                if (factory.getClass().getName().equals("org.eclipse.core.internal.adapter.AdapterFactoryProxy")) {
-                    iterator.remove();
-                    break;
-                }
-            }
-
-        } catch (Exception e) {
-            GroovyCore.logException("Exception removing JDI Adapter", e);
-        }
-    }
-
-    public static void disconnect() {
-        fgLPFrame.disconnect();
+        return delegateFactory.getAdapter(adaptableObject, adapterType);
     }
 }

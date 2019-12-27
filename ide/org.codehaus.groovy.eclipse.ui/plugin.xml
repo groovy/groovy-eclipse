@@ -1026,42 +1026,6 @@
          <adapter
                type="org.eclipse.ui.model.IWorkbenchAdapter"/>
       </factory>
-      <factory
-            adaptableType="org.eclipse.ui.IFileEditorInput"
-            class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
-         <adapter
-               type="org.codehaus.groovy.ast.ClassNode"/>
-         <adapter
-               type="org.codehaus.groovy.ast.ModuleNode"/>
-         <adapter
-               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
-      </factory>
-      <factory
-            adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
-         <adapter
-               type="org.codehaus.groovy.ast.ClassNode"/>
-         <adapter
-               type="org.codehaus.groovy.ast.ModuleNode"/>
-         <adapter
-               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
-      </factory>
-      <factory
-            adaptableType="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor"
-            class="org.codehaus.groovy.eclipse.adapters.ClassFileEditorAdapterFactory">
-         <adapter
-               type="org.codehaus.groovy.ast.ClassNode"/>
-         <adapter
-               type="org.codehaus.groovy.ast.ModuleNode"/>
-      </factory>
-      <factory
-            adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
-            class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory">
-         <adapter
-               type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
-         <adapter
-               type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
-      </factory>
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
