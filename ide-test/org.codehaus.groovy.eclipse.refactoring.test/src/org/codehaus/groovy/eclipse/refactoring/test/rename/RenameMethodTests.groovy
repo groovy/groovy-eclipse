@@ -116,6 +116,11 @@ final class RenameMethodTests extends RefactoringTestSuite {
     }
 
     @Test
+    void test10() {
+        runTest('A', 'setFoo', 'setFooBar', ['QString;'])
+    }
+
+    @Test
     void testStaticImport() {
         createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java', '''\
         |package o;

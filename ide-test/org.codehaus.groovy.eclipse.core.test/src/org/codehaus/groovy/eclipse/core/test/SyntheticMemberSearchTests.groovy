@@ -115,23 +115,6 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/935
-    void testSearchInGroovy5() {
-        String contents = '''\
-            |@groovy.transform.CompileStatic
-            |void meth(p.G pogo) {
-            |  pogo.proper = false
-            |}
-            |'''.stripMargin()
-        addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('proper')
-
-        assertCount(1, matches)
-        SearchMatch match = matches[0]
-        assertMatch('meth', 'proper', contents, matches)
-        Assert.assertEquals(SearchMatch.A_ACCURATE, match.accuracy)
-    }
-
     @Test // GRECLIPSE-1369
     void testSearchInJava0() {
         String contents = '''\
