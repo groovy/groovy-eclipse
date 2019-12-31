@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core;singleton:=true
 Bundle-Name: Groovy-Eclipse integration
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.6.0.qualifier
+Bundle-Version: 3.6.1.qualifier
 Bundle-ClassPath: nlcl.jar, .
 Export-Package: org.codehaus.jdt.groovy.ast,
  org.codehaus.jdt.groovy.control;x-internal:=true,

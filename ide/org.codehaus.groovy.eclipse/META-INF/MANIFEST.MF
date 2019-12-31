@@ -3,4 +3,4 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse;singleton:=true
 Bundle-Name: Groovy-Eclipse
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.6.0.qualifier
+Bundle-Version: 3.6.1.qualifier
