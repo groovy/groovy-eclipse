@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
-
 import java.util.LinkedHashSet;
 import java.util.stream.Stream;
 
@@ -25,6 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -91,7 +90,7 @@ public enum AccessorSupport {
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
                 // abstract types do not track undeclared abstract methods
-                if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
+                if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
                     LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);
                     faces.remove(declaringType); // checked already
