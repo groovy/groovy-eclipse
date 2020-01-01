@@ -113,7 +113,7 @@
          <meta.section type="apiinfo"/>
       </appinfo>
       <documentation>
-         Copyright (c) 2009-2019 Pivotal Software, Inc. and others. All rights reserved.
+         Copyright (c) 2009-2020 Pivotal Software, Inc. and others. All rights reserved.
       </documentation>
    </annotation>
 
@@ -131,7 +131,7 @@
          <meta.section type="copyright"/>
       </appinfo>
       <documentation>
-         Copyright (c) 2009-2019 Pivotal Software, Inc. and others. All rights reserved.
+         Copyright (c) 2009-2020 Pivotal Software, Inc. and others. All rights reserved.
       </documentation>
    </annotation>
 
