@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,26 +34,23 @@ public class TypeLookupResult {
      */
     public enum TypeConfidence {
         /**
-         * Match is certain E.g., type is explicitly declared on a variable
+         * Match is certain. E.g., the type is explicitly declared on a variable.
          */
         EXACT,
+
         /**
-         * Match is potential. E.g., it may be from an interface or from a concrete type, but not possible to tell which one from
-         * the context
-         */
-        POTENTIAL,
-        /**
-         * The type has been inferred from local or global context. E.g., by looking at assignment statements
+         * The type has been inferred from local or global context. E.g., by looking at assignment statements.
          */
         INFERRED,
+
         /**
-         * The type has been inferred using less precise means. E.g., from an extending ITypeLookup All
-         * AbstractSimplifiedTypeLookups return this type confidence.
+         * The type has been inferred using less precise means. E.g., from an extending ITypeLookup.
          * <p>
-         * Furthermore, a type confidence of this will not cause the Inferencing engine to end its lookup. It will continue and try
+         * Furthermore, a type confidence of this will not cause the inferencing engine to end its lookup. It will continue and try
          * to find a more confident type using other lookups.
          */
         LOOSELY_INFERRED,
+
         /**
          * This is an unknown reference
          */

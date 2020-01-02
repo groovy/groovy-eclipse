@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.extract;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ASSIGN;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,6 +32,7 @@ import java.util.Observer;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,12 +40,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
@@ -50,8 +53,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.groovy.eclipse.refactoring.ui.extract.GroovyRefactoringMessages;
-import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Assert;
@@ -150,7 +151,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             updateMethod();
             saveOriginalParameters();
         } catch (Exception e) {
-            e.printStackTrace();
             status.addFatalError(e.getMessage(), createErrorContext());
         }
     }
@@ -223,31 +223,31 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private RefactoringStatus initialize(final JavaRefactoringArguments arguments) {
-        final String selection = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION);
+        String selection = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION);
         if (selection == null) {
             return RefactoringStatus.createFatalErrorStatus(Messages.format(
-                    RefactoringCoreMessages.InitializableRefactoring_argument_not_exist,
-                    JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION));
+                RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION));
         }
 
         int offset = -1;
         int length = -1;
-        final StringTokenizer tokenizer = new StringTokenizer(selection);
+        StringTokenizer tokenizer = new StringTokenizer(selection);
         if (tokenizer.hasMoreTokens())
             offset = Integer.valueOf(tokenizer.nextToken()).intValue();
         if (tokenizer.hasMoreTokens())
             length = Integer.valueOf(tokenizer.nextToken()).intValue();
-        if (offset < 0 || length < 0)
-            return RefactoringStatus.createFatalErrorStatus(
-                Messages.format(RefactoringCoreMessages.InitializableRefactoring_illegal_argument,
-                    new Object[] {selection, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION}));
+        if (offset < 0 || length < 0) {
+            return RefactoringStatus.createFatalErrorStatus(Messages.format(
+                RefactoringCoreMessages.InitializableRefactoring_illegal_argument,
+                new Object[] {selection, JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION}));
+        }
         selectedText = new Region(offset, length);
 
-        final String handle = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
-        if (handle == null)
+        String handle = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT);
+        if (handle == null) {
             return RefactoringStatus.createFatalErrorStatus(Messages.format(
-                    RefactoringCoreMessages.InitializableRefactoring_argument_not_exist,
-                    JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
+                RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT));
+        }
 
         IJavaElement element = JavaRefactoringDescriptorUtil.handleToElement(arguments.getProject(), handle, false);
         if (element == null || !element.exists() || element.getElementType() != IJavaElement.COMPILATION_UNIT || !(element instanceof GroovyCompilationUnit)) {
@@ -255,11 +255,11 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         }
         unit = (GroovyCompilationUnit) element;
 
-        final String name = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME);
-        if (name == null || name.length() == 0)
+        String name = arguments.getAttribute(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME);
+        if (name == null || name.length() == 0) {
             return RefactoringStatus.createFatalErrorStatus(Messages.format(
-                    RefactoringCoreMessages.InitializableRefactoring_argument_not_exist,
-                    JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME));
+                RefactoringCoreMessages.InitializableRefactoring_argument_not_exist, JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME));
+        }
         newMethodName = name;
 
         return new RefactoringStatus();
@@ -321,43 +321,28 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     /**
-     * MethodCallExpression to call the newly generated method
-     *
-     * @return String containing the call
+     * Generates the new method call source code.
      */
     public String getMethodCall() {
-        Expression objExp = new VariableExpression("this");
-        ArgumentListExpression arguments = new ArgumentListExpression();
-
-        for (Variable param : originalParametersBeforeRename) {
-            arguments.addExpression(new VariableExpression(param.getName(),
-                Optional.ofNullable(param.getOriginType()).orElse(VariableScope.OBJECT_CLASS_NODE)));
-        }
-
-        MethodCallExpression newMethodCall = new MethodCallExpression(objExp, newMethodName, arguments);
+        List<Expression> arguments = originalParametersBeforeRename.stream().map(p ->
+            varX(p.getName(), Optional.ofNullable(p.getOriginType()).orElse(VariableScope.OBJECT_CLASS_NODE))
+        ).collect(Collectors.toList());
+        Expression newMethodCall = callThisX(newMethodName, args(arguments));
 
         ASTWriter writer = new ASTWriter(unit.getModuleNode(), replaceScope.getOffset(), null);
 
         if (!returnParameters.isEmpty()) {
-            visitExpressionsForReturnStmt(newMethodCall, writer);
+            Expression retVar = varX(returnParameters.iterator().next());
+            if (returnMustBeDeclared) {
+                declS(retVar, newMethodCall).visit(writer);
+            } else {
+                binX(retVar, ASSIGN, newMethodCall).visit(writer);
+            }
         } else {
-            writer.visitMethodCallExpression(newMethodCall);
+            newMethodCall.visit(writer);
         }
 
         return writer.getGroovyCode();
-    }
-
-    private void visitExpressionsForReturnStmt(final MethodCallExpression newMethodCall, final ASTWriter astw) {
-        Assert.isTrue(!returnParameters.isEmpty());
-        Variable retVar = returnParameters.iterator().next();
-        if (returnMustBeDeclared) {
-            VariableExpression varExp = new VariableExpression(retVar);
-            DeclarationExpression declarationExpression = new DeclarationExpression(varExp, Token.newSymbol(Types.ASSIGN, -1, -1), newMethodCall);
-            astw.visitDeclarationExpression(declarationExpression);
-        } else {
-            BinaryExpression binaryExpression = new BinaryExpression(new VariableExpression(retVar), Token.newSymbol(Types.ASSIGN, -1, -1), newMethodCall);
-            astw.visitBinaryExpression(binaryExpression);
-        }
     }
 
     public String getMethodHead() {
@@ -631,13 +616,13 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private ASTWriter writeReturnStatements(final IDocument document) {
-        ASTWriter astw = new ASTWriter(unit.getModuleNode(), document);
+        ASTWriter writer = new ASTWriter(unit.getModuleNode(), document);
         for (Variable var : returnParameters) {
-            ReturnStatement ret = new ReturnStatement(new VariableExpression(var));
-            astw.visitReturnStatement(ret);
-            astw.insertLineFeed();
+            ReturnStatement ret = new ReturnStatement(varX(var));
+            writer.visitReturnStatement(ret);
+            writer.insertLineFeed();
         }
-        return astw;
+        return writer;
     }
 
     private InsertEdit createMethodDeclarationEdit(final RefactoringStatus status) {
