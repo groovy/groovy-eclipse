@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1373,6 +1373,43 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9120
+    public void testAnonymousInnerClass27() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.concurrent.Callable\n" +
+            "\n" +
+            "interface Face {\n" +
+            "  Runnable runnable()\n" +
+            "  Callable<Long> callable()\n" +
+            "}\n" +
+            "\n" +
+            "static Face make() {\n" +
+            "  final long number = 42\n" +
+            "  return new Face() {\n" +
+            "    @Override\n" +
+            "    Runnable runnable() {\n" +
+            "      return { ->\n" +
+            "        print \"${number}\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "    @Override\n" +
+            "    Callable<Long> callable() {\n" +
+            "      return { -> number }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "def face = make()\n" +
+            "face.runnable().run()\n" +
+            "print \"${face.callable().call()}\"\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "4242");
     }
 
     @Test
