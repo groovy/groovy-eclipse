@@ -308,11 +308,18 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         }
 
         VariableScope end = scope;
-
+        // GRECLIPSE add -- GROOVY-9120
+        boolean isClassVariable = (end.isClassScope() && !end.isReferencedLocalVariable(name))
+            || (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null);
+        // GRECLIPSE end
         scope = currentScope;
         while (scope != end) {
+            /* GRECLIPSE edit
             if (end.isClassScope() ||
                     (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null)) {
+            */
+            if (isClassVariable) {
+            // GRECLIPSE end
                 scope.putReferencedClassVariable(var);
             } else {
                 scope.putReferencedLocalVariable(var);
