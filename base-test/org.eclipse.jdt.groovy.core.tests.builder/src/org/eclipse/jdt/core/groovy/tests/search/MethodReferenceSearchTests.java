@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -672,7 +672,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(String.valueOf(baz.getContents()).indexOf("'setString'"), matches.get(1).getOffset());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("string = "), matches.get(2).getOffset());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).indexOf("string +="), matches.get(3).getOffset());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(4).getAccuracy());
         assertEquals(String.valueOf(baz.getContents()).lastIndexOf("setString"), matches.get(4).getOffset());

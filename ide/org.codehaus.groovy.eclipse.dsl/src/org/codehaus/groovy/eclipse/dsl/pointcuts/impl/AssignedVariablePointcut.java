@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ public class AssignedVariablePointcut extends AbstractPointcut {
 
     @Override
     public Collection<?> matches(GroovyDSLDContext context, Object toMatch) {
-        BinaryExpression enclosing = (BinaryExpression) context.getCurrentScope().getWormhole().get("enclosingAssignment");
+        BinaryExpression enclosing = context.getCurrentScope().getEnclosingAssignment();
         if (enclosing != null && enclosing.getLeftExpression() instanceof Variable &&
                 enclosing.getLeftExpression() != context.getCurrentScope().getCurrentNode()) {
             Variable variable = (Variable) enclosing.getLeftExpression();
