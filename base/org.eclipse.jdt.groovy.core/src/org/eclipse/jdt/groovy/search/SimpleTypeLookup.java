@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
@@ -429,6 +430,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         declaration = method.getOriginal(); // the trait method
                     }
                 }
+                // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
+                if (confidence.isAtLeast(TypeConfidence.INFERRED) && isLhsExpression && isCompoundAssignment(scope)) {
+                    if (declaration instanceof MethodNode) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED; // setter for write; field or property or accessor for read
+                    } else if (findPropertyAccessorMethod(name, declaringType, false, isStaticObjectExpression, null).filter(getter ->
+                        !isSynthetic(getter) && !(isFieldAccessDirect && declaringType.equals(getter.getDeclaringClass()))
+                    ).isPresent()) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED; // field or property for write; accessor for read
+                    }
+                }
             } else if (VariableScope.CLASS_CLASS_NODE.equals(resolvedDeclaringType) && declaration instanceof MethodNode) {
                 // beware of matching Class methods too aggressively; Arrays.toString(Object[]) vs. Class.toString()
                 MethodNode classMethod = (MethodNode) declaration;
@@ -517,6 +528,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
+                // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
+                if (confidence.isAtLeast(TypeConfidence.INFERRED) && isAssignTarget && isCompoundAssignment(scope) &&
+                        (candidate instanceof MethodNode || !candidate.equals(findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, false, resolveStrategy)))) {
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
+                }
+
                 decl = candidate;
                 type = getTypeFromDeclaration(decl);
                 resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, resolvedDeclaringType);
@@ -922,6 +939,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         return Optional.empty();
+    }
+
+    protected static boolean isCompoundAssignment(final VariableScope scope) {
+        return Optional.ofNullable(scope.getEnclosingAssignment())
+            .filter(expr -> expr.getOperation().getType() != Types.EQUALS).isPresent();
     }
 
     protected static Expression getObjectExpression(final VariableScope scope) {

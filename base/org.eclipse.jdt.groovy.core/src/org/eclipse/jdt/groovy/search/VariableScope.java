@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -685,6 +686,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         } while ((scope = scope.parent) != null);
 
         return null;
+    }
+
+    public BinaryExpression getEnclosingAssignment() {
+        Object node = getWormhole().get("enclosingAssignment");
+        if (node instanceof BinaryExpression) {
+            return (BinaryExpression) node;
+        } else {
+            return null;
+        }
     }
 
     /**

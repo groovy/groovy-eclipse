@@ -1,17 +1,18 @@
-package p;
-import groovy.transform.CompileStatic
+package p
 
 class MyBean {
 	Class foo
+
 	public String setBar(Class bar) {
 		foo = bar
 	}
 }
 
-@CompileStatic
+@groovy.transform.CompileStatic
 class A {
-	def f = new MyBean()
+	def one = new MyBean()
+
 	void main() {
-		MyBean b2 = new MyBean(foo: (new MyBean()).foo)
+		def two = new MyBean(foo: (new MyBean()).foo)
 	}
 }
