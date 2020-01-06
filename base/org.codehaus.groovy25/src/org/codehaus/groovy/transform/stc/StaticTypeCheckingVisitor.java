@@ -3322,7 +3322,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             boolean callArgsVisited = false;
             if (isCallOnClosure) {
                 // this is a closure.call() call
-                if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                // GRECLIPSE edit
+                //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+                // GRECLIPSE end
                     // isClosureCall() check verified earlier that a field exists
                     FieldNode field = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
                     GenericsType[] genericsTypes = field.getType().getGenericsTypes();
@@ -3719,7 +3722,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected boolean isClosureCall(final String name, final Expression objectExpression, final Expression arguments) {
         if (objectExpression instanceof ClosureExpression && ("call".equals(name) || "doCall".equals(name)))
             return true;
-        if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        // GRECLIPSE edit
+        //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+        // GRECLIPSE end
             FieldNode fieldNode = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
             if (fieldNode != null) {
                 ClassNode type = fieldNode.getType();

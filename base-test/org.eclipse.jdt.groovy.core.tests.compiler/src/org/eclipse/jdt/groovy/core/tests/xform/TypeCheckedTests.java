@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "  static def method() {\n" + // static method alters type checking
             "    Set<java.beans.BeanInfo> defs = []\n" +
             "    defs*.additionalBeanInfo\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked5() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class Foo {\n" +
+            "  private Closure<String> normalizer\n" +
+            "  String normalize(String s) {\n" +
+            "    normalizer(s)" +
             "  }\n" +
             "}\n",
         };
