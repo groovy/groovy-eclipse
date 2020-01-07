@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import groovy.lang.GroovyRuntimeException;
 import groovy.transform.PackageScopeTarget;
@@ -80,11 +82,11 @@ import org.codehaus.groovy.control.messages.LocatedMessage;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
-import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
@@ -100,6 +102,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -223,9 +226,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 Thread.currentThread().setContextClassLoader(cl);
             }
 
-            if (groovySourceUnit.getErrorCollector().hasErrors()) {
-                recordProblems(groovySourceUnit.getErrorCollector().getErrors());
-                return false;
+            ErrorCollector collector = groovySourceUnit.getErrorCollector();
+            if (collector.hasErrors() || collector.hasWarnings()) {
+                recordProblems(collector.getErrors(), collector.getWarnings());
+                return !collector.hasErrors();
             } else {
                 return true;
             }
@@ -237,13 +241,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             ErrorCollector collector = e.getErrorCollector();
-            if (collector.getErrorCount() == 1 && e.getErrorCollector().getError(0) instanceof ExceptionMessage) {
-                Exception cause = ((ExceptionMessage) e.getErrorCollector().getError(0)).getCause();
+            if (collector.getErrorCount() == 1 && collector.getError(0) instanceof ExceptionMessage) {
+                Exception cause = ((ExceptionMessage) collector.getError(0)).getCause();
                 if (cause instanceof AbortCompilation) {
                     throw (AbortCompilation) cause;
                 }
             }
-            recordProblems(e.getErrorCollector().getErrors());
+            recordProblems(collector.getErrors(), collector.getWarnings());
         } catch (GroovyBugError e) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getBugText());
@@ -264,7 +268,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // This is mostly a fix for problems where a GroovyBugError is thrown when it is really just a malformed syntax problem.
                 ErrorCollector collector = groovySourceUnit.getErrorCollector();
                 collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getBugText(), e, 1, 1), groovySourceUnit));
-                recordProblems(collector.getErrors());
+                recordProblems(collector.getErrors(), collector.getWarnings());
             }
         } catch (AssertionError | LinkageError e) {
             if (GroovyLogManager.manager.hasLoggers()) {
@@ -276,7 +280,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // probably an AST transform compiled against a different Groovy
             ErrorCollector collector = groovySourceUnit.getErrorCollector();
             collector.addError(new SyntaxErrorMessage(new SyntaxException(" compiler error: " + e.getMessage(), e, 1, 1), groovySourceUnit));
-            recordProblems(collector.getErrors());
+            recordProblems(collector.getErrors(), collector.getWarnings());
         } finally {
             problemReporter.referenceContext = referenceContext;
         }
@@ -431,13 +435,30 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         return null;
     }
 
+    private static int getLine(int[] lineSeparatorPositions, int offset) {
+        int line = 0;
+        while (line < lineSeparatorPositions.length && lineSeparatorPositions[line] < offset) {
+            line += 1;
+        }
+        line += 1; // from an array index to a real 'line number'
+        return line;
+    }
+
+    private static int getOffset(int[] lineSeparatorPositions, int line, int column) {
+        if (column < 1) column = 1;
+
+        if (lineSeparatorPositions.length > (line - 2) && line > 1) {
+            return (lineSeparatorPositions[line - 2] + column);
+        }
+        return (column - 1);
+    }
+
     private static String prepareMessage(String message) {
         int i = 0;
         while (i < message.length() && Character.isWhitespace(message.charAt(i))) {
             i += 1;
         }
 
-        // FIXASC: Prefixed to indicate where it came from...
         message = "Groovy:" + (i < 1 ? "" : " ") + message.substring(i).split("\n| (?:@|at) line\\b")[0];
 
         if (message.endsWith(" Possible causes:")) {
@@ -446,95 +467,100 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         return message;
     }
 
-    // here be dragons
-    private void recordProblems(List<?> errors) {
-        // FIXASC look at this error situation (described below), surely we need to do it?
-        // Due to the nature of driving all groovy entities through compilation together, we can accumulate messages for other
-        // compilation units whilst processing the one we wanted to. Per GRE396 this can manifest as recording the wrong thing
-        // against the wrong type. That is the only case I have seen of it, so I'm not putting in the general mechanism for all
-        // errors yet, I'm just dealing with RuntimeParserExceptions. The general strategy would be to compare the ModuleNode
-        // for each message with the ModuleNode currently being processed - if they differ then this isn't a message for this
-        // unit and so we ignore it. If we do deal with it then we remember that we did (in errorsRecorded) and remove it from
-        // the list of those to process.
+    private void recordProblems(List<? extends Message> errors, List<WarningMessage> warnings) {
+        if (errors == null) errors = Collections.emptyList();
+        if (warnings == null) warnings = Collections.emptyList();
 
-        List<Message> errorsRecorded = new ArrayList<>();
-        // FIXASC Poor way to get the errors attached to the files.
-        // FIXASC Does groovy ever produce warnings? How are they treated here?
-        for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
-            Message message = (Message) iterator.next();
-            SyntaxException syntaxException = null;
-            StringWriter sw = new StringWriter();
-            message.write(new PrintWriter(sw));
-            String msg = sw.toString();
-            CategorizedProblem p = null;
-            int line = 0;
-            int sev = 0;
-            int scol = 0;
-            int ecol = 0;
-            // LocatedMessage instances are produced sometimes, e.g. by grails ast transforms, use the context for position
-            if (message instanceof LocatedMessage) {
-                CSTNode context = ((LocatedMessage) message).getContext();
-                if (context instanceof Token) {
-                    line = context.getStartLine();
-                    scol = context.getStartColumn();
-                    String text = ((Token) context).getText();
-                    ecol = scol + (text == null ? 1 : (text.length() - 1));
+        List<Message> accepted = Stream.concat(errors.stream(), warnings.stream()).filter(message -> {
+            // Due to the nature of driving all Groovy entities through compilation together,
+            // we can accumulate messages for other units while processing the compile unit.
+            // Per GRE396 this can result in markers recorded against the wrong source unit.
+
+            if (message instanceof SyntaxErrorMessage) {
+                Object source = ReflectionUtils.getPrivateField(SyntaxErrorMessage.class, "source", message);
+                if (source != null && source != groovySourceUnit) {
+                    return false;
+                }
+            } else if (message instanceof SimpleMessage) {
+                Object owner = ReflectionUtils.getPrivateField(SimpleMessage.class, "owner", message);
+                if (owner != null && owner != compilationUnit && owner != groovySourceUnit) {
+                    return false;
+                }
+            } else if (message instanceof ExceptionMessage) {
+                Object owner = ReflectionUtils.getPrivateField(ExceptionMessage.class, "owner", message);
+                if (owner != null && owner != compilationUnit && owner != groovySourceUnit) {
+                    return false;
+                }
+                if (((ExceptionMessage) message).getCause() instanceof GroovyRuntimeException) {
+                    GroovyRuntimeException gre = (GroovyRuntimeException) ((ExceptionMessage) message).getCause();
+                    if (gre.getModule() != null && !gre.getModule().equals(this.getModuleNode())) {
+                        return false;
+                    }
                 }
             }
-            if (message instanceof SimpleMessage) {
-                SimpleMessage simpleMessage = (SimpleMessage) message;
-                sev |= ProblemSeverities.Error;
-                msg = prepareMessage(simpleMessage.getMessage());
-            }
+            return true;
+        }).collect(Collectors.toList());
+
+        errors.removeAll(accepted);
+        warnings.removeAll(accepted);
+
+        //----------------------------------------------------------------------
+
+        for (Message message : accepted) {
+            String description = null;
+            int soffset = -1, eoffset = -1;
+            int line = 0, scol = 0, ecol = 0;
+
             if (message instanceof SyntaxErrorMessage) {
                 SyntaxErrorMessage errorMessage = ((SyntaxErrorMessage) message);
-                syntaxException = errorMessage.getCause();
-                sev |= ProblemSeverities.Error;
-                msg = prepareMessage(syntaxException.getMessage());
-                line = syntaxException.getLine();
-                scol = errorMessage.getCause().getStartColumn();
-                ecol = errorMessage.getCause().getEndColumn() - 1;
-            }
-            int soffset = -1;
-            int eoffset = -1;
-            if (message instanceof ExceptionMessage) {
-                ExceptionMessage em = (ExceptionMessage) message;
-                sev |= ProblemSeverities.Error;
-                if (em.getCause() instanceof RuntimeParserException) {
-                    RuntimeParserException rpe = (RuntimeParserException) em.getCause();
-                    if (!rpe.getModule().equals(this.getModuleNode())) {
-                        continue;
-                    }
-                    msg = prepareMessage(rpe.getMessage());
+                SyntaxException syntaxException = errorMessage.getCause();
+                description = syntaxException.getMessage();
 
-                    soffset = rpe.getNode().getStart();
-                    eoffset = rpe.getNode().getEnd() - 1;
-                    // need to work out the line again as it may be wrong
-                    line = 0;
-                    while (compilationResult.lineSeparatorPositions[line] < soffset &&
-                            line < compilationResult.lineSeparatorPositions.length) {
-                        line += 1;
+                line = syntaxException.getLine();
+                scol = syntaxException.getStartColumn();
+                ecol = syntaxException.getEndColumn() - 1;
+                if (syntaxException instanceof PreciseSyntaxException) {
+                    soffset = ((PreciseSyntaxException) syntaxException).getStartOffset();
+                    eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
+                    line = getLine(compilationResult.lineSeparatorPositions, soffset);
+                }
+            } else if (message instanceof SimpleMessage) {
+                SimpleMessage simpleMessage = (SimpleMessage) message;
+                description = simpleMessage.getMessage();
+
+                if (message instanceof LocatedMessage) {
+                    CSTNode context = ((LocatedMessage) message).getContext();
+                    if (context != null) {
+                        line = context.getStartLine();
+                        scol = context.getStartColumn();
+                        if (context instanceof Token) {
+                            String text = ((Token) context).getText();
+                            ecol = scol + (text == null ? 1 : text.length() - 1);
+                        }
                     }
-                    line += 1; // from an array index to a real 'line number'
+                }
+            } else if (message instanceof ExceptionMessage && ((ExceptionMessage) message).getCause() instanceof GroovyRuntimeException) {
+                GroovyRuntimeException gre = (GroovyRuntimeException) ((ExceptionMessage) message).getCause();
+                description = gre.getMessage();
+
+                if (gre.getNode() != null) {
+                    soffset = gre.getNode().getStart();
+                    eoffset = gre.getNode().getEnd() - 1;
+                    line = getLine(compilationResult.lineSeparatorPositions, soffset);
                 }
             }
-            if (syntaxException instanceof PreciseSyntaxException) {
-                soffset = ((PreciseSyntaxException) syntaxException).getStartOffset();
-                eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
-                // need to work out the line again as it may be wrong
-                line = 0;
-                while (line < compilationResult.lineSeparatorPositions.length &&
-                        compilationResult.lineSeparatorPositions[line] < soffset) {
-                    line += 1;
-                }
-                line += 1; // from an array index to a real 'line number'
-            } else {
-                if (soffset == -1) {
-                    soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
-                }
-                if (eoffset == -1) {
-                    eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
-                }
+
+            if (description == null) {
+                StringWriter writer = new StringWriter();
+                message.write(new PrintWriter(writer));
+                description = writer.toString();
+            }
+
+            if (soffset == -1) {
+                soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
+            }
+            if (eoffset == -1) {
+                eoffset = getOffset(compilationResult.lineSeparatorPositions, line, ecol);
             }
             if (soffset > eoffset) {
                 eoffset = soffset;
@@ -544,11 +570,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 eoffset = sourceEnd;
             }
 
-            p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] {msg}, 0, new String[] {msg}, sev, soffset, eoffset, line, scol);
-            problemReporter.record(p, compilationResult, this, false);
-            errorsRecorded.add(message);
+            CategorizedProblem problem = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[0], 0, new String[] {prepareMessage(description)},
+                message instanceof WarningMessage ? ProblemSeverities.Warning : ProblemSeverities.Error, soffset, eoffset, line, scol);
+            problemReporter.record(problem, compilationResult, this, false);
         }
-        errors.removeAll(errorsRecorded);
     }
 
     @Override
@@ -570,15 +595,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         super.finalizeProblems();
-    }
-
-    private static int getOffset(int[] lineSeparatorPositions, int line, int column) {
-        if (column < 1) column = 1;
-
-        if (lineSeparatorPositions.length > (line - 2) && line > 1) {
-            return (lineSeparatorPositions[line - 2] + column);
-        }
-        return (column - 1);
     }
 
     //--------------------------------------------------------------------------
