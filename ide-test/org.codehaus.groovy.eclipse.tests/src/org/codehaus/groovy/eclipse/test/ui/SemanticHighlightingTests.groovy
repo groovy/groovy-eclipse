@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2718,6 +2718,37 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('writeOnly'), 9, UNKNOWN),
             new HighlightedTypedPosition(contents.lastIndexOf('writeOnly'), 9, METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1015
+    void testWithBlock7() {
+        addGroovySource '''\
+            |class Pogo {
+            |  String prop
+            |  void setProp(String value) {}
+            |}
+            |'''.stripMargin()
+
+        // 'prop' references on left-hand side of compound assignment should infer as setter
+        String contents = '''\
+            |@groovy.transform.CompileStatic
+            |void meth(Pogo pogo) {
+            |  pogo.prop += 'x'
+            |  pogo.with {
+            |    prop += 'x'
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Pogo'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('pogo'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('pogo.'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('prop'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('pogo.'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('prop'), 4, METHOD_CALL))
     }
 
     @Test
