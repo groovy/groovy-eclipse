@@ -104,24 +104,22 @@
       xsi:type="setup.p2:P2Task"
       label="">
     <requirement
-        name="org.eclipse.jdt.source.feature.group"/>
-    <requirement
-        name="org.eclipse.pde.source.feature.group"/>
-    <requirement
         name="org.eclipse.platform.source.feature.group"/>
+    <requirement
+        name="org.eclipse.jdt.source.feature.group"/>
     <requirement
         name="org.eclipse.m2e.feature.feature.group"/>
     <requirement
+        name="org.eclipse.m2e.sdk.feature.feature.group"/>
+    <requirement
         name="org.eclipse.oomph.setup.sdk.feature.group"/>
+    <requirement
+        name="org.eclipse.pde.source.feature.group"/>
     <requirement
         name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
     <requirement
-        name="com.ifedorenko.m2e.mavendev.feature.feature.group"/>
-    <requirement
         name="net.sf.eclipsecs.feature.group"
         optional="true"/>
-    <repository
-        url="https://ifedorenko.github.com/m2e-extras"/>
     <repository
         url="https://checkstyle.github.io/eclipse-cs/update"/>
     <description></description>
@@ -275,15 +273,17 @@
         name="Eclipse ${eclipse.target.platform}"
         activeRepositoryList="${eclipse.target.platform}">
       <requirement
-          name="org.eclipse.jdt.source.feature.group"/>
-      <requirement
-          name="org.eclipse.pde.source.feature.group"/>
-      <requirement
           name="org.eclipse.platform.source.feature.group"/>
+      <requirement
+          name="org.eclipse.jdt.source.feature.group"/>
       <requirement
           name="org.eclipse.m2e.feature.feature.group"/>
       <requirement
           name="org.eclipse.m2e.sdk.feature.feature.group"/>
+      <requirement
+          name="org.eclipse.pde.source.feature.group"/>
+      <requirement
+          name="org.eclipse.buildship.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
       <repositoryList
