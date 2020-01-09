@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ package org.codehaus.groovy.eclipse.dsl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -36,21 +36,21 @@ import org.eclipse.core.runtime.jobs.Job;
  */
 public class DSLDStoreManager {
 
-    private final Map<String, DSLDStore> dsldStores = new HashMap<>();
+    private final Map<String, DSLDStore> dsldStores = new ConcurrentHashMap<>();
 
     public String[] getProjectNames() {
         return dsldStores.keySet().toArray(new String[dsldStores.size()]);
     }
 
-    public DSLDStore getDSLDStore(IProject project) {
+    public DSLDStore getDSLDStore(final IProject project) {
         return dsldStores.computeIfAbsent(project.getName(), projectName -> new DSLDStore());
     }
 
-    public boolean hasDSLDStoreFor(IProject project) {
+    public boolean hasDSLDStoreFor(final IProject project) {
         return dsldStores.containsKey(project.getName());
     }
 
-    public void removeDSLDStore(IProject project) {
+    public void removeDSLDStore(final IProject project) {
         dsldStores.remove(project.getName());
     }
 
@@ -62,15 +62,15 @@ public class DSLDStoreManager {
 
     private final Set<String> inProgress = new HashSet<>();
 
-    public void initialize(IProject project, boolean synchronous) {
+    public void initialize(final IProject project, final boolean synchronous) {
         initialize(Collections.singletonList(project), synchronous);
     }
 
-    public void initialize(IProject[] projects, boolean synchronous) {
+    public void initialize(final IProject[] projects, final boolean synchronous) {
         initialize(Arrays.asList(projects), synchronous);
     }
 
-    public void initialize(Collection<IProject> projects, boolean synchronous) {
+    public void initialize(final Collection<IProject> projects, final boolean synchronous) {
         List<IProject> groovyProjects = projects.stream()
             .filter(GroovyNature::hasGroovyNature).collect(Collectors.toList());
 
@@ -85,7 +85,7 @@ public class DSLDStoreManager {
         }
     }
 
-    public void ensureInitialized(IProject project, boolean synchronous) {
+    public void ensureInitialized(final IProject project, final boolean synchronous) {
         boolean isInProgress = isInProgress(project);
         if (!isInProgress && !hasDSLDStoreFor(project)) {
             initialize(project, synchronous);
@@ -109,19 +109,19 @@ public class DSLDStoreManager {
         }
     }
 
-    private synchronized boolean isInProgress(IProject project) {
+    private synchronized boolean isInProgress(final IProject project) {
         return inProgress.contains(project.getName());
     }
 
-    private synchronized boolean addInProgress(IProject project) {
+    private synchronized boolean addInProgress(final IProject project) {
         return inProgress.add(project.getName());
     }
 
-    synchronized List<IProject> addInProgress(Collection<IProject> projects) {
+    synchronized List<IProject> addInProgress(final Collection<IProject> projects) {
         return projects.stream().filter(this::addInProgress).collect(Collectors.toList());
     }
 
-    synchronized void removeInProgress(IProject project) {
+    synchronized void removeInProgress(final IProject project) {
         inProgress.remove(project.getName());
         notifyAll();
     }
