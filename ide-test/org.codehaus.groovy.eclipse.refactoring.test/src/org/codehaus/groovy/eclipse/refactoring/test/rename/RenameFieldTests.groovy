@@ -225,6 +225,6 @@ final class RenameFieldTests extends RefactoringTestSuite {
     @Test
     void test15() {
         def status = runTest('MyBean', 'foo', 'fooBar')
-        assert status.isOK() // TODO: partial matches should result in warning
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 }
