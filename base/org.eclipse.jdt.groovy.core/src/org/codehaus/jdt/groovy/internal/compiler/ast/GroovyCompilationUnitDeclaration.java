@@ -229,13 +229,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             ErrorCollector collector = groovySourceUnit.getErrorCollector();
             if (collector.hasErrors() || collector.hasWarnings()) {
                 recordProblems(collector.getErrors(), collector.getWarnings());
-                return !collector.hasErrors();
-            } else {
+            }
+            if (!collector.hasErrors()) {
                 return true;
             }
         } catch (MultipleCompilationErrorsException e) {
-            fixGroovyRuntimeException(e);
-
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.COMPILER, e.getMessage());
             }
@@ -286,27 +284,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         return false;
-    }
-
-    /** Unwraps any SyntaxExceptions embedded within a GroovyRuntimeException. */
-    private void fixGroovyRuntimeException(MultipleCompilationErrorsException mce) {
-        List<SyntaxException> syntaxErrors = new ArrayList<>();
-
-        for (Iterator<? extends Message> it = mce.getErrorCollector().getErrors().iterator(); it.hasNext();) {
-            Message m = it.next();
-            if (m instanceof ExceptionMessage) {
-                ExceptionMessage em = (ExceptionMessage) m;
-                if (em.getCause() instanceof GroovyRuntimeException &&
-                        ((GroovyRuntimeException) em.getCause()).getCause() instanceof SyntaxException) {
-                    syntaxErrors.add((SyntaxException) em.getCause().getCause());
-                    it.remove();
-                }
-            }
-        }
-
-        for (SyntaxException se : syntaxErrors) {
-            mce.getErrorCollector().addError(se, groovySourceUnit);
-        }
     }
 
     //--------------------------------------------------------------------------
