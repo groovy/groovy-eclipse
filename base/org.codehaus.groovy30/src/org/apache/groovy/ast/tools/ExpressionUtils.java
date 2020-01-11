@@ -90,7 +90,12 @@ public class ExpressionUtils {
             int type = be.getOperation().getType();
             if (handledTypes.contains(type)) {
                 Expression leftX = transformInlineConstants(be.getLeftExpression(), targetType);
+                /* GRECLIPSE edit -- GROOVY-9336
                 Expression rightX = transformInlineConstants(be.getRightExpression(), targetType);
+                */
+                Expression rightX = transformInlineConstants(be.getRightExpression(),
+                    type >= LEFT_SHIFT && type <= RIGHT_SHIFT_UNSIGNED ? ClassHelper.int_TYPE : targetType);
+                // GRECLIPSE end
                 if (leftX instanceof ConstantExpression && rightX instanceof ConstantExpression) {
                     Number left = safeNumber((ConstantExpression) leftX);
                     Number right = safeNumber((ConstantExpression) rightX);

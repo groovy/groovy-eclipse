@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3748,6 +3748,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9336
+    public void testGroovy9336() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  public static final double CONST = 2 << 16 - 1\n" +
+            "  static main(args) {\n" +
+            "    print CONST\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "65536.0");
     }
 
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
