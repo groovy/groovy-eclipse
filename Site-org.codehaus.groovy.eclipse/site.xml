@@ -43,9 +43,9 @@
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature-->
 
-   <feature id="org.codehaus.groovy24.feature" url="features/org.codehaus.groovy24.feature_3.7.0.qualifier.jar" version="3.7.0.qualifier">
+   <!--feature id="org.codehaus.groovy24.feature" url="features/org.codehaus.groovy24.feature_3.7.0.qualifier.jar" version="3.7.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
-   </feature>
+   </feature-->
 
    <feature id="org.codehaus.groovy25.feature" url="features/org.codehaus.groovy25.feature_3.7.0.qualifier.jar" version="3.7.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>

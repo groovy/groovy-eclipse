@@ -193,6 +193,7 @@ Replace e49 with a different option to build it for another Eclipse version:
 * e4.12
 * e4.13
 * e4.14
+* e4.15
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 
