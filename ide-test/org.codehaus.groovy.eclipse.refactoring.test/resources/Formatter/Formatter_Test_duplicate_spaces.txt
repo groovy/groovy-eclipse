@@ -1,0 +1,39 @@
+###prop
+setPreferences=true
+bracesEnd=next
+###src
+package  org.test
+
+public   abstract   class  EmailCommand   extends   Command   implements   Serializable  ,  ICommand  {
+	@Annotation ( value  = "test" , a=1  )
+	@Annotation2  (  )
+	@Annotation3(  "test" )
+	def   foo  ( int  a ,  Map < String  , List <  Integer  >  >  collection  )  {
+		def array   =  [  1,  2  ]
+		
+		if  (  array.length  >=  3  )  {
+			println    "test"
+		}
+		
+		return  1  <2  &&  2>=  1   
+	}
+}
+###exp
+package org.test
+
+public abstract class EmailCommand extends Command implements Serializable,
+		ICommand {
+	@Annotation(value = "test", a = 1)
+	@Annotation2()
+	@Annotation3("test")
+	def foo(int a, Map<String, List<Integer>> collection) {
+		def array = [1, 2]
+
+		if (array.length >= 3) {
+			println "test"
+		}
+
+		return 1 < 2 && 2 >= 1
+	}
+}
+###end
