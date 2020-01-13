@@ -229,7 +229,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         this.requestor = requestor;
         this.enclosingElement = unit;
-        VariableScope topLevelScope = new VariableScope(null, enclosingModule, false);
+        VariableScope topLevelScope = new VariableScope(null, enclosingModule, true);
         scopes.add(topLevelScope);
 
         for (ITypeLookup lookup : lookups) {
@@ -531,9 +531,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             if (imp.getFieldNameExpr() != null) {
                                 completeExpressionStack.add(imp);
                                 try {
+                                    scope.setCurrentNode(imp);
                                     primaryTypeStack.add(type);
-                                    imp.getFieldNameExpr().visit(this);
+                                    visitConstantExpression(imp.getFieldNameExpr());
 
+                                    scope.forgetCurrentNode();
                                     dependentTypeStack.removeLast();
                                     dependentDeclarationStack.removeLast();
                                 } finally {
@@ -2505,6 +2507,8 @@ assert primaryExprType != null && dependentExprType != null;
                 } else if (objectExpression instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType)) {
                     staticObjectExpression = true; // separate lookup exists for non-static members of Class, Object, or GroovyObject
                 }
+            } else if (complete instanceof ImportNode) {
+                staticObjectExpression = true;
             }
         }
         return staticObjectExpression;

@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -421,7 +422,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters())) {
+                    } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&
+                            !(isStaticObjectExpression && isStaticReferenceToUnambiguousMethod(scope, name, declaringType)) &&
+                            !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
@@ -978,6 +981,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0], 10);
             return (majorVersion >= 3);
         }
+        return false;
+    }
+
+    protected static boolean isStaticReferenceToUnambiguousMethod(final VariableScope scope, final String name, final ClassNode type) {
+        if (scope.getEnclosingNode() instanceof ImportNode) { // import nodes can only refer to static methods of type
+            long staticMethodCount = getMethods(name, type).stream().filter(meth -> isCompatible(meth, true)).count();
+            return (staticMethodCount == 1);
+        }
+        // TODO: Add case for PropertyExpression, MethodCallExpression or MethodPointerExpression?
         return false;
     }
 
