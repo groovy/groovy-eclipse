@@ -2575,7 +2575,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else {
                 // start and end of the type name; scripts do not have a name, so use start instead
                 typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
-                typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart()); // incl. extends/implements?
+                typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart() - 1);
 
                 // start and end of the entire declaration including Javadoc and ending at the last close bracket
                 Javadoc doc = findJavadoc(classNode.getLineNumber());
