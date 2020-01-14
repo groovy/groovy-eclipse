@@ -56,14 +56,14 @@ public class CompilerConfiguration {
     /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. */
     public static final String JDK8 = "1.8";
 
+    /** The valid targetBytecode values. */
+    public static final String[] ALLOWED_JDKS = {JDK4, JDK5, JDK6, JDK7, JDK8};
+
     /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5 or later JVM. */
     public static final String POST_JDK5 = JDK5;
 
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. */
     public static final String PRE_JDK5 = JDK4;
-
-    // GRECLIPSE private->public
-    public static final String[] ALLOWED_JDKS = { JDK4, JDK5, JDK6, JDK7, JDK8 };
 
     @Deprecated
     public static final String CURRENT_JVM_VERSION = getMinBytecodeVersion();
@@ -852,8 +852,8 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Sets the bytecode compatibility. The parameter can take one of the values
-     * <tt>1.8</tt>, <tt>1.7</tt>, <tt>1.6</tt>, <tt>1.5</tt> or <tt>1.4</tt>.
+     * Sets the bytecode compatibility. The parameter can take one of the
+     * values in {@link #ALLOWED_JDKS}.
      *
      * @param version the bytecode compatibility level
      */
