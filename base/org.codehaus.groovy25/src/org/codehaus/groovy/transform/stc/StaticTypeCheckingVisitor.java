@@ -263,7 +263,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.resolv
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.toMethodParametersString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodArgumentWithGenerics;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodsWithGenerics;
-import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
 
 /**
  * The main class code visitor responsible for static type checking. It will perform various inspections like checking
@@ -315,7 +314,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected final ReturnAdder.ReturnStatementListener returnListener = new ReturnAdder.ReturnStatementListener() {
         public void returnStatementAdded(final ReturnStatement returnStatement) {
-            if (returnStatement.getExpression() == ConstantExpression.NULL) return;
             if (isNullConstant(returnStatement.getExpression())) return;
             checkReturnType(returnStatement);
             if (typeCheckingContext.getEnclosingClosure() != null) {
@@ -1482,7 +1480,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 return true;
             }
             // GRECLIPSE end
-            LinkedList<ClassNode> queue = new LinkedList<ClassNode>();
+            LinkedList<ClassNode> queue = new LinkedList<>();
             queue.add(testClass);
             if (isPrimitiveType(testClass)) {
                 queue.add(getWrapper(testClass));
@@ -1606,13 +1604,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
                 if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
 
-                // if the property expression is an attribute expression (o.@attr), then
-                // we stop now, otherwise we must check the parent class
-                if (/*!isAttributeExpression && */current.getSuperClass() != null) {
+                if (current.getSuperClass() != null) {
                     queue.add(current.getUnresolvedSuperClass());
                 }
             }
-            // GROOVY-5568, the property may be defined by DGM
+
+            // GROOVY-5568: the property may be defined by DGM
             List<ClassNode> dgmReceivers = new ArrayList<ClassNode>(2);
             dgmReceivers.add(testClass);
             if (isPrimitiveType(testClass)) dgmReceivers.add(getWrapper(testClass));
@@ -1633,6 +1630,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (readMode) storeTargetMethod(pexp, getter);
                         return true;
                     }
+                }
+            }
+
+            // GROOVY-7996: check if receiver implements get(String)/set(String,Object) or propertyMissing(String)
+            if (!testClass.isArray() && !isPrimitiveType(getUnwrapper(testClass))
+                    && pexp.isImplicitThis() && typeCheckingContext.getEnclosingClosure() != null) {
+                MethodNode mopMethod;
+                if (readMode) {
+                    mopMethod = testClass.getMethod("get", new Parameter[]{new Parameter(STRING_TYPE, "name")});
+                } else {
+                    mopMethod = testClass.getMethod("set", new Parameter[]{new Parameter(STRING_TYPE, "name"), new Parameter(OBJECT_TYPE, "value")});
+                }
+                if (mopMethod == null) mopMethod = testClass.getMethod("propertyMissing", new Parameter[]{new Parameter(STRING_TYPE, "propertyName")});
+
+                if (mopMethod != null) {
+                    pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    return true;
                 }
             }
         }
@@ -2270,11 +2286,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
                 if (!methods.isEmpty()) { // indicates specific methods have STC
                     typeCheckingContext.methodsToBeVisited = Collections.emptySet();
-    
+
                     ClassNode anonType = call.getType();
                     visitClass(anonType); // visit anon. inner class inline with method
                     anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
-    
+
                     typeCheckingContext.methodsToBeVisited = methods;
                 }
             }

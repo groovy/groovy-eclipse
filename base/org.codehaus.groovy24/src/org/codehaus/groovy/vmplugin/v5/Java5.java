@@ -419,7 +419,10 @@ public class Java5 implements VMPlugin {
             for (Constructor ctor : constructors) {
                 Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), getConstructorParameterAnnotations(ctor), ctor);
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                // GRECLIPSE add
+                setAnnotationMetaData(ctor.getAnnotations(),
+                // GRECLIPSE end
+                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null));
             }
 
             Class sc = clazz.getSuperclass();

@@ -20,6 +20,7 @@ package org.codehaus.groovy.classgen.asm;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -92,14 +93,27 @@ public class StatementWriter {
         }
         compileStack.pop();
 
-        // GROOVY-7647
-        if (block.getLastLineNumber() > 0) {
+        // GROOVY-7647, GROOVY-9126
+        if (block.getLastLineNumber() > 0 && !isMethodOrConstructorNonEmptyBlock(block)) {
             MethodVisitor mv = controller.getMethodVisitor();
             Label blockEnd = new Label(); mv.visitLabel(blockEnd);
             mv.visitLineNumber(block.getLastLineNumber(), blockEnd);
         }
 
         controller.getOperandStack().popDownTo(mark);
+    }
+
+    private boolean isMethodOrConstructorNonEmptyBlock(BlockStatement block) {
+        MethodNode methodNode = controller.getMethodNode();
+        if (null == methodNode) {
+            methodNode = controller.getConstructorNode();
+        }
+
+        if (null == methodNode || block != methodNode.getCode()) { // check if the block is method/constructor's code
+            return false;
+        }
+
+        return !block.getStatements().isEmpty();
     }
 
     public void writeForStatement(ForStatement loop) {

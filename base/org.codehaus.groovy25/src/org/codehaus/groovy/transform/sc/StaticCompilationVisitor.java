@@ -469,9 +469,6 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 componentType = inferLoopElementType(collectionType);
             }
             forLoop.getVariable().setType(componentType);
-            // GRECLIPSE edit -- preserve origin type for code select
-            //forLoop.getVariable().setOriginType(componentType);
-            // GRECLIPSE end
         }
     }
 
