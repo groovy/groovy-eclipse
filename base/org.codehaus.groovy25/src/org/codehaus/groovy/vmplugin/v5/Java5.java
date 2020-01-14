@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -362,10 +363,7 @@ public class Java5 implements VMPlugin {
     }
 
     private static void setMethodDefaultValue(MethodNode mn, Method m) {
-        Object defaultValue = m.getDefaultValue();
-        ConstantExpression cExp = ConstantExpression.NULL;
-        if (defaultValue!=null) cExp = new ConstantExpression(defaultValue);
-        mn.setCode(new ReturnStatement(cExp));
+        mn.setCode(new ReturnStatement(new ConstantExpression(m.getDefaultValue())));
         mn.setAnnotationDefault(true);
     }
 
@@ -410,7 +408,8 @@ public class Java5 implements VMPlugin {
                 Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), getConstructorParameterAnnotations(ctor), ctor);
                 // GRECLIPSE end
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                ConstructorNode cn = classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                setAnnotationMetaData(ctor.getAnnotations(), cn);
             }
 
             Class sc = clazz.getSuperclass();
