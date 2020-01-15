@@ -69,7 +69,7 @@ import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private ClassNode currentClass;
     private MethodNode currentMethod;
-    private SourceUnit source;
+    private SourceUnit sourceUnit;
     private boolean inSpecialConstructorCall;
     private boolean inClosure;
     private boolean inPropertyExpression;
@@ -78,10 +78,19 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private boolean inAnnotation;
     private boolean inLeftExpression;
 
-    public void visitClass(ClassNode node, SourceUnit source) {
-        this.currentClass = node;
-        this.source = source;
-        super.visitClass(node);
+    public StaticImportVisitor(final ClassNode classNode, final SourceUnit sourceUnit) {
+        this.currentClass = classNode;
+        this.sourceUnit = sourceUnit;
+    }
+
+    /**
+     * Call {@link #StaticImportVisitor(ClassNode,SourceUnit)} then {@link #visitClass(ClassNode)}.
+     */
+    @Deprecated
+    public void visitClass(final ClassNode classNode, final SourceUnit sourceUnit) {
+        this.currentClass = classNode;
+        this.sourceUnit = sourceUnit;
+        visitClass(classNode);
     }
 
     @Override
@@ -101,25 +110,26 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
 
     public Expression transform(Expression exp) {
         if (exp == null) return null;
-        if (exp.getClass() == VariableExpression.class) {
+        Class<? extends Expression> clazz = exp.getClass();
+        if (clazz == VariableExpression.class) {
             return transformVariableExpression((VariableExpression) exp);
         }
-        if (exp.getClass() == BinaryExpression.class) {
+        if (clazz == BinaryExpression.class) {
             return transformBinaryExpression((BinaryExpression) exp);
         }
-        if (exp.getClass() == PropertyExpression.class) {
+        if (clazz == PropertyExpression.class) {
             return transformPropertyExpression((PropertyExpression) exp);
         }
-        if (exp.getClass() == MethodCallExpression.class) {
+        if (clazz == MethodCallExpression.class) {
             return transformMethodCallExpression((MethodCallExpression) exp);
         }
-        if (exp.getClass() == ClosureExpression.class) {
+        if (exp instanceof ClosureExpression) {
             return transformClosureExpression((ClosureExpression) exp);
         }
-        if (exp.getClass() == ConstructorCallExpression.class) {
+        if (clazz == ConstructorCallExpression.class) {
             return transformConstructorCallExpression((ConstructorCallExpression) exp);
         }
-        if (exp.getClass() == ArgumentListExpression.class) {
+        if (clazz == ArgumentListExpression.class) {
             Expression result = exp.transformExpression(this);
             if (inPropertyExpression) {
                 foundArgs = result;
@@ -573,20 +583,15 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     }
 
     private static PropertyExpression newStaticPropertyX(ClassNode type, String name) {
-        // GRECLIPSE edit
-        //return new PropertyExpression(new ClassExpression(type), name);
         return new PropertyExpression(new ClassExpression(type.getPlainNodeReference()), name);
-        // GRECLIPSE end
     }
 
     private static StaticMethodCallExpression newStaticMethodCallX(ClassNode type, String name, Expression args) {
-        // GRECLIPSE edit
-        //return new StaticMethodCallExpression(type, name, args);
         return new StaticMethodCallExpression(type.getPlainNodeReference(), name, args);
-        // GRECLIPSE end
     }
 
+    @Override
     protected SourceUnit getSourceUnit() {
-        return source;
+        return sourceUnit;
     }
 }

@@ -146,7 +146,6 @@ import org.apache.groovy.parser.antlr4.GroovyParser.NonWildcardTypeArgumentsCont
 import org.apache.groovy.parser.antlr4.GroovyParser.NullLiteralAltContext;
 import org.apache.groovy.parser.antlr4.GroovyParser.PackageDeclarationContext;
 import org.apache.groovy.parser.antlr4.GroovyParser.ParExpressionContext;
-import org.apache.groovy.parser.antlr4.GroovyParser.ParenPrmrAltContext;
 import org.apache.groovy.parser.antlr4.GroovyParser.PathElementContext;
 import org.apache.groovy.parser.antlr4.GroovyParser.PathExpressionContext;
 import org.apache.groovy.parser.antlr4.GroovyParser.PostfixExpressionContext;
@@ -320,7 +319,6 @@ import static org.apache.groovy.parser.antlr4.GroovyParser.ADD;
 import static org.apache.groovy.parser.antlr4.GroovyParser.AS;
 import static org.apache.groovy.parser.antlr4.GroovyParser.CASE;
 import static org.apache.groovy.parser.antlr4.GroovyParser.DEC;
-import static org.apache.groovy.parser.antlr4.GroovyParser.DEF;
 import static org.apache.groovy.parser.antlr4.GroovyParser.DEFAULT;
 import static org.apache.groovy.parser.antlr4.GroovyParser.GE;
 import static org.apache.groovy.parser.antlr4.GroovyParser.GT;
@@ -3445,13 +3443,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         return configureAST(new VariableExpression(ctx.SUPER().getText()), ctx);
     }
 
-    // GRECLIPSE add
-    @Override
-    public Expression visitParenPrmrAlt(ParenPrmrAltContext ctx) {
-        return visitParExpression(ctx.parExpression());
-    }
-    // GRECLIPSE end
-
     // } primary       --------------------------------------------------------------------
 
     @Override
@@ -3643,9 +3634,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 classNode.setGenericsTypes(
                         this.visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond()));
             }
-            // GRECLIPSE edit
-            //classNode = configureAST(classNode, ctx);
-            // GRECLIPSE end
+            /* GRECLIPSE edit
+            classNode = configureAST(classNode, ctx);
+            */
         } else if (asBoolean(ctx.primitiveType())) {
             classNode = configureAST(
                     this.visitPrimitiveType(ctx.primitiveType()),
@@ -4025,33 +4016,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Parameter[] visitStandardLambdaParameters(StandardLambdaParametersContext ctx) {
         if (asBoolean(ctx.variableDeclaratorId())) {
-            /* GRECLIPSE edit
-            return new Parameter[]{
-                    configureAST(
-                            new Parameter(
-                                    ClassHelper.OBJECT_TYPE,
-                                    this.visitVariableDeclaratorId(ctx.variableDeclaratorId()).getName()
-                            ),
-                            ctx.variableDeclaratorId()
-                    )
-            };
-            */
             VariableExpression variable = this.visitVariableDeclaratorId(ctx.variableDeclaratorId());
             Parameter parameter = new Parameter(ClassHelper.OBJECT_TYPE, variable.getName());
+            // GRECLIPSE add
             parameter.setNameStart(variable.getStart());
             parameter.setNameEnd(variable.getEnd());
+            // GRECLIPSE end
             configureAST(parameter, variable);
             return new Parameter[]{parameter};
-            // GRECLIPSE end
         }
 
         Parameter[] parameters = this.visitFormalParameters(ctx.formalParameters());
-
-        if (0 == parameters.length) {
-            return null;
-        }
-
-        return parameters;
+        return (parameters.length > 0 ? parameters : null);
     }
 
     @Override
@@ -4394,7 +4370,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             GenericsType genericsType = new GenericsType(baseType, upperBounds, lowerBound);
             genericsType.setWildcard(true);
-            genericsType.setName(QUESTION_STR);
 
             return configureAST(genericsType, ctx);
         } else if (asBoolean(ctx.type())) {

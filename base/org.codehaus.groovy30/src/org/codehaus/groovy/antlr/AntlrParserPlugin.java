@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.antlr;
 
-import groovy.transform.Trait;
 import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
@@ -837,7 +836,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (isType(TRAIT_DEF, classDef)) {
             // GRECLIPSE edit
             //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
-            annotations.add(makeAnnotationNode(Trait.class));
+            annotations.add(makeAnnotationNode(groovy.transform.Trait.class));
             // GRECLIPSE end
         }
 
@@ -3484,7 +3483,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else {
                 gt = new GenericsType(base, null, null);
             }
-            gt.setName("?");
             gt.setWildcard(true);
         } else {
             ClassNode argument = makeTypeWithArguments(rootNode);

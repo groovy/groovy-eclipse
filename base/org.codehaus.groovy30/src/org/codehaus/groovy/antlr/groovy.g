@@ -1374,7 +1374,7 @@ enumConstantsStart
 enumConstants
     :
         enumConstant
-        (
+        ( options {generateAmbigWarnings=false;} :
             (nls (SEMI | enumConstantsEnd)) => {break;} // GROOVY-4438, GROOVY-9184
         |
             nls! COMMA! (
@@ -1388,6 +1388,7 @@ enumConstants
     ;
 
 enumConstantsEnd
+    options {generateAmbigWarnings=false;}
     :   RCURLY | declarationStart | constructorStart | typeDefinitionStart
     ;
 
@@ -1545,7 +1546,6 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-
         // GRECLIPSE add
         exception
         catch [RecognitionException e] {
@@ -2962,7 +2962,6 @@ assignmentExpression[int lc_stmt]
             expressionStatementNoCheck
             // If left-context of {x = y} is a statement boundary,
             // define the left-context of y as an initializer.
-
             // GRECLIPSE add
             exception
             catch [RecognitionException e] {

@@ -50,14 +50,20 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     // cached data
     private String typeDescriptor;
 
-    public MethodNode(String name, int modifiers, ClassNode returnType, Parameter[] parameters, ClassNode[] exceptions, Statement code) {
+    protected MethodNode() {
+        this.name = null;
+        this.exceptions = null;
+        this.staticConstructor = false;
+    }
+
+    public MethodNode(final String name, final int modifiers, final ClassNode returnType, final Parameter[] parameters, final ClassNode[] exceptions, final Statement code) {
         this.name = name;
         this.modifiers = modifiers;
+        this.exceptions = exceptions;
         this.code = code;
         setReturnType(returnType);
         setParameters(parameters);
-        this.exceptions = exceptions;
-        this.staticConstructor = (name != null && name.equals("<clinit>"));
+        this.staticConstructor = "<clinit>".equals(name);
     }
 
     /**

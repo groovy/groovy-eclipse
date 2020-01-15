@@ -606,7 +606,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "    return 42\n" +
             "  }\n" +
             "  String toString() {\n" +
-            "    \"{value: $value\"}\n" + // exact
+            "    \"{value: $value}\"\n" + // exact
             "  }\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",

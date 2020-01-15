@@ -286,7 +286,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * <li> array component types: follow the pattern for the component, if it starts '[' add another leading; if it ends with '[]' then do that
      * </ul>
      */
-    private static String computeArrayName(ClassNode componentType) {
+    private static String computeArrayName(final ClassNode componentType) {
         String componentName = componentType.getName();
         if (componentType.isPrimitive()) {
             switch (componentName.charAt(0)) {

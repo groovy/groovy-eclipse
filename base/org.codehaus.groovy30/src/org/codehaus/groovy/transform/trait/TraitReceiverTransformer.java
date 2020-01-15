@@ -205,11 +205,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                 method,
                 ArgumentListExpression.EMPTY_ARGUMENTS
         );
-        /* GRECLIPSE edit
-        mce.setSourcePosition(exp);
-        */
         mce.setSourcePosition(exp instanceof PropertyExpression ? ((PropertyExpression) exp).getProperty() : exp);
-        // GRECLIPSE end
         mce.setImplicitThis(false);
         return mce;
     }

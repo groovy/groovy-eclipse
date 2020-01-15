@@ -25,7 +25,7 @@ import groovyjarjarasm.asm.Opcodes;
  * Represents an import statement of a single class
  */
 public class ImportNode extends AnnotatedNode implements Opcodes {
-
+    // GRECLIPSE edit
     private ClassNode type;
     private final String alias;
     private final String fieldName;
