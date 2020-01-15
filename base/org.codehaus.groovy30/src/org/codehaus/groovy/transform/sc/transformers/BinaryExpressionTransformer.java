@@ -21,10 +21,7 @@ package org.codehaus.groovy.transform.sc.transformers;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -32,12 +29,10 @@ import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.asm.sc.StaticPropertyAccessHelper;
-import org.codehaus.groovy.classgen.asm.sc.StaticTypesTypeChooser;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
@@ -52,31 +47,35 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.boolX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.classgen.AsmClassGenerator.isNullConstant;
+
 public class BinaryExpressionTransformer {
     private static final MethodNode COMPARE_TO_METHOD = ClassHelper.COMPARABLE_TYPE.getMethods("compareTo").get(0);
+    private static final ConstantExpression CONSTANT_MINUS_ONE = constX(-1, true);
+    private static final ConstantExpression CONSTANT_ZERO = constX(0, true);
+    private static final ConstantExpression CONSTANT_ONE = constX(1, true);
 
-    private static final ConstantExpression CONSTANT_ZERO = new ConstantExpression(0, true);
-    private static final ConstantExpression CONSTANT_MINUS_ONE = new ConstantExpression(-1, true);
-    private static final ConstantExpression CONSTANT_ONE = new ConstantExpression(1, true);
-    /* GRECLIPSE edit
-    static {
-        CONSTANT_ZERO.setType(ClassHelper.int_TYPE);
-        CONSTANT_ONE.setType(ClassHelper.int_TYPE);
-        CONSTANT_MINUS_ONE.setType(ClassHelper.int_TYPE);
-    }
-    */
-    private int tmpVarCounter = 0;
+    private int tmpVarCounter;
 
     private final StaticCompilationTransformer staticCompilationTransformer;
 
-    public BinaryExpressionTransformer(StaticCompilationTransformer staticCompilationTransformer) {
+    public BinaryExpressionTransformer(final StaticCompilationTransformer staticCompilationTransformer) {
         this.staticCompilationTransformer = staticCompilationTransformer;
     }
 
-    Expression transformBinaryExpression(final BinaryExpression bin) {
+    public Expression transformBinaryExpression(final BinaryExpression bin) {
         if (bin instanceof DeclarationExpression) {
             Expression optimized = transformDeclarationExpression(bin);
-            if (optimized!=null) {
+            if (optimized != null) {
                 return optimized;
             }
         }
@@ -94,7 +93,7 @@ public class BinaryExpressionTransformer {
                         && wrapper.isDerivedFrom(ClassHelper.Number_TYPE)
                         && WideningCategories.isDoubleCategory(unwrapper)) {
                     ConstantExpression constant = (ConstantExpression) rightExpression;
-                    if (constant.getValue()!=null) {
+                    if (!constant.isNullExpression()) {
                         return optimizeConstantInitialization(bin, operation, constant, leftExpression, declarationType);
                     }
                 }
@@ -103,7 +102,9 @@ public class BinaryExpressionTransformer {
         if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
-                return transformPropertyAssignmentToSetterCall((PropertyExpression) leftExpression, rightExpression, directMCT);
+                PropertyExpression left = (PropertyExpression) leftExpression;
+                Expression right = staticCompilationTransformer.transform(rightExpression);
+                return transformPropertyAssignmentToSetterCall(left, right, directMCT);
             }
         }
         if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
@@ -119,84 +120,58 @@ public class BinaryExpressionTransformer {
                 return compareToNullExpression;
             }
         } else if (operationType == Types.KEYWORD_IN) {
-            return convertInOperatorToTernary(bin, rightExpression, leftExpression);
+            return staticCompilationTransformer.transform(convertInOperatorToTernary(bin, rightExpression, leftExpression));
         }
         if (list != null) {
-            if (operationType == Types.COMPARE_TO) {
-                StaticTypesTypeChooser typeChooser = staticCompilationTransformer.getTypeChooser();
-                ClassNode classNode = staticCompilationTransformer.getClassNode();
-                ClassNode leftType = typeChooser.resolveType(leftExpression, classNode);
-                if (leftType.implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
-                    ClassNode rightType = typeChooser.resolveType(rightExpression, classNode);
-                    if (rightType.implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
-                        Expression left = staticCompilationTransformer.transform(leftExpression);
-                        Expression right = staticCompilationTransformer.transform(rightExpression);
-                        MethodCallExpression call = new MethodCallExpression(left, "compareTo", new ArgumentListExpression(right));
-                        call.setImplicitThis(false);
-                        call.setMethodTarget(COMPARE_TO_METHOD);
-                        call.setSourcePosition(bin);
-
-                        CompareIdentityExpression compareIdentity = new CompareIdentityExpression(
-                                left, right
-                        );
-                        compareIdentity.putNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE, ClassHelper.boolean_TYPE);
-                        TernaryExpression result = new TernaryExpression(
-                                new BooleanExpression(compareIdentity), // a==b
-                                CONSTANT_ZERO,
-                                new TernaryExpression(
-                                        new BooleanExpression(new CompareToNullExpression(left, true)), // a==null
-                                        CONSTANT_MINUS_ONE,
-                                        new TernaryExpression(
-                                                new BooleanExpression(new CompareToNullExpression(right, true)), // b==null
-                                                CONSTANT_ONE,
-                                                call
-                                        )
-                                )
-                        );
-                        compareIdentity.putNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE, ClassHelper.int_TYPE);
-                        result.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
-                        TernaryExpression expr = (TernaryExpression) result.getFalseExpression();
-                        expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
-                        expr.getFalseExpression().putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
-                        return result;
-                    }
-                }
-            }
-            boolean isAssignment = StaticTypeCheckingSupport.isAssignment(operationType);
             MethodCallExpression call;
-            MethodNode node = (MethodNode) list[0];
-            String name = (String) list[1];
             Expression left = staticCompilationTransformer.transform(leftExpression);
             Expression right = staticCompilationTransformer.transform(rightExpression);
+
+            if (operationType == Types.COMPARE_TO
+                    && findType(leftExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)
+                    && findType(rightExpression).implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
+                call = callX(left, "compareTo", args(right));
+                call.setImplicitThis(false);
+                call.setMethodTarget(COMPARE_TO_METHOD);
+                call.setSourcePosition(bin);
+
+                // right == null ? 1 : left.compareTo(right)
+                Expression expr = ternaryX(
+                        boolX(new CompareToNullExpression(right, true)),
+                        CONSTANT_ONE,
+                        call
+                );
+                expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
+
+                // left == null ? -1 : (right == null ? 1 : left.compareTo(right))
+                expr = ternaryX(
+                        boolX(new CompareToNullExpression(left, true)),
+                        CONSTANT_MINUS_ONE,
+                        expr
+                );
+                expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
+
+                // left === right ? 0 : (left == null ? -1 : (right == null ? 1 : left.compareTo(right)))
+                expr = ternaryX(
+                        boolX(new CompareIdentityExpression(left, right)),
+                        CONSTANT_ZERO,
+                        expr
+                );
+                expr.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, ClassHelper.int_TYPE);
+
+                return expr;
+            }
+
             BinaryExpression optimized = tryOptimizeCharComparison(left, right, bin);
-            if (optimized!=null) {
+            if (optimized != null) {
                 optimized.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
                 return transformBinaryExpression(optimized);
             }
-            /* GRECLIPSE edit
-            call = new MethodCallExpression(
-                    left,
-                    name,
-                    new ArgumentListExpression(right)
-            );
-            call.setImplicitThis(false);
-            call.setMethodTarget(node);
-            MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
-            if (adapter != null) {
-                ClassExpression sba = new ClassExpression(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
-                // replace with compareEquals
-                call = new MethodCallExpression(sba,
-                        "compareEquals",
-                        new ArgumentListExpression(left, right));
-                call.setMethodTarget(adapter);
-                call.setImplicitThis(false);
-            }
-            call.setSourcePosition(bin);
-            if (!isAssignment) return call;
-            // case of +=, -=, /=, ...
-            // the method represents the operation type only, and we must add an assignment
-            return new BinaryExpression(left, Token.newSymbol("=", operation.getStartLine(), operation.getStartColumn()), call);
-            */
+
+            String name = (String) list[1];
+            MethodNode node = (MethodNode) list[0];
+            boolean isAssignment = Types.isAssignment(operationType);
+            // GRECLIPSE edit
             Expression expr = !isAssignment ? left : new ExpressionTransformer() {
                 @Override
                 public Expression transform(final Expression expression) {
@@ -238,14 +213,14 @@ public class BinaryExpressionTransformer {
                     return transformed;
                 }
             }.transform(left);
-
+            // GRECLIPSE end
             MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
             if (adapter != null) {
-                ClassExpression sba = new ClassExpression(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
-                call = new MethodCallExpression(sba, "compareEquals", new ArgumentListExpression(expr, right));
+                Expression sba = classX(StaticCompilationTransformer.BYTECODE_ADAPTER_CLASS);
+                call = callX(sba, "compareEquals", args(expr, right));
                 call.setMethodTarget(adapter);
             } else {
-                call = new MethodCallExpression(expr, name, new ArgumentListExpression(right));
+                call = callX(expr, name, args(right));
                 call.setMethodTarget(node);
             }
             call.setImplicitThis(false);
@@ -253,15 +228,16 @@ public class BinaryExpressionTransformer {
                 call.setSourcePosition(bin);
                 return call;
             }
-            expr = new BinaryExpression(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
+            // case of +=, -=, /=, ...
+            // the method represents the operation type only, and we must add an assignment
+            expr = binX(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
             expr.setSourcePosition(bin);
             return expr;
-            // GRECLIPSE end
         }
-        if (bin.getOperation().getType() == Types.EQUAL && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
+        if (operationType == Types.EQUAL && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
             // multiple assignment
             ListOfExpressionsExpression cle = new ListOfExpressionsExpression();
-            boolean isDeclaration = bin instanceof DeclarationExpression;
+            boolean isDeclaration = (bin instanceof DeclarationExpression);
             List<Expression> leftExpressions = ((TupleExpression) leftExpression).getExpressions();
             List<Expression> rightExpressions = ((ListExpression) rightExpression).getExpressions();
             Iterator<Expression> leftIt = leftExpressions.iterator();
@@ -271,7 +247,7 @@ public class BinaryExpressionTransformer {
                     Expression left = leftIt.next();
                     if (rightIt.hasNext()) {
                         Expression right = rightIt.next();
-                        BinaryExpression bexp = new DeclarationExpression(left, bin.getOperation(), right);
+                        BinaryExpression bexp = new DeclarationExpression(left, operation, right);
                         bexp.setSourcePosition(right);
                         cle.addExpression(bexp);
                     }
@@ -284,16 +260,16 @@ public class BinaryExpressionTransformer {
                 // next = tmp1
                 // result = tmp2
                 int size = rightExpressions.size();
-                List<Expression> tmpAssignments = new ArrayList<Expression>(size);
-                List<Expression> finalAssignments = new ArrayList<Expression>(size);
-                for (int i = 0; i < Math.min(size, leftExpressions.size()); i++) {
+                List<Expression> tmpAssignments = new ArrayList<>(size);
+                List<Expression> finalAssignments = new ArrayList<>(size);
+                for (int i = 0, n = Math.min(size, leftExpressions.size()); i < n; i += 1) {
                     Expression left = leftIt.next();
                     Expression right = rightIt.next();
-                    VariableExpression tmpVar = new VariableExpression("$tmpVar$" + tmpVarCounter++);
-                    BinaryExpression bexp = new DeclarationExpression(tmpVar, bin.getOperation(), right);
+                    VariableExpression tmpVar = varX("$tmpVar$" + tmpVarCounter++);
+                    BinaryExpression bexp = new DeclarationExpression(tmpVar, operation, right);
                     bexp.setSourcePosition(right);
                     tmpAssignments.add(bexp);
-                    bexp = new BinaryExpression(left, bin.getOperation(), new VariableExpression(tmpVar));
+                    bexp = binX(left, operation, varX(tmpVar));
                     bexp.setSourcePosition(left);
                     finalAssignments.add(bexp);
                 }
@@ -309,15 +285,20 @@ public class BinaryExpressionTransformer {
         return staticCompilationTransformer.superTransform(bin);
     }
 
+    private ClassNode findType(final Expression expression) {
+        ClassNode classNode = staticCompilationTransformer.getClassNode();
+        return staticCompilationTransformer.getTypeChooser().resolveType(expression, classNode);
+    }
+
     private static BinaryExpression tryOptimizeCharComparison(final Expression left, final Expression right, final BinaryExpression bin) {
         int op = bin.getOperation().getType();
         if (StaticTypeCheckingSupport.isCompareToBoolean(op) || op == Types.COMPARE_EQUAL || op == Types.COMPARE_NOT_EQUAL) {
             Character cLeft = tryCharConstant(left);
             Character cRight = tryCharConstant(right);
             if (cLeft != null || cRight != null) {
-                Expression oLeft = cLeft == null ? left : new ConstantExpression(cLeft, true);
+                Expression oLeft = (cLeft == null ? left : constX(cLeft, true));
                 oLeft.setSourcePosition(left);
-                Expression oRight = cRight == null ? right : new ConstantExpression(cRight, true);
+                Expression oRight = (cRight == null ? right : constX(cRight, true));
                 oRight.setSourcePosition(right);
                 bin.setLeftExpression(oLeft);
                 bin.setRightExpression(oRight);
@@ -328,13 +309,10 @@ public class BinaryExpressionTransformer {
     }
 
     private static Character tryCharConstant(final Expression expr) {
-        if (expr instanceof ConstantExpression) {
-            ConstantExpression ce = (ConstantExpression) expr;
-            if (ClassHelper.STRING_TYPE.equals(ce.getType())) {
-                String val = (String) ce.getValue();
-                if (val!=null && val.length()==1) {
-                    return val.charAt(0);
-                }
+        if (expr instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(expr.getType())) {
+            String value = (String) ((ConstantExpression) expr).getValue();
+            if (value != null && value.length() == 1) {
+                return value.charAt(0);
             }
         }
         return null;
@@ -345,51 +323,33 @@ public class BinaryExpressionTransformer {
         if (leftExpression instanceof VariableExpression) {
             if (ClassHelper.char_TYPE.equals(((VariableExpression) leftExpression).getOriginType())) {
                 Expression rightExpression = bin.getRightExpression();
-                if (rightExpression instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(rightExpression.getType())) {
-                    String text = (String) ((ConstantExpression) rightExpression).getValue();
-                    if (text.length() == 1) {
-                        // optimize char initialization
-                        ConstantExpression ce = new ConstantExpression(
-                                text.charAt(0),
-                                true
-                        );
-                        ce.setSourcePosition(rightExpression);
-                        bin.setRightExpression(ce);
-                        return bin;
-                    }
+                Character c = tryCharConstant(rightExpression);
+                if (c != null) {
+                    Expression ce = constX(c, true);
+                    ce.setSourcePosition(rightExpression);
+                    bin.setRightExpression(ce);
+                    return bin;
                 }
             }
         }
         return null;
     }
 
-    private Expression convertInOperatorToTernary(final BinaryExpression bin, final Expression rightExpression, final Expression leftExpression) {
-        MethodCallExpression call = new MethodCallExpression(
-                rightExpression,
-                "isCase",
-                leftExpression
-        );
+    private static Expression convertInOperatorToTernary(final BinaryExpression bin, final Expression rightExpression, final Expression leftExpression) {
+        MethodCallExpression call = callX(rightExpression, "isCase", leftExpression);
         call.setMethodTarget((MethodNode) bin.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET));
         call.setSourcePosition(bin);
         call.copyNodeMetaData(bin);
-        TernaryExpression tExp = new TernaryExpression(
-                new BooleanExpression(
-                        new BinaryExpression(rightExpression, Token.newSymbol("==", -1, -1), new ConstantExpression(null))
-                ),
-                new BinaryExpression(leftExpression, Token.newSymbol("==", -1, -1), new ConstantExpression(null)),
+        Expression tExp = ternaryX(
+                boolX(binX(rightExpression, Token.newSymbol("==", -1, -1), nullX())),
+                binX(leftExpression, Token.newSymbol("==", -1, -1), nullX()),
                 call
         );
-        return staticCompilationTransformer.transform(tExp);
+        return tExp;
     }
 
-    private static DeclarationExpression optimizeConstantInitialization(
-            final BinaryExpression originalDeclaration,
-            final Token operation,
-            final ConstantExpression constant,
-            final Expression leftExpression,
-            final ClassNode declarationType) {
-        ConstantExpression cexp = new ConstantExpression(
-                convertConstant((Number) constant.getValue(), ClassHelper.getWrapper(declarationType)), true);
+    private static DeclarationExpression optimizeConstantInitialization(final BinaryExpression originalDeclaration, final Token operation, final ConstantExpression constant, final Expression leftExpression, final ClassNode declarationType) {
+        Expression cexp = constX(convertConstant((Number) constant.getValue(), ClassHelper.getWrapper(declarationType)), true);
         cexp.setType(declarationType);
         cexp.setSourcePosition(constant);
         DeclarationExpression result = new DeclarationExpression(
@@ -402,7 +362,7 @@ public class BinaryExpressionTransformer {
         return result;
     }
 
-    private static Object convertConstant(Number source, ClassNode target) {
+    private static Object convertConstant(final Number source, final ClassNode target) {
         if (ClassHelper.Byte_TYPE.equals(target)) {
             return source.byteValue();
         }
@@ -430,22 +390,17 @@ public class BinaryExpressionTransformer {
         throw new IllegalArgumentException("Unsupported conversion");
     }
 
-    private Expression transformPropertyAssignmentToSetterCall(final PropertyExpression leftExpression, final Expression rightExpression, final MethodNode directMCT) {
+    private static Expression transformPropertyAssignmentToSetterCall(final PropertyExpression leftExpression, final Expression rightExpression, final MethodNode directMCT) {
         // transform "a.x = b" into "def tmp = b; a.setX(tmp); tmp"
-        Expression arg = staticCompilationTransformer.transform(rightExpression);
         return StaticPropertyAccessHelper.transformToSetterCall(
                 leftExpression.getObjectExpression(),
                 directMCT,
-                arg,
+                rightExpression,
                 false,
                 leftExpression.isSafe(),
                 false,
                 true, // to be replaced with a proper test whether a return value should be used or not
                 leftExpression
         );
-    }
-
-    protected static boolean isNullConstant(final Expression expression) {
-        return expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression();
     }
 }

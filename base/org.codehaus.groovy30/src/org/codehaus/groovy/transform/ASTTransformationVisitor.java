@@ -29,13 +29,13 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.ASTTransformationsContext;
-import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.Phases;
@@ -213,7 +213,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
      *
      * @param node the node to be processed
      */
-    public void visitAnnotations(AnnotatedNode node) {
+    public void visitAnnotations(final AnnotatedNode node) {
         super.visitAnnotations(node);
         for (AnnotationNode annotation : distinctAnnotations(node)) {
             if (transforms.containsKey(annotation)) {
@@ -260,18 +260,14 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
-        final ASTTransformationsContext context = compilationUnit.getASTTransformationsContext();
+        ASTTransformationsContext context = compilationUnit.getASTTransformationsContext();
         addGlobalTransforms(context);
 
-        compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
-            public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                ASTTransformationCollectorCodeVisitor collector =
-                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
-                collector.visitClass(classNode);
-            }
+        compilationUnit.addPhaseOperation((final SourceUnit source, final GeneratorContext ignore, final ClassNode classNode) -> {
+            GroovyClassVisitor visitor = new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
+            visitor.visitClass(classNode);
         }, Phases.SEMANTIC_ANALYSIS);
         for (CompilePhase phase : CompilePhase.values()) {
-            final ASTTransformationVisitor visitor = new ASTTransformationVisitor(phase, context);
             switch (phase) {
                 case INITIALIZATION:
                 case PARSING:
@@ -280,11 +276,10 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     break;
 
                 default:
-                    compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
-                        public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                            visitor.source = source;
-                            visitor.visitClass(classNode);
-                        }
+                    compilationUnit.addPhaseOperation((final SourceUnit source, final GeneratorContext ignore, final ClassNode classNode) -> {
+                        ASTTransformationVisitor visitor = new ASTTransformationVisitor(phase, context);
+                        visitor.source = source;
+                        visitor.visitClass(classNode);
                     }, phase.getPhaseNumber());
                     break;
 
@@ -415,8 +410,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
         for (Map.Entry<String, URL> entry : transformNames.entrySet()) {
             try {
-                Class gTransClass = transformLoader.loadClass(entry.getKey(), false, true, false);
-                GroovyASTTransformation transformAnnotation = (GroovyASTTransformation) gTransClass.getAnnotation(GroovyASTTransformation.class);
+                Class<?> gTransClass = transformLoader.loadClass(entry.getKey(), false, true, false);
+                GroovyASTTransformation transformAnnotation = gTransClass.getAnnotation(GroovyASTTransformation.class);
                 if (transformAnnotation == null) {
                     compilationUnit.getErrorCollector().addWarning(new WarningMessage(
                         WarningMessage.POSSIBLE_ERRORS,
@@ -430,47 +425,43 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                     // GRECLIPSE add
                     try {
+                    boolean[] isBuggered = new boolean[1];
                     // GRECLIPSE end
-                    final ASTTransformation instance = (ASTTransformation)gTransClass.getDeclaredConstructor().newInstance();
+                    ASTTransformation instance = (ASTTransformation) gTransClass.getDeclaredConstructor().newInstance();
                     if (instance instanceof CompilationUnitAware) {
-                        ((CompilationUnitAware)instance).setCompilationUnit(compilationUnit);
+                        ((CompilationUnitAware) instance).setCompilationUnit(compilationUnit);
                     }
-                    CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
+                    CompilationUnit.ISourceUnitOperation suOp = source -> {
                         // GRECLIPSE add
-                        private boolean isBuggered;
-                        // GRECLIPSE end
-                        public void call(SourceUnit source) throws CompilationFailedException {
-                            // GRECLIPSE add
-                            if (isBuggered) return;
+                        if (isBuggered[0]) return;
+                        try {
+                            long t0 = System.nanoTime();
+                            boolean okToSet = (source != null && source.getErrorCollector() != null);
                             try {
-                                long t0 = System.nanoTime();
-                                boolean okToSet = (source != null && source.getErrorCollector() != null);
-                                try {
-                                    if (okToSet) {
-                                        source.getErrorCollector().transformActive = true;
-                                    }
-                            // GRECLIPSE end
-                            instance.visit(new ASTNode[] {source.getAST()}, source);
-                            // GRECLIPSE add
-                                } finally {
-                                    if (okToSet) {
-                                        source.getErrorCollector().transformActive = false;
-                                    }
+                                if (okToSet) {
+                                    source.getErrorCollector().transformActive = true;
                                 }
-                                if (GroovyLogManager.manager.hasLoggers()) {
-                                    long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
-                                    String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
-                                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Global transform " + instance.getClass().getName() + " applied to " + sourceName + " in " + millis + "ms");
+                        // GRECLIPSE end
+                        instance.visit(new ASTNode[] {source.getAST()}, source);
+                        // GRECLIPSE add
+                            } finally {
+                                if (okToSet) {
+                                    source.getErrorCollector().transformActive = false;
                                 }
-                            } catch (NoClassDefFoundError ncdfe) {
-                                // Suggests that the transform is written in Java but has dependencies on Groovy source
-                                // within the same project - as this has yet to be compiled, we can't find the class.
-                                source.addException(new GroovyException("Transform " + instance.getClass().getName() + " cannot be run", ncdfe));
-                                // disable this visitor because it is BUGGERED
-                                isBuggered = true;
                             }
-                            // GRECLIPSE end
+                            if (GroovyLogManager.manager.hasLoggers()) {
+                                long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+                                String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
+                                GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Global transform " + instance.getClass().getName() + " applied to " + sourceName + " in " + millis + "ms");
+                            }
+                        } catch (NoClassDefFoundError ncdfe) {
+                            // Suggests that the transform is written in Java but has dependencies on Groovy source
+                            // within the same project - as this has yet to be compiled, we can't find the class.
+                            source.addException(new GroovyException("Transform " + instance.getClass().getName() + " cannot be run", ncdfe));
+                            // disable this visitor because it is BUGGERED
+                            isBuggered[0] = true;
                         }
+                        // GRECLIPSE end
                     };
                     if (isFirstScan) {
                         compilationUnit.addPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
