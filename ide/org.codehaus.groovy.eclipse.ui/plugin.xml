@@ -924,17 +924,20 @@
       </sequenceModifier>
    </extension>
 
-   <extension point="org.eclipse.debug.ui.consoleLineTrackers">
-      <consoleLineTracker
-         class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"
-         processType="java">
-      </consoleLineTracker>
-      <consoleLineTracker
-         class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"
-         processType="groovy">
-      </consoleLineTracker>
+   <extension point="org.eclipse.ui.console.consolePatternMatchListeners">
+      <consolePatternMatchListener id="org.codehaus.groovy.eclipse.ConsoleTracker"
+            class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
+            qualifier="\.groovy\)"
+            regex="(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\.)*\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\(\w+\.groovy\)">
+         <enablement>
+            <or>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="java"/>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="groovy"/>
+               <test property="org.eclipse.ui.console.consoleTypeTest" value="javaStackTraceConsole"/>
+               <test property="org.eclipse.debug.ui.processTypeTest" value="org.eclipse.ant.ui.antProcess"/>
+            </or>
+         </enablement>
+      </consolePatternMatchListener>
    </extension>
 
    <extension point="org.eclipse.core.runtime.preferences">
