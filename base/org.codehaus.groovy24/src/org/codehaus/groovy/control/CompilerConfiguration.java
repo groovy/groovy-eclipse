@@ -82,7 +82,7 @@ public class CompilerConfiguration {
     public static final CompilerConfiguration DEFAULT = new CompilerConfiguration() {
         @Override
         public List<String> getClasspath() {
-            return Optional.ofNullable(super.getClasspath()).map(Collections::unmodifiableList).orElse(null);
+            return Collections.unmodifiableList(super.getClasspath());
         }
         @Override
         public List<CompilationCustomizer> getCompilationCustomizers() {
@@ -90,19 +90,19 @@ public class CompilerConfiguration {
         }
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
+            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(Collections.emptySet());
         }
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
+            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(Collections.emptyMap());
         }
         @Override
         public Map<String, Boolean> getOptimizationOptions() {
-            return Optional.ofNullable(super.getOptimizationOptions()).map(Collections::unmodifiableMap).orElse(null);
+            return Collections.unmodifiableMap(super.getOptimizationOptions());
         }
         @Override
         public Set<String> getScriptExtensions() {
-            return Optional.ofNullable(super.getScriptExtensions()).map(Collections::unmodifiableSet).orElse(null);
+            return Collections.unmodifiableSet(super.getScriptExtensions());
         }
 
         @Override
