@@ -24,9 +24,11 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -3244,6 +3246,62 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCallingJavaFromGroovy1() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    new J().run()\n" +
+            "    print new J().name\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J {\n" +
+            "  public String name = \"name\";\n" +
+            "  public void run() { System.out.print(\"success\"); }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "successname");
+    }
+
+    @Test
+    public void testCallingJavaFromGroovy2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "@Tag(value=4)\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    new J().run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J {\n" +
+            "  public String name = \"name\";\n" +
+            "  public void run() { System.out.print(\"success\"); }\n" +
+            "}\n",
+
+            "p/Tag.java",
+            "package p;\n" +
+            "public @interface Tag {\n" +
+            "  int value() default 3;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
     public void testCallingMethods_JcallingG() {
         //@formatter:off
         String[] sources = {
@@ -4271,62 +4329,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCallingJavaFromGroovy1() throws Exception {
-        //@formatter:off
-        String[] sources = {
-            "p/Code.groovy",
-            "package p;\n" +
-            "class Code {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new J().run();\n" +
-            "    print new J().name;\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/J.java",
-            "package p;\n" +
-            "public class J {\n" +
-            "  public String name = \"name\";\n" +
-            "  public void run() { System.out.print(\"success\"); }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "successname");
-    }
-
-    @Test
-    public void testCallingJavaFromGroovy2() throws Exception {
-        //@formatter:off
-        String[] sources = {
-            "p/Code.groovy",
-            "package p;\n" +
-            "@Wibble(value=4)\n" +
-            "class Code {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new J().run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/J.java",
-            "package p;\n" +
-            "public class J {\n" +
-            "  public String name = \"name\";\n" +
-            "  public void run() { System.out.print(\"success\"); }\n" +
-            "}\n",
-
-            "p/Wibble.java",
-            "package p;\n" +
-            "public @interface Wibble {\n" +
-            "  int value() default 3;\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
     public void testTypeVariableBoundIsRawType() {
         //@formatter:off
         String[] sources = {
@@ -4607,6 +4609,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "abc");
+    }
+
+    @Test
+    public void testConfigDefaults() {
+        CompilerConfiguration cc = CompilerConfiguration.DEFAULT;
+        assertEquals(Collections.emptyList(), cc.getClasspath());
+        assertEquals(Collections.emptyList(), cc.getCompilationCustomizers());
+        assertEquals(Collections.emptyMap(), cc.getJointCompilationOptions());
+        assertEquals(Collections.singleton("groovy"), cc.getScriptExtensions());
+        assertEquals(Collections.emptySet(), cc.getDisabledGlobalASTTransformations());
     }
 
     @Test

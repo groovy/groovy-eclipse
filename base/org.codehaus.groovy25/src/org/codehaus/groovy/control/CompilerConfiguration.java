@@ -139,12 +139,12 @@ public class CompilerConfiguration {
 
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Collections.emptySet();
+            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(Collections.emptySet());
         }
 
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Collections.unmodifiableMap(super.getJointCompilationOptions());
+            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(Collections.emptyMap());
         }
 
         @Override
