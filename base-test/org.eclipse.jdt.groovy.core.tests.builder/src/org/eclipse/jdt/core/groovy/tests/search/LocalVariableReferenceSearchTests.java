@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference3() throws Exception {
-        String contents = "def xxx() { \ndef xxx\n xxx\n xxx() }";
+        String contents = "def xxx() {\n def xxx\n xxx\n xxx()\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('('));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
@@ -45,7 +45,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference4() throws Exception {
-        String contents = "def xxx(xxx) { \n xxx\n xxx() }";
+        String contents = "def xxx(xxx) {\n xxx\n xxx()\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('('));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
@@ -54,7 +54,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference5() throws Exception {
-        String contents = "def xxx(int xxx) { \n xxx\n xxx() }";
+        String contents = "def xxx(int xxx) {\n xxx\n xxx()\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('('));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
@@ -63,7 +63,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference6() throws Exception {
-        String contents = "def xxx = {int xxx -> \n xxx\n xxx() }";
+        String contents = "def xxx = { int xxx ->\n xxx\n xxx()\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('{'));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
@@ -72,7 +72,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference7() throws Exception {
-        String contents = "def xxx = {int xxx \n xxx\n xxx() }";
+        String contents = "def xxx = {\n int xxx\n xxx\n xxx()\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('{'));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
@@ -81,7 +81,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference8() throws Exception {
-        String contents = "for (xxx in 0..7) \n { xxx }";
+        String contents = "for (xxx in 0..7)\n {\n xxx\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('('));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2));
@@ -89,7 +89,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference9() throws Exception {
-        String contents = "def x1(xxx) { xxx }\ndef x2(xxx) { xxx }";
+        String contents = "def x1(xxx) {\n xxx\n}\ndef x2(xxx) {\n xxx\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('}'));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 5, createRegions(nameStart, nameStart2));
@@ -97,7 +97,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReference10() throws Exception {
-        String contents = "class First {\n def xxx \ndef x2(xxx) { xxx } }";
+        String contents = "class First {\n def xxx\n def x2(xxx) {\n xxx\n}\n}\n";
         int nameStart = contents.indexOf("xxx", contents.indexOf('('));
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 1, createRegions(nameStart, nameStart2));
@@ -137,7 +137,7 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testVarReferenceInGString5() throws Exception {
-        String contents = "def xxx\n\"${xxx }\"";
+        String contents = "def xxx\n\"${xxx\t}\"";
         int nameStart = contents.indexOf("xxx");
         int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
