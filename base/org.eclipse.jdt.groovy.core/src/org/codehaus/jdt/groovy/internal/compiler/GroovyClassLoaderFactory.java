@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,17 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -74,7 +76,7 @@ public final class GroovyClassLoaderFactory {
     public static void clearCache(String projectName) {
         Map.Entry<?, GroovyClassLoader[]> entry = projectClassLoaderCache.remove(projectName);
         if (entry != null) {
-            Stream.of(entry.getValue()).filter(Objects::nonNull).forEach(GroovyClassLoaderFactory::close);
+            Arrays.stream(entry.getValue()).filter(Objects::nonNull).forEach(GroovyClassLoaderFactory::close);
         }
     }
 
@@ -87,6 +89,7 @@ public final class GroovyClassLoaderFactory {
             }
         }
         if (classLoader instanceof GroovyClassLoader) {
+            // TODO: Groovy 2.5+ close() calls clearCache()
             ((GroovyClassLoader) classLoader).clearCache();
             // parent was created by newClassLoader(...)
             close(classLoader.getParent());
@@ -154,8 +157,8 @@ public final class GroovyClassLoaderFactory {
                 ClassLoader parentClassLoader = ClassLoader.getSystemClassLoader();
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
-                    new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, parentClassLoader), compilerConfiguration),
-                    new GroovyClassLoader(newClassLoader(xformPaths, getClass().getClassLoader())/*, compilerConfiguration*/),
+                    new GrapeAwareGroovyClassLoader(project, newClassLoader(classPaths, parentClassLoader), compilerConfiguration),
+                    new EclipseGroovyClassLoader(project, newClassLoader(xformPaths, getClass().getClassLoader())/*, compilerConfiguration*/),
                 });
             });
 
@@ -179,7 +182,8 @@ public final class GroovyClassLoaderFactory {
 
     private static void calculateClasspath(IJavaProject javaProject, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
+            // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
+            IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject);
             Arrays.sort(entries, Comparator.comparing(IRuntimeClasspathEntry::getType));
             for (IRuntimeClasspathEntry unresolved : entries) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
@@ -188,9 +192,10 @@ public final class GroovyClassLoaderFactory {
                 }
             }
             classPaths.addAll(xformPaths);
-            assert classPaths.stream().allMatch(path -> new File(path).isAbsolute());
+            assert classPaths.stream().map(File::new).allMatch(File::isAbsolute);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        catch (RuntimeException e) { throw e; } catch (Exception e) { throw new RuntimeException(e); }
     }
 
     private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, IJavaProject javaProject) throws Exception {
@@ -243,15 +248,61 @@ public final class GroovyClassLoaderFactory {
 
     //--------------------------------------------------------------------------
 
-    @SuppressWarnings("rawtypes")
-    public static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
+    private static class EclipseGroovyClassLoader extends GroovyClassLoader {
 
-        public GrapeAwareGroovyClassLoader(ClassLoader parent, CompilerConfiguration config) {
-            super(parent, config);
+        private EclipseGroovyClassLoader(final IProject project, final ClassLoader parent) {
+            this(project, parent, CompilerConfiguration.DEFAULT);
+        }
+
+        private EclipseGroovyClassLoader(final IProject project, final ClassLoader parent, final CompilerConfiguration config) {
+            super(parent, config, false);
+            this.project = project;
+        }
+
+        private final IProject project;
+
+        //
+
+        @Override
+        public Enumeration<URL> getResources(final String name) throws IOException {
+            Enumeration<URL> resources = super.getResources(name);
+            // GRECLIPSE-1762: exclude project's own extension definitions
+            if (project != null && resources.hasMoreElements() && (name.startsWith("META-INF/groovy/") || name.startsWith("META-INF/services/"))) {
+                String exclude = project.getLocation().toOSString();
+                if (!exclude.startsWith("/")) {
+                    try {
+                        // normalize "C:\b\a" to "/C:/b/a" for URL comparison
+                        exclude = new File(exclude).toURI().toURL().getPath();
+                    } catch (Exception ignore) {
+                    }
+                }
+
+                List<URL> list = new ArrayList<>();
+                while (resources.hasMoreElements()) {
+                    URL resource = resources.nextElement();
+                    if (!resource.getProtocol().equals("file") || !resource.getPath().startsWith(exclude)) {
+                        list.add(resource);
+                    }
+                }
+                resources = Collections.enumeration(list);
+            }
+            return resources;
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static class GrapeAwareGroovyClassLoader extends EclipseGroovyClassLoader {
+
+        public  GrapeAwareGroovyClassLoader(final ClassLoader parent, final CompilerConfiguration config) {
+            super(null, parent, config);
+        }
+
+        private GrapeAwareGroovyClassLoader(final IProject project, final ClassLoader parent, final CompilerConfiguration config) {
+            super(project, parent, config);
         }
 
         @Override
-        public void addURL(URL url) {
+        public void addURL(final URL url) {
             this.grabbed = true;
             super.addURL(url);
         }
@@ -307,7 +358,7 @@ public final class GroovyClassLoaderFactory {
             return Collections.unmodifiableSet(defaultCategories);
         }
 
-        public boolean isDefaultStaticCategory(String name) {
+        public boolean isDefaultStaticCategory(final String name) {
             if (defaultStaticCategories == null) getDefaultCategories();
             return defaultStaticCategories.stream().map(Class::getName).anyMatch(name::equals);
         }

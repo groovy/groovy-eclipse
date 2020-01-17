@@ -47,7 +47,6 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.util.URLStreams;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -312,11 +311,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             Enumeration<URL> globalServices = transformLoader.getResources("META-INF/services/org.codehaus.groovy.transform.ASTTransformation");
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
-                String className;
-                // GRECLIPSE add -- don't consume our own META-INF entries
-                if (skipManifest(compilationUnit, service)) continue;
-                // GRECLIPSE end
                 try (BufferedReader svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), "UTF-8"))) {
+                    String className;
                     try {
                         className = svcIn.readLine();
                     } catch (IOException ioe) {
@@ -395,30 +391,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         }
     }
-
-    // GRECLIPSE add
-    /**
-     * Determines whether a given services manifest file belongs to the current project. If so
-     * it must be skipped because we can not apply a GlobalASTTransform to the project that
-     * defines it.
-     */
-    private static boolean skipManifest(CompilationUnit compilationUnit, URL service) {
-        String exclude = compilationUnit.excludeGlobalASTScan;
-        if (exclude != null && service != null && service.getProtocol().equals("file")) {
-            if (!exclude.startsWith("/")) {
-                try {
-                    // normalize "C:\b\a" to "/C:/b/a" for URL comparison
-                    exclude = new File(exclude).toURI().toURL().getPath();
-                } catch (Exception ignore) {
-                }
-            }
-            if (service.getPath().startsWith(exclude)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    // GRECLIPSE end
 
     private static void addPhaseOperationsForGlobalTransforms(CompilationUnit compilationUnit,
             Map<String, URL> transformNames, boolean isFirstScan) {

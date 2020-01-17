@@ -151,12 +151,11 @@ public class CompilationUnit extends ProcessingUnit {
      * @param configuration   - compilation configuration
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader/*GRECLIPSE add*/, boolean allowTransforms, String excludeGlobalASTScan/*GRECLIPSE end*/) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader/*GRECLIPSE add*/, boolean allowTransforms, String legacyString/*GRECLIPSE end*/) {
         super(configuration, loader, null);
 
         // GRECLIPSE add
         this.allowTransforms = allowTransforms;
-        this.excludeGlobalASTScan = excludeGlobalASTScan;
         // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         /* GRECLIPSE edit
@@ -300,10 +299,9 @@ public class CompilationUnit extends ProcessingUnit {
 
     /**
      * Returns the class loader for loading AST transformations.
-     * @return - the transform class loader
      */
     public GroovyClassLoader getTransformLoader() {
-        return astTransformationsContext.getTransformLoader() == null ? getClassLoader() : astTransformationsContext.getTransformLoader();
+        return Optional.ofNullable(astTransformationsContext.getTransformLoader()).orElse(getClassLoader());
     }
 
     public void addPhaseOperation(SourceUnitOperation op, int phase) {
@@ -1276,10 +1274,5 @@ public class CompilationUnit extends ProcessingUnit {
 
     private ProgressListener listener;
     public final boolean allowTransforms;
-    /**
-     * Path to a directory that should be ignored when searching for manifest files that define global AST transforms.
-     * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
-     */
-    public final String excludeGlobalASTScan;
     // GRECLIPSE end
 }
