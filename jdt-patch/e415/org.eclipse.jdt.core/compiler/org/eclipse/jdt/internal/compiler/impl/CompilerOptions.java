@@ -218,7 +218,6 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyFlags                = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyProjectName          = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyCompilerConfigScript = "org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude"; //$NON-NLS-1$
 	// GROOVY end
 
 	/**
@@ -501,7 +500,6 @@ public class CompilerOptions {
 	public int groovyFlags; // 0x01 == IsGrails
 	public String groovyProjectName;
 	public String groovyCompilerConfigScript;
-	public String groovyExcludeGlobalASTScan;
 	// GROOVY end
 
 	// === Support for Null Annotations: ===
@@ -2132,9 +2130,6 @@ public class CompilerOptions {
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyCompilerConfigScript)) != null) {
 			this.groovyCompilerConfigScript = optionValue;
-		}
-		if ((optionValue = optionsMap.get(OPTIONG_GroovyExcludeGlobalASTScan)) != null) {
-			this.groovyExcludeGlobalASTScan = optionValue;
 		}
 		// GROOVY end
 		if ((optionValue = optionsMap.get(OPTION_EnablePreviews)) != null) {

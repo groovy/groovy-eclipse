@@ -51,7 +51,6 @@ public class CompilerUtils {
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
-				options.groovyExcludeGlobalASTScan = project.getLocation().toOSString();
 				options.groovyProjectName = project.getName();
 				options.storeAnnotations = true;
 				options.buildGroovyFiles = 2;
@@ -82,7 +81,6 @@ public class CompilerUtils {
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
-				options.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, project.getLocation().toOSString());
 				options.put(CompilerOptions.OPTIONG_GroovyProjectName, javaProject.getElementName());
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				if (isProbablyGrailsProject(project)) {
