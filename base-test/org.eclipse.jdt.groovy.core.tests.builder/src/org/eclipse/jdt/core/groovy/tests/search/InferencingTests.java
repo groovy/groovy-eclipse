@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1515,7 +1515,8 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n" +
             "class B extends A {\n" +
             "}\n" +
-            "new B().method() { -> }\n";
+            "new B().method() { ->\n" +
+            "}\n";
         assertDeclaringType(contents, "method", "A");
     }
 
@@ -2026,7 +2027,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCatchBlock1() {
-        String catchString = "try {     } catch (NullPointerException e) { e }";
+        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
         int start = catchString.lastIndexOf("NullPointerException");
         int end = start + "NullPointerException".length();
         assertType(catchString, start, end, "java.lang.NullPointerException");
@@ -2034,7 +2035,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCatchBlock2() {
-        String catchString = "try {     } catch (NullPointerException e) { e }";
+        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
         int start = catchString.lastIndexOf("e");
         int end = start + 1;
         assertType(catchString, start, end, "java.lang.NullPointerException");
@@ -2042,7 +2043,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCatchBlock3() {
-        String catchString = "try {     } catch (NullPointerException e) { e }";
+        String catchString = "try {\n} catch (NullPointerException e) {\n e\n}";
         int start = catchString.indexOf("NullPointerException e");
         int end = start + ("NullPointerException e").length();
         assertType(catchString, start, end, "java.lang.NullPointerException");
@@ -2050,7 +2051,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCatchBlock4() {
-        String catchString2 = "try {     } catch (e) { e }";
+        String catchString2 = "try {\n} catch (e) {\n e\n}";
         int start = catchString2.indexOf("e");
         int end = start + 1;
         assertType(catchString2, start, end, "java.lang.Exception");
@@ -2058,7 +2059,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCatchBlock5() {
-        String catchString2 = "try {     } catch (e) { e }";
+        String catchString2 = "try {\n} catch (e) {\n e\n}";
         int start = catchString2.lastIndexOf("e");
         int end = start + 1;
         assertType(catchString2, start, end, "java.lang.Exception");
@@ -2194,7 +2195,9 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testListSort1() {
-        String contents = "def list = []; list.sort()";
+        String contents =
+            "def list = []\n" +
+            "list.sort()\n";
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
         assertDeclaringType(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
@@ -2202,7 +2205,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/387
     public void testListSort2() {
-        String contents = "def list = []; list.sort { a, b -> a <=> b }";
+        String contents =
+            "def list = []\n" +
+            "list.sort { a, b ->\n" +
+            "  a <=> b\n" +
+            "}\n";
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "sort", DeclarationKind.METHOD);
@@ -2220,7 +2227,11 @@ public final class InferencingTests extends InferencingTestSuite {
             jdkListSort = false;
         }
 
-        String contents = "def list = []; list.sort({ a, b -> a <=> b } as Comparator)";
+        String contents =
+            "def list = []\n" +
+            "list.sort({ a, b ->\n" +
+            "  a <=> b\n" +
+            "} as Comparator)\n";
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
         assertDeclaringType(contents, offset, offset + 4, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
@@ -2253,10 +2264,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testInterfaceMethodsAsProperty() throws Exception {
-        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
-        createUnit("foo", "Baz", "package foo; interface Baz extends Bar { def getTwo() }");
+        createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
+        createUnit("foo", "Baz", "package foo; interface Baz extends Bar {\n def getTwo()\n}\n");
 
-        String contents = "def meth(foo.Baz b) { b.one + b.two }";
+        String contents = "def meth(foo.Baz b) {\n b.one + b.two\n}";
 
         int start = contents.indexOf("one");
         assertDeclaringType(contents, start, start + 3, "foo.Bar");
@@ -2266,10 +2277,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testInterfaceMethodAsProperty2() throws Exception {
-        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
-        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
+        createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
-        String contents = "def meth(foo.Baz b) { b.one + b.two }";
+        String contents = "def meth(foo.Baz b) {\n b.one + b.two\n}";
 
         int start = contents.indexOf("one");
         assertDeclaringType(contents, start, start + 3, "foo.Bar");
@@ -2279,10 +2290,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testInterfaceMethodAsProperty3() throws Exception {
-        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
-        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
+        createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
-        String contents = "abstract class C extends foo.Baz { }\n def meth(C c) { c.one + c.two }";
+        String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.one + c.two\n}\n";
 
         int start = contents.indexOf("one");
         assertDeclaringType(contents, start, start + 3, "foo.Bar");
@@ -2292,10 +2303,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testIndirectInterfaceMethod() throws Exception {
-        createUnit("foo", "Bar", "package foo; interface Bar { def getOne() }");
-        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar { abstract def getTwo() }");
+        createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
+        createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
-        String contents = "abstract class C extends foo.Baz { }\n def meth(C c) { c.getOne() + c.getTwo() }";
+        String contents = "abstract class C extends foo.Baz {}\ndef meth(C c) {\n c.getOne() + c.getTwo()\n}\n";
 
         int start = contents.indexOf("getOne");
         assertDeclaringType(contents, start, start + 6, "foo.Bar");
@@ -2305,10 +2316,10 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testIndirectInterfaceConstant() throws Exception {
-        createUnit("I", "interface I { Number ONE = 1 }");
-        createUnit("A", "abstract class A implements I { Number TWO = 2 }");
+        createUnit("I", "interface I {\n Number ONE = 1\n}\n");
+        createUnit("A", "abstract class A implements I {\n Number TWO = 2\n}\n");
 
-        String contents = "abstract class B extends A { }\n B b; b.ONE; b.TWO";
+        String contents = "abstract class B extends A {}\nB b; b.ONE; b.TWO\n";
 
         int start = contents.indexOf("ONE");
         assertDeclaringType(contents, start, start + 3, "I");
@@ -2319,7 +2330,7 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testObjectMethodOnInterface() {
         // Object is not in explicit type hierarchy of List
-        String contents = "def meth(List list) { list.getClass() }";
+        String contents = "def meth(List list) {\n list.getClass()\n}\n";
 
         String target = "getClass", source = "java.lang.Object";
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
@@ -2328,7 +2339,7 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testObjectMethodOnInterfaceAsProperty() {
         // Object is not in explicit type hierarchy of List
-        String contents = "def meth(List list) { list.class }";
+        String contents = "def meth(List list) {\n list.class\n}\n";
 
         String target = "class", source = "java.lang.Object";
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);

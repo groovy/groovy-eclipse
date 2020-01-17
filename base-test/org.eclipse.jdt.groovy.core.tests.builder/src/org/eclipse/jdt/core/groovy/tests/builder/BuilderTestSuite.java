@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -441,26 +439,11 @@ public abstract class BuilderTestSuite {
             return addGroovyClassExtension(packageFragmentRootPath, className, contents, fileExtension);
         }
 
-        @SuppressWarnings("unchecked")
         public <U extends ICompilationUnit> U getUnit(IPath path) {
             IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-            ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-            return (U) unit;
-        }
-
-        public String readTextFile(IPath path) {
-            IFile file = getWorkspace().getRoot().getFile(path);
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents(), file.getCharset()))) {
-                StringBuilder sb = new StringBuilder(300);
-                int read = 0;
-                while ((read = br.read()) != -1) {
-                    sb.append((char) read);
-                }
-                return sb.toString();
-            } catch (Exception ex) {
-                handle(ex);
-                return null;
-            }
+            @SuppressWarnings("unchecked")
+            U unit = (U) JavaCore.createCompilationUnitFrom(file);
+            return unit;
         }
     }
 }

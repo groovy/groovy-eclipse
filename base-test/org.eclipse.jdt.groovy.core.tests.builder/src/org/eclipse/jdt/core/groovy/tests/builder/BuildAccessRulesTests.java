@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.core.ClasspathAccessRule;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,32 +43,27 @@ import org.junit.Test;
  */
 public final class BuildAccessRulesTests extends BuilderTestSuite {
 
-    protected IPath src;
+    private IPath prj, src;
     private String problemFormat;
 
     @Before
     public void setUp() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.7");
-        env.setClasspath(projectPath, new IClasspathEntry[] {
-            JavaCore.newSourceEntry(src = projectPath.append("src")),
-            JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
-            JavaCore.newContainerEntry(new Path("org.eclipse.jdt.launching.JRE_CONTAINER"),
-                new IAccessRule[] {new ClasspathAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false), // create access restriction
-        });
+        prj = env.addProject("Project", "1.7");
+        src = prj.append("src");
         env.createFolder(src);
-        fullBuild(projectPath);
+        env.setClasspath(prj, new IClasspathEntry[] {
+            JavaCore.newSourceEntry(src),
+            JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
+            JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(),
+                new IAccessRule[] {JavaCore.newAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false),
+        });
+        fullBuild(prj);
 
         problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
                                     " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
     }
 
     private void assertAccessRestriction(String source, String... types) {
-        IPath foo = env.addGroovyClass(src, "Foo", source);
-        incrementalBuild();
-
-        // read back contents in case of line delimeters change or package statement addition or ...
-        source = env.readTextFile(foo);
-
         List<String> problems = new ArrayList<>();
         for (String type : types) {
             int offset = -1;
@@ -76,6 +71,9 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
                 problems.add(String.format(problemFormat, last(type.split("\\.")).trim(), offset, offset + type.length()));
             }
         }
+
+        IPath foo = env.addGroovyClass(src, "Foo", source);
+        incrementalBuild(prj);
 
         expectingProblemsFor(foo, problems);
     }

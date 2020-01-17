@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -88,17 +88,17 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClosure2() throws Exception {
-        doTestForTwoInScript("def x = { First first = new First() }");
+        doTestForTwoInScript("def x = {\n First first = new First()\n}");
     }
 
     @Test
     public void testSearchForTypesClosure3() throws Exception {
-        doTestForTwoInScript("def x = { First.class\n First.class }");
+        doTestForTwoInScript("def x = {\n First.class\n First.class\n}");
     }
 
     @Test
     public void testSearchForTypesClass1() throws Exception {
-        doTestForTwoInClass("class Second extends First { First x }");
+        doTestForTwoInClass("class Second extends First {\n First x\n}");
     }
 
     @Test
@@ -139,12 +139,12 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesArray1() throws Exception {
-        doTestForTwoInScript("First[] f = { First[] h -> h }");
+        doTestForTwoInScript("First[] f = {\n First[] h -> h\n}");
     }
 
     @Test // GRECLIPSE-650
     public void testFindClassDeclaration() throws Exception {
-        String firstContents = "class First { First x }";
+        String firstContents = "class First {\n First x\n}";
         String secondContents = "class Second extends First {}";
         List<SearchMatch> matches = getAllMatches(firstContents, secondContents);
         assertEquals("Should find First 2 times", 2, matches.size());
@@ -175,7 +175,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit songTests = createUnit("gtunes", "SongTests",
                 "package gtunes\n" +
                 "\n" +
-                "class SongTests {" +
+                "final class SongTests {" +
                 "    def testSomething() {\n" +
                 "       println 'testing'\n" +
                 "    }\n" +
@@ -192,7 +192,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit artistTests = createUnit("gtunes", "ArtistTests",
                 "package gtunes\n" +
                 "\n" +
-                "class ArtistTests {" +
+                "final class ArtistTests {" +
                 "    def testSomething() {\n" +
                 "       println 'testing'\n" +
                 "    }\n" +

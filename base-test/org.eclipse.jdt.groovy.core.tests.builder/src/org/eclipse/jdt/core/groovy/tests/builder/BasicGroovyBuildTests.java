@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3324,7 +3324,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "The import util.MyException is never used", cuPath, 18, 34, CategorizedProblem.CAT_UNNECESSARY_CODE, IMarker.SEVERITY_WARNING));
 
         env.getJavaProject(paths[0]).setOption(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.IGNORE);
-        incrementalBuild(paths[0]);
+
+        fullBuild(paths[0]);
         expectingNoProblems();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ public final class GenericsMappingTests extends SearchTestSuite {
     @Test // GRECLIPSE-1448: unresolved super types should use a redirect; resolved super types should not
     public void testGenericsMapper() throws Exception {
         GroovyCompilationUnit unit = createUnit("Search",
-            "class A { }\n" +
-            "class B extends A { }\n" +
-            "class C extends B { }");
+            "class A {}\n" +
+            "class B extends A {}\n" +
+            "class C extends B {}\n");
 
         ClassNode classNode = unit.getModuleNode().getClasses().get(2);
         assertEquals("Got the wrong class nodee", "C", classNode.getName());

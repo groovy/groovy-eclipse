@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -505,7 +505,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop2a() {
-        String contents = "for (a in 1..4) { }";
+        String contents = "for (a in 1..4) {\n}";
         String toFind = "a";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -514,7 +514,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop3() {
-        String contents = "for (a in [1, 2].iterator()) { \na }";
+        String contents = "for (a in [1, 2].iterator()) {\n a\n}";
         String toFind = "a";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -523,7 +523,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop4() {
-        String contents = "for (a in (1..4).iterator()) { \na }";
+        String contents = "for (a in (1..4).iterator()) {\n a\n}";
         String toFind = "a";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -532,7 +532,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop5() {
-        String contents = "for (a in [1 : 1]) { \na.key }";
+        String contents = "for (a in [1 : 1]) {\n a.key\n}";
         String toFind = "key";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -541,7 +541,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop6() {
-        String contents = "for (a in [1 : 1]) { \na.value }";
+        String contents = "for (a in [1 : 1]) {\n a.value\n}";
         String toFind = "value";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -550,7 +550,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop7() {
-        String contents = "InputStream x\nfor (a in x) { \na }";
+        String contents = "InputStream x\nfor (a in x) {\n a\n}";
         String toFind = "a";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -559,7 +559,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testForLoop8() {
-        String contents = "DataInputStream x\nfor (a in x) { \na }";
+        String contents = "DataInputStream x\nfor (a in x) {\n a\n}";
         String toFind = "a";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -599,7 +599,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure1() {
-        String contents = "def fn = { int a, int b -> a + b }";
+        String contents = "def fn = { int a, int b ->\n a + b\n}";
         assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
     }
 
@@ -634,7 +634,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-997
     public void testNestedGenerics1() {
         String contents =
-            "class MyMap extends HashMap<String,Class> { }\n" +
+            "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
             "m.get()";
         String toFind = "get";
@@ -646,7 +646,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-997
     public void testNestedGenerics2() {
         String contents =
-            "class MyMap extends HashMap<String,Class> { }\n" +
+            "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
             "m.entrySet()";
         String toFind = "entrySet";
@@ -659,7 +659,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testNestedGenerics3() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
-            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
             "MyMap<String,Class> m\n" +
             "m.entrySet()";
         String toFind = "entrySet";
@@ -672,8 +672,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testNestedGenerics4() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
-            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
-            "class MySubMap extends MyMap<String,Class>{ }\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
+            "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
         String toFind = "entrySet";
@@ -686,7 +686,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testNestedGenerics5() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
-            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{ }\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
             "class MySubMap<L> extends MyMap<String,Class>{ \n" +
             "  Map<L,Class> val\n" +
             "}\n" +
@@ -702,8 +702,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testNestedGenerics6() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
-            "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{ }\n" +
-            "class MySubMap extends MyMap<String,Class>{ }\n" +
+            "class MyMap<K,V> extends HashMap<K,WeakReference<List<K>>>{\n}\n" +
+            "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
         String toFind = "entrySet";
@@ -715,7 +715,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-997
     public void testNestedGenerics7() {
         String contents =
-            "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
+            "class MyMap<K,V> extends HashMap<V,K>{\n}\n" +
             "MyMap<Integer,Class> m\n" +
             "m.get(Object)";
         String toFind = "get";
@@ -922,12 +922,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class A {}\n" +
             "class B extends A {}\n" +
             "class C {\n" +
-            "    static <T extends A> T loadSomething(T t) {\n" +
-            "        return t\n" +
-            "    }\n" +
-            "    def col = loadSomething(new B())\n" +
-            "    def m() { col }" +
-            "}";
+            "  static <T extends A> T loadSomething(T t) {\n" +
+            "    return t\n" +
+            "  }\n" +
+            "  def col = loadSomething(new B())\n" +
+            "  def m() {\n" +
+            "    col\n" +
+            "  }\n" +
+            "}\n";
         int start = contents.lastIndexOf("col");
         int end = start + "col".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -988,8 +990,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads1() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence> T b(T seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence> T b(T seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b([])";
         String toFind = "result";
@@ -1001,8 +1007,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads2() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence> T b(T seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence> T b(T seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b('')";
         String toFind = "result";
@@ -1014,8 +1024,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads3() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Serializable> T b(T seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b([])";
         String toFind = "result";
@@ -1027,8 +1041,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads4() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Iterable> T b(T seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Iterable> T b(T seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b('')";
         String toFind = "result";
@@ -1040,8 +1058,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads5() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Serializable> T b(T seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b('')";
         String toFind = "result";
@@ -1053,8 +1075,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads6() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence> T b(T[] seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence> T b(T[] seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b(new Object[0])";
         String toFind = "result";
@@ -1066,8 +1092,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads7() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence> T b(T[] seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence> T b(T[] seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b(new String[0])";
         String toFind = "result";
@@ -1079,8 +1109,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads8() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Serializable> T b(T[] seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T[] seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b(new Object[0])";
         String toFind = "result";
@@ -1092,8 +1126,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads9() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Iterable> T b(T[] seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Iterable> T b(T[] seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b(new String[0])";
         String toFind = "result";
@@ -1105,8 +1143,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads10() {
         String contents =
             "class A {\n" +
-            "  static Object b(Object obj) { obj }\n" +
-            "  static <T extends CharSequence & Serializable> T b(T[] seq) { seq }\n" +
+            "  static Object b(Object obj) {\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  static <T extends CharSequence & Serializable> T b(T[] seq) {\n" +
+            "    seq\n" +
+            "  }\n" +
             "}\n" +
             "def result = A.b(new String[0])";
         String toFind = "result";
