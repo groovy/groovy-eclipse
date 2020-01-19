@@ -18,7 +18,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -4613,12 +4613,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testConfigDefaults() {
-        CompilerConfiguration cc = CompilerConfiguration.DEFAULT;
-        assertEquals(Collections.emptyList(), cc.getClasspath());
-        assertEquals(Collections.emptyList(), cc.getCompilationCustomizers());
-        assertEquals(Collections.emptyMap(), cc.getJointCompilationOptions());
-        assertEquals(Collections.singleton("groovy"), cc.getScriptExtensions());
-        assertEquals(Collections.emptySet(), cc.getDisabledGlobalASTTransformations());
+        CompilerConfiguration defaultConfig = CompilerConfiguration.DEFAULT;
+
+        assertNull(defaultConfig.getJointCompilationOptions());
+        assertNull(defaultConfig.getDisabledGlobalASTTransformations());
+        assertEquals(Collections.emptyList(), defaultConfig.getClasspath());
+        assertEquals(Collections.emptyList(), defaultConfig.getCompilationCustomizers());
+        assertEquals(Collections.singleton("groovy"), defaultConfig.getScriptExtensions());
     }
 
     @Test
@@ -5176,7 +5177,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
         TypeDeclaration[] tds = gcud.types;
-        assertFalse((tds[0].bits & ASTNode.IsSecondaryType) != 0);
+        assertTrue((tds[0].bits & ASTNode.IsSecondaryType) == 0);
         assertTrue((tds[1].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
@@ -5196,7 +5197,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         gcud = getCUDeclFor("Run2.groovy");
         tds = gcud.types;
         assertTrue((tds[0].bits & ASTNode.IsSecondaryType) != 0);
-        assertFalse((tds[1].bits & ASTNode.IsSecondaryType) != 0);
+        assertTrue((tds[1].bits & ASTNode.IsSecondaryType) == 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
     }

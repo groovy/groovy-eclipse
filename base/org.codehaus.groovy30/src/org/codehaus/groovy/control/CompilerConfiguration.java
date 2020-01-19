@@ -146,12 +146,12 @@ public class CompilerConfiguration {
 
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Collections.emptySet();
+            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
         }
 
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Collections.unmodifiableMap(super.getJointCompilationOptions());
+            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
         }
 
         @Override
@@ -443,8 +443,15 @@ public class CompilerConfiguration {
         handleOptimizationOption(optimizationOptions, GROOVYDOC, "groovy.attach.groovydoc");
         handleOptimizationOption(optimizationOptions, RUNTIME_GROOVYDOC, "groovy.attach.runtime.groovydoc");
 
+        /* GRECLIPSE edit -- GROOVY-9368
         jointCompilationOptions = new HashMap<>(4);
         handleJointCompilationOption(jointCompilationOptions, MEM_STUB, "groovy.generate.stub.in.memory");
+        */
+        if (Optional.ofNullable(getSystemPropertySafe("groovy.generate.stub.in.memory")).map(Boolean::valueOf).orElse(DEFAULT != null && DEFAULT.isMemStubEnabled()).booleanValue()) {
+            jointCompilationOptions = new HashMap<>();
+            jointCompilationOptions.put(MEM_STUB, Boolean.TRUE);
+        }
+        // GRECLIPSE end
     }
 
     private void handleOptimizationOption(Map<String, Boolean> options, String optionName, String sysOptionName) {
@@ -458,6 +465,7 @@ public class CompilerConfiguration {
         }
     }
 
+    /* GRECLIPSE edit
     private void handleJointCompilationOption(Map<String, Object> options, String optionName, String sysOptionName) {
         String propValue = getSystemPropertySafe(sysOptionName);
         boolean optionEnabled = propValue == null
@@ -468,6 +476,7 @@ public class CompilerConfiguration {
             options.put(optionName, Boolean.TRUE);
         }
     }
+    */
 
     /**
      * Copy constructor. Use this if you have a mostly correct configuration
@@ -1126,7 +1135,11 @@ public class CompilerConfiguration {
      * Checks if in-memory stub creation is enabled.
      */
     public boolean isMemStubEnabled() {
+        /* GRECLIPSE edit -- GROOVY-9368
         Object memStubEnabled = getJointCompilationOptions().get(MEM_STUB);
         return Optional.ofNullable(memStubEnabled).map(value -> Boolean.parseBoolean(value.toString())).orElse(Boolean.FALSE).booleanValue();
+         */
+        return Optional.ofNullable(getJointCompilationOptions()).map(opts -> opts.get(MEM_STUB)).map(Object::toString).map(Boolean::valueOf).orElse(Boolean.FALSE).booleanValue();
+        // GRECLIPSE end
     }
 }
