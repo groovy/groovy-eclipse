@@ -90,11 +90,11 @@ public class CompilerConfiguration {
         }
         @Override
         public Set<String> getDisabledGlobalASTTransformations() {
-            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(Collections.emptySet());
+            return Optional.ofNullable(super.getDisabledGlobalASTTransformations()).map(Collections::unmodifiableSet).orElse(null);
         }
         @Override
         public Map<String, Object> getJointCompilationOptions() {
-            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(Collections.emptyMap());
+            return Optional.ofNullable(super.getJointCompilationOptions()).map(Collections::unmodifiableMap).orElse(null);
         }
         @Override
         public Map<String, Boolean> getOptimizationOptions() {
