@@ -1577,7 +1577,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (mopMethod == null) mopMethod = testClass.getMethod("propertyMissing", new Parameter[]{new Parameter(STRING_TYPE, "propertyName")});
 
-                if (mopMethod != null) {
+                if (mopMethod != null && !mopMethod.isSynthetic()) {
                     pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
                     pexp.removeNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
                     pexp.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
