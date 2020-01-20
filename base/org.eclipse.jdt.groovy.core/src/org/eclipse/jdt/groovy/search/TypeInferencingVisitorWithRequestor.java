@@ -2224,8 +2224,8 @@ assert primaryExprType != null && dependentExprType != null;
                                     }
                                 }
                             }
-                        } catch (Exception e) {
-                            log(e, "Error processing @ClosureParams of %s", methodNode.getTypeDescriptor());
+                        } catch (Exception | LinkageError e) {
+                            log(e, "Error processing @ClosureParams of %s#%s", methodNode.getDeclaringClass().getName(), methodNode.getName());
                         }
                     });
                 }
