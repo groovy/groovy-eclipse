@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,6 +88,26 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
             "Color.groovy",
             "enum Color { R, G, B, }\n", // trailing comma
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[R, G, B]");
+    }
+
+    @Test
+    public void testEnum1c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Color.values()\n",
+
+            "Color.groovy",
+            "enum Color {\n" +
+            "  R,\n" +
+            "  G,\n" +
+            "  B,\n" +
+            "  ;" +
+            "}\n",
         };
         //@formatter:on
 

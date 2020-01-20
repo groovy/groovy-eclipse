@@ -1374,8 +1374,8 @@ enumConstantsStart
 enumConstants
     :
         enumConstant
-        ( options {generateAmbigWarnings=false;} :
-            (nls (SEMI | enumConstantsEnd)) => {break;} // GROOVY-4438, GROOVY-9184
+        (
+            (nls enumConstantsEnd) => {break;} // GROOVY-4438, GROOVY-9184
         |
             nls! COMMA! (
                 (nls enumConstantsEnd) => {break;} // GROOVY-8507, GROOVY-9301
@@ -1388,8 +1388,7 @@ enumConstants
     ;
 
 enumConstantsEnd
-    options {generateAmbigWarnings=false;}
-    :   RCURLY | declarationStart | constructorStart | typeDefinitionStart
+    :   SEMI | RCURLY | declarationStart | constructorStart | typeDefinitionStart
     ;
 
 // An annotation field
