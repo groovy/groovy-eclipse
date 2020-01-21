@@ -297,7 +297,11 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             );
             valueOfMethod.setCode(code);
             valueOfMethod.setSynthetic(true);
+            /* GRECLIPSE edit
             enumClass.addMethod(valueOfMethod);
+            */
+            addGeneratedMethod(enumClass, valueOfMethod);
+            // GRECLIPSE end
         }
     }
 
