@@ -398,7 +398,6 @@ public class CompilerConfiguration {
      *   <tr><td><code>groovy.target.directory</code></td><td>{@link #getTargetDirectory}</td></tr>
      *   <tr><td><code>groovy.parameters</code></td><td>{@link #getParameters()}</td></tr>
      *   <tr><td><code>groovy.preview.features</code></td><td>{@link #isPreviewFeatures}</td></tr>
-     *   <tr><td><code>groovy.script.base</code></td><td>{@link #getScriptBaseClass}</td></tr>
      *   <tr><td><code>groovy.default.scriptExtension</code></td><td>{@link #getDefaultScriptExtension}</td></tr>
      * </table>
      * </blockquote>
@@ -416,6 +415,7 @@ public class CompilerConfiguration {
         // Set in safe defaults
         warningLevel = WarningMessage.LIKELY_ERRORS;
         classpath = new LinkedList<String>();
+        /* GRECLIPSE edit
         parameters = getSystemPropertySafe("groovy.parameters") != null;
         tolerance = 10;
         minimumRecompilationInterval = 100;
@@ -431,6 +431,17 @@ public class CompilerConfiguration {
         setSourceEncodingOrDefault(encoding);
 
         setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
+        */
+        tolerance = 10;
+        minimumRecompilationInterval = 100;
+        parameters = Boolean.getBoolean("groovy.parameters");
+        previewFeatures = Boolean.getBoolean("groovy.preview.features");
+        setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
+        setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", JDK8));
+        sourceEncoding = Optional.ofNullable(getSystemPropertySafe("groovy.source.encoding"))
+                .orElseGet(() -> getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
+        defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
+        // GRECLIPSE end
 
         optimizationOptions = new HashMap<>(4);
         handleOptimizationOption(optimizationOptions, INVOKEDYNAMIC, "groovy.target.indy");
@@ -969,9 +980,11 @@ public class CompilerConfiguration {
         this.previewFeatures = previewFeatures;
     }
 
+    /* GRECLIPSE edit
     private static String getMinBytecodeVersion() {
         return JDK7;
     }
+    */
 
     /**
      * Gets the joint compilation options for this configuration.

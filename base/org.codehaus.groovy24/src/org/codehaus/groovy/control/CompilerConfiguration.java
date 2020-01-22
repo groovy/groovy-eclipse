@@ -65,8 +65,10 @@ public class CompilerConfiguration {
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. */
     public static final String PRE_JDK5 = JDK4;
 
+    /* GRECLIPSE edit
     @Deprecated
     public static final String CURRENT_JVM_VERSION = getMinBytecodeVersion();
+    */
 
     /**
      * The default source encoding
