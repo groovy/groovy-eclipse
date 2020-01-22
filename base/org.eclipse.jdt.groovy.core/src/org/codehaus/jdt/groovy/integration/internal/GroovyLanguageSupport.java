@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -242,20 +242,13 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public static CompilerConfiguration newCompilerConfiguration(CompilerOptions compilerOptions, ProblemReporter problemReporter) {
         CompilerConfiguration config = new CompilerConfiguration();
-
-        // if target JDK is greater than Groovy's minimum target, set it to given or max supported value
-        if (compilerOptions.targetJDK > CompilerOptions.versionToJdkLevel(config.getTargetBytecode())) {
-            long target = Math.min(compilerOptions.targetJDK, CompilerOptions.versionToJdkLevel(
-                CompilerConfiguration.ALLOWED_JDKS[CompilerConfiguration.ALLOWED_JDKS.length - 1]));
-            config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(target));
-        }
+        config.setParameters(compilerOptions.produceMethodParameters);
+        config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
+        config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(compilerOptions.targetJDK));
 
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             config.setSourceEncoding(compilerOptions.defaultEncoding);
         }
-
-        config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
-        config.setParameters(compilerOptions.produceMethodParameters);
 
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
@@ -268,7 +261,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
                     configScript = new File(project.getLocation().append(configScript.getPath()).toOSString());
                 }
                 shell.evaluate(configScript);
-            } catch (Exception e) {
+            } catch (Exception | LinkageError e) {
                 int severity = ProblemSeverities.Error;
                 CompilationResult compilationResult = null;
                 if (problemReporter.referenceContext != null) {
@@ -283,6 +276,11 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
         if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
             config.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
+        }
+        if (Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
+            if (config.getTargetBytecode().compareTo(CompilerConfiguration.JDK7) < 0) {
+                config.setTargetBytecode(CompilerConfiguration.JDK7);
+            }
         }
 
         return config;
