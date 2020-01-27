@@ -854,9 +854,14 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Handle any callback that's been set
             //
-            if (CompilationUnit.this.classgenCallback != null) {
+            if (classgenCallback != null) {
                 classgenCallback.call(classVisitor, classNode);
             }
+            // GRECLIPSE add
+            if (progressListener != null) {
+                progressListener.generateComplete(phase, classNode);
+            }
+            // GRECLIPSE end
 
             //
             // Recurse for inner classes
@@ -959,8 +964,8 @@ public class CompilationUnit extends ProcessingUnit {
                 try {
                     body.call(source);
                     // GRECLIPSE add
-                    if (phase == Phases.CONVERSION && getProgressListener() != null && body == phaseOperations[phase].getLast()) {
-                        getProgressListener().parseComplete(phase, name);
+                    if (phase == Phases.CONVERSION && phaseOperations[phase].getLast() == body) {
+                        if (progressListener != null) progressListener.parseComplete(phase, name);
                     }
                     // GRECLIPSE end
                 } catch (CompilationFailedException e) {
@@ -1236,11 +1241,11 @@ public class CompilationUnit extends ProcessingUnit {
     }
 
     public ProgressListener getProgressListener() {
-        return this.listener;
+        return this.progressListener;
     }
 
-    public void setProgressListener(ProgressListener listener) {
-        this.listener = listener;
+    public void setProgressListener(ProgressListener progressListener) {
+        this.progressListener = progressListener;
     }
 
     public ResolveVisitor getResolveVisitor() {
@@ -1272,7 +1277,7 @@ public class CompilationUnit extends ProcessingUnit {
         verifier.inlineStaticFieldInitializersIntoClinit = !isReconcile;
     }
 
-    private ProgressListener listener;
     public final boolean allowTransforms;
+    private ProgressListener progressListener;
     // GRECLIPSE end
 }

@@ -796,8 +796,14 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Handle any callback that's been set
             //
-            Optional.ofNullable(getClassgenCallback())
-                .ifPresent(callback -> callback.call(classVisitor, classNode));
+            if (classgenCallback != null) {
+                classgenCallback.call(classVisitor, classNode);
+            }
+            // GRECLIPSE add
+            if (progressListener != null) {
+                progressListener.generateComplete(phase, classNode);
+            }
+            // GRECLIPSE end
 
             //
             // Recurse for inner classes
@@ -892,11 +898,17 @@ public class CompilationUnit extends ProcessingUnit {
          */
         @Override
         default void doPhaseOperation(final CompilationUnit unit) throws CompilationFailedException {
-            for (String name : unit.sources.keySet()) {
+            // GRECLIPSE edit -- prevent concurrent modification exceptions
+            for (String name : unit.sources.keySet().toArray(new String[unit.sources.size()])) {
                 SourceUnit source = unit.sources.get(name);
                 if (source.phase < unit.phase || (source.phase == unit.phase && !source.phaseComplete)) {
                     try {
                         this.call(source);
+                        // GRECLIPSE add
+                        if (unit.phase == Phases.CONVERSION && unit.phaseOperations[unit.phase].getLast() == this) {
+                            if (unit.progressListener != null) unit.progressListener.parseComplete(unit.phase, name);
+                        }
+                        // GRECLIPSE end
                     } catch (CompilationFailedException e) {
                         throw e;
                     } catch (Exception e) {
@@ -1127,11 +1139,11 @@ public class CompilationUnit extends ProcessingUnit {
     }
 
     public ProgressListener getProgressListener() {
-        return this.listener;
+        return this.progressListener;
     }
 
-    public void setProgressListener(final ProgressListener listener) {
-        this.listener = listener;
+    public void setProgressListener(final ProgressListener progressListener) {
+        this.progressListener = progressListener;
     }
 
     public ResolveVisitor getResolveVisitor() {
@@ -1163,8 +1175,8 @@ public class CompilationUnit extends ProcessingUnit {
         verifier.inlineStaticFieldInitializersIntoClinit = !isReconcile;
     }
 
-    private ProgressListener listener;
     public final boolean allowTransforms;
+    private ProgressListener progressListener;
     // GRECLIPSE end
 
     //--------------------------------------------------------------------------
