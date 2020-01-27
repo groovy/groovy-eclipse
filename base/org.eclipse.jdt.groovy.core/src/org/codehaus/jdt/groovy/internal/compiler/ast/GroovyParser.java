@@ -146,7 +146,7 @@ public class GroovyParser {
         resolver = null;
     }
 
-    public GroovyCompilationUnitDeclaration dietParse(ICompilationUnit iCompilationUnit, CompilationResult compilationResult) {
+    public GroovyCompilationUnitDeclaration dietParse(final ICompilationUnit iCompilationUnit, final CompilationResult compilationResult) {
         String fileName = String.valueOf(iCompilationUnit.getFileName());
         final IPath filePath = new Path(fileName);
         final IFile eclipseFile;
@@ -189,7 +189,7 @@ public class GroovyParser {
             if (compiler.requestor instanceof AbstractImageBuilder) {
                 AbstractImageBuilder builder = (AbstractImageBuilder) compiler.requestor;
                 if (builder.notifier != null) {
-                    compilationUnit.setProgressListener(new ProgressListenerImpl(builder.notifier));
+                    compilationUnit.setProgressListener(newProgressListener(builder.notifier));
                 }
                 if (eclipseFile != null) {
                     SourceFile sourceFile = (SourceFile) builder.fromIFile(eclipseFile);
@@ -229,10 +229,14 @@ public class GroovyParser {
         return gcuDeclaration;
     }
 
+    private static IFile getWorkspaceFile(final String filePath) {
+        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(filePath));
+    }
+
     /**
      * Determines if file matches any groovy script filter in the project.
      */
-    private static boolean isScript(IFile sourceFile, String projectName) {
+    private static boolean isScript(final IFile sourceFile, final String projectName) {
         if (projectName != null) {
             assert projectName == sourceFile.getProject().getName();
             ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache
@@ -243,62 +247,44 @@ public class GroovyParser {
     }
 
     /**
-     * ProgressListener is called back when parsing of a file or generation of a classfile completes. By calling back to the build
-     * notifier we ignore those long pauses where it look likes it has hung!
-     *
+     * ProgressListener is called when parsing of a source unit or generation of
+     * a class file completes.  By calling back to the build notifier we prevent
+     * those long pauses where it looks like compilation has stalled.
+     * <p>
      * Note: this does not move the progress bar, it merely updates the text
      */
-    private static class ProgressListenerImpl implements ProgressListener {
-
-        private BuildNotifier notifier;
-
-        ProgressListenerImpl(BuildNotifier notifier) {
-            this.notifier = notifier;
-        }
-
-        @Override
-        public void parseComplete(int phase, String sourceUnitName) {
-            try {
-                // Chop it down to the containing package folder
-                int lastSlash = sourceUnitName.lastIndexOf("/");
-                if (lastSlash == -1) {
-                    lastSlash = sourceUnitName.lastIndexOf("\\");
+    private static ProgressListener newProgressListener(final BuildNotifier notifier) {
+        return new ProgressListener() {
+            @Override
+            public void parseComplete(final int phase, final String sourceUnitName) {
+                try {
+                    IFile sourceUnitFile = getWorkspaceFile(sourceUnitName);
+                    notifier.subTask("Parsing groovy sources in " + sourceUnitFile.getParent().getFullPath());
+                } catch (Exception ignore) {
                 }
-                if (lastSlash != -1) {
-                    StringBuffer msg = new StringBuffer();
-                    msg.append("Parsing groovy source in ");
-                    msg.append(sourceUnitName, 0, lastSlash);
-                    notifier.subTask(msg.toString());
-                }
-            } catch (Exception e) {
-                // doesn't matter
+                notifier.checkCancel();
             }
-            notifier.checkCancel();
-        }
 
-        @Override
-        public void generateComplete(int phase, ClassNode classNode) {
-            try {
-                String pkgName = classNode.getPackageName();
-                if (pkgName != null && pkgName.length() > 0) {
-                    StringBuffer msg = new StringBuffer();
-                    msg.append("Generating groovy classes in ");
-                    msg.append(pkgName);
-                    notifier.subTask(msg.toString());
+            @Override
+            public void generateComplete(final int phase, final ClassNode classNode) {
+                try {
+                    IFile sourceUnitFile = getWorkspaceFile(classNode.getModule().getContext().getName());
+                    notifier.subTask("Writing groovy classes for " + sourceUnitFile.getParent().getFullPath());
+                } catch (Exception ignore) {
                 }
-            } catch (Exception e) {
-                // doesn't matter
+                notifier.checkCancel();
             }
-            notifier.checkCancel();
-        }
+        };
     }
+
+    //
 
     private static class ReferenceContextImpl implements ReferenceContext {
 
         private boolean hasErrors;
         private final CompilationResult compilationResult;
 
-        ReferenceContextImpl(CompilationResult compilationResult) {
+        ReferenceContextImpl(final CompilationResult compilationResult) {
             this.compilationResult = compilationResult;
         }
 
@@ -313,7 +299,7 @@ public class GroovyParser {
         }
 
         @Override
-        public void tagAsHavingIgnoredMandatoryErrors(int problemId) {
+        public void tagAsHavingIgnoredMandatoryErrors(final int problemId) {
             // no-op
         }
 
@@ -328,7 +314,7 @@ public class GroovyParser {
         }
 
         @Override
-        public void abort(int abortLevel, CategorizedProblem problem) {
+        public void abort(final int abortLevel, final CategorizedProblem problem) {
             switch (abortLevel) {
             case ProblemSeverities.AbortType:
                 throw new AbortType(compilationResult, problem);
