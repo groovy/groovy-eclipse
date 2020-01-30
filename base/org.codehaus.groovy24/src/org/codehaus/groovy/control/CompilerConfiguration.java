@@ -860,11 +860,21 @@ public class CompilerConfiguration {
      * @param version the bytecode compatibility level
      */
     public void setTargetBytecode(String version) {
+        /* GRECLIPSE edit
         for (String allowedJdk : ALLOWED_JDKS) {
             if (allowedJdk.equals(version)) {
                 this.targetBytecode = version;
             }
         }
+        */
+        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        if (index >= 0) {
+            targetBytecode = version; // exact match
+        } else {
+            index = Math.abs(index) - 2; // closest version
+            targetBytecode = ALLOWED_JDKS[Math.max(0, index)];
+        }
+        // GRECLIPSE end
     }
 
     /**
@@ -873,7 +883,7 @@ public class CompilerConfiguration {
      * @return bytecode compatibility level
      */
     public String getTargetBytecode() {
-        return this.targetBytecode;
+        return targetBytecode;
     }
 
     private static String getMinBytecodeVersion() {
