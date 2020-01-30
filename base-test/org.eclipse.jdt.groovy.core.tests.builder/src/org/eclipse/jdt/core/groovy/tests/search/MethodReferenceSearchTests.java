@@ -741,6 +741,44 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
+    public void testExplicitPropertySetterSearch3() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "BarBaz",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  String string\n" +
+            "  void setString(String string) {\n" +
+            "    this.string = (string ?: '')\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def baz(Bar bar) {\n" +
+            "  bar.string += 'x'\n" + // potential
+            "  bar.with {\n" +
+            "    string += 'y'\n" + // potential
+            "    string = 'z'\n" + // exact
+            "  }\n" +
+            "}\n" +
+            "");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(3, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(bar.getContents()).indexOf("string +="), matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(bar.getContents()).lastIndexOf("string +="), matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(bar.getContents()).lastIndexOf("string = "), matches.get(2).getOffset());
+    }
+
+    @Test
     public void testGenericsMethodReferenceSearch() throws Exception {
         GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
             "package foo\n" +

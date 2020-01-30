@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.core.inference;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -189,8 +188,7 @@ public class STCTypeLookup implements ITypeLookup {
     }
 
     private static boolean isCompoundAssignTarget(final Expression expr, final VariableScope scope) {
-        boolean isAssignTarget = (scope.getWormhole().get("lhs") == expr);
-        return (isAssignTarget && Optional.ofNullable(scope.getEnclosingAssignment())
-                .filter(it -> it.getOperation().getType() != Types.EQUALS).isPresent());
+        boolean isAssignTarget = (scope.getWormhole().get("lhs") == expr || expr.getNodeMetaData("rhsType") != null);
+        return (isAssignTarget && scope.getEnclosingAssignmentOperator().filter(op -> op.getType() != Types.EQUALS).isPresent());
     }
 }

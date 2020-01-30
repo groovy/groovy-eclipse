@@ -231,6 +231,9 @@ public class BinaryExpressionTransformer {
             // case of +=, -=, /=, ...
             // the method represents the operation type only, and we must add an assignment
             expr = binX(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
+            // GRECLIPSE add
+            expr.putNodeMetaData("original.operator", operation);
+            // GRECLIPSE end
             expr.setSourcePosition(bin);
             return expr;
         }

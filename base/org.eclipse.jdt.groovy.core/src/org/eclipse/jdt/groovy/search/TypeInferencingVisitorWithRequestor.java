@@ -2527,7 +2527,8 @@ assert primaryExprType != null && dependentExprType != null;
                 if (result == null || result.confidence.isLessThan(candidate.confidence)) {
                     result = candidate;
                 }
-                if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
+                if (result.confidence.isAtLeast(TypeConfidence.INFERRED) ||
+                        (result.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED) && lookup.getClass().getSimpleName().equals("STCTypeLookup"))) {
                     break;
                 }
             }

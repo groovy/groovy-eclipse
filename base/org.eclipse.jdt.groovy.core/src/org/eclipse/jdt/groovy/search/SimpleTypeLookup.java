@@ -945,8 +945,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static boolean isCompoundAssignment(final VariableScope scope) {
-        return Optional.ofNullable(scope.getEnclosingAssignment())
-            .filter(expr -> expr.getOperation().getType() != Types.EQUALS).isPresent();
+        return scope.getEnclosingAssignmentOperator().filter(op -> op.getType() != Types.EQUALS).isPresent();
     }
 
     protected static Expression getObjectExpression(final VariableScope scope) {
