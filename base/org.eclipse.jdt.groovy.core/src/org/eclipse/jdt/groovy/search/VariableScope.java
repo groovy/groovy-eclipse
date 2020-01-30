@@ -37,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -74,6 +75,7 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
+import org.codehaus.groovy.syntax.Token;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
@@ -695,6 +697,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         } else {
             return null;
         }
+    }
+
+    public Optional<Token> getEnclosingAssignmentOperator() {
+        return Optional.ofNullable(getEnclosingAssignment()).map(expr -> Optional.ofNullable((Token) expr.getNodeMetaData("original.operator")).orElse(expr.getOperation()));
     }
 
     /**

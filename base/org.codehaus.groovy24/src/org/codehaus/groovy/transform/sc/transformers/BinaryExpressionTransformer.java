@@ -254,6 +254,7 @@ public class BinaryExpressionTransformer {
                 return call;
             }
             expr = new BinaryExpression(left, Token.newSymbol(Types.EQUAL, operation.getStartLine(), operation.getStartColumn()), call);
+            expr.putNodeMetaData("original.operator", operation);
             expr.setSourcePosition(bin);
             return expr;
             // GRECLIPSE end
