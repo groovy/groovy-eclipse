@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,7 +59,7 @@ public class GroovySnippetParser {
      *
      * @param source the groovy source code to compile
      */
-    public ModuleNode parse(CharSequence source) {
+    public ModuleNode parse(final CharSequence source) {
         ModuleNode node = dietParse(source).getModuleNode();
         if (node == null) {
             return null;
@@ -78,7 +78,8 @@ public class GroovySnippetParser {
         return node;
     }
 
-    public GroovySourceAST parseForCST(CharSequence source) {
+    @Deprecated
+    public GroovySourceAST parseForCST(final CharSequence source) {
         SourceUnit sourceUnit = dietParse(source).getSourceUnit();
         ParserPlugin parserPlugin = ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
         if (parserPlugin instanceof AntlrParserPlugin) {
@@ -90,16 +91,17 @@ public class GroovySnippetParser {
 
     //--------------------------------------------------------------------------
 
-    private GroovyCompilationUnitDeclaration dietParse(CharSequence source) {
+    private GroovyCompilationUnitDeclaration dietParse(final CharSequence source) {
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+        options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
+
         CompilerOptions compilerOptions = new CompilerOptions(options);
         ProblemReporter problemReporter = new ProblemReporter(proceedWithAllProblems(), compilerOptions, new DefaultProblemFactory());
-
         GroovyParser parser = new GroovyParser(compilerOptions, problemReporter, false, true);
+
         ICompilationUnit unit = new MockCompilationUnit(source.toString().toCharArray(), "Snippet.groovy".toCharArray());
         CompilationResult compilationResult = new CompilationResult(unit, 0, 0, compilerOptions.maxProblemsPerUnit);
-
         GroovyCompilationUnitDeclaration gcud = parser.dietParse(unit, compilationResult);
         problems = compilationResult.getProblems();
         return gcud;
