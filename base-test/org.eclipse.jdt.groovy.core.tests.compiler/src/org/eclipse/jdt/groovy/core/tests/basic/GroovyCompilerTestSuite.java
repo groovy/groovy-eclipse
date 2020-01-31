@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
@@ -323,7 +324,7 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
-    protected static FieldDeclaration findField(GroovyCompilationUnitDeclaration decl, String name) {
+    protected static FieldDeclaration findField(CompilationUnitDeclaration decl, String name) {
         for (FieldDeclaration field : decl.types[0].fields) {
             if (name.equals(String.valueOf(field.name))) {
                 return field;
@@ -332,7 +333,7 @@ public abstract class GroovyCompilerTestSuite {
         return null;
     }
 
-    protected static MethodDeclaration findMethod(GroovyCompilationUnitDeclaration decl, String name) {
+    protected static MethodDeclaration findMethod(CompilationUnitDeclaration decl, String name) {
         for (AbstractMethodDeclaration method : decl.types[0].methods) {
             if (name.equals(String.valueOf(method.selector)) &&
                     method instanceof MethodDeclaration) {

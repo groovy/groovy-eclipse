@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,19 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
-import org.junit.Ignore;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.junit.Test;
 import org.osgi.framework.Version;
 
 public final class GenericsTests extends GroovyCompilerTestSuite {
 
-    private void runWarningFreeTest(String[] sources) {
-        runNegativeTest(sources, ""); // expect no compiler output (warnings or errors)
+    private void runWarningFreeTest(final String[] sources) {
+        runNegativeTest(sources, ""); // expect no compiler output (errors/warnings)
     }
+
+    //
 
     @Test
     public void testGenericField() {
@@ -38,7 +39,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
-            "  List<String> bar\n" +
+            "  public List<String> bar\n" +
             "}",
         };
         //@formatter:on
@@ -52,7 +53,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Foo.groovy",
             "class Foo {\n" +
-            "  List<String>[] bar\n" +
+            "  public List<String>[] bar\n" +
             "}",
         };
         //@formatter:on
@@ -85,17 +86,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastJava(JDK7)) {
-            runWarningFreeTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. WARNING in Foo.groovy (at line 2)\n" +
-                "\tpublic void m(List<String>[] bar) {}\n" +
-                "\t              ^^^^^^^^^^^^^^^^^^\n" +
-                "Type safety: Potential heap pollution via varargs parameter bar\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Foo.groovy (at line 2)\n" +
+            "\tpublic void m(List<String>[] bar) {}\n" +
+            "\t              ^^^^^^^^^^^^^^^^^^\n" +
+            "Type safety: Potential heap pollution via varargs parameter bar\n" +
+            "----------\n");
     }
 
     @Test
@@ -109,17 +106,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastJava(JDK7)) {
-            runWarningFreeTest(sources);
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. WARNING in Foo.groovy (at line 2)\n" +
-                "\tpublic void m(List<String>... bar) {}\n" +
-                "\t              ^^^^^^^^^^^^^^^^^^^\n" +
-                "Type safety: Potential heap pollution via varargs parameter bar\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Foo.groovy (at line 2)\n" +
+            "\tpublic void m(List<String>... bar) {}\n" +
+            "\t              ^^^^^^^^^^^^^^^^^^^\n" +
+            "Type safety: Potential heap pollution via varargs parameter bar\n" +
+            "----------\n");
     }
 
     @Test
@@ -127,11 +120,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
-            "package p;\n" +
-            "public class B extends A {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new A(35);\n" +
-            "    System.out.println('success');\n" +
+            "package p\n" +
+            "class B extends A {\n" +
+            "  void m() {\n" +
+            "    new A(42)\n" +
             "  }\n" +
             "}",
 
@@ -155,7 +147,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<?> setone;\n" +
             "  Set<? extends Serializable> settwo;\n" +
             "  Set<? super Number> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
 
             // this Java class is for comparison - breakpoint on building type bindings and you can check the decls
@@ -171,7 +162,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
         runWarningFreeTest(sources);
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         String one = stringify(findField(decl, "setone").type);
         String two = stringify(findField(decl, "settwo").type);
         String three = stringify(findField(decl, "setthree").type);
@@ -189,14 +180,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<?> setone;\n" +
             "  Set<? extends java.io.Serializable> settwo;\n" +
             "  Set<? super java.lang.Thread> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
         //@formatter:on
 
         runWarningFreeTest(sources);
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         String one = stringify(findField(decl, "setone").type);
         String two = stringify(findField(decl, "settwo").type);
         String three = stringify(findField(decl, "setthree").type);
@@ -215,22 +205,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  Set<String[]> settwo;\n" +
             "  Set<String[][]> setthree;\n" +
             "  Set<java.lang.Thread[][][]> setfour;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
-            "}",
-
-            "Y.java",
-            "import java.util.*;\n" +
-            "class Y {\n" +
-            "  Set<String[]> a;\n" +
-            "  Set<String[][]> b;\n" +
-            "  Set<java.lang.Thread[][][]> c;\n" +
             "}",
         };
         //@formatter:on
 
         runWarningFreeTest(sources);
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         String one = stringify(findField(decl, "setone").type);
         String two = stringify(findField(decl, "settwo").type);
         String three = stringify(findField(decl, "setthree").type);
@@ -250,14 +231,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  java.util.Set<?> setone;\n" +
             "  java.util.Set<? extends Serializable> settwo;\n" +
             "  java.util.Set<? super Number> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
         //@formatter:on
 
         runWarningFreeTest(sources);
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         String one = stringify(findField(decl, "setone").type);
         String two = stringify(findField(decl, "settwo").type);
         String three = stringify(findField(decl, "setthree").type);
@@ -275,14 +255,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "  java.util.Set<?> setone;\n" +
             "  java.util.Set<? extends java.io.Serializable> settwo;\n" +
             "  java.util.Set<? super java.lang.Thread> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
             "}",
         };
         //@formatter:on
 
         runWarningFreeTest(sources);
 
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
         String one = stringify(findField(decl, "setone").type);
         String two = stringify(findField(decl, "settwo").type);
         String three = stringify(findField(decl, "setthree").type);
@@ -291,16 +270,71 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         assertEquals("(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>", three);
     }
 
-    @Test @Ignore("support for A<X>.B<Y> has not been implemented")
+    @Test
     public void testGenericsPositions_6_GRE267() {
         //@formatter:off
         String[] sources = {
             "X.groovy",
             "class X {\n" +
-            "  One<String,Integer>.Two<Boolean> whoa;\n" + // multiple generified components in a reference
-            "  java.util.Set<? extends java.io.Serializable> settwo;\n" +
-            "  java.util.Set<? super java.lang.Number> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
+            "  java.util.Set<?> setone;\n" +
+            "  java.util.Set<String[]> settwo;\n" +
+            "  java.util.Set<java.lang.Number[][][]> setthree;\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        String one = stringify(findField(decl, "setone").type);
+        String two = stringify(findField(decl, "settwo").type);
+        String three = stringify(findField(decl, "setthree").type);
+        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
+        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", two);
+        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", three);
+    }
+
+    @Test
+    public void testGenericsPositions_7_GRE267() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  Set<Map.Entry<String,List<String>>> foo;\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(findField(decl, "foo").type));
+    }
+
+    @Test
+    public void testGenericsPositions_8_GRE267() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  Map.Entry<String,List<String>> foo;\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runWarningFreeTest(sources);
+
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(findField(decl, "foo").type));
+    }
+
+    @Test
+    public void testGenericsPositions_9_GRE267() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class X {\n" +
+            "  One<String,Integer>.Two<Boolean> two\n" + // multiple generified components in a reference
             "}",
 
             "One.java",
@@ -311,76 +345,18 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in X.groovy (at line 2)\n" +
+            "\tOne<String,Integer>.Two<Boolean> two\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: One\n" +
+            "----------\n");
+        /*TODO:
         runWarningFreeTest(sources);
-
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        String one = stringify(findField(decl, "one").type);
-        String two = stringify(findField(decl, "settwo").type);
-        String three = stringify(findField(decl, "setthree").type);
-        assertEquals("(12>14)Set<(16>16)?>", one);
-        assertEquals("(29>31)Set<(33>33)? extends (43>61)(43>47)java.(48>50)io.(51>61)Serializable>", two);
-        assertEquals("(67>69)Set<(71>71)? super (79>84)Number>", three);
-    }
-
-    @Test
-    public void testGenericsPositions_7_GRE267() {
-        //@formatter:off
-        String[] sources = {
-            "X.groovy",
-            "class X {\n" +
-            "  java.util.Set<?> setone;\n" +
-            "  java.util.Set<String[]> settwo;\n" +
-            "  java.util.Set<java.lang.Number[][][]> setthree;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        String one = stringify(findField(decl, "setone").type);
-        String two = stringify(findField(decl, "settwo").type);
-        String three = stringify(findField(decl, "setthree").type);
-        assertEquals("(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>", one);
-        assertEquals("(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>60 ose:58)String[]>", two);
-        assertEquals("(73>85)(73>76)java.(78>81)util.(83>85)Set<(87>108)(87>90)java.(92>95)lang.(97>102)Number[][][]>", three);
-    }
-
-    @Test
-    public void testGenericsPositions_8_GRE267() {
-        //@formatter:off
-        String[] sources = {
-            "X.groovy",
-            "class X {\n" +
-            "  Set<Map.Entry<String,List<String>>> foo;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>14)Set<(16>24)(16>18)Map.(20>24)Entry<(26>31)String(33>36)List<(38>43)String>>>", stringify(findField(decl, "foo").type));
-    }
-
-    @Test
-    public void testGenericsPositions_9_GRE267() {
-        //@formatter:off
-        String[] sources = {
-            "X.groovy",
-            "class X {\n" +
-            "  Map.Entry<String,List<String>> foo;\n" +
-            "  public static void main(String[]argv){ print 'y' }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-
-        GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
-        assertEquals("(12>20)(12>14)Map.(16>20)Entry<(22>27)String(29>32)List<(34>39)String>>", stringify(findField(decl, "foo").type));
+        CompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
+        assertEquals("(i>j)One<(i>j)String,(i>j)Integer>.(i>j)Two<(i>j)Boolean>", stringify(findField(decl, "two").type));
+        */
     }
 
     @Test
@@ -868,9 +844,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
             "StructureBase.groovy",
             "public class StructureBase implements Structure {\n" +
-            "   public Integer get(Object key) {\n" +
-            "       return null;\n" +
-            "   }\n" +
+            "  public Integer get(Object key) {\n" +
+            "    return null;\n" +
+            "  }\n" +
             "}",
         };
         //@formatter:on
@@ -879,22 +855,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGenericFields_JcallingG() {
+    public void testGenericFields_JextendingG() {
         //@formatter:off
         String[] sources = {
-            "p/Code.java",
+            "p/J.java",
             "package p;\n" +
-            "public class Code extends G<String> {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    Code c = new Code();\n" +
-            "    c.setField(\"success\");\n" +
-            "    System.out.print(c.getField());\n" +
+            "public class J extends G<String> {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    J j = new J();\n" +
+            "    j.field = \"x\";\n" +
+            "    System.out.print(j.field);\n" +
             "  }\n" +
             "}\n",
 
             "p/G.groovy",
-            "package p;\n" +
-            "class G<T> { T field; }",
+            "package p\n" +
+            "class G<T> { protected T field }",
         };
         //@formatter:on
 
@@ -902,22 +878,22 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testGenericFields_GcallingJ() {
+    public void testGenericFields_GextendingJ() {
         //@formatter:off
         String[] sources = {
-            "p/Code.groovy",
-            "package p;\n" +
-            "public class Code extends G<String> {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    Code c = new Code();\n" +
-            "    c.field=\"success\";\n" +
-            "    System.out.print(c.field);\n" +
+            "p/G.groovy",
+            "package p\n" +
+            "class G extends J<String> {\n" +
+            "  static main(args) {\n" +
+            "    G g = new G()\n" +
+            "    g.field = 'x'\n" +
+            "    print g.field\n" +
             "  }\n" +
             "}\n",
 
-            "p/G.java",
+            "p/J.java",
             "package p;\n" +
-            "class G<T> { public T field; }", // TODO why must this be public for the groovy code to see it?  If non public should it be instead defined as a property on the JDTClassNode rather than a field?
+            "class J<T> { protected T field; }",
         };
         //@formatter:on
 
@@ -982,15 +958,15 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "ab/Inter.java",
             "package ab;\n" +
             "public interface Inter {\n" +
-            "    public Number getItem(Object itemId);\n" +
+            "  public Number getItem(Object itemId);\n" +
             "}\n",
 
             "ab/Clazz.java",
             "package ab;\n" +
             "public abstract class Clazz<ITEM extends Number> implements Inter {\n" +
-            "   public ITEM getItem(Object itemId) {\n" +
-            "       return null;\n" +
-            "   }\n" +
+            "  public ITEM getItem(Object itemId) {\n" +
+            "    return null;\n" +
+            "  }\n" +
             "}\n",
 
             "ab/GClazz.groovy",
@@ -1009,15 +985,15 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "ab/Clazz.java",
             "package ab;\n" +
             "public abstract class Clazz<ITEM extends MyItem> implements Inter {\n" +
-            "   public ITEM getItem(Object itemId) {\n" +
-            "       return null;\n" +
-            "   }\n" +
+            "  public ITEM getItem(Object itemId) {\n" +
+            "    return null;\n" +
+            "  }\n" +
             "}\n",
 
             "ab/Inter.java",
             "package ab;\n" +
             "public interface Inter {\n" +
-            "    public MyItem getItem(Object itemId);\n" +
+            "  public MyItem getItem(Object itemId);\n" +
             "}\n",
 
             "ab/MyItem.java",
@@ -2129,71 +2105,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\t@SuppressWarnings([\"rawtypes\",\"cast2\"])\n" +
             "\t                              ^^^^^^^\n" +
             "Unsupported @SuppressWarnings(\"cast2\")\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testJava7() {
-        assumeTrue(isAtLeastJava(JDK7));
-
-        //@formatter:off
-        String[] sources = {
-            "A.java",
-            "import java.util.*;\n" +
-            "public class A {\n" +
-            "public static void main(String[]argv) {\n" +
-            "  List<String> ls = new ArrayList<>();" +
-            "  int i = 1_000_000;\n" +
-            "  int b = 0b110101;\n" +
-            "  try {\n" +
-            "    foo();\n" +
-            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
-            "  }\n" +
-            "}\n" +
-            "  public static void foo() throws java.io.IOException {}\n" +
-            "}",
-
-            "B.groovy",
-            "print 'a'\n",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testJava7_2() {
-        assumeTrue(!isAtLeastJava(JDK7));
-
-        //@formatter:off
-        String[] sources = {
-            "A.java",
-            "import java.util.*;\n" +
-            "public class A {\n" +
-            "public static void main(String[]argv) {\n" +
-            "  List<String> ls = new ArrayList<>();" +
-            "  int i = 1_000_000;\n" +
-            "  int b = 0b110101;\n" +
-            "}\n" +
-            "  public static void foo() throws java.io.IOException {}\n" +
-            "}",
-
-            "B.groovy",
-            "print 'a'\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.java (at line 4)\n" +
-            "\tList<String> ls = new ArrayList<>();  int i = 1_000_000;\n" +
-            "\t                      ^^^^^^^^^\n" +
-            "\'<>\' operator is not allowed for source level below 1.7\n" +
-            "----------\n" +
-            "2. ERROR in A.java (at line 4)\n" +
-            "\tList<String> ls = new ArrayList<>();  int i = 1_000_000;\n" +
-            "\t                                              ^^^^^^^^^\n" +
-            "Underscores can only be used with source level 1.7 or greater\n" +
             "----------\n");
     }
 
