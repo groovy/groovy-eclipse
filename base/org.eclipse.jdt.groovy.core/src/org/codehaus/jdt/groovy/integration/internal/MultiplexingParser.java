@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,21 +30,21 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
  * Depending on what kind of file is to be parsed, it will invoke the relevant
  * parser.
  */
-public class MultiplexingParser extends Parser {
+class MultiplexingParser extends Parser {
 
     private final GroovyParser groovyParser;
 
-    public MultiplexingParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
+    MultiplexingParser(final Object requestor, final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean optimizeStringLiterals) {
         super(problemReporter, optimizeStringLiterals);
         this.groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, true, false);
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-            return groovyParser.dietParse(sourceUnit, compilationResult);
+    public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
+        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
+            return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
-            return super.dietParse(sourceUnit, compilationResult);
+            return super.dietParse(compilationUnit, compilationResult);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,29 +40,13 @@ import org.eclipse.jdt.internal.core.ImportContainerInfo;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * The multiplexing parser can delegate source parsing to multiple parsers.
- * In this scenario it subtypes 'Parser' (which is the Java parser) but is
- * also aware of a groovy parser. Depending on what kind of file is to be
- * parsed, it will invoke the relevant parser.
- */
 public class MultiplexingSourceElementRequestorParser extends SourceElementParser {
 
-    private GroovyParser groovyParser;
-    private boolean groovyReportReferenceInfo;
+    private final GroovyParser groovyParser;
 
-    public MultiplexingSourceElementRequestorParser(
-        ProblemReporter problemReporter,
-        ISourceElementRequestor requestor,
-        IProblemFactory problemFactory,
-        CompilerOptions options,
-        boolean reportLocalDeclarations,
-        boolean optimizeStringLiterals
-    ) {
-        // the superclass that is extended is in charge of parsing .java files
+    public MultiplexingSourceElementRequestorParser(final ProblemReporter problemReporter, final ISourceElementRequestor requestor, final IProblemFactory problemFactory, final CompilerOptions options, final boolean reportLocalDeclarations, final boolean optimizeStringLiterals) {
         super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
-        this.groovyParser = new GroovyParser(requestor, this.options, problemReporter, false, true);
-
+        groovyParser = new GroovyParser(requestor, this.options, problemReporter, false, true);
         // ensure import annotations are seen by the compilation unit
         if (requestor instanceof CompilationUnitStructureRequestor) {
             final CompilationUnitStructureRequestor compUnitStructureRequestor = (CompilationUnitStructureRequestor) requestor;
@@ -72,15 +56,15 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
                     super.notifySourceElementRequestor(importReference, isPackage);
                     if (!isPackage && importReference.annotations != null) {
                         try {
-                        ImportContainerInfo importContainerInfo = ReflectionUtils.getPrivateField(CompilationUnitStructureRequestor.class, "importContainerInfo", compUnitStructureRequestor);
-                        for (Annotation annotation : importReference.annotations) {
-                            IJavaElement[] imports = ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "getChildren", new Class[] {Object.class}, compUnitStructureRequestor, new Object[] {importContainerInfo});
+                            ImportContainerInfo importContainerInfo = ReflectionUtils.getPrivateField(CompilationUnitStructureRequestor.class, "importContainerInfo", compUnitStructureRequestor);
+                            for (Annotation annotation : importReference.annotations) {
+                                IJavaElement[] imports = ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "getChildren", new Class[] {Object.class}, compUnitStructureRequestor, new Object[] {importContainerInfo});
 
-                            //requestor.acceptAnnotation(Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle);
-                            ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "acceptAnnotation",
-                                new Class[]  {Annotation.class, AnnotatableInfo.class, JavaElement.class}, compUnitStructureRequestor,
-                                new Object[] {annotation,       null,                  imports[imports.length - 1]});
-                        }
+                                //requestor.acceptAnnotation(Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle);
+                                ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "acceptAnnotation",
+                                    new Class[]  {Annotation.class, AnnotatableInfo.class, JavaElement.class}, compUnitStructureRequestor,
+                                    new Object[] {annotation,       null,                  imports[imports.length - 1]});
+                            }
                         } catch (Throwable t) {
                             Util.log(t);
                         }
@@ -91,12 +75,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
     }
 
     @Override
-    public void reset() {
-        groovyParser.reset();
-    }
-
-    @Override
-    public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit compilationUnit, boolean fullParse, IProgressMonitor progressMonitor) {
+    public CompilationUnitDeclaration parseCompilationUnit(final ICompilationUnit compilationUnit, final boolean fullParse, final IProgressMonitor progressMonitor) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
             // ASSUMPTIONS:
             // 1) parsing is for the entire CU (ie- from character 0, to compilationUnit.getContents().length)
@@ -109,9 +88,10 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
             GroovyCompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
 
-            assert scanner.source == null; scanner.source = compilationUnit.getContents();
+            assert scanner.source == null;
+            scanner.source = compilationUnit.getContents();
             SourceElementNotifier notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
-            notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, groovyReportReferenceInfo, compUnitDecl.sourceEnds, Collections.EMPTY_MAP);
+            notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, false, compUnitDecl.sourceEnds, Collections.EMPTY_MAP);
 
             return compUnitDecl;
         } else {
@@ -120,11 +100,16 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit compilationUnit, CompilationResult compilationResult) {
+    public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
             return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
             return super.dietParse(compilationUnit, compilationResult);
         }
+    }
+
+    @Override
+    public void reset() {
+        groovyParser.reset();
     }
 }
