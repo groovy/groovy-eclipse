@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,20 +49,20 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
  * Visits a {@link ModuleNode} and passes it to an indexing element requestor,
  * thus adding this class to the Java indexes.
  */
-public class GroovyIndexingVisitor extends DepthFirstVisitor {
+class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     private boolean newify; // for MCEs
     private MethodNode enclosingMethod; // for CCEs
     private final ISourceElementRequestor requestor;
 
-    public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
+    GroovyIndexingVisitor(final ISourceElementRequestor requestor) {
         this.requestor = requestor;
     }
 
     // NOTE: Expected entry point is visitModule(ModuleNode).
 
     @Override
-    public void visitImport(ImportNode node) {
+    public void visitImport(final ImportNode node) {
         if (node.getType() != null) {
             visitTypeReference(node.getType(), false, true);
         }
@@ -74,7 +74,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitClass(ClassNode node) {
+    public void visitClass(final ClassNode node) {
         if (!node.isSynthetic()) {
             visitTypeReference(node, false, false);
             visitTypeReference(node.getSuperClass(), false, true);
@@ -88,7 +88,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitField(FieldNode node) {
+    public void visitField(final FieldNode node) {
         if (node.getType() != node.getDeclaringClass() && node.getEnd() > 0) {
             visitTypeReference(node.getType(), false, true);
         }
@@ -98,8 +98,9 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitMethod(MethodNode node) {
-        MethodNode meth = enclosingMethod; enclosingMethod = node;
+    public void visitMethod(final MethodNode node) {
+        MethodNode meth = enclosingMethod;
+        enclosingMethod = node;
         if (node != runMethod && node.getEnd() > 0) {
             if (isNotEmpty(node.getGenericsTypes())) {
                 visitTypeParameters(node.getGenericsTypes(), null);
@@ -119,7 +120,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    protected void visitAnnotation(AnnotationNode node) {
+    protected void visitAnnotation(final AnnotationNode node) {
         visitTypeReference(node.getClassNode(), true, true);
         newify = (newify || "Newify".equals(
             node.getClassNode().getNameWithoutPackage()));
@@ -127,7 +128,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    protected void visitParameter(Parameter parameter) {
+    protected void visitParameter(final Parameter parameter) {
         visitTypeReference(parameter.getType(), false, true);
         super.visitParameter(parameter);
     }
@@ -135,7 +136,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     // expressions:
 
     @Override
-    public void visitArrayExpression(ArrayExpression expression) {
+    public void visitArrayExpression(final ArrayExpression expression) {
         if (expression.getEnd() > 0) {
             visitTypeReference(expression.getType(), false, true);
         }
@@ -143,7 +144,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitBinaryExpression(BinaryExpression expression) {
+    public void visitBinaryExpression(final BinaryExpression expression) {
         if (expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR) &&
                 expression.getLeftExpression() instanceof VariableExpression) {
             String name = expression.getLeftExpression().getText();
@@ -160,7 +161,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitCastExpression(CastExpression expression) {
+    public void visitCastExpression(final CastExpression expression) {
         // NOTE: expression.getType() may refer to ClassNode behind "this" or "super"
         if (expression.getEnd() > 0 && (/*cast:*/expression.getStart() == expression.getType().getStart() ||
                                         /*coerce:*/expression.getEnd() == expression.getType().getEnd())) {
@@ -170,13 +171,13 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitClassExpression(ClassExpression expression) {
+    public void visitClassExpression(final ClassExpression expression) {
         visitTypeReference(expression.getType(), false, true);
         super.visitClassExpression(expression);
     }
 
     @Override
-    public void visitConstantExpression(ConstantExpression expression) {
+    public void visitConstantExpression(final ConstantExpression expression) {
         if (!(expression.isNullExpression() || expression.isTrueExpression() || expression.isFalseExpression() || expression.isEmptyStringExpression())) {
             if (expression instanceof AnnotationConstantExpression) {
                 // ex: @interface X { Y default @Y(...) } -- expression is "@Y(...)"
@@ -198,7 +199,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitConstructorCallExpression(ConstructorCallExpression expression) {
+    public void visitConstructorCallExpression(final ConstructorCallExpression expression) {
         ClassNode type = expression.getType();
         if (expression.isSpecialCall()) {
             type = enclosingMethod.getDeclaringClass();
@@ -232,7 +233,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitDeclarationExpression(DeclarationExpression expression) {
+    public void visitDeclarationExpression(final DeclarationExpression expression) {
         visitTypeReference(expression.getLeftExpression().getType(), false, true);
         visitAnnotations(expression.getAnnotations());
         expression.getRightExpression().visit(this);
@@ -240,13 +241,13 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitFieldExpression(FieldExpression expression) {
+    public void visitFieldExpression(final FieldExpression expression) {
         requestor.acceptFieldReference(expression.getFieldName().toCharArray(), expression.getStart());
         super.visitFieldExpression(expression);
     }
 
     @Override
-    public void visitMethodCallExpression(MethodCallExpression expression) {
+    public void visitMethodCallExpression(final MethodCallExpression expression) {
         String name = expression.getMethodAsString();
         if (name != null) {
             if (!"new".equals(name)) {
@@ -264,7 +265,8 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
                         requestor.acceptConstructorReference(methName, i, expression.getNameStart());
                     }
                 }
-            } else { assert newify;
+            } else {
+                assert newify;
                 // assume it's a well-formed @Newify expression like "Type.new(...)"
                 char[] typeName = expression.getObjectExpression().getText().toCharArray();
                 // we don't know how many arguments the constructor has, so go up to 9
@@ -280,7 +282,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitPropertyExpression(PropertyExpression expression) {
+    public void visitPropertyExpression(final PropertyExpression expression) {
         if (!(expression instanceof AttributeExpression) &&
                 expression.getProperty() instanceof ConstantExpression) {
             String name = expression.getProperty().getText();
@@ -294,7 +296,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
+    public void visitStaticMethodCallExpression(final StaticMethodCallExpression expression) {
         ClassNode ownerType = expression.getOwnerType();
         if (ownerType != ownerType.redirect()) {
             visitTypeReference(ownerType, false, true);
@@ -303,7 +305,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     @Override
-    public void visitVariableExpression(VariableExpression expression) {
+    public void visitVariableExpression(final VariableExpression expression) {
         if (expression.getEnd() > 0) {
             String name = expression.getName();
             int offset = expression.getStart();
@@ -320,7 +322,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     //--------------------------------------------------------------------------
 
-    private void visitNameReference(AccessorSupport kind, String name, int offset) {
+    private void visitNameReference(final AccessorSupport kind, final String name, final int offset) {
         String methodName = kind.createAccessorName(name);
         if (methodName != null) {
             int params = (kind == AccessorSupport.SETTER ? 1 : 0);
@@ -328,7 +330,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         }
     }
 
-    private void visitTypeReference(ClassNode type, boolean isAnnotation, boolean useQualifiedName) {
+    private void visitTypeReference(final ClassNode type, final boolean isAnnotation, final boolean useQualifiedName) {
         if (isAnnotation) {
             requestor.acceptAnnotationTypeReference(splitName(type, useQualifiedName), type.getStart(), type.getEnd());
         } else {
@@ -337,13 +339,13 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         visitTypeParameters(type);
     }
 
-    private void visitTypeParameters(ClassNode type) {
+    private void visitTypeParameters(final ClassNode type) {
         if (type.isUsingGenerics() && isNotEmpty(type.getGenericsTypes())) {
             visitTypeParameters(type.getGenericsTypes(), type.getName());
         }
     }
 
-    private void visitTypeParameters(GenericsType[] generics, String typeName) {
+    private void visitTypeParameters(final GenericsType[] generics, final String typeName) {
         for (GenericsType generic : generics) {
             if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
                 visitTypeReference(generic.getType(), generic.getType().isAnnotationDefinition(), true);
@@ -362,7 +364,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         }
     }
 
-    private static char[][] splitName(ClassNode type, boolean useQualifiedName) {
+    private static char[][] splitName(final ClassNode type, final boolean useQualifiedName) {
         String name = useQualifiedName ? type.getName() : type.getNameWithoutPackage();
         String[] nameArr = name.split("\\.");
         char[][] nameCharArr = new char[nameArr.length][];

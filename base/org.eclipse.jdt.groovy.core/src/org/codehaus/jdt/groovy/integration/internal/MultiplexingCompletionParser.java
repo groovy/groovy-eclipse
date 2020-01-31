@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,60 +31,59 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
-public class MultiplexingCompletionParser extends CompletionParser {
+class MultiplexingCompletionParser extends CompletionParser {
 
-    private GroovyParser groovyParser;
+    private final GroovyParser groovyParser;
 
-    public MultiplexingCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
-            boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+    MultiplexingCompletionParser(final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean storeExtraSourceEnds, final IProgressMonitor monitor) {
         super(problemReporter, storeExtraSourceEnds);
         // The superclass that is extended is in charge of parsing .java files
         groovyParser = new GroovyParser(compilerOptions, problemReporter, true, false);
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-            return groovyParser.dietParse(sourceUnit, compilationResult);
+    public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
+        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
+            return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
-            return super.dietParse(sourceUnit, compilationResult);
+            return super.dietParse(compilationUnit, compilationResult);
         }
     }
 
     @Override
-    public void parseBlockStatements(ConstructorDeclaration cd, CompilationUnitDeclaration unit) {
+    public void parseBlockStatements(final ConstructorDeclaration cd, final CompilationUnitDeclaration unit) {
         if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
             super.parseBlockStatements(cd, unit);
         }
     }
 
     @Override
-    public MethodDeclaration parseSomeStatements(int start, int end, int fakeBlocksCount, CompilationUnitDeclaration unit) {
-        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-            return super.parseSomeStatements(start, end, fakeBlocksCount, unit);
-        }
-        return null;
-    }
-
-    @Override
-    public void parseBlockStatements(AbstractMethodDeclaration md, CompilationUnitDeclaration unit) {
+    public void parseBlockStatements(final AbstractMethodDeclaration md, final CompilationUnitDeclaration unit) {
         if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
             super.parseBlockStatements(md, unit);
         }
     }
 
     @Override
-    public void parseBlockStatements(Initializer initializer, TypeDeclaration type, CompilationUnitDeclaration unit) {
+    public void parseBlockStatements(final Initializer initializer, final TypeDeclaration type, final CompilationUnitDeclaration unit) {
         if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
             super.parseBlockStatements(initializer, type, unit);
         }
     }
 
     @Override
-    public void parseBlockStatements(MethodDeclaration md, CompilationUnitDeclaration unit) {
+    public void parseBlockStatements(final MethodDeclaration md, final CompilationUnitDeclaration unit) {
         if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
             super.parseBlockStatements(md, unit);
         }
+    }
+
+    @Override
+    public MethodDeclaration parseSomeStatements(final int start, final int end, final int fakeBlocksCount, final CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            return super.parseSomeStatements(start, end, fakeBlocksCount, unit);
+        }
+        return null;
     }
 
     @Override
