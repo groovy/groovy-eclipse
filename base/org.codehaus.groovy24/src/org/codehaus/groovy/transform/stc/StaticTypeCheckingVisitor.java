@@ -1459,7 +1459,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return true;
                 }
 
-                boolean isThisExpression = enclosingTypes.contains(objectExpressionType);
+                boolean isThisExpression = enclosingTypes.contains(testClass);
                 // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
