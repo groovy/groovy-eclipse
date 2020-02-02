@@ -3150,6 +3150,44 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9204() {
+        //@formatter:off
+        String[] sources = {
+            "G.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class G extends Three {\n" +
+            "  static main(args) {\n" +
+            "    print new G().test()\n" +
+            "  }\n" +
+            "  def test() {\n" +
+            "    field.meth() // typeof(field) should be A\n" +
+            "    //    ^^^^ Cannot find matching method java.lang.Object#meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "J.java",
+            "public class J {\n" +
+            "  public String meth() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
+            "}\n" +
+            "abstract class One<T extends J> {\n" +
+            "  protected T field;\n" +
+            "}\n" +
+            "abstract class Two<T extends J> extends One<T> {\n" +
+            "}\n" +
+            "abstract class Three extends Two<J> {\n" +
+            "  {\n" +
+            "    field = new J();\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic9265() {
         //@formatter:off
         String[] sources = {
