@@ -116,7 +116,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isVoidMethod() {
-        return returnType == ClassHelper.VOID_TYPE;
+        return ClassHelper.VOID_TYPE.equals(getReturnType());
     }
 
     public Statement getCode() {
