@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.eclipse.jdt.groovy.search.GenericsMapper.isVargs;
+
 import java.util.LinkedHashSet;
 import java.util.stream.Stream;
 
@@ -44,10 +46,10 @@ public enum AccessorSupport {
     public boolean isAccessorKind(MethodNode node, boolean isCategory) {
         Parameter[] parameters = node.getParameters();
         switch (this) {
-        case SETTER:
-            return parameters != null && parameters.length == (!isCategory ? 1 : 2);
         case GETTER:
             return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
+        case SETTER:
+            return parameters != null && parameters.length == (!isCategory ? 1 : 2) && (!isCategory || !isVargs(parameters));
         case ISSER:
             return !isCategory && (parameters == null || parameters.length == 0) && ClassHelper.boolean_TYPE.equals(node.getReturnType());
         default:

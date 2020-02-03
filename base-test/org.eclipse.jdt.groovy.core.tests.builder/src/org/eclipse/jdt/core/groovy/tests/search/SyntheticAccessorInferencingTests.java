@@ -98,11 +98,12 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  void    setProperty7(param1, param2) {}\n" +
             "  \n" +
             "  // no underlines and yes content assist\n" +
-            "  def     setProperty1a(param) {}\n" +
+            "  void    setProperty1a(... params) {}\n" +
             "  void    setProperty2a(param) {}\n" +
             "  String  setProperty3a(param) {}\n" +
-            "  def     getProperty4a() {}\n" +
-            "  boolean isProperty5a() {}\n" +
+            "  def     setProperty4a(param) {}\n" +
+            "  def     getProperty5a() {}\n" +
+            "  boolean isProperty6a() {}\n" +
             "  \n" +
             "  void method() {\n" +
             "    property1\n" +
@@ -112,13 +113,13 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "    property5\n" +
             "    property6 = null\n" +
             "    property7 = null\n" +
-            "    property8 = null\n" +
             "    \n" +
             "    property1a = null\n" +
             "    property2a = null\n" +
             "    property3a = null\n" +
-            "    property4a\n" +
+            "    property4a = null\n" +
             "    property5a\n" +
+            "    property6a\n" +
             "  }\n" +
             "}\n";
 
@@ -134,6 +135,8 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
         assertKnown(contents, "property2a", "Foo");
         assertKnown(contents, "property3a", "Foo");
         assertKnown(contents, "property4a", "Foo");
+        assertKnown(contents, "property5a", "Foo");
+        assertKnown(contents, "property6a", "Foo");
     }
 
     @Test
@@ -144,12 +147,13 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  static String  getPropertyCat1(Search self, param) {}\n" +
             "  static void    getPropertyCat2(Search self) {}\n" +
             "  static void    setPropertyCat3(Search self) {}\n" +
-            "  static void    setPropertyCat4(Search self, param1, param2) {}\n" +
-            "  static boolean isPropertyCat5(Search self, param) {}\n" +
-            "  static Boolean isPropertyCat6(Search self) {}\n" +
-            "  static String  isPropertyCat7(Search self) {}\n" +
-            "  static void    isPropertyCat8(Search self) {}\n" +
-            "  static def     isPropertyCat9(Search self) {}\n" +
+            "  static void    setPropertyCat4(Search self, ... params) {}\n" +
+            "  static void    setPropertyCat5(Search self, param1, param2) {}\n" +
+            "  static boolean isPropertyCat6(Search self, param) {}\n" +
+            "  static Boolean isPropertyCat7(Search self) {}\n" +
+            "  static String  isPropertyCat8(Search self) {}\n" +
+            "  static void    isPropertyCat9(Search self) {}\n" +
+            "  static def     isPropertyCat10(Search self) {}\n" +
             "  \n" +
             "  // no underlines and yes content assist\n" +
             "  static def     setPropertyCat1a(Search self, param) {}\n" +
@@ -167,6 +171,7 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  propertyCat7\n" +
             "  propertyCat8\n" +
             "  propertyCat9\n" +
+            "  propertyCat10\n" +
             "  \n" +
             "  propertyCat1a = null\n" +
             "  propertyCat2a = null\n" +
@@ -183,6 +188,7 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
         assertUnknown(contents, "propertyCat7");
         assertUnknown(contents, "propertyCat8");
         assertUnknown(contents, "propertyCat9");
+        assertUnknown(contents, "propertyCat10");
 
         assertKnown(contents, "propertyCat1a", "Cat");
         assertKnown(contents, "propertyCat2a", "Cat");
