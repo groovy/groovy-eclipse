@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
     public void testGrab1() {
         //@formatter:off
         String[] sources = {
-            "Printer.groovy",
+            "Script.groovy",
             "@Grab('joda-time:joda-time:2.10')\n" +
             "def printDate() {\n" +
             "  def dt = new org.joda.time.DateTime()\n" +
@@ -53,7 +53,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
     public void testGrab2() {
         //@formatter:off
         String[] sources = {
-            "Grab1.groovy",
+            "Script.groovy",
             "@Grapes([\n" +
             "  @Grab(group='joda-time', module='joda-time', version='1.6'),\n" +
             "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n" +
@@ -73,16 +73,30 @@ public final class GrabTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in Grab1.groovy (at line 3)\n" +
+            "1. ERROR in Script.groovy (at line 3)\n" +
             "\t@Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n" +
-            "\t ^^^\n" +
+            "\t^^^^^\n" +
             "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
             "----------\n" +
-            "2. ERROR in Grab1.groovy (at line 8)\n" +
+            "2. ERROR in Script.groovy (at line 8)\n" +
             "\tdef world = new org.aspectj.weaver.bcel.BcelWorld()\n" +
             "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
+            "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld\n" +
             "----------\n");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9376
+    public void testGrabResolver() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@GrabResolver(name='restlet.org', root='http://maven.restlet.org')\n" +
+            "@Grab(group='org.restlet', module='org.restlet', version='1.1.6')\n" +
+            "import org.restlet.Restlet\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
     }
 
     @Test
