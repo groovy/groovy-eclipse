@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,69 +87,40 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
     @Test
     public void testSyntheticAccessors4() {
         String contents =
-            "// yes underlines and no content assist\n" +
-            "String getProperty1(param){}\n" +
-            "void getProperty2(){}\n" +
-            "boolean isProperty3(param){}\n" +
-            "String isProperty4(){}\n" +
-            "void isProperty5(){}\n" +
-            "void setProperty6(){}\n" +
-            "void setProperty7(param1, param2){}\n" +
-            "String setProperty8(param){}\n" +
-            "\n" +
-            "// no underlines and yes content assist\n" +
-            "def setProperty1a(param) {}\n" +
-            "void setProperty2a(param) {}\n" +
-            "def getProperty3a() {}\n" +
-            "boolean isProperty4a() {}\n" +
-            "\n" +
-            "property1\n" +
-            "property2\n" +
-            "property3\n" +
-            "property4\n" +
-            "property5\n" +
-            "property6\n" +
-            "property7\n" +
-            "property8\n" +
-            "\n" +
-            "property1a = 1\n" +
-            "property2a = 2\n" +
-            "property3a\n" +
-            "property4a \n" +
-            "\n" +
-            "class Cat {\n" +
-            "    // yes underlines and no content assist\n" +
-            "    static String getPropertyCat1(Search self, param){}\n" +
-            "    static void getPropertyCat2(Search self){}\n" +
-            "    static boolean isPropertyCat3(Search self, param){}\n" +
-            "    static String isPropertyCat4(Search self){}\n" +
-            "    static void isPropertyCat5(Search self){}\n" +
-            "    static void setPropertyCat6(Search self){}\n" +
-            "    static void setPropertyCat7(Search self, param1, param2){}\n" +
-            "    static String setPropertyCat8(Search self, param){}\n" +
-            "    static def isPropertyCat9(Search self) {}\n" +
-            "    def getPropertyCat10(File self) {}\n" +
+            "class Foo {\n" +
+            "  // yes underlines and no content assist\n" +
+            "  String  getProperty1(param) {}\n" +
+            "  void    getProperty2() {}\n" +
+            "  boolean isProperty3(param) {}\n" +
+            "  String  isProperty4() {}\n" +
+            "  void    isProperty5() {}\n" +
+            "  void    setProperty6() {}\n" +
+            "  void    setProperty7(param1, param2) {}\n" +
+            "  \n" +
+            "  // no underlines and yes content assist\n" +
+            "  def     setProperty1a(param) {}\n" +
+            "  void    setProperty2a(param) {}\n" +
+            "  String  setProperty3a(param) {}\n" +
+            "  def     getProperty4a() {}\n" +
+            "  boolean isProperty5a() {}\n" +
+            "  \n" +
+            "  void method() {\n" +
+            "    property1\n" +
+            "    property2\n" +
+            "    property3\n" +
+            "    property4\n" +
+            "    property5\n" +
+            "    property6 = null\n" +
+            "    property7 = null\n" +
+            "    property8 = null\n" +
             "    \n" +
-            "    // no underlines and yes content assist\n" +
-            "    static def setPropertyCat1a(Search self, param) {}\n" +
-            "    static void setPropertyCat2a(Search self, param) {}\n" +
-            "    static def getPropertyCat3a(Search self) {}\n" +
-            "}\n" +
-            "use (Cat) {\n" +
-            "    propertyCat1\n" +
-            "    propertyCat2\n" +
-            "    propertyCat3 \n" +
-            "    propertyCat4\n" +
-            "    propertyCat5\n" +
-            "    propertyCat6\n" +
-            "    propertyCat7\n" +
-            "    propertyCat8\n" +
-            "    propertyCat9\n" +
-            "    \n" +
-            "    propertyCat1a\n" +
-            "    propertyCat2a\n" +
-            "    propertyCat3a\n" +
-            "}";
+            "    property1a = null\n" +
+            "    property2a = null\n" +
+            "    property3a = null\n" +
+            "    property4a\n" +
+            "    property5a\n" +
+            "  }\n" +
+            "}\n";
 
         assertUnknown(contents, "property1");
         assertUnknown(contents, "property2");
@@ -158,7 +129,51 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
         assertUnknown(contents, "property5");
         assertUnknown(contents, "property6");
         assertUnknown(contents, "property7");
-        assertUnknown(contents, "property8");
+
+        assertKnown(contents, "property1a", "Foo");
+        assertKnown(contents, "property2a", "Foo");
+        assertKnown(contents, "property3a", "Foo");
+        assertKnown(contents, "property4a", "Foo");
+    }
+
+    @Test
+    public void testSyntheticAccessors5() {
+        String contents =
+            "class Cat {\n" +
+            "  // yes underlines and no content assist\n" +
+            "  static String  getPropertyCat1(Search self, param) {}\n" +
+            "  static void    getPropertyCat2(Search self) {}\n" +
+            "  static void    setPropertyCat3(Search self) {}\n" +
+            "  static void    setPropertyCat4(Search self, param1, param2) {}\n" +
+            "  static boolean isPropertyCat5(Search self, param) {}\n" +
+            "  static Boolean isPropertyCat6(Search self) {}\n" +
+            "  static String  isPropertyCat7(Search self) {}\n" +
+            "  static void    isPropertyCat8(Search self) {}\n" +
+            "  static def     isPropertyCat9(Search self) {}\n" +
+            "  \n" +
+            "  // no underlines and yes content assist\n" +
+            "  static def     setPropertyCat1a(Search self, param) {}\n" +
+            "  static void    setPropertyCat2a(Search self, param) {}\n" +
+            "  static String  setPropertyCat3a(Search self, param) {}\n" + // https://github.com/groovy/groovy-eclipse/issues/1025
+            "  static def     getPropertyCat4a(Search self) {}\n" +
+            "}\n" +
+            "use (Cat) {\n" +
+            "  propertyCat1\n" +
+            "  propertyCat2\n" +
+            "  propertyCat3\n" +
+            "  propertyCat4\n" +
+            "  propertyCat5\n" +
+            "  propertyCat6\n" +
+            "  propertyCat7\n" +
+            "  propertyCat8\n" +
+            "  propertyCat9\n" +
+            "  \n" +
+            "  propertyCat1a = null\n" +
+            "  propertyCat2a = null\n" +
+            "  propertyCat3a = null\n" +
+            "  propertyCat4a\n" +
+            "}";
+
         assertUnknown(contents, "propertyCat1");
         assertUnknown(contents, "propertyCat2");
         assertUnknown(contents, "propertyCat3");
@@ -169,13 +184,9 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
         assertUnknown(contents, "propertyCat8");
         assertUnknown(contents, "propertyCat9");
 
-        assertKnown(contents, "property1a", DEFAULT_UNIT_NAME);
-        assertKnown(contents, "property2a", DEFAULT_UNIT_NAME);
-        assertKnown(contents, "property3a", DEFAULT_UNIT_NAME);
-        assertKnown(contents, "property4a", DEFAULT_UNIT_NAME);
-
         assertKnown(contents, "propertyCat1a", "Cat");
         assertKnown(contents, "propertyCat2a", "Cat");
         assertKnown(contents, "propertyCat3a", "Cat");
+        assertKnown(contents, "propertyCat4a", "Cat");
     }
 }

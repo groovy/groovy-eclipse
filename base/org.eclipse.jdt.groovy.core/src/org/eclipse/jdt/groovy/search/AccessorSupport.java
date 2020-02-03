@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,18 +42,14 @@ public enum AccessorSupport {
     }
 
     public boolean isAccessorKind(MethodNode node, boolean isCategory) {
-        int paramCount = (isCategory ? 1 : 0);
-        ClassNode returnType = node.getReturnType();
+        Parameter[] parameters = node.getParameters();
         switch (this) {
-        case GETTER:
-            return (node.getParameters() == null || node.getParameters().length == paramCount) &&
-                !VariableScope.VOID_CLASS_NODE.equals(returnType);
         case SETTER:
-            return node.getParameters() != null && node.getParameters().length == paramCount + 1 &&
-                (VariableScope.VOID_CLASS_NODE.equals(returnType) || VariableScope.OBJECT_CLASS_NODE.equals(returnType));
+            return parameters != null && parameters.length == (!isCategory ? 1 : 2);
+        case GETTER:
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
         case ISSER:
-            return !isCategory && (node.getParameters() == null || node.getParameters().length == paramCount) &&
-                ClassHelper.boolean_TYPE.equals(returnType);
+            return !isCategory && (parameters == null || parameters.length == 0) && ClassHelper.boolean_TYPE.equals(node.getReturnType());
         default:
             return false;
         }
@@ -117,15 +113,14 @@ public enum AccessorSupport {
      *         method starting <tt>get<i>Something</i></tt> with a non-void return type and taking no parameters
      */
     public static boolean isGetter(MethodNode node) {
-        return (!node.isVoidMethod() && node.getParameters().length == 0 &&
+        return !node.isVoidMethod() && node.getParameters().length == 0 &&
             ((node.getName().startsWith("get") && node.getName().length() > 3) ||
-                (node.getName().startsWith("is") && node.getName().length() > 2)));
+                (node.getName().startsWith("is") && node.getName().length() > 2));
     }
 
     public static boolean isSetter(MethodNode node) {
-        return (/*node.isVoidMethod() &&*/ node.getParameters().length == 1 &&
-            node.getName().startsWith("set") && node.getName().length() > 3);
-        // TODO: not varagrs?
+        return node.getParameters().length == 1 &&
+            (node.getName().startsWith("set") && node.getName().length() > 3);
     }
 
     public static AccessorSupport create(String methodName, boolean isCategory) {
