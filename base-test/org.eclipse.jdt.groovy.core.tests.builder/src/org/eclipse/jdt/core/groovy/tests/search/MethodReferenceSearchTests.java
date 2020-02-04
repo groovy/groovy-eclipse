@@ -515,8 +515,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "package foo\n" +
             "class Bar {\n" +
             "  static String string\n" +
-            "  static String getString() {\n" +
-            "  }\n" +
+            "  static String getString() {}\n" +
             "}\n");
         GroovyCompilationUnit baz = createUnit("foo", "Baz",
             "package foo\n" +
@@ -650,6 +649,55 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(SearchMatch.A_ACCURATE, match.getAccuracy());
         offset = String.valueOf(baz.getContents()).lastIndexOf("value");
         assertEquals(offset, match.getOffset());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1027
+    public void testExplicitPropertyGetterSearch4() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "//static Boolean bool\n" + //TODO
+            "  static Boolean isBool() {}\n" +
+            "}\n");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "import static foo.Bar.isBool as blah\n" + // exact
+            "import static foo.Bar.isBool as isXy\n" + // exact
+            "flag = Bar.isBool()\n" + // exact
+            "flag = Bar.'isBool'()\n" + // exact
+            "flag = Bar.bool\n" + // exact
+            "flag = Bar.@bool\n" +
+            "func = Bar.&isBool\n" + // potential (may evaluate as category method)
+            "flag = blah()\n" + // exact
+            "flag = xy\n"); // exact
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(8, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("isBool as blah"), matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("isBool as isXy"), matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("isBool()"), matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'isBool'"), matches.get(3).getOffset());
+
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.bool") + 4, matches.get(4).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(5).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("Bar.&isBool") + 5, matches.get(5).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(6).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("blah"), matches.get(6).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(7).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("xy"), matches.get(7).getOffset());
     }
 
     @Test

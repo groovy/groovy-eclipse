@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Tests specific bug reports.
- */
 final class OtherCompletionTests extends CompletionTestSuite {
 
     @Before
@@ -33,16 +30,16 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-414
     void testNoIndexOutOfBoundsException() {
         String contents = '''\
-            public class Test {
-              int i
-              Test() {
-                this.i = 42
-              }
-              Test(Test other) {
-                this.i = other.i
-              }
-            }
-            '''.stripIndent()
+            |class Test {
+            |  int i
+            |  Test() {
+            |    this.i = 42
+            |  }
+            |  Test(Test other) {
+            |    this.i = other.i
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
         proposalExists(proposals, 'i', 1)
     }
@@ -50,36 +47,61 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test
     void testCategoryMethodDisplayString() {
         addJavaSource '''\
-            public class StringExtension {
-              public static String bar(String self) {
-                return self;
-              }
-            }
-            '''.stripIndent(), 'StringExtension'
+            |public class StringExtension {
+            |  public static String bar(String self) {
+            |    return self;
+            |  }
+            |}
+            |'''.stripMargin(), 'StringExtension'
 
         String contents = '''\
-            public class MyClass {
-              public void foo() {
-                String foo = 'foo'
-                use (StringExtension) {
-                  foo.bar()
-                }
-                this.collect
-              }
-            }
-            '''.stripIndent()
+            |class Test {
+            |  void meth() {
+            |    String foo = 'foo'
+            |    use (StringExtension) {
+            |      foo.bar()
+            |    }
+            |    this.collect
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
         ICompletionProposal proposal = findFirstProposal(proposals, 'bar')
         assert proposal.displayString == 'bar() : String - StringExtension (Groovy)'
 
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
-        Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->
+        Arrays.sort(proposals) { ICompletionProposal o1, ICompletionProposal o2 ->
             o2.displayString <=> o1.displayString
-        })
+        }
         proposalExists(proposals, 'collect', 3)
         assert proposals[0].displayString == 'collect(Collection<T> collector, Closure<? extends T> transform) : Collection<T> - DefaultGroovyMethods (Groovy)'
         assert proposals[1].displayString == 'collect(Closure<T> transform) : List<T> - DefaultGroovyMethods (Groovy)'
         assert proposals[2].displayString == 'collect() : Collection - DefaultGroovyMethods (Groovy)'
+    }
+
+    @Test // GROOVY-5245
+    void testCategoryMethodPropertyFilter() {
+        addJavaSource '''\
+            |public class StringExtension {
+            |  public static boolean isBar(String self) {
+            |    return self;
+            |  }
+            |}
+            |'''.stripMargin(), 'StringExtension'
+
+        String contents = '''\
+            |class Test {
+            |  void meth() {
+            |    String foo = 'foo'
+            |    use (StringExtension) {
+            |      foo.ba
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
+        proposalExists(proposals, 'isBar()', 1)
+        proposalExists(proposals, 'bar', 0)
     }
 
     @Test
@@ -120,31 +142,31 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers1() {
         String contents = 'class A { static { aa }\n static aaaa }'
-        applyProposalAndCheck(checkUniqueProposal(contents, '{ aa', 'aaaa'), contents.replace('{ aa }', '{ aaaa }'));
+        applyProposalAndCheck(checkUniqueProposal(contents, '{ aa', 'aaaa'), contents.replace('{ aa }', '{ aaaa }'))
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers2() {
         String contents = 'class A { static {  }\n static aaaa }'
-        applyProposalAndCheck(checkUniqueProposal(contents, 'static { ', 'aaaa'), contents.replace('{  }', '{ aaaa }'));
+        applyProposalAndCheck(checkUniqueProposal(contents, 'static { ', 'aaaa'), contents.replace('{  }', '{ aaaa }'))
     }
 
     @Test
     void testContentAssistInStaticInitializers3() {
         String contents = 'class A { static { getCan } }'
-        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'));
+        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'))
     }
 
     @Test
     void testContentAssistInStaticInitializers4() {
         String contents = 'class A { public static final String NAME = getCan }'
-        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'));
+        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/374
     void testContentAssistInStaticInitializers5() {
         String contents = 'class A { public static final String NAME = canNam }'
-        applyProposalAndCheck(checkUniqueProposal(contents, 'canNam', 'canonicalName', 'this.canonicalName'), contents.replace('canNam', 'this.canonicalName'));
+        applyProposalAndCheck(checkUniqueProposal(contents, 'canNam', 'canonicalName', 'this.canonicalName'), contents.replace('canNam', 'this.canonicalName'))
     }
 
     @Test
@@ -199,7 +221,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test
     void testArrayCompletion4() {
-        String contents = 'class XX { \nXX[] xx\nXX yy }\nnew XX().getXx()[0].x'
+        String contents = 'class XX {\n XX[] xx\n XX yy\n}\nnew XX().getXx()[0].x'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         checkReplacementString(proposals, 'xx', 1)
     }
@@ -351,12 +373,12 @@ final class OtherCompletionTests extends CompletionTestSuite {
     void testSwitchCompletion1() {
         addGroovySource('enum E { ONE, TWO, THREE }', 'E', 'p')
         String contents = '''\
-            void meth(p.E e) {
-              switch (e) {
-              case E
-              }
-            }
-            '''.stripIndent()
+            |void meth(p.E e) {
+            |  switch (e) {
+            |  case E
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'E'))
         proposalExists(proposals, 'E - p', 1)
     }
@@ -364,13 +386,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/762
     void testSwitchCompletion2() {
         String contents = '''\
-            enum E { ONE, TWO, THREE }
-            void meth(E e) {
-              switch (e) {
-              case E.T
-              }
-            }
-            '''.stripIndent()
+            |enum E { ONE, TWO, THREE }
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'T'))
         proposalExists(proposals, 'THREE', 1)
         proposalExists(proposals, 'TWO', 1)
@@ -387,20 +409,20 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/371
     void testCompileStaticCompletion1() {
         String contents = '''\
-            import groovy.transform.*
-            class Bean {
-              URL url
-            }
-            class Main {
-              @CompileStatic
-              static main(args) {
-                Bean b = new Bean()
-                b.with {
-                  url.
-                }
-              }
-            }
-            '''.stripIndent()
+            |import groovy.transform.*
+            |class Bean {
+            |  URL url
+            |}
+            |class Main {
+            |  @CompileStatic
+            |  static main(args) {
+            |    Bean b = new Bean()
+            |    b.with {
+            |      url.
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
         proposalExists(proposals, 'getProtocol', 1)
         proposalExists(proposals, 'protocol', 1)
@@ -409,20 +431,20 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/371
     void testCompileStaticCompletion2() {
         String contents = '''\
-            import groovy.transform.*
-            class Bean {
-              URL url
-            }
-            class Main {
-              @CompileStatic
-              static main(args) {
-                Bean b = new Bean()
-                b.with {
-                  url.pr
-                }
-              }
-            }
-            '''.stripIndent()
+            |import groovy.transform.*
+            |class Bean {
+            |  URL url
+            |}
+            |class Main {
+            |  @CompileStatic
+            |  static main(args) {
+            |    Bean b = new Bean()
+            |    b.with {
+            |      url.pr
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.pr'))
         proposalExists(proposals, 'protocol', 1)
     }
@@ -430,20 +452,20 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/391
     void testCompileStaticCompletion3() {
         String contents = '''\
-            import javax.swing.JFrame
-            import groovy.transform.*
-            @CompileStatic
-            enum E {
-              A() {
-                @Override
-                String method(JFrame frame) {
-                  fr
-                }
-              }
-
-              abstract String method(JFrame jf);
-            }
-            '''.stripIndent()
+            |import javax.swing.JFrame
+            |import groovy.transform.*
+            |@CompileStatic
+            |enum E {
+            |  A() {
+            |    @Override
+            |    String method(JFrame frame) {
+            |      fr
+            |    }
+            |  }
+            |
+            |  abstract String method(JFrame jf);
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'fr'))
         proposalExists(proposals, 'frame', 1)
     }

@@ -33,11 +33,13 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 public enum AccessorSupport {
     GETTER("get"), SETTER("set"), ISSER("is"), NONE("");
 
-    private final String prefix;
-
     AccessorSupport(String prefix) {
         this.prefix = prefix;
     }
+
+    private final String prefix;
+
+    //
 
     public boolean isAccessor() {
         return (this != NONE);
@@ -51,17 +53,33 @@ public enum AccessorSupport {
         case SETTER:
             return parameters != null && parameters.length == (!isCategory ? 1 : 2) && (!isCategory || !isVargs(parameters));
         case ISSER:
-            return !isCategory && (parameters == null || parameters.length == 0) && ClassHelper.boolean_TYPE.equals(node.getReturnType());
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && ClassHelper.boolean_TYPE == ClassHelper.getUnwrapper(node.getReturnType());
         default:
             return false;
         }
     }
 
     public String createAccessorName(String name) {
-        if (!name.startsWith(GETTER.prefix) && !name.startsWith(SETTER.prefix) && name.length() > 0) {
+        if (isAccessor() && !name.isEmpty() && !name.startsWith(GETTER.prefix) && !name.startsWith(SETTER.prefix)) {
             return this.prefix + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
         }
         return null;
+    }
+
+    public static AccessorSupport create(String methodName, boolean isCategory) {
+        AccessorSupport accessor = AccessorSupport.NONE;
+
+        for (AccessorSupport kind : AccessorSupport.values()) {
+            if (kind.isAccessor() &&
+                    methodName.startsWith(kind.prefix) &&
+                    methodName.length() > kind.prefix.length() &&
+                    Character.isUpperCase(methodName.charAt(kind.prefix.length()))) {
+                accessor = kind;
+                break;
+            }
+        }
+
+        return accessor;
     }
 
     public static AccessorSupport findAccessorKind(MethodNode node, boolean isCategory) {
@@ -123,22 +141,5 @@ public enum AccessorSupport {
     public static boolean isSetter(MethodNode node) {
         return node.getParameters().length == 1 &&
             (node.getName().startsWith("set") && node.getName().length() > 3);
-    }
-
-    public static AccessorSupport create(String methodName, boolean isCategory) {
-        AccessorSupport accessor = AccessorSupport.NONE;
-        // is is allowed only for non-category methods
-        if (!isCategory && methodName.length() > 2 && methodName.startsWith("is") &&
-                Character.isUpperCase(methodName.charAt(2))) {
-            accessor = AccessorSupport.ISSER;
-        }
-
-        if (!accessor.isAccessor()) {
-            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set")) &&
-                    Character.isUpperCase(methodName.charAt(3))) {
-                accessor = methodName.charAt(0) == 'g' ? AccessorSupport.GETTER : AccessorSupport.SETTER;
-            }
-        }
-        return accessor;
     }
 }
