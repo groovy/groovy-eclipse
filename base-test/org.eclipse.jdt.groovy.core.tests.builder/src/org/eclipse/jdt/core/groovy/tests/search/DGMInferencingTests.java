@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -664,7 +664,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             //@formatter:on
 
         assertExprType(contents, "result", "java.lang.Number");
-        //assertUnknownConfidence(contents, start, end, "java.lang.Object", false);
+        //assertUnknownConfidence(contents, contents.lastIndexOf("dgm"), contents.lastIndexOf("dgm") + 3);
     }
 
     @Test
@@ -687,6 +687,39 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             //@formatter:on
 
         assertExprType(contents, "abs", "java.lang.Integer");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1027
+    public void testDGM52() {
+        String contents =
+            //@formatter:off
+            "def result = '42'.number\n";
+            //@formatter:on
+
+        assertExprType(contents, "number", "java.lang.Boolean");
+        assertDeclType(contents, "number", "org.codehaus.groovy.runtime.StringGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1027
+    public void testDGM53() {
+        String contents =
+            //@formatter:off
+            "def result = ' '.allWhitespace\n";
+            //@formatter:on
+
+        assertExprType(contents, "allWhitespace", "java.lang.Boolean");
+        assertDeclType(contents, "allWhitespace", "org.codehaus.groovy.runtime.StringGroovyMethods");
+    }
+
+    @Test
+    public void testDGM53a() {
+        String contents =
+            //@formatter:off
+            "def result = ' '.&allWhitespace\n";
+            //@formatter:on
+
+        int offset = contents.indexOf("allWhitespace");
+        assertUnknownConfidence(contents, offset, offset + "allWhitespace".length());
     }
 
     @Test // GRECLIPSE-1131

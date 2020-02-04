@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
  * Looks up the type of an expression in the currently applicable categories.
+ * <p>
  * Note: DefaultGroovyMethods are always considered to be an applicable category.
  */
 public class CategoryTypeLookup implements ITypeLookup {
@@ -48,29 +49,27 @@ public class CategoryTypeLookup implements ITypeLookup {
             //
             List<MethodNode> candidates = new ArrayList<>();
 
-            for (ClassNode category : scope.getCategoryNames()) {
-                if (scope.isMethodCall() || isMethodPointer) {
+            if (isMethodPointer || scope.isMethodCall()) {
+                for (ClassNode category : scope.getCategoryNames()) {
                     for (MethodNode method : category.getMethods(simpleName)) {
                         if (isCompatibleCategoryMethod(method, selfType, scope)) {
                             candidates.add(method);
                         }
                     }
                 }
-                String getterName = AccessorSupport.GETTER.createAccessorName(simpleName);
-                if (getterName != null && !isMethodPointer) {
-                    for (MethodNode method : category.getMethods(getterName)) {
-                        if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER &&
-                                isCompatibleCategoryMethod(method, selfType, scope)) {
-                            candidates.add(method);
-                        }
-                    }
-                }
-                String setterName = AccessorSupport.SETTER.createAccessorName(simpleName);
-                if (setterName != null && !isMethodPointer) {
-                    for (MethodNode method : category.getMethods(setterName)) {
-                        if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER &&
-                                isCompatibleCategoryMethod(method, selfType, scope)) {
-                            candidates.add(method);
+            }
+            if (!isMethodPointer) {
+                for (AccessorSupport kind : AccessorSupport.values()) {
+                    String methodName = kind.createAccessorName(simpleName);
+                    if (methodName != null) {
+                        for (ClassNode category : scope.getCategoryNames()) {
+                            for (MethodNode method : category.getMethods(methodName)) {
+                                if (kind.isAccessorKind(method, true) && isCompatibleCategoryMethod(method, selfType, scope) &&
+                                        // GROOVY-5245: isPropName() methods cannot be used for bean-style property expressions
+                                        (kind != AccessorSupport.ISSER || isDefaultGroovyMethod(method, scope) || isDefaultGroovyStaticMethod(method, scope))) {
+                                    candidates.add(method);
+                                }
+                            }
                         }
                     }
                 }
@@ -85,7 +84,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 MethodNode method = selectBestMatch(candidates, argumentTypes);
 
                 TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
-                        isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
+                    isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
                 result.isGroovy = true; // enable semantic highlighting as Groovy method
                 return result;
             }

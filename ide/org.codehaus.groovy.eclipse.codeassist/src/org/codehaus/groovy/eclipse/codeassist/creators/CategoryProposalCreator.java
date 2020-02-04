@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                     }
 
                     if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
-                            hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                            hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType()) &&
+                            (isDefaultCategory || !methodName.startsWith("is"))) { // GROOVY-5245
                         // add property variant of accessor method
                         proposals.add(new CategoryPropertyProposal(method));
                     }
