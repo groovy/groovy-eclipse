@@ -64,6 +64,7 @@ import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -244,15 +245,30 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
      * Adds special accessors and mutators for private fields so that inner classes can get/set them
      */
     private static void addPrivateFieldsAccessors(ClassNode node) {
+        /* GRECLIPSE edit
         Set<ASTNode> accessedFields = (Set<ASTNode>) node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_ACCESS);
         Set<ASTNode> mutatedFields = (Set<ASTNode>) node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_MUTATION);
         if (accessedFields == null && mutatedFields == null) return;
+        */
         Map<String, MethodNode> privateFieldAccessors = (Map<String, MethodNode>) node.getNodeMetaData(PRIVATE_FIELDS_ACCESSORS);
         Map<String, MethodNode> privateFieldMutators = (Map<String, MethodNode>) node.getNodeMetaData(PRIVATE_FIELDS_MUTATORS);
         if (privateFieldAccessors != null || privateFieldMutators != null) {
             // already added
             return;
         }
+        // GRECLIPSE add
+        Set<ASTNode> accessedFields = node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_ACCESS);
+        Set<ASTNode> mutatedFields = node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_MUTATION);
+        if (accessedFields == null && mutatedFields == null) return;
+        // GROOVY-9385: mutation includes access in case of compound assignment or pre/post-increment/decrement
+        if (mutatedFields != null) {
+            if (accessedFields != null) {
+                accessedFields = new HashSet<>(accessedFields); accessedFields.addAll(mutatedFields);
+            } else {
+                accessedFields = mutatedFields;
+            }
+        }
+        // GRECLIPSE end
         int acc = -1;
         privateFieldAccessors = accessedFields != null ? new HashMap<String, MethodNode>() : null;
         privateFieldMutators = mutatedFields != null ? new HashMap<String, MethodNode>() : null;
