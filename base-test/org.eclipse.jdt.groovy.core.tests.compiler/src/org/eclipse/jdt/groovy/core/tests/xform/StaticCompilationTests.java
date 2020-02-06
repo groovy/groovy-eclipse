@@ -3691,4 +3691,73 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "6");
     }
+
+    @Test
+    public void testCompileStatic9385() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      i += 1\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic9385a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      ++i\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic9385b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      i++\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0");
+    }
 }
