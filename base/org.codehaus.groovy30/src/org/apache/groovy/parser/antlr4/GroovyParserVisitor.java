@@ -688,18 +688,18 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitVariableInitializers(@NotNull GroovyParser.VariableInitializersContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#dims}.
+	 * Visit a parse tree produced by {@link GroovyParser#emptyDims}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitDims(@NotNull GroovyParser.DimsContext ctx);
+	Result visitEmptyDims(@NotNull GroovyParser.EmptyDimsContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#dimsOpt}.
+	 * Visit a parse tree produced by {@link GroovyParser#emptyDimsOpt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitDimsOpt(@NotNull GroovyParser.DimsOptContext ctx);
+	Result visitEmptyDimsOpt(@NotNull GroovyParser.EmptyDimsOptContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#type}.
@@ -1337,6 +1337,13 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitCreator(@NotNull GroovyParser.CreatorContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link GroovyParser#dim}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	Result visitDim(@NotNull GroovyParser.DimContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#arrayInitializer}.

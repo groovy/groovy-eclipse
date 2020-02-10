@@ -193,7 +193,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.thisPropX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.findActualTypeByGenericsPlaceholderName;
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeDeclaringAndActualGenericsTypeMap;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeDeclaringAndActualGenericsTypeMapOfExactType;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigIntCategory;
@@ -244,6 +244,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.choose
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsConnections;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsParameterMapOfThis;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.filterMethodsByVisibility;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
@@ -607,7 +608,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 FieldNode fieldNode = (FieldNode) accessedVariable;
                 ClassNode actualType = findActualTypeByGenericsPlaceholderName(
                         fieldNode.getOriginType().getUnresolvedName(),
-                        makeDeclaringAndActualGenericsTypeMap(fieldNode.getDeclaringClass(), typeCheckingContext.getEnclosingClassNode())
+                        makeDeclaringAndActualGenericsTypeMapOfExactType(fieldNode.getDeclaringClass(), typeCheckingContext.getEnclosingClassNode())
                 );
                 if (actualType != null) {
                     storeType(vexp, actualType);
@@ -673,6 +674,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 Object val = pexp.getNodeMetaData(key);
                 if (val != null) vexp.putNodeMetaData(key, val);
             }
+            vexp.removeNodeMetaData(INFERRED_TYPE);
             ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
             storeType(vexp, Optional.ofNullable(type).orElseGet(pexp::getType));
             return true;
@@ -2872,8 +2874,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClosureSignatureHint hintInstance = hint.getDeclaredConstructor().newInstance();
             closureSignatures = hintInstance.getClosureSignatures(
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
-                    typeCheckingContext.source,
-                    typeCheckingContext.compilationUnit,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
                     convertToStringArray(options), expression);
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
@@ -2893,8 +2895,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     arguments,
                     expression,
                     selectedMethod instanceof ExtensionMethodNode ? ((ExtensionMethodNode) selectedMethod).getExtensionMethodNode() : selectedMethod,
-                    typeCheckingContext.source,
-                    typeCheckingContext.compilationUnit,
+                    typeCheckingContext.getSource(),
+                    typeCheckingContext.getCompilationUnit(),
                     convertToStringArray(options));
         } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new GroovyBugError(e);
@@ -2902,8 +2904,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private ClassLoader getTransformLoader() {
-        CompilationUnit compilationUnit = typeCheckingContext.getCompilationUnit();
-        return compilationUnit != null ? compilationUnit.getTransformLoader() : getSourceUnit().getClassLoader();
+        return Optional.ofNullable(typeCheckingContext.getCompilationUnit()).map(CompilationUnit::getTransformLoader).orElseGet(() -> getSourceUnit().getClassLoader());
     }
 
     private void doInferClosureParameterTypes(final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, final Expression resolverClass, final Expression options) {
@@ -3370,12 +3371,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (mn.isEmpty() && typeCheckingContext.getEnclosingClosure() != null && args.length == 0) {
                     // add special handling of getDelegate() and getOwner()
-                    if ("getDelegate".equals(name)) {
-                        mn = Collections.singletonList(GET_DELEGATE);
-                    } else if ("getOwner".equals(name)) {
-                        mn = Collections.singletonList(GET_OWNER);
-                    } else if ("getThisObject".equals(name)) {
-                        mn = Collections.singletonList(GET_THISOBJECT);
+                    switch (name) {
+                        case "getDelegate":
+                            mn = Collections.singletonList(GET_DELEGATE);
+                            break;
+                        case "getOwner":
+                            mn = Collections.singletonList(GET_OWNER);
+                            break;
+                        case "getThisObject":
+                            mn = Collections.singletonList(GET_THISOBJECT);
+                            break;
                     }
                 }
                 if (mn.isEmpty()) {
@@ -4666,7 +4671,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // lookup in DGM methods too
             findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), receiver, name, args, methods);
         }
-        methods = filterMethodsByVisibility(methods);
+        methods = filterMethodsByVisibility(methods, typeCheckingContext.getEnclosingClassNode());
         List<MethodNode> chosen = chooseBestMethod(receiver, methods, args);
         if (!chosen.isEmpty()) return chosen;
 
@@ -4691,10 +4696,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         return EMPTY_METHODNODE_LIST;
-    }
-
-    private List<MethodNode> filterMethodsByVisibility(final List<MethodNode> methodNodeList) {
-        return StaticTypeCheckingSupport.filterMethodsByVisibility(methodNodeList, typeCheckingContext.getEnclosingClassNode());
     }
 
     /**

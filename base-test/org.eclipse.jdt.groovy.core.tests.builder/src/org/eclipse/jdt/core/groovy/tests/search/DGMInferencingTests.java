@@ -1001,7 +1001,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring5() {
         String contents = "new StringBuilder().size()";
-        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+        String vmplugin = isAtLeastGroovy(30) ? "8" : "5";
+        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
@@ -1015,7 +1016,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring7() {
         String contents = "Thread.State.NEW.next().name()";
-        assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+        String vmplugin = isAtLeastGroovy(30) ? "8" : "5";
+        assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
