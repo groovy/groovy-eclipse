@@ -2009,6 +2009,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         try {
             operand.visit(this);
+            // GRECLIPSE add -- GROOVY-9389
+            SetterInfo setterInfo = removeSetterInfo(operand);
+            if (setterInfo != null) {
+                BinaryExpression rewrite = typeCheckingContext.getEnclosingBinaryExpression();
+                rewrite.setSourcePosition(origin);
+                if (ensureValidSetter(rewrite, operand, rewrite.getRightExpression(), setterInfo)) {
+                    return;
+                }
+            }
+            // GRECLIPSE end
             ClassNode operandType = getType(operand);
             boolean isPostfix = (origin instanceof PostfixExpression);
             String name = (operator == PLUS_PLUS ? "next" : operator == MINUS_MINUS ? "previous" : null);
