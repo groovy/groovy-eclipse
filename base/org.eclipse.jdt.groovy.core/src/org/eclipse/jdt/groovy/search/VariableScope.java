@@ -145,220 +145,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     private static ClassNode initializeProperties(ClassNode node) {
         node.getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
             String propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
-            node.addProperty(new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), methodNode.getDeclaringClass(), null, null, null));
+            node.addProperty(new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), null, null, null, null));
         });
         return node;
     }
 
     //--------------------------------------------------------------------------
-
-    public static class VariableInfo {
-        public ASTNode scopeNode;
-        public final String name;
-        public final ClassNode type;
-        public final ClassNode declaringType;
-
-        public VariableInfo(String name, ClassNode type, ClassNode declaringType) {
-            this.name = name;
-            this.type = type;
-            this.declaringType = declaringType;
-        }
-
-        private VariableInfo(VariableInfo info, ASTNode node) {
-            this(info.name, info.type, info.declaringType);
-            this.scopeNode = (info.scopeNode != null ? info.scopeNode : node);
-        }
-
-        public String getTypeSignature() {
-            return GroovyUtils.getTypeSignature(type, /*fully-qualified:*/ true, false);
-        }
-    }
-
-    public static class CallAndType {
-
-        public final ASTNode declaration;
-        public final ClassNode declaringType;
-        public final MethodCallExpression call;
-        private Map<ClosureExpression, Object[]> delegatesTo;
-
-        /**
-         * @param declaringType type that declares {@code declaration} in most cases;
-         *        if {@code call} is a category method it's likely the calling object
-         *        type; if {@code call} is an implicit-this call in a closure, then...
-         */
-        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringType, ModuleNode enclosingModule) {
-            this.call = call;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-
-            // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
-            if (declaration instanceof MethodNode) {
-                MethodNode methodNode = (MethodNode) declaration;
-                Parameter[] parameters = methodNode.getParameters();
-                if (parameters != null && parameters.length > 0) {
-                    List<Expression> arguments = null;
-                    if (call.getArguments() instanceof TupleExpression) {
-                        arguments = ((TupleExpression) call.getArguments()).getExpressions();
-                    }
-                    if (arguments != null && !arguments.isEmpty()) {
-                        if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
-                            List<Expression> categoryMethodArguments = new ArrayList<>(arguments.size() + 1);
-                            categoryMethodArguments.add(new ClassExpression(declaringType));
-                            categoryMethodArguments.addAll(arguments);
-                            arguments = categoryMethodArguments;
-                        }
-                        for (int i = 0, n = parameters.length; i < n; i += 1) {
-                            List<AnnotationNode> annotations = parameters[i].getAnnotations();
-                            if (annotations != null && !annotations.isEmpty()) {
-                                for (AnnotationNode annotation : annotations) {
-                                    if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
-                                            i < arguments.size() && arguments.get(i) instanceof ClosureExpression) {
-                                        ClosureExpression closure = (ClosureExpression) arguments.get(i);
-                                        CompilerConfiguration config = enclosingModule.getUnit().getConfig();
-
-                                        Expression delegatesToType = annotation.getMember("type");
-                                        Expression delegatesToValue = annotation.getMember("value");
-                                        Expression delegatesToTarget = annotation.getMember("target");
-                                        Expression delegatesToStrategy = annotation.getMember("strategy");
-                                        Expression delegatesToGenericTypeIndex = annotation.getMember("genericTypeIndex");
-
-                                        String typeName = null; Integer strategy = null, generics = null;
-                                        if (delegatesToType != null) {
-                                            typeName = (String) evaluateExpression(castX(STRING_CLASS_NODE, delegatesToType), config);
-                                        }
-                                        if (delegatesToStrategy != null) {
-                                            strategy = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToStrategy), config);
-                                        }
-                                        if (delegatesToGenericTypeIndex != null) {
-                                            generics = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), config);
-                                        }
-
-                                        // handle three modes: @DelegatesTo(Type.class), @DelegatesTo(type="pack.Type"), @DelegatesTo(target="name", genericTypeIndex=i)
-                                        if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
-                                            addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
-
-                                        } else if (typeName != null && !typeName.isEmpty()) {
-                                            CompilationUnit compilationUnit = null;
-                                            if (enclosingModule.getContext() instanceof org.codehaus.jdt.groovy.control.EclipseSourceUnit) {
-                                                compilationUnit = ((org.codehaus.jdt.groovy.control.EclipseSourceUnit) enclosingModule.getContext()).resolver.compilationUnit;
-                                            }
-                                            ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
-                                            addDelegatesToClosure(closure, resolved[0], strategy);
-
-                                        } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
-                                            try {
-                                                String targetName = (String) (delegatesToTarget != null ? evaluateExpression(castX(STRING_CLASS_NODE, delegatesToTarget), config) : DelegatesTo.class.getMethod("target").getDefaultValue());
-                                                int j = indexOfDelegatesToTarget(parameters, targetName, config);
-                                                if (j >= 0 && j < arguments.size()) {
-                                                    Expression target = arguments.get(j);
-                                                    ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
-                                                    if (generics != null && generics >= 0 && targetType.getGenericsTypes() != null) {
-                                                        targetType.getGenericsTypes()[generics].getType();
-                                                    }
-                                                    addDelegatesToClosure(closure, targetType, strategy);
-                                                }
-                                            } catch (NoSuchMethodException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // TODO: Remove when minimum supported Groovy runtime is 2.5
-                        if (delegatesTo == null) {
-                            if (arguments.get(0) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("build|do(Later|Outside)|edt(Builder)?") &&
-                                    methodNode.getDeclaringClass().getName().equals("groovy.swing.SwingBuilder")) {
-                                addDelegatesToClosure((ClosureExpression) arguments.get(0), methodNode.getDeclaringClass(), Closure.OWNER_FIRST);
-                            } else if (arguments.size() > 1 && arguments.get(1) instanceof ClosureExpression &&
-                                    methodNode.getName().matches("identity|with") && DGM_CLASS_NODE.equals(methodNode.getDeclaringClass())) {
-                                // prior to Groovy 2.3, "with" lacked @DelegatesTo metadata; same goes for "identity" (see GROOVY-8376)
-                                addDelegatesToClosure((ClosureExpression) arguments.get(1), declaringType, Closure.DELEGATE_FIRST);
-                            }
-                        }
-                    }
-                }
-            }
-            if (delegatesTo == null) {
-                delegatesTo = Collections.emptyMap();
-            }
-        }
-
-        /**
-         * Returns the perceived declaring type of the call, which may differ
-         * from the actual declaring class in case of class/category methods.
-         */
-        public ClassNode getPerceivedDeclaringType() {
-            if (declaringType.equals(CLASS_CLASS_NODE)) {
-                if (declaringType.getGenericsTypes() != null) {
-                    GenericsType genericsType = declaringType.getGenericsTypes()[0];
-                    return genericsType.getType();
-                }
-                return OBJECT_CLASS_NODE;
-            }
-            return declaringType;
-        }
-
-        public ClassNode getDelegateType(ClosureExpression closure) {
-            Object[] tuple = delegatesTo.get(closure);
-            return (tuple != null ? (ClassNode) tuple[0] : null);
-        }
-
-        public int getResolveStrategy(ClosureExpression closure) {
-            Object[] tuple = delegatesTo.get(closure);
-            return (tuple != null && tuple[1] != null ? (Integer) tuple[1] : Closure.OWNER_FIRST);
-        }
-
-        private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
-            if (delegatesTo == null) {
-                delegatesTo = new HashMap<>();
-            }
-            delegatesTo.put(closure, new Object[] {delegateType, resolveStrategy});
-        }
-
-        /**
-         * Finds param with DelegatesTo.Target annotation that has matching value string.
-         */
-        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) throws NoSuchMethodException {
-            for (int i = 0, n = parameters.length; i < n; i += 1) {
-                List<AnnotationNode> annotations = parameters[i].getAnnotations();
-                if (annotations != null && !annotations.isEmpty()) {
-                    for (AnnotationNode annotation : annotations) {
-                        if (annotation.getClassNode().getName().equals("groovy.lang.DelegatesTo$Target")) {
-                            String value = (String) (annotation.getMember("value") != null ? evaluateExpression(castX(STRING_CLASS_NODE, annotation.getMember("value")), config) : DelegatesTo.Target.class.getMethod("value").getDefaultValue());
-                            if (value.equals(target)) {
-                                return i;
-                            }
-                        }
-                    }
-                }
-            }
-            return -1;
-        }
-    }
-
-    /**
-     * Contains state that is shared amongst {@link VariableScope}s
-     */
-    private static class SharedState {
-        /**
-         * this field stores values that need to get passed between parts of the file to another
-         */
-        final Map<String, Object> wormhole = new HashMap<>();
-        /**
-         * the enclosing method call is the one where there are the current node is part of an argument list
-         */
-        final List<CallAndType> enclosingCallStack = new ArrayList<>();
-        /**
-         * Node currently being evaluated, or null if none
-         */
-        final LinkedList<ASTNode> nodeStack = new LinkedList<>();
-        /**
-         * true iff current scope is implicit run method of script
-         */
-        boolean isRunMethod;
-    }
 
     /**
      * Null for the top level scope.
@@ -485,13 +277,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 categories.add(parent.categoryBeingDeclared);
             }
         } else {
-            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class);
-            if (categories == null) {
+            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class, key -> {
                 GrapeAwareGroovyClassLoader gcl = (GrapeAwareGroovyClassLoader) ((ModuleNode) scopeNode).getUnit().getClassLoader();
-                categories = gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
-
-                scopeNode.putNodeMetaData(DefaultGroovyMethods.class, Collections.unmodifiableSet(categories));
-            }
+                return gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
+            });
         }
 
         return categories;
@@ -606,12 +395,20 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public boolean isOwnerStatic() {
-        FieldNode field; MethodNode method;
-        if (isStatic() ||
-                ((field = getEnclosingFieldDeclaration()) != null && field.isStatic()) ||
-                ((method = getEnclosingMethodDeclaration()) != null && method.isStatic())) {
+        if (isStatic()) {
             return true;
         }
+
+        FieldNode field = getEnclosingFieldDeclaration();
+        if (field != null && field.isStatic()) {
+            return true;
+        }
+
+        MethodNode method = getEnclosingMethodDeclaration();
+        if (method != null && method.isStatic()) {
+            return true;
+        }
+
         return false;
     }
 
@@ -745,7 +542,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param declaringType enclosing type declaration of variable
      */
     public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
-       updateVariableImpl(name, type, declaringType);
+        updateVariableImpl(name, type, declaringType);
     }
 
     /**
@@ -852,13 +649,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 }
                 return resolved;
             }
-
         } else if (generic.getLowerBound() != null) {
             // List<? super E> --> List<? super String>
             ClassNode resolved = resolveTypeParameterization(mapper, generic.getLowerBound());
             generic.setLowerBound(resolved);
             generic.setResolved(true);
-
         } else if (generic.getUpperBounds() != null) {
             // List<? extends E> --> List<? extends String>
             ClassNode[] parameterizedTypeUpperBounds = generic.getUpperBounds();
@@ -940,6 +735,33 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return cloneInternal(type, 0);
     }
 
+    /**
+     * Create a copy of this {@link GenericsType}
+     *
+     * @param gt the {@link GenericsType} to copy
+     * @param depth prevent infinite recursion on bad generics
+     */
+    public static GenericsType clone(GenericsType gt, int depth) {
+        GenericsType newgt = new GenericsType();
+        newgt.setType(cloneInternal(gt.getType(), depth + 1));
+        newgt.setLowerBound(cloneInternal(gt.getLowerBound(), depth + 1));
+        ClassNode[] oldUpperBounds = gt.getUpperBounds();
+        if (oldUpperBounds != null) {
+            int n = oldUpperBounds.length;
+            ClassNode[] newUpperBounds = new ClassNode[n];
+            for (int i = 0; i < n; i += 1) {
+                newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
+            }
+            newgt.setUpperBounds(newUpperBounds);
+        }
+        newgt.setName(gt.getName());
+        newgt.setPlaceholder(gt.isPlaceholder());
+        newgt.setWildcard(gt.isWildcard());
+        newgt.setResolved(gt.isResolved());
+        newgt.setSourcePosition(gt);
+        return newgt;
+    }
+
     public static ClassNode clonedMap() {
         ClassNode clone = clone(MAP_CLASS_NODE);
         cleanGenerics(clone.getGenericsTypes()[0]);
@@ -1008,33 +830,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         }
 
         return newType;
-    }
-
-    /**
-     * Create a copy of this {@link GenericsType}
-     *
-     * @param origgt the original {@link GenericsType} to copy
-     * @param depth prevent infinite recursion on bad generics
-     */
-    public static GenericsType clone(GenericsType origgt, int depth) {
-        GenericsType newgt = new GenericsType();
-        newgt.setType(cloneInternal(origgt.getType(), depth + 1));
-        newgt.setLowerBound(cloneInternal(origgt.getLowerBound(), depth + 1));
-        ClassNode[] oldUpperBounds = origgt.getUpperBounds();
-        if (oldUpperBounds != null) {
-            int n = oldUpperBounds.length;
-            ClassNode[] newUpperBounds = new ClassNode[n];
-            for (int i = 0; i < n; i += 1) {
-                newUpperBounds[i] = cloneInternal(oldUpperBounds[i], depth + 1);
-            }
-            newgt.setUpperBounds(newUpperBounds);
-        }
-        newgt.setName(origgt.getName());
-        newgt.setPlaceholder(origgt.isPlaceholder());
-        newgt.setWildcard(origgt.isWildcard());
-        newgt.setResolved(origgt.isResolved());
-        newgt.setSourcePosition(origgt);
-        return newgt;
     }
 
     public static ClassNode newClassClassNode(ClassNode type) {
@@ -1123,14 +918,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @return {@code true} if scope contains an unconditional return
      */
     public boolean isTerminal() {
-        if (scopeNode instanceof BlockStatement ) {
+        if (scopeNode instanceof BlockStatement) {
             return ((BlockStatement) scopeNode).getStatements()
                 .stream().anyMatch(s -> s instanceof ReturnStatement);
         }
         if (scopeNode instanceof ReturnStatement) {
             return true;
         }
-        if (scopeNode instanceof ThrowStatement ) {
+        if (scopeNode instanceof ThrowStatement) {
             // TODO: What about throw? Could be caught by outer scope...
         }
         return false;
@@ -1179,7 +974,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
      * @param useResolved whether or not to use the resolved interfaces
      */
-    public static void findAllInterfaces(ClassNode type, LinkedHashSet<ClassNode> allInterfaces, boolean useResolved) {
+    public static void findAllInterfaces(ClassNode type, Set<ClassNode> allInterfaces, boolean useResolved) {
         if (!useResolved) type = type.redirect();
         boolean isInterface = type.isInterface();
         if (!isInterface || !allInterfaces.contains(type)) {
@@ -1209,9 +1004,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * Creates a type hierarchy for the <code>clazz</code>>, including self.
      * Classes come first and then interfaces.
      * <p>
-     * FIXADE: The ordering of super interfaces will not be the same as in {@link VariableScope#findAllInterfaces(ClassNode, LinkedHashSet, boolean)}. Should we make it the same?
+     * TODO: The ordering of super interfaces will not be the same as in {@link VariableScope#findAllInterfaces}. Should it be the same?
      */
-    public static void createTypeHierarchy(ClassNode type, LinkedHashSet<ClassNode> allClasses, boolean useResolved) {
+    public static void createTypeHierarchy(ClassNode type, Set<ClassNode> allClasses, boolean useResolved) {
         if (!useResolved) {
             type = type.redirect();
         }
@@ -1270,11 +1065,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 // TODO: Is this right for general iterator()?
                 return extractElementType(returnType);
             case "entrySet":
-                {
+                if (true) {
                     GenericsType[] generics = GroovyUtils.getGenericsTypes(returnType);
                     if (generics.length == 1) return generics[0].getType();
                     return GenericsUtils.nonGeneric(ENTRY_CLASS_NODE);
                 }
+                // falls through (not really)
             default:
                 if (GroovyUtils.getBaseType(returnType).isGenericsPlaceHolder()) {
                     return GenericsUtils.nonGeneric(returnType);
@@ -1283,7 +1079,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
         }
 
-    // TODO: Can DGM iterator() method lookup be generalized?
+        // TODO: Can DGM iterator() method lookup be generalized?
 
         // IOGroovyMethods.iterator(T) overloads
         if (GeneralUtils.isOrImplements(type, INPUT_STREAM_CLASS_NODE) ||
@@ -1296,7 +1092,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (MATCHER_CLASS_NODE.equals(type)) {
             return OBJECT_CLASS_NODE;
         }
-        //XmlGroovyMethods.iterator(NodeList): Iterator<Node>
+        // XmlGroovyMethods.iterator(NodeList): Iterator<Node>
 
         // String->String, otherwise assume non-aggregate type
         return type;
@@ -1306,9 +1102,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         ClassNode collectionType, elementType = extractElementType(type);
         if (!GeneralUtils.isOrImplements(type, MAP_CLASS_NODE)) { // end at entry set
             while (GeneralUtils.isOrImplements(elementType, COLLECTION_CLASS_NODE)) {
-                elementType = extractElementType(collectionType = elementType);
-                if (elementType == collectionType) { // no infinite loop
-                    break;
+                collectionType = elementType;
+                elementType = extractElementType(collectionType);
+                if (elementType == collectionType) {
+                    break; // no infinite loop
                 }
             }
         }
@@ -1329,5 +1126,224 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static boolean isVoidOrObject(ClassNode type) {
         return VOID_CLASS_NODE.equals(type) || OBJECT_CLASS_NODE.equals(type);
+    }
+
+    /**
+     * Contains state that is shared amongst {@link VariableScope}s
+     */
+    private static class SharedState {
+        /**
+         * this field stores values that need to get passed between parts of the file to another
+         */
+        private final Map<String, Object> wormhole = new HashMap<>();
+        /**
+         * the enclosing method call is the one where there are the current node is part of an argument list
+         */
+        private final List<CallAndType> enclosingCallStack = new ArrayList<>();
+        /**
+         * Node currently being evaluated, or null if none
+         */
+        private final LinkedList<ASTNode> nodeStack = new LinkedList<>();
+        /**
+         * true iff current scope is implicit run method of script
+         */
+        private boolean isRunMethod;
+    }
+
+    public static class VariableInfo {
+        public ASTNode scopeNode;
+        public final String name;
+        public final ClassNode type;
+        public final ClassNode declaringType;
+
+        public VariableInfo(String name, ClassNode type, ClassNode declaringType) {
+            this.name = name;
+            this.type = type;
+            this.declaringType = declaringType;
+        }
+
+        private VariableInfo(VariableInfo info, ASTNode node) {
+            this(info.name, info.type, info.declaringType);
+            this.scopeNode = (info.scopeNode != null ? info.scopeNode : node);
+        }
+
+        public String getTypeSignature() {
+            return GroovyUtils.getTypeSignature(type, /*fully-qualified:*/ true, false);
+        }
+    }
+
+    public static class CallAndType {
+
+        public final ASTNode declaration;
+        public final ClassNode declaringType;
+        public final MethodCallExpression call;
+        private Map<ClosureExpression, Object[]> delegatesTo;
+
+        /**
+         * @param declaringType type that declares {@code declaration} in most cases;
+         *        if {@code call} is a category method it's likely the calling object
+         *        type; if {@code call} is an implicit-this call in a closure, then...
+         */
+        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringType, ModuleNode enclosingModule) {
+            this.call = call;
+            this.declaration = declaration;
+            this.declaringType = declaringType;
+
+            // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
+            if (declaration instanceof MethodNode) {
+                MethodNode methodNode = (MethodNode) declaration;
+                Parameter[] parameters = methodNode.getParameters();
+                if (parameters != null && parameters.length > 0) {
+                    List<Expression> arguments = null;
+                    if (call.getArguments() instanceof TupleExpression) {
+                        arguments = ((TupleExpression) call.getArguments()).getExpressions();
+                    }
+                    if (arguments != null && !arguments.isEmpty()) {
+                        if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
+                            List<Expression> categoryMethodArguments = new ArrayList<>(arguments.size() + 1);
+                            categoryMethodArguments.add(new ClassExpression(declaringType));
+                            categoryMethodArguments.addAll(arguments);
+                            arguments = categoryMethodArguments;
+                        }
+                        for (int i = 0, n = parameters.length; i < n; i += 1) {
+                            List<AnnotationNode> annotations = parameters[i].getAnnotations();
+                            if (annotations != null && !annotations.isEmpty()) {
+                                for (AnnotationNode annotation : annotations) {
+                                    if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
+                                            i < arguments.size() && arguments.get(i) instanceof ClosureExpression) {
+                                        ClosureExpression closure = (ClosureExpression) arguments.get(i);
+                                        CompilerConfiguration config = enclosingModule.getUnit().getConfig();
+
+                                        Expression delegatesToType = annotation.getMember("type");
+                                        Expression delegatesToValue = annotation.getMember("value");
+                                        Expression delegatesToTarget = annotation.getMember("target");
+                                        Expression delegatesToStrategy = annotation.getMember("strategy");
+                                        Expression delegatesToGenericTypeIndex = annotation.getMember("genericTypeIndex");
+
+                                        String typeName;
+                                        Integer strategy;
+                                        Integer generics;
+
+                                        if (delegatesToType != null) {
+                                            typeName = (String) evaluateExpression(castX(STRING_CLASS_NODE, delegatesToType), config);
+                                        } else {
+                                            typeName = null;
+                                        }
+                                        if (delegatesToStrategy != null) {
+                                            strategy = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToStrategy), config);
+                                        } else {
+                                            strategy = null;
+                                        }
+                                        if (delegatesToGenericTypeIndex != null) {
+                                            generics = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), config);
+                                        } else {
+                                            generics = null;
+                                        }
+
+                                        // handle three modes: @DelegatesTo(Type.class), @DelegatesTo(type="pack.Type"), @DelegatesTo(target="name", genericTypeIndex=i)
+                                        if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                                            addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
+
+                                        } else if (typeName != null && !typeName.isEmpty()) {
+                                            CompilationUnit compilationUnit = null;
+                                            if (enclosingModule.getContext() instanceof org.codehaus.jdt.groovy.control.EclipseSourceUnit) {
+                                                compilationUnit = ((org.codehaus.jdt.groovy.control.EclipseSourceUnit) enclosingModule.getContext()).resolver.compilationUnit;
+                                            }
+                                            ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
+                                            addDelegatesToClosure(closure, resolved[0], strategy);
+
+                                        } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
+                                            try {
+                                                String targetName = (String) (delegatesToTarget != null ? evaluateExpression(castX(STRING_CLASS_NODE, delegatesToTarget), config) : DelegatesTo.class.getMethod("target").getDefaultValue());
+                                                int j = indexOfDelegatesToTarget(parameters, targetName, config);
+                                                if (j >= 0 && j < arguments.size()) {
+                                                    Expression target = arguments.get(j);
+                                                    ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
+                                                    if (generics != null && generics >= 0 && targetType.getGenericsTypes() != null) {
+                                                        targetType.getGenericsTypes()[generics].getType();
+                                                    }
+                                                    addDelegatesToClosure(closure, targetType, strategy);
+                                                }
+                                            } catch (NoSuchMethodException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // TODO: Remove when minimum supported Groovy runtime is 2.5
+                        if (delegatesTo == null) {
+                            if (arguments.get(0) instanceof ClosureExpression &&
+                                    methodNode.getName().matches("build|do(Later|Outside)|edt(Builder)?") &&
+                                    methodNode.getDeclaringClass().getName().equals("groovy.swing.SwingBuilder")) {
+                                addDelegatesToClosure((ClosureExpression) arguments.get(0), methodNode.getDeclaringClass(), Closure.OWNER_FIRST);
+                            } else if (arguments.size() > 1 && arguments.get(1) instanceof ClosureExpression &&
+                                    methodNode.getName().matches("identity|with") && DGM_CLASS_NODE.equals(methodNode.getDeclaringClass())) {
+                                // prior to Groovy 2.3, "with" lacked @DelegatesTo metadata; same goes for "identity" (see GROOVY-8376)
+                                addDelegatesToClosure((ClosureExpression) arguments.get(1), declaringType, Closure.DELEGATE_FIRST);
+                            }
+                        }
+                    }
+                }
+            }
+            if (delegatesTo == null) {
+                delegatesTo = Collections.emptyMap();
+            }
+        }
+
+        /**
+         * Returns the perceived declaring type of the call, which may differ
+         * from the actual declaring class in case of class/category methods.
+         */
+        public ClassNode getPerceivedDeclaringType() {
+            if (declaringType.equals(CLASS_CLASS_NODE)) {
+                if (declaringType.getGenericsTypes() != null) {
+                    GenericsType genericsType = declaringType.getGenericsTypes()[0];
+                    return genericsType.getType();
+                }
+                return OBJECT_CLASS_NODE;
+            }
+            return declaringType;
+        }
+
+        public ClassNode getDelegateType(ClosureExpression closure) {
+            Object[] tuple = delegatesTo.get(closure);
+            return (tuple != null ? (ClassNode) tuple[0] : null);
+        }
+
+        public int getResolveStrategy(ClosureExpression closure) {
+            Object[] tuple = delegatesTo.get(closure);
+            return (tuple != null && tuple[1] != null ? (Integer) tuple[1] : Closure.OWNER_FIRST);
+        }
+
+        private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
+            if (delegatesTo == null) {
+                delegatesTo = new HashMap<>();
+            }
+            delegatesTo.put(closure, new Object[] {delegateType, resolveStrategy});
+        }
+
+        /**
+         * Finds param with DelegatesTo.Target annotation that has matching value string.
+         */
+        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) throws NoSuchMethodException {
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
+                List<AnnotationNode> annotations = parameters[i].getAnnotations();
+                if (annotations != null && !annotations.isEmpty()) {
+                    for (AnnotationNode annotation : annotations) {
+                        if (annotation.getClassNode().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                            String value = (String) (annotation.getMember("value") != null
+                                ? evaluateExpression(castX(STRING_CLASS_NODE, annotation.getMember("value")), config)
+                                : DelegatesTo.Target.class.getMethod("value").getDefaultValue());
+                            if (value.equals(target)) {
+                                return i;
+                            }
+                        }
+                    }
+                }
+            }
+            return -1;
+        }
     }
 }

@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -316,7 +317,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
                 // concrete types (without mixins/traits) return all methods from getMethods(String)
                 if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
-                    LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
+                    Set<ClassNode> hierarchy = new LinkedHashSet<>();
                     VariableScope.createTypeHierarchy(classNode, hierarchy, false);
                     hierarchy.forEach(type -> candidates.addAll(type.getMethods(methodName)));
                 } else {
@@ -581,7 +582,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
                 for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {
                     if (parameter.getName().equals(var.getName())) {
-                        candidate = parameter; break;
+                        candidate = parameter;
+                        break;
                     }
                 }
             }
@@ -629,7 +631,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor.get();
         }
 
-        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<>();
+        Set<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
 
         // look for property
@@ -706,7 +708,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // abstract types may not return all methods from getMethods(String)
-        LinkedHashSet<ClassNode> types = new LinkedHashSet<>();
+        Set<ClassNode> types = new LinkedHashSet<>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
         if (!implementsTrait(declaringType))
