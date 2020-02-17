@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
-
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getBaseType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -653,11 +651,11 @@ public class OrganizeGroovyImports {
          * that the import will be retained if the type is resolved.
          */
         private void handleTypeReference(ClassNode node, boolean isAnnotation) {
-            ClassNode type = getBaseType(node);
-            String name = getTypeName(type);
-            if (type.isPrimitive()) {
+            ClassNode type = GroovyUtils.getBaseType(node);
+            if (ClassHelper.isPrimitiveType(type)) {
                 return;
             }
+            String name = getTypeName(type);
 
             GenericsType[] generics = type.getGenericsTypes();
             int start = node.getNameStart(),
@@ -743,7 +741,7 @@ public class OrganizeGroovyImports {
         }
 
         private String getTypeName(ClassNode node) {
-            ClassNode type = getBaseType(node);
+            ClassNode type = GroovyUtils.getBaseType(node);
             // unresolved name may have dots and/or dollars (e.g. 'a.b.C$D' or 'C$D' or even 'C.D')
             if (!type.getName().matches(".*\\b" + type.getUnresolvedName().replace('$', '.'))) {
                 // synch up name and unresolved name (e.g. 'java.util.Map$Entry as Foo$Entry')

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -593,7 +593,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             synchronized (this) {
                 if ((bits & INNER_TYPES_INITIALIZED) == 0) {
                     bits |= INNER_TYPES_INITIALIZED;
-                    if (mightHaveInners()) {
+                    if (jdtBinding.hasMemberTypes()) {
                         // workaround for https://github.com/groovy/groovy-eclipse/issues/714
                         if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && Traits.isTrait(this)) {
                             ReferenceBinding[] memberTypes = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding);
@@ -666,17 +666,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public boolean isPrimitive() {
-        return false;
-    }
-
-    @Override
     public boolean isResolved() {
         return true; // JDTClassNode created because of a JDT ReferenceBinding, so it is always "resolved" (although not initialized upon creation)
-    }
-
-    @Override
-    public boolean mightHaveInners() {
-        return jdtBinding.hasMemberTypes();
     }
 }

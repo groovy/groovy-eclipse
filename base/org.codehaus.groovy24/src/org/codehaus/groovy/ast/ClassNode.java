@@ -165,23 +165,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
 
-    // GRECLIPSE add
-    private int bitflags = 0x0000;
-    private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
-
-    public boolean hasInconsistentHierarchy() {
-        return ((redirect().bitflags) & BIT_INCONSISTENT_HIERARCHY) != 0;
-    }
-
-    public void setHasInconsistentHierarchy(boolean b) {
-        if (b) {
-            redirect().bitflags |= BIT_INCONSISTENT_HIERARCHY;
-        } else {
-            redirect().bitflags &= ~BIT_INCONSISTENT_HIERARCHY;
-        }
-    }
-    // GRECLIPSE end
-
     /**
      * The ASTTransformations to be applied to the Class
      */
@@ -196,8 +179,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
     // not null if if the ClassNode is an array
-    // GRECLIPSE private->protected
-    protected ClassNode componentType;
+    private ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
     private ClassNode redirect;
@@ -205,8 +187,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean annotated;
 
     // type spec for generics
-    // GRECLIPSE private->protected
-    protected GenericsType[] genericsTypes;
+    private GenericsType[] genericsTypes;
     private boolean usesGenerics;
 
     // if set to true the name getGenericsTypes consists
@@ -282,7 +263,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     private static String computeArrayName(ClassNode componentType) {
         String n = componentType.getName();
-        if (componentType.isPrimitive()) {
+        if (ClassHelper.isPrimitiveType(componentType)) {
             int len=n.length();
             if (len==7) {
                 // boolean
@@ -1656,31 +1637,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (innerClasses == null ? Collections.<InnerClassNode>emptyList() : innerClasses).iterator();
     }
 
-    // GRECLIPSE add
-    public boolean hasClass() {
-        return (clazz != null || (redirect != null && redirect.hasClass()));
-    }
-
-    public boolean isPrimitive() {
-        return (clazz != null && clazz.isPrimitive());
-    }
-
-    public boolean mightHaveInners() {
-        return (hasClass() || getInnerClasses().hasNext());
-    }
-
-    /**
-     * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
-     */
-    public int getNameStart2() {
-        return nameStart > 0 ? nameStart : getStart();
-    }
-    public void setNameStart2(int offset) {
-        nameStart = offset;
-    }
-    private int nameStart;
-    // GRECLIPSE end
-
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {
         if (transformInstances == null) {
             transformInstances = new EnumMap<CompilePhase, Map<Class <? extends ASTTransformation>, Set<ASTNode>>>(CompilePhase.class);
@@ -1692,11 +1648,45 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
     
     public boolean isRedirectNode() {
-        return redirect!=null;
+        return (redirect != null);
     }
 
     @Override
     public String getText() {
         return getName();
     }
+
+    // GRECLIPSE add
+    public boolean hasClass() {
+        return (clazz != null || (redirect != null && redirect.hasClass()));
+    }
+
+    public boolean hasInconsistentHierarchy() {
+        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
+    }
+
+    public void setHasInconsistentHierarchy(boolean b) {
+        if (b) {
+            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
+        } else {
+            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
+        }
+    }
+
+    private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
+
+    private int bits;
+    private int nameStart;
+
+    /**
+     * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
+     */
+    public int getNameStart2() {
+        return nameStart > 0 ? nameStart : getStart();
+    }
+
+    public void setNameStart2(int offset) {
+        nameStart = offset;
+    }
+    // GRECLIPSE end
 }

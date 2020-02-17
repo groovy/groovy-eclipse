@@ -1034,7 +1034,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             ClassNode type = ClassHelper.make(className);
             if (resolve(type)) {
                 // GRECLIPSE add
-                if (type instanceof ImmutableClassNode && !type.isPrimitive()) {
+                if (type instanceof ImmutableClassNode && !ClassHelper.isPrimitiveType(type)) {
                     ClassNode wrapper = ClassHelper.makeWithoutCaching(className);
                     wrapper.setRedirect(type);
                     type = wrapper;

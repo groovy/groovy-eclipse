@@ -804,7 +804,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param depth stack overflow prevention
      */
     private static ClassNode cloneInternal(ClassNode type, int depth) {
-        if (type == null || type.isPrimitive()) {
+        if (type == null || ClassHelper.isPrimitiveType(type)) {
             return type;
         }
         ClassNode newType = type.getPlainNodeReference();

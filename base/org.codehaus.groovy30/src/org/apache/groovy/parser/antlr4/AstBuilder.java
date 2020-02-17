@@ -766,7 +766,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
-        if (node instanceof ImmutableClassNode && !node.isPrimitive()) {
+        if (node instanceof ImmutableClassNode && !ClassHelper.isPrimitiveType(node)) {
             ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
             wrapper.setRedirect(node);
             node = wrapper;

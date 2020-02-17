@@ -1857,7 +1857,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 pos -= 2;
                 componentType = componentType.getComponentType();
             }
-            if (componentType.isPrimitive()) {
+            if (ClassHelper.isPrimitiveType(componentType)) {
                 Integer typeId = charToTypeId.get(name.charAt(dim));
                 if (typeId == null) {
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
@@ -1901,7 +1901,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 dim += 1;
                 componentType = componentType.getComponentType();
             }
-            if (componentType.isPrimitive()) {
+            if (ClassHelper.isPrimitiveType(componentType)) {
                 Integer typeId = charToTypeId.get(name.charAt(dim));
                 if (typeId == null) {
                     throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not!");
