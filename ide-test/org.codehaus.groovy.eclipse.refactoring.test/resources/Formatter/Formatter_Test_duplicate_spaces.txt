@@ -15,6 +15,9 @@ public   abstract   class  EmailCommand   extends   Command   implements   Seria
 			println    "test"
 		}
 		
+		def a=i<2
+		def b=1<2
+		
 		return  1  <2  &&  2>=  1   
 	}
 }
@@ -32,6 +35,9 @@ public abstract class EmailCommand extends Command implements Serializable,
 		if (array.length >= 3) {
 			println "test"
 		}
+
+		def a = i < 2
+		def b = 1 < 2
 
 		return 1 < 2 && 2 >= 1
 	}

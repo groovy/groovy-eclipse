@@ -11,7 +11,7 @@ def message = "${foo([])}"
 ###exp
 class FormatTest {
 
-	def test () {
+	def test() {
 		def message = "${foo([])}"
 	}
 }
