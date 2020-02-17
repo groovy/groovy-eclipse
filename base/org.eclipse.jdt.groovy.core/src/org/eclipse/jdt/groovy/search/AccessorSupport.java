@@ -18,7 +18,6 @@ package org.eclipse.jdt.groovy.search;
 import static org.eclipse.jdt.groovy.search.GenericsMapper.isVargs;
 
 import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -108,7 +107,7 @@ public enum AccessorSupport {
 
                 // abstract types do not track undeclared abstract methods
                 if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
-                    Set<ClassNode> faces = new LinkedHashSet<>();
+                    LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {

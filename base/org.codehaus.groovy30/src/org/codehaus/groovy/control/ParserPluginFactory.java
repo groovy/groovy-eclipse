@@ -18,59 +18,35 @@
  */
 package org.codehaus.groovy.control;
 
-import org.apache.groovy.parser.antlr4.AstBuilder;
-import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.control.io.StringReaderSource;
-import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.groovy.syntax.ParserException;
 import org.codehaus.groovy.syntax.Reduction;
-
-import java.io.IOException;
-import java.io.Reader;
 
 /**
  * A factory of parser plugin instances.
  */
 public abstract class ParserPluginFactory {
-
-    public abstract ParserPlugin createParserPlugin();
-
     /**
      * Creates the ANTLR 4 parser.
      *
      * @return the factory for the parser
      */
-    public static ParserPluginFactory antlr4() {
+    public static ParserPluginFactory antlr4(final CompilerConfiguration compilerConfiguration) {
         /* GRECLIPSE edit
-        return new Antlr4PluginFactory();
+        return new Antlr4PluginFactory(compilerConfiguration);
         */
         return new ParserPluginFactory() {
             @Override
             public ParserPlugin createParserPlugin() {
                 return new ParserPlugin() {
                     @Override
-                    public Reduction parseCST(final SourceUnit sourceUnit, final Reader reader) throws CompilationFailedException {
-                        if (!sourceUnit.getSource().canReopenSource()) {
-                            try {
-                                sourceUnit.setSource(new StringReaderSource(
-                                    IOGroovyMethods.getText(reader),
-                                    sourceUnit.getConfiguration()
-                                ));
-                            } catch (IOException e) {
-                                throw new GroovyBugError("Failed to create StringReaderSource", e);
-                            }
-                        }
+                    public Reduction parseCST(final SourceUnit sourceUnit, final java.io.Reader reader) throws CompilationFailedException {
                         return null;
                     }
                     @Override
                     public ModuleNode buildAST(final SourceUnit sourceUnit, final ClassLoader classLoader, final Reduction cst) throws ParserException {
                         assert sourceUnit.getSource() != null && sourceUnit.getSource().canReopenSource();
-                        return new AstBuilder(
-                            sourceUnit,
-                            sourceUnit.getConfiguration().isGroovydocEnabled(),
-                            sourceUnit.getConfiguration().isRuntimeGroovydocEnabled()
-                        ).buildAST();
+                        return new org.apache.groovy.parser.antlr4.AstBuilder(sourceUnit, compilerConfiguration).buildAST();
                     }
                 };
             }
@@ -91,4 +67,6 @@ public abstract class ParserPluginFactory {
         return new org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory();
         // GRECLIPSE end
     }
+
+    public abstract ParserPlugin createParserPlugin();
 }

@@ -1495,9 +1495,6 @@ public static File[][] getLibrariesFiles(File[] files) {
 }
 
 public static void main(String[] argv) {
-	// GROOVY add
-	if (System.getProperty("groovy.antlr4") == null) System.setProperty("groovy.antlr4", "true"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	// GROOVY end
 	new Main(new PrintWriter(System.out), new PrintWriter(System.err), true/*systemExit*/, null/*options*/, null/*progress*/).compile(argv);
 }
 
@@ -1760,6 +1757,9 @@ public boolean compile(String[] argv) {
 		if (this.progress != null)
 			this.progress.begin(this.filenames == null ? 0 : this.filenames.length * this.maxRepetition);
 		if (this.proceed) {
+//				if (this.verbose) {
+//					System.out.println(new CompilerOptions(this.options));
+//				}
 			if (this.showProgress) this.logger.compiling();
 			for (this.currentRepetition = 0; this.currentRepetition < this.maxRepetition; this.currentRepetition++) {
 				this.globalProblemsCount = 0;

@@ -49,6 +49,8 @@ import org.eclipse.text.edits.TextEdit;
 @SuppressWarnings("deprecation")
 public class DefaultGroovyFormatter extends GroovyFormatter {
 
+    private static final boolean DEBUG = true;
+
     protected IFormatterPreferences pref;
     private ModuleNode rootNode;
 
@@ -137,6 +139,10 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
             }
         } catch (Exception e) {
             GroovyCore.logWarning("Cannot format, probably due to compilation errors.  Please fix and try again.", e);
+        }
+
+        if (DEBUG) {
+            System.out.println(formattedDocument.get());
         }
 
         if (formattedDocument.get().equals(document.get())) {

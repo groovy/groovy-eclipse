@@ -36,16 +36,19 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.SpreadExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.classgen.asm.InvocationWriter;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.TypeChooser;
@@ -70,13 +73,6 @@ import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.assignS;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorThisS;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.addMethodGenerics;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.applyGenericsContextToPlaceHolders;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
@@ -242,12 +238,18 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
      * Adds special accessors and mutators for private fields so that inner classes can get/set them.
      */
     private static void addPrivateFieldsAccessors(final ClassNode node) {
+        /* GRECLIPSE edit
+        Set<ASTNode> accessedFields = node.getNodeMetaData(PV_FIELDS_ACCESS);
+        Set<ASTNode> mutatedFields = node.getNodeMetaData(PV_FIELDS_MUTATION);
+        if (accessedFields == null && mutatedFields == null) return;
+        */
         Map<String, MethodNode> privateFieldAccessors = node.getNodeMetaData(PRIVATE_FIELDS_ACCESSORS);
         Map<String, MethodNode> privateFieldMutators = node.getNodeMetaData(PRIVATE_FIELDS_MUTATORS);
         if (privateFieldAccessors != null || privateFieldMutators != null) {
             // already added
             return;
         }
+        // GRECLIPSE add
         Set<ASTNode> accessedFields = node.getNodeMetaData(PV_FIELDS_ACCESS);
         Set<ASTNode> mutatedFields = node.getNodeMetaData(PV_FIELDS_MUTATION);
         if (accessedFields == null && mutatedFields == null) return;
@@ -259,19 +261,20 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 accessedFields = mutatedFields;
             }
         }
+        // GRECLIPSE end
         int acc = -1;
-        privateFieldAccessors = (accessedFields != null ? new HashMap<>() : null);
-        privateFieldMutators = (mutatedFields != null ? new HashMap<>() : null);
-        final int modifiers = ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC;
+        privateFieldAccessors = accessedFields != null ? new HashMap<>() : null;
+        privateFieldMutators = mutatedFields != null ? new HashMap<>() : null;
+        final int access = ACC_PUBLIC | ACC_STATIC | ACC_SYNTHETIC;
         for (FieldNode fieldNode : node.getFields()) {
             boolean generateAccessor = accessedFields != null && accessedFields.contains(fieldNode);
             boolean generateMutator = mutatedFields != null && mutatedFields.contains(fieldNode);
             if (generateAccessor) {
                 acc += 1;
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
-                Expression receiver = fieldNode.isStatic() ? classX(node) : varX(param);
-                Statement body = new ExpressionStatement(propX(receiver, fieldNode.getName()));
-                MethodNode accessor = node.addMethod("pfaccess$" + acc, modifiers, fieldNode.getOriginType(), new Parameter[]{param}, ClassNode.EMPTY_ARRAY, body);
+                Expression receiver = fieldNode.isStatic() ? new ClassExpression(node) : new VariableExpression(param);
+                Statement stmt = new ExpressionStatement(new PropertyExpression(receiver, fieldNode.getName()));
+                MethodNode accessor = node.addMethod("pfaccess$" + acc, access, fieldNode.getOriginType(), new Parameter[]{param}, ClassNode.EMPTY_ARRAY, stmt);
                 privateFieldAccessors.put(fieldNode.getName(), accessor);
             }
 
@@ -279,10 +282,10 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 // increment acc if it hasn't been incremented in the current iteration
                 if (!generateAccessor) acc += 1;
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
-                Expression receiver = fieldNode.isStatic() ? classX(node) : varX(param);
+                Expression receiver = fieldNode.isStatic() ? new ClassExpression(node) : new VariableExpression(param);
                 Parameter value = new Parameter(fieldNode.getOriginType(), "$value");
-                Statement body = assignS(propX(receiver, fieldNode.getName()), varX(value));
-                MethodNode mutator = node.addMethod("pfaccess$0" + acc, modifiers, fieldNode.getOriginType(), new Parameter[]{param, value}, ClassNode.EMPTY_ARRAY, body);
+                Statement stmt = GeneralUtils.assignS(new PropertyExpression(receiver, fieldNode.getName()), new VariableExpression(value));
+                MethodNode mutator = node.addMethod("pfaccess$0" + acc, access, fieldNode.getOriginType(), new Parameter[]{param, value}, ClassNode.EMPTY_ARRAY, stmt);
                 privateFieldMutators.put(fieldNode.getName(), mutator);
             }
         }
@@ -337,9 +340,9 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 } else {
                     List<Expression> args = new ArrayList<>();
                     for (Parameter parameter : methodParameters) {
-                        args.add(varX(parameter));
+                        args.add(new VariableExpression(parameter));
                     }
-                    arguments = args(args);
+                    arguments = new ArgumentListExpression(args);
                 }
 
                 MethodNode bridge;
@@ -354,22 +357,22 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                         node.getModule().addClass(thatType);
                     }
                     newParams[0] = new Parameter(thatType.getPlainNodeReference(), "$that");
-                    Statement body = ctorThisS(arguments);
-
+                    Expression cce = new ConstructorCallExpression(ClassNode.THIS, arguments);
+                    Statement body = new ExpressionStatement(cce);
                     bridge = node.addConstructor(ACC_SYNTHETIC, newParams, ClassNode.EMPTY_ARRAY, body);
                 } else {
                     newParams[0] = new Parameter(node.getPlainNodeReference(), "$that");
-                    Expression receiver = method.isStatic() ? classX(node) : varX(newParams[0]);
-                    MethodCallExpression call = callX(receiver, method.getName(), arguments);
-                    call.setMethodTarget(method);
-                    ExpressionStatement body = new ExpressionStatement(call);
+                    Expression receiver = method.isStatic() ? new ClassExpression(node) : new VariableExpression(newParams[0]);
+                    MethodCallExpression mce = new MethodCallExpression(receiver, method.getName(), arguments);
+                    mce.setMethodTarget(method);
 
+                    ExpressionStatement returnStatement = new ExpressionStatement(mce);
                     bridge = node.addMethod(
                             "access$" + i, access,
                             correctToGenericsSpecRecurse(genericsSpec, method.getReturnType(), methodSpecificGenerics),
                             newParams,
                             method.getExceptions(),
-                            body);
+                            returnStatement);
                 }
                 GenericsType[] origGenericsTypes = method.getGenericsTypes();
                 if (origGenericsTypes != null) {

@@ -67,8 +67,8 @@ public class GroovyBeautifier {
             formatLists(edits);
             correctBraces(edits);
             removeUnnecessarySemicolons(edits);
-            addAdditionalSpacing(edits);
             removeUnnecessaryWhitespace(edits);
+            addAdditionalSpacing(edits);
 
             return edits;
         } finally {
@@ -409,8 +409,6 @@ public class GroovyBeautifier {
     }
 
     private void addAdditionalSpacing(MultiTextEdit edits) {
-        GroovyDocumentScanner scanner = new GroovyDocumentScanner(formatter.document);
-
         try {
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
@@ -435,28 +433,32 @@ public class GroovyBeautifier {
                         || tokenType == GroovyTokenTypeBridge.GE || tokenType == GroovyTokenTypeBridge.LE
                         || tokenType == GroovyTokenTypeBridge.NOT_EQUAL || tokenType == GroovyTokenTypeBridge.EQUAL
                         || tokenType == GroovyTokenTypeBridge.ASSIGN)
-                        && (isValueToken(nextToken) || nextTokenType == GroovyTokenTypeBridge.IDENT)
-                        || nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL) {
+                        && ((isValueToken(nextToken) || nextTokenType == GroovyTokenTypeBridge.IDENT)
+                                || nextTokenType == GroovyTokenTypeBridge.STRING_LITERAL)) {
+                    addSpaceAfter = true;
+                }
+
+                if (tokenType == GroovyTokenTypeBridge.COMMA && nextTokenType == GroovyTokenTypeBridge.IDENT) {
                     addSpaceAfter = true;
                 }
 
                 int tokenEndOffset = formatter.getOffsetOfTokenEnd(token);
                 int nextTokenStartOffset = formatter.getOffsetOfToken(nextToken);
 
-                if (addSpaceAfter && (tokenEndOffset == nextTokenStartOffset)) {
-                    addEdit(new InsertEdit(tokenEndOffset, " "), edits);
+                if (addSpaceAfter) {
+                    if (tokenEndOffset == nextTokenStartOffset) {
+                        addEdit(new InsertEdit(tokenEndOffset, " "), edits);
+                    } else {
+//                        replaceWhiteSpaceAfter(edits, token, " ", false, false);
+                    }
                 }
             }
         } catch (Exception e) {
             GroovyCore.logException("Exception.", e);
-        } finally {
-            scanner.dispose();
         }
     }
 
     private void removeUnnecessaryWhitespace(MultiTextEdit edits) {
-        GroovyDocumentScanner scanner = new GroovyDocumentScanner(formatter.document);
-
         try {
             for (Token token : formatter.getTokens().getTokens(formatter.selection)) {
                 Token nextToken = formatter.getTokens().getNextToken(token);
@@ -470,6 +472,7 @@ public class GroovyBeautifier {
                     removeAllWhitespaces = true;
                 }
 
+                // TODO: both Map<String, String> and 1 < 2 match here, how to differentiate them?
                 if (tokenType == GroovyTokenTypeBridge.IDENT && nextTokenType == GroovyTokenTypeBridge.LT) {
                     removeAllWhitespaces = true;
                 }
@@ -509,8 +512,6 @@ public class GroovyBeautifier {
             }
         } catch (Exception e) {
             GroovyCore.logException("Exception.", e);
-        } finally {
-            scanner.dispose();
         }
     }
 

@@ -22,7 +22,6 @@ import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
 import groovyjarjarantlr.collections.AST;
-import groovy.transform.Trait;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
@@ -815,7 +814,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (enumConstantBeingDef) {
             classNode = new EnumConstantClassNode(outerClass, innerClassName, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         } else {
-            classNode = new InnerClassNode(outerClass, innerClassName, 0, ClassHelper.OBJECT_TYPE);
+            classNode = new InnerClassNode(outerClass, innerClassName, /*GRECLIPSE Opcodes.ACC_PUBLIC*/0, ClassHelper.OBJECT_TYPE);
         }
         ((InnerClassNode) classNode).setAnonymous(true);
         classNode.setEnclosingMethod(methodNode);
@@ -835,10 +834,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         List<AnnotationNode> annotations = new ArrayList<>();
 
         if (isType(TRAIT_DEF, classDef)) {
-            /* GRECLIPSE edit
-            annotations.add(new AnnotationNode(ClassHelper.makeCached(Trait.class)));
-            */
-            annotations.add(makeAnnotationNode(Trait.class));
+            // GRECLIPSE edit
+            //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
+            annotations.add(makeAnnotationNode(groovy.transform.Trait.class));
             // GRECLIPSE end
         }
 
@@ -2846,14 +2844,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             } else if (leftExpression instanceof BinaryExpression) {
                 int lefttype = ((BinaryExpression) leftExpression).getOperation().getType();
                 if (!Types.ofType(lefttype, Types.ASSIGNMENT_OPERATOR) && lefttype != Types.LEFT_SQUARE_BRACKET) {
-                    throw new ASTRuntimeException(node, "\n" + leftExpression.getText() + " is a binary expression, but it should be a variable expression");
+                    throw new ASTRuntimeException(node, "\n" + ((BinaryExpression) leftExpression).getText() + " is a binary expression, but it should be a variable expression");
                 }
             } else if (leftExpression instanceof GStringExpression) {
-                throw new ASTRuntimeException(node, "\n\"" + leftExpression.getText() + "\" is a GString expression, but it should be a variable expression");
+                throw new ASTRuntimeException(node, "\n\"" + ((GStringExpression) leftExpression).getText() + "\" is a GString expression, but it should be a variable expression");
             } else if (leftExpression instanceof MethodCallExpression) {
-                throw new ASTRuntimeException(node, "\n\"" + leftExpression.getText() + "\" is a method call expression, but it should be a variable expression");
+                throw new ASTRuntimeException(node, "\n\"" + ((MethodCallExpression) leftExpression).getText() + "\" is a method call expression, but it should be a variable expression");
             } else if (leftExpression instanceof MapExpression) {
-                throw new ASTRuntimeException(node, "\n'" + leftExpression.getText() + "' is a map expression, but it should be a variable expression");
+                throw new ASTRuntimeException(node, "\n'" + ((MapExpression) leftExpression).getText() + "' is a map expression, but it should be a variable expression");
             } else {
                 throw new ASTRuntimeException(node, "\n" + leftExpression.getClass() + ", with its value '" + leftExpression.getText() + "', is a bad expression as the left hand side of an assignment operator");
             }
