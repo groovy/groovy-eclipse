@@ -505,7 +505,7 @@ public class BytecodeHelper implements Opcodes {
     public static boolean box(MethodVisitor mv, ClassNode type) {
         if (type.isPrimaryClassNode()) return false;
         // GRECLIPSE add
-        if (!type.isPrimitive()) return false;
+        if (!ClassHelper.isPrimitiveType(type)) return false;
         // GRECLIPSE end
         return box(mv, type.getTypeClass());
     }

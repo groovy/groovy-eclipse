@@ -600,18 +600,17 @@ public class BytecodeHelper implements Opcodes {
     public static boolean box(MethodVisitor mv, ClassNode type) {
         if (type.isPrimaryClassNode()) return false;
         // GRECLIPSE add
-        if (!type.isPrimitive()) return false;
+        if (!ClassHelper.isPrimitiveType(type)) return false;
         // GRECLIPSE end
         return box(mv, type.getTypeClass());
     }
 
-    
     /**
      * Generates the bytecode to autobox the current value on the stack
      */
     @Deprecated
     public static boolean box(MethodVisitor mv, Class type) {
-        if (ReflectionCache.getCachedClass(type).isPrimitive && type != void.class) {
+        if (ReflectionCache.getCachedClass(type).isPrimitive() && type != void.class) {
             String returnString = "(" + BytecodeHelper.getTypeDescription(type) + ")Ljava/lang/Object;";
             mv.visitMethodInsn(INVOKESTATIC, DTT_CLASSNAME, "box", returnString, false);
             return true;

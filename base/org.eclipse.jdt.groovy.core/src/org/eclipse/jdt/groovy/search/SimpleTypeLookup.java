@@ -1091,7 +1091,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static Boolean isTypeCompatible(final ClassNode source, final ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
-            !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) /*&&
+            !(source == VariableScope.NULL_TYPE && !ClassHelper.isPrimitiveType(target)) /*&&
             !(source.equals(VariableScope.CLOSURE_CLASS_NODE) && ClassHelper.isSAMType(target))*/) {
             // NOTE: Exact match of Closure to SAM Type creates tie for m(Closure) and m(Comparator)
 

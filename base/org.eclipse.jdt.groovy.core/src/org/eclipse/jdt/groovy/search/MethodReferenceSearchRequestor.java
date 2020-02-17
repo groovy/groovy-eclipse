@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -325,7 +326,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             if (GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, false, false).equals(parameterTypeSignature)) {
                 continue;
             }
-            if (parameterType.isPrimitive() || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
+            if (ClassHelper.isPrimitiveType(parameterType) || !GroovyUtils.getTypeSignatureWithoutGenerics(parameterType, true, false).equals(parameterTypeSignature)) {
                 return false;
             }
         }

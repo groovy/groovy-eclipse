@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,55 +125,56 @@ public enum SpecifiedVersion {
     }
 
     public static SpecifiedVersion findVersionFromString(String compilerLevel) {
-        if (compilerLevel != null) {
-            switch (compilerLevel) {
-            case "-1":
-                return DONT_CARE;
+        if (compilerLevel == null) {
+            return UNSPECIFIED;
+        }
+        switch (compilerLevel) {
+        case "-1":
+            return DONT_CARE;
 
-            case "16":
-            case "1.6":
-                return _16;
+        case "16":
+        case "1.6":
+            return _16;
 
-            case "17":
-            case "1.7":
-                return _17;
+        case "17":
+        case "1.7":
+            return _17;
 
-            case "18":
-            case "1.8":
-                return _18;
+        case "18":
+        case "1.8":
+            return _18;
 
-            case "19":
-            case "1.9":
-                return _19;
+        case "19":
+        case "1.9":
+            return _19;
 
-            case "20":
-            case "2.0":
-                return _20;
+        case "20":
+        case "2.0":
+            return _20;
 
-            case "21":
-            case "2.1":
-                return _21;
+        case "21":
+        case "2.1":
+            return _21;
 
-            case "22":
-            case "2.2":
-                return _22;
+        case "22":
+        case "2.2":
+            return _22;
 
-            case "23":
-            case "2.3":
-                return _23;
+        case "23":
+        case "2.3":
+            return _23;
 
-            case "24":
-            case "2.4":
-                return _24;
+        case "24":
+        case "2.4":
+            return _24;
 
-            case "25":
-            case "2.5":
-                return _25;
+        case "25":
+        case "2.5":
+            return _25;
 
-            case "30":
-            case "3.0":
-                return _30;
-            }
+        case "30":
+        case "3.0":
+            return _30;
         }
 
         System.out.println("Invalid Groovy compiler level: " + compilerLevel +

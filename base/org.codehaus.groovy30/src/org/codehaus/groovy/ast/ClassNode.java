@@ -190,23 +190,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // of 1 element describing the name of the placeholder
     private boolean placeholder;
 
-    // GRECLIPSE add
-    private int bits;
-    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
-
-    public boolean hasInconsistentHierarchy() {
-        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
-    }
-
-    public void setHasInconsistentHierarchy(final boolean b) {
-        if (b) {
-            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
-        } else {
-            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
-        }
-    }
-    // GRECLIPSE end
-
     /**
      * Returns the {@code ClassNode} this node is a proxy for or the node itself.
      */
@@ -286,7 +269,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     private static String computeArrayName(final ClassNode componentType) {
         String componentName = componentType.getName();
-        if (componentType.isPrimitive()) {
+        if (ClassHelper.isPrimitiveType(componentType)) {
             switch (componentName.charAt(0)) {
             case 'b': return componentName.charAt(1) == 'y' ? "[B" : "[Z"; // byte or boolean
             case 'c': return "[C"; // char
@@ -1627,13 +1610,22 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (clazz != null || (redirect != null && redirect.hasClass()));
     }
 
-    public boolean isPrimitive() {
-        return (clazz != null && clazz.isPrimitive());
+    public boolean hasInconsistentHierarchy() {
+        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
     }
 
-    public boolean mightHaveInners() {
-        return (hasClass() || getInnerClasses().hasNext());
+    public void setHasInconsistentHierarchy(boolean b) {
+        if (b) {
+            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
+        } else {
+            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
+        }
     }
+
+    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
+
+    private int bits;
+    private int nameStart;
 
     /**
      * Returns the offset of 'M' in "java.util.Map" or 'E' in "java.util.Map.Entry".
@@ -1641,9 +1633,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public int getNameStart2() {
         return nameStart > 0 ? nameStart : getStart();
     }
+
     public void setNameStart2(int offset) {
         nameStart = offset;
     }
-    private int nameStart;
     // GRECLIPSE end
 }

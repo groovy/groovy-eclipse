@@ -159,7 +159,7 @@ public class ImmutableClassNode extends ClassNode {
 
     @Override
     public void setGenericsTypes(GenericsType[] genericsTypes) {
-        if (genericsInitialized && genericsTypes != this.genericsTypes) {
+        if (genericsInitialized && genericsTypes != super.getGenericsTypes()) {
             throw new GroovyBugError("Attempt to change an immutable Groovy class: " + getName());
         }
         if (genericsTypes != null) {
