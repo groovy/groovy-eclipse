@@ -34,12 +34,12 @@ b) {
 
 class SomeClass {
 	@Blart(
-	value1='',
-	value2='',
-	value3=''
+	value1 = '',
+	value2 = '',
+	value3 = ''
 	)
 	def foo (
-			s,j,
+			s, j,
 			k) {
 	}
 

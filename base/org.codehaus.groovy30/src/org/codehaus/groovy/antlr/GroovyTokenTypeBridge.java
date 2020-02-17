@@ -97,5 +97,6 @@ public class GroovyTokenTypeBridge {
     public static int NUM_DOUBLE           = GroovyTokenTypes.NUM_DOUBLE;
     public static int NUM_BIG_INT          = GroovyTokenTypes.NUM_BIG_INT;
     public static int NUM_BIG_DECIMAL      = GroovyTokenTypes.NUM_BIG_DECIMAL;
+    public static int STRING_LITERAL       = GroovyTokenTypes.STRING_LITERAL;
     
 }
