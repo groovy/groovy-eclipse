@@ -161,23 +161,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
 
-    // GRECLIPSE add
-    private int bits;
-    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
-
-    public boolean hasInconsistentHierarchy() {
-        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
-    }
-
-    public void setHasInconsistentHierarchy(boolean b) {
-        if (b) {
-            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
-        } else {
-            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
-        }
-    }
-    // GRECLIPSE end
-
     /**
      * The AST Transformations to be applied during compilation.
      */
@@ -192,8 +175,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE private->protected
     protected volatile boolean lazyInitDone = true;
     // not null if if the ClassNode is an array
-    // GRECLIPSE private->protected
-    protected ClassNode componentType;
+    private ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
     private ClassNode redirect;
@@ -201,13 +183,29 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean annotated;
 
     // type spec for generics
-    // GRECLIPSE private->protected
-    protected GenericsType[] genericsTypes;
+    private GenericsType[] genericsTypes;
     private boolean usesGenerics;
 
     // if set to true the name getGenericsTypes consists
     // of 1 element describing the name of the placeholder
     private boolean placeholder;
+
+    // GRECLIPSE add
+    private int bits;
+    private static final int BIT_INCONSISTENT_HIERARCHY = 1;
+
+    public boolean hasInconsistentHierarchy() {
+        return ((redirect().bits) & BIT_INCONSISTENT_HIERARCHY) != 0;
+    }
+
+    public void setHasInconsistentHierarchy(final boolean b) {
+        if (b) {
+            redirect().bits |= BIT_INCONSISTENT_HIERARCHY;
+        } else {
+            redirect().bits &= ~BIT_INCONSISTENT_HIERARCHY;
+        }
+    }
+    // GRECLIPSE end
 
     /**
      * Returns the {@code ClassNode} this node is a proxy for or the node itself.

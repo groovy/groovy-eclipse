@@ -142,11 +142,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             cloneCall.setMethodTarget(values.getType().getMethod("clone", Parameter.EMPTY_ARRAY));
             code.addStatement(new ReturnStatement(cloneCall));
             valuesMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(valuesMethod);
-            */
             addGeneratedMethod(enumClass, valuesMethod);
-            // GRECLIPSE end
         }
 
         if (!hasNext) {
@@ -158,7 +154,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             //     }
             Token assign = Token.newSymbol(Types.ASSIGN, -1, -1);
             Token ge = Token.newSymbol(Types.COMPARE_GREATER_THAN_EQUAL, -1, -1);
-            MethodNode nextMethod = new MethodNode("next", ACC_PUBLIC/*GRECLIPSE | ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+            MethodNode nextMethod = new MethodNode("next", ACC_PUBLIC, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
             nextMethod.setSynthetic(true);
             BlockStatement code = new BlockStatement();
             BlockStatement ifStatement = new BlockStatement();
@@ -205,11 +201,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     )
             );
             nextMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(nextMethod);
-            */
             addGeneratedMethod(enumClass, nextMethod);
-            // GRECLIPSE end
         }
 
         if (!hasPrevious) {
@@ -221,7 +213,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             //    }
             Token assign = Token.newSymbol(Types.ASSIGN, -1, -1);
             Token lt = Token.newSymbol(Types.COMPARE_LESS_THAN, -1, -1);
-            MethodNode prevMethod = new MethodNode("previous", ACC_PUBLIC/*GRECLIPSE | ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+            MethodNode prevMethod = new MethodNode("previous", ACC_PUBLIC, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
             prevMethod.setSynthetic(true);
             BlockStatement code = new BlockStatement();
             BlockStatement ifStatement = new BlockStatement();
@@ -274,11 +266,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     )
             );
             prevMethod.setCode(code);
-            /* GRECLIPSE edit
-            enumClass.addMethod(prevMethod);
-            */
             addGeneratedMethod(enumClass, prevMethod);
-            // GRECLIPSE end
         }
 
         {
@@ -297,11 +285,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             );
             valueOfMethod.setCode(code);
             valueOfMethod.setSynthetic(true);
-            /* GRECLIPSE edit
-            enumClass.addMethod(valueOfMethod);
-            */
             addGeneratedMethod(enumClass, valueOfMethod);
-            // GRECLIPSE end
         }
     }
 
@@ -330,11 +314,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         BlockStatement code = new BlockStatement();
         code.addStatement(new ReturnStatement(cce));
         initMethod.setCode(code);
-        /* GRECLIPSE edit
-        enumClass.addMethod(initMethod);
-        */
         addGeneratedMethod(enumClass, initMethod);
-        // GRECLIPSE end
 
         // static init
         List<FieldNode> fields = enumClass.getFields();

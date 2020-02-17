@@ -26,7 +26,6 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +41,7 @@ import java.util.StringTokenizer;
 
 import static org.apache.groovy.util.SystemUtil.getBooleanSafe;
 import static org.apache.groovy.util.SystemUtil.getSystemPropertySafe;
+import static org.codehaus.groovy.runtime.StringGroovyMethods.isAtLeast;
 
 /**
  * Compilation control flags and coordination stuff.
@@ -424,10 +424,10 @@ public class CompilerConfiguration {
         warningLevel = WarningMessage.LIKELY_ERRORS;
         parameters = getBooleanSafe("groovy.parameters");
         previewFeatures = getBooleanSafe("groovy.preview.features");
+        sourceEncoding = getSystemPropertySafe("groovy.source.encoding",
+            getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
         setTargetDirectorySafe(getSystemPropertySafe("groovy.target.directory"));
         setTargetBytecodeIfValid(getSystemPropertySafe("groovy.target.bytecode", JDK8));
-        sourceEncoding = Optional.ofNullable(getSystemPropertySafe("groovy.source.encoding"))
-                .orElseGet(() -> getSystemPropertySafe("file.encoding", DEFAULT_SOURCE_ENCODING));
         defaultScriptExtension = getSystemPropertySafe("groovy.default.scriptExtension", ".groovy");
 
         optimizationOptions = new HashMap<>(4);
@@ -553,7 +553,7 @@ public class CompilerConfiguration {
      * @return true if the bytecode version is JDK 1.5+
      */
     public static boolean isPostJDK5(final String bytecodeVersion) {
-        return new BigDecimal(bytecodeVersion).compareTo(new BigDecimal(JDK5)) >= 0;
+        return isAtLeast(bytecodeVersion, JDK5);
     }
 
     /**
@@ -563,7 +563,7 @@ public class CompilerConfiguration {
      * @return true if the bytecode version is JDK 1.7+
      */
     public static boolean isPostJDK7(final String bytecodeVersion) {
-        return new BigDecimal(bytecodeVersion).compareTo(new BigDecimal(JDK7)) >= 0;
+        return isAtLeast(bytecodeVersion, JDK7);
     }
 
     /**
@@ -573,7 +573,7 @@ public class CompilerConfiguration {
      * @return true if the bytecode version is JDK 1.8+
      */
     public static boolean isPostJDK8(final String bytecodeVersion) {
-        return new BigDecimal(bytecodeVersion).compareTo(new BigDecimal(JDK8)) >= 0;
+        return isAtLeast(bytecodeVersion, JDK8);
     }
 
     /**
@@ -583,7 +583,7 @@ public class CompilerConfiguration {
      * @return true if the bytecode version is JDK 9.0+
      */
     public static boolean isPostJDK9(final String bytecodeVersion) {
-        return new BigDecimal(bytecodeVersion).compareTo(new BigDecimal(JDK9)) >= 0;
+        return isAtLeast(bytecodeVersion, JDK9);
     }
 
     /**
@@ -710,10 +710,6 @@ public class CompilerConfiguration {
      * Sets the encoding to be used when reading source files.
      */
     public void setSourceEncoding(final String encoding) {
-        setSourceEncodingOrDefault(encoding);
-    }
-
-    private void setSourceEncodingOrDefault(final String encoding) {
         this.sourceEncoding = Optional.ofNullable(encoding).orElse(DEFAULT_SOURCE_ENCODING);
     }
 
@@ -1083,7 +1079,7 @@ public class CompilerConfiguration {
      */
     public boolean isIndyEnabled() {
         Boolean indyEnabled = getOptimizationOptions().get(INVOKEDYNAMIC);
-        return Optional.ofNullable(indyEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Optional.ofNullable(indyEnabled).orElse(Boolean.FALSE);
     }
 
     /**
@@ -1091,7 +1087,7 @@ public class CompilerConfiguration {
      */
     public boolean isGroovydocEnabled() {
         Boolean groovydocEnabled = getOptimizationOptions().get(GROOVYDOC);
-        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Optional.ofNullable(groovydocEnabled).orElse(Boolean.FALSE);
     }
 
     /**
@@ -1099,6 +1095,6 @@ public class CompilerConfiguration {
      */
     public boolean isRuntimeGroovydocEnabled() {
         Boolean runtimeGroovydocEnabled = getOptimizationOptions().get(RUNTIME_GROOVYDOC);
-        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE).booleanValue();
+        return Optional.ofNullable(runtimeGroovydocEnabled).orElse(Boolean.FALSE);
     }
 }
