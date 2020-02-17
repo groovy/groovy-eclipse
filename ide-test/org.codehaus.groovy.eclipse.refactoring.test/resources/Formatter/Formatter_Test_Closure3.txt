@@ -8,7 +8,7 @@ def foo= {	->
 }
 foo()
 ###exp
-def foo= {
+def foo = {
 	->
 	if(true) {
 		// fragile!
