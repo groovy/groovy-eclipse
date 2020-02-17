@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -113,8 +114,8 @@ public class GenericsMapper {
                 // try to resolve each generics type by matching arguments to parameters
                 for (GenericsType ugt : ugts) {
                     Parameter[] methodParameters = methodDeclaration.getParameters();
-                    for (int i = 0, n = isVargs(methodParameters) ? argumentTypes.size() :
-                            Math.min(argumentTypes.size(), methodParameters.length); i < n; i += 1) {
+                    for (int i = 0, n = isVargs(methodParameters) ? argumentTypes.size()
+                            : Math.min(argumentTypes.size(), methodParameters.length); i < n; i += 1) {
                         ClassNode rbt = argumentTypes.get(i);
                         ClassNode ubt = methodParameters[Math.min(i, methodParameters.length - 1)].getType();
                         while (rbt.isArray() && ubt.isArray()) {
@@ -227,7 +228,7 @@ public class GenericsMapper {
     }
 
     protected static Iterator<ClassNode> getTypeHierarchy(ClassNode type, boolean useResolved) {
-        LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
+        Set<ClassNode> hierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(type, hierarchy, useResolved);
         hierarchy.remove(VariableScope.GROOVY_OBJECT_CLASS_NODE);
         hierarchy.remove(VariableScope.OBJECT_CLASS_NODE);

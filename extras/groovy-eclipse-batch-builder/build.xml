@@ -35,6 +35,7 @@
         <jar destfile="${build.dir}/${main.jar}">
             <fileset dir="${stage.dir}">
                 <exclude name="**/*.g"/>
+                <exclude name="**/*.g4"/>
                 <exclude name="**/*.groovy"/>
                 <exclude name="**/*.html"/>
                 <exclude name="**/*.jar"/>
@@ -45,11 +46,14 @@
                 <exclude name=".options"/>
                 <exclude name="about_files/**"/>
                 <exclude name="ant_tasks/**"/>
+                <exclude name="package-list"/>
                 <exclude name="plugin.*"/>
-                <exclude name="org/codehaus/groovy/activator/**"/>
                 <exclude name="script.js"/>
                 <exclude name="stylesheet.css"/>
+                <exclude name="systembundle.properties"/>
+                <exclude name="META-INF/*.properties"/>
                 <exclude name="META-INF/eclipse.inf"/>
+                <exclude name="META-INF/INDEX.LIST"/>
                 <exclude name="META-INF/maven/**"/>
                 <exclude name="META-INF/*.RSA"/>
                 <exclude name="META-INF/*.SF"/>
@@ -71,6 +75,10 @@
             <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch">
                 <include name="**/BatchCompiler.java" />
                 <include name="**/Main.java" />
+            </fileset>
+            <fileset dir="${stage.dir}">
+                <include name="**/*.groovy" />
+                <include name="**/*.java" />
             </fileset>
         </jar>
     </target>
@@ -133,9 +141,9 @@
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
-            <!-- include groovy and the sources -->
-            <include name="${groovy.folder}/lib/groovy-*.jar"/>
-            <!-- also include the non-locking classloader with sources -->
+            <include name="${groovy.folder}/lib/groovy*.jar"/>
+            <exclude name="${groovy.folder}/lib/groovy-test*.jar"/>
+            <!-- include the non-locking classloader w/ sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
         </fileset>
         <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">

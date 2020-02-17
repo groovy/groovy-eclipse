@@ -381,6 +381,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             visitClass(innerClassNode);
         }
         typeCheckingContext.alreadyVisitedMethods = oldVisitedMethod;
+        // GRECLIPSE add
+        typeCheckingContext.popEnclosingClassNode();
+        if (type != null) {
+            typeCheckingContext.popErrorCollector();
+        }
+        // GRECLIPSE end
         node.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, node);
         // mark all methods as visited. We can't do this in visitMethod because the type checker
         // works in a two pass sequence and we don't want to skip the second pass
@@ -394,6 +400,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected boolean shouldSkipClassNode(final ClassNode node) {
+        // GRECLIPSE add
+        if (Boolean.TRUE.equals(node.getNodeMetaData(StaticTypeCheckingVisitor.class))) return true;
+        // GRECLIPSE end
         if (isSkipMode(node)) return true;
         return false;
     }
@@ -954,28 +963,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected void inferDiamondType(final ConstructorCallExpression cce, final ClassNode lType) {
         // check if constructor call expression makes use of the diamond operator
         ClassNode node = cce.getType();
-        /* GRECLIPSE edit -- GROOVY-8572
-        if (node.isUsingGenerics() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
-            ClassNode[] interfaces = node.getInterfaces();
-            node = interfaces != null && interfaces.length == 1 ? interfaces[0] : node.getUnresolvedSuperClass(false);
-            if ((node.getGenericsTypes() == null || node.getGenericsTypes().length == 0) && lType.isUsingGenerics()) {
-        */
         if (cce.isUsingAnonymousInnerClass()) {
             node = cce.getType().getUnresolvedSuperClass(false);
             if (node == ClassHelper.OBJECT_TYPE)
                 node = cce.getType().getUnresolvedInterfaces(false)[0];
             if (node.getGenericsTypes() != null && node.getGenericsTypes().length == 0) {
-        // GRECLIPSE end
                 // InterfaceA<Foo> obj = new InterfaceA<>() { ... }
                 // InterfaceA<Foo> obj = new ClassA<>() { ... }
                 // ClassA<Foo> obj = new ClassA<>() { ... }
                 addStaticTypeError("Cannot use diamond <> with anonymous inner classes", cce);
             }
-        /* GRECLIPSE edit
-        } else if (node.isUsingGenerics() && node.getGenericsTypes() != null && node.getGenericsTypes().length == 0) {
-        */
         } else if (node.getGenericsTypes() != null && node.getGenericsTypes().length == 0) {
-        // GRECLIPSE end
             ArgumentListExpression argumentListExpression = InvocationWriter.makeArgumentList(cce.getArguments());
             if (argumentListExpression.getExpressions().isEmpty()) {
                 adjustGenerics(lType, node);
@@ -1461,7 +1459,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return true;
                 }
 
-                boolean isThisExpression = enclosingTypes.contains(objectExpressionType);
+                boolean isThisExpression = enclosingTypes.contains(testClass);
                 // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
@@ -1548,8 +1546,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             dgmReceivers.add(testClass);
             if (isPrimitiveType(testClass)) dgmReceivers.add(getWrapper(testClass));
             for (ClassNode dgmReceiver: dgmReceivers) {
-                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
-                for (MethodNode m : findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
+                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
+                for (MethodNode m : findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
                     if (Boolean_TYPE.equals(getWrapper(m.getReturnType()))) methods.add(m);
                 }
                 if (!methods.isEmpty()) {
@@ -1568,6 +1566,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+            // GRECLIPSE add -- GROOVY-7996: check if receiver implements get(String)/set(String,Object) or propertyMissing(String)
+            if (!testClass.isArray() && !isPrimitiveType(getUnwrapper(testClass))
+                    && pexp.isImplicitThis() && typeCheckingContext.getEnclosingClosure() != null) {
+                MethodNode mopMethod;
+                if (readMode) {
+                    mopMethod = testClass.getMethod("get", new Parameter[]{new Parameter(STRING_TYPE, "name")});
+                } else {
+                    mopMethod = testClass.getMethod("set", new Parameter[]{new Parameter(STRING_TYPE, "name"), new Parameter(OBJECT_TYPE, "value")});
+                }
+                if (mopMethod == null) mopMethod = testClass.getMethod("propertyMissing", new Parameter[]{new Parameter(STRING_TYPE, "propertyName")});
+
+                if (mopMethod != null && !mopMethod.isSynthetic()) {
+                    pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    return true;
+                }
+            }
+            // GRECLIPSE end
         }
 
         for (Receiver<String> receiver : receivers) {
@@ -2176,6 +2193,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             if (node != null) storeTargetMethod(call, node);
         }
+        // GRECLIPSE add -- GROOVY-9327: check for AIC in STC method with non-STC enclosing class
+        if (call.isUsingAnonymousInnerClass()) {
+            Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
+            if (!methods.isEmpty()) { // indicates specific methods have STC
+                typeCheckingContext.methodsToBeVisited = Collections.emptySet();
+
+                ClassNode anonType = call.getType();
+                visitClass(anonType); // visit anon. inner class inline with method
+                anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+
+                typeCheckingContext.methodsToBeVisited = methods;
+            }
+        }
+        // GRECLIPSE end
         extension.afterMethodCall(call);
     }
 
@@ -2649,6 +2680,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // First we try to get as much information about the declaration
         // class through the receiver
         Map<String,GenericsType> targetMethodDeclarationClassConnections = new HashMap<String,GenericsType>();
+        // GRECLIPSE add -- GROOVY-9347
+        for (ClassNode face : receiver.getAllInterfaces()) {
+            extractGenericsConnections(targetMethodDeclarationClassConnections, StaticTypeCheckingSupport.getCorrectedClassNode(receiver, face, true), face.redirect());
+        }
+        if (!receiver.isInterface())
+        // GRECLIPSE end
         extractGenericsConnections(targetMethodDeclarationClassConnections, receiver, receiver.redirect());
         // then we use the method with the SAM parameter to get more information about the declaration
         Parameter[] parametersOfMethodContainingSAM = methodWithSAMParameter.getParameters();
@@ -3160,7 +3197,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             boolean callArgsVisited = false;
             if (isCallOnClosure) {
                 // this is a closure.call() call
-                if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                // GRECLIPSE edit
+                //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+                // GRECLIPSE end
                     // isClosureCall() check verified earlier that a field exists
                     FieldNode field = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
                     GenericsType[] genericsTypes = field.getType().getGenericsTypes();
@@ -3542,7 +3582,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected boolean isClosureCall(final String name, final Expression objectExpression, final Expression arguments) {
         if (objectExpression instanceof ClosureExpression && ("call".equals(name)||"doCall".equals(name))) return true;
-        if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        // GRECLIPSE edit
+        //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+        // GRECLIPSE end
             FieldNode fieldNode = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
             if (fieldNode != null) {
                 ClassNode type = fieldNode.getType();
@@ -4342,8 +4385,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             collectAllInterfaceMethodsByName(receiver, name, methods);
         }
 
-        // lookup in DGM methods too
-        findDGMMethodsByNameAndArguments(getTransformLoader(), receiver, name, args, methods);
+        if (!"<init>".equals(name) && !"<clinit>".equals(name)) {
+            // lookup in DGM methods too
+            findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), receiver, name, args, methods);
+        }
         List<MethodNode> chosen = chooseBestMethod(receiver, methods, args);
         if (!chosen.isEmpty()) return chosen;
 

@@ -201,11 +201,25 @@ public class GroovyLexer extends AbstractLexer {
 	        super.emit(token);
 	    }
 
-	    private static final Set<Integer> REGEX_CHECK_SET =
-	                                            Collections.unmodifiableSet(
-	                                                new HashSet<>(Arrays.asList(Identifier, CapitalizedIdentifier, NullLiteral, BooleanLiteral, THIS, RPAREN, RBRACK, RBRACE, IntegerLiteral, FloatingPointLiteral, StringLiteral, GStringEnd, INC, DEC)));
+	    private static final int[] REGEX_CHECK_ARRAY =
+	                                    /* GRECLIPSE edit
+	                                    IntStream.of(
+	                                    */
+	                                    {
+	                                    // GRECLIPSE end
+	                                        Identifier, CapitalizedIdentifier, NullLiteral, BooleanLiteral, THIS, RPAREN, RBRACK, RBRACE,
+	                                        IntegerLiteral, FloatingPointLiteral, StringLiteral, GStringEnd, INC, DEC
+	                                    /* GRECLIPSE edit
+	                                    ).sorted().toArray();
+	                                    */
+	                                    };
+	        static {
+	            Arrays.sort(REGEX_CHECK_ARRAY);
+	        }
+	        // GRECLIPSE end
+
 	    private boolean isRegexAllowed() {
-	        if (REGEX_CHECK_SET.contains(this.lastTokenType)) {
+	        if (Arrays.binarySearch(REGEX_CHECK_ARRAY, this.lastTokenType) >= 0) {
 	            return false;
 	        }
 
@@ -238,10 +252,12 @@ public class GroovyLexer extends AbstractLexer {
 	            return this.lastTokenType;
 	        }
 
+	        @SuppressWarnings("unused")
 	        public int getLine() {
 	            return line;
 	        }
 
+	        @SuppressWarnings("unused")
 	        public int getColumn() {
 	            return column;
 	        }
@@ -263,22 +279,6 @@ public class GroovyLexer extends AbstractLexer {
 	        }
 	    }
 
-	    /* GRECLIPSE edit
-	    private static final Map<String, String> PAREN_MAP = Collections.unmodifiableMap(new HashMap<String, String>() {
-	        {
-	            put("(", ")");
-	            put("[", "]");
-	            put("{", "}");
-	        }
-	    });
-	    */
-	    private static final Map<String, String> PAREN_MAP = org.apache.groovy.util.Maps.of(
-	        "(", ")",
-	        "[", "]",
-	        "{", "}"
-	    );
-	    // GRECLIPSE end
-
 	    protected void enterParenCallback(String text) {}
 
 	    protected void exitParenCallback(String text) {}
@@ -288,19 +288,18 @@ public class GroovyLexer extends AbstractLexer {
 	    private void enterParen() {
 	        String text = getText();
 	        enterParenCallback(text);
+
 	        parenStack.push(new Paren(text, this.lastTokenType, getLine(), getCharPositionInLine()));
 	    }
 
 	    private void exitParen() {
-	        Paren paren = parenStack.peek();
 	        String text = getText();
-	        require(null != paren, "Too many '" + text + "'");
-	        require(text.equals(PAREN_MAP.get(paren.getText())),
-	                "'" + paren.getText() + "'" + new PositionInfo(paren.getLine(), paren.getColumn()) + " can not match '" + text + "'", -1);
 	        exitParenCallback(text);
+
+	        Paren paren = parenStack.peek();
+	        if (null == paren) return;
 	        parenStack.pop();
 	    }
-
 	    private boolean isInsideParens() {
 	        Paren paren = parenStack.peek();
 
@@ -309,6 +308,7 @@ public class GroovyLexer extends AbstractLexer {
 	        if (null == paren) {
 	            return false;
 	        }
+
 	        return ("(".equals(paren.getText()) && TRY != paren.getLastTokenType()) // we don't treat try-paren(i.e. try (....)) as parenthesis
 	                    || "[".equals(paren.getText());
 	    }
@@ -342,6 +342,15 @@ public class GroovyLexer extends AbstractLexer {
 	        return getCharPositionInLine() + 1;
 	    }
 
+	    @Override
+	    public int popMode() {
+	        try {
+	            return super.popMode();
+	        } catch (EmptyStackException ignore) { // raised when parens are unmatched: too many ), ], or }
+	        }
+
+	        return Integer.MIN_VALUE;
+	    }
 	    // GRECLIPSE add
 	    private void addComment(int type) {
 	        String text = _input.getText(Interval.of(_tokenStartCharIndex, getCharIndex() - 1));
@@ -453,7 +462,8 @@ public class GroovyLexer extends AbstractLexer {
 		case 1:
 
 			            // a trick to handle GStrings followed by EOF properly
-			            if (EOF == _input.LA(1) && ('"' == _input.LA(-1) || '/' == _input.LA(-1))) {
+			            int readChar = _input.LA(-1);
+			            if (EOF == _input.LA(1) && ('"' == readChar || '/' == readChar)) {
 			                setType(GStringEnd);
 			            } else {
 			                setChannel(HIDDEN);

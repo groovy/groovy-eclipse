@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,7 +131,9 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     public void testCompileStatic10() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "public class Groovy20 {\n" +
-            "  enum Letter { A,B,C }\n" +
+            "  enum Letter {\n" +
+            "    A,B,C\n" +
+            "  }\n" +
             "  boolean bug(Letter l) {\n" +
             "    boolean isEarly = l in [Letter.A, Letter.B]\n" +
             "    isEarly\n" +
@@ -218,7 +220,9 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     public void testCompileStatic15() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "void meth() {\n" +
-            "  java.util.concurrent.Callable<String> task = { -> '' }\n" +
+            "  java.util.concurrent.Callable<String> task = { ->\n" +
+            "    ''\n" +
+            "  }\n" +
             "  def result = task.call()" +
             "}";
 

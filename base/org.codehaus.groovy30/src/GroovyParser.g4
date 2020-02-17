@@ -136,19 +136,21 @@ modifier
     ;
 
 modifiersOpt
-    :   modifiers?
+    :   (modifiers nls)?
     ;
 
 modifiers
-    :   (modifier nls)+
+    :   modifier (nls modifier)*
     ;
 
 classOrInterfaceModifiersOpt
-    :   classOrInterfaceModifiers?
+    :   (classOrInterfaceModifiers
+            NL* /* Use `NL*` here for better performance, so DON'T replace it with `nls` */
+        )?
     ;
 
 classOrInterfaceModifiers
-    :   (classOrInterfaceModifier nls)+
+    :   classOrInterfaceModifier (nls classOrInterfaceModifier)*
     ;
 
 classOrInterfaceModifier
@@ -184,11 +186,11 @@ variableModifier
     ;
 
 variableModifiersOpt
-    :   variableModifiers?
+    :   (variableModifiers nls)?
     ;
 
 variableModifiers
-    :   (variableModifier nls)+
+    :   variableModifier (nls variableModifier)*
     ;
 
 typeParameters
@@ -223,24 +225,24 @@ locals[ int t ]
 
         (
             { 3 != $t }?
-            typeParameters? nls
+            (typeParameters nls)?
             (
                 { 2 != $t }?
-                (EXTENDS nls
+                EXTENDS nls
                     (
                         // Only interface can extend more than one super class
                         {1 == $t}? scs=typeList
                     |
                         sc=type
                     )
-                nls)?
+                nls
             |
                 /* enum should not have type parameters and extends */
             )
 
             (
                 {1 != $t}?
-                (IMPLEMENTS nls is=typeList nls)?
+                IMPLEMENTS nls is=typeList nls
             |
                 /* interface should not implement other interfaces */
             )
@@ -257,15 +259,14 @@ classBody[int t]
         (
             /* Only enum can have enum constants */
             { 2 == $t }?
-            enumConstants? sep?
+            enumConstants (nls COMMA)? sep?
         |
-
         )
-        classBodyDeclaration[$t]? (sep classBodyDeclaration[$t])* sep? RBRACE
+        (classBodyDeclaration[$t] (sep classBodyDeclaration[$t])*)? sep? RBRACE
     ;
 
 enumConstants
-    :   enumConstant (nls COMMA nls enumConstant)* (nls COMMA)?
+    :   enumConstant (nls COMMA nls enumConstant)*
     ;
 
 enumConstant
@@ -273,8 +274,7 @@ enumConstant
     ;
 
 classBodyDeclaration[int t]
-    :   SEMI
-    |   (STATIC nls)? block
+    :   (STATIC nls)? block
     |   memberDeclaration[$t]
     ;
 
@@ -296,7 +296,7 @@ methodDeclaration[int t, int ct]
     |
         modifiersOpt typeParameters? returnType[$ct]?
         methodName formalParameters (nls THROWS nls qualifiedClassNameList)?
-        nls methodBody?
+        (nls methodBody)?
     ;
 
 methodName
@@ -307,9 +307,7 @@ methodName
 returnType[int ct]
     :
         standardType
-    |
-        // annotation method can not have void return type
-        { 3 != $ct }? VOID
+    |   VOID
     ;
 
 fieldDeclaration
@@ -333,15 +331,15 @@ variableInitializer
     ;
 
 variableInitializers
-    :   variableInitializer nls (COMMA nls variableInitializer nls)* nls COMMA?
+    :   variableInitializer (nls COMMA nls variableInitializer)* nls COMMA?
     ;
 
-dims
+emptyDims
     :   (annotationsOpt LBRACK RBRACK)+
     ;
 
-dimsOpt
-    :   dims?
+emptyDimsOpt
+    :   emptyDims?
     ;
 
 standardType
@@ -352,7 +350,7 @@ options { baseContext = type; }
         |
             standardClassOrInterfaceType
         )
-        dimsOpt
+        emptyDimsOpt
     ;
 
 type
@@ -367,7 +365,7 @@ type
         |
                 generalClassOrInterfaceType
         )
-        dimsOpt
+        emptyDimsOpt
     ;
 
 classOrInterfaceType
@@ -532,11 +530,11 @@ blockStatements
 // ANNOTATIONS
 
 annotationsOpt
-    :   (annotation nls)*
+    :   (annotation (nls annotation)* nls)?
     ;
 
 annotation
-    :   AT annotationName ( LPAREN elementValues? rparen )?
+    :   AT annotationName ( LPAREN elementValues? rparen)?
     ;
 
 elementValues
@@ -567,13 +565,13 @@ elementValue
     ;
 
 elementValueArrayInitializer
-    :   LBRACK (elementValue (COMMA elementValue)*)? (COMMA)? RBRACK
+    :   LBRACK (elementValue (COMMA elementValue)* COMMA?)? RBRACK
     ;
 
 // STATEMENTS / BLOCKS
 
 block
-    :   LBRACE (nls | sep*) blockStatementsOpt RBRACE
+    :   LBRACE sep? blockStatementsOpt RBRACE
     ;
 
 blockStatement
@@ -587,22 +585,18 @@ localVariableDeclaration
     ;
 
 classifiedModifiers[int t]
-    :   { 0 == $t }? variableModifiers
-    |   { 1 == $t }? modifiers
+    :   modifiers nls
     ;
-
 
 /**
  *  t   0: local variable declaration; 1: field declaration
  */
 variableDeclaration[int t]
-@leftfactor { classifiedModifiers }
     :   classifiedModifiers[$t]
         (   type? variableDeclarators
         |   typeNamePairs nls ASSIGN nls variableInitializer
         )
     |
-        classifiedModifiers[$t]?
         type variableDeclarators
     ;
 
@@ -628,7 +622,7 @@ ifElseStatement
     ;
 
 switchStatement
-    :   SWITCH expressionInPar nls LBRACE nls switchBlockStatementGroup* nls RBRACE
+    :   SWITCH expressionInPar nls LBRACE nls (switchBlockStatementGroup+ nls)? RBRACE
     ;
 
 loopStatement
@@ -716,7 +710,7 @@ resource
  *  To handle empty cases at the end, we add switchLabel* to statement.
  */
 switchBlockStatementGroup
-    :   (switchLabel nls)+ blockStatements
+    :   switchLabel (nls switchLabel)* nls blockStatements
     ;
 
 switchLabel
@@ -766,9 +760,7 @@ expressionList[boolean canSpread]
     ;
 
 expressionListElement[boolean canSpread]
-    :   (   MUL { require($canSpread, "spread operator is not allowed here", -1); }
-        |
-        ) expression
+    :   MUL? expression
     ;
 
 enhancedStatementExpression
@@ -943,30 +935,32 @@ pathExpression returns [int t]
 
 pathElement returns [int t]
     :   nls
-
-        // AT: foo.@bar selects the field (or attribute), not property
         (
-            (   DOT                 // The all-powerful dot.
-            |   SPREAD_DOT          // Spread operator:  x*.y  ===  x?.collect{it.y}
-            |   SAFE_DOT            // Optional-null operator:  x?.y  === (x==null)?null:x.y
-            |   SAFE_CHAIN_DOT      // Optional-null chain operator:  x??.y.z  === x?.y?.z
-            ) nls (AT | nonWildcardTypeArguments)?
+            // AT: foo.@bar selects the field (or attribute), not property
+            (
+                (   DOT                 // The all-powerful dot.
+                |   SPREAD_DOT          // Spread operator:  x*.y  ===  x?.collect{it.y}
+                |   SAFE_DOT            // Optional-null operator:  x?.y  === (x==null)?null:x.y
+                |   SAFE_CHAIN_DOT      // Optional-null chain operator:  x??.y.z  === x?.y?.z
+                ) nls (AT | nonWildcardTypeArguments)?
+            |
+                METHOD_POINTER nls      // Method pointer operator: foo.&y == foo.metaClass.getMethodPointer(foo, "y")
+            |
+                METHOD_REFERENCE nls    // Method reference: System.out::println
+            )
+            namePart
+            { $t = 1; }
         |
-            METHOD_POINTER nls      // Method pointer operator: foo.&y == foo.metaClass.getMethodPointer(foo, "y")
-        |
-            METHOD_REFERENCE nls    // Method reference: System.out::println
+            DOT nls NEW creator[1]
+            { $t = 6; }
+
+            // Can always append a block, as foo{bar}
+        |   closureOrLambdaExpression
+            { $t = 3; }
         )
-        namePart
-        { $t = 1; }
-    |
-        nls DOT nls NEW creator[1]
-        { $t = 6; }
+
     |   arguments
         { $t = 2; }
-
-    // Can always append a block, as foo{bar}
-    |   nls closureOrLambdaExpression
-        { $t = 3; }
 
     // Element selection is always an option, too.
     // In Groovy, the stuff between brackets is a general argument list,
@@ -1072,14 +1066,17 @@ mapEntryLabel
  */
 creator[int t]
     :   createdName
-        (   {0 == $t || 1 == $t}? nls arguments anonymousInnerClassDeclaration[0]?
-        |   {0 == $t}?            (annotationsOpt LBRACK expression RBRACK)+ dimsOpt
-        |   {0 == $t}?            dims nls arrayInitializer
+        (   nls arguments anonymousInnerClassDeclaration[0]?
+        |   dim+ (nls arrayInitializer)?
         )
     ;
 
+dim
+    :   annotationsOpt LBRACK expression? RBRACK
+    ;
+
 arrayInitializer
-    :   LBRACE nls variableInitializers? nls RBRACE
+    :   LBRACE nls (variableInitializers nls)? RBRACE
     ;
 
 /**
@@ -1148,14 +1145,14 @@ identifier
     :   Identifier
     |   CapitalizedIdentifier
     |   VAR
-    |
-        // if 'static' followed by DOT, we can treat them as identifiers, e.g. static.unused = { -> }
-        { DOT == _input.LT(2).getType() }?
-        STATIC
     |   IN
 //    |   DEF
     |   TRAIT
     |   AS
+    |
+        // if 'static' followed by DOT, we can treat them as identifiers, e.g. static.unused = { -> }
+        { DOT == _input.LT(2).getType() }?
+        STATIC
     ;
 
 builtInType

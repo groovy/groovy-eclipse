@@ -64,6 +64,7 @@ import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -246,15 +247,30 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
      * Adds special accessors and mutators for private fields so that inner classes can get/set them
      */
     private static void addPrivateFieldsAccessors(ClassNode node) {
+        /* GRECLIPSE edit
         Set<ASTNode> accessedFields = (Set<ASTNode>) node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_ACCESS);
         Set<ASTNode> mutatedFields = (Set<ASTNode>) node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_MUTATION);
         if (accessedFields == null && mutatedFields == null) return;
+        */
         Map<String, MethodNode> privateFieldAccessors = (Map<String, MethodNode>) node.getNodeMetaData(PRIVATE_FIELDS_ACCESSORS);
         Map<String, MethodNode> privateFieldMutators = (Map<String, MethodNode>) node.getNodeMetaData(PRIVATE_FIELDS_MUTATORS);
         if (privateFieldAccessors != null || privateFieldMutators != null) {
             // already added
             return;
         }
+        // GRECLIPSE add
+        Set<ASTNode> accessedFields = node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_ACCESS);
+        Set<ASTNode> mutatedFields = node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_MUTATION);
+        if (accessedFields == null && mutatedFields == null) return;
+        // GROOVY-9385: mutation includes access in case of compound assignment or pre/post-increment/decrement
+        if (mutatedFields != null) {
+            if (accessedFields != null) {
+                accessedFields = new HashSet<>(accessedFields); accessedFields.addAll(mutatedFields);
+            } else {
+                accessedFields = mutatedFields;
+            }
+        }
+        // GRECLIPSE end
         int acc = -1;
         privateFieldAccessors = accessedFields != null ? new HashMap<String, MethodNode>() : null;
         privateFieldMutators = mutatedFields != null ? new HashMap<String, MethodNode>() : null;
@@ -425,7 +441,13 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
     @Override
     public void visitConstructorCallExpression(final ConstructorCallExpression call) {
         super.visitConstructorCallExpression(call);
-
+        // GRECLIPSE add -- GROOVY-9327
+        if (call.isUsingAnonymousInnerClass() && call.getType().getNodeMetaData(StaticTypeCheckingVisitor.class) != null) {
+            ClassNode anonType = call.getType();
+            anonType.putNodeMetaData(STATIC_COMPILE_NODE, anonType.getEnclosingMethod().getNodeMetaData(STATIC_COMPILE_NODE));
+            anonType.putNodeMetaData(WriterControllerFactory.class, anonType.getOuterClass().getNodeMetaData(WriterControllerFactory.class));
+        }
+        // GRECLIPSE end
         MethodNode target = (MethodNode) call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
         if (target==null && call.getLineNumber()>0) {
             addError("Target constructor for constructor call expression hasn't been set", call);
@@ -463,9 +485,6 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 componentType = inferLoopElementType(collectionType);
             }
             forLoop.getVariable().setType(componentType);
-            // GRECLIPSE edit -- preserve origin type for code select
-            //forLoop.getVariable().setOriginType(componentType);
-            // GRECLIPSE end
         }
     }
 

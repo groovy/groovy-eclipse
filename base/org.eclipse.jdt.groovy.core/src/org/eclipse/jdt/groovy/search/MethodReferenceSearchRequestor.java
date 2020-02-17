@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -418,14 +417,12 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private int getAccuracy(TypeConfidence confidence) {
-        //                                                   improves call hierarchy and prevents "possible matches" warnings in refactoring wizard
-        if (confidence.isAtLeast(TypeConfidence.INFERRED) || ACCURATE_REQUESTOR.matcher(requestor.getClass().getName()).find()) {
+        //                                                   improves call hierarchy (inaccurate matches aren't displayed)
+        if (confidence.isAtLeast(TypeConfidence.INFERRED) || requestor.getClass().getName().contains(".callhierarchy.")) {
             return SearchMatch.A_ACCURATE;
         }
         return SearchMatch.A_INACCURATE;
     }
-
-    private static final Pattern ACCURATE_REQUESTOR = Pattern.compile("\\.(?:callhierarchy|refactoring)\\.");
 
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
         int flags = method.getFlags();

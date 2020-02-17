@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,7 +146,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         Util.log(s);
     }
 
-    // shared instances for several method checks below
     private static final String[] NO_PARAMS = CharOperation.NO_STRINGS;
     private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
 
@@ -230,7 +229,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         this.requestor = requestor;
         this.enclosingElement = unit;
-        VariableScope topLevelScope = new VariableScope(null, enclosingModule, false);
+        VariableScope topLevelScope = new VariableScope(null, enclosingModule, true);
         scopes.add(topLevelScope);
 
         for (ITypeLookup lookup : lookups) {
@@ -532,9 +531,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             if (imp.getFieldNameExpr() != null) {
                                 completeExpressionStack.add(imp);
                                 try {
+                                    scope.setCurrentNode(imp);
                                     primaryTypeStack.add(type);
-                                    imp.getFieldNameExpr().visit(this);
+                                    visitConstantExpression(imp.getFieldNameExpr());
 
+                                    scope.forgetCurrentNode();
                                     dependentTypeStack.removeLast();
                                     dependentDeclarationStack.removeLast();
                                 } finally {
@@ -2223,8 +2224,8 @@ assert primaryExprType != null && dependentExprType != null;
                                     }
                                 }
                             }
-                        } catch (Exception e) {
-                            log(e, "Error processing @ClosureParams of %s", methodNode.getTypeDescriptor());
+                        } catch (Exception | LinkageError e) {
+                            log(e, "Error processing @ClosureParams of %s#%s", methodNode.getDeclaringClass().getName(), methodNode.getName());
                         }
                     });
                 }
@@ -2506,6 +2507,8 @@ assert primaryExprType != null && dependentExprType != null;
                 } else if (objectExpression instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType)) {
                     staticObjectExpression = true; // separate lookup exists for non-static members of Class, Object, or GroovyObject
                 }
+            } else if (complete instanceof ImportNode) {
+                staticObjectExpression = true;
             }
         }
         return staticObjectExpression;
@@ -2524,7 +2527,8 @@ assert primaryExprType != null && dependentExprType != null;
                 if (result == null || result.confidence.isLessThan(candidate.confidence)) {
                     result = candidate;
                 }
-                if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
+                if (result.confidence.isAtLeast(TypeConfidence.INFERRED) ||
+                        (result.confidence.isAtLeast(TypeConfidence.LOOSELY_INFERRED) && lookup.getClass().getSimpleName().equals("STCTypeLookup"))) {
                     break;
                 }
             }

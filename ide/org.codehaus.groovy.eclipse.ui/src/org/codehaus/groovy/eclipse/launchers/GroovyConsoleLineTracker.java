@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,199 +15,45 @@
  */
 package org.codehaus.groovy.eclipse.launchers;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.debug.ui.console.FileLink;
-import org.eclipse.debug.ui.console.IConsole;
-import org.eclipse.debug.ui.console.IConsoleLineTracker;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.window.Window;
-import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.jdt.internal.debug.ui.console.JavaConsoleTracker;
+import org.eclipse.jdt.internal.debug.ui.console.JavaStackTraceHyperlink;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ui.console.IHyperlink;
-import org.eclipse.ui.dialogs.ListDialog;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.console.PatternMatchEvent;
+import org.eclipse.ui.console.TextConsole;
 
-public class GroovyConsoleLineTracker implements IConsoleLineTracker {
-
-    private static final Pattern LINE_PATTERN = Pattern.compile(".*\\((.*)\\.groovy(:(.*))?\\)");
-
-    private IConsole console;
+/**
+ * Adds links to consoles for each occurrence of "pack.Type.meth(File.groovy)".
+ * <p>
+ * NOTE: "pack.Type.meth(File.groovy:line)" is handled by {@code JavaConsoleTracker}.
+ */
+public class GroovyConsoleLineTracker extends JavaConsoleTracker {
 
     @Override
-    public void init(IConsole console) {
-        this.console = console;
-    }
-
-    /**
-     * Hyperlink error lines to the editor.
-     */
-    @Override
-    public void lineAppended(IRegion line) {
-        if (console == null) return;
-
-        int lineOffset = line.getOffset();
-        int lineLength = line.getLength();
+    public void matchFound(final PatternMatchEvent event) {
+        int offset = event.getOffset();
+        int length = event.getLength() - 1;
+        TextConsole console = getConsole();
         try {
-            String consoleLine = console.getDocument().get(lineOffset, lineLength);
-            GroovyPlugin.trace(consoleLine);
-            Matcher m = LINE_PATTERN.matcher(consoleLine);
-            String groovyFileName = null;
-            int lineNumber = -1;
-            int openParenIndexAt = -1;
-            int closeParenIndexAt = -1;
-            // match
-            if (m.matches()) {
-                consoleLine = m.group(0);
-                openParenIndexAt = consoleLine.indexOf("(");
-                if (openParenIndexAt >= 0) {
-                    int end = consoleLine.indexOf(".groovy");
-                    if (end == -1 || (openParenIndexAt + 1) >= end) {
-                        return;
-                    }
-                    String groovyClassName = consoleLine.substring(openParenIndexAt + 1, end);
-                    int classIndex = consoleLine.indexOf(groovyClassName);
-                    int start = 3;
-                    if (classIndex < start || classIndex >= consoleLine.length()) {
-                        return;
-                    }
-                    String groovyFilePath = consoleLine.substring(start, classIndex).trim().replace('.', '/');
-                    groovyFileName = groovyFilePath + groovyClassName + ".groovy";
-                    int colonIndex = consoleLine.indexOf(":");
-                    // get the line number in groovy class
-                    closeParenIndexAt = consoleLine.lastIndexOf(")");
-                    if (colonIndex > 0) {
-                        lineNumber = Integer.parseInt(consoleLine.substring(colonIndex + 1, closeParenIndexAt));
-                    }
-                    GroovyPlugin.trace("groovyFile=" + groovyFileName + " lineNumber:" + lineNumber);
-                }
-                // hyperlink if we found something
-                if (groovyFileName != null) {
-                    IFile[] file = searchForFileInLaunchConfig(groovyFileName);
-                    if (file.length == 1) {
-                        IHyperlink link = new FileLink(file[0], GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
-                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt - 1);
-                    } else if (file.length > 1) {
-                        IHyperlink link = new AmbiguousFileLink(file, GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
-                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt - 1);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            GroovyPlugin.getDefault().logError("unexpected error", e);
-        }
-    }
+            String consoleExcerpt = console.getDocument().get(offset, length);
 
-    private IFile[] searchForFileInLaunchConfig(String groovyFileName) throws JavaModelException {
-        List<IFile> files = new LinkedList<>();
-        IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
-        for (IJavaProject javaProject : projects) {
-            if (GroovyNature.hasGroovyNature(javaProject.getProject())) {
-                for (IPackageFragmentRoot root : javaProject.getAllPackageFragmentRoots()) {
-                    if (root.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                        IResource resource = root.getResource();
-                        if (resource.isAccessible() && resource.getType() != IResource.FILE) {
-                            IFile file = ((IContainer) resource).getFile(new Path(groovyFileName));
-                            if (file.isAccessible()) {
-                                files.add(file);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return files.toArray(new IFile[files.size()]);
-    }
-
-    IFile chooseFile(final IFile[] files) {
-        final IFile[] result = new IFile[1];
-        ConsolePlugin.getStandardDisplay().syncExec(() -> {
-            final ListDialog dialog = new ListDialog(ConsolePlugin.getStandardDisplay().getActiveShell());
-            dialog.setLabelProvider(new WorkbenchLabelProvider() {
+            IHyperlink link = new JavaStackTraceHyperlink(console) {
                 @Override
-                protected String decorateText(String input, Object element) {
-                    return ((IFile) element).getFullPath().toPortableString();
+                protected String getLinkText() {
+                    return consoleExcerpt + ":1)";
                 }
-            });
-            dialog.setTitle("Choose file to open");
-            dialog.setInput(files);
-            dialog.setContentProvider(new FileContentProvider());
-            dialog.setAddCancelButton(true);
-            dialog.setMessage("Select a file:");
-            dialog.setBlockOnOpen(true);
-            int dialogResult = dialog.open();
-            if (dialogResult == Window.OK && dialog.getResult().length > 0) {
-                result[0] = (IFile) dialog.getResult()[0];
-            }
-        });
-        return result[0];
-    }
 
-    @Override
-    public void dispose() {
-        console = null;
-    }
-
-    //--------------------------------------------------------------------------
-
-    public class AmbiguousFileLink extends FileLink implements IHyperlink {
-        IFile[] files;
-        boolean fileChosen;
-
-        public AmbiguousFileLink(IFile[] files, String editorId, int fileOffset, int fileLength, int fileLineNumber) {
-            super(null, editorId, fileOffset, fileLength, fileLineNumber);
-            this.files = files;
-        }
-
-        @Override
-        public void linkActivated() {
-            if (!fileChosen) {
-                IFile file = chooseFile(files);
-                if (file != null) {
-                    fileChosen = true;
-                    ReflectionUtils.setPrivateField(FileLink.class, "fFile", this, file);
+                @Override
+                protected String getTypeName(final String linkText) {
+                    String typeName = linkText.substring(0, linkText.indexOf('('));
+                    typeName = typeName.substring(0, typeName.lastIndexOf('.'));
+                    return typeName;
                 }
-            }
-            if (fileChosen) {
-                super.linkActivated();
-            }
-        }
-    }
+            };
 
-    public static class FileContentProvider implements IStructuredContentProvider {
-
-        @Override
-        public Object[] getElements(Object inputElement) {
-            IFile[] files = (IFile[]) inputElement;
-            Object[] out = new Object[files.length];
-            for (int i = 0; i < out.length; i++) {
-                out[i] = files[i];
-            }
-            return out;
-        }
-
-        @Override
-        public void dispose() {
-        }
-
-        @Override
-        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            int index = consoleExcerpt.indexOf('(') + 1;
+            console.addHyperlink(link, offset + index, length - index);
+        } catch (BadLocationException ignore) {
         }
     }
 }

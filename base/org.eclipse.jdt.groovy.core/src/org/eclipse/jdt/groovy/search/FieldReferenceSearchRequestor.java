@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -179,18 +179,9 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
-        if (shouldAlwaysBeAccurate() || (isCompleteMatch && confidence.isAtLeast(TypeConfidence.INFERRED))) {
+        if (isCompleteMatch && confidence.isAtLeast(TypeConfidence.INFERRED)) {
             return SearchMatch.A_ACCURATE;
         }
         return SearchMatch.A_INACCURATE;
-    }
-
-    /**
-     * Checks to see if this requestor has something to do with refactoring.
-     * If so, we always want an accurate match otherwise we get complaints
-     * in the refactoring wizard of "possible matches".
-     */
-    private boolean shouldAlwaysBeAccurate() {
-        return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
     }
 }

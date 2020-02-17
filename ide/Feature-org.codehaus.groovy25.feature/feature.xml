@@ -2,7 +2,7 @@
 
 <feature id="org.codehaus.groovy25.feature"
       label="%featureName"
-      version="3.6.0.qualifier"
+      version="3.7.0.qualifier"
       provider-name="%providerName"
       plugin="org.codehaus.groovy.eclipse">
 
@@ -22,7 +22,7 @@
          id="org.codehaus.groovy"
          download-size="0"
          install-size="0"
-         version="2.5.8.qualifier"
+         version="2.5.9.qualifier"
    />
 
    <plugin

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,17 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import static org.codehaus.jdt.groovy.model.JavaCoreUtil.findType
+import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
+
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.IAnnotatable
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IField
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
-import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameFieldProcessor
 import org.eclipse.jdt.internal.corext.util.JdtFlags
 import org.eclipse.ltk.core.refactoring.RefactoringCore
@@ -34,6 +34,7 @@ import org.eclipse.ltk.core.refactoring.participants.RenameArguments
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring
 import org.junit.Test
 
+@CompileStatic
 final class RenameFieldTests extends RefactoringTestSuite {
 
     @Override
@@ -41,171 +42,189 @@ final class RenameFieldTests extends RefactoringTestSuite {
         'RenameField/'
     }
 
-    private void helper2_0(String typeName, String fieldName, String newFieldName, boolean updateReferences, boolean createDelegates, boolean renameGetter, boolean renameSetter, boolean performOnError, boolean updateTextual) {
-        ICompilationUnit cu = createCUfromTestFile(packageP, 'A')
-        IType classA = getType(cu, typeName)
-        if (classA == null) {
-            classA = cu.getJavaProject().findType(typeName)
-        }
-        IField field = classA.getField(fieldName)
+    private RefactoringStatus runTest(Map<String, Boolean> flags = Collections.EMPTY_MAP, String typeName, String fieldName, String newFieldName) {
+        def unit = createCUfromTestFile(packageP, 'A')
+        def type = getType(unit, typeName) ?: findType(typeName, unit)
+        def field = type.getField(fieldName)
         boolean isEnum = JdtFlags.isEnum(field)
-        String id = isEnum ? IJavaRefactorings.RENAME_ENUM_CONSTANT : IJavaRefactorings.RENAME_FIELD
-        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(id)
-        descriptor.setUpdateReferences(updateReferences)
-        descriptor.setJavaElement(field)
-        descriptor.setNewName(newFieldName)
-        if (!isEnum) {
-            descriptor.setRenameGetters(renameGetter)
-            descriptor.setRenameSetters(renameSetter)
-            descriptor.setKeepOriginal(createDelegates)
-            descriptor.setUpdateTextualOccurrences(updateTextual)
-            descriptor.setDeprecateDelegate(true)
-        }
-        RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor)
-        RenameFieldProcessor processor = (RenameFieldProcessor) refactoring.getProcessor()
+        boolean renameGetters = flags.getOrDefault('renameGetters', false)
+        boolean renameSetters = flags.getOrDefault('renameSetters', false)
+        boolean updateReferences = flags.getOrDefault('updateReferences', true)
 
-        List<IAnnotatable> elements = [field]
-        List<RenameArguments> args = [new RenameArguments(newFieldName, updateReferences)]
-        if (renameGetter) {
-            elements.add(processor.getGetter())
-            args.add(new RenameArguments(processor.getNewGetterName(), updateReferences))
+        RenameJavaElementDescriptor descriptor = createRenameJavaElementDescriptor(
+            isEnum ? IJavaRefactorings.RENAME_ENUM_CONSTANT : IJavaRefactorings.RENAME_FIELD)
+        descriptor.javaElement = field
+        descriptor.newName = newFieldName
+        descriptor.updateReferences = updateReferences
+        if (!isEnum) {
+            descriptor.deprecateDelegate = flags.getOrDefault('deprecateDelegate', false)
+            descriptor.keepOriginal = flags.getOrDefault('keepOriginal', false)
+            descriptor.renameGetters = renameGetters
+            descriptor.renameSetters = renameSetters
+            descriptor.updateTextualOccurrences = flags.getOrDefault('updateTextualOccurrences', false)
         }
-        if (renameSetter) {
-            elements.add(processor.getSetter())
-            args.add(new RenameArguments(processor.getNewSetterName(), updateReferences))
+
+        RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor)
+        RenameFieldProcessor processor = (RenameFieldProcessor) refactoring.processor
+
+        def elements = [field as IJavaElement]
+        def arguments = [new RenameArguments(newFieldName, updateReferences)]
+        if (renameGetters) {
+            elements.add(processor.getter)
+            arguments.add(new RenameArguments(processor.newGetterName, updateReferences))
+        }
+        if (renameSetters) {
+            elements.add(processor.setter)
+            arguments.add(new RenameArguments(processor.newSetterName, updateReferences))
         }
         String[] renameHandles = ParticipantTesting.createHandles(elements.toArray())
 
-        RefactoringStatus result = performRefactoring(refactoring, performOnError)
-        assert result==null || result.isOK() : 'was supposed to pass'
-        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName('A')), cu.getSource())
+        RefactoringStatus status = performRefactoring(refactoring, flags.getOrDefault('performOnError', false))
+        assertEqualLines('invalid change', getFileContents(getOutputTestFileName('A')), unit.source)
+        ParticipantTesting.testRename(renameHandles, arguments as RenameArguments[])
+        RefactoringCore.getUndoManager().with { undoManager ->
+            assert undoManager.anythingToUndo() : 'anythingToUndo'
+            assert !undoManager.anythingToRedo() : '! anythingToRedo'
 
-        ParticipantTesting.testRename(renameHandles, args.toArray(new RenameArguments[args.size()]))
+            undoManager.performUndo(null, new NullProgressMonitor())
+            assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), unit.source)
 
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+            assert !undoManager.anythingToUndo() : '! anythingToUndo'
+            assert undoManager.anythingToRedo() : 'anythingToRedo'
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), cu.getSource())
+            undoManager.performRedo(null, new NullProgressMonitor())
+            assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), unit.source)
+        }
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), cu.getSource())
-    }
-
-    private void helper2(boolean updateReferences) {
-        helper2_0('A', 'f', 'g', updateReferences, false, false, false, false, false)
-    }
-
-    private void helperPerformOnError(boolean updateReferences) {
-        helper2_0('A', 'f', 'g', updateReferences, false, false, false, true, false)
-    }
-
-    private void helperScript() {
-        helper2_0('B', 'f', 'g', true, false, false, false, false, false)
-    }
-
-    private void helper2() {
-        helper2(true)
+        return status
     }
 
     // NOTE: Test method names are matched to test case data stored externally
 
     @Test
     void testInitializer1() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void testInitializer2() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void testInitializer3() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test1() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test2() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test3() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test4() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test5() {
-        helperPerformOnError(true)
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test6() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test7() {
-        helperPerformOnError(true)
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test8() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test9() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test10() {
-        helper2()
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test11() {
-        createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java', 'package o;\npublic class Other { public static int FOO;\n }')
-        helper2_0('o.Other', 'FOO', 'BAR', true, false, false, false, false, false)
+        createCU(root.createPackageFragment('o', true, null), 'Other.java', '''\
+            |package o;
+            |public class Other {
+            |  public static int FOO;
+            |}
+            |'''.stripMargin())
+
+        def status = runTest('o.Other', 'FOO', 'BAR')
+        assert status.isOK()
     }
 
     @Test
     void testScript1() {
-        helperScript()
+        def status = runTest('B', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void testScript2() {
-        helperScript()
+        def status = runTest('B', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test12() {
-        helper2_0('A', 'f', 'g', true, false, false, false, false, true)
+        def status = runTest('A', 'f', 'g', updateTextualOccurrences: true)
+        assert status.isOK()
     }
 
     @Test
     void test13() {
-        helper2_0('A', 'f', 'g', true, false, false, false, false, true)
+        def status = runTest('A', 'f', 'g')
+        assert status.isOK()
     }
 
     @Test
     void test14() {
-        helper2_0('MyBean', 'foo', 'baz', true, false, false, false, false, true)
+        def status = runTest('MyBean', 'foo', 'fooBar')
+        assert status.isOK()
+    }
+
+    @Test
+    void test15() {
+        def status = runTest('MyBean', 'foo', 'fooBar')
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 }

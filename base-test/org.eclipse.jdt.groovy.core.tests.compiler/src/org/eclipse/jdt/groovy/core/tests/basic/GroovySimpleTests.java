@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,17 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -3244,6 +3246,62 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCallingJavaFromGroovy1() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    new J().run()\n" +
+            "    print new J().name\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J {\n" +
+            "  public String name = \"name\";\n" +
+            "  public void run() { System.out.print(\"success\"); }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "successname");
+    }
+
+    @Test
+    public void testCallingJavaFromGroovy2() {
+        //@formatter:off
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "@Tag(value=4)\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    new J().run()\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/J.java",
+            "package p;\n" +
+            "public class J {\n" +
+            "  public String name = \"name\";\n" +
+            "  public void run() { System.out.print(\"success\"); }\n" +
+            "}\n",
+
+            "p/Tag.java",
+            "package p;\n" +
+            "public @interface Tag {\n" +
+            "  int value() default 3;\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
     public void testCallingMethods_JcallingG() {
         //@formatter:off
         String[] sources = {
@@ -3750,6 +3808,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9336
+    public void testGroovy9336() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  public static final double CONST = 2 << 16 - 1\n" +
+            "  static main(args) {\n" +
+            "    print CONST\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "65536.0");
+    }
+
     // was worried <clinit> would surface in list of methods used to build the type declaration, but that doesn't appear to be the case
     @Test
     public void testExtendingGroovyObjects_clinit() {
@@ -4254,62 +4329,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCallingJavaFromGroovy1() throws Exception {
-        //@formatter:off
-        String[] sources = {
-            "p/Code.groovy",
-            "package p;\n" +
-            "class Code {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new J().run();\n" +
-            "    print new J().name;\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/J.java",
-            "package p;\n" +
-            "public class J {\n" +
-            "  public String name = \"name\";\n" +
-            "  public void run() { System.out.print(\"success\"); }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "successname");
-    }
-
-    @Test
-    public void testCallingJavaFromGroovy2() throws Exception {
-        //@formatter:off
-        String[] sources = {
-            "p/Code.groovy",
-            "package p;\n" +
-            "@Wibble(value=4)\n" +
-            "class Code {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new J().run();\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/J.java",
-            "package p;\n" +
-            "public class J {\n" +
-            "  public String name = \"name\";\n" +
-            "  public void run() { System.out.print(\"success\"); }\n" +
-            "}\n",
-
-            "p/Wibble.java",
-            "package p;\n" +
-            "public @interface Wibble {\n" +
-            "  int value() default 3;\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
     public void testTypeVariableBoundIsRawType() {
         //@formatter:off
         String[] sources = {
@@ -4590,6 +4609,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "abc");
+    }
+
+    @Test
+    public void testConfigDefaults() {
+        CompilerConfiguration defaultConfig = CompilerConfiguration.DEFAULT;
+
+        assertNull(defaultConfig.getJointCompilationOptions());
+        assertNull(defaultConfig.getDisabledGlobalASTTransformations());
+        assertEquals(Collections.emptyList(), defaultConfig.getClasspath());
+        assertEquals(Collections.emptyList(), defaultConfig.getCompilationCustomizers());
+        assertEquals(Collections.singleton("groovy"), defaultConfig.getScriptExtensions());
     }
 
     @Test
@@ -5147,7 +5177,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
         GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
         TypeDeclaration[] tds = gcud.types;
-        assertFalse((tds[0].bits & ASTNode.IsSecondaryType) != 0);
+        assertTrue((tds[0].bits & ASTNode.IsSecondaryType) == 0);
         assertTrue((tds[1].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
@@ -5167,7 +5197,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         gcud = getCUDeclFor("Run2.groovy");
         tds = gcud.types;
         assertTrue((tds[0].bits & ASTNode.IsSecondaryType) != 0);
-        assertFalse((tds[1].bits & ASTNode.IsSecondaryType) != 0);
+        assertTrue((tds[1].bits & ASTNode.IsSecondaryType) == 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
     }

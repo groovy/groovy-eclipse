@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +40,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -61,6 +63,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
@@ -314,7 +317,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
                 // concrete types (without mixins/traits) return all methods from getMethods(String)
                 if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
-                    LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
+                    Set<ClassNode> hierarchy = new LinkedHashSet<>();
                     VariableScope.createTypeHierarchy(classNode, hierarchy, false);
                     hierarchy.forEach(type -> candidates.addAll(type.getMethods(methodName)));
                 } else {
@@ -420,13 +423,25 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     } else if (method.isPrivate() && isThisObjectExpression(scope) && isNotThisOrOuterClass(declaringType, resolvedDeclaringType)) {
                         // "this.method()" reference to private method of super class yields MissingMethodException; "super.method()" is okay
                         confidence = TypeConfidence.UNKNOWN;
-                    } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters())) {
+                    } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), method.getParameters()) &&
+                            !(isStaticObjectExpression && isStaticReferenceToUnambiguousMethod(scope, name, declaringType)) &&
+                            !(AccessorSupport.isGetter(method) && !scope.isMethodCall() && scope.getEnclosingNode() instanceof PropertyExpression)) {
                         // if arguments and parameters are mismatched, a category method may make a better match
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
                     if (isTraitHelper(resolvedDeclaringType) && method.getOriginal() != method) {
                         resolvedDeclaringType = method.getOriginal().getDeclaringClass();
                         declaration = method.getOriginal(); // the trait method
+                    }
+                }
+                // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
+                if (confidence.isAtLeast(TypeConfidence.INFERRED) && isLhsExpression && isCompoundAssignment(scope)) {
+                    if (declaration instanceof MethodNode) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED; // setter for write; field or property or accessor for read
+                    } else if (findPropertyAccessorMethod(name, declaringType, false, isStaticObjectExpression, null).filter(getter ->
+                        !isSynthetic(getter) && !(isFieldAccessDirect && declaringType.equals(getter.getDeclaringClass()))
+                    ).isPresent()) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED; // field or property for write; accessor for read
                     }
                 }
             } else if (VariableScope.CLASS_CLASS_NODE.equals(resolvedDeclaringType) && declaration instanceof MethodNode) {
@@ -445,7 +460,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // StatementAndExpressionCompletionProcessor circa line 275 has similar check for proposals
-        if (TypeConfidence.INFERRED.compareTo(confidence) < 0 && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && GroovyUtils.getGenericsTypes(declaringType).length > 0) {
+        if (confidence.isLessThan(TypeConfidence.INFERRED) && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && GroovyUtils.getGenericsTypes(declaringType).length > 0) {
             ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
                 // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations
@@ -464,11 +479,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         Variable accessedVar = var.getAccessedVariable();
         VariableInfo variableInfo = scope.lookupName(var.getName());
         int resolveStrategy = scope.getEnclosingClosureResolveStrategy();
-        boolean direct = (accessedVar instanceof AnnotatedNode &&
+        boolean isAssignTarget = (scope.getWormhole().get("lhs") == var);
+        boolean isDirectAccess = (accessedVar instanceof AnnotatedNode &&
             resolvedDeclaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
 
-        if ((accessedVar instanceof FieldNode && !(direct && scope.isFieldAccessDirect())) ||
-                (direct && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
+        if ((accessedVar instanceof FieldNode && !(isDirectAccess && scope.isFieldAccessDirect())) ||
+                (isDirectAccess && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
             // accessed variable was found using direct search; forget the reference
             accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
         }
@@ -482,8 +498,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (decl instanceof PropertyNode) {
                     PropertyNode prop = (PropertyNode) decl; // check for pseudo-property
                     if (prop.isDynamicTyped() && prop.getField().hasNoRealSourcePosition()) {
-                        Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(), resolvedDeclaringType,
-                            (scope.getWormhole().get("lhs") == var), prop.isStatic(), scope.getMethodCallArgumentTypes());
+                        Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(),
+                            resolvedDeclaringType, isAssignTarget, prop.isStatic(), scope.getMethodCallArgumentTypes());
                         decl = accessor.map(meth -> (ASTNode) meth).orElse(decl);
                     }
                 }
@@ -494,7 +510,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         } else if (accessedVar instanceof DynamicVariable) {
             resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
-            ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, resolveStrategy);
+            ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, isAssignTarget, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
                 if (candidate instanceof FieldNode) {
@@ -516,6 +532,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
+                // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
+                if (confidence.isAtLeast(TypeConfidence.INFERRED) && isAssignTarget && isCompoundAssignment(scope) &&
+                        (candidate instanceof MethodNode || !candidate.equals(findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, false, resolveStrategy)))) {
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
+                }
+
                 decl = candidate;
                 type = getTypeFromDeclaration(decl);
                 resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, resolvedDeclaringType);
@@ -538,37 +560,36 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(type, resolvedDeclaringType, decl, confidence, scope);
     }
 
-    protected ASTNode findDeclarationForDynamicVariable(final VariableExpression var, final ClassNode owner, final VariableScope scope, final int resolveStrategy) {
+    protected ASTNode findDeclarationForDynamicVariable(final VariableExpression var, final ClassNode owner, final VariableScope scope, final boolean isAssignTarget, final int resolveStrategy) {
         ASTNode candidate = null;
         List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
-        boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
 
         if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
             // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
-            candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
+            candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, false, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
-                if (isLhsExpr) scope.getWormhole().put("lhs", var);
                 int enclosingResolveStrategy = outer.getEnclosingClosureResolveStrategy();
-                candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, enclosingResolveStrategy);
+                candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, isAssignTarget, enclosingResolveStrategy);
             } else {
-                candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
+                candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
             }
             if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
-                candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
+                candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, false, callArgs);
             }
             if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
                 for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {
                     if (parameter.getName().equals(var.getName())) {
-                        candidate = parameter; break;
+                        candidate = parameter;
+                        break;
                     }
                 }
             }
         }
         if (candidate == null && resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
-            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, false, callArgs);
+            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isAssignTarget, false, false, callArgs);
         }
 
         return candidate;
@@ -610,7 +631,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor.get();
         }
 
-        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<>();
+        Set<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
 
         // look for property
@@ -687,7 +708,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // abstract types may not return all methods from getMethods(String)
-        LinkedHashSet<ClassNode> types = new LinkedHashSet<>();
+        Set<ClassNode> types = new LinkedHashSet<>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
         if (!implementsTrait(declaringType))
@@ -925,6 +946,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return Optional.empty();
     }
 
+    protected static boolean isCompoundAssignment(final VariableScope scope) {
+        return scope.getEnclosingAssignmentOperator().filter(op -> op.getType() != Types.EQUALS).isPresent();
+    }
+
     protected static Expression getObjectExpression(final VariableScope scope) {
         ASTNode node = scope.getEnclosingNode();
         if (node instanceof PropertyExpression) {
@@ -957,6 +982,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             int majorVersion = Integer.parseInt(GroovySystem.getVersion().split("\\.")[0], 10);
             return (majorVersion >= 3);
         }
+        return false;
+    }
+
+    protected static boolean isStaticReferenceToUnambiguousMethod(final VariableScope scope, final String name, final ClassNode type) {
+        if (scope.getEnclosingNode() instanceof ImportNode) { // import nodes can only refer to static methods of type
+            long staticMethodCount = getMethods(name, type).stream().filter(meth -> isCompatible(meth, true)).count();
+            return (staticMethodCount == 1);
+        }
+        // TODO: Add case for PropertyExpression, MethodCallExpression or MethodPointerExpression?
         return false;
     }
 

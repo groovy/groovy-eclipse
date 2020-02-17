@@ -75,6 +75,7 @@ import static org.apache.groovy.ast.tools.ClassNodeUtils.samePackageName;
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS;
 import static groovyjarjarasm.asm.Opcodes.ACONST_NULL;
 import static groovyjarjarasm.asm.Opcodes.ALOAD;
@@ -165,7 +166,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                     bridge = bridgeMethods != null ? bridgeMethods.get(cn) : null;
                 }
                 if (bridge instanceof ConstructorNode) {
-                    ArgumentListExpression newArgs = new ArgumentListExpression(new ConstantExpression(null));
+                    ArgumentListExpression newArgs = new ArgumentListExpression(nullX());
                     for (Expression arg: args) {
                         newArgs.addExpression(arg);
                     }
@@ -257,7 +258,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                     }
                 }
             }
-            ArgumentListExpression newArgs = new ArgumentListExpression(target.isStatic()?new ConstantExpression(null):fixedReceiver);
+            ArgumentListExpression newArgs = new ArgumentListExpression(target.isStatic() ? nullX() : fixedReceiver);
             for (Expression expression : args.getExpressions()) {
                 newArgs.addExpression(expression);
             }
@@ -281,10 +282,7 @@ public class StaticInvocationWriter extends InvocationWriter {
 
             if (emn.isStaticExtension()) {
                 // it's a static extension method
-                // GRECLIPSE edit -- GROOVY-9153
-                //argumentList.add(0, ConstantExpression.NULL);
-                argumentList.add(0, new ConstantExpression(null));
-                // GRECLIPSE end
+                argumentList.add(0, nullX());
             } else {
                 ClassNode classNode = controller.getClassNode();
                 boolean isThisOrSuper = false;

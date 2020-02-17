@@ -231,11 +231,12 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         if (name.startsWith("set") || name.startsWith("get") || name.startsWith("is")) {
             String pname = decapitalize(name.substring(name.startsWith("is") ? 2 : 3));
             if (!pname.isEmpty()) {
+                Parameter[] parameters = m.getParameters();
                 if (name.startsWith("set")) {
-                    if (m.getParameters().length == 1) {
+                    if (parameters.length == 1) {
                         return pname;
                     }
-                } else if (m.getParameters().length == 0 && !ClassHelper.VOID_TYPE.equals(m.getReturnType())) {
+                } else if (parameters.length == 0 && !m.isVoidMethod()) {
                     if (name.startsWith("get") || ClassHelper.boolean_TYPE.equals(m.getReturnType())) {
                         return pname;
                     }
@@ -308,11 +309,18 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         }
 
         VariableScope end = scope;
-
+        // GRECLIPSE add -- GROOVY-9120
+        boolean isClassVariable = (end.isClassScope() && !end.isReferencedLocalVariable(name))
+            || (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null);
+        // GRECLIPSE end
         scope = currentScope;
         while (scope != end) {
+            /* GRECLIPSE edit
             if (end.isClassScope() ||
                     (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null)) {
+            */
+            if (isClassVariable) {
+            // GRECLIPSE end
                 scope.putReferencedClassVariable(var);
             } else {
                 scope.putReferencedLocalVariable(var);

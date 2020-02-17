@@ -85,19 +85,6 @@
       </content-type>
    </extension>
 
-   <extension point="org.eclipse.core.runtime.adapters">
-      <factory
-            adaptableType="org.eclipse.core.resources.IResource"
-            class= "org.eclipse.jdt.groovy.core.GroovyResourceAdapter">
-         <adapter
-               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
-         <adapter
-               type="org.codehaus.groovy.ast.ModuleNode"/>
-         <adapter
-               type="org.codehaus.groovy.ast.ClassNode"/>
-      </factory>
-   </extension>
-
    <extension point="org.eclipse.core.variables.dynamicVariables">
       <variable
             description="The location of the Groovy home used in this instance of Eclipse."

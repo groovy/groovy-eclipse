@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,7 +162,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     private static Set<ClassNode> getAllSupers(ClassNode type, Set<ClassNode> exclude) {
-        LinkedHashSet<ClassNode> superTypes = new LinkedHashSet<>();
+        Set<ClassNode> superTypes = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(type, superTypes, false);
         superTypes.removeAll(exclude);
         return superTypes;

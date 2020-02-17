@@ -87,10 +87,7 @@ public class LazyASTTransformation extends AbstractASTTransformation {
 
         String backingFieldName = "$" + fieldNode.getName();
         fieldNode.rename(backingFieldName);
-        fieldNode.setModifiers(ACC_PRIVATE | (fieldNode.getModifiers() & (~(ACC_PUBLIC | ACC_PROTECTED))));
-        // GRECLIPSE add
-        fieldNode.setModifiers(ACC_SYNTHETIC | fieldNode.getModifiers());
-        // GRECLIPSE end
+        fieldNode.setModifiers(ACC_PRIVATE | ACC_SYNTHETIC | (fieldNode.getModifiers() & (~(ACC_PUBLIC | ACC_PROTECTED))));
         PropertyNode pNode = fieldNode.getDeclaringClass().getProperty(backingFieldName);
         if (pNode != null) {
             fieldNode.getDeclaringClass().getProperties().remove(pNode);

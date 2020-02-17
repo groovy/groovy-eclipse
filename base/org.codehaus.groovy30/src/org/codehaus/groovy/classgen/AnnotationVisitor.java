@@ -159,10 +159,7 @@ public class AnnotationVisitor {
         // if it is an error, we have to test it at another place. But size==0 is
         // an error, because it means that no such attribute exists.
         if (methods.isEmpty()) {
-            // GRECLIPSE edit
-            //addError("'" + attrName + "'is not part of the annotation " + classNode, node);
             addError("'" + attrName + "'is not part of the annotation " + classNode.getNameWithoutPackage(), node);
-            // GRECLIPSE end
             return ClassHelper.OBJECT_TYPE;
         }
         MethodNode method = (MethodNode) methods.get(0);
@@ -247,12 +244,9 @@ public class AnnotationVisitor {
         } else {
             addError(base, exp);
         }
-        // GRECLIPSE edit
-        //return ConstantExpression.EMPTY_EXPRESSION;
         ConstantExpression ret = new ConstantExpression(null);
         ret.setSourcePosition(exp);
         return ret;
-        // GRECLIPSE end
     }
 
     protected void visitAnnotationExpression(String attrName, AnnotationConstantExpression expression, ClassNode attrType) {

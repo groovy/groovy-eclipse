@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,6 +88,26 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
 
             "Color.groovy",
             "enum Color { R, G, B, }\n", // trailing comma
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[R, G, B]");
+    }
+
+    @Test
+    public void testEnum1c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "println Color.values()\n",
+
+            "Color.groovy",
+            "enum Color {\n" +
+            "  R,\n" +
+            "  G,\n" +
+            "  B,\n" +
+            "  ;" +
+            "}\n",
         };
         //@formatter:on
 
@@ -798,13 +818,16 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor("Color.groovy");
 
         FieldDeclaration fDecl = findField(decl, "RED");
-        assertEquals("RED declarationSourceStart:15 modifiersSourceStart:30 endPart1Position:0 sourceStart:30 sourceEnd:32 endPart2Position:0 declarationEnd:32 declarationSourceEnd:32", stringify(fDecl));
+        assertEquals("RED declarationSourceStart:15 modifiersSourceStart:30 endPart1Position:0 sourceStart:30" +
+                " sourceEnd:32 endPart2Position:0 declarationEnd:32 declarationSourceEnd:32", stringify(fDecl));
 
         fDecl = findField(decl, "GREEN");
-        assertEquals("GREEN declarationSourceStart:37 modifiersSourceStart:37 endPart1Position:0 sourceStart:37 sourceEnd:41 endPart2Position:0 declarationEnd:41 declarationSourceEnd:41", stringify(fDecl));
+        assertEquals("GREEN declarationSourceStart:37 modifiersSourceStart:37 endPart1Position:0 sourceStart:37" +
+                " sourceEnd:41 endPart2Position:0 declarationEnd:41 declarationSourceEnd:41", stringify(fDecl));
 
         fDecl = findField(decl, "BLUE");
-        assertEquals("BLUE declarationSourceStart:46 modifiersSourceStart:46 endPart1Position:0 sourceStart:46 sourceEnd:49 endPart2Position:0 declarationEnd:49 declarationSourceEnd:49", stringify(fDecl));
+        assertEquals("BLUE declarationSourceStart:46 modifiersSourceStart:46 endPart1Position:0 sourceStart:46" +
+                " sourceEnd:49 endPart2Position:0 declarationEnd:49 declarationSourceEnd:49", stringify(fDecl));
     }
 
     @Test

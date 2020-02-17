@@ -61,6 +61,7 @@ import groovyjarjarasm.asm.Opcodes;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 
 public class EnumVisitor extends ClassCodeVisitorSupport {
@@ -140,7 +141,11 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             cloneCall.setMethodTarget(values.getType().getMethod("clone", Parameter.EMPTY_ARRAY));
             code.addStatement(new ReturnStatement(cloneCall));
             valuesMethod.setCode(code);
+            /* GRECLIPSE edit
             enumClass.addMethod(valuesMethod);
+            */
+            addGeneratedMethod(enumClass, valuesMethod);
+            // GRECLIPSE end
         }
 
         if (!hasNext) {
@@ -199,7 +204,11 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                     )
             );
             nextMethod.setCode(code);
+            /* GRECLIPSE edit
             enumClass.addMethod(nextMethod);
+            */
+            addGeneratedMethod(enumClass, nextMethod);
+            // GRECLIPSE end
         }
 
         if (!hasPrevious) {
@@ -211,8 +220,8 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             //    }
             Token assign = Token.newSymbol(Types.ASSIGN, -1, -1);
             Token lt = Token.newSymbol(Types.COMPARE_LESS_THAN, -1, -1);
-            MethodNode nextMethod = new MethodNode("previous", Opcodes.ACC_PUBLIC/*GRECLIPSE | Opcodes.ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-            nextMethod.setSynthetic(true);
+            MethodNode prevMethod = new MethodNode("previous", Opcodes.ACC_PUBLIC/*GRECLIPSE | Opcodes.ACC_SYNTHETIC*/, enumRef, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+            prevMethod.setSynthetic(true);
             BlockStatement code = new BlockStatement();
             BlockStatement ifStatement = new BlockStatement();
             ifStatement.addStatement(
@@ -263,8 +272,12 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                             new MethodCallExpression(new FieldExpression(values), "getAt", new VariableExpression("ordinal"))
                     )
             );
-            nextMethod.setCode(code);
-            enumClass.addMethod(nextMethod);
+            prevMethod.setCode(code);
+            /* GRECLIPSE edit
+            enumClass.addMethod(prevMethod);
+            */
+            addGeneratedMethod(enumClass, prevMethod);
+            // GRECLIPSE end
         }
 
         {
@@ -283,7 +296,11 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
             );
             valueOfMethod.setCode(code);
             valueOfMethod.setSynthetic(true);
+            /* GRECLIPSE edit
             enumClass.addMethod(valueOfMethod);
+            */
+            addGeneratedMethod(enumClass, valueOfMethod);
+            // GRECLIPSE end
         }
     }
 
@@ -314,7 +331,11 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
         BlockStatement code = new BlockStatement();
         code.addStatement(new ReturnStatement(cce));
         initMethod.setCode(code);
+        /* GRECLIPSE edit
         enumClass.addMethod(initMethod);
+        */
+        addGeneratedMethod(enumClass, initMethod);
+        // GRECLIPSE end
 
         // static init
         List<FieldNode> fields = enumClass.getFields();

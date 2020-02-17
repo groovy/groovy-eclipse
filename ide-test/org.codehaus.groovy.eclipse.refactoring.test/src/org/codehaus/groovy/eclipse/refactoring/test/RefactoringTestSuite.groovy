@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@ import org.codehaus.groovy.eclipse.refactoring.test.internal.TestOptions
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantShared
 import org.codehaus.groovy.eclipse.refactoring.test.internal.TestRenameParticipantSingle
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IClasspathEntry
@@ -70,7 +69,7 @@ abstract class RefactoringTestSuite {
     static final void setUpTestSuite() {
         fWasAutobuild = CoreUtility.setAutoBuilding(false)
         fWasOptions = JavaCore.getOptions()
-        TestOptions.defaultOptions.with {
+        TestOptions.getDefaultOptions().with {
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
             put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
             put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999))
@@ -78,7 +77,7 @@ abstract class RefactoringTestSuite {
             JavaCore.setOptions(it)
         }
         TestOptions.initializeCodeGenerationOptions()
-        JavaPlugin.getDefault().getCodeTemplateStore().load()
+        JavaPlugin.getDefault().codeTemplateStore.load()
 
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
@@ -98,7 +97,7 @@ abstract class RefactoringTestSuite {
     }
 
     @Rule
-    public TestName test = new TestName()
+    public final TestName test = new TestName()
 
     @Before
     final void setUpTestCase() {
@@ -197,10 +196,8 @@ abstract class RefactoringTestSuite {
             }
 
             for (njr in fgJavaTestProject.nonJavaResources) {
-                if (njr instanceof IResource) {
-                    if (!(njr.name in ['.project', '.classpath', '.settings'])) {
-                        JavaProjectHelper.delete(njr)
-                    }
+                if (njr instanceof IResource && !(njr.name in ['.classpath', '.project', '.settings'])) {
+                    JavaProjectHelper.delete(njr)
                 }
             }
         }
@@ -209,7 +206,7 @@ abstract class RefactoringTestSuite {
     //--------------------------------------------------------------------------
 
     /**
-     * subclasses override to inform about the location of their test cases
+     * Override to inform about the location of their test cases.
      */
     protected abstract String getRefactoringPath()
 
@@ -229,32 +226,19 @@ abstract class RefactoringTestSuite {
         fgJavaTestProject
     }
 
-    protected final RefactoringStatus performRefactoring(RefactoringDescriptor descriptor) {
-        performRefactoring(descriptor, true)
-    }
-
-    protected final RefactoringStatus performRefactoring(RefactoringDescriptor descriptor, boolean providesUndo) {
-        Refactoring refactoring = createRefactoring(descriptor)
-        performRefactoring(refactoring, providesUndo)
-    }
-
     protected final Refactoring createRefactoring(RefactoringDescriptor descriptor) {
         RefactoringStatus status = new RefactoringStatus()
         Refactoring refactoring = descriptor.createRefactoring(status)
         assert refactoring != null : 'refactoring should not be null'
         assert status.isOK() : 'status should be ok'
-        refactoring
+        return refactoring
     }
 
-    protected final RefactoringStatus performRefactoring(Refactoring ref, boolean performOnFail) {
-        performRefactoring(ref, true, performOnFail)
-    }
-
-    protected final RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo, boolean performOnFail) {
+    protected final RefactoringStatus performRefactoring(Refactoring action, boolean performOnFail, boolean providesUndo = true) {
         IUndoManager undoManager = getUndoManager()
+        CreateChangeOperation create = new CreateChangeOperation(
+            new CheckConditionsOperation(action, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
         if (DESCRIPTOR_TEST) {
-            final CreateChangeOperation create = new CreateChangeOperation(
-                new CheckConditionsOperation(ref, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
             create.run(new NullProgressMonitor())
             RefactoringStatus checkingStatus = create.conditionCheckingStatus
             if (checkingStatus.hasError())
@@ -274,48 +258,36 @@ abstract class RefactoringTestSuite {
                     RefactoringContribution contribution = RefactoringCore.getRefactoringContribution(jrd.ID)
                     jrd = contribution.createDescriptor(jrd.ID, jrd.project, jrd.description, jrd.comment, contribution.retrieveArgumentMap(jrd), jrd.flags)
                     assert jrd.class == expected
-                    ref = jrd.createRefactoring(refactoringStatus)
+                    action = jrd.createRefactoring(refactoringStatus)
                     if (refactoringStatus.hasError() && !performOnFail)
                         return refactoringStatus
                     TestRenameParticipantSingle.reset()
                 }
             }
         }
-        final CreateChangeOperation create = new CreateChangeOperation(
-            new CheckConditionsOperation(ref, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
-        final PerformChangeOperation perform = new PerformChangeOperation(create)
-        perform.setUndoManager(undoManager, ref.name)
-        IWorkspace workspace = ResourcesPlugin.getWorkspace()
-        executePerformOperation(perform, workspace)
+
+        PerformChangeOperation perform = new PerformChangeOperation(create)
+        perform.setUndoManager(undoManager, action.name)
+
+        ResourcesPlugin.getWorkspace().run(perform, new NullProgressMonitor())
         RefactoringStatus status = create.conditionCheckingStatus
-        if ((!status.hasError() && !performOnFail) || (status.hasError() && performOnFail))
-            return status
-        assert perform.changeExecuted() : 'Change was not executed'
-        Change undo = perform.undoChange
-        if (providesUndo) {
-            assert undo != null : 'Undo does not exist'
-            assert undoManager.anythingToUndo() : 'Undo manager is empty'
-        } else {
-            assert undo == null : 'Undo manager contains undo but should not'
+        if (!status.hasError()) {
+            assert perform.changeExecuted() : 'Change was not executed'
+            Change undo = perform.undoChange
+            if (providesUndo) {
+                assert undo != null : 'Undo does not exist'
+                assert undoManager.anythingToUndo() : 'Undo manager is empty'
+            } else {
+                assert undo == null : 'Undo manager contains undo but should not'
+            }
         }
-        return null
-    }
-
-    protected final void executePerformOperation(final PerformChangeOperation perform, IWorkspace workspace) {
-        workspace.run(perform, new NullProgressMonitor())
-    }
-
-    protected final RefactoringStatus performRefactoringWithStatus(Refactoring ref, boolean performOnFail) {
-        RefactoringStatus status = performRefactoring(ref, performOnFail)
-        if (status == null)
-            return new RefactoringStatus()
         return status
     }
 
-    protected final Change performChange(Refactoring refactoring, boolean storeUndo) {
+    private final Change performChange(Refactoring refactoring, boolean saveUndo) {
         CreateChangeOperation create = new CreateChangeOperation(refactoring)
         PerformChangeOperation perform = new PerformChangeOperation(create)
-        if (storeUndo) {
+        if (saveUndo) {
             perform.setUndoManager(undoManager, refactoring.name)
         }
         ResourcesPlugin.getWorkspace().run(perform, new NullProgressMonitor())
@@ -323,7 +295,7 @@ abstract class RefactoringTestSuite {
         return perform.undoChange
     }
 
-    protected final Change performChange(final Change change) {
+    private final Change performChange(Change change) {
         PerformChangeOperation perform = new PerformChangeOperation(change)
         ResourcesPlugin.getWorkspace().run(perform, new NullProgressMonitor())
         assert perform.changeExecuted() : 'Change was not executed'
@@ -384,8 +356,7 @@ abstract class RefactoringTestSuite {
     }
 
     protected final ICompilationUnit createCUfromTestFile(IPackageFragment pack, String cuName, String subDirName, boolean input) {
-        String contents = input ? getFileContents(getInputTestFileName(cuName, subDirName))
-            : getFileContents(getOutputTestFileName(cuName, subDirName))
+        String contents = input ? getFileContents(getInputTestFileName(cuName, subDirName)) : getFileContents(getOutputTestFileName(cuName, subDirName))
         return createCU(pack, cuName + '.groovy', contents)
     }
 
@@ -393,9 +364,9 @@ abstract class RefactoringTestSuite {
 
     protected static ICompilationUnit createCU(IPackageFragment pack, String name, String contents) {
         assert !pack.getCompilationUnit(name).exists()
-        ICompilationUnit cu = pack.createCompilationUnit(name, contents, true, null)
-        cu.save(null, true)
-        return cu
+        ICompilationUnit unit = pack.createCompilationUnit(name, contents, true, null)
+        unit.save(null, true)
+        return unit
     }
 
     protected static String getFileContents(String fileName) {

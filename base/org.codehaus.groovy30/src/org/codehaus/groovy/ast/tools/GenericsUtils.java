@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static groovy.lang.Tuple.tuple;
@@ -400,7 +401,6 @@ public class GenericsUtils {
                         lower = correctToGenericsSpecRecurse(genericsSpec, oldLower, exclusions);
                     }
                     GenericsType fixed = new GenericsType(oldgType.getType(), upper, lower);
-                    fixed.setName(oldgType.getName());
                     fixed.setWildcard(true);
                     newgTypes[i] = fixed;
                 } else if (oldgType.isPlaceholder()) {
@@ -433,7 +433,7 @@ public class GenericsUtils {
             String name = type.getGenericsTypes()[0].getName();
             type = genericsSpec.get(name);
             if (type != null && type.isGenericsPlaceHolder()
-                    /* GRECLIPSE EDIT -- GROOVY-9059
+                    /* GRECLIPSE edit -- GROOVY-9059
                     && !name.equals(type.getUnresolvedName())) {
                     */
                     && type.hasMultiRedirect()) {
@@ -883,7 +883,7 @@ public class GenericsUtils {
     private static Map<GenericsType, GenericsType> connectGenericsTypes(Map<GenericsType, GenericsType> genericsTypeMap) {
         Map<GenericsType, GenericsType> result = new LinkedHashMap<>();
 
-        outter:
+        outer:
         for (Map.Entry<GenericsType, GenericsType> entry : genericsTypeMap.entrySet()) {
             GenericsType key = entry.getKey();
             GenericsType value = entry.getValue();
@@ -893,7 +893,7 @@ public class GenericsUtils {
                     GenericsType genericsTypeMapEntryValue = genericsTypeMapEntry.getValue();
                     if (!genericsTypeMapEntryValue.isPlaceholder() && (genericsTypeMapEntry.getKey().getName().equals(value.getName()))) {
                         result.put(key, genericsTypeMapEntryValue); // connected to actual type
-                        continue outter;
+                        continue outer;
                     }
                 }
             }
@@ -942,7 +942,7 @@ public class GenericsUtils {
     }
 
     /**
-     * Get the parameter and return types of the abstract method of SAM
+     * Gets the parameter and return types of the abstract method of SAM.
      *
      * If the abstract method is not parameterized, we will get generics placeholders, e.g. T, U
      * For example, the abstract method of {@link java.util.function.Function} is
@@ -959,51 +959,48 @@ public class GenericsUtils {
      * we can get parameter types and return type of the above abstract method,
      * i.e. ClassNode {@code ClassHelper.STRING_TYPE} and {@code ClassHelper.Integer_TYPE}
      *
-     * @param sam the class node which contains only one abstract method
-     * @return the parameter and return types
-     * @since 3.0.0
+     * @param samType the class node which contains only one abstract method
      *
+     * @since 3.0.0
      */
-    public static Tuple2<ClassNode[], ClassNode> parameterizeSAM(ClassNode sam) {
-        MethodNode methodNode = ClassHelper.findSAM(sam);
-        final Map<GenericsType, GenericsType> map = makeDeclaringAndActualGenericsTypeMapOfExactType(methodNode.getDeclaringClass(), sam);
+    public static Tuple2<ClassNode[], ClassNode> parameterizeSAM(final ClassNode samType) {
+        MethodNode abstractMethod = ClassHelper.findSAM(samType);
 
-        ClassNode[] parameterTypes =
-                Arrays.stream(methodNode.getParameters())
-                    .map(e -> {
-                        ClassNode originalParameterType = e.getType();
-                        return originalParameterType.isGenericsPlaceHolder()
-                                ? findActualTypeByGenericsPlaceholderName(originalParameterType.getUnresolvedName(), map)
-                                : originalParameterType;
-                    })
-                    .toArray(ClassNode[]::new);
+        Map<GenericsType, GenericsType> generics = makeDeclaringAndActualGenericsTypeMapOfExactType(abstractMethod.getDeclaringClass(), samType);
+        Function<ClassNode, ClassNode> resolver = t -> {
+            if (t.isGenericsPlaceHolder()) {
+                return findActualTypeByGenericsPlaceholderName(t.getUnresolvedName(), generics);
+            }
+            return t;
+        };
 
-        ClassNode originalReturnType = methodNode.getReturnType();
-        ClassNode returnType =
-                originalReturnType.isGenericsPlaceHolder()
-                        ? findActualTypeByGenericsPlaceholderName(originalReturnType.getUnresolvedName(), map)
-                        : originalReturnType;
-
+        ClassNode[] parameterTypes = Arrays.stream(abstractMethod.getParameters()).map(Parameter::getType).map(resolver).toArray(ClassNode[]::new);
+        ClassNode returnType = resolver.apply(abstractMethod.getReturnType());
         return tuple(parameterTypes, returnType);
     }
 
     /**
-     * Get the actual type according to the placeholder name
+     * Gets the actual type according to the placeholder name.
      *
-     * @param placeholderName the placeholder name, e.g. T, E
+     * @param placeholderName the placeholder name (i.e. "T", "E", etc.)
      * @param genericsPlaceholderAndTypeMap the result of {@link #makeDeclaringAndActualGenericsTypeMap(ClassNode, ClassNode)}
-     * @return the actual type
      */
-    public static ClassNode findActualTypeByGenericsPlaceholderName(String placeholderName, Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {
-        for (Map.Entry<GenericsType, GenericsType> entry : genericsPlaceholderAndTypeMap.entrySet()) {
-            GenericsType declaringGenericsType = entry.getKey();
-
-            if (placeholderName.equals(declaringGenericsType.getName())) {
-                return entry.getValue().getType().redirect();
+    public static ClassNode findActualTypeByGenericsPlaceholderName(final String placeholderName, final Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {
+        Function<GenericsType, ClassNode> resolver = gt -> {
+            if (gt.isWildcard()) {
+                if (gt.getLowerBound() != null) {
+                    return gt.getLowerBound();
+                }
+                if (gt.getUpperBounds() != null) {
+                    return gt.getUpperBounds()[0];
+                }
             }
-        }
+            return gt.getType();
+        };
 
-        return null;
+        return genericsPlaceholderAndTypeMap.entrySet().stream()
+                .filter(e -> e.getKey().getName().equals(placeholderName))
+                .map(Map.Entry::getValue).map(resolver).findFirst().orElse(null);
     }
 
     private static class ParameterizedTypeCacheKey {

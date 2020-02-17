@@ -709,10 +709,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             }
         }
 
-        if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
-            return true;
-        }
-        return false;
+        return resolveFromDefaultImports(type, DEFAULT_IMPORTS);
     }
 
     private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();

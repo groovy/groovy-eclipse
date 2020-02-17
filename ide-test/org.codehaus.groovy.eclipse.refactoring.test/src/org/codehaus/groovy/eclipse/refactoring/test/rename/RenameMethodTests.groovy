@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,18 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import static org.codehaus.jdt.groovy.model.JavaCoreUtil.findType
 import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
-import org.codehaus.jdt.groovy.model.JavaCoreUtil
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IMethod
-import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
-import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
 import org.eclipse.ltk.core.refactoring.RefactoringCore
-import org.junit.Ignore
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Test
 
 final class RenameMethodTests extends RefactoringTestSuite {
@@ -36,158 +34,219 @@ final class RenameMethodTests extends RefactoringTestSuite {
         'RenameMethod/'
     }
 
-    private void runTest(String typeName, String methodName, String newMethodName, List<String> paramSignatures = Collections.EMPTY_LIST,
+    private RefactoringStatus runTest(String typeName, String methodName, String newMethodName, List<String> paramSignatures = [],
             boolean updateReferences = true, boolean createDelegate = false, boolean deprecateDelegate = true) {
-        ICompilationUnit unit = createCUfromTestFile(packageP, 'A')
-        IType type = getType(unit, typeName)
-        if (type == null) {
-            type = JavaCoreUtil.findType(typeName, unit)
-        }
-        IMethod method = type.getMethod(methodName, paramSignatures as String[])
+        def unit = createCUfromTestFile(packageP, 'A')
+        def type = getType(unit, typeName) ?: findType(typeName, unit)
+        def method = type.getMethod(methodName, paramSignatures as String[])
 
-        RenameJavaElementDescriptor descriptor = createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD)
+        def descriptor = createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD)
         descriptor.deprecateDelegate = deprecateDelegate
         descriptor.javaElement = method
         descriptor.keepOriginal = createDelegate
         descriptor.newName = newMethodName
         descriptor.updateReferences = updateReferences
 
-        assert performRefactoring(descriptor) == null : 'was supposed to pass'
-        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName('A')), unit.source)
+        def status = performRefactoring(createRefactoring(descriptor), true)
+        assertEqualLines('invalid change', getFileContents(getOutputTestFileName('A')), unit.source)
+        RefactoringCore.getUndoManager().with { undoManager ->
+            assert undoManager.anythingToUndo() : 'anythingToUndo'
+            assert !undoManager.anythingToRedo() : '! anythingToRedo'
 
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+            undoManager.performUndo(null, new NullProgressMonitor())
+            assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), unit.source)
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), unit.source)
+            assert !undoManager.anythingToUndo() : '! anythingToUndo'
+            assert undoManager.anythingToRedo() : 'anythingToRedo'
 
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), unit.source)
+            undoManager.performRedo(null, new NullProgressMonitor())
+            assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), unit.source)
+        }
+        return status
     }
 
     // NOTE: Test method names are matched to test case data stored externally
 
     @Test
     void test1() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test2() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test3() {
-        runTest('A', 'm', 'k', ['QD;'])
+        def status = runTest('A', 'm', 'k', ['QD;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void test4() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test5() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void test6() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test7() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test8() {
-        runTest('B', 'm', 'k')
+        def status = runTest('B', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void test9() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.entries[0].message.startsWith('Found potential matches.')
+    }
+
+    @Test
+    void test10() {
+        def status = runTest('A', 'setFoo', 'setFooBar', ['QString;'])
+        assert status.isOK() : 'rename failed'
+    }
+
+    @Test
+    void test11() {
+        def status = runTest('A', 'setFoo', 'setFooBar', ['QInteger;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
+    }
+
+    @Test
+    void test12() {
+        def status = runTest('A', 'setFoo', 'setFooBar', ['QInteger;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
+    }
+
+    @Test
+    void test13() {
+        def status = runTest('A', 'getFoo', 'getFooBar')
+        assert status.isOK() : 'rename failed' // property is not renamed, so no potential matches
+    }
+
+    @Test
+    void test14() {
+        def status = runTest('A', 'getFoo', 'getFooBar')
+        assert status.isOK() : 'rename failed' // property is not renamed, so no potential matches
     }
 
     @Test
     void testStaticImport() {
-        createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java',
-            'package o;\npublic class Other { public static int FOO() { return 0; }\n }')
+        createCU(root.createPackageFragment('o', true, null), 'Other.java', '''\
+        |package o;
+        |
+        |public class Other {
+        |  public static int FOO() {
+        |    return 0;
+        |  }
+        |}
+        |'''.stripMargin())
 
-        runTest('o.Other', 'FOO', 'BAR')
+        def status = runTest('o.Other', 'FOO', 'BAR')
+        assert status.entries[0].message.startsWith('This name is discouraged.')
     }
 
     @Test
     void testAnonOverrides() {
         // rename I.run() to sam() and anonymous inners in A should change
-        runTest('I', 'run', 'sam')
+        def status = runTest('I', 'run', 'sam')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides() {
         // rename A.getFoo() to foo() and enum constant overrides should change
-        runTest('A', 'getFoo', 'foo')
+        def status = runTest('A', 'getFoo', 'foo')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/390
     void testEnumOverrides2() {
         // rename A.getFoo() to foo() and enum constant overrides should change
-        runTest('A', 'getFoo', 'foo')
+        def status = runTest('A', 'getFoo', 'foo')
+        assert status.isOK() : 'rename failed'
     }
 
-    @Test @Ignore('Need to get ref to method in enum const') // https://github.com/groovy/groovy-eclipse/issues/389
+    @Test @NotYetImplemented // need to get ref to method in enum const // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides3() {
         // rename A.ONE.getFoo() to foo() and enum constant overrides should change
-        runTest('A$1', 'getFoo', 'foo')
+        def status = runTest('A$1', 'getFoo', 'foo')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testInitializer1() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testInitializer2() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testInitializer3() {
-        runTest('A', 'm', 'k')
+        def status = runTest('A', 'm', 'k')
+        assert status.isOK() : 'rename failed'
     }
 
     // org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration#parseMethods was set to no-op and so no bodies avail for refactor
 
-    @Test @Ignore('@see org.eclipse.jdt.internal.corext.refactoring.rename.RenameNonVirtualMethodProcessor#addDeclarationUpdate')
+    @Test
     void testDelegate1() {
         // rename static method 'm' to 'k' and add deprecated delegate
-        runTest('A', 'm', 'k', [], true, true)
+        def status = runTest('A', 'm', 'k', [], true, true)
+        assert status.isOK() : 'rename failed'
     }
 
-    @Test @Ignore('@see org.eclipse.jdt.internal.corext.refactoring.rename.RenameVirtualMethodProcessor')
+    @Test
     void testDelegate2() {
         // rename non-static method 'm' to 'k' and add deprecated delegate
-        runTest('A', 'm', 'k', [], true, true)
+        def status = runTest('A', 'm', 'k', [], true, true)
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testOverload1() {
-        runTest('A', 'm', 'k', ['Ljava.lang.Object;'], true, false)
+        // rename single-parameter method 'm' to 'k'
+        def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void testOverload2() {
-        runTest('A', 'm', 'k', ['Ljava.lang.Object;'], true, false)
+        // rename single-parameter method 'm' to 'k'
+        def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 
     @Test
     void testOverload3() {
-        runTest('A', 'm', 'k', ['Ljava.lang.Object;'], true, false)
+        // rename single-parameter method 'm' to 'k'
+        def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
     }
 }

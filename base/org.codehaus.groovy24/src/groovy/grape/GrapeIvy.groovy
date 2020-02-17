@@ -108,8 +108,6 @@ class GrapeIvy implements GrapeEngine {
         resolvedDependencies = []
         downloadedArtifacts = []
 
-        //TODO add grab to the DGM??
-
         enableGrapes = true
     }
 
@@ -664,7 +662,10 @@ class GrapeIvy implements GrapeEngine {
         IBiblioResolver resolver = new IBiblioResolver(name: args.name, root:args.root,
               m2compatible:(args.m2Compatible ?: true), settings:settings)
 
-        chainResolver.add(resolver)
+        // GRECLIPSE edit -- GROOVY-9376
+        //chainResolver.add(resolver)
+        chainResolver.resolvers.add(0, resolver)
+        // GRECLIPSE end
 
         ivyInstance = Ivy.newInstance(settings)
         resolvedDependencies = []

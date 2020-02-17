@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,9 +15,10 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
+import static org.eclipse.jdt.groovy.search.GenericsMapper.isVargs;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -25,6 +26,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Kind of accessor a method name may be and then does further processing on a method node if the name matches.
@@ -32,39 +34,53 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 public enum AccessorSupport {
     GETTER("get"), SETTER("set"), ISSER("is"), NONE("");
 
-    private final String prefix;
-
     AccessorSupport(String prefix) {
         this.prefix = prefix;
     }
+
+    private final String prefix;
+
+    //
 
     public boolean isAccessor() {
         return (this != NONE);
     }
 
     public boolean isAccessorKind(MethodNode node, boolean isCategory) {
-        int paramCount = (isCategory ? 1 : 0);
-        ClassNode returnType = node.getReturnType();
+        Parameter[] parameters = node.getParameters();
         switch (this) {
         case GETTER:
-            return (node.getParameters() == null || node.getParameters().length == paramCount) &&
-                !VariableScope.VOID_CLASS_NODE.equals(returnType);
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && !node.isVoidMethod();
         case SETTER:
-            return node.getParameters() != null && node.getParameters().length == paramCount + 1 &&
-                (VariableScope.VOID_CLASS_NODE.equals(returnType) || VariableScope.OBJECT_CLASS_NODE.equals(returnType));
+            return parameters != null && parameters.length == (!isCategory ? 1 : 2) && (!isCategory || !isVargs(parameters));
         case ISSER:
-            return !isCategory && (node.getParameters() == null || node.getParameters().length == paramCount) &&
-                ClassHelper.boolean_TYPE.equals(returnType);
+            return (parameters == null || parameters.length == (!isCategory ? 0 : 1)) && ClassHelper.boolean_TYPE == ClassHelper.getUnwrapper(node.getReturnType());
         default:
             return false;
         }
     }
 
     public String createAccessorName(String name) {
-        if (!name.startsWith(GETTER.prefix) && !name.startsWith(SETTER.prefix) && name.length() > 0) {
+        if (isAccessor() && !name.isEmpty() && !name.startsWith(GETTER.prefix) && !name.startsWith(SETTER.prefix)) {
             return this.prefix + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
         }
         return null;
+    }
+
+    public static AccessorSupport create(String methodName, boolean isCategory) {
+        AccessorSupport accessor = AccessorSupport.NONE;
+
+        for (AccessorSupport kind : AccessorSupport.values()) {
+            if (kind.isAccessor() &&
+                    methodName.startsWith(kind.prefix) &&
+                    methodName.length() > kind.prefix.length() &&
+                    Character.isUpperCase(methodName.charAt(kind.prefix.length()))) {
+                accessor = kind;
+                break;
+            }
+        }
+
+        return accessor;
     }
 
     public static AccessorSupport findAccessorKind(MethodNode node, boolean isCategory) {
@@ -91,8 +107,8 @@ public enum AccessorSupport {
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
                 // abstract types do not track undeclared abstract methods
-                if (declaringType.isAbstract() || declaringType.isInterface() || implementsTrait(declaringType)) {
-                    LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
+                if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
+                    Set<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {
@@ -118,31 +134,13 @@ public enum AccessorSupport {
      *         method starting <tt>get<i>Something</i></tt> with a non-void return type and taking no parameters
      */
     public static boolean isGetter(MethodNode node) {
-        return (!node.isVoidMethod() && node.getParameters().length == 0 &&
+        return !node.isVoidMethod() && node.getParameters().length == 0 &&
             ((node.getName().startsWith("get") && node.getName().length() > 3) ||
-                (node.getName().startsWith("is") && node.getName().length() > 2)));
+                (node.getName().startsWith("is") && node.getName().length() > 2));
     }
 
     public static boolean isSetter(MethodNode node) {
-        return (/*node.isVoidMethod() &&*/ node.getParameters().length == 1 &&
-            node.getName().startsWith("set") && node.getName().length() > 3);
-        // TODO: not varagrs?
-    }
-
-    public static AccessorSupport create(String methodName, boolean isCategory) {
-        AccessorSupport accessor = AccessorSupport.NONE;
-        // is is allowed only for non-category methods
-        if (!isCategory && methodName.length() > 2 && methodName.startsWith("is") &&
-                Character.isUpperCase(methodName.charAt(2))) {
-            accessor = AccessorSupport.ISSER;
-        }
-
-        if (!accessor.isAccessor()) {
-            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set")) &&
-                    Character.isUpperCase(methodName.charAt(3))) {
-                accessor = methodName.charAt(0) == 'g' ? AccessorSupport.GETTER : AccessorSupport.SETTER;
-            }
-        }
-        return accessor;
+        return node.getParameters().length == 1 &&
+            (node.getName().startsWith("set") && node.getName().length() > 3);
     }
 }

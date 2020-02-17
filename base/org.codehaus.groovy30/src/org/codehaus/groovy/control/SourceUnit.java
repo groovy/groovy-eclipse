@@ -280,16 +280,10 @@ public class SourceUnit extends ProcessingUnit {
         String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
 
         if ("xml".equals(property)) {
-            saveAsXML(name, ast);
+            XStreamUtils.serialize(name, ast);
         }
         */
     }
-
-    /* GRECLIPSE edit
-    private static void saveAsXML(String name, ModuleNode ast) {
-        XStreamUtils.serialize(name, ast);
-    }
-    */
 
     //---------------------------------------------------------------------------
     // SOURCE SAMPLING

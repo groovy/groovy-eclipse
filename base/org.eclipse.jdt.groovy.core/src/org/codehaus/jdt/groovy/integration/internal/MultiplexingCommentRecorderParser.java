@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,44 +34,42 @@ import org.eclipse.jdt.internal.core.util.Util;
  * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java
  * parser) but is also aware of a groovy parser. Depending on what kind of file is to be parsed, it will invoke the relevant parser.
  */
-public class MultiplexingCommentRecorderParser extends CommentRecorderParser {
-
-    // FIXASC How often is the LanguageSupport impl looked up? Should be once then we remember what happened.
+class MultiplexingCommentRecorderParser extends CommentRecorderParser {
 
     private final GroovyParser groovyParser;
 
-    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals) {
+    MultiplexingCommentRecorderParser(final Object requestor, final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean optimizeStringLiterals) {
         this(requestor, compilerOptions, problemReporter, optimizeStringLiterals, true);
     }
 
-    public MultiplexingCommentRecorderParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean optimizeStringLiterals, boolean allowTransforms) {
+    MultiplexingCommentRecorderParser(final Object requestor, final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean optimizeStringLiterals, final boolean allowTransforms) {
         super(problemReporter, optimizeStringLiterals);
         groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, allowTransforms, true);
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if (isGroovyLikeFileName(sourceUnit.getFileName()) || isGroovyLikeSourceUnit(sourceUnit)) {
+    public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
+        if (isGroovyLikeFileName(compilationUnit.getFileName()) || isGroovySource(compilationUnit)) {
             if (this.scanner != null) {
-                this.scanner.setSource(sourceUnit.getContents());
+                this.scanner.setSource(compilationUnit.getContents());
             }
-            return groovyParser.dietParse(sourceUnit, compilationResult);
+            return groovyParser.dietParse(compilationUnit, compilationResult);
         }
-        return super.dietParse(sourceUnit, compilationResult);
+        return super.dietParse(compilationUnit, compilationResult);
     }
 
-    private static boolean isGroovyLikeSourceUnit(ICompilationUnit sourceUnit) {
-        if (sourceUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeFileName(new CharArraySequence(sourceUnit.getFileName()))) {
-            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(sourceUnit.getContents())).find()) {
+    private static boolean isGroovySource(final ICompilationUnit compilationUnit) {
+        if (compilationUnit.getFileName() == null || !isJavaLikeButNotGroovyLikeFileName(new CharArraySequence(compilationUnit.getFileName()))) {
+            if (GROOVY_SOURCE_DISCRIMINATOR.matcher(new CharArraySequence(compilationUnit.getContents())).find()) {
                 Util.log(1, "Identified a Groovy source unit through inspection of its contents: " +
-                    String.valueOf(sourceUnit.getContents(), 0, Math.min(250, sourceUnit.getContents().length)));
+                    String.valueOf(compilationUnit.getContents(), 0, Math.min(250, compilationUnit.getContents().length)));
                 return true;
             }
         }
         return false;
     }
-    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR =
-        Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
+
+    private static final Pattern GROOVY_SOURCE_DISCRIMINATOR = Pattern.compile("\\A(/\\*.*?\\*/\\s*)?package\\s+\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*(?:\\s*\\.\\s*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*\\s++(?!;)", Pattern.DOTALL);
 
     @Override
     public void reset() {

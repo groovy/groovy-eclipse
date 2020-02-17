@@ -32,34 +32,35 @@ import java.util.List;
 public class MethodNode extends AnnotatedNode implements Opcodes {
 
     public static final String SCRIPT_BODY_METHOD_KEY = "org.codehaus.groovy.ast.MethodNode.isScriptBody";
-    private final String name;
+    private String name;
     private int modifiers;
     private boolean syntheticPublic;
     private ClassNode returnType;
     private Parameter[] parameters;
-    private boolean hasDefaultValue = false;
+    private boolean hasDefaultValue;
     private Statement code;
     private boolean dynamicReturnType;
     private VariableScope variableScope;
-    private final ClassNode[] exceptions;
-    private final boolean staticConstructor;
+    private ClassNode[] exceptions;
+    private boolean staticConstructor;
 
     // type spec for generics
-    private GenericsType[] genericsTypes = null;
+    private GenericsType[] genericsTypes;
     private boolean hasDefault;
 
     // cached data
     String typeDescriptor;
 
+    protected MethodNode() {}
+
     public MethodNode(String name, int modifiers, ClassNode returnType, Parameter[] parameters, ClassNode[] exceptions, Statement code) {
         this.name = name;
         this.modifiers = modifiers;
+        this.exceptions = exceptions;
         this.code = code;
         setReturnType(returnType);
         setParameters(parameters);
-        this.hasDefault = false;
-        this.exceptions = exceptions;
-        this.staticConstructor = (name != null && name.equals("<clinit>"));
+        this.staticConstructor = "<clinit>".equals(name);
     }
 
     /**
@@ -81,7 +82,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isVoidMethod() {
-        return returnType == ClassHelper.VOID_TYPE;
+        return ClassHelper.VOID_TYPE.equals(getReturnType());
     }
 
     public Statement getCode() {

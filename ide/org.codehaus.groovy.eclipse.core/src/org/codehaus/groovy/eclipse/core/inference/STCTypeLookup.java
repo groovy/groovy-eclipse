@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.stc.ExtensionMethodNode;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
@@ -123,6 +124,13 @@ public class STCTypeLookup implements ITypeLookup {
             }
 
             if (inferredType instanceof ClassNode) {
+                // compound assignment (+=, ?=, etc.) may involve separate declarations for read and write
+                if (confidence.isAtLeast(TypeConfidence.INFERRED) && isCompoundAssignTarget(expr, scope)) {
+                    if (declaration instanceof MethodNode) {
+                        confidence = TypeConfidence.LOOSELY_INFERRED; // setter for write; field or property or accessor for read
+                    }
+                }
+
                 TypeLookupResult result = new TypeLookupResult((ClassNode) inferredType, declaringType, declaration, confidence, scope);
                 result.isGroovy = isGroovy;
                 return result;
@@ -177,5 +185,10 @@ public class STCTypeLookup implements ITypeLookup {
             }
         }
         return null;
+    }
+
+    private static boolean isCompoundAssignTarget(final Expression expr, final VariableScope scope) {
+        boolean isAssignTarget = (scope.getWormhole().get("lhs") == expr || expr.getNodeMetaData("rhsType") != null);
+        return (isAssignTarget && scope.getEnclosingAssignmentOperator().filter(op -> op.getType() != Types.EQUALS).isPresent());
     }
 }

@@ -256,8 +256,7 @@ public class SourceUnit extends ProcessingUnit {
         try {
             this.ast = parserPlugin.buildAST(this, this.classLoader, this.cst);
             this.ast.setDescription(this.name);
-        }
-        catch (SyntaxException e) {
+        } catch (SyntaxException e) {
             if (this.ast == null) {
                 // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);

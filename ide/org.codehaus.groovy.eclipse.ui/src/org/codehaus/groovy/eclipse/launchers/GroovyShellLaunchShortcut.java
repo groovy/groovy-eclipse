@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,66 +15,42 @@
  */
 package org.codehaus.groovy.eclipse.launchers;
 
-import java.util.Arrays;
-
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.Adapters;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfigurationType;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
-import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.ui.DebugUITools;
-import org.eclipse.debug.ui.ILaunchShortcut;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
-import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IEditorPart;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.util.CompilerUtils;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-public class GroovyShellLaunchShortcut implements ILaunchShortcut {
+public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
     @Override
-    public void launch(IEditorPart editor, String mode) {
-        // make sure we are saved as we run groovy from the file
-        editor.getEditorSite().getPage().saveEditor(editor, false);
-        IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
-        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-        if (unit.getJavaProject() != null) {
-            launchGroovy(unit.getJavaProject(), mode);
-        }
+    protected ILaunchConfigurationType getGroovyLaunchConfigType() {
+        return getLaunchManager().getLaunchConfigurationType("org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration");
     }
 
     @Override
-    public void launch(ISelection selection, String mode)  {
-        if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) {
-            IStructuredSelection structredSelection = (IStructuredSelection) selection;
-            Object elem = structredSelection.getFirstElement();
-            if (elem instanceof IJavaElement) {
-                launchGroovy(((IJavaElement) elem).getJavaProject(), mode);
+    protected String applicationOrConsole() {
+        return "Shell";
+    }
+
+    @Override
+    protected boolean canLaunchWithNoType() {
+        return true;
+    }
+
+    @Override
+    protected String mainArgs(IType runType, IJavaProject javaProject) {
+        StringBuilder mainArgs = new StringBuilder("org.codehaus.groovy.tools.shell.Main");
+        mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
+
+        if (isAtLeastGroovy(2, 5, 0)) {
+            CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
+            CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
+            if (compilerOptions.produceMethodParameters) {
+                mainArgs.append(" --parameters");
             }
         }
-    }
 
-    private void launchGroovy(IJavaProject project, String mode) {
-        try {
-            ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-            String launchName = launchManager.generateLaunchConfigurationName(project.getProject().getName());
-            ILaunchConfigurationType launchType = launchManager.getLaunchConfigurationType("org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration");
-
-            ILaunchConfigurationWorkingCopy launchConfig = launchType.newInstance(null, launchName);
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "org.codehaus.groovy.tools.shell.Main");
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
-
-            DebugUITools.launch(launchConfig, mode);
-        } catch (Exception e) {
-            GroovyPlugin.getDefault().logError("Exception launching Groovy Shell", e);
-        }
+        return mainArgs.toString();
     }
 }

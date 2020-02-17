@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -874,8 +874,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7996a() {
-        assumeTrue(isAtLeastGroovy(30));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -3152,6 +3150,44 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9204() {
+        //@formatter:off
+        String[] sources = {
+            "G.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class G extends Three {\n" +
+            "  static main(args) {\n" +
+            "    print new G().test()\n" +
+            "  }\n" +
+            "  def test() {\n" +
+            "    field.meth() // typeof(field) should be A\n" +
+            "    //    ^^^^ Cannot find matching method java.lang.Object#meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "J.java",
+            "public class J {\n" +
+            "  public String meth() {\n" +
+            "    return \"works\";\n" +
+            "  }\n" +
+            "}\n" +
+            "abstract class One<T extends J> {\n" +
+            "  protected T field;\n" +
+            "}\n" +
+            "abstract class Two<T extends J> extends One<T> {\n" +
+            "}\n" +
+            "abstract class Three extends Two<J> {\n" +
+            "  {\n" +
+            "    field = new J();\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic9265() {
         //@formatter:off
         String[] sources = {
@@ -3222,6 +3258,56 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "Outer0 > Inner1 > Inner2 > Inner3"); // OWNER_FIRST results in "Outer0 > Outer0 > Outer0 > Inner3"
+    }
+
+    @Test
+    public void testCompileStatic9327() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def runner = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      unknown\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tunknown\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9327a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  def runner = new Runnable() {\n" +
+            "    @Override void run() {\n" +
+            "      unknown\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tunknown\n" +
+            "\t^^^^^^^\n" +
+            "Groovy:[Static type checking] - The variable [unknown] is undeclared.\n" +
+            "----------\n");
     }
 
     @Test
@@ -3342,29 +3428,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "3");
     }
 
-    @Test @Ignore("java.lang.ExceptionInInitializerError")
-    public void testCompileStatic9332c() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
-
-        //@formatter:off
-        String[] sources = {
-            "Main.groovy",
-            "@groovy.transform.CompileStatic\n" +
-            "class Main {\n" +
-            "  static main(args) {\n" +
-            "    print acc\n" +
-            "  }\n" +
-            "  static int acc = 0\n" +
-            "  static {\n" +
-            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "7");
-    }
-
     @Test
     public void testCompileStatic9333() {
         assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
@@ -3421,8 +3484,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "1f2f3f4f");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9332?focusedCommentId=16994038&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-16994038")
-    public void testCompileStatic9333b() {
+    @Test
+    public void testCompileStatic9333and9341() {
         assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
 
         //@formatter:off
@@ -3534,6 +3597,247 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\tmeth(c)\n" +
             "\t^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot call Script#meth(java.lang.Class <? super java.lang.CharSequence>) with arguments [java.lang.Class <?>] \n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9340() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    this.newInstance().test()\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    java.util.function.Consumer<Main> consumer = main -> print 'works'\n" + // A transform used a generics containing ClassNode Main for the method ...
+            "    consumer.accept(this)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9342() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach((Integer i) -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9347() {
+        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach(i -> acc += i)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9347a() {
+        assumeTrue(isAtLeastJava(JDK8));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print acc\n" +
+            "  }\n" +
+            "  static int acc = 0\n" +
+            "  static {\n" +
+            "    [1, 2, 3].forEach { i -> acc += i }\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9385() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      i += 1\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic9385a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      ++i\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic9385b() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  private int i\n" +
+            "  int test() {\n" +
+            "    { ->\n" +
+            "      i++\n" +
+            "    }.call()\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print new Main().test()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0");
+    }
+
+    @Test
+    public void testCompileStatic9389() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print new Pogo().integer++\n" +
+            "  }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  Integer integer = 0\n" +
+            "  Integer getInteger() { return integer }\n" +
+            "  void setInteger(Integer i) { integer = i }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0");
+    }
+
+    @Test
+    public void testCompileStatic9389a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print(++(new Pogo().integer))\n" +
+            "  }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  Integer integer = 0\n" +
+            "  Integer getInteger() { return integer }\n" +
+            "  void setInteger(Integer i) { integer = i }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic9389b() {
+        assumeTrue(isAtLeastGroovy(30));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print new Pogo().integer++\n" +
+            "  }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  Integer integer = 0\n" +
+            "  Integer getInteger() { return integer }\n" +
+            "  void setInteger(Character c) { integer = c as int }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tprint new Pogo().integer++\n" +
+            "\t      ^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot assign value of type java.lang.Integer to variable of type java.lang.Character\n" +
             "----------\n");
     }
 }

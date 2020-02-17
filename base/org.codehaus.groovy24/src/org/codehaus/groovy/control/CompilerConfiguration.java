@@ -56,17 +56,19 @@ public class CompilerConfiguration {
     /** This (<code>"1.8"</code>) is the value for targetBytecode to compile for a JDK 1.8. */
     public static final String JDK8 = "1.8";
 
+    /** The valid targetBytecode values. */
+    public static final String[] ALLOWED_JDKS = {JDK4, JDK5, JDK6, JDK7, JDK8};
+
     /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5 or later JVM. */
     public static final String POST_JDK5 = JDK5;
 
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. */
     public static final String PRE_JDK5 = JDK4;
 
-    // GRECLIPSE private->public
-    public static final String[] ALLOWED_JDKS = { JDK4, JDK5, JDK6, JDK7, JDK8 };
-
+    /* GRECLIPSE edit
     @Deprecated
     public static final String CURRENT_JVM_VERSION = getMinBytecodeVersion();
+    */
 
     /**
      * The default source encoding
@@ -82,7 +84,7 @@ public class CompilerConfiguration {
     public static final CompilerConfiguration DEFAULT = new CompilerConfiguration() {
         @Override
         public List<String> getClasspath() {
-            return Optional.ofNullable(super.getClasspath()).map(Collections::unmodifiableList).orElse(null);
+            return Collections.unmodifiableList(super.getClasspath());
         }
         @Override
         public List<CompilationCustomizer> getCompilationCustomizers() {
@@ -98,11 +100,11 @@ public class CompilerConfiguration {
         }
         @Override
         public Map<String, Boolean> getOptimizationOptions() {
-            return Optional.ofNullable(super.getOptimizationOptions()).map(Collections::unmodifiableMap).orElse(null);
+            return Collections.unmodifiableMap(super.getOptimizationOptions());
         }
         @Override
         public Set<String> getScriptExtensions() {
-            return Optional.ofNullable(super.getScriptExtensions()).map(Collections::unmodifiableSet).orElse(null);
+            return Collections.unmodifiableSet(super.getScriptExtensions());
         }
 
         @Override
@@ -852,17 +854,27 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Sets the bytecode compatibility. The parameter can take one of the values
-     * <tt>1.8</tt>, <tt>1.7</tt>, <tt>1.6</tt>, <tt>1.5</tt> or <tt>1.4</tt>.
+     * Sets the bytecode compatibility. The parameter can take one of the
+     * values in {@link #ALLOWED_JDKS}.
      *
      * @param version the bytecode compatibility level
      */
     public void setTargetBytecode(String version) {
+        /* GRECLIPSE edit
         for (String allowedJdk : ALLOWED_JDKS) {
             if (allowedJdk.equals(version)) {
                 this.targetBytecode = version;
             }
         }
+        */
+        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        if (index >= 0) {
+            targetBytecode = version; // exact match
+        } else {
+            index = Math.abs(index) - 2; // closest version
+            targetBytecode = ALLOWED_JDKS[Math.max(0, index)];
+        }
+        // GRECLIPSE end
     }
 
     /**
@@ -871,7 +883,7 @@ public class CompilerConfiguration {
      * @return bytecode compatibility level
      */
     public String getTargetBytecode() {
-        return this.targetBytecode;
+        return targetBytecode;
     }
 
     private static String getMinBytecodeVersion() {

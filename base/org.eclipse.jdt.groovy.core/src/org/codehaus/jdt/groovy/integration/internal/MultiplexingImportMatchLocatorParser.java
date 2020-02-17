@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,26 +25,28 @@ import org.eclipse.jdt.internal.core.search.matching.ImportMatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
-public class MultiplexingImportMatchLocatorParser extends ImportMatchLocatorParser {
+class MultiplexingImportMatchLocatorParser extends ImportMatchLocatorParser {
 
-    GroovyParser groovyParser;
+    private final GroovyParser groovyParser;
 
-    protected MultiplexingImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+    MultiplexingImportMatchLocatorParser(final ProblemReporter problemReporter, final MatchLocator locator) {
         super(problemReporter, locator);
-        // The superclass that is extended is in charge of parsing .java files
         groovyParser = new GroovyParser(locator.options, problemReporter, false, true);
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if ((sourceUnit instanceof PossibleMatch && ((PossibleMatch) sourceUnit).isInterestingSourceFile()) ||
-                ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-            // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            // FIXASC ought to reuse to ensure types end up in same groovy CU
-            GroovyParser groovyParser = new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, false, true);
-            return groovyParser.dietParse(sourceUnit, compilationResult);
+    public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
+        if (compilationUnit instanceof PossibleMatch
+                ? ((PossibleMatch) compilationUnit).isInterestingSourceFile()
+                : ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
+            return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
-            return super.dietParse(sourceUnit, compilationResult);
+            return super.dietParse(compilationUnit, compilationResult);
         }
+    }
+
+    @Override
+    public void reset() {
+        groovyParser.reset();
     }
 }

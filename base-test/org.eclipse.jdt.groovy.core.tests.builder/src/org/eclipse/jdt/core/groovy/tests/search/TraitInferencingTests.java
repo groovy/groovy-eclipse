@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,17 +213,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     public void testProperty13() {
         String source =
             "trait T {\n" +
-            "  Number number\n" +
+            "  Number thing\n" +
             "}\n" +
             "class C implements T {\n" +
             "  void meth() {\n" +
-            "    println T.super.number\n" +
+            "    println T.super.thing\n" +
             "  }\n" +
             "}\n";
 
-        // TODO: assertDeclType(source, "number", "T");
-        // TODO: assertExprType(source, "number", "java.lang.Number");
-        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length());
+        // TODO: assertDeclType(source, "thing", "T");
+        // TODO: assertExprType(source, "thing", "java.lang.Number");
+        assertUnknownConfidence(source, source.lastIndexOf("thing"), source.lastIndexOf("thing") + "thing".length());
     }
 
     @Test

@@ -263,7 +263,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.resolv
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.toMethodParametersString;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodArgumentWithGenerics;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodsWithGenerics;
-import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
 
 /**
  * The main class code visitor responsible for static type checking. It will perform various inspections like checking
@@ -315,7 +314,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     protected final ReturnAdder.ReturnStatementListener returnListener = new ReturnAdder.ReturnStatementListener() {
         public void returnStatementAdded(final ReturnStatement returnStatement) {
-            if (returnStatement.getExpression() == ConstantExpression.NULL) return;
             if (isNullConstant(returnStatement.getExpression())) return;
             checkReturnType(returnStatement);
             if (typeCheckingContext.getEnclosingClosure() != null) {
@@ -400,6 +398,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             visitClass(innerClassNode);
         }
         typeCheckingContext.alreadyVisitedMethods = oldVisitedMethod;
+        // GRECLIPSE add
+        typeCheckingContext.popEnclosingClassNode();
+        if (type != null) {
+            typeCheckingContext.popErrorCollector();
+        }
+        // GRECLIPSE end
         node.putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, node);
         // mark all methods as visited. We can't do this in visitMethod because the type checker
         // works in a two pass sequence and we don't want to skip the second pass
@@ -413,6 +417,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected boolean shouldSkipClassNode(final ClassNode node) {
+        // GRECLIPSE add
+        if (Boolean.TRUE.equals(node.getNodeMetaData(StaticTypeCheckingVisitor.class))) return true;
+        // GRECLIPSE end
         if (isSkipMode(node)) return true;
         return false;
     }
@@ -1473,7 +1480,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 return true;
             }
             // GRECLIPSE end
-            LinkedList<ClassNode> queue = new LinkedList<ClassNode>();
+            LinkedList<ClassNode> queue = new LinkedList<>();
             queue.add(testClass);
             if (isPrimitiveType(testClass)) {
                 queue.add(getWrapper(testClass));
@@ -1523,7 +1530,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return true;
                 }
 
-                boolean isThisExpression = enclosingTypes.contains(objectExpressionType);
+                boolean isThisExpression = enclosingTypes.contains(testClass);
                 // GRECLIPSE end
 
                 MethodNode getter = findGetter(current, "get" + capName, pexp.isImplicitThis());
@@ -1597,19 +1604,18 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
                 if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
 
-                // if the property expression is an attribute expression (o.@attr), then
-                // we stop now, otherwise we must check the parent class
-                if (/*!isAttributeExpression && */current.getSuperClass() != null) {
+                if (current.getSuperClass() != null) {
                     queue.add(current.getUnresolvedSuperClass());
                 }
             }
-            // GROOVY-5568, the property may be defined by DGM
+
+            // GROOVY-5568: the property may be defined by DGM
             List<ClassNode> dgmReceivers = new ArrayList<ClassNode>(2);
             dgmReceivers.add(testClass);
             if (isPrimitiveType(testClass)) dgmReceivers.add(getWrapper(testClass));
             for (ClassNode dgmReceiver : dgmReceivers) {
-                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
-                for (MethodNode m : findDGMMethodsByNameAndArguments(getTransformLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
+                List<MethodNode> methods = findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "get" + capName, ClassNode.EMPTY_ARRAY);
+                for (MethodNode m : findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), dgmReceiver, "is" + capName, ClassNode.EMPTY_ARRAY)) {
                     if (Boolean_TYPE.equals(getWrapper(m.getReturnType()))) methods.add(m);
                 }
                 if (!methods.isEmpty()) {
@@ -1624,6 +1630,25 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (readMode) storeTargetMethod(pexp, getter);
                         return true;
                     }
+                }
+            }
+
+            // GROOVY-7996: check if receiver implements get(String)/set(String,Object) or propertyMissing(String)
+            if (!testClass.isArray() && !isPrimitiveType(getUnwrapper(testClass))
+                    && pexp.isImplicitThis() && typeCheckingContext.getEnclosingClosure() != null) {
+                MethodNode mopMethod;
+                if (readMode) {
+                    mopMethod = testClass.getMethod("get", new Parameter[]{new Parameter(STRING_TYPE, "name")});
+                } else {
+                    mopMethod = testClass.getMethod("set", new Parameter[]{new Parameter(STRING_TYPE, "name"), new Parameter(OBJECT_TYPE, "value")});
+                }
+                if (mopMethod == null) mopMethod = testClass.getMethod("propertyMissing", new Parameter[]{new Parameter(STRING_TYPE, "propertyName")});
+
+                if (mopMethod != null && !mopMethod.isSynthetic()) {
+                    pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
+                    pexp.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    return true;
                 }
             }
         }
@@ -2256,6 +2281,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (node != null) storeTargetMethod(call, node);
             }
+            // GRECLIPSE add -- GROOVY-9327: check for AIC in STC method with non-STC enclosing class
+            if (call.isUsingAnonymousInnerClass()) {
+                Set<MethodNode> methods = typeCheckingContext.methodsToBeVisited;
+                if (!methods.isEmpty()) { // indicates specific methods have STC
+                    typeCheckingContext.methodsToBeVisited = Collections.emptySet();
+
+                    ClassNode anonType = call.getType();
+                    visitClass(anonType); // visit anon. inner class inline with method
+                    anonType.putNodeMetaData(StaticTypeCheckingVisitor.class, Boolean.TRUE);
+
+                    typeCheckingContext.methodsToBeVisited = methods;
+                }
+            }
+            // GRECLIPSE end
             extension.afterMethodCall(call);
         } finally {
             typeCheckingContext.popEnclosingConstructorCall();
@@ -2811,6 +2850,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // First we try to get as much information about the declaration
         // class through the receiver
         Map<GenericsTypeName, GenericsType> targetMethodDeclarationClassConnections = new HashMap<GenericsTypeName, GenericsType>();
+        // GRECLIPSE add -- GROOVY-9347
+        for (ClassNode face : receiver.getAllInterfaces()) {
+            extractGenericsConnections(targetMethodDeclarationClassConnections, StaticTypeCheckingSupport.getCorrectedClassNode(receiver, face, true), face.redirect());
+        }
+        if (!receiver.isInterface())
+        // GRECLIPSE end
         extractGenericsConnections(targetMethodDeclarationClassConnections, receiver, receiver.redirect());
         // then we use the method with the SAM parameter to get more information about the declaration
         Parameter[] parametersOfMethodContainingSAM = methodWithSAMParameter.getParameters();
@@ -3293,7 +3338,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             boolean callArgsVisited = false;
             if (isCallOnClosure) {
                 // this is a closure.call() call
-                if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                // GRECLIPSE edit
+                //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+                if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+                // GRECLIPSE end
                     // isClosureCall() check verified earlier that a field exists
                     FieldNode field = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
                     GenericsType[] genericsTypes = field.getType().getGenericsTypes();
@@ -3690,7 +3738,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     protected boolean isClosureCall(final String name, final Expression objectExpression, final Expression arguments) {
         if (objectExpression instanceof ClosureExpression && ("call".equals(name) || "doCall".equals(name)))
             return true;
-        if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        // GRECLIPSE edit
+        //if (objectExpression == VariableExpression.THIS_EXPRESSION) {
+        if (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()) {
+        // GRECLIPSE end
             FieldNode fieldNode = typeCheckingContext.getEnclosingClassNode().getDeclaredField(name);
             if (fieldNode != null) {
                 ClassNode type = fieldNode.getType();
@@ -4602,8 +4653,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             collectAllInterfaceMethodsByName(receiver, name, methods);
         }
 
-        // lookup in DGM methods too
-        findDGMMethodsByNameAndArguments(getTransformLoader(), receiver, name, args, methods);
+        if (!"<init>".equals(name) && !"<clinit>".equals(name)) {
+            // lookup in DGM methods too
+            findDGMMethodsByNameAndArguments(getSourceUnit().getClassLoader(), receiver, name, args, methods);
+        }
         methods = filterMethodsByVisibility(methods);
         List<MethodNode> chosen = chooseBestMethod(receiver, methods, args);
         if (!chosen.isEmpty()) return chosen;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
+    public Parser getParser(final Object requestor, final CompilerOptions compilerOptions, final ProblemReporter problemReporter, final boolean parseLiteralExpressionsAsConstants, final int variant) {
         if (variant == 1) {
             return new MultiplexingParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
         } else if (variant == 2) {
@@ -133,33 +133,33 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+    public CompletionParser getCompletionParser(final CompilerOptions compilerOptions, final ProblemReporter problemReposrter, final boolean storeExtraSourceEnds, final IProgressMonitor monitor) {
         return new MultiplexingCompletionParser(compilerOptions, problemReposrter, storeExtraSourceEnds, monitor);
     }
 
     @Override
-    public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+    public IndexingParser getIndexingParser(final ISourceElementRequestor requestor, final IProblemFactory problemFactory, final CompilerOptions options, final boolean reportLocalDeclarations, final boolean optimizeStringLiterals, final boolean useSourceJavadocParser) {
         return new MultiplexingIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
     }
 
     @Override
-    public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
+    public MatchLocatorParser getMatchLocatorParserParser(final ProblemReporter problemReporter, final MatchLocator locator) {
         return new MultiplexingMatchLocatorParser(problemReporter, locator);
     }
 
     @Override
-    public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
+    public ImportMatchLocatorParser getImportMatchLocatorParserParser(final ProblemReporter problemReporter, final MatchLocator locator) {
         return new MultiplexingImportMatchLocatorParser(problemReporter, locator);
     }
 
     @Override
-    public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+    public SourceElementParser getSourceElementParser(final ISourceElementRequestor requestor, final IProblemFactory problemFactory, final CompilerOptions options, final boolean reportLocalDeclarations, final boolean optimizeStringLiterals, final boolean useSourceJavadocParser) {
         ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options, new DefaultProblemFactory());
         return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
     }
 
     @Override
-    public Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
+    public Collection<String> getImplicitImportContainers(final org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
         Collection<String> implicitImportContainerNames = Arrays.stream(ResolveVisitor.DEFAULT_IMPORTS)
                 .map(p -> p.substring(0, p.length() - 1)).collect(java.util.stream.Collectors.toList());
 
@@ -180,7 +180,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
+    public CompilationUnit newCompilationUnit(final PackageFragment parent, final String name, final WorkingCopyOwner owner) {
         if (ContentTypeUtils.isGroovyLikeFileName(name)) {
             return new GroovyCompilationUnit(parent, name, owner);
         } else {
@@ -189,7 +189,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit icu, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
+    public CompilationUnitDeclaration newCompilationUnitDeclaration(final ICompilationUnit icu, final ProblemReporter problemReporter, final CompilationResult compilationResult, final int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(icu.getFileName())) {
 
             String unitName = String.valueOf(icu.getFileName());
@@ -240,22 +240,15 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
-    public static CompilerConfiguration newCompilerConfiguration(CompilerOptions compilerOptions, ProblemReporter problemReporter) {
+    public static CompilerConfiguration newCompilerConfiguration(final CompilerOptions compilerOptions, final ProblemReporter problemReporter) {
         CompilerConfiguration config = new CompilerConfiguration();
-
-        // if target JDK is greater than Groovy's minimum target, set it to given or max supported value
-        if (compilerOptions.targetJDK > CompilerOptions.versionToJdkLevel(config.getTargetBytecode())) {
-            long target = Math.min(compilerOptions.targetJDK, CompilerOptions.versionToJdkLevel(
-                CompilerConfiguration.ALLOWED_JDKS[CompilerConfiguration.ALLOWED_JDKS.length - 1]));
-            config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(target));
-        }
+        config.setParameters(compilerOptions.produceMethodParameters);
+        config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
+        config.setTargetBytecode(CompilerOptions.versionFromJdkLevel(compilerOptions.targetJDK));
 
         if (compilerOptions.defaultEncoding != null && !compilerOptions.defaultEncoding.isEmpty()) {
             config.setSourceEncoding(compilerOptions.defaultEncoding);
         }
-
-        config.setPreviewFeatures(compilerOptions.enablePreviewFeatures);
-        config.setParameters(compilerOptions.produceMethodParameters);
 
         if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
@@ -268,7 +261,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
                     configScript = new File(project.getLocation().append(configScript.getPath()).toOSString());
                 }
                 shell.evaluate(configScript);
-            } catch (Exception e) {
+            } catch (Exception | LinkageError e) {
                 int severity = ProblemSeverities.Error;
                 CompilationResult compilationResult = null;
                 if (problemReporter.referenceContext != null) {
@@ -284,11 +277,16 @@ public class GroovyLanguageSupport implements LanguageSupport {
         if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
             config.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
         }
+        if (Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
+            if (config.getTargetBytecode().compareTo(CompilerConfiguration.JDK7) < 0) {
+                config.setTargetBytecode(CompilerConfiguration.JDK7);
+            }
+        }
 
         return config;
     }
 
-    public static GroovyClassLoader newGroovyClassLoader(IJavaProject project, ClassLoader parentLoader) {
+    public static GroovyClassLoader newGroovyClassLoader(final IJavaProject project, final ClassLoader parentLoader) {
         Map<String, String> options = project.getOptions(true);
         CompilerUtils.configureOptionsBasedOnNature(options, project);
         GroovyClassLoaderFactory factory = new GroovyClassLoaderFactory(new CompilerOptions(options), null);
@@ -302,12 +300,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public boolean isInterestingProject(IProject project) {
+    public boolean isInterestingProject(final IProject project) {
         return GroovyNature.hasGroovyNature(project);
     }
 
     @Override
-    public boolean isSourceFile(String fileName, boolean isInterestingProject) {
+    public boolean isSourceFile(final String fileName, final boolean isInterestingProject) {
         if (isInterestingProject) {
             return Util.isJavaLikeFileName(fileName);
         } else {
@@ -316,12 +314,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public boolean isInterestingSourceFile(String fileName) {
+    public boolean isInterestingSourceFile(final String fileName) {
         return ContentTypeUtils.isGroovyLikeFileName(fileName);
     }
 
     @Override
-    public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
+    public boolean maybePerformDelegatedSearch(final PossibleMatch possibleMatch, final SearchPattern pattern, final SearchRequestor requestor) {
         if (possibleMatch.openable != null && possibleMatch.openable.exists()) {
             ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
             if (typeRequestor != null) {
@@ -340,10 +338,10 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     /**
-     * Go through the bunary children and remove all children that do not have a real source location
+     * Removes all children that do not have a real source location.
      */
     @Override
-    public void filterNonSourceMembers(BinaryType binaryType) {
+    public void filterNonSourceMembers(final BinaryType binaryType) {
         try {
             IJavaElement[] childrenArr = binaryType.getChildren();
             List<IJavaElement> children = new ArrayList<>(Arrays.asList(childrenArr));
@@ -386,11 +384,11 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public static ISearchScopeExpander searchScopeExpander;
 
     /**
-     * Expand the search scope iff the focus is a private member inside of a {@link GroovyCompilationUnit}. And the search requestor
-     * is CollectingSearchRequestor.
+     * Expands the search scope iff the focus is a private member inside of a
+     * {@link GroovyCompilationUnit} and the search requestor is CollectingSearchRequestor.
      */
     @Override
-    public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
+    public IJavaSearchScope expandSearchScope(final IJavaSearchScope scope, final SearchPattern pattern, final SearchRequestor requestor) {
         // delegate to something that can see the org.eclise.jdt.coreext classes
         if (searchScopeExpander != null) {
             return searchScopeExpander.expandSearchScope(scope, pattern, requestor);
@@ -399,12 +397,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
     }
 
     @Override
-    public boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo) {
+    public boolean isInterestingBinary(final BinaryType type, final IBinaryType typeInfo) {
         return isInterestingProject(type.getJavaProject().getProject()) && ContentTypeUtils.isGroovyLikeFileName(type.sourceFileName(typeInfo));
     }
 
     @Override
-    public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner)
+    public IJavaElement[] binaryCodeSelect(final ClassFile classFile, final int offset, final int length, final WorkingCopyOwner owner)
             throws JavaModelException {
         GroovyCompilationUnit binaryUnit = new GroovyClassFileWorkingCopy(classFile, owner);
         return binaryUnit.codeSelect(offset, length, owner);
