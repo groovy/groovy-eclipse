@@ -39,9 +39,18 @@
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
             class="org.codehaus.groovy.eclipse.launchers.LaunchConfigurationTabGroup"
-            description="Launch a Groovy Script"
+            description="Launch a Groovy script"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration.tabGroup"
             type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
+      </launchConfigurationTabGroup>
+      <launchConfigurationTabGroup
+            class="org.eclipse.eclemma.ui.launching.CoverageTabGroup"
+            description="Coverage of a Groovy script."
+            helpContextId="org.eclipse.eclemma.ui.coverage_launch_context"
+            id="org.eclipse.eclemma.ui.groovyScriptLaunchConfigurationTabGroup"
+            type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
+         <launchMode
+               mode="coverage"/>
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
             class="org.codehaus.groovy.eclipse.launchers.LaunchConfigurationTabGroup"
@@ -86,7 +95,7 @@
             icon="$nl$/icons/run_as_groovy.png"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut"
             label="Groovy Script"
-            modes="run,debug">
+            modes="run,debug,coverage">
          <contextualLaunch>
             <enablement>
                <with variable="selection">
@@ -778,6 +787,24 @@
    <extension point="org.eclipse.ui.commands">
       <command
             categoryId="org.eclipse.debug.ui.category.run"
+            description="Run Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
+            name="Run Groovy Script">
+      </command>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
+            description="Debug Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
+            name="Debug Groovy Script">
+      </command>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
+            description="Coverage Groovy Script"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.coverage"
+            name="Coverage Groovy Script">
+      </command>
+      <command
+            categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Shell"
             id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut.run"
             name="Run Groovy Shell">
@@ -793,24 +820,6 @@
             description="Run Groovy Console"
             id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.run"
             name="Run Groovy Console">
-      </command>
-      <command
-            categoryId="org.eclipse.debug.ui.category.run"
-            description="Debug Groovy Console"
-            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.debug"
-            name="Debug Groovy Console">
-      </command>
-      <command
-            categoryId="org.eclipse.debug.ui.category.run"
-            description="Run Groovy Script"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
-            name="Run Groovy Script">
-      </command>
-      <command
-            categoryId="org.eclipse.debug.ui.category.run"
-            description="Debug Groovy Script"
-            id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
-            name="Debug Groovy Script">
       </command>
 
       <category
@@ -876,47 +885,58 @@
       <key
             commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+X G"/>
+            sequence="M2+M3+X G">
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+D G"/>
+            sequence="M2+M3+D G">
+      </key>
+      <key
+            commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.coverage"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+M3+E G"><!-- TestNG Suite also uses 'G' -->
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M3+G J"/>
+            sequence="M3+G J">
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M3+J G"/>
-
+            sequence="M3+J G">
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToClosure"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M3+G F"/>
+            sequence="M3+G F">
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToMethod"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M3+G M"/>
+            sequence="M3+G M">
+      </key>
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToProperty"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+M2+,"/>
+            sequence="M1+M2+,">
+      </key>
 
-      <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->
-      <!-- Reenable commands using M1+M3+G for Swiss German -->
-
-      <!-- Use our Find occurrences command instead -->
+      <!-- Use our Find Occurrences command instead -->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.findOccurrences"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+M2+U"/>
+            sequence="M1+M2+U">
+      </key>
+
+      <!-- Switch the M3+G commands to M1+M3+G since they conflict with '@' for Swiss German -->
       <sequenceModifier
             find="M3+G"
             platforms="cocoa,carbon"

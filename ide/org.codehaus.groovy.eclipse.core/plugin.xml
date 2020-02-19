@@ -48,6 +48,15 @@
       </launchConfigurationType>
    </extension>
 
+   <extension point="org.eclipse.debug.core.launchDelegates">
+      <launchDelegate
+            delegate="org.eclipse.eclemma.core.launching.JavaApplicationLauncher"
+            id="org.codehaus.groovy.eclipse.groovyScriptLaunchDelegate"
+            modes="coverage"
+            type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
+      </launchDelegate>
+   </extension>
+
    <extension point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
             class="org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer"
