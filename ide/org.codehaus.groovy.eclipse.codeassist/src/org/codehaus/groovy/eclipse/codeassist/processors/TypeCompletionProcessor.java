@@ -130,7 +130,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
      * </ul>
      */
     protected boolean doTypeCompletion(ContentAssistContext context, String expression) {
-        if (expression.isEmpty()) {
+        if (expression != null && expression.isEmpty()) {
             return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
         }
         if (context.location == ContentAssistLocation.GENERICS && context.completionNode instanceof GenericsType) {
