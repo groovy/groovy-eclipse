@@ -59,6 +59,7 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
@@ -205,6 +206,24 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         }
 
         ContentAssistContext assistContext = createContentAssistContext(gunit, offset, document);
+
+        // if content assist is invoked right after the @ sign this would lead to a timeout
+        // in that case we just return an empty results
+        boolean isEmptyAnnotationRequest = false;
+
+        try {
+            final int startIdx = assistContext.completionEnd - 1;
+
+            if (startIdx >= 0) {
+                final String previousChar = document.get(startIdx, 1);
+                if (assistContext.completionExpression.length() == 0 && "@".equals(previousChar)) {
+                    isEmptyAnnotationRequest = true;
+                }
+            }
+        } catch (BadLocationException e) {
+            GroovyContentAssist.logError("Exception while checking for empty content assist requests after an annotation", e);
+        }
+
         List<ICompletionProposal> proposals = new ArrayList<>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = LOCATION_FACTORIES.get(assistContext.location);
@@ -213,6 +232,12 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                 SearchableEnvironment environment = createSearchableEnvironment(javaContext);
                 try {
                     for (IGroovyCompletionProcessorFactory factory : factories) {
+
+                        // this is the slowest factory, so we ignore it in this case, as it would lead to a timeout anyway
+                        if (isEmptyAnnotationRequest && factory instanceof AnnotationCollectorTypeCompletionProcessorFactory) {
+                            continue;
+                        }
+
                         IGroovyCompletionProcessor processor = factory.createProcessor(assistContext, javaContext, environment);
                         if (processor != null) {
                             if (processor instanceof ITypeResolver) {
