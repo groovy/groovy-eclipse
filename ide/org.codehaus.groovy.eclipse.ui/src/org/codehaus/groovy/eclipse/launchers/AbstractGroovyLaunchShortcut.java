@@ -18,17 +18,21 @@ package org.codehaus.groovy.eclipse.launchers;
 import static org.codehaus.groovy.eclipse.core.compiler.CompilerUtils.getActiveGroovyBundle;
 import static org.codehaus.groovy.eclipse.core.compiler.CompilerUtils.getExportedGroovyAllJar;
 import static org.codehaus.groovy.eclipse.core.compiler.CompilerUtils.getExtraJarsForClasspath;
+import static org.eclipse.jdt.internal.corext.util.JavaModelUtil.getPackageFragmentRoot;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_CLASSPATH;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_DEFAULT_CLASSPATH;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_DEFAULT_SOURCE_PATH;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_EXCLUDE_TEST_CODE;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME;
+import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_SOURCE_PATH;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS;
 import static org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants.ATTR_WORKING_DIRECTORY;
+import static org.eclipse.jdt.launching.JavaRuntime.computeUnresolvedRuntimeClasspath;
 import static org.eclipse.jdt.launching.JavaRuntime.newArchiveRuntimeClasspathEntry;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -71,6 +75,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -186,16 +191,17 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
             try {
                 types = unit.getAllTypes();
             } catch (JavaModelException e) {
-                GroovyCore.logException("Error running Groovy", e);
+                GroovyCore.logException("Failed to launch Groovy", e);
                 return;
             }
             runType = findClassToRun(types);
             if (runType == null) {
-                GroovyCore.logException("Error running Groovy", new Exception(notRunnable));
+                GroovyCore.logException("Failed to launch Groovy", new Exception(notRunnable));
                 return;
             }
         }
 
+        boolean excludeTestCode = (runType != null && !hasTestAttribute(runType));
         Map<String, String> launchProperties = createLaunchProperties(runType, javaProject);
         try {
             String launchName = (runType != null ? runType.getElementName() : javaProject.getElementName());
@@ -213,13 +219,21 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
                 }
             }
 
+            List<String> sourcepath = new ArrayList<>();
+            for (IRuntimeClasspathEntry entry : computeUnresolvedRuntimeClasspath(javaProject, excludeTestCode)) {
+                sourcepath.add(entry.getMemento());
+            }
+
             workingCopy.setAttribute(ATTR_CLASSPATH, classpath);
+            workingCopy.setAttribute(ATTR_SOURCE_PATH, sourcepath);
             workingCopy.setAttribute(ATTR_DEFAULT_CLASSPATH, false);
+            workingCopy.setAttribute(ATTR_DEFAULT_SOURCE_PATH, false);
+            workingCopy.setAttribute(ATTR_EXCLUDE_TEST_CODE, excludeTestCode);
 
             ILaunchConfiguration config = workingCopy.doSave();
             DebugUITools.launch(config, mode);
-        } catch (CoreException | IOException e) {
-            GroovyCore.logException("Error running Groovy file: " + unit.getResource().getName(), e);
+        } catch (Exception e) {
+            GroovyCore.logException("Failed to launch Groovy", e);
         }
     }
 
@@ -232,7 +246,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
         launchConfigProperties.put(ATTR_VM_ARGUMENTS,
             "-Dgroovy.home=\"${groovy_home}\" -Djava.system.class.loader=groovy.lang.GroovyClassLoader");
         launchConfigProperties.put(ATTR_PROGRAM_ARGUMENTS,
-            "--classpath " + generateClasspath(javaProject) + " --main " + mainArgs(runType, javaProject));
+            "--classpath " + generateClasspath(runType, javaProject) + " --main " + mainArgs(runType, javaProject));
         launchConfigProperties.put(ATTR_WORKING_DIRECTORY,
             getWorkingDirectory(runType, javaProject));
         launchConfigProperties.put(GROOVY_TYPE_TO_RUN,
@@ -271,38 +285,34 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
         return null; // aka "${workspace_loc:project_name}"
     }
 
-    private String generateClasspath(IJavaProject javaProject) {
-        Set<String> sourceEntries = new TreeSet<>();
-        Set<String> binEntries = new TreeSet<>();
-        addClasspathEntriesForProject(javaProject, sourceEntries, binEntries);
-        StringBuilder sb = new StringBuilder();
-        sb.append("\"");
+    private String generateClasspath(IType runType, IJavaProject javaProject) {
+        Set<String> sourceEntries = new TreeSet<>(), binaryEntries = new TreeSet<>();
+        addClasspathEntriesForProject(javaProject, sourceEntries, binaryEntries, runType != null && !hasTestAttribute(runType));
+
+        StringBuilder sb = new StringBuilder("\"");
         for (String entry : sourceEntries) {
             sb.append(entry);
             sb.append(File.pathSeparator);
         }
-        for (String entry : binEntries) {
+        for (String entry : binaryEntries) {
             sb.append(entry);
             sb.append(File.pathSeparator);
         }
-
         if (sb.length() > 0) {
             sb.replace(sb.length() - 1, sb.length(), "\"");
         }
         return sb.toString();
     }
 
-    /**
-     * Need to recursively walk the classpath and visit all dependent projects
-     * Not looking at classpath containers yet.
-     */
-    private void addClasspathEntriesForProject(IJavaProject javaProject, Set<String> sourceEntries, Set<String> binEntries) {
+    private void addClasspathEntriesForProject(IJavaProject javaProject, Set<String> sourceEntries, Set<String> binaryEntries, boolean excludeTestCode) {
         List<IJavaProject> dependingProjects = new ArrayList<>();
         try {
             IClasspathEntry[] entries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : entries) {
-                int kind = entry.getEntryKind();
-                switch (kind) {
+                if (excludeTestCode && entry.isTest()) {
+                    continue;
+                }
+                switch (entry.getEntryKind()) {
                 case IClasspathEntry.CPE_LIBRARY:
                     IPath libPath = entry.getPath();
                     if (!isPathInWorkspace(libPath)) {
@@ -324,7 +334,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
                         if (outPath.segmentCount() > 1) {
                             bloc += File.separator + outPath.removeFirstSegments(1).toOSString();
                         }
-                        binEntries.add(bloc);
+                        binaryEntries.add(bloc);
                     }
                     break;
 
@@ -339,15 +349,15 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
                 if (defaultOutPath.segmentCount() > 1) {
                     bloc += File.separator + defaultOutPath.removeFirstSegments(1).toOSString();
                 }
-                binEntries.add(bloc);
+                binaryEntries.add(bloc);
             }
         } catch (JavaModelException e) {
-            GroovyCore.logException("Exception generating classpath for launching groovy script", e);
+            GroovyCore.logException("Exception generating classpath for Groovy launch", e);
         }
         // recur through dependent projects
         for (IJavaProject dependingProject : dependingProjects) {
             if (dependingProject.getProject().isAccessible()) {
-                addClasspathEntriesForProject(dependingProject, sourceEntries, binEntries);
+                addClasspathEntriesForProject(dependingProject, sourceEntries, binaryEntries, excludeTestCode);
             }
         }
     }
@@ -463,5 +473,16 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
 
     protected static boolean matchesScriptFilter(IResource resource) {
         return new ScriptFolderSelector(resource.getProject()).isScript(resource);
+    }
+
+    /**
+     * @see org.eclipse.jdt.debug.ui.launchConfigurations.JavaApplicationLaunchShortcut#isTestCode(IType)
+     */
+    protected static boolean hasTestAttribute(IJavaElement element) {
+        try {
+            return getPackageFragmentRoot(element).getResolvedClasspathEntry().isTest();
+        } catch (JavaModelException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
