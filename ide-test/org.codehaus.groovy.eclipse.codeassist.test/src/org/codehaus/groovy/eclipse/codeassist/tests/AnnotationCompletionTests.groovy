@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.CODEASSIST_ADDIMPORT
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
@@ -65,6 +66,18 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '@'))
 
         assertThat(proposals).includes('Deprecated')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/994
+    void testAnno0d() {
+        String contents = '@ class Foo { }'
+        def proposals = getProposals(contents, '@')
+
+        if (isAtLeastGroovy(25)) {
+            assertThat(proposals).includes('AutoExternalize', 'CompileDynamic')
+        } else {
+            assertThat(proposals).excludes('AutoExternalize', 'CompileDynamic')
+        }
     }
 
     @Test

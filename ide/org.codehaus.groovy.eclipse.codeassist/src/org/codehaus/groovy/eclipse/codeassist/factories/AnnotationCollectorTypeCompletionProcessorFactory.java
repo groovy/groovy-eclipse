@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
             public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
                 List<ICompletionProposal> proposals = super.generateProposals(monitor);
                 if ((monitor != null && monitor.isCanceled()) || proposals.isEmpty()) {
-                    return Collections.EMPTY_LIST;
+                    return Collections.emptyList();
                 }
 
                 // remove types that are not annotated with the AnnotationCollector transform
@@ -70,6 +70,11 @@ public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroov
                 }
 
                 return proposals;
+            }
+
+            @Override
+            protected boolean doTypeCompletion(ContentAssistContext context, String expression) {
+                return !expression.isEmpty() && super.doTypeCompletion(context, expression);
             }
 
             @Override
