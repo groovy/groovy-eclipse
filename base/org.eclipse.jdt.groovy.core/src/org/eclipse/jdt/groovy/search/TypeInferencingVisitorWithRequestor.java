@@ -2101,9 +2101,18 @@ assert primaryExprType != null && dependentExprType != null;
     private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
         if (node instanceof MethodCall) {
             Expression arguments = ((MethodCall) node).getArguments();
-            if (arguments instanceof ArgumentListExpression) {
-                List<Expression> expressions = ((ArgumentListExpression) arguments).getExpressions();
+            if (arguments instanceof TupleExpression) {
+                List<Expression> expressions = ((TupleExpression) arguments).getExpressions();
                 if (isNotEmpty(expressions)) {
+                    if (expressions.get(0) instanceof NamedArgumentListExpression) {
+                        if (node instanceof ConstructorCallExpression) {
+                            return Collections.emptyList(); // default constructor
+                        } else {
+                            return Collections.singletonList(createParameterizedMap(
+                                VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
+                        }
+                    }
+
                     List<ClassNode> types = new ArrayList<>(expressions.size());
                     for (Expression expression : expressions) {
                         ClassNode exprType = expression.getType();
@@ -2150,7 +2159,6 @@ assert primaryExprType != null && dependentExprType != null;
                     return types;
                 }
             }
-            // TODO: Might be useful to look into TupleExpression
             return Collections.emptyList();
         }
 

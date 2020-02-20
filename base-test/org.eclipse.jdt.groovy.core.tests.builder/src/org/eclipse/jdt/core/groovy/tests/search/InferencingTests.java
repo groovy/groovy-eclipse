@@ -3479,4 +3479,16 @@ public final class InferencingTests extends InferencingTestSuite {
 
         assertType(contents, "n", "java.lang.Number");
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1024
+    public void testMethodOverloadsArgumentMatching10() {
+        String contents =
+            "byte meth(String s) {\n" +
+            "}\n" +
+            "char meth(Map args) {\n" +
+            "}\n" +
+            "meth(name:null)\n";
+
+        assertType(contents, "meth", "java.lang.Character");
+    }
 }
