@@ -892,11 +892,11 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+M3+D G">
       </key>
-      <key
+      <!--key
             commandId="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.coverage"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+E G"><!-- TestNG Suite also uses 'G' -->
-      </key>
+            sequence="M2+M3+E G"><!- TestNG Suite also uses 'G' ->
+      </key-->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
             contextId="org.eclipse.ui.contexts.window"
