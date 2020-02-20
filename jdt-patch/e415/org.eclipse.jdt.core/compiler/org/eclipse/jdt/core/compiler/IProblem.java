@@ -1900,6 +1900,10 @@ void setSourceStart(int sourceStart);
 	int NonNullMethodTypeVariableFromLegacyMethod = TypeRelated + 981;
 	/** @since 3.21 */
 	int MissingNullAnnotationImplicitlyUsed = Internal + 982;
+	/** @since 3.21 */
+	int AnnotatedTypeArgumentToUnannotated = Internal + 983;
+	/** @since 3.21 */
+	int AnnotatedTypeArgumentToUnannotatedSuperHint = Internal + 984;
 
 
 	// Java 8 work

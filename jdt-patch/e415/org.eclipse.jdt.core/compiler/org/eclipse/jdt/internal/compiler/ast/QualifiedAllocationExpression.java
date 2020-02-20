@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -49,6 +49,7 @@ import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
@@ -305,11 +306,14 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 			final CompilerOptions compilerOptions = scope.compilerOptions();
 			if (compilerOptions.isAnnotationBasedNullAnalysisEnabled) {
 				ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(this.binding, scope);
-				if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8) {
+				if (scope.environment().usesNullTypeAnnotations()) {
 					if (this.binding instanceof ParameterizedGenericMethodBinding && this.typeArguments != null) {
 						TypeVariableBinding[] typeVariables = this.binding.original().typeVariables();
 						for (int i = 0; i < this.typeArguments.length; i++)
 							this.typeArguments[i].checkNullConstraints(scope, (ParameterizedGenericMethodBinding) this.binding, typeVariables, i);
+					}
+					if (this.resolvedType.isValidBinding()) {
+						this.resolvedType = scope.environment().createAnnotatedType(this.resolvedType, new AnnotationBinding[] {scope.environment().getNonNullAnnotation()});
 					}
 				}
 			}

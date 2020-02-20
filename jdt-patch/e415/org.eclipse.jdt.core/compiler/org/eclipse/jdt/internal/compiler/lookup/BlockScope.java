@@ -1078,6 +1078,11 @@ public void removeTrackingVar(FakedTrackingVariable trackingVariable) {
 public void pruneWrapperTrackingVar(FakedTrackingVariable trackingVariable) {
 	this.trackingVariables.remove(trackingVariable);
 }
+
+public boolean hasResourceTrackers() {
+	return this.trackingVariables != null && !this.trackingVariables.isEmpty();
+}
+
 /**
  * At the end of a block check the closing-status of all tracked closeables that are declared in this block.
  * Also invoked when entering unreachable code.

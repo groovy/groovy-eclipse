@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2019 GK Software AG and others.
+ * Copyright (c) 2013, 2020 GK Software AG and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -101,6 +101,8 @@ public class NullAnnotationMatching {
 		LEGACY_WARNING,
 		/** Need unchecked conversion from unannotated to annotated. */
 		UNCHECKED,
+		/** Need unchecked conversion to pass type with annotated type arguments into unannotated code. */
+		UNCHECKED_TO_UNANNOTATED,
 		/** Definite nullity mismatch. */
 		MISMATCH;
 
@@ -127,10 +129,11 @@ public class NullAnnotationMatching {
 		this.nullStatus = nullStatus;
 	}
 
-	public boolean isAnyMismatch()      { return this.severity.isAnyMismatch(); }
-	public boolean isUnchecked()        { return this.severity == Severity.UNCHECKED; }
-	public boolean isDefiniteMismatch() { return this.severity == Severity.MISMATCH; }
-	public boolean wantToReport() 		{ return this.severity == Severity.LEGACY_WARNING; }
+	public boolean isAnyMismatch()      		{ return this.severity.isAnyMismatch(); }
+	public boolean isUnchecked()        		{ return this.severity == Severity.UNCHECKED || this.severity == Severity.UNCHECKED_TO_UNANNOTATED; }
+	public boolean isAnnotatedToUnannotated() 	{ return this.severity == Severity.UNCHECKED_TO_UNANNOTATED; }
+	public boolean isDefiniteMismatch() 		{ return this.severity == Severity.MISMATCH; }
+	public boolean wantToReport() 				{ return this.severity == Severity.LEGACY_WARNING; }
 
 	public boolean isPotentiallyNullMismatch() {
 		return !isDefiniteMismatch() && this.nullStatus != -1 && (this.nullStatus & FlowInfo.POTENTIALLY_NULL) != 0;
@@ -228,6 +231,7 @@ public class NullAnnotationMatching {
 		try {
 			Severity severity = Severity.OK;
 			TypeBinding superTypeHint = null;
+			TypeBinding originalRequiredType = requiredType;
 			NullAnnotationMatching okStatus = NullAnnotationMatching.NULL_ANNOTATIONS_OK;
 			if (areSameTypes(requiredType, providedType, providedSubstitute)) {
 				if ((requiredType.tagBits & TagBits.AnnotationNonNull) != 0)
@@ -288,7 +292,7 @@ public class NullAnnotationMatching {
 							} else {
 								if (i > 0)
 									currentNullStatus = -1; // don't use beyond the outermost dimension
-								Severity dimSeverity = computeNullProblemSeverity(requiredBits, providedBits, currentNullStatus, i == 0 ? mode : mode.toDetail(), false);
+								Severity dimSeverity = computeNullProblemSeverity(requiredBits, providedBits, currentNullStatus, i == 0 ? mode : mode.toDetail(), null);
 								if (i > 0 && dimSeverity == Severity.UNCHECKED
 										&& providedExpression instanceof ArrayAllocationExpression
 										&& providedBits == 0 && requiredBits != 0)
@@ -322,11 +326,14 @@ public class NullAnnotationMatching {
 					// at toplevel (having a nullStatus) nullable matches all
 				} else {
 					long providedBits = providedNullTagBits(providedType);
-					Severity s = computeNullProblemSeverity(requiredBits, providedBits, nullStatus, mode, requiredType.isTypeVariable());
+					Severity s = computeNullProblemSeverity(requiredBits, providedBits, nullStatus, mode, originalRequiredType);
 					if (s.isAnyMismatch() && requiredType.isWildcard() && requiredBits != 0) {
 						if (((WildcardBinding) requiredType).determineNullBitsFromDeclaration(null, null) == 0) {
-							// wildcard has its nullBits from the type variable: avoid redundant warning.
-							s = Severity.OK;
+							TypeVariableBinding typeVariable = ((WildcardBinding) requiredType).typeVariable();
+							if ((typeVariable.tagBits & TagBits.AnnotationNullMASK) != 0) {
+								// wildcard has its nullBits from the type variable
+								s = Severity.OK; // is already reported as illegal substitution
+							}
 						}
 					}
 					severity = severity.max(s);
@@ -433,6 +440,19 @@ public class NullAnnotationMatching {
 			return validNullTagBits(tagBits);
 
 		if (type.isWildcard()) {
+			WildcardBinding wildcardBinding = (WildcardBinding) type;
+			TypeBinding bound = wildcardBinding.bound;
+			tagBits = bound != null ? bound.tagBits & TagBits.AnnotationNullMASK : 0;
+			switch (wildcardBinding.boundKind) {
+				case Wildcard.SUPER:
+					if (tagBits == TagBits.AnnotationNullable)
+						return TagBits.AnnotationNullable; // type cannot require @NonNull
+					break;
+				case Wildcard.EXTENDS:
+					if (tagBits == TagBits.AnnotationNonNull)
+						return tagBits;
+					break;
+			}
 			return TagBits.AnnotationNullMASK;
 		} 
 		
@@ -544,29 +564,44 @@ public class NullAnnotationMatching {
 	 * @param providedBits null tagBits of the provided type
 	 * @param nullStatus -1 means: don't use, other values see constants in FlowInfo
 	 * @param mode check mode (see {@link CheckMode})
-	 * @param requiredIsTypeVariable is the required type a type variable (possibly: "free type variable")?
+	 * @param requiredType the required type, used, e.g., to check if it is a type variable (possibly: "free type variable")?
 	 * @return see {@link #severity} for interpretation of values
 	 */
-	private static Severity computeNullProblemSeverity(long requiredBits, long providedBits, int nullStatus, CheckMode mode, boolean requiredIsTypeVariable) {
+	private static Severity computeNullProblemSeverity(long requiredBits, long providedBits, int nullStatus, CheckMode mode, TypeBinding requiredType) {
 		if (requiredBits == providedBits)
 			return Severity.OK;
 		if (requiredBits == 0) { 
 			switch (mode) {
+				case EXACT:
+					if (providedBits == TagBits.AnnotationNonNull && !(requiredType instanceof TypeVariableBinding))
+						return Severity.UNCHECKED_TO_UNANNOTATED;
+					return Severity.OK;
 				case COMPATIBLE:
 				case BOUND_CHECK:
 				case BOUND_SUPER_CHECK:
-				case EXACT:
 					return Severity.OK;
 				case OVERRIDE_RETURN:
 					if (providedBits == TagBits.AnnotationNonNull)
 						return Severity.OK; // covariant redefinition to nonnull is good
-					if (!requiredIsTypeVariable)
+					if (!(requiredType instanceof TypeVariableBinding))
 						return Severity.OK; // refining an unconstrained non-TVB return to nullable is also legal
 					return Severity.UNCHECKED;
 				case OVERRIDE:
 					return Severity.UNCHECKED; // warn about dropped annotation
 			}
 		} else if (requiredBits == TagBits.AnnotationNullMASK) {
+			if (mode == CheckMode.EXACT && providedBits == TagBits.AnnotationNonNull) {
+				if (requiredType instanceof WildcardBinding) {
+					WildcardBinding wildcard = (WildcardBinding) requiredType;
+					// passing '@NonNull X' into '? super Y' risks pollution with null
+					if (wildcard.boundKind == Wildcard.SUPER && providedBits == TagBits.AnnotationNonNull) {
+						TypeBinding bound = wildcard.bound;
+						if (bound != null && (bound.tagBits & TagBits.AnnotationNullMASK) != 0)
+							return Severity.OK; // when the wildcard is annotated via its bound, there is not annotated->unannotated conversion
+						return Severity.UNCHECKED_TO_UNANNOTATED;
+					}
+				}
+			}
 			return Severity.OK; // OK since LHS accepts either
 		} else if (requiredBits == TagBits.AnnotationNonNull) {
 			switch (mode) {

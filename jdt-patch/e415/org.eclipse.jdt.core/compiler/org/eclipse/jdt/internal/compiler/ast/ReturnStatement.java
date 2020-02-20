@@ -99,6 +99,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				// by returning the method passes the responsibility to the caller:
 				flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.expression, flowInfo, flowContext, true);
 			}
+			// don't wait till after this statement, because then flowInfo would be DEAD_END & thus cannot serve nullStatus any more:
+			FakedTrackingVariable.cleanUpUnassigned(currentScope, this.expression, flowInfo);
 		}
 	}
 	this.initStateIndex =

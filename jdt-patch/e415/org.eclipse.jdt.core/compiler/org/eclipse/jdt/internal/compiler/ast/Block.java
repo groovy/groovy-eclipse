@@ -23,6 +23,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.codegen.*;
 import org.eclipse.jdt.internal.compiler.flow.*;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class Block extends Statement {
@@ -41,7 +42,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// empty block
 	if (this.statements == null)	return flowInfo;
 	int complaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0 ? Statement.COMPLAINED_FAKE_REACHABLE : Statement.NOT_COMPLAINED;
-	boolean enableSyntacticNullAnalysisForFields = currentScope.compilerOptions().enableSyntacticNullAnalysisForFields;
+	CompilerOptions compilerOptions = currentScope.compilerOptions();
+	boolean enableSyntacticNullAnalysisForFields = compilerOptions.enableSyntacticNullAnalysisForFields;
 	for (int i = 0, max = this.statements.length; i < max; i++) {
 		Statement stat = this.statements[i];
 		if ((complaintLevel = stat.complainIfUnreachable(flowInfo, this.scope, complaintLevel, true)) < Statement.COMPLAINED_UNREACHABLE) {
@@ -51,6 +53,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		flowContext.mergeFinallyNullInfo(flowInfo);
 		if (enableSyntacticNullAnalysisForFields) {
 			flowContext.expireNullCheckedFieldInfo();
+		}
+		if (compilerOptions.analyseResourceLeaks) {
+			FakedTrackingVariable.cleanUpUnassigned(this.scope, stat, flowInfo);
 		}
 	}
 	if (this.scope != currentScope) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -5980,7 +5980,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 	
 	private boolean isLikelyLocalTypeName(char[] typeName) {
 		int dollarPos = CharOperation.lastIndexOf('$', typeName);
-		while (dollarPos != -1) {
+		while (dollarPos != -1 && dollarPos+1 < typeName.length) {
 			if (Character.isDigit(typeName[dollarPos+1]))
 				return true; // name segment starts with a digit => likely a local type (but still "$0" etc. could be part of the source name)
 			dollarPos = CharOperation.lastIndexOf('$', typeName, 0, dollarPos-1);

@@ -383,10 +383,7 @@ public static boolean isDigit(char c) throws InvalidInputException {
 	if(c < ScannerHelper.MAX_OBVIOUS) {
 		return (ScannerHelper.OBVIOUS_IDENT_CHAR_NATURES[c] & ScannerHelper.C_DIGIT) != 0;
 	}
-	if (Character.isDigit(c)) {
-		throw new InvalidInputException(Scanner.INVALID_DIGIT);
-	}
-	return false;
+	return Character.isDigit(c);
 }
 public static int digit(char c, int radix) {
 	if (c < ScannerHelper.MAX_OBVIOUS) {

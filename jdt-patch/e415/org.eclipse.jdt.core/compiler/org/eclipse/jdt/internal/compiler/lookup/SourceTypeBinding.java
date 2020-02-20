@@ -2292,7 +2292,7 @@ protected boolean hasMethodWithNumArgs(char[] selector, int numArgs) {
 	if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
 		return super.hasMethodWithNumArgs(selector, numArgs);
 	// otherwise don't trigger unResolvedMethods() which would actually resolve!
-	if (this.scope != null) {
+	if (this.scope != null && this.scope.referenceContext.methods != null) {
 		for (AbstractMethodDeclaration method : this.scope.referenceContext.methods) {
 			if (CharOperation.equals(method.selector, TypeConstants.CLOSE)) {
 				if (numArgs == 0) {

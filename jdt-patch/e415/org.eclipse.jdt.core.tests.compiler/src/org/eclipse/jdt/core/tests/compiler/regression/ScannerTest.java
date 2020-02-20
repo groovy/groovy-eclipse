@@ -1540,5 +1540,19 @@ public class ScannerTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-
+	/**
+	 * http://bugs.eclipse.org/bugs/show_bug.cgi?id=422760
+	 */
+	public void testBug422760() {
+		String sourceA001 = "\\u0660";
+		IScanner scanner = ToolFactory.createScanner(false, true, false, false);
+		scanner.setSource(sourceA001.toCharArray());
+		int token = 0;
+		try {
+			token = scanner.getNextToken();
+		} catch (InvalidInputException e) {
+			assertTrue(false);
+		}
+		assertEquals("Wrong token type", ITerminalSymbols.TokenNameIntegerLiteral, token);
+	}
 }

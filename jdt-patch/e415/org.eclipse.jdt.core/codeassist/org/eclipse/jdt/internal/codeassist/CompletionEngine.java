@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -4677,7 +4677,7 @@ public final class CompletionEngine
 			}	
 			for (int i = 0; i <= this.expectedTypesPtr; i++) {
 				if((this.expectedTypesFilter & SUBTYPE) != 0
-						&& proposalType.isCompatibleWith(this.expectedTypes[i])) {
+						&& (proposalType.erasure().isCompatibleWith(this.expectedTypes[i].erasure()))) {
 
 					if(CharOperation.equals(this.expectedTypes[i].qualifiedPackageName(), proposalType.qualifiedPackageName()) &&
 							CharOperation.equals(this.expectedTypes[i].qualifiedSourceName(), proposalType.qualifiedSourceName())) {
@@ -13321,12 +13321,14 @@ public final class CompletionEngine
 			typeCompletion = simpleTypeName;
 		}
 
+		ReferenceBinding typeBinding = this.lookupEnvironment.getType(CharOperation.splitOn('.', fullyQualifiedName));
+
 		int relevance = computeBaseRelevance();
 		relevance += computeRelevanceForResolution();
 		relevance += computeRelevanceForInterestingProposal();
 		relevance += computeRelevanceForRestrictions(accessibility);
 		relevance += computeRelevanceForCaseMatching(this.completionToken, simpleTypeName);
-		relevance += computeRelevanceForExpectingType(packageName, simpleTypeName);
+		relevance += computeRelevanceForExpectingType(typeBinding);
 		relevance += computeRelevanceForQualification(isQualified);
 		relevance += computeRelevanceForConstructor();
 

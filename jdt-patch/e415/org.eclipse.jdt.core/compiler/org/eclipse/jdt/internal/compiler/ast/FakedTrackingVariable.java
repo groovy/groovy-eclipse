@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2019 GK Software AG and others.
+ * Copyright (c) 2011, 2020 GK Software AG and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.flow.FinallyFlowContext;
@@ -730,6 +731,28 @@ public class FakedTrackingVariable extends LocalDeclaration {
 			if (local != null && local.closeTracker != null && ((lhsBits & Binding.FIELD) != 0))
 				local.closeTracker.withdraw(); // TODO: may want to use local.closeTracker.markPassedToOutside(..,true)
 		}
+	}
+
+	/** Unassigned closeables are not visible beyond their enclosing statement, immediately report & remove after each statement. */
+	public static void cleanUpUnassigned(BlockScope scope, ASTNode location, FlowInfo flowInfo) {
+		if (!scope.hasResourceTrackers()) return;
+		location.traverse(new ASTVisitor() {
+				@Override
+				public boolean visit(MessageSend messageSend, BlockScope skope) {
+					FakedTrackingVariable closeTracker = messageSend.closeTracker;
+					if (closeTracker != null) {
+						if (closeTracker.originalBinding == null) {
+							int nullStatus = flowInfo.nullStatus(closeTracker.binding);
+							if ((nullStatus & (FlowInfo.POTENTIALLY_NULL | FlowInfo.NULL)) != 0) {
+								closeTracker.reportError(skope.problemReporter(), messageSend, nullStatus);
+							}
+							closeTracker.withdraw();
+						}
+					}
+					return true;
+				}
+			},
+			scope);
 	}
 
 	/** Answer wither the given type binding is a subtype of java.lang.AutoCloseable. */

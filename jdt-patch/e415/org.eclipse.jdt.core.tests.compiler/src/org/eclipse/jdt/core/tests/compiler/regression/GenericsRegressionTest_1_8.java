@@ -10041,4 +10041,23 @@ public void testBug508834_comment0() {
 		runner.runConformTest(); // don't use pre-compiled p/X$1.class
 	}
 
+	public void testBug559449() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+				"p/X.java",
+				"package p;\n" +
+				"public class X {\n" +
+				"	class $$$ {}\n" +
+				"	<S> void m() {\n" +
+				"		Runnable r = () -> {\n" +
+				"			$$$ ddd = new $$$();\n" +
+				"			if (ddd != null)\n" +
+				"				System.out.println(ddd);\n" +
+				"		};\n" +
+				"		r.run();\n" +
+				"	}\n" +
+				"}\n"
+			};
+		runner.runConformTest();
+	}
 }

@@ -14,6 +14,7 @@
 package org.eclipse.jdt.internal.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -492,8 +493,11 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		try {
 			jar = getJar();
 			ZipEntry mfEntry = jar.getEntry(TypeConstants.META_INF_MANIFEST_MF);
-			if (mfEntry != null)
-				return new Manifest(jar.getInputStream(mfEntry));
+			if (mfEntry != null) {
+				try (InputStream is = jar.getInputStream(mfEntry)) {
+					return new Manifest(is);
+				}
+			}
 		} catch (CoreException | IOException e) {
 			// must do without manifest
 		} finally {

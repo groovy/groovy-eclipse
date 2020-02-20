@@ -491,6 +491,9 @@ public static int getIrritant(int problemID) {
 		case IProblem.ReferenceExpressionReturnNullRedefUnchecked:
 		case IProblem.UnsafeNullnessCast:
 			return CompilerOptions.NullUncheckedConversion;
+		case IProblem.AnnotatedTypeArgumentToUnannotated:
+		case IProblem.AnnotatedTypeArgumentToUnannotatedSuperHint:
+			return CompilerOptions.AnnotatedTypeArgumentToUnannotated;
 		case IProblem.RedundantNullAnnotation:
 		case IProblem.RedundantNullDefaultAnnotation:
 		case IProblem.RedundantNullDefaultAnnotationModule:
@@ -801,6 +804,7 @@ public static int getProblemCategory(int severity, int problemID) {
 			case CompilerOptions.NullUncheckedConversion :
 			case CompilerOptions.MissingNonNullByDefaultAnnotation:
 			case CompilerOptions.NonnullParameterAnnotationDropped:
+			case CompilerOptions.AnnotatedTypeArgumentToUnannotated:
 				return CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM;
 			case CompilerOptions.RedundantNullAnnotation :
 				return CategorizedProblem.CAT_UNNECESSARY_CODE;
@@ -10692,17 +10696,21 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 	String superHint = null;
 	String superHintShort = null;
 	if (status.superTypeHint != null && requiredType.isParameterizedType()) {
-		problemId = (status.isUnchecked()
-			? IProblem.NullityUncheckedTypeAnnotationDetailSuperHint
-			: IProblem.NullityMismatchingTypeAnnotationSuperHint);
+		problemId = (status.isAnnotatedToUnannotated()
+					? IProblem.AnnotatedTypeArgumentToUnannotatedSuperHint
+					: (status.isUnchecked()
+						? IProblem.NullityUncheckedTypeAnnotationDetailSuperHint
+						: IProblem.NullityMismatchingTypeAnnotationSuperHint));
 		superHint = status.superTypeHintName(this.options, false);
 		superHintShort = status.superTypeHintName(this.options, true);
 	} else {
-		problemId = (status.isUnchecked()
-			? IProblem.NullityUncheckedTypeAnnotationDetail
-			: (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
-				? IProblem.NullityMismatchAgainstFreeTypeVariable
-				: IProblem.NullityMismatchingTypeAnnotation);
+		problemId = (status.isAnnotatedToUnannotated()
+					? IProblem.AnnotatedTypeArgumentToUnannotated
+					: (status.isUnchecked()
+						? IProblem.NullityUncheckedTypeAnnotationDetail
+						: (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
+							? IProblem.NullityMismatchAgainstFreeTypeVariable
+							: IProblem.NullityMismatchingTypeAnnotation));
 		if (problemId == IProblem.NullityMismatchAgainstFreeTypeVariable) {
 			arguments      = new String[] { null, null, new String(requiredType.sourceName()) }; // don't show bounds here
 			shortArguments = new String[] { null, null, new String(requiredType.sourceName()) };

@@ -5849,7 +5849,7 @@ public void testBug463320_comment8() {
 		"1. ERROR in Try17.java (at line 7)\n" + 
 		"	System.out.println(FileSystems.getFileSystem(uri));\n" + 
 		"	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Potential resource leak: \'<unassigned Closeable value from line 7>\' may not be closed\n" + 
+		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" + 
 		"----------\n",
 		options);
 }
@@ -6399,5 +6399,43 @@ public void testBug558759() {
 	runConformTest(false,
 			new String[] { "Y.java", ySource },
 			"", "", "", null);
+}
+public void testBug559119() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses @Override
+	Map options = getCompilerOptions(); 
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.WARNING);
+	runLeakWarningTest(
+		new String[] {
+			"Sequencer.java",
+			"interface Sequencer extends AutoCloseable {\n" +
+			"	void close(); // no exception\n" +
+			"}\n",
+			"SequencerControl.java",
+			"public abstract class SequencerControl {\n" +
+			"	public abstract Sequencer getSequencer();\n" + 
+			"	@Override\n" + 
+			"	public boolean equals(Object obj) {\n" + 
+			"		if (obj != null) {\n" + 
+			"			if (getClass().equals(obj.getClass())) {\n" + 
+			"				return ((SequencerControl)obj).getSequencer().equals(getSequencer());\n" + 
+			"			}\n" + 
+			"		}\n" + 
+			"		return false;\n" + 
+			"	}\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. WARNING in SequencerControl.java (at line 7)\n" + 
+		"	return ((SequencerControl)obj).getSequencer().equals(getSequencer());\n" + 
+		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" + 
+		"----------\n" + 
+		"2. WARNING in SequencerControl.java (at line 7)\n" + 
+		"	return ((SequencerControl)obj).getSequencer().equals(getSequencer());\n" + 
+		"	                                                     ^^^^^^^^^^^^^^\n" + 
+		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" + 
+		"----------\n",
+		options);
 }
 }

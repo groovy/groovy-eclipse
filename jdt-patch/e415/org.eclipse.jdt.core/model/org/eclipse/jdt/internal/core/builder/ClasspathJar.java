@@ -18,6 +18,7 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -394,9 +395,9 @@ public Manifest getManifest() {
 	if (!scanContent()) // ensure zipFile is initialized
 		return null;
 	ZipEntry entry = this.zipFile.getEntry(TypeConstants.META_INF_MANIFEST_MF);
-	try {
-		if (entry != null)
-			return new Manifest(this.zipFile.getInputStream(entry));
+	try(InputStream is = entry != null ? this.zipFile.getInputStream(entry) : null) {
+		if (is != null)
+			return new Manifest(is);
 	} catch (IOException e) {
 		// cannot use manifest
 	}

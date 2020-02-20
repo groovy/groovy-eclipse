@@ -340,6 +340,8 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("AmbiguousField", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("AmbiguousMethod", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("AmbiguousType", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("AnnotatedTypeArgumentToUnannotated", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
+		expectedProblemAttributes.put("AnnotatedTypeArgumentToUnannotatedSuperHint", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("AnnotationCannotOverrideMethod", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("AnnotationCircularity", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("AnnotationCircularitySelfReference", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
@@ -1325,6 +1327,8 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("AmbiguousField", SKIP);
 		expectedProblemAttributes.put("AmbiguousMethod", SKIP);
 		expectedProblemAttributes.put("AmbiguousType", SKIP);
+		expectedProblemAttributes.put("AnnotatedTypeArgumentToUnannotated", new ProblemAttributes(JavaCore.COMPILER_PB_ANNOTATED_TYPE_ARGUMENT_TO_UNANNOTATED));
+		expectedProblemAttributes.put("AnnotatedTypeArgumentToUnannotatedSuperHint", new ProblemAttributes(JavaCore.COMPILER_PB_ANNOTATED_TYPE_ARGUMENT_TO_UNANNOTATED));
 		expectedProblemAttributes.put("AnnotationCannotOverrideMethod", SKIP);
 		expectedProblemAttributes.put("AnnotationCircularity", SKIP);
 		expectedProblemAttributes.put("AnnotationCircularitySelfReference", SKIP);

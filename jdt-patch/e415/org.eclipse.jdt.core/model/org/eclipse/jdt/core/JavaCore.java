@@ -2070,7 +2070,22 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_NONNULL_TYPEVAR_FROM_LEGACY_INVOCATION = JavaCore.PLUGIN_ID+".compiler.problem.nonnullTypeVariableFromLegacyInvocation"; //$NON-NLS-1$
-
+	/**
+	 * Compiler option ID: Reporting Unsafe Conversion To Unannotated Type Argument.
+	 * <p>When enabled, the compiler will issue an error, warning or info when a value of a parameterized type
+	 * with annotated type arguments is assigned to a variable / bound to a method argument, where the corresponding
+	 * type argument is unannotated.</p>
+	 * <p>This situation is problematic because it will enable using the less-annotated type to manipulate the given
+	 * objects in ways that may violate contracts of the more-annotated type.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.annotatedTypeArgumentToUnannotated"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"info"</code></dd>
+	 * </dl>
+	 * @since 3.21
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_ANNOTATED_TYPE_ARGUMENT_TO_UNANNOTATED = JavaCore.PLUGIN_ID+".compiler.problem.annotatedTypeArgumentToUnannotated"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Setting Source Compatibility Mode.
 	 * <p>Specify whether which source level compatibility is used. From 1.4 on, <code>'assert'</code> is a keyword

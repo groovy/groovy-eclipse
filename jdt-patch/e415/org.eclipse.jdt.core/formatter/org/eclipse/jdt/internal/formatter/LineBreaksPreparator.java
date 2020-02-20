@@ -818,6 +818,8 @@ public class LineBreaksPreparator extends ASTVisitor {
 			return false; // must be handling ast rewrite
 		if (previous != null && this.tm.countLineBreaksBetween(previous, token) == 0)
 			return false;
+		if (token.getLineBreaksBefore() == 0 && (previous == null || previous.getLineBreaksAfter() == 0))
+			return false;
 		int lineStart = token.originalStart;
 		char c;
 		while (lineStart > 0 && (c = this.tm.charAt(lineStart - 1)) != '\r' && c != '\n')

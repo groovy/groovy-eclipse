@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -225,7 +226,9 @@ public class ExternalAnnotationDecorator implements IBinaryType {
 		} else {
 			ZipEntry entry = zipFile.getEntry(qualifiedBinaryFileName);
 			if (entry != null) {
-				return new ExternalAnnotationProvider(zipFile.getInputStream(entry), qualifiedBinaryTypeName);
+				try(InputStream is = zipFile.getInputStream(entry)) {
+					return new ExternalAnnotationProvider(is, qualifiedBinaryTypeName);
+				}
 			}
 		}
 		return null;
