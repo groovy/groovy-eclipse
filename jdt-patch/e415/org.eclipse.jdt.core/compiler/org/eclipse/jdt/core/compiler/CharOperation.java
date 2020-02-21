@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -56,6 +56,8 @@ public final class CharOperation {
 	 * @since 3.14
 	 */
 	public static final char[] COMMA_SEPARATOR = new char[] {','};
+
+	private static final int[] EMPTY_REGIONS = new int[0];
 
 /**
  * Answers a new array with appending the suffix character at the end of the array.
@@ -741,6 +743,146 @@ public static final boolean camelCaseMatch(char[] pattern, int patternStart, int
 		// At this point, either name has been exhausted, or it is at an uppercase letter.
 		// Since pattern is also at an uppercase letter
 	}
+}
+
+/**
+ * Answers true if the characters of the pattern are contained in the
+ * name as a subword, in a case-insensitive way.
+ *
+ * @param pattern the given pattern
+ * @param name the given name
+ * @return true if the pattern matches the given name, false otherwise
+ * @since 3.21
+ */
+public static final boolean subWordMatch(char[] pattern, char[] name) {
+	if (name == null)
+		return false; // null name cannot match
+	if (pattern == null)
+		return true; // null pattern is equivalent to '*'
+
+	int[] matchingRegions = getSubWordMatchingRegions(new String(pattern), new String(name));
+	return matchingRegions != null;
+}
+
+/**
+ * Answers all the regions in a given name matching a subword pattern.
+ * <p>
+ * Each of these regions is made of its starting index and its length in the given
+ * name. They are all concatenated in a single array of <code>int</code>
+ * which therefore always has an even length.
+ * <p>
+ * Note that each region is disjointed from the following one.<br>
+ * E.g. if the regions are <code>{ start1, length1, start2, length2 }</code>,
+ * then <code>start1+length1</code> will always be smaller than
+ * <code>start2</code>.
+ * <p>
+ * Examples:
+ * <ol>
+ * <li><pre>
+ *    pattern = "linkedmap"
+ *    name = LinkedHashMap
+ *    result:  { 0, 6, 10, 3 }
+ * </pre></li>
+ * </ol>
+ *
+ * @see CharOperation#subWordMatch(char[], char[])
+ * 	for more details on the subword behavior
+ *
+ * @param pattern the given pattern
+ * @param name the given name
+ * @return an array of <code>int</code> having two slots per returned
+ * 	regions (first one is the starting index of the region and the second
+ * 	one the length of the region).<br>
+ * 	Note that it may be <code>null</code> if the given name does not match
+ * 	the pattern
+ * @since 3.21
+ */
+public static final int[] getSubWordMatchingRegions(String pattern, String name) {
+
+	if (name == null)
+		return null; // null name cannot match
+	if (pattern == null) {
+		// null pattern cannot match any region
+		// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=264816
+		return EMPTY_REGIONS;
+	}
+
+	int segmentStart = 0;
+	int[] segments = EMPTY_REGIONS;
+	char[] nameChars = name.toCharArray();
+
+	// Main loop is on pattern characters
+	int iName = -1;
+	for (int iPattern = 0; iPattern < pattern.length(); iPattern++) {
+		iName++;
+		if (iName == nameChars.length){
+			// We have exhausted the name (and not the pattern), so it's not a match
+			return null;
+		}
+
+		char patternChar = pattern.charAt(iPattern);
+		char nameChar = nameChars[iName];
+
+		// For as long as we're exactly matching, bring it on
+		if (patternChar == nameChar) {
+			continue;
+		}
+
+		// lower case pattern also matches upper case name
+		if (ScannerHelper.toLowerCase(nameChar) == patternChar) {
+			continue;
+		}
+
+		// not matching, record previous segment and find next word match in name
+		if (iName > segmentStart) {
+			segments = Arrays.copyOf(segments, segments.length + 2);
+			segments[segments.length - 2] = segmentStart;
+			segments[segments.length - 1] = iName - segmentStart;
+		}
+
+		int wordStart = indexOfWordStart(nameChars, iName, patternChar);
+		if (wordStart < 0) {
+			//	We have exhausted name (and not pattern), so it's not a match
+			return null;
+		}
+
+		segmentStart = wordStart;
+		iName = wordStart;
+	}
+
+	 // we have exhausted pattern, record final segment
+	segments = Arrays.copyOf(segments, segments.length + 2);
+	segments[segments.length - 2] = segmentStart;
+	segments[segments.length - 1] = iName - segmentStart + 1;
+
+	return segments;
+}
+
+/**
+ * Returns the index of the first word after nameStart, beginning with patternChar.
+ * Returns -1 if no matching word is found.
+ */
+private static int indexOfWordStart(char[] name, int nameStart, char patternChar) {
+
+	char target = ScannerHelper.toUpperCase(patternChar);
+	boolean lastWasSeparator = false;
+
+	for (int iName = nameStart; iName < name.length; iName++) {
+		char nameChar = name[iName];
+		if (nameChar == target || (lastWasSeparator && nameChar == patternChar)) {
+			return iName;
+		}
+
+		// don't match across identifiers (e.g. "index" should not match "substring(int beginIndex)")
+		if (!ScannerHelper.isJavaIdentifierPart(nameChar)) {
+			return -1;
+		}
+
+		lastWasSeparator = nameChar == '_';
+	}
+
+	// We have exhausted name
+	return -1;
 }
 
 /**

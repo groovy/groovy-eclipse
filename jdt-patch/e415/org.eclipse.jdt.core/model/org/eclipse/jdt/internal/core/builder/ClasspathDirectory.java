@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -97,6 +97,7 @@ IModule initializeModule() {
 	}
 	return null;
 }
+/** Lists all java-like files and also sub-directories (for recursive tests). */
 String[] directoryList(String qualifiedPackageName) {
 	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
 	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
@@ -111,7 +112,8 @@ String[] directoryList(String qualifiedPackageName) {
 			for (int i = 0, l = members.length; i < l; i++) {
 				IResource m = members[i];
 				String name = m.getName();
-				if (m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name)) {
+				if (m.getType() == IResource.FOLDER || // include folders so we recognize empty parent packages
+						(m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name))) {
 					// add exclusion pattern check here if we want to hide .class files
 					dirList[index++] = name;
 				}
@@ -215,7 +217,23 @@ public boolean isPackage(String qualifiedPackageName, String moduleName) {
 		if (this.module == null || !moduleName.equals(String.valueOf(this.module.name())))
 			return false;
 	}
-	return directoryList(qualifiedPackageName) != null;
+	String[] list = directoryList(qualifiedPackageName);
+	if (list != null) {
+		// 1. search files here:
+		for (String entry : list) {
+			String entryLC = entry.toLowerCase();
+			if (entryLC.endsWith(SuffixConstants.SUFFIX_STRING_class) || entryLC.endsWith(SuffixConstants.SUFFIX_STRING_java))
+				return true;
+		}
+		// 2. recurse into sub directories
+		for (String entry : list) {
+			if (entry.indexOf('.') == -1) { // no plain files without '.' are returned by directoryList()
+				if (isPackage(qualifiedPackageName+'/'+entry, null/*already checked*/))
+					return true;
+			}
+		}
+	}
+	return false;
 }
 @Override
 public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {

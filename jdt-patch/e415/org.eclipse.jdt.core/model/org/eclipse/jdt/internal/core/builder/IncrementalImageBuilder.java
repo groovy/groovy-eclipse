@@ -138,6 +138,9 @@ public boolean build(SimpleLookupTable deltas) {
 
 			this.notifier.subTask(Messages.build_analyzingSources);
 			addAffectedSourceFiles();
+			if (this.testImageBuilder != null) {
+				this.testImageBuilder.addAffectedSourceFiles();
+			}
 			this.notifier.updateProgressDelta(0.05f);
 		}
 

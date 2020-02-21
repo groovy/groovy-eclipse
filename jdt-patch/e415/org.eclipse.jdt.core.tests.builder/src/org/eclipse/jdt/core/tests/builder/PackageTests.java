@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -39,7 +39,7 @@ public class PackageTests extends BuilderTests {
 	/**
 	 * Bugs 6564
 	 */
-	public void testPackageProblem() throws JavaModelException {
+	public void testNoPackageProblem() throws JavaModelException {
 		//----------------------------
 		//           Step 1
 		//----------------------------
@@ -91,7 +91,7 @@ public class PackageTests extends BuilderTests {
 	/**
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=251690
 	 */
-	public void testNoPackageProblem() throws JavaModelException {
+	public void testPackageProblem() throws JavaModelException {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -112,6 +112,88 @@ public class PackageTests extends BuilderTests {
 			new Problem("", "The type A collides with a package", aPath, 24, 25, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		expectingOnlySpecificProblemFor(bPath,
 			new Problem("", "The declared package \"\" does not match the expected package \"p.A\"", bPath, 0, 1, CategorizedProblem.CAT_INTERNAL, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	public void testNoFolderProblem() throws JavaModelException {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(src, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p;\n"+ //$NON-NLS-1$
+			"public class A {}" //$NON-NLS-1$
+		);
+
+		// create folder & contained non-java file (which don't establish package p.A!):
+		env.addFolder(src, "p/A"); //$NON-NLS-1$
+		env.addFile(src, "p/A/some.properties", //$NON-NLS-1$
+			"name=Some\n" //$NON-NLS-1$
+		);
+
+		fullBuild();
+		expectingNoProblems();
+	}
+
+	public void testNoFolderProblem2() throws JavaModelException {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2");
+
+		// create folder & contained non-java file (which don't establish package p.A!):
+		env.addFolder(src, "p/A"); //$NON-NLS-1$
+		env.addFile(src, "p/A/some.properties", //$NON-NLS-1$
+			"name=Some\n" //$NON-NLS-1$
+		);
+
+		env.addClass(src2, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p;\n"+ //$NON-NLS-1$
+			"public class A {}" //$NON-NLS-1$
+		);
+
+		IPath project2Path = env.addProject("Project2");
+		env.addExternalJars(project2Path, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(project2Path, ""); //$NON-NLS-1$
+		IPath srcP2 = env.addPackageFragmentRoot(project2Path, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		env.addRequiredProject(project2Path, projectPath, false);
+
+		env.addClass(srcP2, "q", "Main",
+			"package q;\n" +
+			"import p.A;\n" +
+			"public class Main {\n" +
+			"	A field;\n" +
+			"}\n");
+
+		fullBuild();
+		expectingNoProblems();
+	}
+
+	public void testNestedPackageProblem() throws JavaModelException {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath aPath = env.addClass(src, "p", "A", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p;\n"+ //$NON-NLS-1$
+			"public class A {}\n" //$NON-NLS-1$
+		);
+
+		// a class in a sub-package of p.A seems to establish package p.A, too, causing a conflict indeed:
+		env.addClass(src, "p.A.c", "B", //$NON-NLS-1$ //$NON-NLS-2$
+			"package p.A.c;\n" +
+			"public class B {}\n" //$NON-NLS-1$
+		);
+
+		fullBuild();
+		expectingOnlySpecificProblemFor(aPath,
+			new Problem("", "The type A collides with a package", aPath, 24, 25, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=117092

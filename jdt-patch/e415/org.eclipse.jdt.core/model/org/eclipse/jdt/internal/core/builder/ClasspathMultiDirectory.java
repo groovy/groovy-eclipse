@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -86,7 +86,8 @@ String[] directoryList(String qualifiedPackageName) {
 				for (int i = 0, l = members.length; i < l; i++) {
 					IResource m = members[i];
 					String name = m.getName();
-					if (m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name)) {
+					if (m.getType() == IResource.FOLDER
+							|| (m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name))) {
 						// add exclusion pattern check here if we want to hide .class files
 						dirList[index++] = name;
 					}
@@ -102,7 +103,8 @@ String[] directoryList(String qualifiedPackageName) {
 						for (int i = 0, l = members.length; i < l; i++) {
 							IResource m = members[i];
 							String name = m.getName();
-							if (m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isJavaFileName(name)) {
+							if (m.getType() == IResource.FOLDER
+									|| (m.getType() == IResource.FILE && org.eclipse.jdt.internal.compiler.util.Util.isJavaFileName(name))) {
 								// FIXME: check if .java file has any declarations?
 								dirList[index++] = name;
 							}

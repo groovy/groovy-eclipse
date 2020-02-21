@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -225,6 +225,27 @@ public abstract class SearchPattern {
 	 * @since 3.12
 	 */
 	public static final int R_SUBSTRING_MATCH = 0x0200;
+
+	/**
+	 * Match rule: The search pattern contains a subword expression in a case-insensitive way.
+	 * <p>
+	 * Examples:
+	 * <ul>
+	 * 	<li>'addlist' string pattern will match
+	 * 		'addListener' and 'addChangeListener'</li>
+	 * </ul>
+	 *
+	 * This rule is not intended to be combined with any other match rule. In case
+	 * of other match rule flags are combined with this one, then match rule validation
+	 * will return a modified rule in order to perform a better appropriate search request
+	 * (see {@link #validateMatchRule(String, int)} for more details).
+	 * 
+	 * <p>
+	 * This is implemented only for code assist and not available for normal search.
+	 *
+	 * @since 3.21
+	 */
+	public static final int R_SUBWORD_MATCH = 0x0400;
 
 	private static final int MODE_MASK = R_EXACT_MATCH
 		| R_PREFIX_MATCH
@@ -872,6 +893,8 @@ public static final int[] getMatchingRegions(String pattern, String name, int ma
 				return next >= 0 ? new int[] {next, patternLength} : null;
 			}
 			break;
+		case SearchPattern.R_SUBWORD_MATCH:
+			return CharOperation.getSubWordMatchingRegions(pattern, name);
 	}
 	return null;
 }

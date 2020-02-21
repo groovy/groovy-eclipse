@@ -10671,6 +10671,7 @@ public void arrayReferencePotentialNullReference(ArrayReference arrayReference) 
 public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding providedType, TypeBinding requiredType, NullAnnotationMatching status) 
 {
 	if (providedType == requiredType) return; //$IDENTITY-COMPARISON$
+
 	// try to improve nonnull vs. null:
 	if (providedType.id == TypeIds.T_null || status.nullStatus == FlowInfo.NULL) {
 		nullityMismatchIsNull(expression, requiredType);

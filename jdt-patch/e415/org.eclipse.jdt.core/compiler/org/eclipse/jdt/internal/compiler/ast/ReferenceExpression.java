@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -66,6 +66,7 @@ import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -946,13 +947,25 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		return this.descriptor.parameters;
 	}
 
+	private boolean contextHasSyntaxError() {
+		ReferenceContext referenceContext = this.enclosingScope.referenceContext();
+		if (referenceContext instanceof AbstractMethodDeclaration) {
+			if ((((AbstractMethodDeclaration) referenceContext).bits & ASTNode.HasSyntaxErrors) != 0)
+				return true;
+		}
+		return false;
+	}
+
 	// Cache resolved copies against various target types, so repeat overload resolution and possibly type inference could be avoided.
 	private ReferenceExpression cachedResolvedCopy(TypeBinding targetType) {
 
 		ReferenceExpression copy = this.copiesPerTargetType != null ? this.copiesPerTargetType.get(targetType) : null;
 		if (copy != null)
 			return copy;
-		
+
+		if (contextHasSyntaxError())
+			return null;
+
 		IErrorHandlingPolicy oldPolicy = this.enclosingScope.problemReporter().switchErrorHandlingPolicy(silentErrorHandlingPolicy);
 		try {
 			copy = copy();
@@ -1239,7 +1252,11 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 	@Override
 	public boolean isCompatibleWith(TypeBinding targetType, Scope scope) {
 		ReferenceExpression copy = cachedResolvedCopy(targetType);
-		return copy != null && copy.resolvedType != null && copy.resolvedType.isValidBinding() && copy.binding != null && copy.binding.isValidBinding();
+		if (copy == null) {
+			return contextHasSyntaxError(); // in case of syntax error avoid secondary errors
+		} else {
+			return copy.resolvedType != null && copy.resolvedType.isValidBinding() && copy.binding != null && copy.binding.isValidBinding();
+		}
 	}
 	
 	@Override

@@ -867,4 +867,39 @@ public class TestAttributeBuilderTests extends BuilderTests {
 		fullBuild();
 		expectingNoProblems();
 	}
+	public void testBug559965() throws JavaModelException {
+		// Bug 559965 - No recompilation when deleting java file from test-source-folder
+		IPath project1Path = env.addProject("Project1");
+		env.removePackageFragmentRoot(project1Path, "");
+		IPath src1 = env.addPackageFragmentRoot(project1Path, "src", null, "bin");
+		assertNotNull(src1);
+
+		IPath tests1 = env.addTestPackageFragmentRoot(project1Path, "tests");
+		env.addExternalJars(project1Path, Util.getJavaClassLibs());
+
+		env.addClass(tests1, "p1", "T1Class",
+				"package p1;\n" +
+				"\n" +
+				"public class T1Class {\n"+
+				"}\n"
+				);
+		env.addClass(tests1, "p1", "Test1",
+				"package p1;\n" +
+				"\n" +
+				"public class Test1 {\n" +
+				"	void test1() {\n" +
+				"		new T1Class();" +
+				"	}\n" +
+				"}\n" +
+				""
+				);
+
+		fullBuild();
+		expectingNoProblems();
+
+		env.removeClass(tests1, "p1/T1Class");
+		incrementalBuild();
+
+		expectingProblemsFor(env.getWorkspaceRootPath(), "Problem : T1Class cannot be resolved to a type [ resource : </Project1/tests/p1/Test1.java> range : <56,63> category : <40> severity : <2>]");
+	}
 }

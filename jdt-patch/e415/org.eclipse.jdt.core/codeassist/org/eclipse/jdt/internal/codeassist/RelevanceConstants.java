@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -48,6 +48,7 @@ public interface RelevanceConstants {
 	int R_NAME_SUFFIX = 3;
 	int R_NAME_LESS_NEW_CHARACTERS = 15;
 	int R_SUBSTRING = -21;
+	int R_SUBWORD = -22;
 	int R_METHOD_OVERIDE = 3;
 	int R_NON_RESTRICTED = 3;
 	int R_TRUE_OR_FALSE = 1;

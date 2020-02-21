@@ -16,6 +16,8 @@
  *								Bug 467482 - TYPE_USE null annotations: Incorrect "Redundant null check"-warning
  *								Bug 473713 - [1.8][null] Type mismatch: cannot convert from @NonNull A1 to @NonNull A1
  *								Bug 467430 - TYPE_USE Null Annotations: Confusing error message with known null value
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contribution for
+ *                              Bug 559618 - No compiler warning for import from same package
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -1343,7 +1345,6 @@ public class NullTypeAnnotationTest extends AbstractNullAnnotationTest {
 					"p/X1.java",
 					"package p;\n" +
 					"import java.util.Map;\n" +
-					"import p.List;\n" +
 					"import org.eclipse.jdt.annotation.*;\n" +
 					"import static java.lang.annotation.ElementType.*;\n" +
 					"import java.lang.annotation.*;\n" +
@@ -3236,7 +3237,8 @@ public class NullTypeAnnotationTest extends AbstractNullAnnotationTest {
 	}
 
 	public void testBug416180() {
-		runConformTestWithLibs(
+		runWarningTestWithLibs(
+			true,
 			new String[] {
 				"X.java",
 				"import org.eclipse.jdt.annotation.NonNull;\n" + 
@@ -4984,6 +4986,7 @@ public void testDefault05_custom() {
 		"	       ^^^^^\n" + 
 		"The @NonNull field field may not have been initialized\n" + 
 		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 	runner.runNegativeTest();
 }
 
@@ -5029,6 +5032,7 @@ public void testDefault05_custom2() {
 		"	       ^^^^^\n" + 
 		"The @NonNull field field may not have been initialized\n" + 
 		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 	runner.runNegativeTest();
 }
 
@@ -5305,6 +5309,7 @@ public void testDefault04_bin() {
 		"	          ^^^^\n" + 
 		"Null type mismatch: required \'@NonNull Number\' but the provided value is null\n" + 
 		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 	runner.runNegativeTest();
 }
 
@@ -6620,7 +6625,8 @@ public void testBug439298_comment2() {
 		"");
 }
 public void testBug439298_comment3() {
-	runConformTestWithLibs(
+	runWarningTestWithLibs(
+		true,
 		new String[] {
 			"Extract.java",
 			"import org.eclipse.jdt.annotation.*;\n" + 
@@ -17742,7 +17748,8 @@ public void testBug536555() {
 	runner.runWarningTest();
 }
 public void testBug540264() {
-	runNegativeTestWithLibs(
+	runNegativeTest(
+		true,
 		new String[] {
 			"example/Example.java",
 			"package example;\n" +
@@ -17754,7 +17761,8 @@ public void testBug540264() {
 			"    }\n" +
 			"}\n" +
 			"",
-		}, 
+		},
+		this.LIBS,
 		getCompilerOptions(),
 		"----------\n" + 
 		"1. ERROR in example\\Example.java (at line 5)\n" + 
@@ -17771,7 +17779,8 @@ public void testBug540264() {
 		"	for (X.Y<Z> entry : x) {\n" + 
 		"	                    ^\n" + 
 		"x cannot be resolved to a variable\n" + 
-		"----------\n"
+		"----------\n",
+		JavacTestOptions.DEFAULT
 	);
 }
 public void testBug542707_1() {
@@ -17985,5 +17994,72 @@ public void testBug482242_boundedWildcard() {
 		"	      ^\n" + 
 		"Null type safety (type annotations): The expression of type \'String\' needs unchecked conversion to conform to \'capture#of ? super @Nullable String\'\n" + 
 		"----------\n");
+}
+public void testBug560213source() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.classLibraries = this.LIBS;
+	runner.testFiles = new String[] {
+		"nullEnumSort/MyEnum.java",
+		"package nullEnumSort;\n" + 
+		"\n" + 
+		"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+		"\n" + 
+		"@NonNullByDefault\n" + 
+		"enum MyEnum {\n" + 
+		"    x\n" + 
+		"}\n",
+		"nullEnumSort/EnumProblem.java",
+		"package nullEnumSort;\n" + 
+		"\n" + 
+		"import java.util.Collections;\n" + 
+		"import java.util.List;\n" + 
+		"\n" + 
+		"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+		"\n" + 
+		"@NonNullByDefault\n" + 
+		"public class EnumProblem {\n" + 
+		"    void f(List<MyEnum> list) {\n" + 
+		"        Collections.sort(list);\n" + 
+		"    }\n" + 
+		"\n}"
+	};
+	runner.runConformTest();
+}
+public void testBug560213binary() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.testFiles = new String[] {
+		"nullEnumSort/MyEnum.java",
+		"package nullEnumSort;\n" + 
+		"\n" + 
+		"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+		"\n" + 
+		"@NonNullByDefault\n" + 
+		"enum MyEnum {\n" + 
+		"    x\n" + 
+		"}\n"
+	};
+	runner.classLibraries = this.LIBS;
+	runner.runConformTest();
+
+	runner.shouldFlushOutputDirectory = false;
+	runner.testFiles = new String[] {
+		"nullEnumSort/EnumProblem.java",
+		"package nullEnumSort;\n" + 
+		"\n" + 
+		"import java.util.Collections;\n" + 
+		"import java.util.List;\n" + 
+		"\n" + 
+		"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+		"\n" + 
+		"@NonNullByDefault\n" + 
+		"public class EnumProblem {\n" + 
+		"    void f(List<MyEnum> list) {\n" + 
+		"        Collections.sort(list);\n" + 
+		"    }\n" + 
+		"\n}"
+	};
+	runner.runConformTest();
 }
 }

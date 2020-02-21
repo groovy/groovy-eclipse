@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2019 GK Software AG, and others.
+ * Copyright (c) 2013, 2020 GK Software AG, and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -10059,5 +10059,109 @@ public void testBug508834_comment0() {
 				"}\n"
 			};
 		runner.runConformTest();
+	}
+	public void testBug559677() {
+		Runner runner = new Runner();
+		runner.testFiles = new String[] {
+			"MyClass.java",
+			"public class MyClass {\n" + 
+			"	private void myRun() {\n" + 
+			"	}\n" + 
+			"	private void myMethod(final Runnable r) {\n" + 
+			"	}\n" + 
+			"	public void test() {\n" + 
+			"		// second opening brace causes endless loop while saving\n" + 
+			"		myMethod((this::myRun);\n" + 
+			"	}\n" + 
+			"}\n"
+		};
+		runner.performStatementsRecovery = true;
+		runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. ERROR in MyClass.java (at line 8)\n" + 
+			"	myMethod((this::myRun);\n" + 
+			"	                     ^\n" + 
+			"Syntax error, insert \")\" to complete Expression\n" + 
+			"----------\n";
+		runner.runNegativeTest();
+	}
+	public void testBug559951() {
+		if (this.complianceLevel < ClassFileConstants.JDK10) return; // uses 'var'
+		runConformTest(
+			new String[] {
+				"no/Demo.java",
+				"package no;\n" +
+				"public class Demo {\n" +
+				"	static void broken_method_dispatch_on_bounded_type_in_lambda_argument_with_Eclipse_compiler() {\n" + 
+				"		WithMessageRecipients withRecipients = new Message(new EmailRecipient(\"Jane\", \"jane@example.com\"), new EmailRecipient(\"Joe\", \"joe@example.com\"));\n" + 
+				"\n" + 
+				"		withRecipients.getMessageRecipients()\n" + 
+				"			.stream()\n" + 
+				"			.forEach(recipient -> System.out.println(recipient.getName() + \" <\" + recipient.getEmailAddress() + \">\"));\n" + 
+				"	}\n" + 
+				"	static void works_fine_in_for_loop() {\n" + 
+				"		WithMessageRecipients withRecipients = new Message(new EmailRecipient(\"Jane\", \"jane@example.com\"), new EmailRecipient(\"Joe\", \"joe@example.com\"));\n" + 
+				"\n" + 
+				"		for (var recipient : withRecipients.getMessageRecipients()) {\n" + 
+				"			System.out.println(recipient.getName() + \" <\" + recipient.getEmailAddress() + \">\");\n" + 
+				"		}\n" + 
+				"	}\n" +
+				"	public static void main(String... args) {\n" +
+				"		works_fine_in_for_loop();\n" +
+				"		broken_method_dispatch_on_bounded_type_in_lambda_argument_with_Eclipse_compiler();\n" +
+				"	}\n" +
+				"}\n",
+				"no/WithName.java",
+				"package no;\n" + 
+				"public interface WithName {\n" + 
+				"	String getName();\n" + 
+				"}",
+				"no/WithEmailAddress.java",
+				"package no;\n" + 
+				"public interface WithEmailAddress {\n" + 
+				"	String getEmailAddress();\n" + 
+				"}\n",
+				"no/WithMessageRecipients.java",
+				"package no;\n" + 
+				"import java.util.List;\n" + 
+				"public interface WithMessageRecipients {\n" + 
+				"	<CONTACT extends WithName & WithEmailAddress> List<? extends CONTACT> getMessageRecipients();\n" + 
+				"}",
+				"no/EmailRecipient.java",
+				"package no;\n" + 
+				"public class EmailRecipient implements WithName, WithEmailAddress {\n" + 
+				"	private final String name;\n" + 
+				"	private final String emailAddress;\n" + 
+				"	public EmailRecipient(String name, String emailAddress) {\n" + 
+				"		this.name = name;\n" + 
+				"		this.emailAddress = emailAddress;\n" + 
+				"	}\n" + 
+				"	@Override\n" + 
+				"	public String getEmailAddress() {\n" + 
+				"		return emailAddress;\n" + 
+				"	}\n" + 
+				"	@Override\n" + 
+				"	public String getName() {\n" + 
+				"		return name;\n" + 
+				"	}\n" + 
+				"}",
+				"no/Message.java",
+				"package no;\n" + 
+				"import java.util.List;\n" + 
+				"public class Message implements WithMessageRecipients {\n" + 
+				"	private final List<EmailRecipient> recipients;\n" + 
+				"	public Message(EmailRecipient ... recipients) {\n" + 
+				"		this.recipients = List.of(recipients);\n" + 
+				"	}\n" + 
+				"	@Override\n" + 
+				"	public List<EmailRecipient> getMessageRecipients() {\n" + 
+				"		return recipients;\n" + 
+				"	}\n" + 
+				"}"
+			},
+			"Jane <jane@example.com>\n" + 
+			"Joe <joe@example.com>\n" + 
+			"Jane <jane@example.com>\n" + 
+			"Joe <joe@example.com>");
 	}
 }

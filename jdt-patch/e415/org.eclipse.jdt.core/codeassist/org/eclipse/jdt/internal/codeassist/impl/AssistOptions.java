@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -57,6 +57,8 @@ public class AssistOptions {
 		"org.eclipse.jdt.core.codeComplete.camelCaseMatch"; 	//$NON-NLS-1$
 	public static final String OPTION_SubstringMatch =
 			"org.eclipse.jdt.core.codeComplete.substringMatch"; 	//$NON-NLS-1$
+	public static final String OPTION_SubwordMatch =
+			"org.eclipse.jdt.core.codeComplete.subwordMatch"; 	//$NON-NLS-1$
 	public static final String OPTION_SuggestStaticImports =
 		"org.eclipse.jdt.core.codeComplete.suggestStaticImports"; 	//$NON-NLS-1$
 
@@ -70,6 +72,7 @@ public class AssistOptions {
 	public boolean forceImplicitQualification = false;
 	public boolean camelCaseMatch = true;
 	public boolean substringMatch = true;
+	public boolean subwordMatch = true;
 	public boolean suggestStaticImport = true;
 	public char[][] fieldPrefixes = null;
 	public char[][] staticFieldPrefixes = null;
@@ -241,6 +244,13 @@ public class AssistOptions {
 				this.substringMatch = true;
 			} else if (DISABLED.equals(optionValue)) {
 				this.substringMatch = false;
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_SubwordMatch)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.subwordMatch = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.subwordMatch = false;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTION_PerformDeprecationCheck)) != null) {

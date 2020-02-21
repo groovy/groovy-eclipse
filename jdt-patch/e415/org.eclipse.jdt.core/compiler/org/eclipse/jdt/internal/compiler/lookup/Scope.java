@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -59,6 +59,8 @@
  *  							Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
  *     Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          	Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
+ *     Pierre-Yves B. <pyvesdev@gmail.com> - Contributions for
+ *                              Bug 559618 - No compiler warning for import from same package
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -3318,14 +3320,15 @@ public abstract class Scope {
 			Binding cachedBinding = (Binding) typeOrPackageCache.get(name);
 			if (cachedBinding != null) { // can also include NotFound ProblemReferenceBindings if we already know this name is not found
 				if (cachedBinding instanceof ImportBinding) { // single type import cached in faultInImports(), replace it in the cache with the type
-					ImportReference importReference = ((ImportBinding) cachedBinding).reference;
-					if (importReference != null) {
+					ImportBinding importBinding = (ImportBinding) cachedBinding;
+					ImportReference importReference = importBinding.reference;
+					if (importReference != null && !isUnnecessarySamePackageImport(importBinding.resolvedImport, unitScope)) {
 						importReference.bits |= ASTNode.Used;
 					}
 					if (cachedBinding instanceof ImportConflictBinding)
 						typeOrPackageCache.put(name, cachedBinding = ((ImportConflictBinding) cachedBinding).conflictingTypeBinding); // already know its visible
 					else
-						typeOrPackageCache.put(name, cachedBinding = ((ImportBinding) cachedBinding).resolvedImport); // already know its visible
+						typeOrPackageCache.put(name, cachedBinding = importBinding.resolvedImport); // already know its visible
 				}
 				if ((mask & Binding.TYPE) != 0) {
 					if (foundType != null && foundType.problemId() != ProblemReasons.NotVisible && cachedBinding.problemId() != ProblemReasons.Ambiguous)
@@ -3494,6 +3497,17 @@ public abstract class Scope {
 		}
 	}
 	// GROOVY end
+
+	private boolean isUnnecessarySamePackageImport(Binding resolvedImport, Scope unitScope) {
+		if (resolvedImport instanceof ReferenceBinding) {
+			if (unitScope.getCurrentPackage() == ((ReferenceBinding) resolvedImport).getPackage()) {
+				if ((resolvedImport.getAnnotationTagBits() & TagBits.IsNestedType) != 0)
+					return false; // importing nested types is still necessary
+				return true;
+			}
+		}
+		return false;
+	}
 
 	// Added for code assist... NOT Public API
 	// DO NOT USE to resolve import references since this method assumes 'A.B' is relative to a single type import of 'p1.A'

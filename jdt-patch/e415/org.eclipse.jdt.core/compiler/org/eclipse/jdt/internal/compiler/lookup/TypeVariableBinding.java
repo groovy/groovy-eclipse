@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -295,7 +295,8 @@ public class TypeVariableBinding extends ReferenceBinding {
 	}
 
 	private BoundCheckStatus nullBoundCheck(Scope scope, TypeBinding argumentType, TypeBinding substitutedSuperType, Substitution substitution, ASTNode location, BoundCheckStatus previousStatus) {
-		if (NullAnnotationMatching.analyse(this, argumentType, substitutedSuperType, substitution, -1, null, CheckMode.BOUND_CHECK).isAnyMismatch()) {
+		NullAnnotationMatching status = NullAnnotationMatching.analyse(this, argumentType, substitutedSuperType, substitution, -1, null, CheckMode.BOUND_CHECK);
+		if (status.isAnyMismatch() && !status.isAnnotatedToUnannotated()) {
 			if (location != null)
 				scope.problemReporter().nullityMismatchTypeArgument(this, argumentType, location);
 			return BoundCheckStatus.NULL_PROBLEM;
