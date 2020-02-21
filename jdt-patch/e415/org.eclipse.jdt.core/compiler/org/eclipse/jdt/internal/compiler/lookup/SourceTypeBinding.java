@@ -1236,10 +1236,16 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	
 	if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 		return ReferenceBinding.binarySearch(fieldName, this.fields);
-
+	
+	// GROOVY add
+	if (!areFieldsInitialized()) {
+		this.scope.buildFields();
+	}
+	// GROOVY end
+	
 	// lazily sort fields
 	if ((this.tagBits & TagBits.AreFieldsSorted) == 0) {
-		int length = this.fields().length;
+		int length = this.fields.length;
 		if (length > 1)
 			ReferenceBinding.sortFields(this.fields, 0, length);
 		this.tagBits |= TagBits.AreFieldsSorted;
