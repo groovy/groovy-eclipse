@@ -935,7 +935,13 @@ public FieldBinding[] fields() {
 	
 	if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 		return this.fields;
-
+	
+	// GROOVY add
+	if (!areFieldsInitialized()) {
+		this.scope.buildFields();
+	}
+	// GROOVY end
+	
 	int failed = 0;
 	FieldBinding[] resolvedFields = this.fields;
 	try {
@@ -1216,7 +1222,7 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 
 	// lazily sort fields
 	if ((this.tagBits & TagBits.AreFieldsSorted) == 0) {
-		int length = this.fields.length;
+		int length = this.fields().length;
 		if (length > 1)
 			ReferenceBinding.sortFields(this.fields, 0, length);
 		this.tagBits |= TagBits.AreFieldsSorted;
@@ -2634,11 +2640,11 @@ public void tagIndirectlyAccessibleMembers() {
 		return;
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328281
-	for (int i = 0; i < this.fields.length; i++) {
+	for (int i = 0, n = this.fields().length; i < n; i += 1) {
 		if (!this.fields[i].isPrivate())
 			this.fields[i].modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 	}
-	for (int i = 0; i < this.memberTypes.length; i++) {
+	for (int i = 0, n = this.memberTypes().length; i < n; i += 1) {
 		if (!this.memberTypes[i].isPrivate())
 			this.memberTypes[i].modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 	}
@@ -2646,6 +2652,7 @@ public void tagIndirectlyAccessibleMembers() {
 		if (this.superclass instanceof SourceTypeBinding)  // should always be true because private super type can only be accessed in same CU
 			((SourceTypeBinding) this.superclass).tagIndirectlyAccessibleMembers();
 }
+
 @Override
 public ModuleBinding module() {
 	if (!isPrototype())
@@ -2662,7 +2669,6 @@ public void setNestHost(SourceTypeBinding nestHost) {
 }
 
 public boolean isNestmateOf(SourceTypeBinding other) {
-
 	CompilerOptions options = this.scope.compilerOptions();
 	if (options.targetJDK < ClassFileConstants.JDK11 ||
 		options.complianceLevel < ClassFileConstants.JDK11)
@@ -2673,12 +2679,14 @@ public boolean isNestmateOf(SourceTypeBinding other) {
 			TypeBinding.equalsEquals(this.nestHost == null ? this : this.nestHost, 
 					otherHost == null ? other : otherHost);
 }
+
 public void addNestMember(SourceTypeBinding member) {
 	if (this.nestMembers == null) {
 		this.nestMembers = new HashSet<>();
 	}
 	this.nestMembers.add(member);
 }
+
 public List<String> getNestMembers() {
 	if (this.nestMembers == null)
 		return null;
