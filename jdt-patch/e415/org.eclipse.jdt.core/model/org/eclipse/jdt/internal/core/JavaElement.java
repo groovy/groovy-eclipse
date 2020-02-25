@@ -595,10 +595,6 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		boolean hadTemporaryCache = manager.hasTemporaryCache();
 		try {
 			HashMap<IJavaElement, Object> newElements = manager.getTemporaryCache();
-			// GROOVY add
-			Openable openable = (Openable) getOpenable();
-			boolean closeParent = !(newElements.containsKey(openable) && openable.isOpen());
-			// GROOVY end
 			generateInfos(info, newElements, monitor);
 			if (info == null) {
 				info = newElements.get(this);
@@ -612,12 +608,10 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			}
 			if (info == null) { // a source ref element could not be opened
 				// close the buffer that was opened for the openable parent
-				// close only the openable's buffer (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=62854)
-				// GROOVY edit
-				//Openable openable = (Openable) getOpenable();
-				//if (newElements.containsKey(openable)) {
-				if (closeParent && newElements.containsKey(openable)) {
-				// GROOVY end
+				Openable openable = (Openable) getOpenable();
+				if (newElements.containsKey(openable)
+						// GROOVY add -- do not close current working copy, which can affect save actions
+						&& !(openable instanceof ICompilationUnit && ((ICompilationUnit) openable).isWorkingCopy())) {
 					openable.closeBuffer();
 				}
 				throw newNotPresentException();
