@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -244,11 +244,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 reconcileFlags = 0;
                 problems = null;
             }
-
-            boolean computeProblems = (perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject()));
+            boolean hasJavaNature = (project != null && JavaProject.hasJavaNature(project.getProject()));
+            boolean computeProblems = (hasJavaNature && perWorkingCopyInfo != null && perWorkingCopyInfo.isActive());
 
             // compiler options
-            Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
+            Map<String, String> options = (hasJavaNature ? project.getOptions(true) : JavaCore.getOptions());
             options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
             if (!computeProblems) {
