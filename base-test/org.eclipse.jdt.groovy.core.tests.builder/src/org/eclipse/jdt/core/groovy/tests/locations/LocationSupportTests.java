@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,12 @@ import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -60,14 +61,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsBlock() throws Exception {
         String content = "def x = 7\n  x++\n  def y = []";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
@@ -83,14 +83,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsEmpty() throws Exception {
         String content = "";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
     }
@@ -98,14 +97,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsOneLine() throws Exception {
         String content = "def x = 7";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
@@ -117,14 +115,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsNewLine() throws Exception {
         String content = "def x = 7\n";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals("".length(), module.getStatementBlock().getStart());
@@ -136,14 +133,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsClass() throws Exception {
         String content = "class X {\n}";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, ((ASTNode) module.getClasses().get(0)).getStart());
@@ -153,14 +149,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsMethod() throws Exception {
         String content = "def x() { \n\n\n\n\n\n\n}";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
@@ -172,14 +167,13 @@ public final class LocationSupportTests {
     @Test
     public void testParserSourceLocationsMethod2() throws Exception {
         String content = "def \"x   \"    () { \n\n\n\n\n\n\n}";
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, ((ASTNode) module.getMethods().get(0)).getStart());
@@ -189,17 +183,51 @@ public final class LocationSupportTests {
     }
 
     @Test
+    public void testParserSourceLocationsCatchStatement1() throws Exception {
+        String content = "try {} catch (Exception   ex) {}";
+        //                              ^14      ^23
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+
+        TryCatchStatement tryCatch = (TryCatchStatement) sourceUnit.getAST().getStatementBlock().getStatements().get(0);
+        ClassNode exceptionType = tryCatch.getCatchStatement(0).getVariable().getType();
+
+        assertEquals(content.indexOf("Exception"), exceptionType.getStart());
+        assertEquals(content.indexOf("Exception"), exceptionType.getNameStart2());
+        assertEquals(content.indexOf("Exception") + 9, exceptionType.getEnd());
+    }
+
+    @Test
+    public void testParserSourceLocationsCatchStatement2() throws Exception {
+        String content = "try {} catch (java.lang.Exception   ex) {}";
+        //                              ^14                ^33
+
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
+        sourceUnit.parse();
+        sourceUnit.completePhase();
+        sourceUnit.convert();
+
+        TryCatchStatement tryCatch = (TryCatchStatement) sourceUnit.getAST().getStatementBlock().getStatements().get(0);
+        ClassNode exceptionType = tryCatch.getCatchStatement(0).getVariable().getType();
+
+        assertEquals(content.indexOf("java."), exceptionType.getStart());
+        assertEquals(content.indexOf("Exception"), exceptionType.getNameStart2());
+        assertEquals(content.indexOf("Exception") + 9, exceptionType.getEnd());
+    }
+
+    @Test
     public void testParserSourceLocationsClassMethodStatement() throws Exception {
         String content = "def x = 7\n  x++\n  def y = []\ndef z() { \n\n\n\n\n\n\n}\nclass X {\n}";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getStatementBlock().getStart());
@@ -221,25 +249,22 @@ public final class LocationSupportTests {
     public void testGRECLIPSE887_ImportStatements() throws Exception {
         String content = "import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
-        final ModuleNode module = sourceUnit.getAST();
+        ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(0, module.getImport("List").getStart());
-        assertEquals("import java.util.List".length(), module.getImport("List").getEnd());
-        assertEquals("import java.util.List\n".length(), module.getStarImports().get(0).getStart());
-        assertEquals("import java.util.List\nimport java.lang.*".length(), module.getStarImports().get(0).getEnd());
-        assertEquals("import java.util.List\nimport java.lang.*\n".length(), module.getImport("A").getStart());
-        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A".length(), module.getImport("A").getEnd());
-        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\n".length(), module.getStarImports().get(1).getStart());
-        assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*".length(),
-            module.getStarImports().get(1).getEnd());
+        assertEquals(content.indexOf("List") + 4, module.getImport("List").getEnd());
+        assertEquals(content.indexOf("import java.lang.*"), module.getStarImports().get(0).getStart());
+        assertEquals(content.indexOf("import java.lang.*") + 18, module.getStarImports().get(0).getEnd());
+        assertEquals(content.indexOf("import javax.swing.text.html.HTML.A"), module.getImport("A").getStart());
+        assertEquals(content.indexOf("import javax.swing.text.html.HTML.A") + 35, module.getImport("A").getEnd());
+        assertEquals(content.indexOf("import javax.swing.text.html.HTML.*"), module.getStarImports().get(1).getStart());
+        assertEquals(content.length(), module.getStarImports().get(1).getEnd());
 
         // now test against the compilation unit declaration
         GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {
@@ -265,14 +290,12 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "def x = 7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(escapeSequence.length(), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
@@ -284,14 +307,12 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9*/ ";
         String content = escapeSequence + "\n\n\ndef x = 7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(content.indexOf("def"), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());
@@ -303,14 +324,12 @@ public final class LocationSupportTests {
         String escapeSequence = "/*\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9\\u00E9*/";
         String content = escapeSequence + "\n\n\ndef /*\\u00E9*/x = /*\\u00E9*/7";
 
-        SourceUnit sourceUnit = new SourceUnit("Foo", content,
-            CompilerConfiguration.DEFAULT, new GroovyClassLoader(), new ErrorCollector(CompilerConfiguration.DEFAULT));
+        SourceUnit sourceUnit = new SourceUnit("script", content, CompilerConfiguration.DEFAULT, new GroovyClassLoader(), null);
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
         ModuleNode module = sourceUnit.getAST();
 
-        // now check locations
         assertEquals(0, module.getStart());
         assertEquals(content.length(), module.getEnd());
         assertEquals(content.indexOf("def"), ((ASTNode) module.getStatementBlock().getStatements().get(0)).getStart());

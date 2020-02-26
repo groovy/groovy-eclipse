@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -680,7 +680,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-895
-    void testCatchClausesExceptions() {
+    void testCaughtExceptions1() {
         String originalContents = '''
             import java.util.zip.ZipException
 
@@ -699,6 +699,24 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
                 nothing
             } catch (ZipException e1) {
             } catch (BadLocationException e2) {
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testCaughtExceptions2() {
+        String originalContents = '''\
+            import java.util.zip.ZipException
+            try {
+                ;
+            } catch (java.util.zip.ZipException e) {
+            }
+            '''
+        String expectedContents = '''\
+            try {
+                ;
+            } catch (java.util.zip.ZipException e) {
             }
             '''
         doContentsCompareTest(originalContents, expectedContents)

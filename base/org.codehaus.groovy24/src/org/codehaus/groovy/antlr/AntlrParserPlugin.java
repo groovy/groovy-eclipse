@@ -3491,11 +3491,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return gStringExpression;
     }
 
+    /* GRECLIPSE edit
     protected ClassNode type(AST typeNode) {
         // TODO intern types?
         // TODO configureAST(...)
         return buildName(typeNode.getFirstChild());
     }
+    */
 
     public static String qualifiedName(AST qualifiedNameNode) {
         if (isType(IDENT, qualifiedNameNode)) {
@@ -3689,14 +3691,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return answer;
     }
 
-    /**
-     * Extracts an identifier from the Antlr AST and then performs a name resolution
-     * to see if the given name is a type from imports, aliases or newly created classes
-     */
     protected ClassNode buildName(AST node) {
         if (isType(TYPE, node)) {
             node = node.getFirstChild();
         }
+        /* GRECLIPSE edit
         ClassNode answer = null;
         if (isType(DOT, node) || isType(OPTIONAL_DOT, node)) {
             answer = ClassHelper.make(qualifiedName(node));
@@ -3720,6 +3719,34 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(answer, node);
             return answer;
         }
+        */
+        if (isType(ARRAY_DECLARATOR, node.getNextSibling()) || isType(INDEX_OP, node.getNextSibling())) {
+            throw new ASTRuntimeException(node, "Unexpected '[' sibling in type name");
+        }
+        if (isType(ARRAY_DECLARATOR, node) || isType(INDEX_OP, node)) {
+            ClassNode answer = buildName(node.getFirstChild()).makeArray();
+            configureAST(answer, node);
+            return answer;
+        }
+
+        String name;
+        if (isType(DOT, node) || isType(OPTIONAL_DOT, node)) {
+            name = qualifiedName(node);
+        } else {
+            name = node.getText();
+        }
+
+        ClassNode answer = makeClassNode(name);
+        configureAST(answer, node);
+        if (isType(DOT, node) || isType(OPTIONAL_DOT, node)) {
+            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            answer.setLastLineNumber(type.getLineLast());
+            answer.setLastColumnNumber(type.getColumnLast());
+            answer.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
+            answer.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
+        }
+        return answer;
+        // GRECLIPSE end
     }
 
     protected boolean isPrimitiveTypeLiteral(AST node) {

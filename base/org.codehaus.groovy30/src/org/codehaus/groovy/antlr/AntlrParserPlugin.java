@@ -3652,6 +3652,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else {
             name = node.getText();
         }
+        /* GRECLIPSE edit
         ClassNode answer = ClassHelper.make(name);
         AST nextSibling = node.getNextSibling();
         if (isType(ARRAY_DECLARATOR, nextSibling) || isType(INDEX_OP, nextSibling)) {
@@ -3660,6 +3661,22 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(answer, node);
             return answer;
         }
+        */
+        if (isType(ARRAY_DECLARATOR, node.getNextSibling()) || isType(INDEX_OP, node.getNextSibling())) {
+            throw new ASTRuntimeException(node, "Unexpected '[' sibling in type name");
+        }
+
+        ClassNode answer = makeClassNode(name);
+        configureAST(answer, node);
+        if (isType(DOT, node) || isType(OPTIONAL_DOT, node)) {
+            GroovySourceAST type = (GroovySourceAST) node.getFirstChild().getNextSibling();
+            answer.setLastLineNumber(type.getLineLast());
+            answer.setLastColumnNumber(type.getColumnLast());
+            answer.setNameStart2(locations.findOffset(type.getLine(), type.getColumn()));
+            answer.setEnd(locations.findOffset(type.getLineLast(), type.getColumnLast()));
+        }
+        return answer;
+        // GRECLIPSE end
     }
 
     protected boolean isPrimitiveTypeLiteral(AST node) {

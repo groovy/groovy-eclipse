@@ -997,7 +997,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testCatchParam() {
+    void testCatchParams1() {
         // don't want PARAMETER
         String contents = '''\
             |class X {
@@ -1022,6 +1022,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('unspecified'), 'unspecified'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('printStackTrace'), 'printStackTrace'.length(), METHOD_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testCatchParams2() {
+        String contents = '''\
+            |try {
+            |} catch (java.lang.Error | java.lang.Exception e) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Error'), 5, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Exception'), 9, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('e'), 1, VARIABLE))
     }
 
     @Test
@@ -3411,6 +3425,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('pat'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('Pattern'), 'Pattern'.length(), CLASS),
             new HighlightedTypedPosition(contents.indexOf('compile'), 'compile'.length(), STATIC_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testQualifiedType7() {
+        String contents = '''\
+            |if (obj instanceof java.lang.String) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1042
+    void testQualifiedType8() {
+        String contents = '''\
+            |if (obj instanceof java.lang.String [] ) {
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('obj'), 3, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
     }
 
     @Test
