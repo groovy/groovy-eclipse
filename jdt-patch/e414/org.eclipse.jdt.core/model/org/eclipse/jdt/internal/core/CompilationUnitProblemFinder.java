@@ -213,12 +213,12 @@ public class CompilationUnitProblemFinder extends Compiler {
 		};
 	}
 
-	private static boolean isTestSource(IJavaProject project, ICompilationUnit cu) {
+	private static boolean isTestSource(ICompilationUnit cu) {
+		// GROOVY add
+		if (JavaProject.hasJavaNature(cu.getJavaProject().getProject()) && cu.getResource() != null)
+		// GROOVY end
 		try {
-			// GROOVY add
-			if (cu.getResource() == null) return false;
-			// GROOVY end
-			IClasspathEntry[] resolvedClasspath = project.getResolvedClasspath(true);
+			IClasspathEntry[] resolvedClasspath = cu.getJavaProject().getResolvedClasspath(true);
 			final IPath resourcePath = cu.getResource().getFullPath();
 			for (IClasspathEntry e : resolvedClasspath) {
 				if (e.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
@@ -255,7 +255,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
 		try {
-			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor, !isTestSource(unitElement.getJavaProject(), unitElement));
+			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor, !isTestSource(unitElement));
 			problemFactory = new CancelableProblemFactory(monitor);
 			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
 			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
