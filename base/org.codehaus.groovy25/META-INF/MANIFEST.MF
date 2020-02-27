@@ -94,7 +94,8 @@ Export-Package: groovy.beans;version="2.5.9",
  org.codehaus.groovy.vmplugin.v7;version="2.5.9",
  org.codehaus.groovy.vmplugin.v8;version="2.5.9",
  org.codehaus.groovy.vmplugin.v9;version="2.5.9"
-Require-Bundle: org.eclipse.core.runtime
+Require-Bundle: org.eclipse.core.runtime,
+ org.junit;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir
