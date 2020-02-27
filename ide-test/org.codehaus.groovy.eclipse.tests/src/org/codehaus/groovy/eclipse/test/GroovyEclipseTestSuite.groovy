@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPlugin
@@ -96,9 +95,7 @@ abstract class GroovyEclipseTestSuite {
         GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
         testProject.deleteWorkingCopies()
 
-        def spm = new SimpleProgressMonitor("$testProject.project.name clean")
-        testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
-        spm.waitForCompletion()
+        testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
 
         // for some reason the source folder is not always present in getPackageFragmentRoots():
         for (pfr in (testProject.javaProject.packageFragmentRoots + testProject.sourceFolder)) {
@@ -124,9 +121,7 @@ abstract class GroovyEclipseTestSuite {
             return true
         }
 
-        spm = new SimpleProgressMonitor("$testProject.project.name reset classpath")
-        testProject.javaProject.setRawClasspath(entries as IClasspathEntry[], spm)
-        spm.waitForCompletion()
+        testProject.javaProject.setRawClasspath(entries as IClasspathEntry[], null)
     }
 
     //--------------------------------------------------------------------------
