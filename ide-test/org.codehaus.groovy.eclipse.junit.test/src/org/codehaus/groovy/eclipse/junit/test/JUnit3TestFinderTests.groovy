@@ -73,7 +73,7 @@ final class JUnit3TestFinderTests extends JUnitTestSuite {
 
     @Test
     void testFindAllTestSuites() {
-        def base = addGroovySource '''
+        addGroovySource '''
             abstract class TestBase extends junit.framework.TestCase {
             }
             '''
@@ -95,7 +95,7 @@ final class JUnit3TestFinderTests extends JUnitTestSuite {
             '''
 
         Set<IType> testTypes = []
-        new JUnit3TestFinder().findTestsInContainer(base.javaProject, testTypes, null)
+        new JUnit3TestFinder().findTestsInContainer(packageFragmentRoot, testTypes, null)
 
         assert testTypes.any { it.elementName == 'X' } : 'X should be a test type'
         assert testTypes.any { it.elementName == 'Y' } : 'Y should be a test type'
