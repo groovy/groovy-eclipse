@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -820,8 +820,33 @@ protected boolean recordFinalAssignment(VariableBinding variable, Reference fina
  *      Alternatively, a {@link #IN_UNBOXING} check can e requested.
  * @param nullInfo the null flow info observed at this first visit of location.
  */
-protected void recordNullReference(LocalVariableBinding local,
+protected final void recordNullReference(LocalVariableBinding local,
 	ASTNode location, int checkType, FlowInfo nullInfo) {
+	recordNullReferenceWithAnnotationStatus(local, location, checkType, nullInfo, null);
+}
+
+/**
+ * Record a null reference for use by deferred checks. Only looping or
+ * finally contexts really record that information. Other contexts
+ * immediately check for unboxing.
+ * @param local the local variable involved in the check
+ * @param location the location triggering the analysis, for normal null dereference
+ *      this is an expression resolving to 'local', for resource leaks it is an
+ *      early exit statement.
+ * @param checkType the checkType against which the check must be performed; one of
+ * 		{@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
+ * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL},
+ *      {@link #CAN_ONLY_NON_NULL CAN_ONLY_NON_NULL}, potentially
+ *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
+ *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF}).
+ *      <br>
+ *      Alternatively, a {@link #IN_UNBOXING} check can e requested.
+ * @param nullInfo the null flow info observed at this first visit of location.
+ * @param nullAnnotationStatus if null annotations are analysed this may hold more information
+ * 		about the exact kind of problem, can be <code>null</code>
+ */
+protected void recordNullReferenceWithAnnotationStatus(LocalVariableBinding local,
+	ASTNode location, int checkType, FlowInfo nullInfo, NullAnnotationMatching nullAnnotationStatus) {
 	// default implementation: do nothing
 }
 
@@ -1054,7 +1079,7 @@ public void recordNullityMismatch(BlockScope currentScope, Expression expression
 			if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
 				isInsideAssert = FlowContext.HIDE_NULL_COMPARISON_WARNING;
 			}
-			if (currentContext.internalRecordNullityMismatch(expression, providedType, flowInfo, nullStatus, expectedType, ASSIGN_TO_NONNULL | isInsideAssert))
+			if (currentContext.internalRecordNullityMismatch(expression, providedType, flowInfo, nullStatus, annotationStatus, expectedType, ASSIGN_TO_NONNULL | isInsideAssert))
 				return;
 			currentContext = currentContext.parent;
 		}
@@ -1066,7 +1091,7 @@ public void recordNullityMismatch(BlockScope currentScope, Expression expression
 		currentScope.problemReporter().nullityMismatch(expression, providedType, expectedType, nullStatus,
 														currentScope.environment().getNonNullAnnotationName());
 }
-protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, TypeBinding expectedType, int checkType) {
+protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, NullAnnotationMatching nullAnnotationStatus, TypeBinding expectedType, int checkType) {
 	// nop, to be overridden in subclasses
 	return false; // not recorded
 }

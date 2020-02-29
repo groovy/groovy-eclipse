@@ -10677,19 +10677,29 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 		nullityMismatchIsNull(expression, requiredType);
 		return;
 	}
-	// try to improve nonnull vs. nullable:
-	if (status.isPotentiallyNullMismatch()
-			&& (requiredType.tagBits & TagBits.AnnotationNonNull) != 0 
-			&& (providedType.tagBits & TagBits.AnnotationNullable) == 0)
-	{
-		if(this.options.pessimisticNullAnalysisForFreeTypeVariablesEnabled && providedType.isTypeVariable() && !providedType.hasNullTypeAnnotations()) {
-			nullityMismatchIsFreeTypeVariable(providedType, expression.sourceStart, expression.sourceEnd);
+	if ((requiredType.tagBits & TagBits.AnnotationNonNull) != 0) { // some problems need a closer look to report the best possible message:
+		// try to improve nonnull vs. nullable:
+		if (status.isPotentiallyNullMismatch()
+				&& (providedType.tagBits & TagBits.AnnotationNullable) == 0)
+		{
+			if(this.options.pessimisticNullAnalysisForFreeTypeVariablesEnabled && providedType.isTypeVariable() && !providedType.hasNullTypeAnnotations()) {
+				nullityMismatchIsFreeTypeVariable(providedType, expression.sourceStart, expression.sourceEnd);
+				return;
+			}
+
+			nullityMismatchPotentiallyNull(expression, requiredType, this.options.nonNullAnnotationName);
 			return;
 		}
-
-		nullityMismatchPotentiallyNull(expression, requiredType, this.options.nonNullAnnotationName);
-		return;
+		VariableBinding var = expression.localVariableBinding();
+		if (var == null && expression instanceof Reference) {
+			var = ((Reference)expression).lastFieldBinding();
+		}
+		if(var != null && var.type.isFreeTypeVariable()) {
+			nullityMismatchVariableIsFreeTypeVariable(var, expression);
+			return;
+		}
 	}
+
 	String[] arguments;
 	String[] shortArguments;
 		

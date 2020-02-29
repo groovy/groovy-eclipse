@@ -129,6 +129,14 @@ public class NullAnnotationMatching {
 		this.nullStatus = nullStatus;
 	}
 
+	/**
+	 * For creating updated status during *FlowContext.complainOnDeferred*Checks() once the actual nullStatus is known
+	 */
+	public NullAnnotationMatching withNullStatus(int updatedNullStatus) {
+		return updatedNullStatus == this.nullStatus ? this
+				: new NullAnnotationMatching(this.severity, updatedNullStatus, this.superTypeHint);
+	}
+
 	public boolean isAnyMismatch()      		{ return this.severity.isAnyMismatch(); }
 	public boolean isUnchecked()        		{ return this.severity == Severity.UNCHECKED || this.severity == Severity.UNCHECKED_TO_UNANNOTATED; }
 	public boolean isAnnotatedToUnannotated() 	{ return this.severity == Severity.UNCHECKED_TO_UNANNOTATED; }

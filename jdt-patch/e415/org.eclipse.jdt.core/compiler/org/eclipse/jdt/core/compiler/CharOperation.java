@@ -813,6 +813,7 @@ public static final int[] getSubWordMatchingRegions(String pattern, String name)
 
 	// Main loop is on pattern characters
 	int iName = -1;
+	int iPatternWordStart = 0;
 	for (int iPattern = 0; iPattern < pattern.length(); iPattern++) {
 		iName++;
 		if (iName == nameChars.length){
@@ -828,11 +829,6 @@ public static final int[] getSubWordMatchingRegions(String pattern, String name)
 			continue;
 		}
 
-		// lower case pattern also matches upper case name
-		if (ScannerHelper.toLowerCase(nameChar) == patternChar) {
-			continue;
-		}
-
 		// not matching, record previous segment and find next word match in name
 		if (iName > segmentStart) {
 			segments = Arrays.copyOf(segments, segments.length + 2);
@@ -842,12 +838,24 @@ public static final int[] getSubWordMatchingRegions(String pattern, String name)
 
 		int wordStart = indexOfWordStart(nameChars, iName, patternChar);
 		if (wordStart < 0) {
-			//	We have exhausted name (and not pattern), so it's not a match
+			// no matching word found, backtrack and try to find next occurrence of current word
+			int next = indexOfWordStart(nameChars, iName, pattern.charAt(iPatternWordStart));
+			if (next > 0) {
+				wordStart = next;
+				iPattern = iPatternWordStart;
+				 // last recorded segment was invalid -> drop it
+				segments = Arrays.copyOfRange(segments, 0, segments.length - 2);
+			}
+		}
+
+		if (wordStart < 0) {
+			// We have exhausted name (and not pattern), so it's not a match
 			return null;
 		}
 
 		segmentStart = wordStart;
 		iName = wordStart;
+		iPatternWordStart = iPattern;
 	}
 
 	 // we have exhausted pattern, record final segment

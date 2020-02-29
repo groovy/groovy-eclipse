@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
@@ -75,6 +76,7 @@ public class LoopingFlowContext extends SwitchFlowContext {
 								// cast to Expression is safe if corresponding nullCheckType != EXIT_RESOURCE
 	int[] nullCheckTypes;
 	UnconditionalFlowInfo[] nullInfos;	// detailed null info observed during the first visit of nullReferences[i], or null
+	NullAnnotationMatching[] nullAnnotationStatuses;
 	int nullCount;
 	// see also the related field FlowContext#expectedTypes
 
@@ -408,7 +410,15 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 					int nullStatus = flowInfo.nullStatus(local);
 					if (nullStatus != FlowInfo.NON_NULL) {
 						char[][] annotationName = scope.environment().getNonNullAnnotationName();
-						scope.problemReporter().nullityMismatch((Expression) location, this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], nullStatus, annotationName);
+						TypeBinding providedType = this.providedExpectedTypes[i][0];
+						TypeBinding expectedType = this.providedExpectedTypes[i][1];
+						Expression expression2 = (Expression) location;
+						if (this.nullAnnotationStatuses[i] != null) {
+							this.nullAnnotationStatuses[i] = this.nullAnnotationStatuses[i].withNullStatus(nullStatus);
+							scope.problemReporter().nullityMismatchingTypeAnnotation(expression2, providedType, expectedType, this.nullAnnotationStatuses[i]);
+						} else {
+							scope.problemReporter().nullityMismatch(expression2, providedType, expectedType, nullStatus, annotationName);
+						}
 					}
 					break;
 				case EXIT_RESOURCE:
@@ -563,13 +573,14 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 	}
 
 @Override
-protected void recordNullReference(LocalVariableBinding local,
-	ASTNode expression, int checkType, FlowInfo nullInfo) {
+protected void recordNullReferenceWithAnnotationStatus(LocalVariableBinding local,
+	ASTNode expression, int checkType, FlowInfo nullInfo, NullAnnotationMatching nullAnnotationStatus) {
 	if (this.nullCount == 0) {
 		this.nullLocals = new LocalVariableBinding[5];
 		this.nullReferences = new ASTNode[5];
 		this.nullCheckTypes = new int[5];
 		this.nullInfos = new UnconditionalFlowInfo[5];
+		this.nullAnnotationStatuses = new NullAnnotationMatching[5];
 	}
 	else if (this.nullCount == this.nullLocals.length) {
 		System.arraycopy(this.nullLocals, 0,
@@ -580,10 +591,13 @@ protected void recordNullReference(LocalVariableBinding local,
 			this.nullCheckTypes = new int[this.nullCount * 2], 0, this.nullCount);
 		System.arraycopy(this.nullInfos, 0,
 			this.nullInfos = new UnconditionalFlowInfo[this.nullCount * 2], 0, this.nullCount);
+		System.arraycopy(this.nullAnnotationStatuses, 0,
+			this.nullAnnotationStatuses = new NullAnnotationMatching[this.nullCount * 2], 0, this.nullCount);
 	}
 	this.nullLocals[this.nullCount] = local;
 	this.nullReferences[this.nullCount] = expression;
 	this.nullCheckTypes[this.nullCount] = checkType;
+	this.nullAnnotationStatuses[this.nullCount] = nullAnnotationStatus;
 	this.nullInfos[this.nullCount++] = nullInfo != null ? nullInfo.unconditionalCopy() : null;
 }
 @Override
@@ -781,9 +795,9 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 	}
 
 	@Override
-	protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, TypeBinding expectedType, int checkType) {
+	protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, NullAnnotationMatching nullAnnotationStatus, TypeBinding expectedType, int checkType) {
 		recordProvidedExpectedTypes(providedType, expectedType, this.nullCount);
-		recordNullReference(expression.localVariableBinding(), expression, checkType, flowInfo);
+		recordNullReferenceWithAnnotationStatus(expression.localVariableBinding(), expression, checkType, flowInfo, nullAnnotationStatus);
 		return true;
 	}
 }
