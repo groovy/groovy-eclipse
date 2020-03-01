@@ -1091,11 +1091,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static Boolean isTypeCompatible(final ClassNode source, final ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
-            !(source == VariableScope.NULL_TYPE && !ClassHelper.isPrimitiveType(target)) /*&&
-            !(source.equals(VariableScope.CLOSURE_CLASS_NODE) && ClassHelper.isSAMType(target))*/) {
+            !(VariableScope.NULL_TYPE == source && !ClassHelper.isPrimitiveType(target))) {
             // NOTE: Exact match of Closure to SAM Type creates tie for m(Closure) and m(Comparator)
-
-            result = !GroovyUtils.isAssignable(source, target) ? Boolean.FALSE : null; // not an exact match
+            result = !GroovyUtils.isAssignable(source, target) && !(VariableScope.CLOSURE_CLASS_NODE.equals(source) && ClassHelper.isSAMType(target)) ? Boolean.FALSE : null; // not an exact match
         }
         return result;
     }
