@@ -31,9 +31,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "import groovy.transform.TypeChecked\n"+
             "@TypeChecked\n"+
             "void method(String message) {\n"+
-            "   if (rareCondition) {\n"+
-            "        println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
-            "   }\n"+
+            "  if (rareCondition) {\n"+
+            "    println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
+            "  }\n"+
             "}\n",
         };
         //@formatter:on
@@ -61,9 +61,9 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
             "import groovy.transform.TypeChecked\n" +
             "@TypeChecked\n" +
             "void method(String message) {\n" +
-            "   List<Integer> ls = new ArrayList<Integer>();\n" +
-            "   ls.add(123);\n" +
-            "   ls.add('abc');\n" +
+            "  List<Integer> ls = new ArrayList<Integer>()\n" +
+            "  ls.add(123)\n" +
+            "  ls.add('abc')\n" +
             "}\n",
         };
         //@formatter:on
@@ -71,14 +71,36 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 6)\n" +
-            "\tls.add(\'abc\');\n" +
+            "\tls.add(\'abc\')\n" +
             "\t^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9412
     public void testTypeChecked3() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "interface I {\n" +
+            "}\n" +
+            "enum E implements I {\n" +
+            "  X\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test() {\n" +
+            "  List<I> list = []\n" +
+            "  list.add(E.X)\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTypeChecked4() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -96,7 +118,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked4() {
+    public void testTypeChecked5() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -114,7 +136,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeChecked5() {
+    public void testTypeChecked6() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
