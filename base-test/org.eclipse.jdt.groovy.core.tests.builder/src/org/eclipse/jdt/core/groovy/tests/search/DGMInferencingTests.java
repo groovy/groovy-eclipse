@@ -19,9 +19,6 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
-import java.util.Comparator;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -544,9 +541,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    @Test // GRECLIPSE-1695 redux
+    @Test
     public void testDGM45() {
-        // Java 8 adds default method sort(Comparator) to the List interface
         String contents =
             //@formatter:off
             "List<String> list = []\n" +
@@ -558,14 +554,16 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             //@formatter:on
 
         assertExprType(contents, "it", "java.lang.String");
+        // Java 8 adds default method sort(Comparator) to the List interface
+        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
-    @Test @Ignore("each(T, Closure) lacks @ClosureParams metadata")
+    @Test
     public void testDGM45a() {
         // Java 8 adds default method sort(Comparator) to the List interface
         boolean jdkListSort;
         try {
-            List.class.getDeclaredMethod("sort", Comparator.class);
+            java.util.List.class.getDeclaredMethod("sort", java.util.Comparator.class);
             jdkListSort = true;
         } catch (Exception e) {
             jdkListSort = false;
@@ -581,7 +579,12 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}\n";
             //@formatter:on
 
-        assertExprType(contents, "it", jdkListSort ? "java.lang.Void" : "java.lang.String");
+        if (!jdkListSort) {
+            assertExprType(contents, "it", "java.lang.String");
+        } else {
+            assertExprType(contents, "sort", "java.lang.Void");
+            assertUnknownConfidence(contents, contents.indexOf("each"), contents.indexOf("each") + 4);
+        }
     }
 
     @Test
