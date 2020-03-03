@@ -19,7 +19,7 @@
    </license>
 
    <requires>
-      <import plugin="org.codehaus.groovy" version="2.4.18" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy" version="2.4.19" match="greaterOrEqual"/>
       <!--import feature="org.eclipse.m2e.feature" version="1.8.0" match="greaterOrEqual"/-->
       <import feature="org.codehaus.groovy.eclipse.feature" version="3.7.0" match="greaterOrEqual"/>
    </requires>
