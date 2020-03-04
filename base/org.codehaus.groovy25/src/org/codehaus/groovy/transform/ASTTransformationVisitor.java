@@ -461,8 +461,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     }
                     // GRECLIPSE add
                     } catch (Throwable t) {
-                        // unexpected problem with the transformation. Could be:
-                        // - problem instantiating the transformation class
+                        if (t instanceof InvocationTargetException) {
+                            t = ((InvocationTargetException) t).getTargetException();
+                        }
                         compilationUnit.getErrorCollector().addError(new SimpleMessage(
                             "Unexpected problem with AST transform: " + t.getMessage(), null));
                     }

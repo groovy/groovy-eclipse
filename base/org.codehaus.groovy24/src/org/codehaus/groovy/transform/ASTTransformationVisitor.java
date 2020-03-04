@@ -47,6 +47,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -447,8 +448,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     }
                     // GRECLIPSE add
                     } catch (Throwable t) {
-                        // unexpected problem with the transformation. Could be:
-                        // - problem instantiating the transformation class
+                        if (t instanceof InvocationTargetException) {
+                            t = ((InvocationTargetException) t).getTargetException();
+                        }
                         compilationUnit.getErrorCollector().addError(new SimpleMessage(
                             "Unexpected problem with AST transform: " + t.getMessage(), null));
                     }
