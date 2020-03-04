@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.test.TestProject
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchConfiguration
@@ -37,7 +36,6 @@ import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
@@ -72,34 +70,35 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             p3.addProjectReference(p4.javaProject)
             p3.createSourceFolder('src2', 'bin2')
 
-            p2.addProjectReference(p4.javaProject)
             p2.addProjectReference(p3.javaProject)
+            p2.addProjectReference(p4.javaProject)
 
-            p1.addProjectReference(p4.javaProject)
-            p1.addProjectReference(p3.javaProject)
             p1.addProjectReference(p2.javaProject)
+            p1.addProjectReference(p3.javaProject)
+            p1.addProjectReference(p4.javaProject)
 
             def classpath = buildScriptClasspath(p1.javaProject)
 
             def entries = [
-                ['P1', 'src'],
-                ['P2', 'src'],
-                ['P3', 'src'],
-                ['P3', 'src2'],
-                ['P4', 'src'],
-                ['P4', 'src2'],
-                ['P1', 'bin'],
-                ['P2', 'bin'],
-                ['P3', 'bin'],
+                ['P1', 'bin' ],
+                ['P1', 'src' ],
+                ['P2', 'bin' ],
+                ['P2', 'src' ],
+                ['P3', 'bin' ],
+                ['P3', 'src' ],
                 ['P3', 'bin2'],
-                ['P4', 'bin'],
+                ['P3', 'src2'],
+                ['P4', 'bin' ],
+                ['P4', 'src' ],
                 ['P4', 'bin2'],
+                ['P4', 'src2'],
             ]
             String expected_classpath = entries.collect { String proj, String path ->
                 '${workspace_loc:' + proj + '}' + File.separator + path
             }.join(File.pathSeparator)
 
-            Assert.assertEquals(expected_classpath, classpath)
+            assert classpath.endsWith(expected_classpath)
+            assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()
             p2.dispose()
@@ -113,8 +112,8 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         TestProject p1 = new TestProject('P1a')
         TestProject p2 = new TestProject('P2a')
         try {
-            IPath runtimeJarPath = CompilerUtils.exportedGroovyAllJar
-            p1.addExternalLibrary(runtimeJarPath)
+            // this should not produce a duplicate entry in classpath
+            p1.addExternalLibrary(CompilerUtils.exportedGroovyAllJar)
 
             IFile f1 = p1.project.getFile('empty.jar')
             f1.create(new ByteArrayInputStream(new byte[0]), false, null)
@@ -126,14 +125,15 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
             String classpath = buildScriptClasspath(p1.javaProject)
 
-            String expected_classpath =
-                '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar' + File.pathSeparator +
-                '${workspace_loc:' + 'P1a}' + File.separator + 'src' + File.pathSeparator +
-                '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar' + File.pathSeparator +
-                runtimeJarPath.toPortableString().replace('/' as char, File.separatorChar) + File.pathSeparator +
-                '${workspace_loc:' + 'P1a}' + File.separator + 'bin'
+            String expected_classpath = [
+                '${workspace_loc:' + 'P1a}' + File.separator + 'bin',
+                '${workspace_loc:' + 'P1a}' + File.separator + 'src',
+                '${workspace_loc:' + 'P1a}' + File.separator + 'empty.jar',
+                '${workspace_loc:' + 'P2a}' + File.separator + 'empty2.jar'
+            ].join(File.pathSeparator)
 
-            Assert.assertEquals(expected_classpath, classpath)
+            assert classpath.endsWith(expected_classpath)
+            assert classpath.contains(CompilerUtils.exportedGroovyAllJar.toOSString())
         } finally {
             p1.dispose()
             p2.dispose()
@@ -280,8 +280,9 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
             @Override
             void run() {
                 GroovyScriptLaunchShortcut shortcut = new GroovyScriptLaunchShortcut()
-                ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType, launchType.javaProject), launchType.fullyQualifiedName)
-                Assert.assertTrue(launchType.exists())
+                ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(
+                    shortcut.createLaunchProperties(launchType, launchType.javaProject), launchType.fullyQualifiedName)
+                assert launchType.exists()
                 ILaunch launch = config.launch('run', new NullProgressMonitor())
                 final StringBuilder stdout = new StringBuilder()
                 final StringBuilder stderr = new StringBuilder()
@@ -307,7 +308,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
                     }
                 }
                 if (launch.isTerminated()) {
-                    Assert.assertEquals(1, launch.processes.length)
+                    assert launch.processes.length == 1
                     println('Process output:')
                     println('==================')
                     println(stdout)
@@ -317,8 +318,8 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
                     println(stderr)
                     println('==================')
                 }
-                Assert.assertTrue('Process not terminated after timeout has been reached', launch.isTerminated())
-                Assert.assertEquals('Expecting normal exit, but found invalid exit value', 0, launch.processes[0].exitValue)
+                assert launch.isTerminated() : 'Process not terminated after timeout has been reached'
+                assert launch.processes[0].exitValue == 0 : 'Expecting normal exit, but found invalid exit value'
             }
         }
 

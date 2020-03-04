@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,8 +51,8 @@ public class GroovyConsoleLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
             if (compilerOptions.groovyCompilerConfigScript != null && !compilerOptions.groovyCompilerConfigScript.isEmpty() &&
                     (runType == null || (javaProject.isOnClasspath(runType) && !matchesScriptFilter(runType.getResource())))) {
-                mainArgs.append(" --configscript ").append('"').append(getProjectLocation(javaProject))
-                    .append(File.separator).append(compilerOptions.groovyCompilerConfigScript).append('"');
+                mainArgs.append(" --configscript \"${workspace_loc:").append(javaProject.getElementName()).append('}')
+                    .append(File.separatorChar).append(compilerOptions.groovyCompilerConfigScript).append('"');
             }
             if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
                 mainArgs.append(" --indy");
