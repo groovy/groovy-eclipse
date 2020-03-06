@@ -28,6 +28,7 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.Excuse;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
@@ -18063,7 +18064,9 @@ public void testBug560213binary() {
 	runner.runConformTest();
 }
 public void testBug560310() {
-	runConformTestWithLibs(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.testFiles =
 		new String[] {
 			"confusing/Confusing.java",
 			"package confusing;\n" + 
@@ -18084,17 +18087,22 @@ public void testBug560310() {
 			"        }\n" + 
 			"    }\n" + 
 			"}\n"
-		},
-		getCompilerOptions(),
+		};
+	runner.classLibraries = this.LIBS;
+	runner.javacTestOptions = Excuse.EclipseHasSomeMoreWarnings;
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. INFO in confusing\\Confusing.java (at line 15)\n" + 
 		"	unannotated(list);\n" + 
 		"	            ^^^^\n" + 
 		"Unsafe null type conversion (type annotations): The value of type \'ArrayList<@NonNull String>\' is made accessible using the less-annotated type \'ArrayList<String>\'\n" + 
-		"----------\n");
+		"----------\n";
+	runner.runWarningTest();
 }
 public void testBug560310try_finally() {
-	runConformTestWithLibs(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.testFiles =
 		new String[] {
 			"confusing/Confusing.java",
 			"package confusing;\n" + 
@@ -18117,8 +18125,10 @@ public void testBug560310try_finally() {
 			"        }\n" + 
 			"    }\n" + 
 			"}\n"
-		},
-		getCompilerOptions(),
+		};
+	runner.classLibraries = this.LIBS;
+	runner.javacTestOptions = Excuse.EclipseHasSomeMoreWarnings;
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. INFO in confusing\\Confusing.java (at line 15)\n" + 
 		"	unannotated(list);\n" + 
@@ -18129,6 +18139,7 @@ public void testBug560310try_finally() {
 		"	unannotated(list);\n" + 
 		"	            ^^^^\n" + 
 		"Unsafe null type conversion (type annotations): The value of type \'ArrayList<@NonNull String>\' is made accessible using the less-annotated type \'ArrayList<String>\'\n" + 
-		"----------\n");
+		"----------\n";
+	runner.runWarningTest();
 }
 }

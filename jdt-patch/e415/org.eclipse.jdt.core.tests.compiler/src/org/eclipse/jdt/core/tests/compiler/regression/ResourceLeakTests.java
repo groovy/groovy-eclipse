@@ -5886,6 +5886,23 @@ public void testBug558574() {
 		"",
 		options);
 }
+public void testBug560460() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_7) return; // uses try-with-resources
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	runConformTest(
+		new String[] {
+			"X.java",
+			"import java.util.*;\n" +
+			"public class X {\n" +
+			"	Scanner m(String source) {\n" +
+			"		return new Scanner(source).useDelimiter(\"foobar\");\n" +
+			"	}\n" +
+			"}\n"
+		},
+		options);
+}
 public void testBug463320_comment19() {
 	Map options = getCompilerOptions(); 
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);

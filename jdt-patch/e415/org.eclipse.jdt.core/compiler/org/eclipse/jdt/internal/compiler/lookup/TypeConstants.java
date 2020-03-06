@@ -329,7 +329,8 @@ public interface TypeConstants {
 		new char[][] {JAVA, NIO, CHANNELS, "SelectableChannel".toCharArray() }, //$NON-NLS-1$
 		new char[][] {JAVA, NIO, CHANNELS, "Selector".toCharArray() }, //$NON-NLS-1$
 		new char[][] {JAVA, NIO, CHANNELS, "ServerSocketChannel".toCharArray() }, //$NON-NLS-1$
-		new char[][] {JAVA, UTIL, "Formatter".toCharArray() } //$NON-NLS-1$
+		new char[][] {JAVA, UTIL, "Formatter".toCharArray() }, //$NON-NLS-1$
+		new char[][] {JAVA, UTIL, "Scanner".toCharArray() }, //$NON-NLS-1$
 	};
 
 	// different assertion utilities:

@@ -7,3 +7,4 @@ Several bundles changed and need to be touched
 Bug 418646 - org.eclipse.jdt.core does not provide an artifact with classifier 'antadapter'
 Bug 436266 - Use RC3 (plus) version of JDT compiler to build RC4
 Bug 551547 - The library org.eclipse.jdt.core.compiler.batch_*.jar should be signed
+Bug 549687 - Local ecj build has a SHA-256 digest error for org/eclipse/jdt/internal/compiler/apt/model/PackageElementImpl.class

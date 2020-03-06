@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -57,6 +57,9 @@ public final class CompilationUnitSorter {
         case AST.JLS8 :
         case AST.JLS9 :
         case AST.JLS10 :
+        case AST.JLS11 :
+        case AST.JLS12 :
+        case AST.JLS13 :
             break;
         default :
             throw new IllegalArgumentException();
