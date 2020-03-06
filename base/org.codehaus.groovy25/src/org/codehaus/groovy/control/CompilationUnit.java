@@ -81,10 +81,14 @@ public class CompilationUnit extends ProcessingUnit {
 
     protected ASTTransformationsContext astTransformationsContext; // AST transformations state data
 
-    protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
+    @Deprecated
     protected Map summariesBySourceName;      // Summary of each SourceUnit
+    @Deprecated
     protected Map summariesByPublicClassName;       // Summary of each SourceUnit
+    @Deprecated
     protected Map classSourcesByPublicClassName;    // Summary of each Class
+
+    protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
     /* GRECLIPSE edit
     protected List<String> names;      // Names for each SourceUnit in sources.
     */
@@ -349,21 +353,22 @@ public class CompilationUnit extends ProcessingUnit {
         return this.ast;
     }
 
-    /**
-     * Get the source summaries
-     */
+    @Deprecated
     public Map getSummariesBySourceName() {
         return summariesBySourceName;
     }
 
+    @Deprecated
     public Map getSummariesByPublicClassName() {
         return summariesByPublicClassName;
     }
 
+    @Deprecated
     public Map getClassSourcesByPublicClassName() {
         return classSourcesByPublicClassName;
     }
 
+    @Deprecated
     public boolean isPublicClass(String className) {
         return summariesByPublicClassName.containsKey(className);
     }
