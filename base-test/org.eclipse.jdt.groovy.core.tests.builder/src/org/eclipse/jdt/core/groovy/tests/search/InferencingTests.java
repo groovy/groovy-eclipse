@@ -3139,6 +3139,168 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSwitchClassCase1() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number:\n" +
+            "    obj\n" +
+            "    break\n" +
+            "   case String:\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase2() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number:\n" +
+            "    obj\n" +
+            "    return\n" +
+            "   case String:\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase3() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number:\n" +
+            "    obj\n" +
+            "    throw new Exception()\n" +
+            "   case String:\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase4() {
+        String contents =
+            "void test(obj) {\n" +
+            "  for (i in 1..3) {\n" +
+            "    switch (obj) {\n" +
+            "     case Number:\n" +
+            "      obj\n" +
+            "      continue\n" +
+            "     case String:\n" +
+            "      obj\n" +
+            "    }\n" +
+            "    obj\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.String");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase5() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number:\n" +
+            "    obj\n" +
+            "   case String:\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.io.Serializable");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
+    public void testSwitchClassCase6() {
+        String contents =
+            "void test(obj) {\n" +
+            "  switch (obj) {\n" +
+            "   case Number:\n" +
+            "    obj\n" +
+            "   default:\n" +
+            "    obj\n" +
+            "  }\n" +
+            "  obj\n" +
+            "}\n";
+
+        int offset = contents.lastIndexOf("obj)");
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+
+        offset = contents.indexOf("obj", offset + 1);
+        assertType(contents, offset, offset + 3, "java.lang.Object");
+    }
+
+    @Test
     public void testThisInInnerClass() {
         String contents =
             "class A {\n" +

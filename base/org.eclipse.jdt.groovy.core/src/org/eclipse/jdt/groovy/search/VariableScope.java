@@ -578,9 +578,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param type type of variable
      */
     /*package*/ void updateVariableSoft(String name, ClassNode type) {
-        VariableInfo info = merge(parent.lookupName(name), type, null);
-        info = nameVariableMap.put(name, info);
-        assert info == null;
+        nameVariableMap.put(name, merge(parent.lookupName(name), type, null));
     }
 
     private static VariableInfo merge(VariableInfo base, ClassNode type, ClassNode declaringType) {
