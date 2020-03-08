@@ -731,7 +731,12 @@ DollarEscape
 
 fragment
 LineEscape
-    :   Backslash '\r'? '\n'
+    :   Backslash LineTerminator
+    ;
+
+fragment
+LineTerminator
+    :   '\r'? '\n' | '\r'
     ;
 
 fragment
@@ -953,7 +958,7 @@ WS  :  ([ \t\u000C]+ | LineEscape+)     -> skip
 
 
 // Inside (...) and [...] but not {...}, ignore newlines.
-NL  : '\r'? '\n'            { this.ignoreTokenInsideParens(); }
+NL  : LineTerminator   { this.ignoreTokenInsideParens(); }
     ;
 
 // Multiple-line comments(including groovydoc comments)

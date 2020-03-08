@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 
 import org.junit.Test
 
@@ -35,7 +37,7 @@ final class CodeSelectCategoriesTests extends BrowsingTestSuite {
         def elem = assertCodeSelect(sources, 'getAt')
         assert elem.parameterTypes.length == 2
         assert elem.parameterTypes[0] == 'Ljava.util.Map<TK;TV;>;'
-        assert elem.parameterTypes[1] == 'TK;' // the class literal argument
+        assert elem.parameterTypes[1] == isAtLeastGroovy(30) ? 'java.lang.Object' : 'TK;'
     }
 
     @Test

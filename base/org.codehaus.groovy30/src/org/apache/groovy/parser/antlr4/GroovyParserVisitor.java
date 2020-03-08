@@ -19,7 +19,7 @@ import groovyjarjarantlr4.v4.runtime.tree.ParseTreeVisitor;
 public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	/**
 	 * Visit a parse tree produced by the {@code identifierPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -27,7 +27,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code literalPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -35,7 +35,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code gstringPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -67,7 +67,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code parenPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#primary}.
+	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -980,13 +980,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitLocalVariableDeclaration(@NotNull GroovyParser.LocalVariableDeclarationContext ctx);
-
-	/**
-	 * Visit a parse tree produced by {@link GroovyParser#classifiedModifiers}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitClassifiedModifiers(@NotNull GroovyParser.ClassifiedModifiersContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#variableDeclaration}.

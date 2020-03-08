@@ -61,7 +61,6 @@
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LazyASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/BinaryExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/MethodCallExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/AbstractExtensionMethodCache.java" include-pattern="false" />

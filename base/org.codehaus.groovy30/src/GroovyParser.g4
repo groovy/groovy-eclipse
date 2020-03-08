@@ -221,36 +221,11 @@ locals[ int t ]
         |   AT INTERFACE { $t = 3; }
         |   TRAIT { $t = 4; }
         )
-        identifier nls
-
-        (
-            { 3 != $t }?
-            (typeParameters nls)?
-            (
-                { 2 != $t }?
-                EXTENDS nls
-                    (
-                        // Only interface can extend more than one super class
-                        {1 == $t}? scs=typeList
-                    |
-                        sc=type
-                    )
-                nls
-            |
-                /* enum should not have type parameters and extends */
-            )
-
-            (
-                {1 != $t}?
-                IMPLEMENTS nls is=typeList nls
-            |
-                /* interface should not implement other interfaces */
-            )
-        |
-            /* annotation should not have implements and extends*/
-        )
-
-        classBody[$t]
+        identifier
+        (nls typeParameters)?
+        (nls EXTENDS nls scs=typeList)?
+        (nls IMPLEMENTS nls is=typeList)?
+        nls classBody[$t]
     ;
 
 // t    see the comment of classDeclaration
@@ -291,12 +266,14 @@ memberDeclaration[int t]
  *  ct  9: script, other see the comment of classDeclaration
  */
 methodDeclaration[int t, int ct]
-    :   { 3 == $ct }?
-        returnType[$ct] methodName LPAREN rparen (DEFAULT nls elementValue)?
-    |
-        modifiersOpt typeParameters? returnType[$ct]?
-        methodName formalParameters (nls THROWS nls qualifiedClassNameList)?
-        (nls methodBody)?
+    :   modifiersOpt
+        (   { 3 == $ct }?
+            returnType[$ct] methodName LPAREN rparen (DEFAULT nls elementValue)?
+        |
+            typeParameters? returnType[$ct]?
+            methodName formalParameters (nls THROWS nls qualifiedClassNameList)?
+            (nls methodBody)?
+        )
     ;
 
 methodName
@@ -469,7 +446,6 @@ gstring
 
 gstringValue
     :   gstringPath
-    |   LBRACE statementExpression? RBRACE
     |   closure
     ;
 
@@ -584,15 +560,11 @@ localVariableDeclaration
         variableDeclaration[0]
     ;
 
-classifiedModifiers[int t]
-    :   modifiers nls
-    ;
-
 /**
  *  t   0: local variable declaration; 1: field declaration
  */
 variableDeclaration[int t]
-    :   classifiedModifiers[$t]
+    :   modifiers nls
         (   type? variableDeclarators
         |   typeNamePairs nls ASSIGN nls variableInitializer
         )
@@ -655,20 +627,14 @@ statement
     :   block                                                                                               #blockStmtAlt
     |   conditionalStatement                                                                                #conditionalStmtAlt
     |   loopStatement                                                                                       #loopStmtAlt
-
     |   tryCatchStatement                                                                                   #tryCatchStmtAlt
-
     |   SYNCHRONIZED expressionInPar nls block                                                              #synchronizedStmtAlt
     |   RETURN expression?                                                                                  #returnStmtAlt
     |   THROW expression                                                                                    #throwStmtAlt
-
     |   breakStatement                                                                                      #breakStmtAlt
     |   continueStatement                                                                                   #continueStmtAlt
-
     |   identifier COLON nls statement                                                                      #labeledStmtAlt
-
     |   assertStatement                                                                                     #assertStmtAlt
-
     |   localVariableDeclaration                                                                            #localVariableDeclarationStmtAlt
 
     // validate the method in the AstBuilder#visitMethodDeclaration, e.g. method without method body is not allowed
@@ -676,7 +642,6 @@ statement
         methodDeclaration[3, 9]                                                                             #methodDeclarationStmtAlt
 
     |   statementExpression                                                                                 #expressionStmtAlt
-
     |   SEMI                                                                                                #emptyStmtAlt
     ;
 
@@ -877,12 +842,13 @@ castOperandExpression
 options { baseContext = expression; }
     :   castParExpression castOperandExpression                                             #castExprAlt
     |   postfixExpression                                                                   #postfixExprAlt
+
     // ~(BNOT)/!(LNOT) (level 1)
     |   (BITNOT | NOT) nls castOperandExpression                                            #unaryNotExprAlt
+
     // ++(prefix)/--(prefix)/+(unary)/-(unary) (level 3)
     |   op=(INC | DEC | ADD | SUB) castOperandExpression                                    #unaryAddExprAlt
     ;
-
 
 commandExpression
     :   expression
@@ -1015,7 +981,7 @@ indexPropertyArgs
     ;
 
 namedPropertyArgs
-    :   QUESTION? LBRACK (mapEntryList | COLON) RBRACK
+    :   QUESTION? LBRACK (namedPropertyArgList | COLON) RBRACK
     ;
 
 primary
@@ -1035,6 +1001,14 @@ primary
     |   builtInType                                                                         #builtInTypePrmrAlt
     ;
 
+namedPropertyArgPrimary
+options { baseContext = primary; }
+    :   identifier                                                                          #identifierPrmrAlt
+    |   literal                                                                             #literalPrmrAlt
+    |   gstring                                                                             #gstringPrmrAlt
+    |   parExpression                                                                       #parenPrmrAlt
+    ;
+
 list
     :   LBRACK expressionList[true]? COMMA? RBRACK
     ;
@@ -1051,14 +1025,31 @@ mapEntryList
     :   mapEntry (COMMA mapEntry)*
     ;
 
+namedPropertyArgList
+options { baseContext = mapEntryList; }
+    :   namedPropertyArg (COMMA namedPropertyArg)*
+    ;
+
 mapEntry
     :   mapEntryLabel COLON nls expression
+    |   MUL COLON nls expression
+    ;
+
+namedPropertyArg
+options { baseContext = mapEntry; }
+    :   namedPropertyArgLabel COLON nls expression
     |   MUL COLON nls expression
     ;
 
 mapEntryLabel
     :   keywords
     |   primary
+    ;
+
+namedPropertyArgLabel
+options { baseContext = mapEntryLabel; }
+    :   keywords
+    |   namedPropertyArgPrimary
     ;
 
 /**
@@ -1124,13 +1115,13 @@ enhancedArgumentList
 argumentListElement
 options { baseContext = enhancedArgumentListElement; }
     :   expressionListElement[true]
-    |   mapEntry
+    |   namedPropertyArg
     ;
 
 enhancedArgumentListElement
     :   expressionListElement[true]
     |   standardLambdaExpression
-    |   mapEntry
+    |   namedPropertyArg
     ;
 
 stringLiteral

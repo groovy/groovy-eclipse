@@ -1064,14 +1064,6 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitClassifiedModifiers(@NotNull GroovyParser.ClassifiedModifiersContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public Result visitVariableDeclaration(@NotNull GroovyParser.VariableDeclarationContext ctx) { return visitChildren(ctx); }
 
 	/**
