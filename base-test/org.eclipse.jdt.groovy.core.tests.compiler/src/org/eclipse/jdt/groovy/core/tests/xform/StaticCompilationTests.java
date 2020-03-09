@@ -3840,4 +3840,37 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "Groovy:[Static type checking] - Cannot assign value of type java.lang.Integer to variable of type java.lang.Character\n" +
             "----------\n");
     }
+
+    @Test
+    public void testCompileStatic9454() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface Face {\n" +
+            "}\n" +
+            "class Impl implements Face {\n" +
+            "  String something\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Task<R extends Face> implements java.util.concurrent.Callable<String> {\n" +
+            "  R request\n" +
+            "  \n" +
+            "  @Override\n" +
+            "  String call() {\n" +
+            "    if (request instanceof Impl) {\n" +
+            "      def thing = request.something // No such property: something for class: R\n" +
+            "      def lower = thing.toLowerCase()\n" +
+            "    } else {\n" +
+            "      // ...\n" +
+            "      return null\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "def task = new Task<Impl>(request: new Impl(something: 'WORKS'))\n" +
+            "print task.call()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

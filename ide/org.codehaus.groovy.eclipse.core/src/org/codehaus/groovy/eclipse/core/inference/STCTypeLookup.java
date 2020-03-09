@@ -59,6 +59,9 @@ public class STCTypeLookup implements ITypeLookup {
             ClassNode declaringType = objectExpressionType;
             TypeConfidence confidence = TypeConfidence.INFERRED;
             Object inferredType = expr.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+            if (inferredType == null) {
+                inferredType = expr.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
+            }
 
             if (inferredType instanceof ClassNode) {
                 if (expr instanceof ClassExpression) {

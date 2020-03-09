@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class Groovy20InferencingTests extends InferencingTestSuite {
@@ -92,7 +93,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test // tests instanceof flow typing
+    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
     public void testCompileStatic7() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
@@ -116,7 +117,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test // tests instanceof flow typing
+    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
     public void testCompileStatic9() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
@@ -346,7 +347,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test // tests instanceof flow typing
+    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
     public void testTypeChecked7() {
         String contents = "@groovy.transform.TypeChecked\n" +
             "class Groovy20 {\n" +
@@ -368,5 +369,16 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         assertType(contents, "x", "java.lang.Number");
+    }
+
+    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
+    public void testTypeChecked9() {
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    !(x instanceof Number) ? x.toString() : null\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "x", "java.lang.Object");
     }
 }
