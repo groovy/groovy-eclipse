@@ -28,7 +28,6 @@ import org.eclipse.core.internal.utils.UniversalUniqueIdentifier
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ProjectScope
-import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
@@ -171,12 +170,6 @@ abstract class GroovyEclipseTestSuite {
 
     protected final void addJUnit(int n) { assert n in 3..5
         addClasspathContainer(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/$n"))
-    }
-
-    protected final void addSpock() {
-        def bundle = Platform.getBundle('org.eclipse.jdt.groovy.core.tests.builder')
-        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/spock-core-1.3-groovy-2.4.jar'))
-        testProject.addExternalLibrary(new Path(jarUrl.file))
     }
 
     protected final void addNature(String... natures) {

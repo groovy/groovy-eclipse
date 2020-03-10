@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeFalse;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.junit.Before;
@@ -29,11 +27,16 @@ public final class SpockInferencingTests extends InferencingTestSuite {
 
     @Before
     public void setUp() throws Exception {
-        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
-
-        IPath projectPath = project.getFullPath();
-        env.addJar(projectPath, "lib/spock-core-1.3-groovy-2.4.jar");
-        env.addEntry(projectPath, JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        String spockCorePath;
+        if (isAtLeastGroovy(30)) {
+            spockCorePath = "lib/spock-core-2.0-M2-groovy-3.0.jar";
+        } else if (isAtLeastGroovy(25)) {
+            spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
+        } else {
+            spockCorePath = "lib/spock-core-1.3-groovy-2.4.jar";
+        }
+        env.addJar(project.getFullPath(), spockCorePath);
+        env.addEntry(project.getFullPath(), JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
     }
 
     @Test
