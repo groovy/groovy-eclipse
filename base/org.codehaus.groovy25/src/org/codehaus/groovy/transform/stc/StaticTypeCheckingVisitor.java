@@ -806,8 +806,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    // GRECLIPSE add -- GROOVY-9455: !(x instanceof T) shouldn't propagate T as inferred type
     @Override
-    public void visitBinaryExpression(BinaryExpression expression) {
+    public void visitNotExpression(final NotExpression expression) {
+        typeCheckingContext.pushTemporaryTypeInfo();
+        super.visitNotExpression(expression);
+        typeCheckingContext.popTemporaryTypeInfo();
+    }
+    // GRECLIPSE end
+
+    @Override
+    public void visitBinaryExpression(final BinaryExpression expression) {
         int op = expression.getOperation().getType();
         if (op == COMPARE_IDENTICAL) {
             return; // we'll report those as errors later

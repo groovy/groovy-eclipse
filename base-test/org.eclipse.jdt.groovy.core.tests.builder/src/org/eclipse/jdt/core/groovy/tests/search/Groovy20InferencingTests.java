@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.junit.Ignore;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
+import static org.junit.Assume.assumeTrue;
+
 import org.junit.Test;
 
 public final class Groovy20InferencingTests extends InferencingTestSuite {
@@ -93,12 +95,27 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
+    @Test // tests instanceof flow typing
     public void testCompileStatic7() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
             "    if (!(x instanceof Number)) {\n" +
+            "      x.toString()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic7a() {
+        assumeTrue(isParrotParser());
+
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (x !instanceof Number) {\n" +
             "      x.toString()\n" +
             "    }\n" +
             "  }\n" +
@@ -117,12 +134,25 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
+    @Test // tests instanceof flow typing
     public void testCompileStatic9() {
         String contents = "@groovy.transform.CompileStatic\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
             "    !(x instanceof Number) ? x.toString() : null\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic9a() {
+        assumeTrue(isParrotParser());
+
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    x !instanceof Number ? x.toString() : null\n" +
             "  }\n" +
             "}";
         assertType(contents, "x", "java.lang.Object");
@@ -347,12 +377,27 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
+    @Test // tests instanceof flow typing
     public void testTypeChecked7() {
         String contents = "@groovy.transform.TypeChecked\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
             "    if (!(x instanceof Number)) {\n" +
+            "      x.toString()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testTypeChecked7a() {
+        assumeTrue(isParrotParser());
+
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (x !instanceof Number) {\n" +
             "      x.toString()\n" +
             "    }\n" +
             "  }\n" +
@@ -371,12 +416,25 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.Number");
     }
 
-    @Test @Ignore("GROOVY-9455") // tests instanceof flow typing
+    @Test // tests instanceof flow typing
     public void testTypeChecked9() {
         String contents = "@groovy.transform.TypeChecked\n" +
             "class Groovy20 {\n" +
             "  def meth(def x) {\n" +
             "    !(x instanceof Number) ? x.toString() : null\n" +
+            "  }\n" +
+            "}";
+        assertType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testTypeChecked9a() {
+        assumeTrue(isParrotParser());
+
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    x !instanceof Number ? x.toString() : null\n" +
             "  }\n" +
             "}";
         assertType(contents, "x", "java.lang.Object");
