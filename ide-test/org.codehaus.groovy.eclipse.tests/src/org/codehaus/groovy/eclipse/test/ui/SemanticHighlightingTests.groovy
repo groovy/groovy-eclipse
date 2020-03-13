@@ -2886,7 +2886,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMethodReference() {
+    void testMethodPointer4() {
+        String contents = 'String[].&new'
+
+        if (isAtLeastGroovy(30)) {
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+        } else {
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+                new HighlightedTypedPosition(contents.indexOf('new'), 'new'.length(), UNKNOWN))
+        }
+    }
+
+    @Test
+    void testMethodReference1() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'String[]::new'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS))
+    }
+
+    @Test
+    void testMethodReference2() {
         assumeTrue(isParrotParser())
 
         String contents = '''\

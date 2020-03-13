@@ -15,8 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.Set;
 
@@ -619,6 +622,19 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testClosure4() {
         String contents = "def fn = (String.&trim) >> (Class.&forName)";
         assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Class<?>>");
+    }
+
+    @Test
+    public void testClosure5() {
+        String contents = "def fn = String[].&new";
+        assertType(contents, 4, 6, isAtLeastGroovy(30) ? "groovy.lang.Closure<java.lang.String[]>" : "groovy.lang.Closure");
+    }
+
+    @Test
+    public void testClosure6() {
+        assumeTrue(isParrotParser());
+        String contents = "def fn = String[]::new";
+        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.String[]>");
     }
 
     @Test

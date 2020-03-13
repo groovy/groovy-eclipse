@@ -225,6 +225,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     // "super.@value" prefers fields but supports general Groovy property access; see AsmClassGenerator#visitAttributeExpression
                 }
 
+                if ("new".equals(node.getText()) && isStaticObjectExpression && isStaticReferenceToInstanceMethod(scope)) {
+                    return new TypeLookupResult(declaringType.getGenericsTypes()[0].getType(), null, node, confidence, scope);
+                }
+
                 boolean isLhsExpression = (scope.getWormhole().remove("lhs") == node);
                 return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, isLhsExpression, isStaticObjectExpression);
             }
@@ -905,6 +909,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (field.isDynamicTyped() && field.hasInitialExpression()) {
                 type = field.getInitialExpression().getType();
             }
+        } else if (decl instanceof ConstructorNode) {
+            type = ((ConstructorNode) decl).getDeclaringClass();
         } else if (decl instanceof MethodNode) {
             type = ((MethodNode) decl).getReturnType();
         } else if (decl instanceof Expression) {
@@ -1022,7 +1028,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * implicit in some sense).
      */
     protected static boolean isSynthetic(final MethodNode method) {
-        // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
+        // TODO: What about 'method.getDeclaringClass().equals(VariableScope.GROOVY_OBJECT_CLASS_NODE)'?
         return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE);
     }
 

@@ -1267,6 +1267,7 @@ assert primaryExprType != null && dependentExprType != null;
     @Override
     public void visitListExpression(final ListExpression node) {
         scopes.getLast().setCurrentNode(node);
+
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1290,12 +1291,14 @@ assert primaryExprType != null && dependentExprType != null;
         }
         ClassNode exprType = createParameterizedList(itemType);
         handleCompleteExpression(node, exprType, null);
+
         scopes.getLast().forgetCurrentNode();
     }
 
     @Override
     public void visitMapEntryExpression(final MapEntryExpression node) {
         scopes.getLast().setCurrentNode(node);
+
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1312,6 +1315,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
         ClassNode exprType = createParameterizedMap(keyType, valType);
         handleCompleteExpression(node, exprType, null);
+
         scopes.getLast().forgetCurrentNode();
     }
 
@@ -1492,7 +1496,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         Tuple t = dependentDeclarationStack.removeLast();
-        if (!(t.declaration instanceof MethodNode)) {
+        if (t.declaration == null) {
             dependentTypeStack.removeLast(); // unused type
             handleCompleteExpression(node, node.getType(), null);
         } else {
