@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -717,6 +718,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             storeType(expression,  rangeType);
         }
     }
+
+    // GRECLIPSE add -- GROOVY-9455: !(x instanceof T) shouldn't propagate T as inferred type
+    @Override
+    public void visitNotExpression(final NotExpression expression) {
+        typeCheckingContext.pushTemporaryTypeInfo();
+        super.visitNotExpression(expression);
+        typeCheckingContext.popTemporaryTypeInfo();
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
