@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
@@ -72,7 +73,7 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
 
         @Override
         public String getDisplayString() {
-            return "Add Groovy Runtime to classpath";
+            return "Add " + GroovyClasspathContainer.DESC + " to classpath";
         }
 
         @Override
