@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -78,25 +78,22 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
      * @return model representing the Java problem context
      */
     protected QuickFixProblemContext getQuickFixProblemContext(IInvocationContext context, IProblemLocation[] locations) {
-        if (context == null || locations == null || locations.length == 0) {
-            return null;
-        }
-        // FIX: for now return the first location. Add support to
-        // return multiple locations if necessary
-        IProblemLocation location = locations[0];
-        ProblemDescriptor descriptor = getProblemDescriptor(
-            location.getProblemId(), location.getMarkerType(), location.getProblemArguments());
-        if (descriptor != null) {
-            return new QuickFixProblemContext(descriptor, context, location);
+        if (context != null && locations != null && locations.length > 0) {
+            // TODO: for now return the first location; add support to return multiple locations if necessary
+            IProblemLocation location = locations[0];
+            ProblemDescriptor descriptor = getProblemDescriptor(location.getProblemId(), location.getMarkerType(), location.getProblemArguments());
+            if (descriptor != null) {
+                return new QuickFixProblemContext(descriptor, context, location);
+            }
         }
         return null;
     }
 
-    /** not API.  Public for testing purposes */
-    public ProblemDescriptor getProblemDescriptor(int problemID, String markerDescription, String[] messages) {
-        ProblemType type = ProblemType.getProblemType(problemID, markerDescription, messages);
+    //@VisibleForTesting
+    public ProblemDescriptor getProblemDescriptor(int problemId, String markerType, String[] problemArgs) {
+        ProblemType type = ProblemType.getProblemType(problemId, markerType, problemArgs);
         if (type != null) {
-            return new ProblemDescriptor(type, messages);
+            return new ProblemDescriptor(type, problemArgs);
         }
         return null;
     }

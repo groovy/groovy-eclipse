@@ -532,6 +532,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 message.write(new PrintWriter(writer));
                 description = writer.toString();
             }
+            String[] problemArguments = {prepareMessage(description)};
 
             if (soffset == -1) {
                 soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
@@ -547,7 +548,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 eoffset = sourceEnd;
             }
 
-            CategorizedProblem problem = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[0], 0, new String[] {prepareMessage(description)},
+            CategorizedProblem problem = new DefaultProblemFactory().createProblem(getFileName(), 0, problemArguments, 0, problemArguments,
                 message instanceof WarningMessage ? ProblemSeverities.Warning : ProblemSeverities.Error, soffset, eoffset, line, scol);
             problemReporter.record(problem, compilationResult, this, false);
         }

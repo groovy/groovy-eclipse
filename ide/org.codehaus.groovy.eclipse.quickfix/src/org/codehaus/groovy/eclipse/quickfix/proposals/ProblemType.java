@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,9 +27,9 @@ import org.eclipse.jdt.core.compiler.IProblem;
 public enum ProblemType {
     FINAL_METHOD_OVERRIDE("Groovy:You are not allowed to override the final method"),
     WEAKER_ACCESS_OVERRIDE("attempting to assign weaker access privileges; was "),
-    GROOVY_KEYWORD_TYPE1(IProblem.UndefinedType, "as cannot be resolved to a type", "def cannot be resolved to a type"),
-    GROOVY_KEYWORD_TYPE2(IProblem.ParsingError, "Syntax error on token \"in\", : expected", "Syntax error on token \"trait\", interface expected"),
-    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, "Syntax error, insert \";\" to complete", "Syntax error, insert \"}\" to complete"),
+    GROOVY_KEYWORD_TYPE1(IProblem.UndefinedType, "as", "def", "trait"),
+    GROOVY_KEYWORD_TYPE2(IProblem.ParsingError, "in", "trait"),
+    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, ";", "}"),
     MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter), // TODO: Add test case(s) for this
     MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", " is not an annotation in @", "Groovy:[Static type checking] - The variable "),

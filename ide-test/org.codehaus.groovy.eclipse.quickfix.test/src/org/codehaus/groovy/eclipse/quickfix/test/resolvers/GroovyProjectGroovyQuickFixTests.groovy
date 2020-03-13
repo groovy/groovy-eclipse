@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -121,7 +121,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarReturnType'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarReturnType { public TopLevelType doSomething() { \n return null \n } }'
+        String typeToAddImportContent = 'class BarReturnType { TopLevelType doSomething() { return null } }'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -135,7 +135,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarMethodParameter'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMethodParameter { public void doSomething(TopLevelType ttI) {  } }'
+        String typeToAddImportContent = 'class BarMethodParameter { void doSomething(TopLevelType ttI) {} }'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -163,7 +163,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarSubclassing'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarSubclassing extends TopLevelType {  }'
+        String typeToAddImportContent = 'class BarSubclassing extends TopLevelType {}'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -177,7 +177,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarLocalVariable'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarLocalVariable  { public void doSomething () { TopLevelType localVar  }  }'
+        String typeToAddImportContent = 'class BarLocalVariable  { void doSomething () { TopLevelType localVar } }'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -192,7 +192,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarMultipleLocations'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMultipleLocations extends TopLevelType { public List<TopLevelType> doSomething () {\n TopLevelType localVar \n return null }  }'
+        String typeToAddImportContent = 'class BarMultipleLocations extends TopLevelType { List<TopLevelType> doSomething () { TopLevelType localVar; return null } }'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -207,7 +207,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         String typeToAddImport = 'BarMultipleUnresolved'
         String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
         String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMultipleUnresolved extends TopLevelType { \n CSS css \n HTML val = new Entry() \n  }'
+        String typeToAddImportContent = 'class BarMultipleUnresolved extends TopLevelType { CSS css; HTML val = new Entry() }'
 
         testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
     }
@@ -222,7 +222,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
         String typeToImport = 'TopLevelType'
         String typeToAddImport = 'BarLocalMultipleSameType'
-        String typeToAddImportContent = 'class BarLocalMultipleSameType { public void doSomething () { TopLevelType localVar } }'
+        String typeToAddImportContent = 'class BarLocalMultipleSameType { void doSomething () { TopLevelType localVar } }'
 
         Map<String, String> expectedQuickFixes = [:]
         expectedQuickFixes.put("Import 'TopLevelType' ($SUBTEST)", SUBTEST + '.TopLevelType')
@@ -238,7 +238,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     void testAddImportNoProposals() {
         String typeToAddImport = 'BarAddImportNoProposal'
         String nonExistantType = 'DoesNotExistTopLevelType'
-        String typeToAddImportContent = 'class BarAddImportNoProposal  { public void doSomething () { DoesNotExistTopLevelType localVar  }  }'
+        String typeToAddImportContent = 'class BarAddImportNoProposal  { void doSomething () { DoesNotExistTopLevelType localVar } }'
         def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
 
         AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(nonExistantType, unit)
@@ -250,7 +250,7 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         Map<String, String> expectedProposals = [
             'Import \'Builder\' (groovy.transform.builder)': 'groovy.transform.builder.Builder'
         ]
-        testMultipleProposalsSameTypeName('Builder', expectedProposals, 'Test', '@Builder public class Test {}')
+        testMultipleProposalsSameTypeName('Builder', expectedProposals, 'Test', '@Builder class Test {}')
     }
 
     @Test
@@ -267,17 +267,17 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         Map<String, String> expectedProposals = [
             'Import \'CompileDynamic\' (groovy.transform)': 'groovy.transform.CompileDynamic'
         ]
-        testMultipleProposalsSameTypeName('CompileDynamic', expectedProposals, 'Test', '@CompileDynamic public class Test {}')
+        testMultipleProposalsSameTypeName('CompileDynamic', expectedProposals, 'Test', '@CompileDynamic class Test {}')
     }
 
     @Test // GRECLIPSE-1612
     void testAddImportClassExpression() {
         addJavaSource('''\
-            public class FooJava {
-              public static String getProperty() {
-                return "sad";
-              }
-            }'''.stripIndent(), 'FooJava', 'other')
+            |public class FooJava {
+            |  public static String getProperty() {
+            |    return "sad";
+            |  }
+            |}'''.stripMargin(), 'FooJava', 'other')
 
         String typeToAddImport = 'FooGroovy'
         String typeToAddImportContent = '@groovy.transform.TypeChecked\nclass FooGroovy {\n def main() { FooJava.getProperty() } }'
@@ -288,23 +288,23 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
         assert resolvers.size() == 1 : 'Should have found exactly one resolver'
         assert resolvers.get(0) instanceof AddMissingGroovyImportsResolver : 'Wrong type of resolver'
-        def proposal = resolvers.get(0).getQuickFixProposals().get(0)
+        def proposal = resolvers[0].quickFixProposals[0]
         assert proposal.displayString == 'Import \'FooJava\' (other)'
     }
 
     @Test // GRECLIPSE-1777
     void testAddTypecast() {
         def unit = addGroovySource('''\
-            @groovy.transform.CompileStatic
-            class D {
-                Number foo() {
-                    new Integer(1)
-                }
-                Integer bar() {
-                    Integer result = foo()
-                    result
-                }
-            }'''.stripIndent(), 'D', 'com.test')
+            |@groovy.transform.CompileStatic
+            |class D {
+            |  Number foo() {
+            |    new Integer(1)
+            |  }
+            |  Integer bar() {
+            |    Integer result = foo()
+            |    result
+            |  }
+            |}'''.stripMargin(), 'D', 'com.test')
 
         String expectedQuickFixDisplay = 'Add cast to Integer'
         AddClassCastResolver resolver = getAddClassCastResolver(unit)
@@ -315,14 +315,28 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     }
 
     @Test
+    void testAddUnimplementedMethods() {
+        String contents = '''\
+            |package foo
+            |class Bar implements Map.Entry {
+            |}
+            |'''.stripMargin()
+        def unit = addGroovySource(contents, 'Bar', 'foo')
+
+        def proposals = findQuickFixes(unit, ProblemType.UNIMPLEMENTED_METHODS_TYPE)
+
+        assert !proposals.isEmpty() : 'Expected quick fix for adding unimplemented methods'
+    }
+
+    @Test
     void testRemoveFinalModifier0() {
         String contents = '''\
-            package foo
-            class Bar {
-              void wait() {} // attempts to override final method
-            }
-            '''.stripIndent()
-        def unit = addGroovySource(contents, 'Baz', 'foo')
+            |package foo
+            |class Bar {
+            |  void wait() {} // attempts to override final method
+            |}
+            |'''.stripMargin()
+        def unit = addGroovySource(contents, 'Bar', 'foo')
 
         def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
 
@@ -332,14 +346,14 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test
     void testRemoveFinalModifier1() {
         String contents = '''\
-            package foo
-            class Bar {
-              final void meth() {}
-            }
-            class Baz extends Bar {
-              void meth() {} // attempts to override final method
-            }
-            '''.stripIndent()
+            |package foo
+            |class Bar {
+            |  final void meth() {}
+            |}
+            |class Baz extends Bar {
+            |  void meth() {} // attempts to override final method
+            |}
+            |'''.stripMargin()
         def unit = addGroovySource(contents, 'Baz', 'foo')
 
         def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
@@ -352,19 +366,19 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test
     void testRemoveFinalModifier2() {
         String contents = '''\
-            package foo
-            class Bar {
-              final void meth() {}
-            }
-            '''.stripIndent()
+            |package foo
+            |class Bar {
+            |  final void meth() {}
+            |}
+            |'''.stripMargin()
         def unit1 = addGroovySource(contents, 'Bar', 'foo')
 
         def unit2 = addGroovySource('''\
-            package foo
-            class Baz extends Bar {
-              void meth() {} // attempts to override final method
-            }
-            '''.stripIndent(), 'Baz', 'foo')
+            |package foo
+            |class Baz extends Bar {
+            |  void meth() {} // attempts to override final method
+            |}
+            |'''.stripMargin(), 'Baz', 'foo')
 
         def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
 
@@ -376,25 +390,25 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test
     void testRemoveFinalModifier3() {
         String contents = '''\
-            package foo
-            class Bar {
-              final void meth() {}
-            }
-            '''.stripIndent()
+            |package foo
+            |class Bar {
+            |  final void meth() {}
+            |}
+            |'''.stripMargin()
         def unit1 = addGroovySource(contents, 'Bar', 'foo')
 
         addGroovySource('''\
-            package foo
-            class Baz extends Bar {
-            }
-            '''.stripIndent(), 'Baz', 'foo')
+            |package foo
+            |class Baz extends Bar {
+            |}
+            |'''.stripMargin(), 'Baz', 'foo')
 
         def unit2 = addGroovySource('''\
-            package whatever
-            class Something extends foo.Baz {
-              void meth() {} // attempts to override final method
-            }
-            '''.stripIndent(), 'Something', 'whatever')
+            |package whatever
+            |class Something extends foo.Baz {
+            |  void meth() {} // attempts to override final method
+            |}
+            |'''.stripMargin(), 'Something', 'whatever')
 
         def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
 
@@ -406,14 +420,14 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test
     void testRaiseVisibilityModifier1() {
         String contents = '''\
-            package foo
-            class Bar {
-              public void meth() {}
-            }
-            class Baz extends Bar {
-              private void meth() {} // attempts to lower visibility
-            }
-            '''.stripIndent()
+            |package foo
+            |class Bar {
+            |  public void meth() {}
+            |}
+            |class Baz extends Bar {
+            |  private void meth() {} // attempts to lower visibility
+            |}
+            |'''.stripMargin()
         def unit = addGroovySource(contents, 'Baz', 'foo')
 
         def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
@@ -427,14 +441,14 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test
     void testRaiseVisibilityModifier2() {
         String contents = '''\
-            package foo
-            class Bar {
-              protected void meth() {}
-            }
-            class Baz extends Bar {
-              private void meth() {} // attempts to lower visibility
-            }
-            '''.stripIndent()
+            |package foo
+            |class Bar {
+            |  protected void meth() {}
+            |}
+            |class Baz extends Bar {
+            |  private void meth() {} // attempts to lower visibility
+            |}
+            |'''.stripMargin()
         def unit = addGroovySource(contents, 'Baz', 'foo')
 
         def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
@@ -447,15 +461,15 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
     @Test @NotYetImplemented
     void testRaiseVisibilityModifier3() {
         String contents = '''\
-            package foo
-            import groovy.transform.PackageScope
-            class Bar {
-              @PackageScope void meth() {}
-            }
-            class Baz extends Bar {
-              private void meth() {} // attempts to lower visibility
-            }
-            '''.stripIndent()
+            |package foo
+            |import groovy.transform.PackageScope
+            |class Bar {
+            |  @PackageScope void meth() {}
+            |}
+            |class Baz extends Bar {
+            |  private void meth() {} // attempts to lower visibility
+            |}
+            |'''.stripMargin()
         def unit = addGroovySource(contents, 'Baz', 'foo')
 
         def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)

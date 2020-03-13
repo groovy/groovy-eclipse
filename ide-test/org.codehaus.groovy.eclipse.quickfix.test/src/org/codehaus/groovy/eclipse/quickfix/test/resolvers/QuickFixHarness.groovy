@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
+import static org.eclipse.jdt.internal.core.util.Util.getProblemArgumentsFromMarker
 import static org.junit.Assert.*
 
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor
@@ -22,7 +23,6 @@ import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
-import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemDescriptor
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
 import org.codehaus.groovy.eclipse.quickfix.proposals.QuickFixProblemContext
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal
@@ -214,10 +214,6 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
      * Consequently, this should only be used to test resolvers that can fix a
      * problem purely on the information contained in a marker (the marker type,
      * messages, problem ID, offset of problem, and length of problem)
-     *
-     * @param marker
-     * @param unit
-     * @param problemType
      */
     protected QuickFixProblemContext getSimpleProblemContext(IMarker marker, ICompilationUnit unit, ProblemType problemType) {
         // make sure the marker's associated resource matches the compilation
@@ -229,23 +225,17 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         if (markResource != unitResource) {
             return null
         }
-        if (((Integer) marker.getAttribute(IMarker.SEVERITY)).intValue() == IMarker.SEVERITY_ERROR) {
-            String[] markerMessages = getMarkerMessages(marker)
-            // NOTE: this is not the same as the marker ID
-            int problemID = ((Integer) marker.getAttribute('id')).intValue()
-            ProblemDescriptor descriptor = new GroovyQuickFixProcessor().getProblemDescriptor(problemID, marker.type, markerMessages)
+        if (marker.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR) {
+            def arguments = getProblemArgumentsFromMarker(marker.getAttribute(IJavaModelMarker.ARGUMENTS, ''))
+            int problemId = marker.getAttribute('id')
+            def descriptor = new GroovyQuickFixProcessor().getProblemDescriptor(problemId, marker.type, arguments)
             if (descriptor != null && descriptor.type == problemType) {
                 int offset = ((Integer) marker.getAttribute(IMarker.CHAR_START))
                 int length = ((Integer) marker.getAttribute(IMarker.CHAR_END)) - offset
-                return new QuickFixProblemContext(descriptor, new AssistContext(unit, offset, length), new ProblemLocation(offset, length, problemID, null, true, marker.type))
+                return new QuickFixProblemContext(descriptor, new AssistContext(unit, offset, length), new ProblemLocation(offset, length, problemId, null, true, marker.type))
             }
         }
         return null
-    }
-
-    protected String[] getMarkerMessages(IMarker marker) {
-        String message = (String) marker.getAttribute(IMarker.MESSAGE)
-        return [message] as String[]
     }
 
     /**
