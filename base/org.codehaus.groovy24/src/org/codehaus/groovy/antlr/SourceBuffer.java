@@ -29,9 +29,12 @@ public class SourceBuffer {
     private final List<StringBuilder> lines;
     private StringBuilder current;
     // GRECLIPSE add
-    private final List<Integer> lineEndings = new ArrayList<Integer>();
+    private final List<Integer> lineEndings = new ArrayList<>();
     // GRECLIPSE-805: Support for unicode escape sequences
-    private UnicodeEscapingReader unescaper = new NoEscaper();
+    UnicodeEscapingReader unescaper = new UnicodeEscapingReader(null, null) {
+        @Override public int getUnescapedUnicodeColumnCount() { return 0; }
+        @Override public int getUnescapedUnicodeOffsetCount() { return 0; }
+    };
     // GRECLIPSE end
 
     public SourceBuffer() {
@@ -151,24 +154,5 @@ public class SourceBuffer {
         }
         return new LocationSupport(lineEndingsArray);
     }
-
-    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
-        this.unescaper = unicodeEscapingReader;
-    }
     // GRECLIPSE end
-}
-
-/**
- * GRECLIPSE-805: Support for unicode escape sequences
- */
-class NoEscaper extends UnicodeEscapingReader {
-    public NoEscaper() {
-        super(null, null);
-    }
-    public int getUnescapedUnicodeColumnCount() {
-        return 0;
-    }
-    public int getUnescapedUnicodeOffsetCount() {
-        return 0;
-    }
 }

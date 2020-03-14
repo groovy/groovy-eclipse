@@ -284,9 +284,11 @@ tokens {
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { lexer.setFilename(f); super.setFilename(f); }
 
+    /* GRECLIPSE edit
     @Deprecated
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
     }
+    */
 
     /**
      * Creates an AST node with the token type and text passed in, but

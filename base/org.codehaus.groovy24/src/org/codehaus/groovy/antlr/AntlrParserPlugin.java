@@ -18,9 +18,9 @@
  */
 package org.codehaus.groovy.antlr;
 
-import groovy.transform.Trait;
 import groovyjarjarantlr.RecognitionException;
 import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
 import groovyjarjarantlr.collections.AST;
 import org.codehaus.groovy.GroovyBugError;
@@ -132,18 +132,20 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 /**
- * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
+ * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime.
  */
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 
     private static class AnonymousInnerClassCarrier extends Expression {
         ClassNode innerClass;
 
+        @Override
         public Expression transformExpression(ExpressionTransformer transformer) {
             return null;
         }
@@ -187,16 +189,16 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     /* GRECLIPSE edit -- GROOVY-9203
     private int innerClassCounter = 1;
     */
-    private boolean enumConstantBeingDef = false;
-    private boolean forStatementBeingDef = false;
-    private boolean firstParamIsVarArg = false;
-    private boolean firstParam = false;
+    private boolean enumConstantBeingDef;
+    private boolean forStatementBeingDef;
+    private boolean firstParamIsVarArg;
+    private boolean firstParam;
     // GRECLIPSE add
     protected LocationSupport locations = LocationSupport.NO_LOCATIONS;
     // GRECLIPSE end
 
-    public /*final*/ Reduction parseCST(final SourceUnit sourceUnit, Reader reader) throws CompilationFailedException {
-        final SourceBuffer sourceBuffer = new SourceBuffer();
+    public Reduction parseCST(SourceUnit sourceUnit, Reader reader) throws CompilationFailedException {
+        SourceBuffer sourceBuffer = new SourceBuffer();
         transformCSTIntoAST(sourceUnit, reader, sourceBuffer);
         processAST();
         return outputAST(sourceUnit, sourceBuffer);
@@ -207,41 +209,104 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         setController(sourceUnit);
 
-        // TODO find a way to inject any GroovyLexer/GroovyRecognizer
-
         UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader, sourceBuffer);
         UnicodeLexerSharedInputState inputState = new UnicodeLexerSharedInputState(unicodeReader);
         GroovyLexer lexer = new GroovyLexer(inputState);
         unicodeReader.setLexer(lexer);
         GroovyRecognizer parser = GroovyRecognizer.make(lexer);
+        /* GRECLIPSE edit
         parser.setSourceBuffer(sourceBuffer);
+        */
         tokenNames = parser.getTokenNames();
         parser.setFilename(sourceUnit.getName());
 
         // start parsing at the compilationUnit rule
         try {
             parser.compilationUnit();
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+            // GRECLIPSE end
         }
         catch (TokenStreamRecognitionException tsre) {
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+            // GRECLIPSE end
             RecognitionException e = tsre.recog;
             SyntaxException se = new SyntaxException(e.getMessage(), e, e.getLine(), e.getColumn());
             se.setFatal(true);
             sourceUnit.addError(se);
         }
         catch (RecognitionException e) {
-            SyntaxException se = new SyntaxException(e.getMessage(), e, e.getLine(), e.getColumn());
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+
+            // TODO: Sometimes the line/column is after the end of the file. Why is this? Fix if possible.
+            int line = e.getLine(), column = e.getColumn();
+            if (locations.isPopulated()) {
+                int offset = locations.findOffset(line, column);
+                if (offset >= locations.getEnd() - 1) {
+                    int[] row_col = locations.getRowCol(locations.getEnd() - 1);
+                    line = row_col[0];
+                    column = row_col[1];
+                }
+            }
+            // GRECLIPSE end
+            SyntaxException se = new SyntaxException(e.getMessage(), e, line, column);
             se.setFatal(true);
             sourceUnit.addError(se);
         }
         catch (TokenStreamException e) {
+            // GRECLIPSE add
+            configureLocationSupport(sourceBuffer);
+
+            boolean handled = false;
+            if (e instanceof TokenStreamIOException) {
+                // GRECLIPSE-896: "Did not find four digit hex character code. line: 1 col:7"
+                String m = e.getMessage();
+                if (m != null && m.startsWith("Did not find four digit hex character code.")) {
+                    try {
+                        int linepos = m.indexOf("line:");
+                        int colpos = m.indexOf("col:");
+                        int line = Integer.valueOf(m.substring(linepos + 5, colpos).trim());
+                        int column = Integer.valueOf(m.substring(colpos + 4).trim());
+                        SyntaxException se = new SyntaxException(e.getMessage(), e, line, column);
+                        se.setFatal(true);
+                        sourceUnit.addError(se);
+                        handled = true;
+                    } catch (Throwable t) {
+                        System.err.println(m);
+                        t.printStackTrace();
+                    }
+                }
+            }
+            if (!handled)
+            // GRECLIPSE end
             sourceUnit.addException(e);
         }
 
-        // GRECLIPSE add
-        configureLocationSupport(sourceBuffer);
-        // GRECLIPSE end
-
         ast = parser.getAST();
+
+        // GRECLIPSE add
+        sourceUnit.setComments(parser.getComments());
+
+        for (Map<String, Object> error : (List<Map<String, Object>>) parser.getErrorList()) {
+            int line = ((Integer) error.get("line")).intValue();
+            int column = ((Integer) error.get("column")).intValue();
+
+            // TODO: Sometimes the line/column is after the end of the file. Why is this? Fix if possible.
+            if (locations.isPopulated()) {
+                int offset = locations.findOffset(line, column);
+                if (offset >= locations.getEnd() - 1) {
+                    int[] row_col = locations.getRowCol(locations.getEnd() - 1);
+                    line = row_col[0];
+                    column = row_col[1];
+                }
+            }
+
+            SyntaxException se = new SyntaxException((String) error.get("error"), line, column);
+            sourceUnit.addError(se);
+        }
+        // GRECLIPSE end
     }
 
     // GRECLIPSE add
@@ -256,23 +321,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     public Reduction outputAST(final SourceUnit sourceUnit, final SourceBuffer sourceBuffer) {
-        AccessController.doPrivileged(new PrivilegedAction() {
-            public Object run() {
+        return AccessController.doPrivileged(new PrivilegedAction<Reduction>() {
+            @Override
+            public Reduction run() {
                 outputASTInVariousFormsIfNeeded(sourceUnit, sourceBuffer);
                 return null;
             }
         });
-
-        return null; //new Reduction(Tpken.EOF);
     }
 
     private void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
         // straight xstream output of AST
         String formatProp = System.getProperty("ANTLR.AST".toLowerCase()); // uppercase to hide from jarjar
 
+        /* GRECLIPSE edit
         if ("xml".equals(formatProp)) {
             saveAsXML(sourceUnit.getName(), ast);
         }
+        */
 
         // 'pretty printer' output of AST
         if ("groovy".equals(formatProp)) {
@@ -327,11 +393,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
+    /* GRECLIPSE edit
     private static void saveAsXML(String name, AST ast) {
-        // GRECLIPSE edit
-        //XStreamUtils.serialize(name + ".antlr", ast);
-        // GRECLIPSE end
+        XStreamUtils.serialize(name + ".antlr", ast);
     }
+    */
 
     public ModuleNode buildAST(SourceUnit sourceUnit, ClassLoader classLoader, Reduction cst) throws ParserException {
         setClassLoader(classLoader);
@@ -408,7 +474,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     // GRECLIPSE end
 
     /**
-     * Converts the Antlr AST to the Groovy AST
+     * Converts the Antlr AST to the Groovy AST.
      */
     protected void convertGroovy(AST node) {
         while (node != null) {
@@ -805,7 +871,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (isType(TRAIT_DEF, classDef)) {
             // GRECLIPSE edit
             //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
-            annotations.add(makeAnnotationNode(Trait.class));
+            annotations.add(makeAnnotationNode(groovy.transform.Trait.class));
             // GRECLIPSE end
         }
 

@@ -254,11 +254,12 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
 
-    @SuppressWarnings("unused")
+    /* GRECLIPSE edit
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
     }
+    */
 
     /** Create an AST node with the token type and text passed in, but
      *  with the same background information as another supplied Token (e.g.&nbsp;line numbers).

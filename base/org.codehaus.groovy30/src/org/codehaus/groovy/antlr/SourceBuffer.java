@@ -40,14 +40,10 @@ public class SourceBuffer {
     }
 
     // GRECLIPSE add -- GRECLIPSE-805: Support for unicode escape sequences
-    private UnicodeEscapingReader unescaper = new UnicodeEscapingReader(null, null) {
+    UnicodeEscapingReader unescaper = new UnicodeEscapingReader(null, null) {
         @Override public int getUnescapedUnicodeColumnCount() { return 0; }
         @Override public int getUnescapedUnicodeOffsetCount() { return 0; }
     };
-
-    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
-        this.unescaper = unicodeEscapingReader;
-    }
 
     public LocationSupport getLocationSupport() {
         lineEndings.add(column + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out

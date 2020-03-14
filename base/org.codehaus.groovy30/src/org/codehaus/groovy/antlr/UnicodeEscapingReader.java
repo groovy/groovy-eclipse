@@ -66,7 +66,7 @@ public class UnicodeEscapingReader extends Reader {
         this.sourceBuffer = sourceBuffer;
         // GRECLIPSE add
         if (sourceBuffer != null) {
-            sourceBuffer.setUnescaper(this);
+            sourceBuffer.unescaper = this;
         }
         // GRECLIPSE end
         this.lexer = new DummyLexer();
