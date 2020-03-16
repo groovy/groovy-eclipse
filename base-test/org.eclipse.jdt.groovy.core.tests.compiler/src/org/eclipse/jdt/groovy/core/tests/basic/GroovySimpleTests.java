@@ -739,65 +739,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testStaticOuter_GRE944() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "static class A {\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testStaticOuter_GRE944_2() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "static class A {\n" +
-            "  static class B {\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\tstatic class A {\n" +
-            "\t             ^\n" +
-            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testIncompleteCharacterEscape_GRE986() {
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "hello \\u\n" +
-            "class Foo {}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\thello \\u\n" +
-            "\t      ^\n" +
-            "Groovy:Did not find four digit hex character code. line: 1 col:7\n" +
-            "----------\n");
-    }
-
-    @Test
     public void testPrimitiveLikeTypeNames_GRE891() {
         //@formatter:off
         String[] sources = {
@@ -929,10 +870,144 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertEquals("[[Lpkg.H;", getReturnTypeOfMethod("Z.groovy", "zzz"));
     }
 
-    /**
-     * The groovy object method augmentation (in GroovyClassScope) should only apply to types directly implementing GroovyObject, rather than
-     * adding them all the way down the hierarchy.  This mirrors what happens in the compiler.
+    @Test
+    public void testStaticOuter_GRE944() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "static class A {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\tstatic class A {\n" +
+            "\t             ^\n" +
+            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testStaticOuter_GRE944_2() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "static class A {\n" +
+            "  static class B {\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\tstatic class A {\n" +
+            "\t             ^\n" +
+            "Groovy:The class \'A\' has an incorrect modifier static.\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testIncompleteCharacterEscape_GRE986() {
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "hello \\u\n" +
+            "class Foo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.groovy (at line 1)\n" +
+            "\thello \\u\n" +
+            "\t      ^\n" +
+            "Groovy:Did not find four digit hex character code. line: 1 col:7\n" + // Java Editor: "Invalid unicode" with 6 characters underlined
+            "----------\n");
+    }
+
+    @Test
+    public void testInvisibleCharacter1() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class F\u000Coo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass F\foo {}\n" +
+            "\t       ^\n" +
+            "Groovy:Unexpected character 0x0C (FORM FEED (FF)) at column 8\n" +
+            "----------\n" +
+            "2. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass F\foo {}\n" +
+            "\t        ^\n" +
+            "Groovy:unexpected token: oo\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testInvisibleCharacter2() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class F\u200Boo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass F\u200Boo {}\n" +
+            "\t       ^\n" +
+            "Groovy:Unexpected character 0x200B (ZERO WIDTH SPACE) at column 8\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testInvisibleCharacter3() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class F\u2063oo {}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass F\u2063oo {}\n" +
+            "\t       ^\n" +
+            "Groovy:Unexpected character 0x2063 (INVISIBLE SEPARATOR) at column 8\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testInvisibleCharacter4() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  public static final String SEPARATOR = '\\u2063'\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    /*
+     * The groovy object method augmentation (in GroovyClassScope) should only
+     * apply to types directly implementing GroovyObject, rather than adding all
+     * the way down the hierarchy.  This mirrors what happens in the compiler.
      */
+
     /**
      * First a class extending another.  The superclass gets augmented but not the subclass.
      */
@@ -1025,50 +1100,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         } finally {
             GroovyClassScope.debugListener = null;
         }
-    }
-
-    // WMTW: What makes this work: the groovy compiler is delegated to for .groovy files
-    @Test
-    public void testStandaloneGroovyFile() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testStandaloneGroovyFile2() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  static main(args) {\n" +
-            "    print \"success\"\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-        checkGCUDeclaration("X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "X() {\n" +
-            "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
-            "  }\n" +
-            "}\n"
-        );
     }
 
     @Test
@@ -2438,6 +2469,75 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testStandaloneGroovySource1() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testStandaloneGroovySource2() {
+        //@formatter:off
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  static main(args) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+        checkGCUDeclaration("X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "X() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n"
+        );
+    }
+
+    @Test
+    public void testStandaloneGroovySource3() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "print 'success'\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testReadStaticFieldFromGtoJ() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "print SomeJava.constant\n",
+            "SomeJava.java",
+            "class SomeJava { static String constant = \"abc\";}",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc");
+    }
+
+    @Test
     public void testCallStaticMethodFromGtoJ() {
         //@formatter:off
         String[] sources = {
@@ -2480,28 +2580,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  public static void run() {\n" +
             "    System.out.println(\"success\");\n" +
             "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testNotMakingInterfacesImplementGroovyObject() {
-        //@formatter:off
-        String[] sources = {
-            "p/X.java",
-            "package p;\n" +
-            "public class X implements I {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    System.out.println(\"success\");\n" +
-            "  }\n" +
-            "}\n",
-
-            "p/I.groovy",
-            "package p;\n" +
-            "public interface I {\n" +
             "}\n",
         };
         //@formatter:on
@@ -2765,9 +2843,31 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/C.java",
             "package p;\n" +
+            "public class C implements I {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/I.groovy",
+            "package p;\n" +
+            "public interface I {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "success");
+    }
+
+    @Test
+    public void testImplementingInterface2() {
+        //@formatter:off
+        String[] sources = {
+            "p/C.java",
+            "package p;\n" +
             "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
             "  public static void main(String[] argv) {\n" +
-            "    System.out.println( \"success\");\n" +
+            "    System.out.println(\"success\");\n" +
             "  }\n" +
             "}\n",
 
@@ -2789,7 +2889,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImplementingInterface2() {
+    public void testImplementingInterface3() {
         //@formatter:off
         String[] sources = {
             "p/C.java",
@@ -2797,7 +2897,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
             "  public void m() {}\n" +
             "  public static void main(String[] argv) {\n" +
-            "    System.out.println( \"success\");\n" +
+            "    System.out.println(\"success\");\n" +
             "  }\n" +
             "}\n",
 
@@ -2813,7 +2913,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImplementingInterface3() {
+    public void testImplementingInterface4() {
         //@formatter:off
         String[] sources = {
             "p/C.java",
@@ -2821,7 +2921,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
             "  void m() {}\n" +
             "  public static void main(String[] argv) {\n" +
-            "    System.out.println( \"success\");\n" +
+            "    System.out.println(\"success\");\n" +
             "  }\n" +
             "}\n",
 
@@ -2843,7 +2943,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImplementingInterface4() {
+    public void testImplementingInterface5() {
         //@formatter:off
         String[] sources = {
             "p/C.java",
@@ -2851,7 +2951,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class C extends groovy.lang.GroovyObjectSupport implements I {\n" +
             "  public String m() { return \"\";}\n" +
             "  public static void main(String[] argv) {\n" +
-            "    System.out.println( \"success\");\n" +
+            "    System.out.println(\"success\");\n" +
             "  }\n" +
             "}\n",
 
@@ -2867,7 +2967,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImplementingInterface5() {
+    public void testImplementingInterface6() {
         //@formatter:off
         String[] sources = {
             "C.groovy",
@@ -2886,7 +2986,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testImplementingInterface6() {
+    public void testImplementingInterface7() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -4583,32 +4683,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testScript() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "print 'Coolio'\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "Coolio");
-    }
-
-    @Test
-    public void testScriptCallJava() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "print SomeJava.constant\n",
-            "SomeJava.java",
-            "class SomeJava { static String constant = \"abc\";}",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "abc");
     }
 
     @Test

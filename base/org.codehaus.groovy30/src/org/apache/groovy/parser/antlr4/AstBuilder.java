@@ -353,7 +353,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         this.lexer = new GroovyLangLexer(charStream);
         this.parser = new GroovyLangParser(new CommonTokenStream(this.lexer));
-        this.parser.setErrorHandler(new DescriptiveErrorStrategy(charStream));
+        this.parser.setErrorHandler(new DescriptiveErrorStrategy(charStream) {
+            // GRECLIPSE add
+            @Override
+            protected String escapeWSAndQuote(final String string) { int cp;
+                if (string.length() == 1 && (Character.isIdentifierIgnorable(cp = string.codePointAt(0)) ||
+                        Character.getType(cp) == Character.CONTROL && cp != '\t' && cp != '\r' && cp != '\n')) {
+                    return String.format("0x%02X (%s) at column %d", cp, Character.getName(cp), lexer.getCharPositionInLine());
+                }
+                return super.escapeWSAndQuote(string);
+            }
+            // GRECLIPSE end
+        });
 
         this.groovydocManager = new GroovydocManager(groovydocEnabled, runtimeGroovydocEnabled);
         this.tryWithResourcesASTTransformation = new TryWithResourcesASTTransformation(this);
