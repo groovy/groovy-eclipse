@@ -253,6 +253,75 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testModuleInfo1() {
+        assumeTrue(isAtLeastJava(JDK9));
+
+        //@formatter:off
+        String[] sources = {
+            "script.groovy",
+            "print 'hello'",
+
+            "module-info.java",
+            "module test.project {\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "hello");
+    }
+
+    @Test
+    public void testMultiCatch1() {
+        assumeTrue(!isAtLeastJava(JDK7));
+
+        //@formatter:off
+        String[] sources = {
+            "A.java",
+            "import java.util.*;\n" +
+            "public class A {\n" +
+            "public static void main(String[]argv) {\n" +
+            "  try {\n" +
+            "    foo();\n" +
+            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
+            "  }\n" +
+            "}\n" +
+            "  public static void foo() throws java.io.IOException {}\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in A.java (at line 6)\n" +
+            "\t} catch (java.io.IOException | IllegalStateException re) {\n" +
+            "\t         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Multi-catch parameters are not allowed for source level below 1.7\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testMultiCatch2() {
+        assumeTrue(isAtLeastJava(JDK7));
+
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "class A {\n" +
+            "  static main(args) {\n" +
+            "    try {\n" +
+            "      foo();\n" +
+            "    } catch (IOException | IllegalStateException ex) {\n" +
+            "    }\n" +
+            "  }\n" +
+            "  public static void foo() throws IOException { print 'foo' }\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
+    }
+
+    @Test
     public void testGreclipse719() {
         //@formatter:off
         String[] sources = {
@@ -5274,57 +5343,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertTrue((tds[1].bits & ASTNode.IsSecondaryType) == 0);
         assertTrue((tds[2].bits & ASTNode.IsSecondaryType) != 0);
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
-    }
-
-    @Test
-    public void testMultiCatch0() {
-        assumeTrue(!isAtLeastJava(JDK7));
-
-        //@formatter:off
-        String[] sources = {
-            "A.java",
-            "import java.util.*;\n" +
-            "public class A {\n" +
-            "public static void main(String[]argv) {\n" +
-            "  try {\n" +
-            "    foo();\n" +
-            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
-            "  }\n" +
-            "}\n" +
-            "  public static void foo() throws java.io.IOException {}\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.java (at line 6)\n" +
-            "\t} catch (java.io.IOException | IllegalStateException re) {\n" +
-            "\t         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Multi-catch parameters are not allowed for source level below 1.7\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testMultiCatch1() {
-        assumeTrue(isAtLeastJava(JDK7));
-
-        //@formatter:off
-        String[] sources = {
-            "A.groovy",
-            "class A {\n" +
-            "  static main(args) {\n" +
-            "    try {\n" +
-            "      foo();\n" +
-            "    } catch (IOException | IllegalStateException ex) {\n" +
-            "    }\n" +
-            "  }\n" +
-            "  public static void foo() throws IOException { print 'foo' }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "foo");
     }
 
     //--------------------------------------------------------------------------

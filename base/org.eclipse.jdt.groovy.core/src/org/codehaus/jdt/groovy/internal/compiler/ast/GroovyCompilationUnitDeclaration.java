@@ -2261,44 +2261,34 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         //----------------------------------------------------------------------
 
         /**
-         * For some input array (usually representing a reference), work out the offset positions, assuming they are dotted. <br>
-         * Currently this uses the size of each component to move from start towards end. For the very last one it makes the end
-         * position 'end' because in some cases just adding 1+length of previous reference isn't enough. For example in java.util.List[]
-         * the end will be the end of [] but reference will only contain 'java' 'util' 'List'
+         * For some input array (usually representing a reference), work out the
+         * start and end positions of each element, assuming they are dotted.
          * <p>
-         * Because the 'end' is quite often wrong right now (for example on a return type 'java.util.List[]' the end can be two
-         * characters off the end (set to the start of the method name...) - we are just computing the positional information from the
-         * start.
+         * Because 'end' is quite often wrong right now (for example on a return
+         * type 'java.util.List[]' the end can be two characters off by the end
+         * (set to the start of the method name...) -- we are just computing the
+         * positional information from the start.
          * <p>
-         * FIXASC: seems that sometimes, especially for types that are defined as 'def', but are converted to java.lang.Object, end
-         * < start. This causes no end of problems. I don't think it is so much the 'declaration' as the fact that is no reference and
-         * really what is computed here is the reference for something actually specified in the source code. Coming up with fake
-         * positions for something not specified is not entirely unreasonable we should check
-         * if the reference in particular needed creating at all in the first place...
+         * FIXASC: It seems that sometimes, especially for types that are defined
+         * as 'def', but are converted to java.lang.Object, end &lt; start. This
+         * causes no end of problems. I don't think it's so much the declaration
+         * as the fact that is no reference and really what is computed here is
+         * the reference for something actually specified in the source code.
          */
         private long[] positionsFor(char[][] reference, long start, long end) {
-            long[] result = new long[reference.length];
-            if (start == -1 && end == -2) {
-                for (int i = 0, max = result.length; i < max; i++) {
-                    result[i] = ((-1L << 32) | -2L);
-                }
-                return result;
-            }
+            int n = reference.length;
+            long[] result = new long[n];
             if (start < end) {
-                // Do the right thing
-                long pos = start;
-                for (int i = 0, max = result.length; i < max; i++) {
-                    long s = pos;
-                    pos = pos + reference[i].length - 1; // jump to the last char of the name
-                    result[i] = ((s << 32) | pos);
-                    pos += 2; // jump onto the following '.' then off it
+                long offset = start;
+                for (int i = 0; i < n; i += 1) {
+                    long length = reference[i].length - 1;
+                    result[i] = ((offset << 32) | offset + length);
+                    offset += length + 2; // advance past the next '.'
                 }
-            } else {
-                // FIXASC this case shouldn't happen (end<start) - uncomment following if to collect diagnostics
-                long pos = (start << 32) | start;
-                for (int i = 0, max = result.length; i < max; i++) {
-                    result[i] = pos;
-                }
+            } else if (start == -1 && end == -2) {
+                Arrays.fill(result, (-1L << 32) | -2L);
+            } else { // FIXASC: This case shouldn't happen
+                Arrays.fill(result, (start << 32) | start);
             }
             return result;
         }

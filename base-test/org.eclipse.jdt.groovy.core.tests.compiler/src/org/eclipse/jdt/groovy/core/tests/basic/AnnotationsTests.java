@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.core.JavaCore;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -866,7 +866,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, CompilerOptions.versionToJdkLevel(System.getProperty("java.version")) < JDK9 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
+        runConformTest(sources, JavaCore.compareJavaVersions(System.getProperty("java.version"), "9") < 0 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
     }
 
     @Test

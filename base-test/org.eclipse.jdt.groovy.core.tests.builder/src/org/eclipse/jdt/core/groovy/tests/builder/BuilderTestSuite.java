@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
@@ -36,6 +36,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
@@ -159,6 +161,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
+    @SuppressWarnings("cast")
     protected void executeClass(IPath projectPath, String className, String expectingOutput, String expectedError) {
         List<String> classpath = new ArrayList<>();
         IPath workspacePath = env.getWorkspaceRootPath();
@@ -313,11 +316,18 @@ public abstract class BuilderTestSuite {
             try {
                 IPath projectPath = super.addProject(projectName, compliance);
 
-                new ProjectScope(getProject(projectName)).getNode("org.eclipse.jdt.launching")
-                    .put("org.eclipse.jdt.launching.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE", JavaCore.IGNORE);
+                new ProjectScope(getProject(projectName)).getNode(JavaRuntime.ID_PLUGIN)
+                    .put(JavaRuntime.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE, JavaCore.IGNORE);
+                IClasspathAttribute[] attributes;
+                if (JavaCore.compareJavaVersions(compliance, "9") < 0) {
+                    attributes = new IClasspathAttribute[0];
+                } else {
+                    attributes = new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.MODULE, "true")};
+                }
+                addEntry(projectPath, JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(), new IAccessRule[0], attributes, false));
 
-                addEntry(projectPath, JavaRuntime.getDefaultJREContainerEntry());
                 addGroovyNature(projectName);
+
                 return projectPath;
             } catch (JavaModelException e) {
                 throw new RuntimeException(e);
@@ -347,7 +357,20 @@ public abstract class BuilderTestSuite {
         }
 
         public void addGroovyJars(IPath projectPath) throws Exception {
-            addExternalJar(projectPath, CompilerUtils.getExportedGroovyAllJar().toOSString());
+            for (IClasspathEntry cpe : getJavaProject(projectPath).getRawClasspath()) {
+                if (cpe.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
+                        cpe.getPath().segment(0).equals(JavaRuntime.JRE_CONTAINER)) {
+                    for (IClasspathAttribute cpa : cpe.getExtraAttributes()) {
+                        if (IClasspathAttribute.MODULE.equals(cpa.getName()) && "true".equals(cpa.getValue())) {
+                            addEntry(projectPath, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID, new IAccessRule[0],
+                                new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.MODULE, "true")}, false));
+                            return;
+                        }
+                    }
+                }
+            }
+
+            addEntry(projectPath, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
         }
 
         public void addJar(IPath projectPath, String path) throws Exception {

@@ -4843,7 +4843,9 @@ public void invalidType(ASTNode location, TypeBinding type) {
 		if (isRecoveredName(arrayTypeReference.token)) return;
 		end = arrayTypeReference.originalSourceEnd;
 	}
-
+	// GROOVY add
+	if (end < -1) end = -1;
+	// GROOVY end
 	int start = location.sourceStart;
 	if (location instanceof org.eclipse.jdt.internal.compiler.ast.SingleTypeReference) {
 		org.eclipse.jdt.internal.compiler.ast.SingleTypeReference ref =

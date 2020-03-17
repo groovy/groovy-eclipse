@@ -57,6 +57,9 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
+import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.text.edits.InsertEdit;
 import org.junit.After;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -66,9 +69,24 @@ import org.osgi.framework.Version;
  */
 public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
-    @After
-    public void tearDown() {
-        JDTResolver.recordInstances = false;
+    private IPath[] createModularProject(String name, boolean isGroovy) throws Exception {
+        assumeTrue(JavaCore.compareJavaVersions(System.getProperty("java.version"), "9") >= 0);
+
+        IPath prjPath = env.addProject(name, "9");
+        if (isGroovy) {
+            env.addGroovyJars(prjPath);
+        } else {
+            env.removeGroovyNature(name);
+        }
+        env.setOutputFolder(prjPath, "bin");
+        env.removePackageFragmentRoot(prjPath, "");
+        IPath srcPath = env.addPackageFragmentRoot(prjPath, "src");
+        try {
+            return new IPath[] {prjPath, srcPath, env.addClass(srcPath,
+                "module-info", "module " + name.toLowerCase() + " {\n}\n")};
+        } finally {
+            assumeTrue(JavaRuntime.isModule(env.getRawClasspath(prjPath)[0], env.getJavaProject(prjPath)));
+        }
     }
 
     private IPath[] createSimpleProject(String name, boolean isGroovy) throws Exception {
@@ -109,7 +127,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private static void compareGenericsTypes(GenericsType jgt, GenericsType gt, int d) {
-        //assertEquals(jgt.getText(), gt.getText());
         assertEquals(jgt.getName(), gt.getName());
         assertEquals(jgt.isPlaceholder(), gt.isPlaceholder());
         assertEquals(jgt.isResolved(), gt.isResolved());
@@ -155,6 +172,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         return tasktag + message;
     }
 
+    @After
+    public void tearDown() {
+        JDTResolver.recordInstances = false;
+    }
+
     //--------------------------------------------------------------------------
 
     @Test
@@ -165,9 +187,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             //@formatter:off
             "package p1;\n" +
             "public class Hello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(\"Hello world\");\n" +
-            "   }\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println(\"Hello world\");\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
@@ -183,18 +205,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addGroovyClass(paths[1], "p1", "Hello",
             //@formatter:off
-            "package p1;\n" +
+            "package p1\n" +
             "class Hello {\n" +
-            "   static void main(String[] args) {\n" +
-            "      print \"Hello Groovy world\"\n" +
-            "   }\n" +
+            "  static void main(String[] args) {\n" +
+            "    print \"Hello world\"\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
-        executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
+        executeClass(paths[0], "p1.Hello", "Hello world", null);
     }
 
     @Test // uses alternate main method syntax
@@ -203,18 +225,78 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addGroovyClass(paths[1], "p1", "Hello",
             //@formatter:off
-            "package p1;\n" +
+            "package p1\n" +
             "class Hello {\n" +
-            "   static main(args) {\n" +
-            "      print \"Hello Groovy world\"\n" +
-            "   }\n" +
+            "  static main(args) {\n" +
+            "    print 'Hello world'\n" +
+            "  }\n" +
             "}\n");
             //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
-        executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
+        executeClass(paths[0], "p1.Hello", "Hello world", null);
+    }
+
+    @Test
+    public void testBuildGroovyHelloWorld3() throws Exception {
+        IPath[] paths = createModularProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p1", "Hello",
+            //@formatter:off
+            "package p1\n" +
+            "class Hello {\n" +
+            "  static main(args) {\n" +
+            "    print 'Hello world'\n" +
+            "  }\n" +
+            "}\n");
+            //@formatter:on
+
+        fullBuild(paths[0]);
+
+        expectingProblemsFor(paths[0], Arrays.asList(
+            "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
+                " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
+                " [ resource : </Project/src/p1/Hello.groovy> range : <0,1> category : <10> severity : <2>]"
+        ));
+    }
+
+    @Test
+    public void testBuildGroovyHelloWorld4() throws Exception {
+        IPath[] paths = createModularProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p1", "Hello",
+            //@formatter:off
+            "package p1\n" +
+            "print 'hello world'\n");
+            //@formatter:on
+
+        fullBuild(paths[0]);
+
+        expectingProblemsFor(paths[0], Arrays.asList(
+            "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
+                " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
+            "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
+                " [ resource : </Project/src/p1/Hello.groovy> range : <0,1> category : <10> severity : <2>]"
+        ));
+    }
+
+    @Test
+    public void testBuildGroovyHelloWorld5() throws Exception {
+        IPath[] paths = createModularProject("Project", true);
+
+        JavaModelUtil.applyEdit(env.getUnit(paths[2]), new InsertEdit(17, "  requires org.codehaus.groovy;\n"), true, null);
+
+        env.addGroovyClass(paths[1], "p1", "Hello",
+            //@formatter:off
+            "package p1\n" +
+            "print 'hello world'\n");
+            //@formatter:on
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
     }
 
     @Test

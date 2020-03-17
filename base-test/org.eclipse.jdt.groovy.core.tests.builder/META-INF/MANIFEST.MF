@@ -10,7 +10,9 @@ Export-Package: org.eclipse.jdt.core.groovy.tests,
  org.eclipse.jdt.core.groovy.tests.locations,
  org.eclipse.jdt.core.groovy.tests.model,
  org.eclipse.jdt.core.groovy.tests.search
-Import-Package: org.eclipse.jdt.launching
+Import-Package: org.eclipse.jdt.internal.corext.util,
+ org.eclipse.jdt.launching,
+ org.eclipse.text.edits
 Require-Bundle: org.eclipse.jdt.core.tests.builder;visibility:=reexport,
  org.eclipse.jdt.groovy.core.tests.compiler;visibility:=reexport,
  org.codehaus.groovy.eclipse.core;visibility:=reexport

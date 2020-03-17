@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,13 +165,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     public boolean reportInvalidType(TypeReference typeReference, TypeBinding resolvedType) {
-        if (resolvedType instanceof ProblemReferenceBinding) {
-            ProblemReferenceBinding problemRefBinding = (ProblemReferenceBinding) resolvedType;
-            if (problemRefBinding.problemId() == ProblemReasons.Ambiguous) {
-                return true;
-            }
-        }
-        return false;
+        return (resolvedType.problemId() > ProblemReasons.NotFound);
     }
 
     @Override
@@ -255,5 +249,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             }
         }
     }
+
     private volatile boolean verified;
 }
