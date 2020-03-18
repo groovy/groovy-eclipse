@@ -47,6 +47,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -57,7 +58,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.text.edits.InsertEdit;
 import org.junit.After;
@@ -285,16 +285,20 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testBuildGroovyHelloWorld5() throws Exception {
+        assumeTrue(isAtLeastGroovy(25));
+
         IPath[] paths = createModularProject("Project", true);
 
-        JavaModelUtil.applyEdit(env.getUnit(paths[2]), new InsertEdit(17, "  requires org.codehaus.groovy;\n"), true, null);
+        ICompilationUnit unit = env.getUnit(paths[2]);
+        unit.applyTextEdit(new InsertEdit(17,
+            "  requires org.codehaus.groovy;\n"), null);
+        unit.save(null, true);
 
         env.addGroovyClass(paths[1], "p1", "Hello",
             //@formatter:off
             "package p1\n" +
             "print 'hello world'\n");
             //@formatter:on
-
         fullBuild(paths[0]);
         expectingNoProblems();
     }
