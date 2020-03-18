@@ -1767,7 +1767,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * we always return the member, since then access to static members and
      * non-static members is allowed.
      */
-    @SuppressWarnings("unchecked")
     private <T> T allowStaticAccessToMember(final T member, final boolean staticOnly) {
         if (member == null) return null;
         if (!staticOnly) return member;
@@ -2898,7 +2897,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         List<ClassNode[]> closureSignatures;
         try {
             ClassLoader transformLoader = getTransformLoader();
-            @SuppressWarnings("unchecked")
             Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) transformLoader.loadClass(hintClass.getText());
             ClosureSignatureHint hintInstance = hint.getDeclaredConstructor().newInstance();
             closureSignatures = hintInstance.getClosureSignatures(
@@ -2916,7 +2914,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // initialize resolver
         try {
             ClassLoader transformLoader = getTransformLoader();
-            @SuppressWarnings("unchecked")
             Class<? extends ClosureSignatureConflictResolver> resolver = (Class<? extends ClosureSignatureConflictResolver>) transformLoader.loadClass(resolverClass.getText());
             ClosureSignatureConflictResolver resolverInstance = resolver.getDeclaredConstructor().newInstance();
             return resolverInstance.resolve(
