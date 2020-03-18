@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,7 +214,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass2() {
         String contents = 'class Foo { }\nFoo.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'componentType', 1, true)
+        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
+        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2, true)
     }
 
     @Test
@@ -228,7 +229,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass4() {
         String contents = 'class Foo { }\nFoo.class.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'componentType', 1)
+        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
+        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2)
     }
 
     @Test

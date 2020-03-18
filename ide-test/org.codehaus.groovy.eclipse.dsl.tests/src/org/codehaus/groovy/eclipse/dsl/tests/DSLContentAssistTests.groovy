@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,136 +59,136 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testAssignedVariable1() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'v', 'var_foo')
     }
 
     @Test
     void testAssignedVariable2() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable('foo'))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable('foo'))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'v', 'var_foo')
     }
 
     @Test
     void testAssignedVariable2a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable('boo'))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable('boo'))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
     }
 
     @Test
     void testAssignedVariable3() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(~/f.*/))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(~/f.*/))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'v', 'var_foo')
     }
 
     @Test
     void testAssignedVariable3a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(~/b.*/))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(~/b.*/))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
     }
 
     @Test
     void testAssignedVariable4() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(name('foo')))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(name('foo')))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'v', 'var_foo')
     }
 
     @Test
     void testAssignedVariable4a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(name('boo')))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(name('boo')))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
     }
 
     @Test
     void testAssignedVariable5() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            BigInteger foo = v
-            '''.stripIndent()
+            |BigInteger foo = v
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'v', 'var_foo')
     }
 
     @Test
     void testAssignedVariable5a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = v
-            '''.stripIndent()
+            |def foo = v
+            |'''.stripMargin()
         proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
     }
 
     @Test
     void testAssignedVariable6() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = 'def foo = '
         checkUniqueProposal(contents, '= ', 'var_foo')
@@ -197,98 +197,98 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/600
     void testAssignedVariable6a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
-        String contents = 'foo = '.stripIndent()
+        String contents = 'foo = '
         checkUniqueProposal(contents, '= ', 'var_foo')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/598
     void testAssignedVariable7() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = { }
-            '''.stripIndent()
+            |def foo = { }
+            |'''.stripMargin()
         checkUniqueProposal(contents, '{ ', 'var_foo')
     }
 
     @Test
     void testAssignedVariable7a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            foo = { }
-            '''.stripIndent()
+            |foo = { }
+            |'''.stripMargin()
         checkUniqueProposal(contents, '{ ', 'var_foo')
     }
 
     @Test
     void testAssignedVariable8() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo = {
-              bar {
-                baz {
-                }
-              }
-            }
-            '''.stripIndent()
+            |def foo = {
+            |  bar {
+            |    baz {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'baz {', 'var_foo')
     }
 
     @Test
     void testAssignedVariable8a() {
         createDsld '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
+            |contribute(bind(exprs: assignedVariable())) {
+            |  property name: 'var_' + exprs[0].leftExpression.name
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            foo = {
-              bar {
-                baz {
-                }
-              }
-            }
-            '''.stripIndent()
+            |foo = {
+            |  bar {
+            |    baz {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         checkUniqueProposal(contents, 'baz {', 'var_foo')
     }
 
     @Test
     void testDelegatesToNoParens1() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              delegatesTo type: 'Other', noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  delegatesTo type: 'Other', noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
-            }
-            class Inner { }
-            def val = new Inner()
-            val.bl
-            '''.stripIndent()
+            |class Other {
+            |  def blart(a, b, c) { }
+            |  def flart(a) { }
+            |}
+            |class Inner { }
+            |def val = new Inner()
+            |val.bl
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
         applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
     }
@@ -296,20 +296,20 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testDelegatesToNoParens2() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              delegatesTo type: 'Other', noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  delegatesTo type: 'Other', noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
-            }
-            class Inner { }
-            def val = new Inner()
-            val.fl
-            '''.stripIndent()
+            |class Other {
+            |  def blart(a, b, c) { }
+            |  def flart(a) { }
+            |}
+            |class Inner { }
+            |def val = new Inner()
+            |val.fl
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
         applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
     }
@@ -317,16 +317,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testCommandChain1() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              method name: 'flart', type: 'Inner', noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  method name: 'flart', type: 'Inner', noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.fla
-            '''.stripIndent()
+            |class Inner { }
+            |def val = new Inner()
+            |val.fla
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, '.fla', 'flart', 'flart()')
         applyProposalAndCheck(proposal, contents.replace('val.fla', 'val.flart()'))
     }
@@ -334,16 +334,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testCommandChain2() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              method name: 'flart', type: 'Inner', noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  method name: 'flart', type: 'Inner', noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo fl
-            '''.stripIndent()
+            |class Inner { }
+            |def val = new Inner()
+            |val.flart foo fl
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
     }
@@ -351,16 +351,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testCommandChain3() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              method name: 'flart', type: 'Inner', noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  method name: 'flart', type: 'Inner', noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
+            |class Inner { }
+            |def val = new Inner()
+            |val.flart foo, baz fl
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
     }
@@ -368,16 +368,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testCommandChain4() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              method name: 'flart', type: 'Inner', params: [a: Integer], noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  method name: 'flart', type: 'Inner', params: [a: Integer], noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
+            |class Inner { }
+            |def val = new Inner()
+            |val.flart foo, baz fl
+            |'''.stripMargin()
 
         ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0')
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0'))
@@ -386,16 +386,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testCommandChain5() {
         createDsld '''\
-            contribute(currentType('Inner')) {
-              method name: 'flart', type: 'Inner', params: [a: Integer, b: String], noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType('Inner')) {
+            |  method name: 'flart', type: 'Inner', params: [a: Integer, b: String], noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
+            |class Inner { }
+            |def val = new Inner()
+            |val.flart foo, baz fl
+            |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0, ""')
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
     }
@@ -403,16 +403,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testConfigScript1() {
         createDsld '''\
-            contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
-              method(name: 'imports', type: void, params: [block: Closure])
-            }
-            '''.stripIndent()
+            |contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+            |  method(name: 'imports', type: void, params: [block: Closure])
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            withConfig(configuration) {
-              // here
-            }
-            '''.stripIndent()
+            |withConfig(configuration) {
+            |  // here
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('// here'))
         proposalExists(proposals, 'imports(Closure block)', 1)
     }
@@ -420,16 +420,16 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testConfigScript1a() {
         createDsld '''\
-            contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
-              method(name: 'imports', type: void, params: [block: Closure])
-            }
-            '''.stripIndent()
+            |contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+            |  method(name: 'imports', type: void, params: [block: Closure])
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            withConfig(configuration) {
-              x.i
-            }
-            '''.stripIndent()
+            |withConfig(configuration) {
+            |  x.i
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'x.i'))
         proposalExists(proposals, 'imports(Closure block)', 0)
     }
@@ -449,13 +449,13 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |'''.stripMargin()
 
         String contents = '''\
-            withConfig(configuration) {
-              imports {
-                star 'groovy.transform'
-                norm
-              }
-            }
-            '''.stripIndent()
+            |withConfig(configuration) {
+            |  imports {
+            |    star 'groovy.transform'
+            |    norm
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'norm'))
         proposalExists(proposals, 'normal', 2)
     }
@@ -475,15 +475,15 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |'''.stripMargin()
 
         String contents = '''\
-            withConfig(configuration) {
-              source(basenameValidator: { !!(it =~ /.src.test./) }) {
-                imports {
-                  normal 'org.junit.Test'
-                  st
-                }
-              }
-            }
-            '''.stripIndent()
+            |withConfig(configuration) {
+            |  source(basenameValidator: { !!(it =~ /.src.test./) }) {
+            |    imports {
+            |      normal 'org.junit.Test'
+            |      st
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'st'))
         proposalExists(proposals, 'staticMember', 2)
         proposalExists(proposals, 'staticStar', 2)
@@ -493,18 +493,18 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1324
     void testStatementPosition1() {
         createDsld '''\
-            contribute(currentType(Integer) & enclosingCallName('foo')) {
-              setDelegateType(String)
-            }
-            '''.stripIndent()
+            |contribute(currentType(Integer) & enclosingCallName('foo')) {
+            |  setDelegateType(String)
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo(@DelegatesTo(Integer) Closure cl) {
-            }
-            foo {
-              #
-            }
-            '''.stripIndent()
+            |def foo(@DelegatesTo(Integer) Closure cl) {
+            |}
+            |foo {
+            |  #
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         // should see proposals from String, not Integer
         proposalExists(proposals, 'substring', 2)
@@ -517,18 +517,18 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test // GRECLIPSE-1324
     void testStatementPosition2() {
         createDsld '''\
-            contribute(currentType(Integer) & enclosingCallName('foo')) {
-              setDelegateType(String)
-            }
-            '''.stripIndent()
+            |contribute(currentType(Integer) & enclosingCallName('foo')) {
+            |  setDelegateType(String)
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo(@DelegatesTo(Integer) Closure cl) {
-            }
-            foo {
-              something
-            }
-            '''.stripIndent()
+            |def foo(@DelegatesTo(Integer) Closure cl) {
+            |}
+            |foo {
+            |  something
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'something') + 1)
         // should see proposals from String, not Integer
         proposalExists(proposals, 'toUpperCase()', 1)
@@ -539,19 +539,19 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testStatementPosition3() {
         // 1 and 2 hit on return statement; make sure block statement gives same result
         createDsld '''\
-            contribute(isScript() & enclosingCallName('foo') & inClosure() & isThisType()) {
-              setDelegateType(String)
-            }
-            '''.stripIndent()
+            |contribute(isScript() & enclosingCallName('foo') & inClosure() & isThisType()) {
+            |  setDelegateType(String)
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            def foo(Closure block) {
-            }
-            foo {
-              #
-              something
-            }
-            '''.stripIndent()
+            |def foo(Closure block) {
+            |}
+            |foo {
+            |  #
+            |  something
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         // should see proposals from String
         proposalExists(proposals, 'bytes', 1)
@@ -562,10 +562,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/786
     void testStatementPosition4() {
         createDsld '''\
-            contribute(isScript() & isThisType()) {
-              property name: 'xyz'
-            }
-            '''.stripIndent()
+            |contribute(isScript() & isThisType()) {
+            |  property name: 'xyz'
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
             |/*
@@ -585,18 +585,18 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test // ensures currentNode contains BlockStatement reference
     void testStatementPosition5() {
         createDsld '''\
-            contribute(isThisType()) {
-              if (currentNode instanceof org.codehaus.groovy.ast.stmt.BlockStatement) {
-                property name: 'xyz'
-              }
-            }
-            '''.stripIndent()
+            |contribute(isThisType()) {
+            |  if (currentNode instanceof org.codehaus.groovy.ast.stmt.BlockStatement) {
+            |    property name: 'xyz'
+            |  }
+            |}
+            |'''.stripMargin()
 
         String contents = '''\
-            void meth() {
-              #
-            }
-            '''.stripIndent()
+            |void meth() {
+            |  #
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('#', ''), contents.indexOf('#'))
         proposalExists(proposals, 'xyz', 1)
     }
@@ -608,10 +608,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar {  } }'
@@ -626,10 +626,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar {  } }'
@@ -644,10 +644,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar(block) }'
@@ -662,10 +662,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [closure: Closure, block: Closure]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [closure: Closure, block: Closure]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar(closure) {  } }'
@@ -680,10 +680,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [closure: Closure, block: Closure]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [closure: Closure, block: Closure]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar({  }) {  } }'
@@ -698,10 +698,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar(name: name) {  } }'
@@ -716,10 +716,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar(name: name, {  }) }'
@@ -734,10 +734,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar(name: name, block) }'
@@ -752,10 +752,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar name: name, block }'
@@ -770,10 +770,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar name: name, {  } }'
@@ -788,10 +788,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
 
         createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: void, params: [block: Closure], noParens: true
-            }
-            '''.stripIndent()
+            |contribute(currentType()) {
+            |  method name: 'bar', type: void, params: [block: Closure], noParens: true
+            |}
+            |'''.stripMargin()
 
         String contents = 'foo {  }'
         String expected = 'foo { bar {  } }'
@@ -1030,11 +1030,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testNewifyTransform1() {
         String contents = '''\
-            @Newify class Foo {
-              List list = ArrayList.n
-              Map map = HashM
-            }
-            '''.stripIndent()
+            |@Newify class Foo {
+            |  List list = ArrayList.n
+            |  Map map = HashM
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
@@ -1046,11 +1046,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testNewifyTransform2() {
         String contents = '''\
-            @Newify(HashMap) class Foo {
-              List list = ArrayList.n
-              Map map = HashM
-            }
-            '''.stripIndent()
+            |@Newify(HashMap) class Foo {
+            |  List list = ArrayList.n
+            |  Map map = HashM
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
@@ -1062,11 +1062,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testNewifyTransform3() {
         String contents = '''\
-            @Newify(auto=false, value=HashMap) class Foo {
-              List list = ArrayList.n
-              Map map = HashM
-            }
-            '''.stripIndent()
+            |@Newify(auto=false, value=HashMap) class Foo {
+            |  List list = ArrayList.n
+            |  Map map = HashM
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
@@ -1078,11 +1078,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testNewifyTransform4() {
         String contents = '''\
-            @Newify
-            List list = ArrayList.n
-            @Newify(HashMap)
-            Map map = HashM
-            '''.stripIndent()
+            |@Newify
+            |List list = ArrayList.n
+            |@Newify(HashMap)
+            |Map map = HashM
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
@@ -1096,11 +1096,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
 
         String contents = '''\
-            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
-              List list = ArrayList.n
-              Map map = HashM
-            }
-            '''.stripIndent()
+            |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+            |  List list = ArrayList.n
+            |  Map map = HashM
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
@@ -1114,10 +1114,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
 
         String contents = '''\
-            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
-              Map map = LinkedH
-            }
-            '''.stripIndent()
+            |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+            |  Map map = LinkedH
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH')))
         proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
@@ -1128,10 +1128,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
 
         String contents = '''\
-            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
-              Map map = LinkedHashMap()
-            }
-            '''.stripIndent()
+            |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+            |  Map map = LinkedHashMap()
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap')))
         proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
@@ -1140,19 +1140,19 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testSelfTypeTransform1() {
         String contents = '''\
-            import groovy.transform.*
-
-            class Foo { String string }
-
-            @CompileStatic
-            @SelfType(Foo)
-            trait Bar {
-              void baz() {
-                def s1 = str
-                def s2 = getStr
-              }
-            }
-            '''.stripIndent()
+            |import groovy.transform.*
+            |
+            |class Foo { String string }
+            |
+            |@CompileStatic
+            |@SelfType(Foo)
+            |trait Bar {
+            |  void baz() {
+            |    def s1 = str
+            |    def s2 = getStr
+            |  }
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
         proposalExists(proposals, 'string', 1)
@@ -1164,19 +1164,19 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testSelfTypeTransform2() {
         String contents = '''\
-            import groovy.transform.*
-
-            class Foo { String string }
-
-            @CompileStatic
-            @SelfType([Foo, GroovyObject])
-            trait Bar {
-              void baz() {
-                def s1 = str
-                def s2 = getStr
-              }
-            }
-            '''.stripIndent()
+            |import groovy.transform.*
+            |
+            |class Foo { String string }
+            |
+            |@CompileStatic
+            |@SelfType([Foo, GroovyObject])
+            |trait Bar {
+            |  void baz() {
+            |    def s1 = str
+            |    def s2 = getStr
+            |  }
+            |}
+            |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'str'))
         proposalExists(proposals, 'string', 1)
@@ -1188,9 +1188,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testSingletonTransform1() {
         String contents = '''\
-            @Singleton class Foo { static Object ijk }
-            Foo.i
-            '''.stripIndent()
+            |@Singleton class Foo { static Object ijk }
+            |Foo.i
+            |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.i')))
         // contributed by built-in DLSD for @Singleton AST transform
         assertProposalOrdering(proposals, 'instance', 'ijk')
@@ -1199,9 +1199,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testSingletonTransform2() {
         String contents = '''\
-            @Singleton class Foo { static Object getIjk() { } }
-            Foo.g
-            '''.stripIndent()
+            |@Singleton class Foo { static Object getIjk() { } }
+            |Foo.g
+            |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.g')))
         // contributed by built-in DLSD for @Singleton AST transform
         assertProposalOrdering(proposals, 'getInstance', 'getIjk')
@@ -1210,10 +1210,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testSortableTransform1() {
         String contents = '''\
-            import groovy.transform.*
-            @Sortable class Foo {}
-            new Foo().com
-            '''.stripIndent()
+            |import groovy.transform.*
+            |@Sortable class Foo {}
+            |new Foo().com
+            |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'com')))
         // contributed by built-in DLSD for @Sortable AST transform
         proposalExists(proposals, 'compareTo(Foo other) : int', 1)
@@ -1224,11 +1224,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
 
         String contents = '''\
-            import groovy.swing.SwingBuilder
-            new SwingBuilder().edt {
-              delegate.f
-            }
-            '''.stripIndent()
+            |import groovy.swing.SwingBuilder
+            |new SwingBuilder().edt {
+            |  delegate.f
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.f')))
         // contributed by built-in DSLD for SwingBuilder
         assertProposalOrdering(proposals, 'frame', 'find')
@@ -1239,11 +1239,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
 
         String contents = '''\
-            import groovy.swing.SwingBuilder
-            new SwingBuilder().edt {
-              fr
-            }
-            '''.stripIndent()
+            |import groovy.swing.SwingBuilder
+            |new SwingBuilder().edt {
+            |  fr
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
         // contributed by built-in DSLD for SwingBuilder
         assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
@@ -1254,11 +1254,11 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
 
         String contents = '''\
-            import groovy.swing.SwingBuilder
-            new SwingBuilder().edt {
-              this.x
-            }
-            '''.stripIndent()
+            |import groovy.swing.SwingBuilder
+            |new SwingBuilder().edt {
+            |  this.x
+            |}
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
         // proposals should not exist since not applied to 'this'
         proposalExists(proposals, 'frame', 0)

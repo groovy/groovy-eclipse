@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,11 +83,10 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
             "import java.lang.reflect.*\n" +
             "class Book {\n" +
             "  @ISBN String isbn\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    Field f = Book.class.getDeclaredField('isbn')\n" +
-            "    Object[] os = f.getDeclaredAnnotations()\n" +
-            "    for (Object o: os) {\n" +
-            "      println(o)\n" +
+            "  static void main(args) {\n" +
+            "    Field f = this.getDeclaredField('isbn')\n" +
+            "    for (a in f.getDeclaredAnnotations()) {\n" +
+            "      print(a)\n" +
             "    }\n" +
             "  }\n" +
             "}\n",
@@ -110,6 +109,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "@NotNull()\n@Length(value=0)");
+        int release = Integer.parseInt(System.getProperty("java.version").split("\\.")[0]);
+        runConformTest(sources, release > 13 ? "@NotNull()@Length(0)" : "@NotNull()@Length(value=0)");
     }
 }

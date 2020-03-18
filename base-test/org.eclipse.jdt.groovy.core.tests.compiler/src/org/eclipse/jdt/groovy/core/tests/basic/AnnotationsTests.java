@@ -17,7 +17,6 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
-import org.eclipse.jdt.core.JavaCore;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -866,7 +865,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, JavaCore.compareJavaVersions(System.getProperty("java.version"), "9") < 0 ? "@Anno(value=abc)" : "@Anno(value=\"abc\")");
+        int release = Integer.parseInt(System.getProperty("java.version").split("\\.")[0]);
+        runConformTest(sources, release < 9 ? "@Anno(value=abc)" : (release < 13 ? "@Anno(value=\"abc\")" : "@Anno(\"abc\")"));
     }
 
     @Test
