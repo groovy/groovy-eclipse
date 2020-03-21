@@ -73,7 +73,7 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
 
         @Override
         public String getDisplayString() {
-            return "Add " + GroovyClasspathContainer.DESC + " to classpath";
+            return "Add " + GroovyClasspathContainer.NAME + " to classpath";
         }
 
         @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.core.tests.util.Util
 import org.junit.After
@@ -58,12 +59,17 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
 
         GroovyLogManager.manager.addLogger(logger)
+
+        def cpe = GroovyRuntime.findClasspathEntry(javaProject) {
+            it.path == GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID
+        }
         if (doRemoveClasspathContainer) {
-            GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, javaProject)
+            cpe.ifPresent() { GroovyRuntime.removeClasspathEntry(javaProject, it) }
             GroovyDSLCoreActivator.default.contextStoreManager.getDSLDStore(project).purgeAll()
         } else {
             refreshExternalFoldersProject()
-            GroovyRuntime.addLibraryToClasspath(javaProject, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false)
+            if (!cpe.isPresent()) GroovyRuntime.appendClasspathEntry(javaProject,
+                JavaCore.newContainerEntry(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID))
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
         }
         javaProject.project.refreshLocal(IResource.DEPTH_ONE, null)

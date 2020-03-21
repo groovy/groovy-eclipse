@@ -273,7 +273,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
                 }
                 for (IClasspathEntry entry : nextProject.getRawClasspath()) {
                     if ((excludeTestCode && entry.isTest()) || (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
-                            (entry.getPath().equals(DSLD_CONTAINER_ID) || entry.getPath().segment(0).equals(JRE_CONTAINER)))) {
+                            (DSLD_CONTAINER_ID.equals(entry.getPath().segment(0)) || JRE_CONTAINER.equals(entry.getPath().segment(0))))) {
                         continue;
                     }
                     switch (entry.getEntryKind()) {

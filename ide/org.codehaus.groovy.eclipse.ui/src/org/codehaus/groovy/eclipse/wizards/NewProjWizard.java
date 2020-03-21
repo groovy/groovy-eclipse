@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -57,12 +58,12 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
             @Override
             public IClasspathEntry[] getDefaultClasspathEntries() {
                 IClasspathEntry[] entries = super.getDefaultClasspathEntries();
-                entries = (IClasspathEntry[]) ArrayUtils.add(entries, GroovyRuntime.createContainerEntry(false));
+                entries = (IClasspathEntry[]) ArrayUtils.add(entries, GroovyRuntime.newGroovyClasspathContainerEntry(false, false, null));
 
                 String namespace = "org.codehaus.groovy.eclipse.dsl";
                 IPreferenceStore prefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, namespace);
                 if (!prefs.getBoolean(namespace + ".disabled") /*&& prefs.getBoolean(namespace + ".auto.add.support")*/) {
-                    entries = (IClasspathEntry[]) ArrayUtils.add(entries, entries.length - 1, JavaCore.newContainerEntry(GroovyRuntime.DSLD_CONTAINER_ID));
+                    entries = (IClasspathEntry[]) ArrayUtils.add(entries, entries.length - 1, JavaCore.newContainerEntry(new Path(GroovyRuntime.DSLD_CONTAINER_ID)));
                 }
                 return entries;
             }

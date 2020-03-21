@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,10 @@ import java.io.IOException;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.resources.IProject;
@@ -36,10 +37,14 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IClasspathContainer;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.preferences.PropertyAndPreferencePage;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -398,7 +403,15 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
 
     private void updateClasspathContainers() {
         try {
-            GroovyClasspathContainerInitializer.updateAllGroovyClasspathContainers();
+            for (IJavaProject javaProject : JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects()) {
+                IPath containerPath = GroovyRuntime.findClasspathEntry(javaProject, cpe -> GroovyClasspathContainer.ID.equals(cpe.getPath().segment(0))).map(IClasspathEntry::getPath).orElse(null);
+                if (containerPath != null && !containerPath.lastSegment().equals("minimal") && !containerPath.lastSegment().equals("user-libs=false")) {
+                    IClasspathContainer container = JavaCore.getClasspathContainer(containerPath, javaProject);
+                    if (container instanceof GroovyClasspathContainer) {
+                        ((GroovyClasspathContainer) container).reset();
+                    }
+                }
+            }
         } catch (JavaModelException e) {
             GroovyPlugin.getDefault().logError("Problem updating Groovy classpath contianers", e);
         }

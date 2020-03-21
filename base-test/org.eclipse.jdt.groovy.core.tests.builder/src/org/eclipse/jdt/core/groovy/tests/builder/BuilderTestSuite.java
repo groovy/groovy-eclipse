@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
@@ -357,20 +357,20 @@ public abstract class BuilderTestSuite {
         }
 
         public void addGroovyJars(IPath projectPath) throws Exception {
+            boolean minimal = false, modular = false;
             for (IClasspathEntry cpe : getJavaProject(projectPath).getRawClasspath()) {
                 if (cpe.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
                         cpe.getPath().segment(0).equals(JavaRuntime.JRE_CONTAINER)) {
                     for (IClasspathAttribute cpa : cpe.getExtraAttributes()) {
                         if (IClasspathAttribute.MODULE.equals(cpa.getName()) && "true".equals(cpa.getValue())) {
-                            addEntry(projectPath, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID, new IAccessRule[0],
-                                new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.MODULE, "true")}, false));
-                            return;
+                            modular = true;
+                            break;
                         }
                     }
                 }
             }
 
-            addEntry(projectPath, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
+            addEntry(projectPath, GroovyRuntime.newGroovyClasspathContainerEntry(minimal, modular, null));
         }
 
         public void addJar(IPath projectPath, String path) throws Exception {

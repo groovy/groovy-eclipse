@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
 
     @Override
     public void run(final IAction action) {
-        if (currSelected != null && currSelected.size() > 0) {
+        if (currSelected != null && !currSelected.isEmpty()) {
             GroovyCore.trace("RemoveGroovyNatureAction.run()");
 
             for (IProject project : currSelected) {
@@ -63,9 +63,9 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
                         }
                         if (shouldRemove) {
                             GroovyRuntime.removeGroovyClasspathContainer(javaProject);
-                            GroovyRuntime.removeLibraryFromClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID);
                         }
                     }
+                    GroovyRuntime.findClasspathEntry(javaProject, cpe -> GroovyRuntime.DSLD_CONTAINER_ID.equals(cpe.getPath().segment(0))).ifPresent(cpe -> GroovyRuntime.removeClasspathEntry(javaProject, cpe));
                 } catch (CoreException e) {
                     GroovyCore.logException("Error removing Groovy nature", e);
                 }
@@ -88,7 +88,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
                     IProject project = Adapters.adapt(object, IProject.class);
-                    if(project != null) {
+                    if (project != null) {
                         newSelected.add(project);
                     } else {
                         enabled = false;

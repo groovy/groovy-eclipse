@@ -53,12 +53,12 @@ final class GroovyNatureActionTests extends GroovyEclipseTestSuite {
         addGroovyAction.run(null)
 
         assert hasGroovyNature() : 'testProject should have Groovy nature after testing action'
-        assert hasGroovyContainer() : 'testProject should have Groovy jars after running remove nature action'
+        assert hasGroovyLibraries() : 'testProject should have Groovy jars after running remove nature action'
 
         addGroovyAction.run(null)
 
         assert hasGroovyNature() : 'testProject should still have Groovy nature after testing action twice'
-        assert hasGroovyContainer() : 'testProject should have Groovy jars after running remove nature action'
+        assert hasGroovyLibraries() : 'testProject should have Groovy jars after running remove nature action'
     }
 
     /**
@@ -87,21 +87,21 @@ final class GroovyNatureActionTests extends GroovyEclipseTestSuite {
         removeGroovyAction.selectionChanged(null, selection)
 
         assert !hasGroovyNature() : 'testProject should not have Groovy nature before testing action'
-        assert hasGroovyContainer() : 'testProject should have Groovy jars after running add nature action'
+        assert hasGroovyLibraries() : 'testProject should have Groovy jars after running add nature action'
 
         removeGroovyAction.run(null)
 
         assert !hasGroovyNature() : 'testProject should not have Groovy nature after running remove nature action'
-        assert !hasGroovyContainer() : 'testProject should not have Groovy jars after running remove nature action'
+        assert !hasGroovyLibraries() : 'testProject should not have Groovy jars after running remove nature action'
 
         addGroovyAction.run(null)
 
         assert hasGroovyNature() : 'testProject should have Groovy nature after testing action'
-        assert hasGroovyContainer() : 'testProject should have Groovy jars after running add nature action'
+        assert hasGroovyLibraries() : 'testProject should have Groovy jars after running add nature action'
 
         removeGroovyAction.run(null)
 
         assert !hasGroovyNature() : 'testProject should not have Groovy nature after running remove nature action'
-        assert !hasGroovyContainer() : 'testProject should not have Groovy jars after running remove nature action'
+        assert !hasGroovyLibraries() : 'testProject should not have Groovy jars after running remove nature action'
     }
 }

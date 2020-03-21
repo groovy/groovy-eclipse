@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.Assert;
@@ -52,8 +51,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
 
     private static File resolveGlobalDsldLocation() {
         String dotGroovyLocation;
-        if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled() ||
-                (dotGroovyLocation = CompilerUtils.getDotGroovyLocation()) == null) {
+        if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled() || (dotGroovyLocation = CompilerUtils.getDotGroovyLocation()) == null) {
             return null;
         }
 
@@ -77,28 +75,20 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     //--------------------------------------------------------------------------
 
     @Override
-    public void initialize(IPath containerPath, IJavaProject javaProject)
-            throws CoreException {
-        IClasspathContainer container = new DSLDClasspathContainer();
-        JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {javaProject}, new IClasspathContainer[] {container}, null);
+    public void initialize(final IPath containerPath, final IJavaProject javaProject) throws CoreException {
+        JavaCore.setClasspathContainer(containerPath, new IJavaProject[]{javaProject}, new IClasspathContainer[]{new DSLDClasspathContainer()}, null);
     }
 
     @Override
-    public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject javaProject) {
+    public boolean canUpdateClasspathContainer(final IPath containerPath, final IJavaProject javaProject) {
         return true;
     }
 
     @Override
-    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject javaProject, IClasspathContainer containerSuggestion)
-            throws CoreException {
-        if (containerSuggestion instanceof DSLDClasspathContainer) {
-            ((DSLDClasspathContainer) containerSuggestion).reset();
-        }
-        if (javaProject == null) {
-            IClasspathContainer dsld = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, javaProject);
-            if (dsld instanceof DSLDClasspathContainer) {
-                ((DSLDClasspathContainer) dsld).reset();
-            }
+    public void requestClasspathContainerUpdate(final IPath containerPath, final IJavaProject javaProject, final IClasspathContainer containerSuggestion) throws CoreException {
+        IClasspathContainer container = JavaCore.getClasspathContainer(containerPath, javaProject);
+        if (container instanceof DSLDClasspathContainer) {
+            ((DSLDClasspathContainer) container).reset();
         }
     }
 

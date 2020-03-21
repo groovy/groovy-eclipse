@@ -20,7 +20,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IAccessRule;
@@ -53,7 +53,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
         env.createFolder(src);
         env.setClasspath(prj, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src),
-            JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
+            GroovyRuntime.newGroovyClasspathContainerEntry(false, false, null),
             JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(),
                 new IAccessRule[] {JavaCore.newAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false),
         });

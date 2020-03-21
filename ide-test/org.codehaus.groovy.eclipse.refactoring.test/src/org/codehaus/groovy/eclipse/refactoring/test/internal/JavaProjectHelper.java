@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -98,7 +95,6 @@ public class JavaProjectHelper {
         jproject.setOutputLocation(outputLocation, null);
         removeFromClasspath(jproject, jproject.getPath());
         addToClasspath(jproject, JavaRuntime.getDefaultJREContainerEntry());
-        //jproject.setOptions(putCompilerOptions(new HashMap<>(), JavaCore.VERSION_1_6));
         return jproject;
     }
 
@@ -108,12 +104,7 @@ public class JavaProjectHelper {
      */
     public static IJavaProject createGroovyProject(String projectName, String binFolderName) throws Exception {
         IJavaProject jproject = createJavaProject(projectName, binFolderName);
-
-        if (!jproject.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-            addNatureToProject(jproject.getProject(), GroovyNature.GROOVY_NATURE, null);
-        }
-        addToClasspath(jproject, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
-
+        GroovyRuntime.addGroovyRuntime(jproject.getProject());
         return jproject;
     }
 
@@ -393,31 +384,11 @@ public class JavaProjectHelper {
     }
 
     public static void removeFromClasspath(IJavaProject jproject, IPath path) throws Exception {
-        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
-        int nEntries = oldEntries.length;
-        List<IClasspathEntry> list = new ArrayList<>(nEntries);
-        for (int i = 0; i < nEntries; i++) {
-            IClasspathEntry curr = oldEntries[i];
-            if (!path.equals(curr.getPath())) {
-                list.add(curr);
-            }
-        }
-        IClasspathEntry[] newEntries = list.toArray(new IClasspathEntry[list.size()]);
-        jproject.setRawClasspath(newEntries, null);
+        GroovyRuntime.findClasspathEntry(jproject, cpe -> cpe.getPath().equals(path)).ifPresent(cpe -> GroovyRuntime.removeClasspathEntry(jproject, cpe));
     }
 
     public static void addToClasspath(IJavaProject jproject, IClasspathEntry cpe) throws Exception {
-        IClasspathEntry[] oldEntries = jproject.getRawClasspath();
-        for (int i = 0; i < oldEntries.length; i++) {
-            if (oldEntries[i].equals(cpe)) {
-                return;
-            }
-        }
-        int nEntries = oldEntries.length;
-        IClasspathEntry[] newEntries = new IClasspathEntry[nEntries + 1];
-        System.arraycopy(oldEntries, 0, newEntries, 0, nEntries);
-        newEntries[nEntries] = cpe;
-        jproject.setRawClasspath(newEntries, null);
+        GroovyRuntime.appendClasspathEntry(jproject, cpe);
     }
 
     private static void addNatureToProject(IProject proj, String natureId, IProgressMonitor monitor) throws Exception {

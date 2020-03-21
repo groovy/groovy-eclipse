@@ -165,7 +165,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final void addClasspathContainer(IPath path) {
-        testProject.addClasspathEntry(JavaCore.newContainerEntry(path, true))
+        testProject.addClasspathEntry(JavaCore.newContainerEntry(path))
     }
 
     protected final void addJUnit(int n) { assert n in 3..5
@@ -184,8 +184,8 @@ abstract class GroovyEclipseTestSuite {
         testProject.project.hasNature(GroovyNature.GROOVY_NATURE)
     }
 
-    protected final boolean hasGroovyContainer() {
-        testProject.hasGroovyContainer()
+    protected final boolean hasGroovyLibraries() {
+        testProject.hasGroovyLibraries()
     }
 
     protected final GroovySnippetCompiler getGroovySnippetCompiler() {

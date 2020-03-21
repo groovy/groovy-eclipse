@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,17 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 import java.text.MessageFormat;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage;
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -48,39 +42,40 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.osgi.service.prefs.BackingStoreException;
 
 public class GroovyLibrariesContainerPage extends WizardPage implements IClasspathContainerPage, IClasspathContainerPageExtension {
 
     private IClasspathEntry containerEntry;
-    private IEclipsePreferences prefs;
-    private IJavaProject project;
+    private IJavaProject javaProject;
     private boolean isMinimal;
     private String userLibs;
 
     public GroovyLibrariesContainerPage() {
-        super("GroovyLibrariesContainerPage", GroovyClasspathContainer.DESC, JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY); //$NON-NLS-1$
+        super("GroovyLibrariesContainerPage", GroovyClasspathContainer.NAME, JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY); //$NON-NLS-1$
         setDescription(MessageFormat.format(Messages.getString("GroovyLibrariesPreferencesPage.Description"), getTitle())); //$NON-NLS-1$
     }
 
     @Override
-    public void initialize(IJavaProject project, IClasspathEntry[] entries) {
-        this.project = project;
-        this.prefs = new ProjectScope(project.getProject()).getNode(GroovyCoreActivator.PLUGIN_ID);
-        this.userLibs = this.prefs.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default"); //$NON-NLS-1$
+    public void initialize(final IJavaProject javaProject, final IClasspathEntry[] entries) {
+        this.userLibs = GroovyClasspathContainer.getLegacyUserLibsPreference(this.javaProject = javaProject);
     }
 
     @Override
-    public void setSelection(IClasspathEntry containerEntry) {
-        this.containerEntry = (containerEntry != null ? containerEntry
-            : JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
-        this.isMinimal = GroovyClasspathContainer.hasMinimalAttribute(this.containerEntry);
+    public void setSelection(final IClasspathEntry containerEntry) {
+        this.isMinimal = Optional.ofNullable(containerEntry).filter(GroovyClasspathContainer::hasMinimalAttribute).isPresent();
+        if (!this.isMinimal && containerEntry != null) {
+            if (containerEntry.getPath().lastSegment().equals("user-libs=true")) {
+                this.userLibs = "true";
+            } else if (containerEntry.getPath().lastSegment().equals("user-libs=false")) {
+                this.userLibs = "false";
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
 
     @Override
-    public void createControl(Composite parent) {
+    public void createControl(final Composite parent) {
         SelectionListener minimalListener = createSelectionListener(data -> isMinimal = (boolean) data);
         SelectionListener userLibListener = createSelectionListener(data -> userLibs  = (String)  data);
 
@@ -140,7 +135,7 @@ public class GroovyLibrariesContainerPage extends WizardPage implements IClasspa
         button.setText(Messages.getString("GroovyLibrariesPreferencesPage.UserLibsChoiceN")); //$NON-NLS-1$
     }
 
-    private Group createControlGroup(Composite parent) {
+    private Group createControlGroup(final Composite parent) {
         Group group = new Group(parent, SWT.SHADOW_NONE);
         group.setFont(parent.getFont());
         group.setLayout(new GridLayout());
@@ -150,12 +145,12 @@ public class GroovyLibrariesContainerPage extends WizardPage implements IClasspa
         return group;
     }
 
-    private SelectionListener createSelectionListener(Consumer<Object> consumer) {
+    private SelectionListener createSelectionListener(final Consumer<Object> consumer) {
         return new SelectionAdapter() {
             @Override
-            public void widgetSelected(SelectionEvent e) {
-                if (((Button) e.widget).getSelection()) {
-                    consumer.accept(e.widget.getData());
+            public void widgetSelected(final SelectionEvent event) {
+                if (((Button) event.widget).getSelection()) {
+                    consumer.accept(event.widget.getData());
                 }
             }
         };
@@ -163,17 +158,8 @@ public class GroovyLibrariesContainerPage extends WizardPage implements IClasspa
 
     @Override
     public boolean finish() {
-        try {
-            if (!prefs.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default").equals(userLibs)) { //$NON-NLS-1$
-                prefs.put(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, userLibs);
-                prefs.flush();
-            }
-
-            GroovyRuntime.ensureGroovyClasspathContainer(project, isMinimal);
-            GroovyClasspathContainerInitializer.updateGroovyClasspathContainer(project);
-        } catch (BackingStoreException | JavaModelException e) {
-            GroovyPlugin.getDefault().logError(Messages.getString("GroovyLibrariesPreferencesPage.FinishError"), e); //$NON-NLS-1$
-        }
+        containerEntry = GroovyRuntime.newGroovyClasspathContainerEntry(isMinimal,
+            JavaRuntime.isModularProject(javaProject), "default".equals(userLibs) ? null : Boolean.valueOf(userLibs));
 
         return true;
     }

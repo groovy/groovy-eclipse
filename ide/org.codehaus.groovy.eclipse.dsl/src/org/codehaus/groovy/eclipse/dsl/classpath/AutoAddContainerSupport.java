@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,10 @@ package org.codehaus.groovy.eclipse.dsl.classpath;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
@@ -53,138 +54,78 @@ import org.eclipse.jface.preference.IPreferenceStore;
  */
 public class AutoAddContainerSupport implements IResourceChangeListener {
 
-    private final class AddDSLSupportJob extends Job {
-        private final String projectName;
-        private final IJavaProject project;
-
-        private AddDSLSupportJob(String name, String projectName, IJavaProject project) {
-            super(name);
-            this.projectName = projectName;
-            this.project = project;
-        }
-
-        @Override
-        public IStatus run(IProgressMonitor monitor) {
-            try {
-                GroovyRuntime.addLibraryToClasspath(project, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
-                // here, remember that we have added this project
-                alreadyAddedProjects.add(projectName);
-                return Status.OK_STATUS;
-            } catch (JavaModelException e) {
-                GroovyDSLCoreActivator.logException("Problem auto-adding DSL support to " + projectName, e);
-                return e.getStatus();
-            }
-        }
-    }
-
     private final IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
 
     private final Set<String> alreadyAddedProjects;
 
     public AutoAddContainerSupport() {
-        alreadyAddedProjects = new HashSet<>();
-        String toIgnore = store.getString(DSLPreferencesInitializer.PROJECTS_TO_IGNORE);
-        if (toIgnore != null) {
-            String[] split = toIgnore.split(",");
-            for (String projName : split) {
-                projName = projName.trim();
-                if (projName.length() > 0 && ResourcesPlugin.getWorkspace().getRoot().getProject(projName).exists()) {
-                    alreadyAddedProjects.add(projName);
-                }
-            }
-        }
-    }
-
-    private boolean shouldAddSupport() {
-        return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT) || store.getBoolean(DSLPreferences.DISABLED_SCRIPTS);
-    }
-
-    // will add container if it doesn't already exist
-    private void addContainer(final IJavaProject project) {
-        final String projectName = project.getElementName();
-        AddDSLSupportJob runnable = new AddDSLSupportJob("Add DSL Support", projectName, project);
-        runnable.setPriority(Job.BUILD);
-        runnable.setSystem(true);
-        //Next line is very important! Otherwise => race condition with GrailsProjectVersionFixer!
-        runnable.setRule(getSetClassPathSchedulingRule(project));
-        runnable.schedule();
-    }
-
-    /**
-     * Same scheduling rule as {@link SetClasspathOperation}
-     */
-    private ISchedulingRule getSetClassPathSchedulingRule(IJavaProject project) {
-        //copied from SetClassPathOperation. Rules must match (or be wider than this rule or the setClassPathOperation will fail)
-        IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
-        return new MultiRule(new ISchedulingRule[] {
-                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
-                ruleFactory.modifyRule(project.getProject()),
-
-                // and external project modification rule in case the external folders are modified
-                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject()),
-            });
-    }
-
-    public void addContainerToAll() {
-        if (!shouldAddSupport()) {
-            return;
-        }
-
-        IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        for (IProject project : allProjects) {
-            if (!alreadyAddedProjects.contains(project.getName()) && GroovyNature.hasGroovyNature(project)) {
-                addContainer(JavaCore.create(project));
-            }
-        }
+        alreadyAddedProjects = Arrays.stream(store.getString(DSLPreferencesInitializer.PROJECTS_TO_IGNORE).split(","))
+            .filter(projName -> !projName.isEmpty() && ResourcesPlugin.getWorkspace().getRoot().getProject(projName).exists())
+            .collect(Collectors.toSet());
     }
 
     @Override
-    public void resourceChanged(IResourceChangeEvent event) {
-        if (!shouldAddSupport()) {
-            return;
-        }
-
+    public void resourceChanged(final IResourceChangeEvent event) {
         // look for projects that are becoming groovy projects, or projects that are being created
         // we can approximate this by looking for changes in .project files
         IResourceDelta delta = event.getDelta();
-        if (delta != null) {
+        if (delta != null && delta.getAffectedChildren().length > 0) {
             List<IProject> projects = new ArrayList<>();
-            if (delta.getAffectedChildren().length > 0) {
-                IResourceDelta[] children = delta.getAffectedChildren();
-                for (IResourceDelta child : children) {
-                    if (child.getResource() instanceof IProject) {
-                        if (child.getAffectedChildren().length == 0) {
-                            projects.add((IProject) child.getResource());
-                        } else {
-                            for (IResourceDelta childDelta : child.getAffectedChildren()) {
-                                IResource r = childDelta.getResource();
-                                if (r instanceof IFile && r.getName().equals(".project")) {
-                                    projects.add((IProject) child.getResource());
-                                }
+            for (IResourceDelta child : delta.getAffectedChildren()) {
+                if (child.getResource() instanceof IProject) {
+                    if (child.getAffectedChildren().length == 0) {
+                        projects.add((IProject) child.getResource());
+                    } else {
+                        for (IResourceDelta grandchild : child.getAffectedChildren()) {
+                            IResource r = grandchild.getResource();
+                            if (r instanceof IFile && r.getName().equals(".project")) {
+                                projects.add((IProject) child.getResource());
                             }
                         }
                     }
                 }
             }
-
-            for (IProject project : projects) {
-                if (!alreadyAddedProjects.contains(project.getName()) && GroovyNature.hasGroovyNature(project)) {
-                    addContainer(JavaCore.create(project));
-                }
-            }
+            addContainer(projects.toArray(new IProject[projects.size()]));
         }
     }
 
+    public void addContainer(final IProject[] projects) {
+        if (!store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT) || store.getBoolean(DSLPreferences.DISABLED_SCRIPTS)) {
+            return;
+        }
+        for (IProject project : projects) {
+            if (alreadyAddedProjects.contains(project.getName()) || !GroovyNature.hasGroovyNature(project)) {
+                continue;
+            }
+
+            IJavaProject javaProject = JavaCore.create(project);
+
+            AddDSLSupportJob job = new AddDSLSupportJob(javaProject);
+            // prevent race condition with GrailsProjectVersionFixer
+            job.setRule(getSetClassPathSchedulingRule(javaProject));
+            job.setPriority(Job.BUILD);
+            job.setSystem(true);
+            job.schedule();
+        }
+    }
+
+    /**
+     * Same scheduling rule as {@link SetClasspathOperation}
+     */
+    private ISchedulingRule getSetClassPathSchedulingRule(final IJavaProject javaProject) {
+        // copied from SetClassPathOperation. Rules must match (or be wider than this rule or the setClassPathOperation will fail)
+        IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
+        return new MultiRule(new ISchedulingRule[] {
+            // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
+            ruleFactory.modifyRule(javaProject.getProject()),
+
+            // and external project modification rule in case the external folders are modified
+            ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject()),
+        });
+    }
+
     public void dispose() {
-        StringBuilder sb = new StringBuilder();
-        for (String projName : alreadyAddedProjects) {
-            sb.append(projName);
-            sb.append(",");
-        }
-        if (sb.length() > 0) {
-            sb.replace(sb.length()-1, sb.length(), "");
-        }
-        store.setValue(DSLPreferencesInitializer.PROJECTS_TO_IGNORE, sb.toString());
+        store.setValue(DSLPreferencesInitializer.PROJECTS_TO_IGNORE, alreadyAddedProjects.stream().collect(Collectors.joining(",")));
         if (store instanceof IPersistentPreferenceStore) {
             try {
                 ((IPersistentPreferenceStore) store).save();
@@ -194,13 +135,40 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         }
     }
 
-    public void ignoreProject(IProject project) {
+    public void ignoreProject(final IProject project) {
         alreadyAddedProjects.add(project.getName());
     }
-    public void unignoreProject(IProject project) {
+
+    public void unignoreProject(final IProject project) {
         alreadyAddedProjects.remove(project.getName());
     }
+
     public void unignoreAllProjects() {
         alreadyAddedProjects.clear();
+    }
+
+    private class AddDSLSupportJob extends Job {
+
+        private final IJavaProject javaProject;
+
+        private AddDSLSupportJob(final IJavaProject javaProject) {
+            super("Add DSL Support");
+            this.javaProject = javaProject;
+        }
+
+        @Override
+        public IStatus run(final IProgressMonitor monitor) {
+            try {
+                if (!GroovyRuntime.findClasspathEntry(javaProject, cpe -> cpe.getPath().equals(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)).isPresent()) {
+                    GroovyRuntime.appendClasspathEntry(javaProject, JavaCore.newContainerEntry(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID));
+                }
+                // here, remember that we have added this project
+                alreadyAddedProjects.add(javaProject.getElementName());
+                return Status.OK_STATUS;
+            } catch (JavaModelException e) {
+                GroovyDSLCoreActivator.logException("Problem auto-adding DSL support to " + javaProject.getElementName(), e);
+                return e.getStatus();
+            }
+        }
     }
 }

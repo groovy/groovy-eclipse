@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
-import static org.codehaus.groovy.eclipse.core.model.GroovyRuntime.ensureGroovyClasspathContainer;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 
-import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.internal.events.BuildCommand;
@@ -100,14 +98,8 @@ public class TestProject {
         return sourceFolder;
     }
 
-    public boolean hasGroovyContainer() throws Exception {
-        for (IClasspathEntry entry : javaProject.getRawClasspath()) {
-            if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
-                    entry.getPath().equals(GroovyClasspathContainer.CONTAINER_ID)) {
-                return true;
-            }
-        }
-        return false;
+    public boolean hasGroovyLibraries() throws Exception {
+        return GroovyRuntime.hasGroovyClasspathContainer(javaProject);
     }
 
     /** Adds base Java nature and classpath entries to project. */
@@ -121,8 +113,8 @@ public class TestProject {
     private void prepareForGroovy() throws Exception {
         addNature(GroovyNature.GROOVY_NATURE);
 
-        if (!hasGroovyContainer()) {
-            ensureGroovyClasspathContainer(getJavaProject(), false);
+        if (!GroovyRuntime.hasGroovyClasspathContainer(javaProject)) {
+            GroovyRuntime.addGroovyClasspathContainer(javaProject);
         }
     }
 
@@ -153,13 +145,10 @@ public class TestProject {
         }
     }
 
-    public void addClasspathEntry(IClasspathEntry classpathEntry) throws Exception {
-        if (Arrays.asList(javaProject.getRawClasspath()).contains(classpathEntry)) return;
-        IClasspathEntry[] entries = (IClasspathEntry[]) ArrayUtils.add(javaProject.getRawClasspath(), classpathEntry);
-
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Add to classpath: " + classpathEntry);
-        javaProject.setRawClasspath(entries, monitor);
-        monitor.waitForCompletion();
+    public void addClasspathEntry(IClasspathEntry entry) throws Exception {
+        if (!GroovyRuntime.findClasspathEntry(javaProject, entry::equals).isPresent()) {
+            GroovyRuntime.appendClasspathEntry(javaProject, entry);
+        }
     }
 
     public void addExternalLibrary(IPath libraryPath) throws Exception {
