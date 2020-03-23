@@ -16,9 +16,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
 
-import org.eclipse.jdt.core.dom.BindingResolver;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-
 /**
  * Member value pair which compose of default values.
  */

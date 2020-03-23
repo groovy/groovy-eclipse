@@ -45,7 +45,6 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.search.AbstractJavaSearchScope;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Creates java element handles.
