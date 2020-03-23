@@ -5345,6 +5345,40 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertTrue((tds[3].bits & ASTNode.IsSecondaryType) != 0);
     }
 
+    @Test
+    public void testShellScriptComment1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "#! blah blah\n" +
+            "println 'hello world'\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testShellScriptComment2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "#! /usr/bin/env nix-shell\n" +
+            "#! nix-shell -i groovy -p groovy\n" +
+            "/* copyright notice */\n" +
+            "println 'hello world'\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 2)\n" +
+            "\t#! nix-shell -i groovy -p groovy\n" +
+            "\t^\n" +
+            "Groovy:unexpected char: '#'\n" +
+            "----------\n");
+    }
+
     //--------------------------------------------------------------------------
 
     private void assertEventCount(int expectedCount, EventListener listener) {
