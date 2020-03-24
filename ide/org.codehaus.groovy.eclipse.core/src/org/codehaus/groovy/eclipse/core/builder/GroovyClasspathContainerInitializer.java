@@ -32,8 +32,8 @@ public class GroovyClasspathContainerInitializer extends ClasspathContainerIniti
 
     @Override
     public void initialize(IPath containerPath, final IJavaProject javaProject) throws CoreException {
-        if (containerPath.segmentCount() == 1 && !GroovyRuntime.findClasspathEntry(javaProject, cpe ->
-                GroovyClasspathContainer.ID.equals(cpe.getPath().segment(0))).filter(GroovyClasspathContainer::hasLegacyMinimalAttribute).isPresent()) {
+        if (containerPath.segmentCount() == 1 && !(javaProject.exists() && GroovyRuntime.findClasspathEntry(javaProject, cpe ->
+                GroovyClasspathContainer.ID.equals(cpe.getPath().segment(0))).filter(GroovyClasspathContainer::hasLegacyMinimalAttribute).isPresent())) {
             String val = GroovyClasspathContainer.getLegacyUserLibsPreference(javaProject);
             if (!"default".equals(val)) {
                 containerPath = containerPath.append("user-libs=" + Boolean.valueOf(val).toString());
