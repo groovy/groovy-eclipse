@@ -53,7 +53,7 @@ public DefaultProblem(
 	this.arguments = stringArguments;
 	this.severity = severity;
 	this.startPosition = startPosition;
-	this.endPosition = endPosition;
+	this.endPosition = Math.max(endPosition, -1); // GROOVY edit
 	this.line = line;
 	this.column = column;
 }
