@@ -206,6 +206,9 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
             if (left instanceof StaticMethodCallExpression) {
                 StaticMethodCallExpression smce = (StaticMethodCallExpression) left;
                 StaticMethodCallExpression result = new StaticMethodCallExpression(smce.getOwnerType(), smce.getMethod(), right);
+                // GRECLIPSE add
+                result.copyNodeMetaData(smce);
+                // GRECLIPSE end
                 setSourcePosition(result, be);
                 return result;
             }
@@ -420,6 +423,9 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         //   import static MyClass.setProp [as setOtherProp]
         //   import static MyClass.getProp [as getOtherProp]
         // when resolving prop reference
+        // GRECLIPSE add
+        try {
+        // GRECLIPSE end
         if (importNodes.containsKey(accessorName)) {
             expression = findStaticProperty(importNodes, accessorName);
             if (expression != null) return expression;
@@ -431,6 +437,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 if (expression != null) return expression;
             }
         }
+        // GRECLIPSE add
+        } finally {
+            // store the accessor name to facilitate organizing static imports
+            if (expression != null) expression.putNodeMetaData("static.import.alias", accessorName);
+        }
+        // GRECLIPSE end
 
         // look for one of these:
         //   import static MyClass.prop [as otherProp]

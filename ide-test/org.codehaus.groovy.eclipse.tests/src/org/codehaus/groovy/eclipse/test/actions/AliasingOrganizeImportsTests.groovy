@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -314,6 +314,40 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testRetainStaticAlias6() {
+        createGroovyType 'p', 'Q', '''\
+            class Q {
+              static getBadName() {}
+              static getFineName() {}
+            }
+            '''
+        String contents = '''\
+            import static p.Q.getBadName as getGoodName
+            import static p.Q.getFineName
+            def one = goodName
+            def two = fineName
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainStaticAlias6a() {
+        createGroovyType 'p', 'Q', '''\
+            class Q {
+              static void setBadName(value) {}
+              static void setFineName(value) {}
+            }
+            '''
+        String contents = '''\
+            import static p.Q.setBadName as setGoodName
+            import static p.Q.setFineName
+            goodName = null
+            fineName = null
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainStaticAlias7() {
         createGroovyType 'other', 'Wrapper', '''
             class Wrapper {
               enum Feature {
@@ -334,7 +368,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainStaticAlias7() {
+    void testRetainStaticAlias8() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -346,7 +380,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/731
-    void testRetainStaticAlias8() {
+    void testRetainStaticAlias9() {
         addJavaSource('enum E { ONE, TWO; }', 'E', 'p')
 
         String contents = '''\

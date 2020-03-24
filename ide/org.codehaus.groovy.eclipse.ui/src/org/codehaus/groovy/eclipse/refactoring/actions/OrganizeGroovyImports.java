@@ -573,7 +573,7 @@ public class OrganizeGroovyImports {
             if (expression.getEnd() > 0) {
                 String staticImport = expression.getOwnerType().getName().replace('$', '.') + "." + expression.getMethod();
                 Object alias = expression.getNodeMetaData("static.import.alias");
-                if (alias != null) {
+                if (alias != null && !alias.equals(expression.getMethod())) {
                     staticImport += " as " + alias;
                 }
                 doNotRemoveImport(staticImport);
