@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.codehaus.groovy.eclipse.core.model.RequireModuleOperation.requireModule;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,7 +48,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -59,7 +59,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.launching.JavaRuntime;
-import org.eclipse.text.edits.InsertEdit;
 import org.junit.After;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -289,10 +288,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createModularProject("Project", true);
 
-        ICompilationUnit unit = env.getUnit(paths[2]);
-        unit.applyTextEdit(new InsertEdit(17,
-            "  requires org.codehaus.groovy;\n"), null);
-        unit.save(null, true);
+        requireModule(env.getJavaProject(paths[0]), "org.codehaus.groovy");
 
         env.addGroovyClass(paths[1], "p1", "Hello",
             //@formatter:off

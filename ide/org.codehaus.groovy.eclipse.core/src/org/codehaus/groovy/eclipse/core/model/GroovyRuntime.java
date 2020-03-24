@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.core.model;
 
+import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
+
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -30,6 +32,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
@@ -54,13 +57,12 @@ public class GroovyRuntime {
         try {
             if (project != null && project.isAccessible() && project.hasNature(JavaCore.NATURE_ID) && !project.hasNature(GroovyNature.GROOVY_NATURE)) {
                 IJavaProject javaProject = JavaCore.create(project);
-
-                addGroovyNature(project);
-                addGroovyClasspathContainer(javaProject);
                 // this breaks encapsulation, but seems the most logical place to put it:
                 if (!findClasspathEntry(javaProject, cpe -> DSLD_CONTAINER_ID.equals(cpe.getPath().segment(0))).isPresent()) {
                     appendClasspathEntry(javaProject, JavaCore.newContainerEntry(new Path(DSLD_CONTAINER_ID)));
                 }
+                addGroovyClasspathContainer(javaProject);
+                addGroovyNature(project);
             }
         } catch (Exception e) {
             GroovyCore.logException("Failed to add groovy runtime support", e);
@@ -70,10 +72,13 @@ public class GroovyRuntime {
     public static void addGroovyNature(final IProject project) throws CoreException {
         GroovyCore.trace("GroovyRuntime.addGroovyNature(IProject)");
         IProjectDescription description = project.getDescription();
-        // add groovy nature at the start so that its image will be shown
-        description.setNatureIds((String[]) ArrayUtils.add(
-            description.getNatureIds(), 0, GroovyNature.GROOVY_NATURE));
+        // add nature first so that its image will be shown
+        description.setNatureIds((String[]) ArrayUtils.add(description.getNatureIds(), 0, GroovyNature.GROOVY_NATURE));
         project.setDescription(description, null);
+
+        IJavaProject javaProject = JavaCore.create(project);
+        IType type = javaProject.findType(GROOVY_OBJECT_TYPE.getName());
+        if (type.exists()) RequireModuleOperation.requireModule(javaProject, type);
     }
 
     public static void removeGroovyNature(final IProject project) throws CoreException {
