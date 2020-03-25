@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -48,7 +45,6 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
@@ -61,13 +57,12 @@ import org.eclipse.jdt.core.JavaModelException;
 public class RefreshDSLDJob extends Job {
 
     private final List<IProject> projects;
-    private DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
     /**
      * @deprecated Use {@link DSLDStoreManager#initialize(IProject, boolean)} instead.
      */
     @Deprecated
-    public RefreshDSLDJob(IProject project) {
+    public RefreshDSLDJob(final IProject project) {
         this(Collections.singletonList(project));
     }
 
@@ -75,25 +70,25 @@ public class RefreshDSLDJob extends Job {
      * @deprecated Use {@link DSLDStoreManager#initialize(List, boolean)} instead.
      */
     @Deprecated
-    public RefreshDSLDJob(List<IProject> projects) {
+    public RefreshDSLDJob(final List<IProject> projects) {
         super("Refresh DSLD scripts");
-        this.projects = contextStoreManager.addInProgress(projects);
+        this.projects = GroovyDSLCoreActivator.getDefault().getContextStoreManager().addInProgress(projects);
     }
 
     @Override
-    public boolean belongsTo(Object family) {
-        return family == RefreshDSLDJob.class;
+    public boolean belongsTo(final Object family) {
+        return (family == RefreshDSLDJob.class);
     }
 
-    protected boolean isDSLD(IStorage file) {
+    private static boolean isDSLD(final IStorage file) {
         return isFile(file, "dsld");
     }
 
-    protected boolean isSuggestionFile(IStorage file) {
+    private static boolean isSuggestionFile(final IStorage file) {
         return isFile(file, SuggestionsFileProperties.FILE_TYPE);
     }
 
-    protected boolean isFile(IStorage file, String extension) {
+    private static boolean isFile(final IStorage file, final String extension) {
         if (file instanceof IFile) {
             IFile iFile = (IFile) file;
             return !iFile.isDerived() && extension.equals(iFile.getFileExtension());
@@ -104,7 +99,7 @@ public class RefreshDSLDJob extends Job {
     }
 
     @Override
-    public IStatus run(IProgressMonitor monitor) {
+    public IStatus run(final IProgressMonitor monitor) {
         try {
             if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
                 if (GroovyLogManager.manager.hasLoggers()) {
@@ -122,7 +117,7 @@ public class RefreshDSLDJob extends Job {
                 try {
                     res = refreshProject(project, submon.split(9));
                 } finally {
-                    contextStoreManager.removeInProgress(project);
+                    GroovyDSLCoreActivator.getDefault().getContextStoreManager().removeInProgress(project);
                 }
                 if (!res.isOK()) {
                     errorStatuses.add(res);
@@ -135,20 +130,16 @@ public class RefreshDSLDJob extends Job {
                 return Status.OK_STATUS;
             } else {
                 MultiStatus multi = new MultiStatus(GroovyDSLCoreActivator.PLUGIN_ID, 0, "Error refreshing DSLDs.", null);
-                for (IStatus error : errorStatuses) {
-                    multi.add(error);
-                }
+                errorStatuses.forEach(multi::add);
                 return multi;
             }
         } finally {
             // in case the job was exited early, ensure all projects have their initialization stage removed
-            for (IProject project : projects) {
-                contextStoreManager.removeInProgress(project);
-            }
+            projects.forEach(GroovyDSLCoreActivator.getDefault().getContextStoreManager()::removeInProgress);
         }
     }
 
-    private IStatus refreshProject(IProject project, IProgressMonitor monitor) {
+    private IStatus refreshProject(final IProject project, final IProgressMonitor monitor) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Refreshing inferencing scripts for " + project.getName());
@@ -216,16 +207,15 @@ public class RefreshDSLDJob extends Job {
 
     private class DSLDResourceVisitor implements IResourceVisitor {
 
+        private final Map<String, IStorage> dsldFiles = new HashMap<>();
         private final IProject project;
-        private final Map<String, IStorage> dsldFiles;
 
-        DSLDResourceVisitor(IProject project) {
+        DSLDResourceVisitor(final IProject project) {
             this.project = project;
-            this.dsldFiles = new HashMap<>();
         }
 
         @Override
-        public boolean visit(IResource resource) throws CoreException {
+        public boolean visit(final IResource resource) throws CoreException {
             // don't visit the output folders
             if (resource.isDerived()) {
                 return false;
@@ -241,7 +231,7 @@ public class RefreshDSLDJob extends Job {
             return true;
         }
 
-        public Collection<IStorage> findFiles(IProgressMonitor monitor) {
+        public Collection<IStorage> findFiles(final IProgressMonitor monitor) {
             try {
                 // first look for files in the project
                 project.accept(this);
@@ -259,16 +249,14 @@ public class RefreshDSLDJob extends Job {
             return dsldFiles.values();
         }
 
-        protected void findDSLDsInLibraries(IProgressMonitor monitor) throws JavaModelException {
-            IPackageFragmentRoot[] roots = getFragmentRoots(monitor);
-            for (IPackageFragmentRoot root : roots) {
+        protected void findDSLDsInLibraries(final IProgressMonitor monitor) throws JavaModelException {
+            for (IPackageFragmentRoot root : getPackageFragmentRoots(monitor)) {
                 if (monitor.isCanceled()) {
                     throw new OperationCanceledException();
                 }
                 try {
                     // GRECLIPSE-1458: must check source folders, but avoid source folders from same project
                     if ((root.getKind() == IPackageFragmentRoot.K_BINARY || isSourceFolderFromOtherProject(root))) {
-
                         if (root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
                             List<IParent> containers = new LinkedList<>();
                             containers.add(root);
@@ -276,8 +264,9 @@ public class RefreshDSLDJob extends Job {
                                 IParent container = containers.remove(0);
 
                                 for (IJavaElement child : container.getChildren()) {
-                                    if (child instanceof IPackageFragment)
+                                    if (child instanceof IPackageFragment) {
                                         containers.add((IPackageFragment) child);
+                                    }
                                 }
 
                                 Object[] resources;
@@ -290,19 +279,21 @@ public class RefreshDSLDJob extends Job {
                                 for (Object resource : resources) {
                                     if (resource instanceof IStorage && isDSLD((IStorage) resource)) {
                                         if (dsldFiles.putIfAbsent(((IStorage) resource).getName(), (IStorage) resource) != null) {
-                                            GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD file " + ((IStorage) resource).getFullPath() + " already added, so skipping.");
+                                            GroovyLogManager.manager.log(TraceCategory.DSL,
+                                                "DSLD file " + ((IStorage) resource).getFullPath() + " already added, so skipping.");
                                         }
                                     }
                                 }
                             } while (!containers.isEmpty());
-
+                            //
                         } else if (root.getPackageFragment("dsld").exists()) {
                             IFolder dsldFolder;
                             if (root.getResource() instanceof IFolder && (dsldFolder = ((IFolder) root.getResource()).getFolder("dsld")).exists()) {
                                 for (IResource resource : dsldFolder.members()) {
                                     if (resource.getType() == IResource.FILE && isDSLD((IStorage) resource)) {
                                         if (dsldFiles.putIfAbsent(resource.getName(), (IStorage) resource) != null) {
-                                            GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD file " + resource.getFullPath() + " already added, so skipping.");
+                                            GroovyLogManager.manager.log(TraceCategory.DSL,
+                                                "DSLD file " + resource.getFullPath() + " already added, so skipping.");
                                         }
                                     }
                                 }
@@ -313,7 +304,8 @@ public class RefreshDSLDJob extends Job {
                                         IStorage file = (IStorage) resource;
                                         if (isDSLD(file)) {
                                             if (dsldFiles.putIfAbsent(file.getName(), file) != null) {
-                                                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD file " + file.getFullPath() + " already added, so skipping.");
+                                                GroovyLogManager.manager.log(TraceCategory.DSL,
+                                                    "DSLD file " + file.getFullPath() + " already added, so skipping.");
                                             }
                                         }
                                     }
@@ -333,7 +325,7 @@ public class RefreshDSLDJob extends Job {
             }
         }
 
-        private boolean isSourceFolderFromOtherProject(IPackageFragmentRoot root) {
+        private boolean isSourceFolderFromOtherProject(final IPackageFragmentRoot root) {
             if (root.isReadOnly()) {
                 // not source folder
                 return false;
@@ -349,37 +341,48 @@ public class RefreshDSLDJob extends Job {
         }
 
         /**
-         * Get all package fragment roots in a safe way so that concurrent modifications aren't thrown
-         * See http://jira.codehaus.org/browse/GRECLIPSE-1284
+         * Get all package fragment roots in a safe way so that concurrent modifications aren't thrown.
+         * <p>
+         * GRECLIPSE-1284: When IDE runs its initialization jobs, I often get the following exception:
+         * <pre>
+         * java.util.ConcurrentModificationException
+         *     at java.util.HashMap$HashIterator.nextEntry(Unknown Source)
+         *     at java.util.HashMap$EntryIterator.next(Unknown Source)
+         *     at java.util.HashMap$EntryIterator.next(Unknown Source)
+         *     at org.eclipse.jdt.internal.core.JavaModelManager$9.run(JavaModelManager.java:2796)
+         *     at org.eclipse.core.internal.resources.Workspace.run(Workspace.java:2344)
+         *     at org.eclipse.jdt.internal.core.JavaModelManager.initializeAllContainers(JavaModelManager.java:2816)
+         *     at org.eclipse.jdt.internal.core.JavaModelManager.getClasspathContainer(JavaModelManager.java:1873)
+         *     at org.eclipse.jdt.core.JavaCore.getClasspathContainer(JavaCore.java:2798)
+         *     at org.eclipse.jdt.internal.core.JavaProject.resolveClasspath(JavaProject.java:2679)
+         *     at org.eclipse.jdt.internal.core.JavaProject.resolveClasspath(JavaProject.java:2843)
+         *     at org.eclipse.jdt.internal.core.JavaProject.getResolvedClasspath(JavaProject.java:1948)
+         *     at org.eclipse.jdt.internal.core.JavaProject.buildStructure(JavaProject.java:463)
+         *     at org.eclipse.jdt.internal.core.Openable.generateInfos(Openable.java:258)
+         *     at org.eclipse.jdt.internal.core.JavaElement.openWhenClosed(JavaElement.java:518)
+         *     at org.eclipse.jdt.internal.core.JavaElement.getElementInfo(JavaElement.java:255)
+         *     at org.eclipse.jdt.internal.core.JavaElement.getElementInfo(JavaElement.java:241)
+         *     at org.eclipse.jdt.internal.core.JavaElement.getChildren(JavaElement.java:196)
+         *     at org.eclipse.jdt.internal.core.JavaProject.getPackageFragmentRoots(JavaProject.java:1836)
+         *     at org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob$DSLDResourceVisitor.findDSLDsInLibraries(RefreshDSLDJob.java:99)
+         *     at org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob$DSLDResourceVisitor.findFiles(RefreshDSLDJob.java:89)
+         *     at org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob.refreshProject(RefreshDSLDJob.java:279)
+         *     at org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob.run(RefreshDSLDJob.java:227)
+         *     at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54)
+         * </pre>
          */
-        private IPackageFragmentRoot[] getFragmentRoots(IProgressMonitor monitor) throws JavaModelException {
-            final IPackageFragmentRoot[][] roots = new IPackageFragmentRoot[1][];
+        private IPackageFragmentRoot[] getPackageFragmentRoots(final IProgressMonitor monitor) throws JavaModelException {
+            IPackageFragmentRoot[][] roots = new IPackageFragmentRoot[1][];
             try {
-                ResourcesPlugin.getWorkspace().run(pm -> {
+                JavaCore.run(pm -> {
                     roots[0] = JavaCore.create(project).getAllPackageFragmentRoots();
-                }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
+                }, project, monitor);
             } catch (CoreException e) {
-                if (e.getStatus().getCode()  == IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
-                    // ignore...project was deleted
-                } else {
+                if (e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
                     GroovyDSLCoreActivator.logException(e);
                 }
             }
             return roots[0] != null ? roots[0] : new IPackageFragmentRoot[0];
-        }
-
-        private ISchedulingRule getSchedulingRule() {
-            IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
-            // FIXADE Arrrrgh...we need to grab a build rule here.  Looks like a classpath container refresh
-            // will grab the rule of projects that are contained in the container.
-            /*return new MultiRule(new ISchedulingRule[] {
-                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
-                ruleFactory.modifyRule(this.project.getProject()),
-
-                // and external project modification rule in case the external folders are modified
-                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
-            });*/
-            return ruleFactory.buildRule();
         }
     }
 }

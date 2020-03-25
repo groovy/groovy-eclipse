@@ -128,7 +128,7 @@ public class JavaProjectHelper {
      * @see #ASSERT_NO_MIXED_LINE_DELIMIERS
      */
     public static void delete(final IJavaElement elem) throws Exception {
-        ResourcesPlugin.getWorkspace().run(monitor -> {
+        JavaCore.run(monitor -> {
             performDummySearch();
             if (elem instanceof IJavaProject) {
                 IJavaProject jproject = (IJavaProject) elem;
@@ -165,13 +165,11 @@ public class JavaProjectHelper {
      */
     public static void clear(final IJavaProject jproject, final IClasspathEntry[] entries) throws Exception {
         performDummySearch();
-        ResourcesPlugin.getWorkspace().run(monitor -> {
+        JavaCore.run(monitor -> {
             jproject.setRawClasspath(entries, null);
-
-            IResource[] resources = jproject.getProject().members();
-            for (int i = 0; i < resources.length; i += 1) {
-                if (!resources[i].getName().startsWith(".")) {
-                    delete(resources[i]);
+            for (IResource resource : jproject.getProject().members()) {
+                if (!resource.getName().startsWith(".")) {
+                    delete(resource);
                 }
             }
         }, null);

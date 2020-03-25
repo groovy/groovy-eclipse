@@ -18,11 +18,12 @@ package org.codehaus.groovy.eclipse.dsl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -60,7 +61,8 @@ public class DSLDStoreManager {
 
     //--------------------------------------------------------------------------
 
-    private final Set<String> inProgress = new HashSet<>();
+    private final Set<String> inProgress = new ConcurrentSkipListSet<>();
+    private final Object progressMonitor = new Object();
 
     public void initialize(final IProject project, final boolean synchronous) {
         initialize(Collections.singletonList(project), synchronous);
@@ -94,35 +96,39 @@ public class DSLDStoreManager {
         }
     }
 
-    private synchronized void waitForFinish() {
-        long end = System.currentTimeMillis() + 30000;
-        while (!inProgress.isEmpty()) {
-            try {
-                long timeLeft = end - System.currentTimeMillis();
-                if (timeLeft > 0) {
-                    wait(timeLeft);
-                } else {
-                    break;
-                }
-            } catch (InterruptedException ignore) {
-            }
-        }
-    }
-
-    private synchronized boolean isInProgress(final IProject project) {
+    private boolean isInProgress(final IProject project) {
         return inProgress.contains(project.getName());
     }
 
-    private synchronized boolean addInProgress(final IProject project) {
+    private boolean addInProgress(final IProject project) {
         return inProgress.add(project.getName());
     }
 
-    synchronized List<IProject> addInProgress(final Collection<IProject> projects) {
+    List<IProject>  addInProgress(final Collection<IProject> projects) {
         return projects.stream().filter(this::addInProgress).collect(Collectors.toList());
     }
 
-    synchronized void removeInProgress(final IProject project) {
+    void removeInProgress(final IProject project) {
         inProgress.remove(project.getName());
-        notifyAll();
+        synchronized (progressMonitor) {
+            progressMonitor.notifyAll();
+        }
+    }
+
+    private void waitForFinish() {
+        long end = (System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10));
+        while (!inProgress.isEmpty()) {
+            long timeLeft = (end - System.currentTimeMillis());
+            if (timeLeft > 0) {
+                synchronized (progressMonitor) {
+                    try {
+                        progressMonitor.wait(Math.min(timeLeft, 100));
+                    } catch (InterruptedException ignore) {
+                    }
+                }
+            } else {
+                break;
+            }
+        }
     }
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,15 +19,12 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionUtil;
-import org.eclipse.jdt.internal.ui.actions.WorkbenchRunnableAdapter;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.util.ElementValidator;
 import org.eclipse.jdt.internal.ui.util.ExceptionHandler;
@@ -41,16 +38,11 @@ import org.eclipse.ui.progress.IProgressService;
 
 public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction {
 
-    public AddImportOnSelectionAdapter(CompilationUnitEditor editor) {
+    public AddImportOnSelectionAdapter(final CompilationUnitEditor editor) {
         super(editor);
     }
 
-    public interface AddImportOperation extends IWorkspaceRunnable {
-        IStatus getStatus();
-    }
-
-    protected abstract AddImportOperation newAddImportOperation(
-        GroovyCompilationUnit cu, ITextSelection ts, IChooseImportQuery iq);
+    protected abstract AddImportOperation newAddImportOperation(GroovyCompilationUnit cu, ITextSelection ts, IChooseImportQuery iq);
 
     @Override
     public final void run() {
@@ -78,8 +70,7 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
                 try {
                     register(helper);
                     IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
-                    progressService.runInUI(editor.getSite().getWorkbenchWindow(),
-                        new WorkbenchRunnableAdapter(operation, getScheduleRule(cu)), getScheduleRule(cu));
+                    progressService.runInUI(editor.getSite().getWorkbenchWindow(), operation, cu.getJavaProject().getResource());
                     IStatus status = operation.getStatus();
                     if (!status.isOK()) {
                         IStatusLineManager manager = editor.getEditorSite().getActionBars().getStatusLineManager();
@@ -110,49 +101,45 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
         return editor;
     }
 
-    private ISchedulingRule getScheduleRule(ICompilationUnit cu) {
-        return cu.getJavaProject().getResource();
-    }
-
-    private IChooseImportQuery newChooseImportQuery(Shell shell) {
+    private IChooseImportQuery newChooseImportQuery(final Shell shell) {
         return ReflectionUtils.invokeConstructor(SELECT_TYPE_QUERY, new Class[] {Shell.class}, new Object[] {shell});
     }
 
-    private IEditingSupport newEditingSupport(ITextSelection textSelection, IChooseImportQuery typeQuery) {
+    private IEditingSupport newEditingSupport(final ITextSelection textSelection, final IChooseImportQuery typeQuery) {
         return ReflectionUtils.executePrivateMethod(
             org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction.class,
             "createViewerHelper", new Class[] {ITextSelection.class, SELECT_TYPE_QUERY}, this, new Object[] {textSelection, typeQuery});
-//        return new IEditingSupport() {
-//            public boolean isOriginator(DocumentEvent event, IRegion subjectRegion) {
-//                return subjectRegion.getOffset() <= textSelection.getOffset() + textSelection.getLength() &&
-//                        textSelection.getOffset() <= subjectRegion.getOffset() + subjectRegion.getLength();
-//            }
-//            public boolean ownsFocusShell() {
-//                return typeQuery.isShowing();
-//            }
-//        };
+        /*return new IEditingSupport() {
+            public boolean isOriginator(DocumentEvent event, IRegion subjectRegion) {
+                return subjectRegion.getOffset() <= textSelection.getOffset() + textSelection.getLength() &&
+                        textSelection.getOffset() <= subjectRegion.getOffset() + subjectRegion.getLength();
+            }
+            public boolean ownsFocusShell() {
+                return typeQuery.isShowing();
+            }
+        };*/
     }
 
     private void register(IEditingSupport helper) {
         ReflectionUtils.executePrivateMethod(
             org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction.class,
             "registerHelper", new Class[] {IEditingSupport.class}, this, new Object[] {helper});
-//        ISourceViewer viewer = editor.getViewer();
-//        if (viewer instanceof IEditingSupportRegistry) {
-//            IEditingSupportRegistry registry = (IEditingSupportRegistry) viewer;
-//            registry.register(helper);
-//        }
+        /*ISourceViewer viewer = editor.getViewer();
+        if (viewer instanceof IEditingSupportRegistry) {
+            IEditingSupportRegistry registry = (IEditingSupportRegistry) viewer;
+            registry.register(helper);
+        }*/
     }
 
     private void unregister(IEditingSupport helper) {
         ReflectionUtils.executePrivateMethod(
             org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction.class,
             "deregisterHelper", new Class[] {IEditingSupport.class}, this, new Object[] {helper});
-//        ISourceViewer viewer = editor.getViewer();
-//        if (viewer instanceof IEditingSupportRegistry) {
-//            IEditingSupportRegistry registry = (IEditingSupportRegistry) viewer;
-//            registry.unregister(helper);
-//        }
+        /*ISourceViewer viewer = editor.getViewer();
+        if (viewer instanceof IEditingSupportRegistry) {
+            IEditingSupportRegistry registry = (IEditingSupportRegistry) viewer;
+            registry.unregister(helper);
+        }*/
     }
 
     private static Class<? extends IChooseImportQuery> SELECT_TYPE_QUERY;
@@ -163,5 +150,11 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
         } catch (Exception e) {
             GroovyPlugin.getDefault().logError("Failed to locate SelectTypeQuery", e);
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    public interface AddImportOperation extends org.eclipse.jface.operation.IRunnableWithProgress {
+        IStatus getStatus();
     }
 }

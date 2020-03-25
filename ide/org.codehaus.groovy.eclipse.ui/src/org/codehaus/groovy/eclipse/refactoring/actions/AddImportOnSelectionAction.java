@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,7 +73,7 @@ import org.eclipse.text.edits.TextEdit;
 
 public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
-    public AddImportOnSelectionAction(CompilationUnitEditor editor) {
+    public AddImportOnSelectionAction(final CompilationUnitEditor editor) {
         super(editor);
     }
 
@@ -88,7 +88,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             }
 
             @Override
-            public void run(IProgressMonitor monitor) throws CoreException {
+            public void run(final IProgressMonitor monitor) {
                 SubMonitor submon = SubMonitor.convert(monitor, CodeGenerationMessages.AddImportsOperation_description, 4);
                 try {
                     ModuleNodeInfo info = compilationUnit.getModuleInfo(true);
@@ -108,13 +108,16 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                     result.addChild(edit);
                     result.addChild(importRewrite.rewriteImports(submon.split(1)));
                     applyEdit(compilationUnit, result, true, submon.split(1));
+                } catch (CoreException e) {
+                    fStatus = e.getStatus();
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
                 }
             }
 
-            private TextEdit evaluateEdits(ModuleNode moduleNode, ImportRewrite importRewrite, IProgressMonitor monitor) throws CoreException {
+            private TextEdit evaluateEdits(final ModuleNode moduleNode, final ImportRewrite importRewrite, final IProgressMonitor monitor)
+                    throws CoreException {
                 Region selectRegion = new Region(textSelection.getOffset(), textSelection.getLength());
                 ASTNodeFinder nodeFinder = new ASTNodeFinder(selectRegion);
                 ASTNode node = nodeFinder.doVisit(moduleNode);
@@ -229,7 +232,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return null;
             }
 
-            private TypeNameMatch findCandidateTypes(String typeName, int typeStart, IProgressMonitor monitor) throws CoreException {
+            private TypeNameMatch findCandidateTypes(final String typeName, final int typeStart, final IProgressMonitor monitor) throws CoreException {
                 boolean isAnnotation = ('@' == compilationUnit.getContents()[Math.max(0, typeStart - 1)]);
                 UnresolvedTypeData typeData = new UnresolvedTypeData(typeName, isAnnotation, new SourceRange(typeStart, typeName.length()));
 
@@ -248,7 +251,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return choice;
             }
 
-            private int startOffset(ASTNode node, ASTNodeFinder nodeFinder) throws CoreException {
+            private int startOffset(final ASTNode node, final ASTNodeFinder nodeFinder) throws CoreException {
                 int start = node.getStart();
                 if (node.getEnd() < 1) {
                     Region nodeRegion = ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
@@ -262,7 +265,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return start;
             }
 
-            private int endOffset(ASTNode node, ASTNodeFinder nodeFinder) throws CoreException {
+            private int endOffset(final ASTNode node, final ASTNodeFinder nodeFinder) throws CoreException {
                 int end = node.getEnd();
                 if (end < 1) {
                     Region nodeRegion = ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
@@ -277,16 +280,20 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             }
 
             private int endOffsetPlus(int end) throws CoreException {
-                while (Character.isJavaIdentifierPart(compilationUnit.getSource().charAt(end))) { end += 1; }
+                while (Character.isJavaIdentifierPart(compilationUnit.getSource().charAt(end))) {
+                    end += 1;
+                }
                 return end;
             }
 
             private int endOffsetMinus(int end) throws CoreException {
-                while (end > 0 && Character.isJavaIdentifierPart(compilationUnit.getSource().charAt(end - 1))) { end -= 1; }
+                while (end > 0 && Character.isJavaIdentifierPart(compilationUnit.getSource().charAt(end - 1))) {
+                    end -= 1;
+                }
                 return end;
             }
 
-            private ClassNode componentType(ASTNode node) {
+            private ClassNode componentType(final ASTNode node) {
                 ClassNode type = (node instanceof ClassNode ? (ClassNode) node : ((Expression) node).getType());
                 return type.getComponentType() != null ? componentType(type.getComponentType()) : type;
             }
@@ -318,7 +325,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
      * @param save if set, save the CU after the edit has been applied
      */
     // copied from JavaModelUtil (moved to JavaElementUtil circa Eclipse 4.7 and back to JavaModelUtil in Eclipse 4.8m6)
-    protected static void applyEdit(ICompilationUnit cu, TextEdit edit, boolean save, IProgressMonitor monitor) throws CoreException {
+    protected static void applyEdit(final ICompilationUnit cu, final TextEdit edit, final boolean save, final IProgressMonitor monitor) throws CoreException {
         SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
         IFile file = (IFile) cu.getResource();
         if (!save || !file.exists()) {
