@@ -29,11 +29,14 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.util.ExceptionHandler;
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard;
+import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage;
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne;
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.PlatformUI;
@@ -72,7 +75,23 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
         pageOne.setDescription(WizardMessages.NewProjWizard_page1_message);
         addPage(pageOne);
 
-        pageTwo = new NewJavaProjectWizardPageTwo(pageOne);
+        pageTwo = new NewJavaProjectWizardPageTwo(pageOne) {
+            @Override
+            public void createControl(final Composite parent) {
+                super.createControl(parent);
+
+                Object buildPathsBlock = ReflectionUtils.executePrivateMethod(JavaCapabilityConfigurationPage.class, "getBuildPathsBlock", this);
+                if (buildPathsBlock != null) {
+                    Object sourceFolderPage = ReflectionUtils.executePrivateMethod(buildPathsBlock.getClass(), "getSourceContainerPage", buildPathsBlock);
+                    if (sourceFolderPage != null) {
+                        Object createModuleInfo = ReflectionUtils.getPrivateField(sourceFolderPage.getClass(), "fCreateModuleInfoFileButton", sourceFolderPage);
+                        if (createModuleInfo != null) {
+                            ReflectionUtils.executePrivateMethod(createModuleInfo.getClass(), "setSelection", new Class[] {boolean.class}, createModuleInfo, new Object[] {Boolean.FALSE});
+                        }
+                    }
+                }
+            }
+        };
         pageTwo.setTitle(WizardMessages.NewProjWizard_page2_title);
         pageTwo.setDescription(WizardMessages.NewProjWizard_page2_message);
         addPage(pageTwo);
@@ -115,12 +134,12 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
     //--------------------------------------------------------------------------
 
     @Override
-    protected void finishPage(IProgressMonitor monitor) throws CoreException, InterruptedException {
+    protected void finishPage(final IProgressMonitor monitor) throws CoreException, InterruptedException {
         pageTwo.performFinish(monitor);
     }
 
     @Override
-    protected void handleFinishException(Shell shell, java.lang.reflect.InvocationTargetException e) {
+    protected void handleFinishException(final Shell shell, final java.lang.reflect.InvocationTargetException e) {
         ExceptionHandler.handle(e, getShell(), WizardMessages.NewProjWizard_error_title, WizardMessages.NewProjWizard_error_message);
     }
 
@@ -129,7 +148,7 @@ public class NewProjWizard extends NewElementWizard implements IExecutableExtens
      * used in {@code performFinish} to set the result perspective.
      */
     @Override
-    public void setInitializationData(IConfigurationElement configElement, String propertyName, Object data) {
+    public void setInitializationData(final IConfigurationElement configElement, final String propertyName, final Object data) {
         this.configElement = configElement;
     }
 }
