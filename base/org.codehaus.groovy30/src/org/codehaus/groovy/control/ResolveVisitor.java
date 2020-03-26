@@ -63,11 +63,8 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
-import org.codehaus.groovy.runtime.memoize.EvictableCache;
-import org.codehaus.groovy.runtime.memoize.UnlimitedConcurrentCache;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
-import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
@@ -640,7 +637,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // default packages do not contain classes like these
         if (!(type instanceof LowerCaseClass)) {
             String typeName = type.getName();
-
+            /* GRECLIPSE edit
             Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.get(typeName);
             if (packagePrefixSet != null) {
                 // if the type name was resolved before, we can try the successfully resolved packages first, which are much less and very likely successful to resolve.
@@ -649,7 +646,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
             }
-
+            */
             if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
                 return true;
             }
@@ -665,11 +662,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new UnlimitedConcurrentCache<>();
+    /* GRECLIPSE edit
+    private static final Map<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new UnlimitedConcurrentCache<>();
     static {
-        Map<String, Set<String>> defaultImportClasses = VMPluginFactory.getPlugin().getDefaultImportClasses(DEFAULT_IMPORTS);
-        DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.putAll(defaultImportClasses);
+        DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.putAll(VMPluginFactory.getPlugin().getDefaultImportClasses(DEFAULT_IMPORTS));
     }
+    */
 
     protected boolean resolveFromDefaultImports(final ClassNode type, final String[] packagePrefixes) {
         String typeName = type.getName();
@@ -687,12 +685,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
             if (resolve(tmp, false, false, false)) {
                 type.setRedirect(tmp.redirect());
-
+                /* GRECLIPSE edit
                 if (DEFAULT_IMPORTS == packagePrefixes) { // Only the non-cached type and packages should be cached
-                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.getAndPut(typeName, key -> new HashSet<>(2));
+                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.computeIfAbsent(typeName, key -> new HashSet<>(2));
                     packagePrefixSet.add(packagePrefix);
                 }
-
+                */
                 return true;
             }
             // GRECLIPSE add

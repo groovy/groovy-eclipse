@@ -28,9 +28,11 @@ import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.CompileUnit.ConstructedOuterNestedClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
@@ -61,8 +63,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
-import org.codehaus.groovy.runtime.memoize.ConcurrentCommonCache;
-import org.codehaus.groovy.runtime.memoize.EvictableCache;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
@@ -79,8 +79,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import static org.codehaus.groovy.ast.CompileUnit.ConstructedOuterNestedClassNode;
-import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import static org.codehaus.groovy.ast.tools.ClosureUtils.getParametersSafe;
 
 /**
@@ -698,6 +696,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     private boolean resolveFromDefaultImports(ClassNode type) {
+        /* GRECLIPSE edit
         final String typeName = type.getName();
 
         Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.get(typeName);
@@ -708,11 +707,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 return true;
             }
         }
-
+        */
         return resolveFromDefaultImports(type, DEFAULT_IMPORTS);
     }
 
-    private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
+    /* GRECLIPSE edit
+    private static final Map<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
+    */
 
     private boolean resolveFromDefaultImports(final ClassNode type, final String[] packagePrefixes) {
         final String typeName = type.getName();
@@ -730,17 +731,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
             if (resolve(tmp, false, false, false)) {
                 type.setRedirect(tmp.redirect());
-
+                /* GRECLIPSE edit
                 if (DEFAULT_IMPORTS == packagePrefixes) { // Only the non-cached type and packages should be cached
-                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.getAndPut(typeName, new ConcurrentCommonCache.ValueProvider<String, Set<String>>() {
-                        @Override
-                        public Set<String> provide(String key) {
-                            return new HashSet<>(2);
-                        }
-                    });
+                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.computeIfAbsent(typeName, key -> new HashSet<>(2));
                     packagePrefixSet.add(packagePrefix);
                 }
-
+                */
                 return true;
             }
             // GRECLIPSE add
