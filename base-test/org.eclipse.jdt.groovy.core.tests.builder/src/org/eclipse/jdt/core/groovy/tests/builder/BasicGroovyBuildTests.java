@@ -258,7 +258,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
                 " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
-                " [ resource : </Project/src/p1/Hello.groovy> range : <0,1> category : <10> severity : <2>]"
+                " [ resource : </Project/src/p1/Hello.groovy> range : <-1,0> category : <10> severity : <2>]"
         ));
     }
 
@@ -278,7 +278,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "Problem : The project was not built since its build path is incomplete. Cannot find the class file for groovy.lang.GroovyObject." +
                 " Fix the build path then try building this project [ resource : </Project> range : <-1,-1> category : <10> severity : <2>]",
             "Problem : The type groovy.lang.GroovyObject cannot be resolved. It is indirectly referenced from required .class files" +
-                " [ resource : </Project/src/p1/Hello.groovy> range : <0,1> category : <10> severity : <2>]"
+                " [ resource : </Project/src/p1/Hello.groovy> range : <-1,0> category : <10> severity : <2>]"
         ));
     }
 

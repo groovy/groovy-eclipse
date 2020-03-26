@@ -5018,7 +5018,7 @@ public void isClassPathCorrect(char[][] wellKnownTypeName, CompilationUnitDeclar
 	ReferenceContext savedContext = this.referenceContext;
 	this.referenceContext = compUnitDecl;
 	String[] arguments = new String[] {CharOperation.toString(wellKnownTypeName)};
-	int start = 0, end = 0;
+	int start = -1, end = -1; // GROOVY edit
 	if (location != null) {
 		if (location instanceof InvocationSite) {
 			InvocationSite site = (InvocationSite) location;
