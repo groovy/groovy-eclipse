@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -1626,9 +1626,28 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/393
     void testAssignStatementToNewLocalVariable11() {
-        String contents = 'class Foo { def bar() { return System.out } }'
-        int offset = contents.indexOf('System.out')
-        assertProposalNotOffered(contents, offset, offset + 'System.out'.length(), new AssignStatementToNewLocalProposal())
+        def source = 'class Foo { def bar() { return System.out } }'
+        def target = 'System.out'
+        int offset = source.indexOf(target)
+        assertProposalNotOffered(source, offset, offset + target.length(), new AssignStatementToNewLocalProposal())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1068
+    void testAssignStatementToNewLocalVariable12() {
+        def source = 'package p'
+        assertProposalNotOffered(source, 0, 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1068
+    void testAssignStatementToNewLocalVariable13() {
+        def source = 'import groovy.lang.GroovyObject'
+        assertProposalNotOffered(source, 0, 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test
+    void testAssignStatementToNewLocalVariable14() {
+        def source = 'package p\n\nimport groovy.lang.GroovyObject'
+        assertProposalNotOffered(source, source.indexOf('import'), 0, new AssignStatementToNewLocalProposal())
     }
 
     @Test
