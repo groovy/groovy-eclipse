@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,22 +53,21 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
 import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.GlobalTemplateVariables.LineSelection;
 import org.eclipse.jface.text.templates.Template;
 import org.eclipse.jface.text.templates.TemplateContextType;
+import org.eclipse.text.templates.ContextTypeRegistry;
 
 public class GroovyQuickAssist implements IQuickAssistProcessor {
 
     @Override
-    public boolean hasAssists(IInvocationContext context) throws CoreException {
+    public boolean hasAssists(final IInvocationContext context) throws CoreException {
         return getAssists(context, null).length > 0;
     }
 
     @Override
-    public IJavaCompletionProposal[] getAssists(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
-        if (context == null || !(context.getCompilationUnit() instanceof GroovyCompilationUnit) ||
-                !isContentInGroovyProject(context.getCompilationUnit())) {
+    public IJavaCompletionProposal[] getAssists(final IInvocationContext context, final IProblemLocation[] locations) throws CoreException {
+        if (context == null || !(context.getCompilationUnit() instanceof GroovyCompilationUnit) || !isContentInGroovyProject(context.getCompilationUnit())) {
             return new IJavaCompletionProposal[0];
         }
 
@@ -103,10 +102,10 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             }
         }
 
-        return proposals.toArray(new IJavaCompletionProposal[0]);
+        return proposals.toArray(new IJavaCompletionProposal[proposals.size()]);
     }
 
-    public List<IJavaCompletionProposal> getTemplateAssists(IQuickAssistInvocationContext context, GroovyCompilationUnit unit) {
+    public List<IJavaCompletionProposal> getTemplateAssists(final IQuickAssistInvocationContext context, final GroovyCompilationUnit unit) {
         IDocument document = null;
         ISourceViewer viewer = context.getSourceViewer();
         if (viewer != null) document = viewer.getDocument();
@@ -143,7 +142,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
      * @param unit compilation unit containing the resource with the problem
      * @return {@code true} iff the problem is contained in an accessible Groovy project
      */
-    private boolean isContentInGroovyProject(ICompilationUnit unit) {
+    private static boolean isContentInGroovyProject(final ICompilationUnit unit) {
         if (unit != null) {
             IResource resource = unit.getResource();
             if (resource != null) {
@@ -156,7 +155,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         return false;
     }
 
-    private boolean isSurroundWith(Template template, JavaContext templateContext) {
+    private static boolean isSurroundWith(final Template template, final JavaContext templateContext) {
         String contextId = templateContext.getContextType().getId();
         return GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE.equals(contextId) &&
             template.getPattern().indexOf(LINE_SELECTION_TEMPLATE) != -1;
