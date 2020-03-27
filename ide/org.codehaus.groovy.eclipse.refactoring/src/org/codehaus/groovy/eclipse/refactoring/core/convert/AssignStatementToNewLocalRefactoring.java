@@ -106,7 +106,7 @@ public class AssignStatementToNewLocalRefactoring {
             private void visitStatementExpression(final Expression statementExpression) {
                 if (statementExpression instanceof BinaryExpression) {
                     BinaryExpression bexp = (BinaryExpression) statementExpression;
-                    if (!Types.isAssignment(bexp.getOperation().getType())) {
+                    if (!bexp.getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
                         expression = statementExpression;
                         atExpressionStatement = true;
                     } else if (!(bexp.getRightExpression() instanceof ClosureExpression)) {
