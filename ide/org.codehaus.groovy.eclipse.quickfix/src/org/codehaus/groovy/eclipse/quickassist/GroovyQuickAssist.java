@@ -35,13 +35,10 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTyp
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.SwapLeftAndRightOperandsProposal;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
+import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor;
 import org.codehaus.groovy.eclipse.quickfix.templates.GroovyContext;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.corext.template.java.JavaContext;
 import org.eclipse.jdt.internal.ui.text.template.contentassist.TemplateProposal;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
@@ -62,16 +59,18 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 
     @Override
     public boolean hasAssists(final IInvocationContext context) throws CoreException {
-        return getAssists(context, null).length > 0;
+        return getAssists(context, new IProblemLocation[0]).length > 0;
     }
 
     @Override
     public IJavaCompletionProposal[] getAssists(final IInvocationContext context, final IProblemLocation[] locations) throws CoreException {
-        if (context == null || !(context.getCompilationUnit() instanceof GroovyCompilationUnit) || !isContentInGroovyProject(context.getCompilationUnit())) {
+        if (!(GroovyQuickFixPlugin.isGroovyProject(context) && context.getCompilationUnit() instanceof GroovyCompilationUnit)) {
             return new IJavaCompletionProposal[0];
         }
 
         List<IJavaCompletionProposal> proposals = new ArrayList<>();
+
+        Collections.addAll(proposals, new GroovyQuickFixProcessor().getCorrections(context, locations));
 
         if (context instanceof IQuickAssistInvocationContext) {
             proposals.addAll(getTemplateAssists((IQuickAssistInvocationContext) context, (GroovyCompilationUnit) context.getCompilationUnit()));
@@ -134,26 +133,6 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
     }
 
     //--------------------------------------------------------------------------
-
-    /**
-     * Determines if the problem is contained in an accessible (open and existing)
-     * Groovy project in the workspace.
-     *
-     * @param unit compilation unit containing the resource with the problem
-     * @return {@code true} iff the problem is contained in an accessible Groovy project
-     */
-    private static boolean isContentInGroovyProject(final ICompilationUnit unit) {
-        if (unit != null) {
-            IResource resource = unit.getResource();
-            if (resource != null) {
-                IProject project = resource.getProject();
-                if (project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
     private static boolean isSurroundWith(final Template template, final JavaContext templateContext) {
         String contextId = templateContext.getContextType().getId();

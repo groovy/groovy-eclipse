@@ -16,16 +16,15 @@
 package org.codehaus.groovy.eclipse.quickfix;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemDescriptor;
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
 import org.codehaus.groovy.eclipse.quickfix.proposals.QuickFixProblemContext;
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
@@ -39,103 +38,38 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 
     @Override
-    public boolean hasCorrections(ICompilationUnit unit, int problemId) {
-        return isProblemInGroovyProject(unit) && ProblemType.isRecognizedProblemId(problemId);
+    public boolean hasCorrections(final ICompilationUnit unit, final int problemId) {
+        return GroovyQuickFixPlugin.isGroovyProject(unit) && ProblemType.isRecognizedProblemId(problemId);
     }
 
     @Override
-    public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
-        // The problem must be in a Groovy project. Otherwise do not handle it
-        // as the proposals should not appear if the problem is in any other
-        // type of project
-        if (isProblemInGroovyProject(context, locations)) {
-            QuickFixProblemContext problemContext = getQuickFixProblemContext(context, locations);
-            if (problemContext != null) {
-                List<IQuickFixResolver> resolvers = new GroovyQuickFixResolverRegistry(problemContext).getQuickFixResolvers();
-                if (resolvers != null) {
-                    List<IJavaCompletionProposal> proposals = new ArrayList<>();
+    public IJavaCompletionProposal[] getCorrections(final IInvocationContext context, final IProblemLocation[] locations) throws CoreException {
+        if (!GroovyQuickFixPlugin.isGroovyProject(context) || locations == null || locations.length == 0) {
+            return new IJavaCompletionProposal[0];
+        }
+
+        List<IJavaCompletionProposal> proposals = new ArrayList<>();
+        for (IProblemLocation location : locations) {
+            ProblemDescriptor descriptor = getProblemDescriptor(location.getProblemId(), location.getMarkerType(), location.getProblemArguments());
+            if (descriptor != null) {
+                List<IQuickFixResolver> resolvers = new GroovyQuickFixResolverRegistry(
+                    new QuickFixProblemContext(descriptor, context, location)).getQuickFixResolvers();
+                if (resolvers != null && !resolvers.isEmpty()) {
                     for (IQuickFixResolver resolver : resolvers) {
-                        List<IJavaCompletionProposal> foundProposals = resolver.getQuickFixProposals();
-                        if (foundProposals != null) {
-                            proposals.addAll(foundProposals);
-                        }
+                        proposals.addAll(Optional.ofNullable(resolver.getQuickFixProposals()).orElseGet(Collections::emptyList));
                     }
-                    return proposals.toArray(new IJavaCompletionProposal[proposals.size()]);
                 }
             }
         }
-        return new IJavaCompletionProposal[0];
-    }
-
-    /**
-     * Generates a representation of the Java problem context that the Groovy
-     * quick fix framework will understand.
-     *
-     * @param context
-     *            Java context containing information about the problem
-     * @param locations
-     *            where the problem occurs
-     * @return model representing the Java problem context
-     */
-    protected QuickFixProblemContext getQuickFixProblemContext(IInvocationContext context, IProblemLocation[] locations) {
-        if (context != null && locations != null && locations.length > 0) {
-            // TODO: for now return the first location; add support to return multiple locations if necessary
-            IProblemLocation location = locations[0];
-            ProblemDescriptor descriptor = getProblemDescriptor(location.getProblemId(), location.getMarkerType(), location.getProblemArguments());
-            if (descriptor != null) {
-                return new QuickFixProblemContext(descriptor, context, location);
-            }
-        }
-        return null;
+        return proposals.toArray(new IJavaCompletionProposal[proposals.size()]);
     }
 
     //@VisibleForTesting
-    public ProblemDescriptor getProblemDescriptor(int problemId, String markerType, String[] problemArgs) {
+    public ProblemDescriptor getProblemDescriptor(final int problemId, final String markerType, final String[] problemArgs) {
         ProblemType type = ProblemType.getProblemType(problemId, markerType, problemArgs);
         if (type != null) {
             return new ProblemDescriptor(type, problemArgs);
         }
         return null;
-    }
-
-    /**
-     * True if the problem is contained in an accessible (open and existing)
-     * Groovy project in the workspace. False otherwise.
-     *
-     * @param context
-     *            containing Java/Groovy problem information
-     * @param locations
-     *            of the Java/Groovy problem
-     * @return true if and only if the problem is contained in an accessible
-     *         Groovy project. False otherwise
-     */
-    protected boolean isProblemInGroovyProject(IInvocationContext context, IProblemLocation[] locations) {
-        if (context != null && locations != null && locations.length > 0) {
-            return isProblemInGroovyProject(context.getCompilationUnit());
-        }
-
-        return false;
-    }
-
-    /**
-     * True if the problem is contained in an accessible (open and existing)
-     * Groovy project in the workspace. False otherwise.
-     *
-     * @param unit
-     *            compilation unit containing the resource with the problem
-     * @return true if and only if the problem is contained in an accessible
-     *         Groovy project. False otherwise
-     */
-    protected boolean isProblemInGroovyProject(ICompilationUnit unit) {
-        if (unit != null) {
-            IResource resource = unit.getResource();
-            if (resource != null) {
-                IProject project = resource.getProject();
-                if (project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }
