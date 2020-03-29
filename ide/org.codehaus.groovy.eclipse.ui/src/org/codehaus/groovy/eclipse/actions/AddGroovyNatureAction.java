@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,15 +31,15 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 public class AddGroovyNatureAction implements IObjectActionDelegate {
-    private List<IProject> currSelected = new LinkedList<>();
+
+    private List<IProject> selected;
 
     @Override
     public void run(final IAction action) {
-        if (currSelected != null && currSelected.size() > 0) {
+        if (selected != null && !selected.isEmpty()) {
             GroovyCore.trace("AddGroovyNatureAction.run()");
-
-            for (IProject project : currSelected) {
-                GroovyCore.trace("   to " + project.getName());
+            for (IProject project : selected) {
+                GroovyCore.trace("    to " + project.getName());
                 GroovyRuntime.addGroovyRuntime(project);
             }
         }
@@ -47,7 +47,8 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
 
     @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
-        currSelected.clear();
+        selected = null;
+
         List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
         if (selection instanceof IStructuredSelection) {
@@ -73,7 +74,7 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
         }
 
         if (enabled) {
-            this.currSelected = newSelected;
+            this.selected = newSelected;
         }
     }
 

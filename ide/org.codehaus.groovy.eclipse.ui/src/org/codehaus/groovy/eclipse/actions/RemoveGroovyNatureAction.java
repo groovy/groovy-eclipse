@@ -37,7 +37,8 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 public class RemoveGroovyNatureAction implements IObjectActionDelegate {
-    private List<IProject> currSelected = new LinkedList<>();
+
+    private List<IProject> selected;
 
     private IWorkbenchPart targetPart;
 
@@ -45,11 +46,10 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
 
     @Override
     public void run(final IAction action) {
-        if (currSelected != null && !currSelected.isEmpty()) {
+        if (selected != null && !selected.isEmpty()) {
             GroovyCore.trace("RemoveGroovyNatureAction.run()");
-
-            for (IProject project : currSelected) {
-                GroovyCore.trace("   to " + project.getName());
+            for (IProject project : selected) {
+                GroovyCore.trace("    from " + project.getName());
                 try {
                     GroovyRuntime.removeGroovyNature(project);
                     IJavaProject javaProject = JavaCore.create(project);
@@ -58,8 +58,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
                         if (shouldAskToRemoveJars) {
                             shouldRemove = MessageDialog.openQuestion(getShell(), "Remove Groovy jars?", "Do you want to also remove the groovy runtime jars from project " + project.getName() + "?");
                         } else {
-                            // do automatically during testing
-                            shouldRemove = true;
+                            shouldRemove = true; // do automatically during testing
                         }
                         if (shouldRemove) {
                             GroovyRuntime.removeGroovyClasspathContainer(javaProject);
@@ -79,7 +78,8 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
 
     @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
-        currSelected.clear();
+        selected = null;
+
         List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
         if (selection instanceof IStructuredSelection) {
@@ -105,7 +105,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
         }
 
         if (enabled) {
-            this.currSelected = newSelected;
+            this.selected = newSelected;
         }
     }
 
@@ -114,7 +114,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
         this.targetPart = targetPart;
     }
 
-    // for testing ensure there is no ui modal dialog
+    //@VisibleForTesting
     public void doNotAskToRemoveJars() {
         this.shouldAskToRemoveJars = false;
     }

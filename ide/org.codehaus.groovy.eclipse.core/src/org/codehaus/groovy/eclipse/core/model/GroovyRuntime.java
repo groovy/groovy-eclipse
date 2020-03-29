@@ -74,7 +74,7 @@ public class GroovyRuntime {
         IProjectDescription description = project.getDescription();
         // add nature first so that its image will be shown
         description.setNatureIds((String[]) ArrayUtils.add(description.getNatureIds(), 0, GroovyNature.GROOVY_NATURE));
-        project.setDescription(description, null);
+        project.setDescription(description, null); // NOTE: throws ResourceException if .project file is read-only
 
         IJavaProject javaProject = JavaCore.create(project);
         IType type = javaProject.findType(GROOVY_OBJECT_TYPE.getName());
@@ -84,13 +84,9 @@ public class GroovyRuntime {
     public static void removeGroovyNature(final IProject project) throws CoreException {
         GroovyCore.trace("GroovyRuntime.removeGroovyNature(IProject)");
         IProjectDescription description = project.getDescription();
-        String[] ids = description.getNatureIds();
-        for (int i = 0, n = ids.length; i < n; i += 1) {
-            if (ids[i].equals(GroovyNature.GROOVY_NATURE)) {
-                description.setNatureIds((String[]) ArrayUtils.remove(ids, i));
-                project.setDescription(description, null);
-                return;
-            }
+        if (description.hasNature(GroovyNature.GROOVY_NATURE)) {
+            description.setNatureIds((String[]) ArrayUtils.removeElement(description.getNatureIds(), GroovyNature.GROOVY_NATURE));
+            project.setDescription(description, null); // NOTE: throws ResourceException if .project file is read-only
         }
     }
 
