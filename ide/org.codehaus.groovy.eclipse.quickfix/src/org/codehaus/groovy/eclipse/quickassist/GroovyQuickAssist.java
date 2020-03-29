@@ -35,7 +35,6 @@ import org.codehaus.groovy.eclipse.quickassist.proposals.ReplaceDefWithStaticTyp
 import org.codehaus.groovy.eclipse.quickassist.proposals.SplitVariableDeclAndInitProposal;
 import org.codehaus.groovy.eclipse.quickassist.proposals.SwapLeftAndRightOperandsProposal;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
-import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor;
 import org.codehaus.groovy.eclipse.quickfix.templates.GroovyContext;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
@@ -69,8 +68,6 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         }
 
         List<IJavaCompletionProposal> proposals = new ArrayList<>();
-
-        Collections.addAll(proposals, new GroovyQuickFixProcessor().getCorrections(context, locations));
 
         if (context instanceof IQuickAssistInvocationContext) {
             proposals.addAll(getTemplateAssists((IQuickAssistInvocationContext) context, (GroovyCompilationUnit) context.getCompilationUnit()));

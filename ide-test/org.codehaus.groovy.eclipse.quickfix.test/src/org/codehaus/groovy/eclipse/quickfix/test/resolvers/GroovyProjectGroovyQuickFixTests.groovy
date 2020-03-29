@@ -15,171 +15,120 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assume.assumeTrue
+import static org.codehaus.groovy.eclipse.core.model.GroovyRuntime.removeGroovyClasspathContainer
 
 import groovy.transform.NotYetImplemented
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
-import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver
-import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyRuntimeResolver
-import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver
-import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver
-import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType
-import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal
-import org.eclipse.core.resources.IMarker
-import org.eclipse.jdt.core.ICompilationUnit
+import org.codehaus.groovy.eclipse.quickfix.test.QuickFixTestSuite
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.Before
+import org.junit.Assert
 import org.junit.Test
 
 /**
- * Tests Groovy quick fixes in a Groovy file contained in a Groovy project.
+ * Tests Groovy quick fixes for Groovy files in a Groovy project.
  */
-final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
-
-    private static final String SUBTEST = 'com.test.subtest'
-    private static final String SUBSUBTEST = 'com.test.subtest.subtest'
-    private static final String TOP_LEVEL_TYPE = 'class TopLevelType { class InnerType { class InnerInnerType { } } }'
-
-    private ICompilationUnit topLevelUnit
-
-    @Before
-    void setUp() {
-        topLevelUnit = addGroovySource(TOP_LEVEL_TYPE, 'TopLevelType', SUBTEST)
-    }
+final class GroovyProjectGroovyQuickFixTests extends QuickFixTestSuite {
 
     @Test
     void testAddImportField() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarField'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String typeToAddImportContent = 'class BarField { TopLevelType typeVar }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
-    }
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  private Foo foo
+            |}'''.stripMargin())
 
-    @Test
-    void testAddImportInnerType() {
-        // When an InnerType is referenced with its declaring type, for example,
-        // Map.Entry,
-        // 'Map' is imported. When the InnerType is referenced by it's simple
-        // name, there may
-        // be further suggestions as other top level types might have inner
-        // types with the same name
-        // therefore 'Inner' is imported and the actual fully qualified top
-        // level is shown within parenthesis
+        def proposals = getGroovyQuickFixes(unit)
 
-        // This tests the inner type reference by itself: InnerType
-        String typeToImport = 'InnerType'
-        String typeToAddImport = 'BarUsingInner'
-        String innerFullyQualified = 'com.test.subtest.TopLevelType.InnerType'
-        String expectedQuickFixDisplay = 'Import \'InnerType\' (com.test.subtest.TopLevelType)'
-        String typeToAddImportContent = 'class BarUsingInner { InnerType innerTypeVar }'
-
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, innerFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
-    }
-
-    @Test
-    void testAddImportInnerType2() {
-        // When an InnerType is referenced with its declaring type, for example,
-        // Map.Entry,
-        // 'Map' is imported. When the InnerType is referenced by it's simple
-        // name, there may
-        // be further suggestions as other top level types might have inner
-        // types with the same name
-        // therefore 'Inner' is imported and the actual fully qualified top
-        // level is shown within parenthesis
-
-        // This tests the inner type when it also contains the top level type:
-        // TopLevelType.InnerType
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarUsingInnerB'
-        String typeToImportFullyQualified = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarUsingInnerB { TopLevelType.InnerType innerTypeVar }'
-
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, typeToImportFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
-    }
-
-    @Test
-    void testAddImportInnerInnerType() {
-        String typeToImport = 'InnerInnerType'
-        String typeToAddImport = 'BarUsingInnerInner'
-        String typeToImportFullyQualified = 'com.test.subtest.TopLevelType.InnerType.InnerInnerType'
-        String expectedQuickFixDisplay = 'Import \'InnerInnerType\' (com.test.subtest.TopLevelType.InnerType)'
-        String typeToAddImportContent = 'class BarUsingInnerInner { InnerInnerType innerTypeVar }'
-
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, typeToImportFullyQualified, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
-    }
-
-    @Test
-    void testAddImportReturnType() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarReturnType'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarReturnType { TopLevelType doSomething() { return null } }'
-
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     /**
-     * Tests if an add import resolver can be found if the unresolved type is in a local variable declaration
+     * Tests that an add import quick fix is proposed if the unresolved type is in a return type declaration.
+     */
+    @Test
+    void testAddImportReturnType() {
+        addGroovySource('class Foo {}', 'Foo', 'p')
+
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  Foo test() {
+            |  }
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
+    }
+
+    /**
+     * Tests that an add import quick fix is proposed if the unresolved type is in a parameter declaration.
      */
     @Test
     void testAddImportMethodParameter() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarMethodParameter'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMethodParameter { void doSomething(TopLevelType ttI) {} }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  void test(Foo foo) {
+            |  }
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     /**
-     * Tests if an add import resolver can be found if the unresolved type is a generic
+     * Tests that an add import quick fix is proposed if the unresolved type is a generic.
      */
     @Test
     void testAddImportGeneric() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarGeneric'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarGeneric { List<TopLevelType> aList }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  List<Foo> list
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     /**
-     * Tests if an add import resolver can be found if a class is extending an unresolved type
+     * Tests that an add import quick fix is proposed if a class is extending an unresolved type.
      */
     @Test
     void testAddImportSubclassing() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarSubclassing'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarSubclassing extends TopLevelType {}'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar extends Foo {
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     /**
-     * Tests if an add import resolver can be found if the unresolved type is in a local variable declaration
+     * Tests that an add import quick fix is proposed if the unresolved type is in a local variable declaration.
      */
     @Test
     void testAddImportLocalVariable() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarLocalVariable'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarLocalVariable  { void doSomething () { TopLevelType localVar } }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  void test() {
+            |    Foo foo
+            |  }
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     /**
@@ -188,28 +137,38 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
      */
     @Test
     void testAddImportMultipleLocations() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarMultipleLocations'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMultipleLocations extends TopLevelType { List<TopLevelType> doSomething () { TopLevelType localVar; return null } }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar extends Foo {
+            |  List<Foo> test(Foo foo) {
+            |    return [foo]
+            |  }
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert 'Import \'Foo\' (p)' in proposals*.displayString
     }
 
     /**
      * Tests if a Groovy add import quick fix can be obtained when other
-     * unresolved types exist in the Groovy file
+     * unresolved types exist in the Groovy file.
      */
     @Test
     void testAddImportMultipleUnresolved() {
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarMultipleUnresolved'
-        String fullQualifiedTypeToImport = 'com.test.subtest.TopLevelType'
-        String expectedQuickFixDisplay = 'Import \'TopLevelType\' (com.test.subtest)'
-        String typeToAddImportContent = 'class BarMultipleUnresolved extends TopLevelType { CSS css; HTML val = new Entry() }'
+        addGroovySource('class Foo {}', 'Foo', 'p')
 
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+        def unit = addGroovySource('''\
+            |class Bar extends Foo {
+            |  void test() {
+            |    CSS css; HTML val = new Entry()
+            |  }
+            |}'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert 'Import \'Foo\' (p)' in proposals*.displayString
     }
 
     /**
@@ -218,16 +177,19 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
      */
     @Test
     void testAddImportMultipleProposalsForSameType() {
-        addGroovySource(TOP_LEVEL_TYPE, 'TopLevelType', SUBSUBTEST)
+        addGroovySource('class Foo {}', 'Foo', 'p')
+        addGroovySource('class Foo {}', 'Foo', 'q')
 
-        String typeToImport = 'TopLevelType'
-        String typeToAddImport = 'BarLocalMultipleSameType'
-        String typeToAddImportContent = 'class BarLocalMultipleSameType { void doSomething () { TopLevelType localVar } }'
+        def unit = addGroovySource('''\
+            |class Bar {
+            |  void test() {
+            |    Foo foo
+            |  }
+            |}'''.stripMargin())
 
-        Map<String, String> expectedQuickFixes = [:]
-        expectedQuickFixes.put("Import 'TopLevelType' ($SUBTEST)", SUBTEST + '.TopLevelType')
-        expectedQuickFixes.put("Import 'TopLevelType' ($SUBSUBTEST)", SUBSUBTEST + '.TopLevelType')
-        testMultipleProposalsSameTypeName(typeToImport, expectedQuickFixes, typeToAddImport, typeToAddImportContent)
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals*.displayString == ['Import \'Foo\' (p)', 'Import \'Foo\' (q)']
     }
 
     /**
@@ -235,68 +197,109 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
      * unresolved type that does not exist.
      */
     @Test
-    void testAddImportNoProposals() {
-        String typeToAddImport = 'BarAddImportNoProposal'
-        String nonExistantType = 'DoesNotExistTopLevelType'
-        String typeToAddImportContent = 'class BarAddImportNoProposal  { void doSomething () { DoesNotExistTopLevelType localVar } }'
-        def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
+    void testNoAddImportProposals() {
+        def unit = addGroovySource('''\
+            |class Foo {
+            |  void test() {
+            |    DoesNotExistTopLevelType bar
+            |  }
+            |}'''.stripMargin())
 
-        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(nonExistantType, unit)
-        assert resolver == null : 'Expected no resolver for nonexistant type: ' + nonExistantType
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals.length == 0 : 'Expected no quick fixes for nonexistant type: DoesNotExistTopLevelType'
     }
 
     @Test
     void testAddImportAnnotation1() {
-        Map<String, String> expectedProposals = [
-            'Import \'Builder\' (groovy.transform.builder)': 'groovy.transform.builder.Builder'
-        ]
-        testMultipleProposalsSameTypeName('Builder', expectedProposals, 'Test', '@Builder class Test {}')
+        def unit = addGroovySource('@Builder class Foo {}')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals*.displayString == ['Import \'Builder\' (groovy.transform.builder)']
     }
 
     @Test
     void testAddImportAnnotation2() {
-        Map<String, String> expectedProposals = [
-            'Import \'Target\' (java.lang.annotation)': 'java.lang.annotation.Target',
-            'Import \'Target\' (groovy.lang.DelegatesTo)': 'groovy.lang.DelegatesTo.Target'
-        ]
-        testMultipleProposalsSameTypeName('Target', expectedProposals, 'Test', '@Target() public @interface Test {}')
+        def unit = addGroovySource('@Target @interface Foo {}')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals*.displayString == ['Import \'Target\' (java.lang.annotation)', 'Import \'Target\' (groovy.lang.DelegatesTo)']
     }
 
     @Test
     void testAddImportAnnotation3() {
-        Map<String, String> expectedProposals = [
-            'Import \'CompileDynamic\' (groovy.transform)': 'groovy.transform.CompileDynamic'
-        ]
-        testMultipleProposalsSameTypeName('CompileDynamic', expectedProposals, 'Test', '@CompileDynamic class Test {}')
+        def unit = addGroovySource('@CompileDynamic class Foo {}')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals*.displayString == ['Import \'CompileDynamic\' (groovy.transform)']
     }
 
     @Test // GRECLIPSE-1612
     void testAddImportClassExpression() {
         addJavaSource('''\
-            |public class FooJava {
+            |public class J {
             |  public static String getProperty() {
-            |    return "sad";
+            |    return "whatever";
             |  }
-            |}'''.stripMargin(), 'FooJava', 'other')
+            |}'''.stripMargin(), 'J', 'p')
 
-        String typeToAddImport = 'FooGroovy'
-        String typeToAddImportContent = '@groovy.transform.TypeChecked\nclass FooGroovy {\n def main() { FooJava.getProperty() } }'
-        def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
+        def unit = addGroovySource('''\
+            |@groovy.transform.TypeChecked
+            |class G {
+            |  static main(args) {
+            |    J.getProperty()
+            |  }
+            |}'''.stripMargin())
 
-        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
-        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_IMPORTS_TYPE, unit)
+        def proposals = getGroovyQuickFixes(unit)
 
-        assert resolvers.size() == 1 : 'Should have found exactly one resolver'
-        assert resolvers.get(0) instanceof AddMissingGroovyImportsResolver : 'Wrong type of resolver'
-        def proposal = resolvers[0].quickFixProposals[0]
-        assert proposal.displayString == 'Import \'FooJava\' (other)'
+        assert proposals.length == 1
+        assert proposals[0].displayString == 'Import \'J\' (p)'
+    }
+
+    @Test
+    void testAddImportStaticInnerType1() {
+        // When an inner type is referenced with its declaring type, for example,
+        // Map.Entry, 'Map' is imported. When the InnerType is referenced by it's
+        // simple name, there may be further suggestions as other top level types
+        // might have inner types with the same name therefore 'Entry' is imported
+        // and the actual fully qualified top level is shown within parenthesis
+
+        def unit = addGroovySource('Entry entry = null')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert 'Import \'Entry\' (java.util.Map)' in proposals*.displayString
+    }
+
+    @Test
+    void testAddImportStaticInnerType2() {
+        // When an inner type is referenced with its declaring type, for example,
+        // Map.Entry, 'Map' is imported. When the InnerType is referenced by it's
+        // simple name, there may be further suggestions as other top level types
+        // might have inner types with the same name.
+
+        addGroovySource('''\
+            |class Foo {
+            |  static class Bar {
+            |  }
+            |}.stripMargin()''', 'Foo', 'p')
+
+        def unit = addGroovySource('Foo.Bar bar = null')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals[0].displayString == 'Import \'Foo\' (p)'
     }
 
     @Test // GRECLIPSE-1777
-    void testAddTypecast() {
+    void testInsertTypecast() {
         def unit = addGroovySource('''\
             |@groovy.transform.CompileStatic
-            |class D {
+            |class C {
             |  Number foo() {
             |    new Integer(1)
             |  }
@@ -304,48 +307,56 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
             |    Integer result = foo()
             |    result
             |  }
-            |}'''.stripMargin(), 'D', 'com.test')
+            |}'''.stripMargin())
 
-        String expectedQuickFixDisplay = 'Add cast to Integer'
-        AddClassCastResolver resolver = getAddClassCastResolver(unit)
-        assert resolver != null : "Expected a resolver for ${ -> unit }"
-        AddClassCastProposal proposal = getAddClassCastProposal(expectedQuickFixDisplay, resolver)
-        assert proposal != null : "Expected a quick fix proposal for ${ -> unit }"
-        assert proposal.displayString ==  expectedQuickFixDisplay: "Actual quick fix display expression should be: ${ -> expectedQuickFixDisplay }"
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals.length == 1 : "Expected a quick fix proposal for ${ -> unit }"
+        assert proposals[0].displayString ==  'Add cast to Integer'
     }
 
     @Test
-    void testAddUnimplementedMethods() {
-        String contents = '''\
-            |package foo
-            |class Bar implements Map.Entry {
+    void testAddUnimplementedMethods1() {
+        def unit = addGroovySource('''\
+            |class Foo implements Map.Entry {
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Bar', 'foo')
+            |'''.stripMargin())
 
-        def proposals = findQuickFixes(unit, ProblemType.UNIMPLEMENTED_METHODS_TYPE)
+        def proposals = getGroovyQuickFixes(unit)
 
-        assert !proposals.isEmpty() : 'Expected quick fix for adding unimplemented methods'
+        assert proposals.length > 0 : 'Expected quick fix for adding unimplemented methods'
+        assert proposals[0].displayString == 'Add unimplemented methods'
+    }
+
+    @Test
+    void testAddUnimplementedMethods2() {
+        def unit = addGroovySource('''\
+            |def list = new List() {
+            |}
+            |'''.stripMargin())
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        assert proposals.length > 0 : 'Expected quick fix for adding unimplemented methods'
+        assert proposals[0].displayString == 'Add unimplemented methods'
     }
 
     @Test
     void testRemoveFinalModifier0() {
-        String contents = '''\
-            |package foo
-            |class Bar {
+        def unit = addGroovySource('''\
+            |class Foo {
             |  void wait() {} // attempts to override final method
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Bar', 'foo')
+            |'''.stripMargin())
 
-        def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
+        def proposals = getGroovyQuickFixes(unit)
 
-        assert proposals.isEmpty() : 'Expected no quick fix for override of final method in binary type'
+        assert proposals.length == 0 : 'Expected no quick fix for override of final method in binary type'
     }
 
     @Test
     void testRemoveFinalModifier1() {
-        String contents = '''\
+        def unit = addGroovySource('''\
             |package foo
             |class Bar {
             |  final void meth() {}
@@ -353,25 +364,25 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
             |class Baz extends Bar {
             |  void meth() {} // attempts to override final method
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Baz', 'foo')
+            |'''.stripMargin(), 'Baz', 'foo')
 
-        def proposals = findQuickFixes(unit, ProblemType.FINAL_METHOD_OVERRIDE)
+        def expected = unit.source.replaceFirst('final ', '')
+
+        def proposals = getGroovyQuickFixes(unit)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit)
-        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit.contents))
+        Assert.assertEquals(expected, unit.source)
     }
 
     @Test
     void testRemoveFinalModifier2() {
-        String contents = '''\
+        def unit1 = addGroovySource('''\
             |package foo
             |class Bar {
             |  final void meth() {}
             |}
-            |'''.stripMargin()
-        def unit1 = addGroovySource(contents, 'Bar', 'foo')
+            |'''.stripMargin(), 'Bar', 'foo')
 
         def unit2 = addGroovySource('''\
             |package foo
@@ -380,22 +391,23 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
             |}
             |'''.stripMargin(), 'Baz', 'foo')
 
-        def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
+        def expected = unit1.source.replaceFirst('final ', '')
+
+        def proposals = getGroovyQuickFixes(unit2)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit1)
-        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit1.contents))
+        Assert.assertEquals(expected, unit1.source)
     }
 
     @Test
     void testRemoveFinalModifier3() {
-        String contents = '''\
+        def unit1 = addGroovySource('''\
             |package foo
             |class Bar {
             |  final void meth() {}
             |}
-            |'''.stripMargin()
-        def unit1 = addGroovySource(contents, 'Bar', 'foo')
+            |'''.stripMargin(), 'Bar', 'foo')
 
         addGroovySource('''\
             |package foo
@@ -410,114 +422,122 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
             |}
             |'''.stripMargin(), 'Something', 'whatever')
 
-        def proposals = findQuickFixes(unit2, ProblemType.FINAL_METHOD_OVERRIDE)
+        def expected = unit1.source.replaceFirst('final ', '')
+
+        def proposals = getGroovyQuickFixes(unit2)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit1)
-        assertEquals(contents.replaceFirst('final ', ''), String.valueOf(unit1.contents))
+        Assert.assertEquals(expected, unit1.source)
     }
 
     @Test
     void testRaiseVisibilityModifier1() {
-        String contents = '''\
-            |package foo
-            |class Bar {
+        def unit = addGroovySource('''\
+            |class Foo {
             |  public void meth() {}
             |}
-            |class Baz extends Bar {
+            |class Bar extends Foo {
             |  private void meth() {} // attempts to lower visibility
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Baz', 'foo')
+            |'''.stripMargin())
 
-        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+        def expected = unit.source.replaceFirst('private ', 'public ') // TODO: Could replace with ' ' instead of 'public '.
+
+        def proposals = getGroovyQuickFixes(unit)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit)
-         // TODO: Could replace with ' ' instead of 'public '.
-        assertEquals(contents.replaceFirst('private ', 'public '), String.valueOf(unit.contents))
+        Assert.assertEquals(expected, unit.source)
     }
 
     @Test
     void testRaiseVisibilityModifier2() {
-        String contents = '''\
-            |package foo
-            |class Bar {
+        def unit = addGroovySource('''\
+            |class Foo {
             |  protected void meth() {}
             |}
-            |class Baz extends Bar {
+            |class Bar extends Foo {
             |  private void meth() {} // attempts to lower visibility
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Baz', 'foo')
+            |'''.stripMargin())
 
-        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+        def expected = unit.source.replaceFirst('private ', 'protected ')
+
+        def proposals = getGroovyQuickFixes(unit)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit)
-        assertEquals(contents.replaceFirst('private ', 'protected '), String.valueOf(unit.contents))
+        Assert.assertEquals(expected, unit.source)
     }
 
     @Test @NotYetImplemented
     void testRaiseVisibilityModifier3() {
-        String contents = '''\
-            |package foo
+        def unit = addGroovySource('''\
             |import groovy.transform.PackageScope
-            |class Bar {
+            |class Foo {
             |  @PackageScope void meth() {}
             |}
-            |class Baz extends Bar {
+            |class Bar extends Foo {
             |  private void meth() {} // attempts to lower visibility
             |}
-            |'''.stripMargin()
-        def unit = addGroovySource(contents, 'Baz', 'foo')
+            |'''.stripMargin())
 
-        def proposals = findQuickFixes(unit, ProblemType.WEAKER_ACCESS_OVERRIDE)
+        def expected = unit.source.replaceFirst('private ', '@PackageScope ')
+
+        def proposals = getGroovyQuickFixes(unit)
 
         proposals[0].apply(null)
         JavaModelUtil.reconcile(unit)
-        assertEquals(contents.replaceFirst('private ', '@PackageScope '), String.valueOf(unit.contents))
+        Assert.assertEquals(expected, unit.source)
+    }
+
+    @Test @NotYetImplemented
+    void testRaiseVisibilityModifier4() {
+        def unit = addGroovySource('''\
+            |class Foo {
+            |  private MetaClass getMetaClass() {} // attempts to lower visibility
+            |}
+            |'''.stripMargin())
+
+        def expected = unit.source.replaceFirst('private ', 'public ')
+
+        def proposals = getGroovyQuickFixes(unit)
+
+        proposals[0].apply(null)
+        JavaModelUtil.reconcile(unit)
+        Assert.assertEquals(expected, unit.source)
     }
 
     @Test
     void testAddGroovyRuntime() {
-        GroovyRuntime.removeGroovyClasspathContainer(topLevelUnit.javaProject)
-        def testProject = topLevelUnit.javaProject.project
-        buildProject()
+        removeGroovyClasspathContainer(packageFragmentRoot.javaProject)
 
-        IMarker[] markers = getJDTFailureMarkers(testProject)
-        assumeTrue(markers != null && markers.length > 0)
+        def unit = addGroovySource('println "hello world"')
 
-        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit)
-        assert resolvers.size() == 1 : 'Should have found exactly one resolver'
-        assert resolvers.get(0) instanceof AddGroovyRuntimeResolver : 'Wrong type of resolver'
+        def proposals = getGroovyQuickFixes(unit)
 
-        resolvers[0].quickFixProposals[0].apply(null)
-        buildProject()
+        assert proposals.length == 1
+        assert proposals[0].displayString == 'Add Groovy Libraries to classpath'
 
-        markers = getJDTFailureMarkers(testProject)
-        assert !markers : 'Should not have found problems in this project'
+        proposals[0].apply(null)
+
+        def markers = getJavaProblemMarkers(packageFragmentRoot.javaProject.resource)
+
+        assert markers.length == 0 : 'Should not have found problems in this project'
     }
 
-    @Test // no Groovy quick fix resolvers should be encountered for unrecognized errors
-    void testUnrecognisedErrorNoProposals() {
-        String typeToAddImport = 'BarUnrecognisedError'
-        String typeToAddImportContent = 'class BarUnrecognisedError  { public void doSomething () { 222  }  }'
-        def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
+    @Test
+    void testNoProposalsForUnrecognizedError() {
+        def unit = addGroovySource('''\
+            |class BarUnrecognisedError {
+            |  void doSomething() {
+            |    return 222 // return from void method
+            |  }
+            |}'''.stripMargin())
 
-        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
-        for (type in ProblemType.values()) {
-            List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, type, unit)
-            assert resolvers == null || resolvers.isEmpty() : 'Encountered resolvers for unknown compilation error; none expected'
-        }
-    }
+        def proposals = getGroovyQuickFixes(unit)
 
-    //--------------------------------------------------------------------------
-
-    private List<? extends ICompletionProposal> findQuickFixes(ICompilationUnit unit, ProblemType type) {
-        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
-        getAllQuickFixResolversForType(markers, type, unit).collectMany {
-            it.quickFixProposals
-        }
+        assert proposals.length == 0 : 'Encountered quick fix(es) for unknown compilation error; none expected'
     }
 }

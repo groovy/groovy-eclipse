@@ -15,7 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.quickfix;
 
+import static org.eclipse.jdt.core.IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER;
+
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -25,6 +28,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
+import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
@@ -85,6 +89,14 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         plugin = this;
     }
 
+    public void savePreferences() {
+        try {
+            InstanceScope.INSTANCE.getNode(PLUGIN_ID).flush();
+        } catch (BackingStoreException e) {
+            log(e);
+        }
+    }
+
     /**
      * Returns the template store for the jsp editor templates.
      *
@@ -125,11 +137,10 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         return Optional.ofNullable(context).map(IInvocationContext::getCompilationUnit).filter(GroovyQuickFixPlugin::isGroovyProject).isPresent();
     }
 
-    public void savePreferences() {
-        try {
-            InstanceScope.INSTANCE.getNode(PLUGIN_ID).flush();
-        } catch (BackingStoreException e) {
-            log(e);
+    public static IProblemLocation[] getJavaProblems(final IProblemLocation[] locations) {
+        if (locations == null || locations.length == 0) {
+            return locations;
         }
+        return Arrays.stream(locations).filter(location -> location.getMarkerType() == JAVA_MODEL_PROBLEM_MARKER).toArray(IProblemLocation[]::new);
     }
 }
