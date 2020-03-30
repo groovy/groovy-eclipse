@@ -45,6 +45,7 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
         0,
         IProblem.UndefinedType,
         IProblem.IsClassPathCorrect,
+        IProblem.NotAccessibleType,
         IProblem.ParsingError,
         IProblem.ParsingErrorInsertTokenAfter,
         IProblem.ParsingErrorInsertToComplete,
@@ -93,6 +94,8 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
 
             addChangeModifierProposals(context, locations, proposals)
 
+            addRequiresModuleProposals(context, locations, proposals)
+
             addUnimplementedMethodsProposals(context, locations, proposals)
         } else {
             if (locations.any(MakeJavaGroovyProposal.&appliesTo)) {
@@ -140,6 +143,32 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
             org.eclipse.jdt.internal.ui.text.correction.ModifierCorrectionSubProcessor.
                 addChangeOverriddenModifierProposal(context, location, proposals, kind)
         }
+    }
+
+    @CompileDynamic
+    private void addRequiresModuleProposals(IInvocationContext context, IProblemLocation[] locations, Collection<IJavaCompletionProposal> proposals) {
+        Collection<org.eclipse.jdt.core.dom.Name> names = Arrays.asList(locations).findResults {
+            if (it.problemId == IProblem.IsClassPathCorrect || it.problemId == IProblem.NotAccessibleType || it.problemId == IProblem.UndefinedType) {
+                def root = context.ASTRoot, node = it.getCoveredNode(root) ?: it.getCoveringNode(root)
+                if (!(node instanceof org.eclipse.jdt.core.dom.Name)) {
+                    String[] tokens = it.problemArguments[0].split(/\./)
+                    org.eclipse.jdt.core.dom.Name name = root.AST.newSimpleName(tokens[0])
+                    for (i in 1..<tokens.length) {
+                        name = root.AST.newQualifiedName(name, root.AST.newSimpleName(tokens[i]))
+                    }
+                    return name
+                }
+            }
+        }
+
+        if (!names) return
+
+        names.each { name ->
+            org.eclipse.jdt.internal.ui.text.correction.UnresolvedElementsSubProcessor.addRequiresModuleProposals(context.compilationUnit,
+                name, org.eclipse.jdt.internal.ui.text.correction.IProposalRelevance.IMPORT_NOT_FOUND_ADD_REQUIRES_MODULE, proposals, true)
+        }
+
+        proposals.unique { proposal -> proposal.displayString }
     }
 
     @CompileDynamic
