@@ -32,7 +32,6 @@ import org.eclipse.swt.graphics.Point
 @CompileStatic
 class AddGroovyLibrariesProposal implements IJavaCompletionProposal {
 
-    final String displayString = "Add ${GroovyClasspathContainer.NAME} to classpath"
     final int relevance = 100
     IJavaProject project
 
@@ -51,6 +50,11 @@ class AddGroovyLibrariesProposal implements IJavaCompletionProposal {
 
     @Override
     IContextInformation getContextInformation() {
+    }
+
+    @Override
+    String getDisplayString() {
+        "Add ${GroovyClasspathContainer.NAME} to ${project.moduleDescription ? 'modulepath' : 'classpath'}"
     }
 
     @Override

@@ -60,6 +60,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
@@ -1599,6 +1600,7 @@ public class SourceMapper
 				sourceFileName = TypeConstants.MODULE_INFO_CLASS_NAME_STRING; 
 			}
 			// GROOVY edit
+			CompilerUtils.configureOptionsBasedOnNature(this.options, this.binaryTypeOrModule.getJavaProject());
 			//parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/);
 			parser = LanguageSupportFactory.getSourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/, true);
 			// GROOVY end
@@ -1609,10 +1611,8 @@ public class SourceMapper
 				new BasicCompilationUnit(contents, null, sourceFileName, javaElement),
 				doFullParse,
 				null/*no progress*/);
-			// GROOVY add
-			// if this is an interesting file in an interesting project, then filter out all binary members that do not have a direct mapping to the source
-			org.eclipse.core.resources.IProject project = javaElement.getJavaProject().getProject();
-			if (LanguageSupportFactory.isInterestingProject(project) && LanguageSupportFactory.isInterestingSourceFile(sourceFileName)) {
+			// GROOVY add -- if this is an interesting file in an interesting project, then filter out all binary members that do not have a direct mapping to the source
+			if (LanguageSupportFactory.isInterestingSourceFile(sourceFileName) && LanguageSupportFactory.isInterestingProject(javaElement.getJavaProject().getProject())) {
 				LanguageSupportFactory.filterNonSourceMembers((BinaryType) this.binaryTypeOrModule);
 			}
 			// GROOVY end

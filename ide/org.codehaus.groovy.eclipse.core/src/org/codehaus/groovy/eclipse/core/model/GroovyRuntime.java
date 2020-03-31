@@ -78,7 +78,7 @@ public class GroovyRuntime {
 
         IJavaProject javaProject = JavaCore.create(project);
         IType type = javaProject.findType(GROOVY_OBJECT_TYPE.getName());
-        if (type.exists()) RequireModuleOperation.requireModule(javaProject, type);
+        if (type != null && type.exists()) RequireModuleOperation.requireModule(javaProject, type);
     }
 
     public static void removeGroovyNature(final IProject project) throws CoreException {

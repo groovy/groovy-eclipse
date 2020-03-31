@@ -288,7 +288,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public static GroovyClassLoader newGroovyClassLoader(final IJavaProject project, final ClassLoader parentLoader) {
         Map<String, String> options = project.getOptions(true);
-        CompilerUtils.configureOptionsBasedOnNature(options, project);
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
         GroovyClassLoaderFactory factory = new GroovyClassLoaderFactory(new CompilerOptions(options), null);
         CompilerConfiguration config = CompilerConfiguration.DEFAULT; // TODO: Use newCompilerConfiguration?
         ClassLoader projectLoader = factory.getGroovyClassLoaders(config)[1]; // the Groovy transform loader

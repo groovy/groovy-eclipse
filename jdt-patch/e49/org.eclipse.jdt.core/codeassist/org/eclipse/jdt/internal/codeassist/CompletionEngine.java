@@ -59,6 +59,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeFound;
 import org.eclipse.jdt.internal.codeassist.complete.AssistNodeParentAnnotationArrayInitializer;
@@ -870,7 +871,9 @@ public final class CompletionEngine
 		this.openedBinaryTypes = 0;
 		this.sourceLevel = javaProject.getOption(JavaCore.COMPILER_SOURCE, true);
 		this.complianceLevel = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
-
+		// GROOVY add
+		CompilerUtils.configureOptionsBasedOnNature(this.compilerOptions, javaProject);
+		// GROOVY end
 		this.problemFactory = new CompletionProblemFactory(Locale.getDefault());
 		this.problemReporter = new ProblemReporter(
 				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
@@ -881,7 +884,7 @@ public final class CompletionEngine
 		this.parser =
 			// GROOVY edit
 			//new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
-			LanguageSupportFactory.getCompletionParser(this.lookupEnvironment.globalOptions, this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+			LanguageSupportFactory.getCompletionParser(this.compilerOptions, this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
 			// GROOVY end
 		this.owner = owner;
 		this.monitor = monitor;
