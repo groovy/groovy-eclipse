@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
 
     @Before
     public void setUp() {
-        assumeTrue(isAtLeastGroovy(25)); // @NamedVariant added in Groovy 2.5
+        assumeTrue(isAtLeastGroovy(25));
     }
 
     @Test
