@@ -4,7 +4,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core.tests.builder;singleton:=true
 Bundle-Name: Builder Tests
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.7.0.qualifier
+Bundle-Version: 3.8.0.qualifier
 Export-Package: org.eclipse.jdt.core.groovy.tests,
  org.eclipse.jdt.core.groovy.tests.builder,
  org.eclipse.jdt.core.groovy.tests.locations,
