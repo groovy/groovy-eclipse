@@ -300,7 +300,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testProjectCompilerConfigScript() throws Exception {
+    public void testProjectCompilerConfigScript1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addFile(paths[0], "config.groovy",
@@ -319,7 +319,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "foo", "Bar",
             "package foo\n" +
             "class Bar {\n" +
-            "   Pattern baz\n" +
+            "  Pattern baz\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -329,7 +329,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // add file outside of source folder
         env.addFile(paths[0], "Err.groovy",
             "class Err {\n" +
-            "   Pattern baz\n" +
+            "  Pattern baz\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -337,6 +337,34 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
 
         // TODO: Can it be shown that config.groovy is not applied when parsing non-classpath resources?
+    }
+
+    @Test
+    public void testProjectCompilerConfigScript2() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addFile(paths[0], "config.groovy",
+            //@formatter:off
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    staticMember 'java.util.regex.Pattern', 'compile'\n" +
+            "  }\n" +
+            "}\n");
+            //@formatter:on
+
+        Map<String, String> newOptions = JavaCore.getOptions();
+        newOptions.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "config.groovy");
+        JavaCore.setOptions((Hashtable<String, String>) newOptions);
+
+        env.addGroovyClass(paths[1], "foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def pattern = compile('regexp')\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("foo.Bar");
+        expectingNoProblems();
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/550

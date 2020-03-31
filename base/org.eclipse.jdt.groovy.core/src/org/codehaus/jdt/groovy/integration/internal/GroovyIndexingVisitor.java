@@ -63,12 +63,8 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitImport(final ImportNode node) {
-        if (node.getType() != null) {
+        if (node.getType() != null && node.getEnd() > 0) {
             visitTypeReference(node.getType(), false, true);
-        }
-        String fieldName = node.getFieldName();
-        if (fieldName != null) {
-            requestor.acceptUnknownReference(fieldName.toCharArray(), node.getFieldNameExpr().getStart());
         }
         super.visitImport(node);
     }
