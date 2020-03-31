@@ -3,10 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl.tests;singleton:=true
 Bundle-Name: Groovy DSL Tests
-Bundle-Version: 3.7.0.qualifier
+Bundle-Version: 3.7.1.qualifier
 Export-Package: org.codehaus.groovy.eclipse.dsl.tests
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="3.7.0",
- org.codehaus.groovy.eclipse.codeassist.test;bundle-version="3.7.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="3.7.0",
- org.codehaus.groovy.eclipse.dsl;bundle-version="3.7.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="[3.7.0,3.8.0)",
+ org.codehaus.groovy.eclipse.codeassist.test;bundle-version="[3.7.0,3.8.0)",
+ org.codehaus.groovy.eclipse.tests;bundle-version="[3.7.0,3.8.0)",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="[3.7.0,3.8.0)"
 Eclipse-BundleShape: dir
