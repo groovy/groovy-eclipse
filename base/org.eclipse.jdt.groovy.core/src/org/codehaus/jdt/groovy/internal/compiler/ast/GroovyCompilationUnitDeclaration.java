@@ -558,12 +558,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     public void finalizeProblems() {
         boolean isReconcile = (compilationUnit.allowTransforms && !compilerOptions.parseLiteralExpressionsAsConstants);
 
-        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit) {
+        if (isScript && !isReconcile && groovySourceUnit instanceof EclipseSourceUnit && ((EclipseSourceUnit) groovySourceUnit).getEclipseFile() != null) {
             CategorizedProblem[] problems = compilationResult.problems;
             if (problems != null && problems.length > 0) {
-                for (int i = 0, n = problems.length; i < n; i += 1) {
-                    CategorizedProblem problem = problems[i];
-
+                for (CategorizedProblem problem : problems) {
                     if (problem != null && CharOperation.equals(problem.getOriginatingFileName(),
                             ((EclipseSourceUnit) groovySourceUnit).getEclipseFile().getFullPath().toString().toCharArray())) {
                         compilationResult.removeProblem(problem);

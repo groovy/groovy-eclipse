@@ -15,6 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.eclipse.jdt.internal.compiler.env.IDependent.JAR_FILE_ENTRY_SEPARATOR;
+import static org.eclipse.jdt.internal.core.util.Util.log;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -148,22 +151,30 @@ public class GroovyParser {
 
     public GroovyCompilationUnitDeclaration dietParse(final ICompilationUnit iCompilationUnit, final CompilationResult compilationResult) {
         String fileName = String.valueOf(iCompilationUnit.getFileName());
-        final IPath filePath = new Path(fileName);
-        final IFile eclipseFile;
-        final boolean isScript;
-        // try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it)
-        // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
-        // needs 2 segments: a project and file name or eclipse throws assertion failed here
-        if (filePath.segmentCount() > 1 && ResourcesPlugin.getPlugin() != null) {
-            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
-            IPath location = eclipseFile.getLocation();
-            if (location != null) {
-                fileName = location.toFile().getAbsolutePath();
+        boolean isInJar = fileName.indexOf(JAR_FILE_ENTRY_SEPARATOR) > 0;
+        boolean isScript = false;
+        IFile eclipseFile = null;
+        if (!isInJar) {
+            // try to convert fileName into an absolute filesystem reference
+            IPath filePath = new Path(fileName);
+            // needs 2 segments (project and file names) or eclipse throws assertion failed
+            // GRECLIPSE-1269: ensure the workspace is available (i.e. not in batch mode)
+            if (filePath.segmentCount() >= 2 && ResourcesPlugin.getWorkspace() != null) {
+                eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
+                IPath location = eclipseFile.getLocation();
+                if (location != null) {
+                    fileName = location.toFile().getAbsolutePath();
+                }
+                if (compilerOptions.groovyProjectName != null) {
+                    if (!compilerOptions.groovyProjectName.equals(eclipseFile.getProject().getName())) {
+                        log(new IllegalStateException("Groovy script check: compiler options project != compilation unit project" +
+                            String.format("%n'%s' vs. '%s'", compilerOptions.groovyProjectName, eclipseFile.getProject().getName())));
+                    }
+                    isScript = scriptFolderSelectorCache.computeIfAbsent(compilerOptions.groovyProjectName, key ->
+                        new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(key))
+                    ).isScript(eclipseFile);
+                }
             }
-            isScript = isScript(eclipseFile, compilerOptions.groovyProjectName);
-        } else {
-            eclipseFile = null;
-            isScript = false;
         }
 
         if (problemReporter.referenceContext == null) {
@@ -171,7 +182,7 @@ public class GroovyParser {
         }
 
         if (compilationUnit == null) {
-            if (isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+            if (isInJar || isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
                     !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))) {
                 compilerOptions.groovyCompilerConfigScript = null;
             }
@@ -231,19 +242,6 @@ public class GroovyParser {
 
     private static IFile getWorkspaceFile(final String filePath) {
         return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(filePath));
-    }
-
-    /**
-     * Determines if file matches any groovy script filter in the project.
-     */
-    private static boolean isScript(final IFile sourceFile, final String projectName) {
-        if (projectName != null) {
-            assert projectName == sourceFile.getProject().getName();
-            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache
-                .computeIfAbsent(projectName, key -> new ScriptFolderSelector(sourceFile.getProject()));
-            return scriptFolderSelector.isScript(sourceFile);
-        }
-        return false;
     }
 
     /**
