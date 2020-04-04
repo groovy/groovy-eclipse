@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
@@ -45,71 +44,7 @@ import org.eclipse.ui.IWorkbenchSite;
 
 public class FormatAllGroovyAction extends FormatAllAction {
 
-    public static class GroovyMultiFormatAction extends MultiFormatAction {
-        final FormatKind kind;
-        public GroovyMultiFormatAction(IWorkbenchSite site, FormatKind kind) {
-            super(site);
-            this.kind = kind;
-        }
-
-        private void showUnexpectedError(CoreException e) {
-            String message2= Messages.format(ActionMessages.CleanUpAction_UnexpectedErrorMessage, e.getStatus().getMessage());
-            IStatus status= new Status(IStatus.ERROR, JavaUI.ID_PLUGIN, IStatus.ERROR, message2, null);
-            ErrorDialog.openError(getShell(), getActionName(), null, status);
-        }
-
-        // Copied from super, but comment out section to test if on classpath
-        private void run(ICompilationUnit cu) {
-            //            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
-            //                return;
-            if (cu.isReadOnly()) {
-                return;
-            }
-
-            ICleanUp[] cleanUps= getCleanUps(new ICompilationUnit[] {
-                    cu
-            });
-            if (cleanUps == null)
-                return;
-
-            if (!ElementValidator.check(cu, getShell(), getActionName(), true /* always in editor */))
-                return;
-
-            try {
-                performRefactoring(new ICompilationUnit[] {
-                        cu
-                }, cleanUps);
-            } catch (InvocationTargetException e) {
-                JavaPlugin.log(e);
-                if (e.getCause() instanceof CoreException)
-                    showUnexpectedError((CoreException)e.getCause());
-            }
-        }
-
-        @Override
-        public void run(IStructuredSelection selection) {
-            ICompilationUnit[] cus= getCompilationUnits(selection);
-            if (cus.length == 0) {
-                MessageDialog.openInformation(getShell(), getActionName(), ActionMessages.CleanUpAction_EmptySelection_description);
-            } else if (cus.length == 1) {
-                run(cus[0]);
-            } else {
-                ReflectionUtils.executePrivateMethod(CleanUpAction.class, "runOnMultuple", new Class[] { ICompilationUnit.class }, this, new Object[] { cus });
-            }
-        }
-
-        /*
-         * @see org.eclipse.jdt.internal.ui.actions.CleanUpAction#createCleanUps(org.eclipse.jdt.core.ICompilationUnit[])
-         */
-        @Override
-        protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
-//            Map settings= new Hashtable();
-//            settings.put(CleanUpConstants.FORMAT_SOURCE_CODE, CleanUpOptions.TRUE);
-            return new ICleanUp[] {new GroovyCodeFormatCleanUp(kind)};
-        }
-    }
-
-    public FormatAllGroovyAction(IWorkbenchSite site, FormatKind kind) {
+    public FormatAllGroovyAction(final IWorkbenchSite site, final FormatKind kind) {
         super(site);
         ReflectionUtils.setPrivateField(FormatAllAction.class, "fCleanUpDelegate", this, new GroovyMultiFormatAction(site, kind));
 
@@ -124,7 +59,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
     }
 
     @Override
-    public void run(ITextSelection selection) {
+    public void run(final ITextSelection selection) {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
@@ -133,6 +68,68 @@ public class FormatAllGroovyAction extends FormatAllAction {
                     super.run(new StructuredSelection(unit));
                 }
             }
+        }
+    }
+
+    public static class GroovyMultiFormatAction extends MultiFormatAction {
+
+        private final FormatKind kind;
+
+        public GroovyMultiFormatAction(final IWorkbenchSite site, final FormatKind kind) {
+            super(site);
+            this.kind = kind;
+        }
+
+        private void showUnexpectedError(final CoreException e) {
+            String message2 = ActionMessages.bind(ActionMessages.CleanUpAction_UnexpectedErrorMessage, e.getStatus().getMessage());
+            IStatus status = new Status(IStatus.ERROR, JavaUI.ID_PLUGIN, IStatus.ERROR, message2, null);
+            ErrorDialog.openError(getShell(), getActionName(), null, status);
+        }
+
+        // Copied from super, but comment out section to test if on classpath
+        private void run(final ICompilationUnit cu) {
+            /*if (!ActionUtil.isEditable(fEditor, getShell(), cu))
+                return;*/
+            if (cu.isReadOnly()) {
+                return;
+            }
+
+            ICleanUp[] cleanUps = getCleanUps(new ICompilationUnit[] {cu});
+            if (cleanUps == null)
+                return;
+
+            if (!ElementValidator.check(cu, getShell(), getActionName(), true /*always in editor*/))
+                return;
+
+            try {
+                performRefactoring(new ICompilationUnit[] {cu}, cleanUps);
+            } catch (InvocationTargetException e) {
+                JavaPlugin.log(e);
+                if (e.getCause() instanceof CoreException)
+                    showUnexpectedError((CoreException) e.getCause());
+            }
+        }
+
+        @Override
+        public void run(final IStructuredSelection selection) {
+            ICompilationUnit[] cus = getCompilationUnits(selection);
+            if (cus.length == 0) {
+                MessageDialog.openInformation(getShell(), getActionName(), ActionMessages.CleanUpAction_EmptySelection_description);
+            } else if (cus.length == 1) {
+                run(cus[0]);
+            } else {
+                ReflectionUtils.executePrivateMethod(CleanUpAction.class, "runOnMultuple", new Class[] {ICompilationUnit.class}, this, new Object[] {cus});
+            }
+        }
+
+        /*
+         * @see org.eclipse.jdt.internal.ui.actions.CleanUpAction#createCleanUps(org.eclipse.jdt.core.ICompilationUnit[])
+         */
+        @Override
+        protected ICleanUp[] getCleanUps(final ICompilationUnit[] units) {
+            /*Map settings= new Hashtable();
+            settings.put(CleanUpConstants.FORMAT_SOURCE_CODE, CleanUpOptions.TRUE);*/
+            return new ICleanUp[] {new GroovyCodeFormatCleanUp(kind)};
         }
     }
 }

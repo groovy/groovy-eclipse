@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +51,6 @@ import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring;
 import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
 import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
@@ -448,7 +447,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                     CleanUpConstants.DEFAULT_SAVE_PARTICIPANT_PROFILE);
             }
             throw new CoreException(new Status(IStatus.ERROR, JavaUI.ID_PLUGIN,
-                Messages.format(FixMessages.CleanUpPostSaveListener_unknown_profile_error_message, id)));
+                FixMessages.bind(FixMessages.CleanUpPostSaveListener_unknown_profile_error_message, id)));
         }
 
         if (CleanUpOptions.TRUE.equals(settings.get(CleanUpConstants.CLEANUP_ON_SAVE_ADDITIONAL_OPTIONS))) {
@@ -669,7 +668,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     }
 
     private void showSlowCleanUpsWarning(HashSet<ICleanUp> slowCleanUps) {
-
         final StringBuffer cleanUpNames = new StringBuffer();
         for (Iterator<ICleanUp> iterator = slowCleanUps.iterator(); iterator.hasNext();) {
             ICleanUp cleanUp = iterator.next();
@@ -701,18 +699,14 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
     // GROOVY add
     /**
-     * GRECLIPSE-1452
-     * Check the validity of the document and log error if there's a problem
-     * @param buffer
-     * @throws BadPositionCategoryException
+     * Checks the validity of the document and log error if there's a problem.
      */
-    private static void assertDocumentGreclipse1452(ITextFileBuffer buffer) {
+    private static void assertDocumentGreclipse1452(final ITextFileBuffer buffer) {
         if (buffer != null) {
             try {
                 buffer.getDocument().getPositions(IDocument.DEFAULT_CATEGORY);
             } catch (BadPositionCategoryException e) {
-                org.codehaus.groovy.eclipse.core.GroovyCore
-                    .logException("GRECLIPSE-1452: Problem found in file. " + buffer.getLocation(), e);
+                org.codehaus.groovy.eclipse.core.GroovyCore.logException("GRECLIPSE-1452: Problem found in file. " + buffer.getLocation(), e);
             }
         }
     }

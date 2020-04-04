@@ -42,7 +42,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
     }
 
     @Override
-    protected String mainArgs(IType runType, IJavaProject javaProject) {
+    protected String mainArgs(final IType runType, final IJavaProject javaProject) {
         CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
         CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
 
@@ -70,7 +70,8 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
             try {
                 mainArgs.append(" \"${workspace_loc:").append(runType.getResource().getFullPath().toOSString().substring(1)).append("}\"");
             } catch (NullPointerException e) {
-                GroovyCore.logException("Error running Groovy", new IllegalArgumentException("Could not find file to run for " + runType));
+                GroovyCore.logException(LaunchShortcutHelper.bind(LaunchShortcutHelper.GroovyLaunchShortcut_failureToLaunch, applicationOrConsole()),
+                    new IllegalArgumentException(LaunchShortcutHelper.bind(LaunchShortcutHelper.GroovyLaunchShortcut_notFound, runType.getElementName())));
             }
         }
 

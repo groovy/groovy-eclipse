@@ -16,33 +16,11 @@
 package org.codehaus.groovy.eclipse.actions;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-public class AddGroovyClasspathContainerAction extends AbstractAddClasspathContainerAction {
+public class GroovyClasspathContainerAction extends AbstractClasspathContainerAction {
 
-    @Override
-    protected IPath getClasspathContainerPath() {
-        return new Path(GroovyClasspathContainer.ID);
-    }
-
-    @Override
-    protected String addText() {
-        return "Add " + GroovyClasspathContainer.NAME + " to classpath";
-    }
-
-    @Override
-    protected String removeText() {
-        return "Remove " + GroovyClasspathContainer.NAME + " from classpath";
-    }
-
-    @Override
-    protected String disabledText() {
-        return "Cannot add Groovy libraries";
-    }
-
-    @Override
-    protected String errorMessage() {
-        return "Failed to add Groovy libraries";
+    public GroovyClasspathContainerAction() {
+        super(GroovyClasspathContainer.NAME, new Path(GroovyClasspathContainer.ID));
     }
 }

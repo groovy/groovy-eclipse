@@ -27,10 +27,9 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IActionDelegate;
 
-public class AddGroovyNatureAction implements IObjectActionDelegate {
+public class AddGroovyNatureAction implements IActionDelegate {
 
     private List<IProject> selected;
 
@@ -76,9 +75,5 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
         if (enabled) {
             this.selected = newSelected;
         }
-    }
-
-    @Override
-    public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
     }
 }

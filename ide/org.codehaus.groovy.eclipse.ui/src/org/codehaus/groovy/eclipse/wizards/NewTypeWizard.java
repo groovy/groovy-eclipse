@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.corext.refactoring.StubTypeContext;
 import org.eclipse.jdt.internal.corext.refactoring.TypeContextChecker;
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
-import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
@@ -88,7 +87,6 @@ import org.eclipse.jdt.ui.wizards.NewAnnotationWizardPage;
 import org.eclipse.jdt.ui.wizards.NewContainerWizardPage;
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage;
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage.ImportsManager;
-import org.eclipse.jface.contentassist.SubjectControlContentAssistant;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -116,7 +114,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.contentassist.ContentAssistHandler;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
 public class NewTypeWizard extends NewElementWizard {
@@ -153,7 +150,7 @@ public class NewTypeWizard extends NewElementWizard {
     }
 
     @Override
-    protected void finishPage(IProgressMonitor monitor) throws CoreException, InterruptedException {
+    protected void finishPage(final IProgressMonitor monitor) throws CoreException, InterruptedException {
         PageOne pageOne = (PageOne) getPage(PageOne.PAGE_NAME);
         PageTwo pageTwo = (PageTwo) getPage(PageTwo.PAGE_NAME);
 
@@ -188,14 +185,15 @@ public class NewTypeWizard extends NewElementWizard {
         fCreatedType = builder.build(monitor, this::finishType);
     }
 
-    protected void finishType(IType createdType, IProgressMonitor subMonitor) throws OperationCanceledException {
+    protected void finishType(final IType createdType, final IProgressMonitor subMonitor) throws OperationCanceledException {
         NewAnnotationWizardPage delegate = (NewAnnotationWizardPage) ((PageTwo) getPage(PageTwo.PAGE_NAME)).getActiveControl().getData("AnnotationDelegate");
         if (delegate != null) {
             subMonitor.beginTask(NewWizardMessages.NewAnnotationWizardPage_description, 3);
 
             //CompilationUnit astRoot = delegate.createASTForImports(fCreatedType.getCompilationUnit());
-            CompilationUnit astRoot = ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "createASTForImports",
-                            new Class[] {ICompilationUnit.class}, delegate, new Object[] {createdType.getCompilationUnit()});
+            CompilationUnit astRoot = ReflectionUtils.executePrivateMethod(
+                NewTypeWizardPage.class, "createASTForImports", new Class[] {ICompilationUnit.class},
+                delegate,                                       new Object[] {createdType.getCompilationUnit()});
 
             //ImportsManager imports = new ImportsManager(astRoot);
             ImportsManager imports = ReflectionUtils.invokeConstructor(ReflectionUtils.getConstructor(ImportsManager.class, CompilationUnit.class), astRoot);
@@ -206,11 +204,14 @@ public class NewTypeWizard extends NewElementWizard {
             }
 
             //delegate.createTypeMembers(createdType, imports, ((SubMonitor) subMonitor).split(1));
-            ReflectionUtils.executePrivateMethod(NewAnnotationWizardPage.class, "createTypeMembers",
-                            new Class[] {IType.class, ImportsManager.class, IProgressMonitor.class}, delegate, new Object[] {createdType, imports, ((SubMonitor) subMonitor).split(1)});
+            ReflectionUtils.executePrivateMethod(
+                NewAnnotationWizardPage.class, "createTypeMembers", new Class[] {IType.class, ImportsManager.class, IProgressMonitor.class},
+                delegate,                                           new Object[] {createdType, imports, ((SubMonitor) subMonitor).split(1)});
 
             //imports.create(false, ((SubMonitor) subMonitor).split(1));
-            ReflectionUtils.executePrivateMethod(ImportsManager.class, "create", new Class[] {boolean.class, IProgressMonitor.class}, imports, new Object[] {Boolean.FALSE, ((SubMonitor) subMonitor).split(1)});
+            ReflectionUtils.executePrivateMethod(
+                ImportsManager.class, "create", new Class[] {boolean.class, IProgressMonitor.class},
+                imports,                        new Object[] {Boolean.FALSE, ((SubMonitor) subMonitor).split(1)});
         }
     }
 
@@ -227,7 +228,7 @@ public class NewTypeWizard extends NewElementWizard {
 
         public static final String PAGE_NAME = "NewTypeWizard.PageOne"; //$NON-NLS-1$
 
-        public PageOne(IStructuredSelection selection) {
+        public PageOne(final IStructuredSelection selection) {
             super(true, PAGE_NAME);
             setTitle(WizardMessages.NewTypeWizard_page1_title);
             setDescription(WizardMessages.NewTypeWizard_page1_message);
@@ -239,7 +240,7 @@ public class NewTypeWizard extends NewElementWizard {
         }
 
         @Override
-        public void createControl(Composite parent) {
+        public void createControl(final Composite parent) {
             initializeDialogUnits(parent);
 
             final int nColumns = 4;
@@ -262,7 +263,7 @@ public class NewTypeWizard extends NewElementWizard {
             // TODO: PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, ?);
         }
 
-        protected void createTypeKindControls(Composite parent, int nColumns) {
+        protected void createTypeKindControls(final Composite parent, final int nColumns) {
             SelectionButtonDialogFieldGroup typeKindGroup = new SelectionButtonDialogFieldGroup(SWT.RADIO, new String[] {
                 WizardMessages.NewTypeWizard_page1_typeKind1,
                 WizardMessages.NewTypeWizard_page1_typeKind2,
@@ -310,7 +311,7 @@ public class NewTypeWizard extends NewElementWizard {
         private final StatusInfo fTypeKindStatus = new StatusInfo();
 
         @Override
-        protected void handleFieldChanged(String fieldName) {
+        protected void handleFieldChanged(final String fieldName) {
             if (getEnclosingType() != null && !ContentTypeUtils.isGroovyLikeFileName(getEnclosingType().getResource().getName())) {
                 ((StatusInfo) fEnclosingTypeStatus).setError(WizardMessages.NewTypeWizard_page1_error_java);
             }
@@ -330,12 +331,12 @@ public class NewTypeWizard extends NewElementWizard {
                 if (root != null) {
                     try {
                         if (!root.getJavaProject().getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
-                            status.setInfo(Messages.format(WizardMessages.NewTypeWizard_page1_info_groovyNature, root.getJavaProject().getElementName()));
+                            status.setInfo(WizardMessages.bind(WizardMessages.NewTypeWizard_page1_info_groovyNature, root.getJavaProject().getElementName()));
                         }
 
                         String name = getTypeNameText();
                         if (ContentTypeUtils.isGroovyLikeFileName(name)) {
-                            status.setInfo(Messages.format(WizardMessages.NewTypeWizard_page1_info_fileExtension, name.substring(name.lastIndexOf('.'))));
+                            status.setInfo(WizardMessages.bind(WizardMessages.NewTypeWizard_page1_info_fileExtension, name.substring(name.lastIndexOf('.'))));
                         }
 
                         if (!isEnclosingTypeSelected()) {
@@ -374,7 +375,7 @@ public class NewTypeWizard extends NewElementWizard {
         //
 
         @Override
-        protected String getCompilationUnitName(String typeName) {
+        protected String getCompilationUnitName(final String typeName) {
             assert typeName.indexOf('<') == -1; // no parameters
             return typeName + ".groovy"; //$NON-NLS-1$
         }
@@ -408,7 +409,7 @@ public class NewTypeWizard extends NewElementWizard {
         }
 
         @Override
-        public boolean addSuperInterface(String name) {
+        public boolean addSuperInterface(final String name) {
             PageTwo pageTwo = (PageTwo) getNextPage();
 
             @SuppressWarnings("unchecked")
@@ -418,7 +419,7 @@ public class NewTypeWizard extends NewElementWizard {
         }
 
         @Override
-        public void setSuperInterfaces(List<String> names, boolean mutable) {
+        public void setSuperInterfaces(final List<String> names, final boolean mutable) {
             PageTwo pageTwo = (PageTwo) getNextPage();
             if (pageTwo != null) {
                 @SuppressWarnings("unchecked")
@@ -429,7 +430,7 @@ public class NewTypeWizard extends NewElementWizard {
         }
 
         @Override
-        public void setVisible(boolean visible) {
+        public void setVisible(final boolean visible) {
             super.setVisible(visible);
             if (visible) setFocus();
         }
@@ -444,7 +445,7 @@ public class NewTypeWizard extends NewElementWizard {
         }
 
         @Override
-        public void createControl(Composite parent) {
+        public void createControl(final Composite parent) {
             initializeDialogUnits(parent);
 
             onVisible = dontCare -> {
@@ -492,7 +493,7 @@ public class NewTypeWizard extends NewElementWizard {
             layout.topControl = composite.getChildren()[0];
         }
 
-        private void createClassControls(Composite parent) {
+        private void createClassControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -516,7 +517,7 @@ public class NewTypeWizard extends NewElementWizard {
             createCommentControls(composite, nColumns);
         }
 
-        private void createTraitControls(Composite parent) {
+        private void createTraitControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -538,7 +539,7 @@ public class NewTypeWizard extends NewElementWizard {
             createCommentControls(composite, nColumns);
         }
 
-        private void createScriptControls(Composite parent) {
+        private void createScriptControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -551,7 +552,7 @@ public class NewTypeWizard extends NewElementWizard {
             createCommentControls(composite, nColumns);
         }
 
-        private void createInterfaceControls(Composite parent) {
+        private void createInterfaceControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -571,7 +572,7 @@ public class NewTypeWizard extends NewElementWizard {
             createCommentControls(composite, nColumns);
         }
 
-        private void createAnnotationControls(Composite parent) {
+        private void createAnnotationControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -604,7 +605,7 @@ public class NewTypeWizard extends NewElementWizard {
             composite.setData("AnnotationDelegate", delegate);
         }
 
-        private void createEnumerationControls(Composite parent) {
+        private void createEnumerationControls(final Composite parent) {
             final int nColumns = 4;
 
             Composite composite = new Composite(parent, SWT.NONE);
@@ -626,7 +627,7 @@ public class NewTypeWizard extends NewElementWizard {
 
         //
 
-        private void createModifierControls(Composite composite, int nColumns, Map<String, Integer> modifiers) {
+        private void createModifierControls(final Composite composite, final int nColumns, final Map<String, Integer> modifiers) {
             List<String> accessFlags = new ArrayList<>(), otherFlags = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : modifiers.entrySet()) {
                 switch (entry.getValue()) {
@@ -642,7 +643,8 @@ public class NewTypeWizard extends NewElementWizard {
             }
 
             //
-            SelectionButtonDialogFieldGroup accessFlagsGroup = new SelectionButtonDialogFieldGroup(SWT.RADIO, accessFlags.toArray(new String[accessFlags.size()]), 4);
+            SelectionButtonDialogFieldGroup accessFlagsGroup =
+                new SelectionButtonDialogFieldGroup(SWT.RADIO, accessFlags.toArray(new String[accessFlags.size()]), 4);
             accessFlagsGroup.setLabelText(NewWizardMessages.NewTypeWizardPage_modifiers_acc_label);
 
             Control label = accessFlagsGroup.getLabelControl(composite);
@@ -654,7 +656,8 @@ public class NewTypeWizard extends NewElementWizard {
             DialogField.createEmptySpace(composite);
 
             //
-            SelectionButtonDialogFieldGroup otherFlagsGroup = new SelectionButtonDialogFieldGroup(SWT.CHECK, otherFlags.toArray(new String[otherFlags.size()]), 4);
+            SelectionButtonDialogFieldGroup otherFlagsGroup =
+                new SelectionButtonDialogFieldGroup(SWT.CHECK, otherFlags.toArray(new String[otherFlags.size()]), 4);
             if (!otherFlags.isEmpty()) {
                 DialogField.createEmptySpace(composite);
 
@@ -707,7 +710,7 @@ public class NewTypeWizard extends NewElementWizard {
             });
         }
 
-        private void createSuperClassControls(Composite composite, int nColumns, String label, String value) {
+        private void createSuperClassControls(final Composite composite, final int nColumns, final String label, final String value) {
             StringButtonDialogField superClassDialogField = new StringButtonDialogField(field -> {
                 IType type = ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "chooseSuperClass", getPreviousPage());
                 if (type != null) {
@@ -758,7 +761,7 @@ public class NewTypeWizard extends NewElementWizard {
             ControlContentAssistHelper.createTextContentAssistant(text, superClassCompletionProcessor);
         }
 
-        private void createSuperInterfacesControls(Composite composite, int nColumns) {
+        private void createSuperInterfacesControls(final Composite composite, final int nColumns) {
             ListDialogField<Wrapper> superInterfacesDialogField = newListField(composite, nColumns);
 
             superInterfacesDialogField.setDialogFieldListener(field -> {
@@ -771,9 +774,12 @@ public class NewTypeWizard extends NewElementWizard {
                     String interfaceName = element.string;
                     Type type = TypeContextChecker.parseSuperInterface(interfaceName);
                     if (type == null) {
-                        status.setError(Messages.format(NewWizardMessages.NewTypeWizardPage_error_InvalidSuperInterfaceName, BasicElementLabels.getJavaElementName(interfaceName)));
+                        status.setError(WizardMessages.bind(
+                            NewWizardMessages.NewTypeWizardPage_error_InvalidSuperInterfaceName, BasicElementLabels.getJavaElementName(interfaceName)));
+                        //
                     } else if (type instanceof ParameterizedType && !JavaModelUtil.is50OrHigher(getJavaProject())) {
-                        status.setError(Messages.format(NewWizardMessages.NewTypeWizardPage_error_SuperInterfaceNotParameterized, BasicElementLabels.getJavaElementName(interfaceName)));
+                        status.setError(WizardMessages.bind(
+                            NewWizardMessages.NewTypeWizardPage_error_SuperInterfaceNotParameterized, BasicElementLabels.getJavaElementName(interfaceName)));
                     }
                 }
 
@@ -795,185 +801,163 @@ public class NewTypeWizard extends NewElementWizard {
             composite.setData("GetInterfaces", getInterfaces);
         }
 
-            private ListDialogField<Wrapper> newListField(Composite composite, int nColumns) {
-                String[] buttons = new String[] {
-                    NewWizardMessages.NewTypeWizardPage_interfaces_add,
-                    null, // spacer
-                    NewWizardMessages.NewTypeWizardPage_interfaces_remove,
-                };
+        private ListDialogField<Wrapper> newListField(final Composite composite, final int nColumns) {
+            String[] buttons = new String[] {
+                NewWizardMessages.NewTypeWizardPage_interfaces_add,
+                null, // spacer
+                NewWizardMessages.NewTypeWizardPage_interfaces_remove,
+            };
 
-                IListAdapter<Wrapper> addButtonHandler = new IListAdapter<Wrapper>() {
-                    @Override
-                    public void customButtonPressed(ListDialogField<Wrapper> listField, int index) {
-                        ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "chooseSuperInterfaces", getPreviousPage());
-                        /*List<Wrapper> elements = listField.getElements();
-                        if (!elements.isEmpty()) {
-                            Wrapper element = elements.get(elements.size() - 1);
-                            listField.editElement(element);
-                        }*/
-                    }
-
-                    @Override
-                    public void selectionChanged(ListDialogField<Wrapper> field) {
-                    }
-
-                    @Override
-                    public void doubleClicked(ListDialogField<Wrapper> field) {
-                    }
-                };
-
-                LabelProvider labelProvider = new LabelProvider() {
-                    @Override
-                    public Image getImage(Object element) {
-                        return JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE);
-                    }
-
-                    @Override
-                    public String getText(Object element) {
-                        return BasicElementLabels.getJavaElementName(((Wrapper) element).string);
-                    }
-                };
-
-                ListDialogField<Wrapper> superInterfacesDialogField = new ListDialogField<>(addButtonHandler, buttons, labelProvider);
-                superInterfacesDialogField.setLabelText(NewWizardMessages.NewTypeWizardPage_interfaces_class_label);
-                superInterfacesDialogField.setTableColumns(new ListDialogField.ColumnsDescription(1, false));
-                superInterfacesDialogField.setRemoveButtonIndex(2);
-
-                // returns: label, listbox, and buttons
-                Control[] controls = superInterfacesDialogField.doFillIntoGrid(composite, nColumns);
-
-                GridData gd = (GridData) controls[1].getLayoutData();
-                gd.grabExcessHorizontalSpace = true;
-                gd.grabExcessVerticalSpace = false;
-                gd.widthHint = getMaxFieldWidth();
-                gd.heightHint = convertHeightInCharsToPixels(3);
-
-                gd = (GridData) controls[2].getLayoutData();
-                gd.grabExcessVerticalSpace = false;
-
-                //
-                TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
-                tableViewer.setColumnProperties(new String[] {"interface"}); //$NON-NLS-1$
-
-                setCellEditor(superInterfacesDialogField);
-                setCellModifier(superInterfacesDialogField);
-                setKeyListener(superInterfacesDialogField);
-
-                return superInterfacesDialogField;
-            }
-
-            private void setCellEditor(ListDialogField<Wrapper> superInterfacesDialogField) {
-                TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
-
-                TableTextCellEditor cellEditor = new TableTextCellEditor(tableViewer, 0) {
-                    @Override
-                    protected Control createControl(Composite parent) {
-                        Control control = super.createControl(parent);
-                        BidiUtils.applyBidiProcessing(text, StructuredTextTypeHandlerFactory.JAVA);
-                        return control;
-                    }
-
-                    @Override
-                    protected void doSetFocus() {
-                        if (text != null) {
-                            text.setFocus();
-                            text.setSelection(text.getText().length());
-                            checkSelection();
-                            checkDeleteable();
-                            checkSelectable();
-                        }
-                    }
-                };
-                Text cellEditorText = cellEditor.getText();
-                TextFieldNavigationHandler.install(cellEditorText);
-
-                JavaTypeCompletionProcessor superInterfaceCompletionProcessor = new JavaTypeCompletionProcessor(false, false, true);
-                superInterfaceCompletionProcessor.setCompletionContextRequestor(new CompletionContextRequestor() {
-                    private StubTypeContext fSuperInterfaceStubTypeContext;
-                    @Override
-                    public StubTypeContext getStubTypeContext() {
-                        if (fSuperInterfaceStubTypeContext == null) {
-                            PageOne pageOne = (PageOne) getPreviousPage();
-                            fSuperInterfaceStubTypeContext = TypeContextChecker.createSuperInterfaceStubTypeContext(
-                                pageOne.getTypeName(), pageOne.getEnclosingType(), pageOne.getPackageFragment());
-                        }
-                        return fSuperInterfaceStubTypeContext;
-                    }
-                });
-                SubjectControlContentAssistant contentAssistant = ControlContentAssistHelper.createJavaContentAssistant(superInterfaceCompletionProcessor);
-                ContentAssistHandler.createHandlerForText(cellEditorText, contentAssistant);
-                cellEditor.setContentAssistant(contentAssistant);
-
-                tableViewer.setCellEditors(new CellEditor[] {cellEditor});
-            }
-
-            private void setCellModifier(ListDialogField<Wrapper> superInterfacesDialogField) {
-                TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
-
-                tableViewer.setCellModifier(new ICellModifier() {
-                    @Override
-                    public void modify(Object element, String property, Object value) {
-                        if (element instanceof Item)
-                            element = ((Item) element).getData();
-
-                        ((Wrapper) element).string = (String) value;
-                        superInterfacesDialogField.elementChanged((Wrapper) element);
-                    }
-
-                    @Override
-                    public Object getValue(Object element, String property) {
-                        return ((Wrapper) element).string;
-                    }
-
-                    @Override
-                    public boolean canModify(Object element, String property) {
-                        return true;
-                    }
-                });
-            }
-
-            private void setKeyListener(ListDialogField<Wrapper> superInterfacesDialogField) {
-                TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
-
-                tableViewer.getTable().addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent event) {
-                        if (event.keyCode == SWT.F2 && event.stateMask == 0) {
-                            ISelection selection = tableViewer.getSelection();
-                            if (selection instanceof IStructuredSelection) {
-                                IStructuredSelection structuredSelection = (IStructuredSelection) selection;
-                                tableViewer.editElement(structuredSelection.getFirstElement(), 0);
-                            }
-                        }
-                    }
-                });
-            }
-
-            public static final class Wrapper {
-                public String string;
-
-                public Wrapper(String string) {
-                    this.string = Objects.requireNonNull(string);
+            IListAdapter<Wrapper> addButtonHandler = new IListAdapter<Wrapper>() {
+                @Override
+                public void customButtonPressed(final ListDialogField<Wrapper> listField, final int index) {
+                    ReflectionUtils.executePrivateMethod(NewTypeWizardPage.class, "chooseSuperInterfaces", getPreviousPage());
+                    /*List<Wrapper> elements = listField.getElements();
+                    if (!elements.isEmpty()) {
+                        Wrapper element = elements.get(elements.size() - 1);
+                        listField.editElement(element);
+                    }*/
                 }
 
                 @Override
-                public int hashCode() {
-                    return string.hashCode();
+                public void selectionChanged(final ListDialogField<Wrapper> field) {
                 }
 
                 @Override
-                public boolean equals(Object that) {
-                    if (that == this) {
-                        return true;
-                    }
-                    if (!(that instanceof Wrapper)) {
-                        return false;
-                    }
-                    return ((Wrapper) that).string.equals(this.string);
+                public void doubleClicked(final ListDialogField<Wrapper> field) {
                 }
-            }
+            };
 
-        private void createMethodStubSelectionControls(Composite composite, int nColumns) {
+            LabelProvider labelProvider = new LabelProvider() {
+                @Override
+                public Image getImage(final Object element) {
+                    return JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE);
+                }
+
+                @Override
+                public String getText(final Object element) {
+                    return BasicElementLabels.getJavaElementName(((Wrapper) element).string);
+                }
+            };
+
+            ListDialogField<Wrapper> superInterfacesDialogField = new ListDialogField<>(addButtonHandler, buttons, labelProvider);
+            superInterfacesDialogField.setLabelText(NewWizardMessages.NewTypeWizardPage_interfaces_class_label);
+            superInterfacesDialogField.setTableColumns(new ListDialogField.ColumnsDescription(1, false));
+            superInterfacesDialogField.setRemoveButtonIndex(2);
+
+            // returns: label, listbox, and buttons
+            Control[] controls = superInterfacesDialogField.doFillIntoGrid(composite, nColumns);
+
+            GridData gd = (GridData) controls[1].getLayoutData();
+            gd.grabExcessHorizontalSpace = true;
+            gd.grabExcessVerticalSpace = false;
+            gd.widthHint = getMaxFieldWidth();
+            gd.heightHint = convertHeightInCharsToPixels(3);
+
+            gd = (GridData) controls[2].getLayoutData();
+            gd.grabExcessVerticalSpace = false;
+
+            //
+            TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
+            tableViewer.setColumnProperties(new String[] {"interface"}); //$NON-NLS-1$
+
+            setCellEditor(superInterfacesDialogField);
+            setCellModifier(superInterfacesDialogField);
+            setKeyListener(superInterfacesDialogField);
+
+            return superInterfacesDialogField;
+        }
+
+        @SuppressWarnings("deprecation")
+        private void setCellEditor(final ListDialogField<Wrapper> superInterfacesDialogField) {
+            TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
+
+            TableTextCellEditor cellEditor = new TableTextCellEditor(tableViewer, 0) {
+                @Override
+                protected Control createControl(final Composite parent) {
+                    Control control = super.createControl(parent);
+                    BidiUtils.applyBidiProcessing(text, StructuredTextTypeHandlerFactory.JAVA);
+                    return control;
+                }
+
+                @Override
+                protected void doSetFocus() {
+                    if (text != null) {
+                        text.setFocus();
+                        text.setSelection(text.getText().length());
+                        checkSelection();
+                        checkDeleteable();
+                        checkSelectable();
+                    }
+                }
+            };
+            Text cellEditorText = cellEditor.getText();
+            TextFieldNavigationHandler.install(cellEditorText);
+
+            JavaTypeCompletionProcessor superInterfaceCompletionProcessor = new JavaTypeCompletionProcessor(false, false, true);
+            superInterfaceCompletionProcessor.setCompletionContextRequestor(new CompletionContextRequestor() {
+                private StubTypeContext fSuperInterfaceStubTypeContext;
+                @Override
+                public StubTypeContext getStubTypeContext() {
+                    if (fSuperInterfaceStubTypeContext == null) {
+                        PageOne pageOne = (PageOne) getPreviousPage();
+                        fSuperInterfaceStubTypeContext = TypeContextChecker.createSuperInterfaceStubTypeContext(
+                            pageOne.getTypeName(), pageOne.getEnclosingType(), pageOne.getPackageFragment());
+                    }
+                    return fSuperInterfaceStubTypeContext;
+                }
+            });
+            org.eclipse.jface.contentassist.SubjectControlContentAssistant contentAssistant =
+                ControlContentAssistHelper.createJavaContentAssistant(superInterfaceCompletionProcessor);
+            org.eclipse.ui.contentassist.ContentAssistHandler.createHandlerForText(cellEditorText, contentAssistant);
+            cellEditor.setContentAssistant(contentAssistant);
+
+            tableViewer.setCellEditors(new CellEditor[] {cellEditor});
+        }
+
+        private void setCellModifier(final ListDialogField<Wrapper> superInterfacesDialogField) {
+            TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
+
+            tableViewer.setCellModifier(new ICellModifier() {
+                @Override
+                public void modify(Object element, final String property, final Object value) {
+                    if (element instanceof Item)
+                        element = ((Item) element).getData();
+
+                    ((Wrapper) element).string = (String) value;
+                    superInterfacesDialogField.elementChanged((Wrapper) element);
+                }
+
+                @Override
+                public Object getValue(final Object element, final String property) {
+                    return ((Wrapper) element).string;
+                }
+
+                @Override
+                public boolean canModify(final Object element, final String property) {
+                    return true;
+                }
+            });
+        }
+
+        private void setKeyListener(final ListDialogField<Wrapper> superInterfacesDialogField) {
+            TableViewer tableViewer = superInterfacesDialogField.getTableViewer();
+
+            tableViewer.getTable().addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(final KeyEvent event) {
+                    if (event.keyCode == SWT.F2 && event.stateMask == 0) {
+                        ISelection selection = tableViewer.getSelection();
+                        if (selection instanceof IStructuredSelection) {
+                            IStructuredSelection structuredSelection = (IStructuredSelection) selection;
+                            tableViewer.editElement(structuredSelection.getFirstElement(), 0);
+                        }
+                    }
+                }
+            });
+        }
+
+        private void createMethodStubSelectionControls(final Composite composite, final int nColumns) {
             SelectionButtonDialogFieldGroup methodStubSelector = new SelectionButtonDialogFieldGroup(SWT.CHECK, new String[] {
                 NewWizardMessages.NewClassWizardPage_methods_constructors,
                 NewWizardMessages.NewClassWizardPage_methods_inherited,
@@ -1002,24 +986,27 @@ public class NewTypeWizard extends NewElementWizard {
             LayoutUtil.setHorizontalSpan(checks, nColumns - 1);
         }
 
-        private void createCommentControls(Composite composite, int nColumns) {
+        private void createCommentControls(final Composite composite, final int nColumns) {
             Link link = new Link(composite, SWT.NONE);
             link.setText(NewWizardMessages.NewTypeWizardPage_addcomment_description);
             link.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, false, false, nColumns, 1));
             link.addSelectionListener(new SelectionListener() {
                 @Override
-                public void widgetDefaultSelected(SelectionEvent event) {
+                public void widgetDefaultSelected(final SelectionEvent event) {
                     widgetSelected(event);
                 }
 
                 @Override
-                public void widgetSelected(SelectionEvent event) {
+                public void widgetSelected(final SelectionEvent event) {
                     IJavaProject javaProject = getJavaProject();
                     if (javaProject != null) {
-                        PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(getShell(), javaProject.getProject(), CodeTemplatePreferencePage.PROP_ID, null, null);
+                        PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(
+                            getShell(), javaProject.getProject(), CodeTemplatePreferencePage.PROP_ID, null, null);
                         dialog.open();
                     } else {
-                        MessageDialog.openInformation(getShell(), NewWizardMessages.NewTypeWizardPage_configure_templates_title, NewWizardMessages.NewTypeWizardPage_configure_templates_message);
+                        MessageDialog.openInformation(getShell(),
+                            NewWizardMessages.NewTypeWizardPage_configure_templates_title,
+                            NewWizardMessages.NewTypeWizardPage_configure_templates_message);
                     }
                 }
             });
@@ -1041,19 +1028,20 @@ public class NewTypeWizard extends NewElementWizard {
          * @param composite the parent composite
          * @param nColumns number of columns to span
          */
-        private void createSeparator(Composite composite, int nColumns) {
+        private void createSeparator(final Composite composite, final int nColumns) {
             LayoutUtil.setHorizontalGrabbing(
                 (new Separator(SWT.SEPARATOR | SWT.HORIZONTAL)).doFillIntoGrid(composite, nColumns, convertHeightInCharsToPixels(1))[0]
             );
         }
 
-        private void mergeStatus(String key, IStatus value) {
+        private void mergeStatus(final String key, final IStatus value) {
             Control panel = getControl();
             if (panel != null) {
                 @SuppressWarnings("unchecked")
                 Map<String, IStatus> map = (Map<String, IStatus>) panel.getData("StatusMap");
                 if (map == null) {
-                    panel.setData("StatusMap", map = new HashMap<>());
+                    map = new HashMap<>();
+                    panel.setData("StatusMap", map);
                 }
 
                 map.put(key, value);
@@ -1107,12 +1095,38 @@ public class NewTypeWizard extends NewElementWizard {
         private Consumer<Boolean> onVisible;
 
         @Override
-        public void setVisible(boolean visible) {
+        public void setVisible(final boolean visible) {
             if (visible) {
                 PageOne pageOne = (PageOne) getPreviousPage();
                 onVisible.accept(pageOne.isEnclosingTypeSelected());
             }
             super.setVisible(visible);
+        }
+
+        //
+
+        public static final class Wrapper {
+            public String string;
+
+            public Wrapper(final String string) {
+                this.string = Objects.requireNonNull(string);
+            }
+
+            @Override
+            public int hashCode() {
+                return string.hashCode();
+            }
+
+            @Override
+            public boolean equals(final Object that) {
+                if (that == this) {
+                    return true;
+                }
+                if (!(that instanceof Wrapper)) {
+                    return false;
+                }
+                return ((Wrapper) that).string.equals(this.string);
+            }
         }
     }
 }

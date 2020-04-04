@@ -77,7 +77,7 @@
                         <reference definitionId="org.eclipse.jdt.groovy.core.isGroovyProject"/>
                         <and>
                            <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
-                           <test property="org.eclipse.jdt.groovy.core.hasMain"/>
+                           <test property="org.eclipse.jdt.launching.hasMain"/>
                         </and>
                      </or>
                   </iterate>
@@ -359,7 +359,7 @@
                menubarPath="groovy/configure">
          </action>
          <action
-               class="org.codehaus.groovy.eclipse.actions.AddGroovyClasspathContainerAction"
+               class="org.codehaus.groovy.eclipse.actions.GroovyClasspathContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.importlibs.action"
                label="Groovy Libraries classpath container"

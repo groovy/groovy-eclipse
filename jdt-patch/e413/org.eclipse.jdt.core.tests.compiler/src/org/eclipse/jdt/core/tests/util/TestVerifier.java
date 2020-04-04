@@ -391,6 +391,7 @@ private String[] getVMArguments(String[] vmArguments) {
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.io=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.math=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.text=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.util.regex=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 public class LaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
     @Override
-    public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
+    public void createTabs(final ILaunchConfigurationDialog dialog, final String mode) {
         ILaunchConfiguration configuration = DebugUITools.getLaunchConfiguration(dialog);
         boolean isModularConfiguration = configuration != null && JavaRuntime.isModularConfiguration(configuration);
 
@@ -63,7 +63,7 @@ public class LaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabG
     public static class GroovyMainTab extends JavaMainTab {
 
         @Override
-        protected void createMainTypeEditor(Composite parent, String text) {
+        protected void createMainTypeEditor(final Composite parent, final String text) {
             super.createMainTypeEditor(parent, text);
             // hide main type extensions like "stop in main"
             super.createMainTypeExtensions(new Composite(parent, 0));
@@ -73,7 +73,7 @@ public class LaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabG
         }
 
         @Override
-        protected void createMainTypeExtensions(Composite parent) {
+        protected void createMainTypeExtensions(final Composite parent) {
         }
 
         @Override

@@ -39,7 +39,7 @@ public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
     }
 
     @Override
-    protected String mainArgs(IType runType, IJavaProject javaProject) {
+    protected String mainArgs(final IType runType, final IJavaProject javaProject) {
         StringBuilder mainArgs = new StringBuilder("org.codehaus.groovy.tools.shell.Main");
         mainArgs.append(" --define jline.terminal=jline.UnsupportedTerminal");
 

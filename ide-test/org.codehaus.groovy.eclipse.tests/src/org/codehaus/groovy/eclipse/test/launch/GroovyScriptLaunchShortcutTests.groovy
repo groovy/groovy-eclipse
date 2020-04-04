@@ -22,17 +22,11 @@ import org.codehaus.groovy.eclipse.test.TestProject
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.debug.core.ILaunch
-import org.eclipse.debug.core.ILaunchConfiguration
-import org.eclipse.debug.core.IStreamListener
-import org.eclipse.debug.core.model.IStreamMonitor
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IType
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
@@ -144,7 +138,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
 
     @Test // single script
     void testScriptLaunch1() {
-        def unit = addGroovySource('print "test me"', 'Launch')
+        def unit = addGroovySource('println "hello world"', 'Launch')
         def type = unit.getType('Launch')
         launchScriptAndAssertExitValue(type)
     }
@@ -248,8 +242,38 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         }
     }
 
-    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
+    @Test // type implements Runnable
     void testScriptLaunch11() {
+        def unit = addGroovySource('''\
+            |class Runner implements Runnable {
+            |  void run() {
+            |    println "hello world"
+            |  }
+            |}
+            |'''.stripMargin(), 'Runner')
+        def type = unit.getType('Runner')
+        launchScriptAndAssertExitValue(type)
+    }
+
+    @Test // type is JUnit test
+    void testScriptLaunch12() {
+        addJUnit(4)
+        def unit = addGroovySource('''\
+            |import org.junit.*
+            |
+            |final class SomeTests {
+            |  @Test
+            |  void testSomething() {
+            |    Assert.assertTrue(true)
+            |  }
+            |}
+            |'''.stripMargin(), 'SomeTests')
+        def type = unit.getType('SomeTests')
+        launchScriptAndAssertExitValue(type)
+    }
+
+    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
+    void testScriptLaunch13() {
         def unit = addGroovySource('''\
             |@Grapes([
             |  @GrabConfig(systemClassLoader=true),
@@ -271,67 +295,53 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         def classpath = (arguments =~ /--classpath "(.*?)" /)[0][1]
     }
 
-    private void launchScriptAndAssertExitValue(IType launchType, int timeoutSeconds = 20) {
-        SimpleProgressMonitor spm = new SimpleProgressMonitor('Launcher test workspace build')
-        ResourcesPlugin.workspace.build(IncrementalProjectBuilder.FULL_BUILD, spm)
-        spm.waitForCompletion()
+    private void launchScriptAndAssertExitValue(IType runType, int timeoutSeconds = 20) {
+        ResourcesPlugin.workspace.build(IncrementalProjectBuilder.FULL_BUILD, null)
+        assert runType.exists()
 
-        def runner = new Runnable() {
-            @Override
-            void run() {
-                GroovyScriptLaunchShortcut shortcut = new GroovyScriptLaunchShortcut()
-                ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(
-                    shortcut.createLaunchProperties(launchType, launchType.javaProject), launchType.fullyQualifiedName)
-                assert launchType.exists()
-                ILaunch launch = config.launch('run', new NullProgressMonitor())
-                final StringBuilder stdout = new StringBuilder()
-                final StringBuilder stderr = new StringBuilder()
-                launch.processes[0].streamsProxy.outputStreamMonitor.addListener(new IStreamListener() {
-                    @Override
-                    void streamAppended(String text, IStreamMonitor monitor) {
-                        stdout.append(text)
-                    }
-                })
-                launch.processes[0].streamsProxy.errorStreamMonitor.addListener(new IStreamListener() {
-                    @Override
-                    void streamAppended(String text, IStreamMonitor monitor) {
-                        stderr.append(text)
-                    }
-                })
-                synchronized (launch) {
-                    int i = 0
-                    println('Waiting for launch to complete ' + i + ' sec...')
-                    while (!launch.isTerminated() && i < timeoutSeconds) {
-                        i++
-                        println('Waiting for launch to complete ' + i + ' sec...')
-                        launch.wait(1000)
-                    }
-                }
-                if (launch.isTerminated()) {
-                    assert launch.processes.length == 1
-                    println('Process output:')
-                    println('==================')
-                    println(stdout)
-                    println('==================')
-                    println('Process err:')
-                    println('==================')
-                    println(stderr)
-                    println('==================')
-                }
-                assert launch.isTerminated() : 'Process not terminated after timeout has been reached'
-                assert launch.processes[0].exitValue == 0 : 'Expecting normal exit, but found invalid exit value'
+        Runnable runner = { ->
+            def shortcut = new GroovyScriptLaunchShortcut()
+            def config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(runType, runType.javaProject), runType.fullyQualifiedName)
+            def launch = config.launch('run', null)
+            def stdout = new StringBuilder(), stderr = new StringBuilder()
+            launch.processes[0].streamsProxy.outputStreamMonitor.addListener { text, monitor ->
+                stdout.append(text)
             }
+            launch.processes[0].streamsProxy.errorStreamMonitor.addListener { text, monitor ->
+                stderr.append(text)
+            }
+            synchronized (launch) {
+                int i = 0
+                while (!launch.isTerminated() && i < timeoutSeconds) {
+                    println "Waiting for launch to complete $i sec..."
+                    launch.wait(1000)
+                    i += 1
+                }
+            }
+            if (launch.isTerminated()) {
+                assert launch.processes.length == 1
+                println('Process output:')
+                println('==================')
+                println(stdout)
+                println('==================')
+                println('Process err:')
+                println('==================')
+                println(stderr)
+                println('==================')
+            }
+            assert launch.isTerminated() : 'Process not terminated after timeout has been reached'
+            assert launch.processes[0].exitValue == 0 : 'Expecting normal exit, but found invalid exit value'
         }
 
         def currentException = null
-        for (attempt in 1..4) {
+        for (attempt in 1..3) {
             try {
                 runner.run()
                 // success
                 return
             } catch (AssertionError e) {
                 currentException = e
-                println('Launch failed on attempt ' + attempt + ' retrying.')
+                println "Launch failed on attempt $attempt; retrying."
             }
         }
         if (currentException != null) {

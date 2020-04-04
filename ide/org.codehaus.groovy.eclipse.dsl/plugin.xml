@@ -43,7 +43,7 @@
             id="org.codehaus.groovy.eclipse.dsl.projectContribution"
             objectClass="org.eclipse.core.resources.IProject">
          <action
-               class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerAction"
+               class="org.codehaus.groovy.eclipse.dsl.ui.DSLDClasspathContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.dsl.action.add_container"
                label="Groovy DSL Support classpath container"
