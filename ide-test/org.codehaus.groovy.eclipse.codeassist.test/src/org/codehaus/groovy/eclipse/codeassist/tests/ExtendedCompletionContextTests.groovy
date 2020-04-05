@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,16 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInScript1() {
         String contents = '''\
-            def x = 9
-            def y = ""
-            def z = []
-            int a
-            String b
-            List c
-            z
-            '''.stripIndent()
+            |def x = 9
+            |def y = ""
+            |def z = []
+            |int a
+            |String b
+            |List c
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'a')
         assertExtendedContextElements(context, 'Ljava.lang.String;', 'y', 'b')
         assertExtendedContextElements(context, 'Ljava.util.List;', 'z', 'c')
@@ -40,13 +40,13 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInScript2() {
         String contents = '''\
-            int[] x
-            String[] y
-            List[] z
-            z
-            '''.stripIndent()
+            |int[] x
+            |String[] y
+            |List[] z
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, '[I', 'x')
         assertExtendedContextElements(context, '[Ljava.lang.String;', 'y')
         assertExtendedContextElements(context, '[Ljava.util.List;', 'z')
@@ -55,15 +55,15 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInScript3() {
         String contents = '''\
-            class Sub extends Super{ }
-            class Super { }
-            def x = new Super()
-            def y = new Sub()
-            def z
-            z
-            '''.stripIndent()
+            |class Sub extends Super{ }
+            |class Super { }
+            |def x = new Super()
+            |def y = new Sub()
+            |def z
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
         assertExtendedContextElements(context, 'LSub;', 'y')
     }
@@ -71,15 +71,15 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInScript4() {
         String contents = '''\
-            class Sub extends Super{ }
-            class Super { }
-            def x = new Super[0]
-            def y = new Sub[0]
-            def z
-            z
-            '''.stripIndent()
+            |class Sub extends Super{ }
+            |class Super { }
+            |def x = new Super[0]
+            |def y = new Sub[0]
+            |def z
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
         assertExtendedContextElements(context, '[LSub;', 'y')
         assertExtendedContextElements(context, 'LSuper;')
@@ -89,18 +89,18 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInClass1() {
         String contents = '''\
-            class Sub extends Super{ }
-            class Super {
-              def foo() {
-                def x = new Super[0]
-                def y = new Sub[0]
-                def z
-                z
-              }
-            }
-            '''.stripIndent()
+            |class Sub extends Super{ }
+            |class Super {
+            |  def foo() {
+            |    def x = new Super[0]
+            |    def y = new Sub[0]
+            |    def z
+            |    z
+            |  }
+            |}
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'foo'
+        assert context.enclosingElement.elementName == 'foo'
         assertExtendedContextElements(context, '[LSuper;', 'x', 'y')
         assertExtendedContextElements(context, '[LSub;', 'y')
         assertExtendedContextElements(context, 'LSuper;')
@@ -110,16 +110,16 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInClass2() {
         String contents = '''\
-            class Sub extends Super { }
-            class Super {
-              Super x
-              Sub y
-              def z
-              def foo() { z }
-            }
-            '''.stripIndent()
+            |class Sub extends Super { }
+            |class Super {
+            |  Super x
+            |  Sub y
+            |  def z
+            |  def foo() { z }
+            |}
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'foo'
+        assert context.enclosingElement.elementName == 'foo'
         assertExtendedContextElements(context, 'LSuper;', 'x', 'y')
         assertExtendedContextElements(context, 'LSub;', 'y')
     }
@@ -127,20 +127,20 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextInClass3() {
         String contents = '''\
-            class Super {
-              Super a
-              Sub b
-              def c
-            }
-            class Sub extends Super {
-              Super x
-              Sub y
-              def z
-              def foo() { Super z }
-            }
-            '''.stripIndent()
+            |class Super {
+            |  Super a
+            |  Sub b
+            |  def c
+            |}
+            |class Sub extends Super {
+            |  Super x
+            |  Sub y
+            |  def z
+            |  def foo() { Super z }
+            |}
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'foo'
+        assert context.enclosingElement.elementName == 'foo'
         assertExtendedContextElements(context, 'LSub;', 'b', 'y')
         assertExtendedContextElements(context, 'LSuper;', 'a', 'b', 'x', 'y', 'z')
     }
@@ -148,12 +148,12 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test // should be using erasure types, so generics need not match
     void testExtendedContextWithGenerics() {
         String contents = '''\
-            Map<Integer, Class> x
-            HashMap<Class, Integer> y
-            z
-            '''.stripIndent()
+            |Map<Integer, Class> x
+            |HashMap<Class, Integer> y
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, 'Ljava.util.Map;', 'x', 'y')
         assertExtendedContextElements(context, 'Ljava.util.HashMap;', 'y')
     }
@@ -161,14 +161,14 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test // now look at boxing and unboxing
     void testExtendedContextWithBoxing() {
         String contents = '''\
-            int x
-            Integer y
-            boolean a
-            Boolean b
-            z
-            '''.stripIndent()
+            |int x
+            |Integer y
+            |boolean a
+            |Boolean b
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, 'I', 'x', 'y')
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
         assertExtendedContextElements(context, 'Z', 'a', 'b')
@@ -178,22 +178,22 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
     @Test
     void testExtendedContextWithArrays() {
         String contents = '''\
-            int x
-            Integer y
-            boolean a
-            Boolean b
-            int[] x1
-            Integer[] y1
-            boolean[] a1
-            Boolean[] b1
-            int[][] x2
-            Integer[][] y2
-            boolean[][] a2
-            Boolean[][] b2
-            z
-            '''.stripIndent()
+            |int x
+            |Integer y
+            |boolean a
+            |Boolean b
+            |int[] x1
+            |Integer[] y1
+            |boolean[] a1
+            |Boolean[] b1
+            |int[][] x2
+            |Integer[][] y2
+            |boolean[][] a2
+            |Boolean[][] b2
+            |z
+            |'''.stripMargin()
         def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.getEnclosingElement().getElementName() == 'run'
+        assert context.enclosingElement.elementName == 'run'
         assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
         assertExtendedContextElements(context, 'I', 'x', 'y')
         assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'a', 'b')

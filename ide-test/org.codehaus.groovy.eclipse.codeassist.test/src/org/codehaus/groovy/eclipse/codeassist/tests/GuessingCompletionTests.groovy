@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testParamGuessing1() {
         String contents = '''\
-            String yyy
-            def xxx(String x) { }
-            xxx
-            '''.stripIndent()
+            |String yyy
+            |def xxx(String x) { }
+            |xxx
+            |'''.stripMargin()
         String[][] expectedChoices = [ [ 'yyy', '""' ] as String[] ]
         checkProposalChoices(contents, 'xxx', 'xxx(yyy)', expectedChoices)
     }
@@ -46,11 +46,11 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testParamGuessing2() {
         String contents = '''\
-            String yyy
-            int zzz
-            def xxx(String x, int z) { }
-            xxx
-            '''.stripIndent()
+            |String yyy
+            |int zzz
+            |def xxx(String x, int z) { }
+            |xxx
+            |'''.stripMargin()
         String[][] expectedChoices = [
             [ 'yyy', '""' ] as String[],
             [ 'zzz', '0' ] as String[]
@@ -61,12 +61,12 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testParamGuessing3() {
         String contents = '''\
-            String yyy
-            Integer zzz
-            boolean aaa
-            def xxx(String x, int z, boolean a) { }
-            xxx
-            '''.stripIndent()
+            |String yyy
+            |Integer zzz
+            |boolean aaa
+            |def xxx(String x, int z, boolean a) { }
+            |xxx
+            |'''.stripMargin()
         String[][] expectedChoices = [
             [ 'yyy', '""' ] as String[],
             [ 'zzz', '0' ] as String[],
@@ -82,11 +82,11 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         // from variable name to local variable declaration in
         // GroovyExtendedCompletionContext.computeVisibleElements(String)
         String contents = '''\
-            Closure yyy
-            def zzz = { -> }
-            def xxx(Closure c, int i) { }
-            xxx
-            '''.stripIndent()
+            |Closure yyy
+            |def zzz = { -> }
+            |def xxx(Closure c, int i) { }
+            |xxx
+            |'''.stripMargin()
         String[][] expectedChoices = [
             ['zzz', 'yyy', '{  }'] as String[],
             ['0'] as String[]
@@ -97,11 +97,11 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testParamGuessing4a() {
         String contents = '''\
-            Closure yyy
-            def zzz = { -> }
-            def xxx(Closure c) { }
-            xxx
-            '''.stripIndent()
+            |Closure yyy
+            |def zzz = { -> }
+            |def xxx(Closure c) { }
+            |xxx
+            |'''.stripMargin()
         String[][] expectedChoices = [
             ['{  }'] as String[]
         ]
@@ -113,12 +113,12 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
 
         addGroovySource '''\
-            import java.util.concurrent.TimeUnit
-            class Util {
-              static void util(TimeUnit units) {
-              }
-            }
-            '''.stripIndent(), 'Util', 'pack'
+            |import java.util.concurrent.TimeUnit
+            |class Util {
+            |  static void util(TimeUnit units) {
+            |  }
+            |}
+            |'''.stripMargin(), 'Util', 'pack'
 
         String contents = '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
@@ -151,12 +151,12 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
 
         addGroovySource '''\
-            import java.util.concurrent.TimeUnit
-            class Util {
-              static void util(TimeUnit units) {
-              }
-            }
-            '''.stripIndent(), 'Util', 'pack'
+            |import java.util.concurrent.TimeUnit
+            |class Util {
+            |  static void util(TimeUnit units) {
+            |  }
+            |}
+            |'''.stripMargin(), 'Util', 'pack'
 
         String contents = '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
@@ -183,17 +183,17 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testCtorParamGuessing() {
         addGroovySource '''\
-            class C {
-              C(java.lang.String string, java.util.concurrent.TimeUnit units) {
-              }
-            }
-            '''.stripIndent(), 'C', 'p'
+            |class C {
+            |  C(java.lang.String string, java.util.concurrent.TimeUnit units) {
+            |  }
+            |}
+            |'''.stripMargin(), 'C', 'p'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
-            String s = ''
-            new p.C
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |String s = ''
+            |new p.C
+            |'''.stripMargin()
 
         ICompletionProposal proposal = checkUniqueProposal(contents, 'new p.C', 'C', '(s, MILLIS)')
         List<ICompletionProposal[]> choices = proposal.choices

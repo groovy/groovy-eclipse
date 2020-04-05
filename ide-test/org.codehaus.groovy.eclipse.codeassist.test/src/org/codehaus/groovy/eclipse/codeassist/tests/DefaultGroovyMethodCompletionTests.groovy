@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,25 @@ import org.junit.Test
  */
 final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
-    private static final String CONTENTS = 'class Class {\n public Class(int x) {\n }\n void doNothing(int x) {\n  this.toString();\n  new Object().toString();\n }\n}'
-    private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()'
+    private static final String CONTENTS = '''\
+        |class Type {
+        |  public Type(int x) {
+        |  }
+        |  void doNothing(int x) {
+        |    this.toString();
+        |    new Object().toString();
+        |  }
+        |}
+        |'''.stripMargin()
+    private static final String SCRIPTCONTENTS = '''\
+        |def x = 9
+        |x++
+        |new Object().toString()
+        |'''.stripMargin()
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
 
     private void setDGMFilter(String... filter) {
-        GroovyContentAssist.default.setFilteredDGMs(filter as Set)
+        GroovyContentAssist.default.filteredDGMs = filter as Set
     }
 
     private org.codehaus.jdt.groovy.model.GroovyCompilationUnit createGroovy() {
@@ -52,7 +65,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testDGMInJavaFile() {
-        def unit = addJavaSource(CONTENTS, 'Class')
+        def unit = addJavaSource(CONTENTS, 'Type')
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'this.'))
         proposalExists(proposals, 'identity', 0)
     }
@@ -74,7 +87,14 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInConstructorScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Type(int x) {\n'))
+        proposalExists(proposals, 'identity', 1)
+    }
+
+    @Test
+    void testDGMInClassScope() {
+        def unit = createGroovy()
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, '}')) // after ctor
         proposalExists(proposals, 'identity', 1)
     }
 
@@ -93,13 +113,6 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testDGMInClassScope() {
-        def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n }'))
-        proposalExists(proposals, 'identity', 1) // TODO: Is there a restriction on what DGMs may run in constructor?
-    }
-
-    @Test
     void testDGMInMethodParamScope() {
         def unit = createGroovy()
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'void doNothing('))
@@ -109,14 +122,14 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInConstructorParamScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class('))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Type('))
         proposalExists(proposals, 'identity', 0)
     }
 
     @Test
     void testDGMInModuleScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, '; } }'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getLastIndexOf(CONTENTS, '}'))
         proposalExists(proposals, 'identity', 0)
     }
 
@@ -157,10 +170,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testPropertyDGM() {
         String contents = '''\
-            import java.util.regex.*
-            Matcher m
-            m.co
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Matcher m
+            |m.co
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
         proposalExists(proposals, 'count', 1)
     }
@@ -168,10 +181,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testIrrelevantDGM() {
         String contents = '''\
-            import java.util.regex.*
-            Pattern p
-            p.co
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Pattern p
+            |p.co
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.co'))
         proposalExists(proposals, 'count', 0) // irrelevant category accessor StringGroovyMethods.getCount(Matcher)
     }
@@ -179,10 +192,10 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testPropertyRelevance() {
         String contents = '''\
-            import java.util.regex.*
-            Matcher m
-            m = m.la
-            '''.stripIndent()
+            |import java.util.regex.*
+            |Matcher m
+            |m = m.la
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.la'))
         assertProposalOrdering(orderByRelevance(proposals), 'lastMatcher', 'lastAppendPosition') // lastMatcher has more relevant type
     }
@@ -210,7 +223,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSystemDGSM2() {
-        String contents = 'def sys = System.class\nsys.cu'
+        String contents = 'def sys = System\nsys.cu'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         def proposal = findFirstProposal(proposals, 'currentTimeSeconds')
         assert Flags.toString(proposal.proposal.flags).contains('static')

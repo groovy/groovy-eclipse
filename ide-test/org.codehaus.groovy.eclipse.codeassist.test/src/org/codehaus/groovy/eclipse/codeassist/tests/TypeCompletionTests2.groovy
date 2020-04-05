@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,7 +177,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = 'package f\n\ndef x(HTML'
         String expected = 'package f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML'
         // deal with some variance in JDT Core adding first import between package and script body
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if ((JavaCore.plugin.bundle.version <=> new Version(3, 12, 3)) >= 0) {
             expected = expected.replace('\n\n\n', '\n\n')
         }
 
@@ -189,7 +189,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = 'package f;\n\ndef x(HTML'
         String expected = 'package f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML'
         // deal with some variance in JDT Core adding first import between package and script body
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if ((JavaCore.plugin.bundle.version <=> new Version(3, 12, 3)) >= 0) {
             expected = expected.replace('\n\n\n', '\n\n')
         }
 
@@ -201,7 +201,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = '/**some stuff*/\npackage f\n\ndef x(HTML'
         String expected = '/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML'
         // deal with some variance in JDT Core adding first import between package and script body
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if ((JavaCore.plugin.bundle.version <=> new Version(3, 12, 3)) >= 0) {
             expected = expected.replace('\n\n\n', '\n\n')
         }
 
@@ -213,7 +213,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
         String contents = '/**some stuff*/\npackage f;\n\ndef x(HTML'
         String expected = '/**some stuff*/\npackage f;\n\nimport javax.swing.text.html.HTML\n\n\ndef x(HTML'
         // deal with some variance in JDT Core adding first import between package and script body
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version(3, 12, 3)) >= 0) {
+        if ((JavaCore.plugin.bundle.version <=> new Version(3, 12, 3)) >= 0) {
             expected = expected.replace('\n\n\n', '\n\n')
         }
 
@@ -407,7 +407,7 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/177
     void testTypeCompletionForClassAnnotation() {
-        IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore()
+        IPreferenceStore prefs = JavaPlugin.default.preferenceStore
         String originalOrder = prefs.getString(PreferenceConstants.ORGIMPORTS_IMPORTORDER)
         prefs.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')
         try {

@@ -708,7 +708,7 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous modifier ''public'' should be removed" /><!-- NOTE: Excludes fields to allow choice of field or property -->
-        <property name="format" value="\bpublic\s+(?:(?:abstract|final|static)\s+)*(?:enum|class|@?interface|(?:\w+(?:\.\w+)*(&lt;.*&gt;)?\s+)?\w+\()" />
+        <property name="format" value="(?&lt;!\|\s{0,80})\bpublic\s+(?:(?:abstract|final|static)\s+)*(?:enum|class|@?interface|(?:\w+(?:\.\w+)*(&lt;.*&gt;)?\s+)?\w+\()" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyDefaultPublic" />
     </module>

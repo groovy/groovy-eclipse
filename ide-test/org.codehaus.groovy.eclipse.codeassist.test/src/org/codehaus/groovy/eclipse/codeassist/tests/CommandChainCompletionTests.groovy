@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ import org.junit.Test
 final class CommandChainCompletionTests extends CompletionTestSuite {
 
     private static final String INITIAL_CONTENTS = '''\
-        class Inner {
-          Inner first(arg) { }
-          Inner second(arg) { }
-          Inner third(arg) { }
-          Inner aField
-        }
-        def start = new Inner()
-        '''.stripIndent()
+        |class Inner {
+        |  Inner first(arg) {}
+        |  Inner second(arg) {}
+        |  Inner third(arg) {}
+        |  Inner aField
+        |}
+        |def start = new Inner()
+        |'''.stripMargin()
 
     @Test
     void testCommandChain1() {

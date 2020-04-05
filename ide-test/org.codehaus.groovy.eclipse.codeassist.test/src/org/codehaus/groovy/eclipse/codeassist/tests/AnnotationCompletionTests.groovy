@@ -148,10 +148,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr0() {
         String contents = '''\
-            @SuppressWarnings()
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings()
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '@SuppressWarnings(')
 
         assertThat(proposals).includes('value').excludes('equals', 'public') // no Object methods or Java keywords
@@ -160,10 +160,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr1() {
         String contents = '''\
-            @SuppressWarnings(v)
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(v)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '@SuppressWarnings(v')
 
         assertThat(proposals).includes('value').excludes('equals', 'public') // no Object methods or Java keywords
@@ -172,10 +172,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr2() {
         String contents = '''\
-            @SuppressWarnings(value=)
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(value=)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '@SuppressWarnings(value=')
 
         assertThat(proposals).excludes('value')
@@ -184,10 +184,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr3() {
         String contents = '''\
-            @SuppressWarnings(value=v)
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(value=v)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '@SuppressWarnings(value=v')
 
         assertThat(proposals).excludes('value')
@@ -196,21 +196,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr4() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              String one();
-              String two();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  String one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            @A()
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.A
+            |@A()
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '@A(')
 
         assertThat(proposals).includes('one', 'two')
@@ -219,21 +219,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttr5() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              String one();
-              String two();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  String one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            @A(one=null,)
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.A
+            |@A(one=null,)
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ',')
 
         assertThat(proposals).excludes('one').includes('two')
@@ -242,22 +242,22 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr6() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            public @interface A {
-              String one();
-              String two();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.METHOD)
+            |public @interface A {
+            |  String one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            class Something {
-              @A(one=null,)
-              void meth() {}
-            }
-            '''.stripIndent()
+            |import p.A
+            |class Something {
+            |  @A(one=null,)
+            |  void meth() {}
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ',')
 
         assertThat(proposals).excludes('one').includes('two')
@@ -266,21 +266,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr7() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              boolean one();
-              String two();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            @A(one=false)
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.A
+            |@A(one=false)
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, 'false')
 
         assertThat(proposals).excludes('one', 'two')
@@ -289,22 +289,22 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr8() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              boolean one();
-              String two();
-              int three();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |  int three();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            @A(one=false, t)
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.A
+            |@A(one=false, t)
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', t')
 
         assertThat(proposals).excludes('one').includes('two', 'three')
@@ -313,23 +313,23 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr9() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            public @interface A {
-              boolean one();
-              String two();
-              int three();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.METHOD)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |  int three();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            class Something {
-              @A(one=false, t)
-              void meth() {}
-            }
-            '''.stripIndent()
+            |import p.A
+            |class Something {
+            |  @A(one=false, t)
+            |  void meth() {}
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', t')
 
         assertThat(proposals).excludes('one').includes('two', 'three')
@@ -338,23 +338,23 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr10() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            public @interface A {
-              boolean one();
-              String two();
-              int three();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.METHOD)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |  int three();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            class Something {
-              @A(one=false, w)
-              void meth() {}
-            }
-            '''.stripIndent()
+            |import p.A
+            |class Something {
+            |  @A(one=false, w)
+            |  void meth() {}
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', w')
 
         assertThat(proposals).excludes('one', 'three').includes('two')
@@ -365,23 +365,23 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
 
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              boolean one();
-              String two();
-              @Deprecated
-              int three();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |  @Deprecated
+            |  int three();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            @A(one=false, t)
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.A
+            |@A(one=false, t)
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', t')
 
         assertThat(proposals).excludes('one', 'three').includes('two')
@@ -390,27 +390,27 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/769
     void testAnnoAttr12() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              boolean one();
-              String two();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  boolean one();
+            |  String two();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         addJavaSource '''\
-            package p;
-            public class Three {
-            }
-            ''', 'Three', 'p'
+            |package p;
+            |public class Three {
+            |}
+            |'''.stripMargin(), 'Three', 'p'
 
         String contents = '''\
-            import p.*
-            @A(one=false, t)
-            class Something {
-            }
-            '''.stripIndent()
+            |import p.*
+            |@A(one=false, t)
+            |class Something {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', t')
 
         assertThat(proposals).excludes('one', 'Three').includes('two')
@@ -419,24 +419,24 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/769
     void testAnnoAttr13() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            public @interface A {
-              boolean one();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.METHOD)
+            |public @interface A {
+            |  boolean one();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         String contents = '''\
-            import p.A
-            class Something {
-              @A(one=false)
-              def meth() {}
-              boolean someFalseCheck() {}
-              private boolean someFalseFlag
-              public static final boolean SOME_FALSE_CONST = false
-            }
-            '''.stripIndent()
+            |import p.A
+            |class Something {
+            |  @A(one=false)
+            |  def meth() {}
+            |  boolean someFalseCheck() {}
+            |  private boolean someFalseFlag
+            |  public static final boolean SOME_FALSE_CONST = false
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, 'false')
 
         assertThat(proposals).excludes('someFalseCheck', 'someFalseFlag').includes('SOME_FALSE_CONST')
@@ -445,10 +445,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrPacks() {
         String contents = '''\
-            @SuppressWarnings(value=jav)
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(value=jav)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '=jav')
 
         assertThat(proposals).includes('java.lang', 'java.util')
@@ -457,10 +457,10 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrTypes() {
         String contents = '''\
-            @SuppressWarnings(value=Obj)
-            class C {
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(value=Obj)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '=Obj')
 
         assertThat(proposals).includes('Object - java.lang', 'ObjectRange - groovy.lang')
@@ -469,11 +469,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst() {
         String contents = '''\
-            @SuppressWarnings(value=V)
-            class C {
-              public static final String VALUE = ''
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(value=V)
+            |class C {
+            |  public static final String VALUE = ''
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '=V')
 
         assertThat(proposals).includes('VALUE')
@@ -482,11 +482,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst2() {
         String contents = '''\
-            @SuppressWarnings(V)
-            class C {
-              public static final String VALUE = ''
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(V)
+            |class C {
+            |  public static final String VALUE = ''
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(V')
 
         assertThat(proposals).includes('VALUE')
@@ -495,11 +495,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst3() {
         String contents = '''\
-            @SuppressWarnings(V)
-            class C {
-              public static String VARIES = ''
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(V)
+            |class C {
+            |  public static String VARIES = ''
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(V')
 
         assertThat(proposals).excludes('VARIES')
@@ -508,11 +508,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst4() {
         String contents = '''\
-            @SuppressWarnings(V)
-            class C {
-              public static final CharSequence VALUE = ''
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(V)
+            |class C {
+            |  public static final CharSequence VALUE = ''
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(V')
 
         assertThat(proposals).excludes('VALUE')
@@ -520,14 +520,18 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnnoAttrConst5() {
-        addJavaSource 'public interface I { String VALUE = ""; }', 'I', 'p'
+        addJavaSource '''\
+            |public interface I {
+            |  String VALUE = "";
+            |}
+            |'''.stripMargin(), 'I', 'p'
 
         String contents = '''\
-            import static p.I.VALUE
-            @SuppressWarnings(V)
-            class C {
-            }
-            '''.stripIndent()
+            |import static p.I.VALUE
+            |@SuppressWarnings(V)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(V')
 
         assertThat(proposals).includes('VALUE')
@@ -535,14 +539,18 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnnoAttrConst6() {
-        addJavaSource('public interface J { String VALUE = ""; }', 'J', 'p')
+        addJavaSource('''\
+            |public interface J {
+            |  String VALUE = "";
+            |}
+            |'''.stripMargin(), 'J', 'p')
 
         String contents = '''\
-            import static p.J.*
-            @SuppressWarnings(V)
-            class C {
-            }
-            '''.stripIndent()
+            |import static p.J.*
+            |@SuppressWarnings(V)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(V')
 
         assertThat(proposals).includes('VALUE')
@@ -551,22 +559,22 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst7() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface K {
-              int one();
-              int two();
-            }
-            ''', 'K', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface K {
+            |  int one();
+            |  int two();
+            |}
+            |'''.stripMargin(), 'K', 'p'
 
         String contents = '''\
-            import p.K
-            @K(one=null, two = )
-            class C {
-              public static final int TWO = 2
-            }
-            '''.stripIndent()
+            |import p.K
+            |@K(one=null, two = )
+            |class C {
+            |  public static final int TWO = 2
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ' = ')
 
         assertThat(proposals).includes('TWO')
@@ -575,23 +583,23 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrConst8() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            public @interface L {
-              int one();
-              int two();
-            }
-            ''', 'L', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.METHOD)
+            |public @interface L {
+            |  int one();
+            |  int two();
+            |}
+            |'''.stripMargin(), 'L', 'p'
 
         String contents = '''\
-            import p.L
-            class C {
-              @L(one=null, two = )
-              String somethingSpecial() {}
-              public static final int TWO = 2
-            }
-            '''.stripIndent()
+            |import p.L
+            |class C {
+            |  @L(one=null, two = )
+            |  String somethingSpecial() {}
+            |  public static final int TWO = 2
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ' = ')
 
         assertThat(proposals).includes('TWO')
@@ -602,23 +610,23 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
 
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface M {
-              int one();
-              int two();
-            }
-            ''', 'M', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface M {
+            |  int one();
+            |  int two();
+            |}
+            |'''.stripMargin(), 'M', 'p'
 
         String contents = '''\
-            import p.M
-            @M(two=T)
-            class C {
-              @Deprecated
-              public static final int TWO = 2
-            }
-            '''.stripIndent()
+            |import p.M
+            |@M(two=T)
+            |class C {
+            |  @Deprecated
+            |  public static final int TWO = 2
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '=T')
 
         assertThat(proposals).excludes('TWO')
@@ -627,20 +635,20 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrEnumConst1() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface U {
-              TimeUnit value();
-            }
-            ''', 'U', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface U {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'U', 'p'
 
         String contents = '''\
-            @p.U()
-            class C {
-            }
-            '''.stripIndent()
+            |@p.U()
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(')
 
         assertThat(proposals).includes('SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'TimeUnit')
@@ -649,21 +657,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test @NotYetImplemented
     void testAnnoAttrEnumConst2() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface V {
-              TimeUnit value();
-            }
-            ''', 'V', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface V {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'V', 'p'
 
         String contents = '''\
-            import java.util.concurrent.TimeUnit
-            @p.V(TimeUnit.)
-            class C {
-            }
-            '''.stripIndent()
+            |import java.util.concurrent.TimeUnit
+            |@p.V(TimeUnit.)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '.')
 
         assertThat(proposals).includes('SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS').excludes('TimeUnit')
@@ -672,14 +680,14 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrEnumConst3() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface W {
-              TimeUnit value();
-            }
-            ''', 'W', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface W {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'W', 'p'
 
         String contents = '''\
             @p.W(MI)
@@ -694,21 +702,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test @NotYetImplemented
     void testAnnoAttrEnumConst4() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface X {
-              TimeUnit[] value();
-            }
-            ''', 'X', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface X {
+            |  TimeUnit[] value();
+            |}
+            |'''.stripMargin(), 'X', 'p'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-            @p.X([SECONDS, ])
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |@p.X([SECONDS, ])
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', ')
 
         assertThat(proposals).includes('MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'TimeUnit').excludes('SECONDS')
@@ -717,21 +725,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test @NotYetImplemented
     void testAnnoAttrEnumConst4a() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface Y {
-              TimeUnit[] value();
-            }
-            ''', 'Y', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface Y {
+            |  TimeUnit[] value();
+            |}
+            |'''.stripMargin(), 'Y', 'p'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-            @p.Y(value=[SECONDS, ])
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |@p.Y(value=[SECONDS, ])
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, ', ')
 
         assertThat(proposals).includes('MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'TimeUnit').excludes('SECONDS')
@@ -740,21 +748,21 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrEnumConst4b() {
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface Z {
-              TimeUnit[] value();
-            }
-            ''', 'Z', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface Z {
+            |  TimeUnit[] value();
+            |}
+            |'''.stripMargin(), 'Z', 'p'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-            @p.Z(value = [SECONDS, M])
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |@p.Z(value = [SECONDS, M])
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, 'M')
 
         assertThat(proposals).includes('MILLISECONDS', 'MICROSECONDS').excludes('SECONDS', 'NANOSECONDS', 'TimeUnit')
@@ -763,85 +771,85 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testAnnoAttrEnumConst5() {
         addJavaSource '''\
-            package time;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface Unit {
-              TimeUnit value();
-            }
-            ''', 'Unit', 'time'
+            |package time;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface Unit {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'Unit', 'time'
 
         String contents = '''\
-            @time.Unit()
-            class C {
-            }
-            '''.stripIndent()
+            |@time.Unit()
+            |class C {
+            |}
+            |'''.stripMargin()
         String expected = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-
-            @time.Unit(SECONDS)
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |
+            |@time.Unit(SECONDS)
+            |class C {
+            |}
+            |'''.stripMargin()
         checkProposalApplication(contents, expected, contents.indexOf('(') + 1, 'SECONDS', false)
     }
 
     @Test
     void testAnnoAttrEnumConst6() {
         addJavaSource '''\
-            package time_;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface Unit {
-              TimeUnit value();
-            }
-            ''', 'Unit', 'time_'
+            |package time_;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface Unit {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'Unit', 'time_'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-
-            @time_.Unit()
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |
+            |@time_.Unit()
+            |class C {
+            |}
+            |'''.stripMargin()
         String expected = '''\
-            import static java.util.concurrent.TimeUnit.SECONDS
-
-            @time_.Unit(SECONDS)
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.SECONDS
+            |
+            |@time_.Unit(SECONDS)
+            |class C {
+            |}
+            |'''.stripMargin()
         checkProposalApplication(contents, expected, contents.indexOf('(') + 1, 'SECONDS', false)
     }
 
     @Test
     void testAnnoAttrEnumConst7() {
         addJavaSource '''\
-            package time__;
-            import java.lang.annotation.*;
-            import java.util.concurrent.*;
-            @Target(ElementType.TYPE)
-            public @interface Unit {
-              TimeUnit value();
-            }
-            ''', 'Unit', 'time__'
+            |package time__;
+            |import java.lang.annotation.*;
+            |import java.util.concurrent.*;
+            |@Target(ElementType.TYPE)
+            |public @interface Unit {
+            |  TimeUnit value();
+            |}
+            |'''.stripMargin(), 'Unit', 'time__'
 
         String contents = '''\
-            import static java.util.concurrent.TimeUnit.*
-
-            @time__.Unit()
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.*
+            |
+            |@time__.Unit()
+            |class C {
+            |}
+            |'''.stripMargin()
         String expected = '''\
-            import static java.util.concurrent.TimeUnit.*
-
-            @time__.Unit(SECONDS)
-            class C {
-            }
-            '''.stripIndent()
+            |import static java.util.concurrent.TimeUnit.*
+            |
+            |@time__.Unit(SECONDS)
+            |class C {
+            |}
+            |'''.stripMargin()
         checkProposalApplication(contents, expected, contents.indexOf('(') + 1, 'SECONDS', false)
     }
 
@@ -850,29 +858,29 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
 
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              E value();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  E value();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         addJavaSource '''\
-            package p;
-            @Deprecated
-            public enum E {
-              ABC, DEF;
-            }
-            ''', 'E', 'p'
+            |package p;
+            |@Deprecated
+            |public enum E {
+            |  ABC, DEF;
+            |}
+            |'''.stripMargin(), 'E', 'p'
 
         String contents = '''\
-            import p.A
-            import p.E
-            @A()
-            class C {
-            }
-            '''.stripIndent()
+            |import p.A
+            |import p.E
+            |@A()
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, '(')
 
         assertThat(proposals).excludes('E', 'ABC', 'DEF').includes('value')
@@ -883,28 +891,28 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
 
         addJavaSource '''\
-            package p;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface A {
-              E value();
-            }
-            ''', 'A', 'p'
+            |package p;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface A {
+            |  E value();
+            |}
+            |'''.stripMargin(), 'A', 'p'
 
         addJavaSource '''\
-            package p;
-            public enum E {
-              @Deprecated ABC, DEF;
-            }
-            ''', 'E', 'p'
+            |package p;
+            |public enum E {
+            |  @Deprecated ABC, DEF;
+            |}
+            |'''.stripMargin(), 'E', 'p'
 
         String contents = '''\
-            import p.A
-            import p.E
-            @A(value=E.)
-            class C {
-            }
-            '''.stripIndent()
+            |import p.A
+            |import p.E
+            |@A(value=E.)
+            |class C {
+            |}
+            |'''.stripMargin()
         def proposals = getProposals(contents, 'E.')
 
         assertThat(proposals).excludes('ABC').includes('DEF')
@@ -913,12 +921,12 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test
     void testConfigScriptCompletion() {
         addPlainText('''\
-            withConfig(configuration) {
-              imports {
-                star 'java.util.regex'
-              }
-            }
-            '''.stripIndent(), '../config.groovy')
+            |withConfig(configuration) {
+            |  imports {
+            |    star 'java.util.regex'
+            |  }
+            |}
+            |'''.stripMargin(), '../config.groovy')
         setJavaPreference(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, 'config.groovy')
         // addition of imports through compiler configuration should not affect proposal application
 
@@ -940,43 +948,43 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/365
     void testQualifierForTypeAnnoScope1() {
         String contents = '''\
-            @SuppressWarnings(V)
-            class C {
-              public static final String VALUE = 'nls'
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(V)
+            |class C {
+            |  public static final String VALUE = 'nls'
+            |}
+            |'''.stripMargin()
         String expected = '''\
-            @SuppressWarnings(C.VALUE)
-            class C {
-              public static final String VALUE = 'nls'
-            }
-            '''.stripIndent()
+            |@SuppressWarnings(C.VALUE)
+            |class C {
+            |  public static final String VALUE = 'nls'
+            |}
+            |'''.stripMargin()
         checkProposalApplication(contents, expected, getIndexOf(contents, '(V'), 'VALUE', false)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/478
     void testQualifierForTypeAnnoScope2() {
         addJavaSource '''\
-            package a;
-            import java.lang.annotation.*;
-            @Target(ElementType.TYPE)
-            public @interface B {
-              Class<?> value();
-            }
-            ''', 'B', 'a'
+            |package a;
+            |import java.lang.annotation.*;
+            |@Target(ElementType.TYPE)
+            |public @interface B {
+            |  Class<?> value();
+            |}
+            |'''.stripMargin(), 'B', 'a'
 
         String contents = '''\
-            @a.B(Nes)
-            class C {
-              static class Nested {}
-            }
-            '''.stripIndent()
+            |@a.B(Nes)
+            |class C {
+            |  static class Nested {}
+            |}
+            |'''.stripMargin()
         String expected = '''\
-            @a.B(C.Nested)
-            class C {
-              static class Nested {}
-            }
-            '''.stripIndent()
+            |@a.B(C.Nested)
+            |class C {
+            |  static class Nested {}
+            |}
+            |'''.stripMargin()
         setJavaPreference(CODEASSIST_ADDIMPORT, 'false')
         checkProposalApplication(contents, expected, getIndexOf(contents, '(Nes'), 'Nested - C', true)
     }

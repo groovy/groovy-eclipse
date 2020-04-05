@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,11 +102,13 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected int getIndexOf(CharSequence contents, String lookFor) {
-        return contents.toString().indexOf(lookFor) + lookFor.length()
+        int index = contents.toString().indexOf(lookFor); assert index != -1
+        return index + lookFor.length()
     }
 
     protected int getLastIndexOf(CharSequence contents, String lookFor) {
-        return contents.toString().lastIndexOf(lookFor) + lookFor.length()
+        int index = contents.toString().lastIndexOf(lookFor); assert index != -1
+        return index + lookFor.length()
     }
 
     protected void proposalExists(ICompletionProposal[] proposals, String name, int expectedCount, boolean isType = name.contains(' - ')) {
@@ -208,14 +210,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (Pattern.matches(expectedReplacement, replacement)) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -226,14 +228,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (replacement == expectedReplacement) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '$expectedReplacement' $expectedCount times, but found it $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -249,14 +251,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void checkReplacementString(ICompletionProposal[] proposals, String[] expectedReplacementOptions, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
-            String replacement = proposal.replacementString
+            def replacement = proposal.replacementString
             if (replacement == expectedReplacementOptions[0] || replacement == expectedReplacementOptions[1]) {
                 foundCount += 1
             }
         }
 
         if (foundCount != expectedCount) {
-            StringBuilder sb = new StringBuilder("Expected to find proposal '${expectedReplacementOptions[0]}' or '${expectedReplacementOptions[1]}' $expectedCount times, but found them $foundCount times.  All Proposals:")
+            def sb = new StringBuilder("Expected to find proposal '${expectedReplacementOptions[0]}' or '${expectedReplacementOptions[1]}' $expectedCount times, but found them $foundCount times.  All Proposals:")
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
@@ -271,7 +273,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected String printProposals(ICompletionProposal[] proposals) {
-        StringBuilder sb = new StringBuilder()
+        def sb = new StringBuilder()
         for (proposal in proposals) {
             sb.append('\n').append(proposal.displayString)
             if (proposal instanceof IJavaCompletionProposal) {

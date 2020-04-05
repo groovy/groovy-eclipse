@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
-import org.codehaus.groovy.runtime.DefaultGroovyMethods
 import org.eclipse.jface.text.Document
 import org.junit.Test
 
@@ -210,46 +209,46 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/409
     void testStatement22() {
         String contents = '''\
-            class Bean {
-              private String foo
-              String getFoo() {}
-            }
-            def bean1 = new Bean()
-            def bean2 = new Bean(foo#: bea)
-            '''.stripIndent()
+            |class Bean {
+            |  private String foo
+            |  String getFoo() {}
+            |}
+            |def bean1 = new Bean()
+            |def bean2 = new Bean(foo#: bea)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/409
     void testStatement23() {
         String contents = '''\
-            class Bean {
-              private String foo
-              String getFoo() {}
-            }
-            def bean1 = new Bean()
-            def bean2 = new Bean(foo: bea#)
-            '''.stripIndent()
+            |class Bean {
+            |  private String foo
+            |  String getFoo() {}
+            |}
+            |def bean1 = new Bean()
+            |def bean2 = new Bean(foo: bea#)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT)
     }
 
     @Test @NotYetImplemented
     void testStatement24() {
         String contents = '''\
-            def a, b
-            def x = true ? #
-            if (x) println(x)
-            '''.stripIndent()
+            |def a, b
+            |def x = true ? #
+            |if (x) println(x)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement25() {
         String contents = '''\
-            def a, b
-            def x = true ? y#
-            if (x) println(x)
-            '''.stripIndent()
+            |def a, b
+            |def x = true ? y#
+            |if (x) println(x)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof VariableExpression
         }
@@ -258,8 +257,8 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testStatement26() {
         String contents = '''\
-            0..#
-            '''.stripIndent()
+            |0..#
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof RangeExpression
         }
@@ -268,8 +267,8 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testStatement27() {
         String contents = '''\
-            0..<#
-            '''.stripIndent()
+            |0..<#
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof RangeExpression
         }
@@ -278,24 +277,24 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testStatement28() {
         String contents = '''\
-            0.#.
-            '''.stripIndent()
+            |0.#.
+            |'''.stripMargin()
         assertLocation(contents, null)
     }
 
     @Test
     void testStatement29() {
         String contents = '''\
-            0.#.<
-            '''.stripIndent()
+            |0.#.<
+            |'''.stripMargin()
         assertLocation(contents, null)
     }
 
     @Test
     void testStatement30() {
         String contents = '''\
-            0..#<
-            '''.stripIndent()
+            |0..#<
+            |'''.stripMargin()
         assertLocation(contents, null)
     }
 
@@ -303,13 +302,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement31() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -320,12 +319,12 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement31a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -336,13 +335,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement32() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -353,12 +352,12 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement32a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -369,14 +368,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement33() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E#
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E#
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -387,13 +386,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement33a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E#
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E#
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -404,14 +403,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement34() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#
-              case E.THREE:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#
+            |  case E.THREE:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -422,13 +421,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement34a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E#
-              case E.THREE:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E#
+            |  case E.THREE:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -439,15 +438,15 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement35() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E#
-              case E.THREE:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E#
+            |  case E.THREE:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -458,14 +457,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement35a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E#
-              case E.THREE:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E#
+            |  case E.THREE:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -476,15 +475,15 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testStatement36() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E#
-              default:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E#
+            |  default:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E'
@@ -534,10 +533,10 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/359
     void testExpression9() {
         String contents = '''\
-            def a, b
-            def x = true ? String.val#
-            def y, z
-            '''.stripIndent()
+            |def a, b
+            |def x = true ? String.val#
+            |def y, z
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
         }
@@ -546,10 +545,10 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExpression10() {
         String contents = '''\
-            def a, b
-            def x = false ? a : String.val#
-            def y, z
-            '''.stripIndent()
+            |def a, b
+            |def x = false ? a : String.val#
+            |def y, z
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
         }
@@ -558,10 +557,10 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExpression11() {
         String contents = '''\
-            def a, b
-            def x = a ?: String.val#
-            def y, z
-            '''.stripIndent()
+            |def a, b
+            |def x = a ?: String.val#
+            |def y, z
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
         }
@@ -570,8 +569,8 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExpression12() {
         String contents = '''\
-            0.#
-            '''.stripIndent()
+            |0.#
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof PropertyExpression
         }
@@ -581,13 +580,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression13() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -598,12 +597,12 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression13a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -614,13 +613,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression14() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -631,12 +630,12 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression14a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -647,14 +646,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression15() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E.T#
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E.T#
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -665,13 +664,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression15a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E.T#
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E.T#
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -682,14 +681,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression16() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#
-              case E.THREE:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#
+            |  case E.THREE:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -700,13 +699,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression16a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.T#
-              case E.THREE:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.T#
+            |  case E.THREE:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -717,15 +716,15 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression17() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E.T#
-              case E.THREE:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E.T#
+            |  case E.THREE:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -736,14 +735,14 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression17a() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E.T#
-              case E.THREE:
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E.T#
+            |  case E.THREE:
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -754,15 +753,15 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testExpression18() {
         addGroovySource 'enum E { ONE, TWO, THREE }'
         String contents = '''\
-            void meth(E e) {
-              switch (e) {
-              case E.ONE:
-              case E.T#
-              default:
-                println 'stmt'
-              }
-            }
-            '''.stripIndent()
+            |void meth(E e) {
+            |  switch (e) {
+            |  case E.ONE:
+            |  case E.T#
+            |  default:
+            |    println 'stmt'
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
             assert fullCompletionExpression == 'E.T'
@@ -867,48 +866,48 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testMethodContext21() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            compile(#)
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |compile(#)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext22() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            compile(#/[a-z0-9]/)
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |compile(#/[a-z0-9]/)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext23() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            def regexp = /[a-z0-9]/
-            compile(#regexp)
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |def regexp = /[a-z0-9]/
+            |compile(#regexp)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext24() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            def regexp = /[a-z0-9]/
-            compile(regexp,# )
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |def regexp = /[a-z0-9]/
+            |compile(regexp,# )
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext25() {
         String contents = '''\
-            import static java.util.regex.Pattern.compile
-            def regexp = /[a-z0-9]/
-            compile(regexp,# 0)
-            '''.stripIndent()
+            |import static java.util.regex.Pattern.compile
+            |def regexp = /[a-z0-9]/
+            |compile(regexp,# 0)
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.METHOD_CONTEXT)
     }
 
@@ -965,56 +964,56 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testClassBody5() {
         String contents = '''\
-            def list = new List() {
-              #
-            }
-            '''.stripIndent()
+            |def list = new List() {
+            |  #
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.CLASS_BODY)
     }
 
     @Test
     void testClassBody6() {
         String contents = '''\
-            def list = new List() {
-              #
-              @Override
-              boolean isEmpty() { true }
-            }
-            '''.stripIndent()
+            |def list = new List() {
+            |  #
+            |  @Override
+            |  boolean isEmpty() { true }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.CLASS_BODY)
     }
 
     @Test
     void testClassBody7() {
         String contents = '''\
-            def list = new List() {
-              @Override
-              boolean isEmpty() { true }
-              #
-            }
-            '''.stripIndent()
+            |def list = new List() {
+            |  @Override
+            |  boolean isEmpty() { true }
+            |  #
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.CLASS_BODY)
     }
 
     @Test
     void testClassBody8() {
         String contents = '''\
-            def list = new ArrayList(42) {
-              #
-            }
-            '''.stripIndent()
+            |def list = new ArrayList(42) {
+            |  #
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.CLASS_BODY)
     }
 
     @Test
     void testClassBody9() {
         String contents = '''\
-            class A {
-              @Lazy def list = new ArrayList(42) {
-                #
-              }
-            }
-            '''.stripIndent()
+            |class A {
+            |  @Lazy def list = new ArrayList(42) {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.CLASS_BODY) {
             assert enclosingGroovyType.name == 'A$1'
         }
@@ -1108,120 +1107,120 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExceptions5() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Th#) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Th#) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions6() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Th# any) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Th# any) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions7() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Th any#) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Th any#) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.PARAMETER)
     }
 
     @Test
     void testExceptions8() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Ex# | Th) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Ex# | Th) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions9() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Ex | Th#) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Ex | Th#) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions10() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Ex# | Th any) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Ex# | Th any) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions11() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Ex | Th# any) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Ex | Th# any) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions12() {
         String contents = '''\
-            class X {
-              void m() {
-                try {
-                  ;
-                } catch (Ex | Th any#) {
-                }
-              }
-            }
-            '''.stripIndent()
+            |class X {
+            |  void m() {
+            |    try {
+            |      ;
+            |    } catch (Ex | Th any#) {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertLocation(contents, ContentAssistLocation.PARAMETER)
     }
 
@@ -1425,15 +1424,13 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private void assertLocation(String contents, ContentAssistLocation expected,
-        @ClosureParams(value=SimpleType, options=['org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext']) @DelegatesTo(value=ContentAssistContext, strategy=Closure.DELEGATE_FIRST) Closure withContext = null) {
-
+    private void assertLocation(String contents, ContentAssistLocation expected, @ClosureParams(value=SimpleType, options=['org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext']) @DelegatesTo(value=ContentAssistContext, strategy=Closure.DELEGATE_FIRST) Closure<Void> withContext = null) {
         def unit = addGroovySource(contents.replace('#', ''), nextUnitName()), offset = contents.indexOf('#')
-        ContentAssistContext context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
+        def context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
 
         assert context?.location == expected
         if (withContext != null) {
-            DefaultGroovyMethods.with(context, withContext)
+            context.with(withContext)
         }
     }
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,10 +35,10 @@ import org.eclipse.jface.preference.IPreferenceStore;
 /**
  * Sub class of {@link CleanUpPostSaveListener} so that we can use only Groovy-supported post-save clean-ups.
  */
-public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener implements IPostSaveListener {
+public class GroovyCleanUpPostSaveListener extends CleanUpPostSaveListener implements IPostSaveListener {
 
     @Override
-    protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
+    protected ICleanUp[] getCleanUps(final Map<String, String> settings, final Set<String> ids) {
         CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
         boolean doFormat = false;
@@ -71,7 +71,6 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
         if (doFormat) {
             groovyCleanUps.add(new GroovyCodeFormatCleanUp(FormatKind.FORMAT));
         } else if (doIndent) {
-            // indent == true && format == false
             groovyCleanUps.add(new GroovyCodeFormatCleanUp(FormatKind.INDENT_ONLY));
         }
 

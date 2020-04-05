@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,51 +33,51 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInInnerClass1() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                HTML
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    HTML
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'HTML', 'HTML - javax.swing.text.html')
     }
 
     @Test
     void testInInnerClass2() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def x(HTML) {
-                  ;
-                }
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def x(HTML) {
+            |      ;
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'HTML', 'HTML - javax.swing.text.html')
     }
 
     @Test
     void testInInnerClass3() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def x() {
-                  HTML
-                }
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def x() {
+            |      HTML
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'HTML', 'HTML - javax.swing.text.html')
     }
 
     @Test
     void testInInnerClass4() {
         String contents = '''\
-            class Outer {
-              class Inner extends HTML {
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner extends HTML {
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'HTML', 'HTML - javax.swing.text.html')
     }
 
@@ -86,44 +86,44 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass1() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                Inner f
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    Inner f
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'Inner', 'Inner - Outer')
     }
 
     @Test
     void testInnerClass2() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                private Inner f
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    private Inner f
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'Inner', 'Inner - Outer')
     }
 
     @Test
     void testInnerClass3() {
         String contents = '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            Outer.Inn
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - Outer'), contents.replaceFirst(/Inn\b/, 'Inner'))
     }
 
     @Test
     void testInnerClass4() {
         String contents = '''\
-            Map.Ent
-            '''.stripIndent()
+            |Map.Ent
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Ent', 'Entry - java.util.Map'), contents.replace('Ent', 'Entry'))
     }
 
@@ -136,63 +136,63 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass6() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'f'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'f'
 
         String contents = '''\
-            import f.Outer
-            Outer.Inn
-            '''.stripIndent()
+            |import f.Outer
+            |Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - f.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
     void testInnerClass7() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'g'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'g'
 
         String contents = '''\
-            g.Outer.Inn
-            '''.stripIndent()
+            |g.Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - g.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
     void testInnerClass8() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'h'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'h'
 
         String contents = '''\
-            import h.Outer
-            class Foo extends Outer.Inn
-            '''.stripIndent()
+            |import h.Outer
+            |class Foo extends Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - h.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
     void testInnerClass9() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'i'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'i'
 
         String contents = '''\
-            import s.Outer
-            class Foo implements Outer.Inn
-            '''.stripIndent()
+            |import s.Outer
+            |class Foo implements Outer.Inn
+            |'''.stripMargin()
         def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inn'))
         assert !proposals
     }
@@ -200,16 +200,16 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass10() {
         addGroovySource '''\
-            class Outer {
-              interface Inner {
-              }
-            }
-            ''', 'Outer', 'j'
+            |class Outer {
+            |  interface Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'j'
 
         String contents = '''\
-            import j.Outer
-            class Foo extends Outer.Inn
-            '''.stripIndent()
+            |import j.Outer
+            |class Foo extends Outer.Inn
+            |'''.stripMargin()
         def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inn'))
         assert !proposals
     }
@@ -217,31 +217,31 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass11() {
         addGroovySource '''\
-            class Outer {
-              interface Inner {
-              }
-            }
-            ''', 'Outer', 'k'
+            |class Outer {
+            |  interface Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'k'
 
         String contents = '''\
-            import k.Outer
-            class Foo implements Outer.Inn
-            '''.stripIndent()
+            |import k.Outer
+            |class Foo implements Outer.Inn
+            |'''.stripMargin()
             applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - k.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
     void testInnerClass12() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'l'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'l'
 
         String contents = '''\
-            Outer.Inn
-            '''.stripIndent()
+            |Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - l.Outer'), '''\
             |import l.Outer
             |
@@ -252,15 +252,15 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass13() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'm'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'm'
 
         String contents = '''\
-            Outer.Inn
-            '''.stripIndent()
+            |Outer.Inn
+            |'''.stripMargin()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - m.Outer'), '''\
             |m.Outer.Inner
@@ -270,32 +270,32 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass14() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-                class Nucleus {
-                }
-              }
-            }
-            ''', 'Outer', 'n'
+            |class Outer {
+            |  class Inner {
+            |    class Nucleus {
+            |    }
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'n'
 
         String contents = '''\
-            n.Outer.Inner.N
-            '''.stripIndent()
+            |n.Outer.Inner.N
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'N', 'Nucleus - n.Outer.Inner'), contents.replace('N', 'Nucleus'))
     }
 
     @Test
     void testInnerClass15() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'o'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'o'
 
         String contents = '''\
-            Inn
-            '''.stripIndent()
+            |Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - o.Outer'), '''\
             |import o.Outer.Inner
             |
@@ -306,15 +306,15 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass16() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'p'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'p'
 
         String contents = '''\
-            Inn
-            '''.stripIndent()
+            |Inn
+            |'''.stripMargin()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - p.Outer'), '''\
             |p.Outer.Inner
@@ -324,15 +324,15 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass17() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'q'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'q'
 
         String contents = '''\
-            new Outer.Inn
-            '''.stripIndent()
+            |new Outer.Inn
+            |'''.stripMargin()
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - q.Outer'), '''\
             |import q.Outer
             |
@@ -343,15 +343,15 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass18() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 'r'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'r'
 
         String contents = '''\
-            new Outer.Inn
-            '''.stripIndent()
+            |new Outer.Inn
+            |'''.stripMargin()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
         applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - r.Outer'), '''\
             |new r.Outer.Inner
@@ -361,17 +361,17 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass19() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 's'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 's'
 
         def unit = addGroovySource '''\
-            class Other {
-              Inn
-            }
-            '''.stripIndent(), nextUnitName(), 's'
+            |class Other {
+            |  Inn
+            |}
+            |'''.stripMargin(), nextUnitName(), 's'
 
         def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Inn'))
         applyProposalAndCheck(findFirstProposal(proposals, 'Inner - s.Outer'), '''\
@@ -388,17 +388,17 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass20() {
         addGroovySource '''\
-            class Outer {
-              class Inner {
-              }
-            }
-            ''', 'Outer', 't'
+            |class Outer {
+            |  class Inner {
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 't'
 
         def unit = addGroovySource '''\
-            class Other {
-              Outer.Inn
-            }
-            '''.stripIndent(), nextUnitName(), 't'
+            |class Other {
+            |  Outer.Inn
+            |}
+            |'''.stripMargin(), nextUnitName(), 't'
 
         def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Inn'))
         applyProposalAndCheck(findFirstProposal(proposals, 'Inner - t.Outer'), '''\
@@ -413,14 +413,14 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass21() {
         def unit = addGroovySource '''\
-            class Outer {
-              class Inner {
-                class Point {
-                }
-                Poi p
-              }
-            }
-            '''.stripIndent(), 'Outer', 'u'
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |    Poi p
+            |  }
+            |}
+            |'''.stripMargin(), 'Outer', 'u'
 
         def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
         applyProposalAndCheck(findFirstProposal(proposals, 'Point - u.Outer.Inner'), '''\
@@ -439,14 +439,14 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass22() {
         def unit = addGroovySource '''\
-            class Outer {
-              class Inner {
-                class Point {
-                }
-              }
-              Poi p
-            }
-            '''.stripIndent(), 'Outer', 'v'
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |  }
+            |  Poi p
+            |}
+            |'''.stripMargin(), 'Outer', 'v'
 
         def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
         applyProposalAndCheck(findFirstProposal(proposals, 'Point - v.Outer.Inner'), '''\
@@ -467,14 +467,14 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerClass23() {
         def unit = addGroovySource '''\
-            class Outer {
-              class Inner {
-                class Point {
-                }
-              }
-              Inner.Poi p
-            }
-            '''.stripIndent(), 'Outer', 'w'
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |  }
+            |  Inner.Poi p
+            |}
+            |'''.stripMargin(), 'Outer', 'w'
 
         def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
         applyProposalAndCheck(findFirstProposal(proposals, 'Point - w.Outer.Inner'), '''\
@@ -495,89 +495,89 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     @Test
     void testInnerMember1() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def xxx
-                def y() {
-                  xxx
-                }
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def xxx
+            |    def y() {
+            |      xxx
+            |    }
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 
     @Test
     void testInnerMember2() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def xxx
-              }
-              Inner i
-              def y() {
-                i.xxx
-              }
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def xxx
+            |  }
+            |  Inner i
+            |  def y() {
+            |    i.xxx
+            |  }
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 
     @Test
     void testInnerMember3() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def xxx
-              }
-            }
-            def y(Outer.Inner i) {
-              i.xxx
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def xxx
+            |  }
+            |}
+            |def y(Outer.Inner i) {
+            |  i.xxx
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 
     @Test
     void testInnerMember4() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def getXxx() {}
-              }
-            }
-            def y(Outer.Inner i) {
-              i.xxx
-            }
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def getXxx() {}
+            |  }
+            |}
+            |def y(Outer.Inner i) {
+            |  i.xxx
+            |}
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 
     @Test
     void testInnerMember5() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def xxx
-              }
-            }
-            Outer.Inner i
-            i.xxx
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def xxx
+            |  }
+            |}
+            |Outer.Inner i
+            |i.xxx
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 
     @Test
     void testInnerMember6() {
         String contents = '''\
-            class Outer {
-              class Inner {
-                def getXxx() {}
-              }
-            }
-            Outer.Inner i
-            i.xxx
-            '''.stripIndent()
+            |class Outer {
+            |  class Inner {
+            |    def getXxx() {}
+            |  }
+            |}
+            |Outer.Inner i
+            |i.xxx
+            |'''.stripMargin()
         assertProposalCreated(contents, 'xxx', 'xxx')
     }
 }

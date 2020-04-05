@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,11 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 public class MockProposalFilter1 implements IProposalFilter {
 
-    private static boolean filterCalled = false;
+    private static boolean filterCalled;
 
     @Override
-    public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+    public List<IGroovyProposal> filterProposals(final List<IGroovyProposal> proposals,
+            final ContentAssistContext context, final JavaContentAssistInvocationContext javaContext) {
         filterCalled = true;
         return proposals;
     }

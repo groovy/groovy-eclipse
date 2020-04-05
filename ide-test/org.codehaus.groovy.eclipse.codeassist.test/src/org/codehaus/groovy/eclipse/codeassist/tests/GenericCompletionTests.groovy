@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,29 +24,29 @@ final class GenericCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAfterArrayAccesses1() {
-        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].c\nj"
-        String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].clear()\nj"
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo'].c"), "clear()")
+        String contents = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"].c\nj'
+        String expected = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"].clear()\nj'
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '["foo"].c'), 'clear()')
     }
 
     @Test
     void testAfterArrayAccesses2() {
-        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo']."
-        String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'].clear()"
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo']."), "clear()")
+        String contents = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"].'
+        String expected = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"].clear()'
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '["foo"].'), 'clear()')
     }
 
     @Test
     void testAfterMultipleArrayAccesses1() {
-        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].t"
-        String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].time"
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo'][5][2].t"), "time")
+        String contents = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"][5][2].t'
+        String expected = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"][5][2].time'
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '["foo"][5][2].t'), 'time')
     }
 
     @Test
     void testAfterMultipleArrayAccesses2() {
-        String contents = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2]."
-        String expected = "Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ['foo'][5][2].time"
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "['foo'][5][2]."), "time")
+        String contents = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"][5][2].'
+        String expected = 'Map<String, Map<Integer, List<Date>>> dataTyped\ndataTyped      ["foo"][5][2].time'
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '["foo"][5][2].'), 'time')
     }
 }

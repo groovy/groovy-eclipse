@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,54 +28,56 @@ import org.junit.Test
 final class GroovyLikeCompletionTests extends CompletionTestSuite {
 
     private static final String SCRIPTCONTENTS = '''\
-        any
-        clone
-        findIndexOf
-        inject
-        class Foo {
-          Foo(first, second) { }
-          Foo(int third) { }
-          def method1(arg) { }
-          def method2(arg, Closure c1) { }
-          def method3(arg, Closure c1, Closure c2) { }
-        }
-        new Foo()
-        '''.stripIndent()
-    private final static String CLOSURE_CONTENTS =
-        "class Other {\n" +
-        "    def first\n" +
-        "    def second2() { } \n" +
-        "}\n" +
-        " \n" +
-        "class MyOtherClass extends Other {\n" +
-        "    def meth() {\n" +
-        "        ''.with {\n" +
-        "            substring(0)\n" +  // should find
-        "            first\n" +  // should find
-        "            second2()\n" +  // should find
-        "            delegate.substring(0)\n" +  // should find
-        "            delegate.first(0)\n" + // should not find
-        "            delegate.second2(0)\n" + // should not find
-        "            this.substring(0)\n" + // should not find
-        "            this.first(0)\n" + // should find
-        "            this.second2(0)\n" +  // should find
-        "            wait\n" +  // should find 2 only
-        "        }\n" +
-        "    }\n" +
-        "}"
-    private final static String CLOSURE_CONTENTS2 =
-        "class Other {\n" +
-        "    def first\n" +
-        "    def second2() { } \n" +
-        "}\n" +
-        "class Other2 extends Other { }\n" +
-        "class MyOtherClass extends Other {\n" +
-        "    def meth() {\n" +
-        "        new Other2().foo {\n" +
-        "            first\n" +  // should find 2 only
-        "        }\n" +
-        "    }\n" +
-        "}"
+        |any
+        |clone
+        |findIndexOf
+        |inject
+        |class Foo {
+        |  Foo(first, second) { }
+        |  Foo(int third) { }
+        |  def method1(arg) { }
+        |  def method2(arg, Closure c1) { }
+        |  def method3(arg, Closure c1, Closure c2) { }
+        |}
+        |new Foo()
+        |'''.stripMargin()
+    private final static String CLOSURE_CONTENTS = '''\
+        |class Other {
+        |    def first
+        |    def second2() { }
+        |}
+        |
+        |class MyOtherClass extends Other {
+        |    def meth() {
+        |        ''.with {
+        |            substring(0) // should find
+        |            first // should find
+        |            second2() // should find
+        |            delegate.substring(0) // should find
+        |            delegate.first(0) // should not find
+        |            delegate.second2(0) // should not find
+        |            this.substring(0) // should not find
+        |            this.first(0) // should find
+        |            this.second2(0) // should find
+        |            wait // should find 2 only
+        |        }
+        |    }
+        |}
+        |'''.stripMargin()
+    private final static String CLOSURE_CONTENTS2 = '''\
+        |class Other {
+        |    def first
+        |    def second2() { }
+        |}
+        |class Other2 extends Other { }
+        |class MyOtherClass extends Other {
+        |    def meth() {
+        |        new Other2().foo {
+        |            first // should find 2 only
+        |        }
+        |    }
+        |}
+        |'''.stripMargin()
 
     private final IPreferenceStore groovyPrefs = GroovyContentAssist.default.preferenceStore
 

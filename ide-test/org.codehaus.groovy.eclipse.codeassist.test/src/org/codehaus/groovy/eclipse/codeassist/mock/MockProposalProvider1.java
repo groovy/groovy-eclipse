@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 
 public class MockProposalProvider1 implements IProposalProvider {
 
-    private static boolean providerCalled = false;
+    private static boolean providerCalled;
 
     public static boolean wasProviderCalled() {
         return providerCalled;
@@ -37,19 +37,20 @@ public class MockProposalProvider1 implements IProposalProvider {
     }
 
     @Override
-    public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
+    public List<IGroovyProposal> getStatementAndExpressionProposals(final ContentAssistContext context,
+            final ClassNode completionType, final boolean isStatic, final Set<ClassNode> categories) {
         providerCalled = true;
         return null;
     }
 
     @Override
-    public List<MethodNode> getNewMethodProposals(ContentAssistContext context) {
+    public List<MethodNode> getNewMethodProposals(final ContentAssistContext context) {
         providerCalled = true;
         return null;
     }
 
     @Override
-    public List<String> getNewFieldProposals(ContentAssistContext context) {
+    public List<String> getNewFieldProposals(final ContentAssistContext context) {
         providerCalled = true;
         return null;
     }

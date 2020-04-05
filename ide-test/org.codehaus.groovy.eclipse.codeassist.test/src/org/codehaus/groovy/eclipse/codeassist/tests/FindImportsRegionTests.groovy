@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,28 +31,28 @@ final class FindImportsRegionTests {
 
     @Test
     void testFindImportsRegion1() {
-        checkRegion('''
-            package p
-            import a
-            import b
-            class I { }
-            '''.stripIndent(), '''
-            package p
-            import a
-            import b
-            '''.stripIndent())
+        checkRegion('''\
+            |package p
+            |import a
+            |import b
+            |class I { }
+            |'''.stripMargin(), '''\
+            |package p
+            |import a
+            |import b
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion2() {
-        checkRegion('''
-            import a
-            import b
-            class I { }
-            '''.stripIndent(), '''
-            import a
-            import b
-            '''.stripIndent())
+        checkRegion('''\
+            |import a
+            |import b
+            |class I { }
+            |'''.stripMargin(), '''\
+            |import a
+            |import b
+            |'''.stripMargin())
     }
 
     // we made the decision only to look at import statements that start at the
@@ -60,82 +60,82 @@ final class FindImportsRegionTests {
     // be changed in the future
     @Test
     void testFindImportsRegion3() {
-        checkRegion('''
-            import a
-             import b
-            class I { }
-            '''.stripIndent(), '''
-            import a
-            '''.stripIndent())
+        checkRegion('''\
+            |import a
+            | import b
+            |class I { }
+            |'''.stripMargin(), '''\
+            |import a
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion4() {
-        checkRegion('''
-             import a
-            import b
-            class I { }
-            '''.stripIndent(), '''
-             import a
-            import b
-            '''.stripIndent())
+        checkRegion('''\
+            | import a
+            |import b
+            |class I { }
+            |'''.stripMargin(), '''\
+            | import a
+            |import b
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion5() {
-        checkRegion('''
-            package p
-            class I { }
-            '''.stripIndent(), '''
-            package p
-            '''.stripIndent())
+        checkRegion('''\
+            |package p
+            |class I {}
+            |'''.stripMargin(), '''\
+            |package p
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion6() {
         checkRegion('''\
-            package p
-            class I { }
-            '''.stripIndent(), '''\
-            package p
-            '''.stripIndent())
+            |package p
+            |class I {}
+            |'''.stripMargin(), '''\
+            |package p
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion7() {
         checkRegion('''\
-            /**
-             *
-             *
-             */
-            package p
-            class I { }
-            '''.stripIndent(), '''\
-            /**
-             *
-             *
-             */
-            package p
-            '''.stripIndent())
+            |/**
+            | *
+            | *
+            | */
+            |package p
+            |class I { }
+            |'''.stripMargin(), '''\
+            |/**
+            | *
+            | *
+            | */
+            |package p
+            |'''.stripMargin())
     }
 
     @Test
     void testFindImportsRegion8() {
         checkRegion('''\
-            /**
-             *
-             *
-             */
-            package p
-            import a.b.c // fdsaffdsa
-            class I { }
-            '''.stripIndent(), '''\
-            /**
-             *
-             *
-             */
-            package p
-            import a.b.c // fdsaffdsa
-            '''.stripIndent())
+            |/**
+            | *
+            | *
+            | */
+            |package p
+            |import a.b.c // fdsaffdsa
+            |class I { }
+            |'''.stripMargin(), '''\
+            |/**
+            | *
+            | *
+            | */
+            |package p
+            |import a.b.c // fdsaffdsa
+            |'''.stripMargin())
     }
 }
