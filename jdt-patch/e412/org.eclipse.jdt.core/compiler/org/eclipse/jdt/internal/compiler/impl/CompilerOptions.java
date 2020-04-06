@@ -211,11 +211,12 @@ public class CompilerOptions {
 
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
-	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
 	public static final String OPTIONG_BuildGroovyFiles           = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyFlags                = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyProjectName          = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyCompilerConfigScript = "org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript"; //$NON-NLS-1$
+
+	public static final int IsGrails = 1, InvokeDynamic = 2; // GroovyFlags bits
 	// GROOVY end
 
 	/**
@@ -492,8 +493,8 @@ public class CompilerOptions {
 	public boolean ignoreSourceFolderWarningOption;
 
 	// GROOVY add
-	public int buildGroovyFiles; // 0=dontknow 1=no 2=yes
-	public int groovyFlags; // 0x01 == IsGrails
+	public int buildGroovyFiles; // [0: unknown, 1: no, 2: yes]
+	public int groovyFlags; // [1: IsGrails, 2: InvokeDynamic]
 	public String groovyProjectName;
 	public String groovyCompilerConfigScript;
 	// GROOVY end

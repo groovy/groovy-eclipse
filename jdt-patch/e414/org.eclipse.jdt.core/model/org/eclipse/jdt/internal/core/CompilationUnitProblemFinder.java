@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -188,9 +187,13 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CompilerOptions compilerOptions = new CompilerOptions(settings);
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
-		compilerOptions.parseLiteralExpressionsAsConstants = !creatingAST; /*parse literal expressions as constants only if not creating a DOM AST*/
+		compilerOptions.parseLiteralExpressionsAsConstants = !creatingAST; // parse literal expressions as constants only if not creating a DOM AST
 		if (creatingAST)
-			compilerOptions.storeAnnotations = true; /* store annotations in the bindings if creating a DOM AST */
+			compilerOptions.storeAnnotations = true; // store annotations in the bindings if creating a DOM AST
+		// GROOVY add
+		else
+			compilerOptions.groovyCompilerConfigScript = null;
+		// GROOVY end
 		return compilerOptions;
 	}
 
@@ -260,12 +263,6 @@ public class CompilationUnitProblemFinder extends Compiler {
 			CompilerOptions compilerOptions = getCompilerOptions(project.getOptions(true), creatingAST, ((reconcileFlags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0));
 			boolean ignoreMethodBodies = (reconcileFlags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
-			// GROOVY add
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
-			if (!creatingAST) {
-				compilerOptions.groovyCompilerConfigScript = null;
-			}
-			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
 				environment,
 				getHandlingPolicy(),

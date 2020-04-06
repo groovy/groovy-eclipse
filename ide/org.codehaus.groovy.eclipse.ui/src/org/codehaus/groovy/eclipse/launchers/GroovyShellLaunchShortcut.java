@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.launchers;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
@@ -45,7 +44,6 @@ public class GroovyShellLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
         if (isAtLeastGroovy(2, 5, 0)) {
             CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
-            CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
             if (compilerOptions.produceMethodParameters) {
                 mainArgs.append(" --parameters");
             }

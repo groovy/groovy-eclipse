@@ -16,7 +16,6 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.env.IDependent.JAR_FILE_ENTRY_SEPARATOR;
-import static org.eclipse.jdt.internal.core.util.Util.log;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -164,15 +163,8 @@ public class GroovyParser {
                 IPath location = eclipseFile.getLocation();
                 if (location != null) {
                     fileName = location.toFile().getAbsolutePath();
-                }
-                if (compilerOptions.groovyProjectName != null) {
-                    if (!compilerOptions.groovyProjectName.equals(eclipseFile.getProject().getName())) {
-                        log(new IllegalStateException("Groovy script check: compiler options project != compilation unit project" +
-                            String.format("%n'%s' vs. '%s'", compilerOptions.groovyProjectName, eclipseFile.getProject().getName())));
-                    }
-                    isScript = scriptFolderSelectorCache.computeIfAbsent(compilerOptions.groovyProjectName, key ->
-                        new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(key))
-                    ).isScript(eclipseFile);
+                    org.eclipse.core.resources.IProject project = eclipseFile.getProject();
+                    isScript = scriptFolderSelectorCache.computeIfAbsent(project.getName(), key -> new ScriptFolderSelector(project)).isScript(eclipseFile);
                 }
             }
         }

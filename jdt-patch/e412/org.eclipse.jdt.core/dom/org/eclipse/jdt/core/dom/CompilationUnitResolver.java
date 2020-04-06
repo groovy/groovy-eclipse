@@ -37,7 +37,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -617,13 +616,10 @@ public class CompilationUnitResolver extends Compiler {
 		try {
 			int amountOfWork = (compilationUnits.length + bindingKeys.length) * 2; // 1 for beginToCompile, 1 for resolve
 			SubMonitor subMonitor = SubMonitor.convert(monitor, amountOfWork);
-			environment = new CancelableNameEnvironment(((JavaProject) javaProject), owner, subMonitor);
+			environment = new CancelableNameEnvironment((JavaProject) javaProject, owner, subMonitor);
 			problemFactory = new CancelableProblemFactory(subMonitor);
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
 			compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
-			// GROOVY add
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
-			// GROOVY end
 			CompilationUnitResolver resolver =
 				new CompilationUnitResolver(
 					environment,
@@ -722,9 +718,6 @@ public class CompilationUnitResolver extends Compiler {
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
 			boolean ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
-			// GROOVY add
-			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
-			// GROOVY end
 			resolver =
 				new CompilationUnitResolver(
 					environment,

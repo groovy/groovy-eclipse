@@ -50,8 +50,8 @@ class MultiplexingCommentRecorderParser extends CommentRecorderParser {
     @Override
     public CompilationUnitDeclaration dietParse(final ICompilationUnit compilationUnit, final CompilationResult compilationResult) {
         if (isGroovyLikeFileName(compilationUnit.getFileName()) || isGroovySource(compilationUnit)) {
-            if (this.scanner != null) {
-                this.scanner.setSource(compilationUnit.getContents());
+            if (scanner != null) {
+                scanner.setSource(compilationUnit.getContents());
             }
             return groovyParser.dietParse(compilationUnit, compilationResult);
         }

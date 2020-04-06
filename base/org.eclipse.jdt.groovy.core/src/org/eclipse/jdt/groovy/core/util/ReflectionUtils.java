@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,10 +19,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -35,18 +35,17 @@ public class ReflectionUtils {
 
     private ReflectionUtils() {}
 
-    public static Class<?>[] getAllInterfaces(Class<?> clazz) {
+    public static Class<?>[] getAllInterfaces(final Class<?> clazz) {
         Set<Class<?>> interfaces = new LinkedHashSet<>();
 
-        do {
-            Collections.addAll(interfaces, clazz.getInterfaces());
+        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
+            Collections.addAll(interfaces, c.getInterfaces());
         }
-        while ((clazz = clazz.getSuperclass()) != null);
 
         return interfaces.toArray(NO_TYPES);
     }
 
-    public static <T> Constructor<T> getConstructor(Class<T> instanceType, Class<?>... parameterTypes) {
+    public static <T> Constructor<T> getConstructor(final Class<T> instanceType, final Class<?>... parameterTypes) {
         try {
             Constructor<T> ctor = instanceType.getDeclaredConstructor(parameterTypes);
             if (!ctor.isAccessible()) ctor.setAccessible(true);
@@ -58,7 +57,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <T> T invokeConstructor(Constructor<T> ctor, Object... args) {
+    public static <T> T invokeConstructor(final Constructor<T> ctor, final Object... args) {
         try {
             return ctor.newInstance(args);
         } catch (RuntimeException e) {
@@ -68,7 +67,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <T> T invokeConstructor(Class<T> instanceType, Class<?>[] parameterTypes, Object[] args) {
+    public static <T> T invokeConstructor(final Class<T> instanceType, final Class<?>[] parameterTypes, final Object[] args) {
         try {
             return invokeConstructor(getConstructor(instanceType, parameterTypes), args);
         } catch (RuntimeException e) {
@@ -77,7 +76,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <R, T> R getPrivateField(Class<? extends T> clazz, String fieldName, T target) {
+    public static <R, T> R getPrivateField(final Class<? extends T> clazz, final String fieldName, final T target) {
         try {
             return throwableGetPrivateField(clazz, fieldName, target);
         } catch (Exception e) {
@@ -86,7 +85,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <T> void setPrivateField(Class<? extends T> clazz, String fieldName, T target, Object value) {
+    public static <T> void setPrivateField(final Class<? extends T> clazz, final String fieldName, final T target, final Object value) {
         try {
             throwableSetPrivateField(clazz, fieldName, target, value);
         } catch (Exception e) {
@@ -94,7 +93,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <R, T> R executePrivateMethod(Class<? extends T> clazz, String methodName, T target) {
+    public static <R, T> R executePrivateMethod(final Class<? extends T> clazz, final String methodName, final T target) {
         return executePrivateMethod(clazz, methodName, NO_TYPES, target, NO_ARGS);
     }
 
@@ -111,7 +110,7 @@ public class ReflectionUtils {
         }
     }
 
-    public static <R, T> R throwableExecutePrivateMethod(Class<? extends T> clazz, String methodName, Class<?>[] paramTypes, T target, Object[] args) throws Exception {
+    public static <R, T> R throwableExecutePrivateMethod(final Class<? extends T> clazz, final String methodName, final Class<?>[] paramTypes, final T target, final Object[] args) throws Exception {
         Method method = getDeclaredMethod(clazz, methodName, paramTypes);
 
         @SuppressWarnings("unchecked")
@@ -119,7 +118,7 @@ public class ReflectionUtils {
         return result;
     }
 
-    public static <R, T> R throwableGetPrivateField(Class<? extends T> clazz, String fieldName, T target) throws Exception {
+    public static <R, T> R throwableGetPrivateField(final Class<? extends T> clazz, final String fieldName, final T target) throws Exception {
         Field field = getDeclaredField(clazz, fieldName);
 
         @SuppressWarnings("unchecked")
@@ -127,7 +126,7 @@ public class ReflectionUtils {
         return result;
     }
 
-    public static <T> void throwableSetPrivateField(Class<? extends T> clazz, String fieldName, T target, Object value) throws Exception {
+    public static <T> void throwableSetPrivateField(final Class<? extends T> clazz, final String fieldName, final T target, final Object value) throws Exception {
         Field field = getDeclaredField(clazz, fieldName);
 
         field.set(target, value);
@@ -135,7 +134,7 @@ public class ReflectionUtils {
 
     //--------------------------------------------------------------------------
 
-    private static Field getDeclaredField(Class<?> clazz, String field) throws Exception {
+    private static Field getDeclaredField(final Class<?> clazz, final String field) throws Exception {
         try {
             return FIELDS.computeIfAbsent(clazz.getCanonicalName() + field, k -> {
                 try {
@@ -154,17 +153,17 @@ public class ReflectionUtils {
         }
     }
 
-    private static Method getDeclaredMethod(Class<?> clazz, String method, Class<?>... paramTypes) throws Exception {
+    private static Method getDeclaredMethod(final Class<?> clazz, final String method, final Class<?>... paramTypes) throws Exception {
         Method m = clazz.getDeclaredMethod(method, paramTypes);
         if (!m.isAccessible()) m.setAccessible(true);
         return m;
     }
 
-    private static void log(String message, Throwable throwable) {
+    private static void log(final String message, final Throwable throwable) {
         Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message, throwable));
     }
 
     private static final Object[] NO_ARGS = new Object[0];
     private static final Class<?>[] NO_TYPES = new Class[0];
-    private static final Map<String, Field> FIELDS = new HashMap<>();
+    private static final Map<String, Field> FIELDS = new ConcurrentHashMap<>();
 }

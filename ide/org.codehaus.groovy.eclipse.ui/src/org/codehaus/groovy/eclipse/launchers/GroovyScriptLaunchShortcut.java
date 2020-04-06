@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
@@ -44,7 +43,6 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
     @Override
     protected String mainArgs(final IType runType, final IJavaProject javaProject) {
         CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
-        CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
 
         StringBuilder mainArgs = new StringBuilder("groovy.ui.GroovyMain");
 
@@ -62,7 +60,7 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         if (compilerOptions.enablePreviewFeatures && isAtLeastGroovy(2, 5, 7)) {
             mainArgs.append(" --enable-preview");
         }
-        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+        if ((compilerOptions.groovyFlags & CompilerOptions.InvokeDynamic) != 0) {
             mainArgs.append(" --indy");
         }
 

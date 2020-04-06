@@ -93,6 +93,7 @@ import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
@@ -2147,16 +2148,56 @@ public class JavaProject
 				Map.Entry entry = (Map.Entry) propertyNames.next();
 				String propertyName = (String) entry.getKey();
 				String propertyValue = (String) entry.getValue();
-				if (propertyValue != null && javaModelManager.knowsOption(propertyName)){
+				if (propertyValue != null && javaModelManager.knowsOption(propertyName)) {
 					options.put(propertyName, propertyValue.trim());
 				}
 			}
+			// GROOVY add
+			setGroovyOptions(options);
+			// GROOVY end
 			Util.fixTaskTags(options);
 			return options;
 		}
+		// GROOVY add
+		setGroovyOptions(projectOptions);
+		// GROOVY end
 		Util.fixTaskTags(projectOptions);
 		return projectOptions;
 	}
+
+	// GROOVY add
+	private void setGroovyOptions(final Map<String, String> options) {
+		options.put(CompilerOptions.OPTIONG_GroovyProjectName, getElementName());
+		try {
+			if (getProject().hasNature("org.eclipse.jdt.groovy.core.groovyNature")) { //$NON-NLS-1$
+				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
+				options.put(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(getProject().getFolder("grails-app").exists() ? CompilerOptions.IsGrails : 0)); //$NON-NLS-1$
+
+				for (IClasspathEntry unresolved : getRawClasspath()) {
+					if (unresolved.getEntryKind() == IClasspathEntry.CPE_CONTAINER && unresolved.getPath().segment(0).equals("GROOVY_SUPPORT")) { //$NON-NLS-1$
+						for (IClasspathEntry resolved : JavaCore.getClasspathContainer(unresolved.getPath(), this).getClasspathEntries()) {
+							String[] tokens = resolved.getPath().lastSegment().toString().split("-"); //$NON-NLS-1$
+							if (tokens.length == 3 && "groovy".equals(tokens[0]) && Character.isDigit(tokens[1].charAt(0))) { //$NON-NLS-1$
+								if (tokens[2].startsWith("indy")) { //$NON-NLS-1$
+									options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerOptions.InvokeDynamic), (String one, String two) -> {
+										return String.valueOf(Integer.parseInt(one) | Integer.parseInt(two));
+									});
+								}
+								break;
+							}
+						}
+						break;
+					}
+				}
+				return;
+			}
+		} catch (CoreException | NullPointerException e) {
+			Util.log(e, "JavaProject.setGroovyOptions failed"); //$NON-NLS-1$
+		}
+		options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
+		options.put(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(0));
+	}
+	// GROOVY end
 
 	/**
 	 * @see IJavaProject

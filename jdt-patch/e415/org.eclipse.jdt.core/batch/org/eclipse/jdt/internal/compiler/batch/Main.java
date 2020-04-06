@@ -79,7 +79,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -2082,7 +2081,7 @@ public void configure(String[] argv) {
 					continue;
 				}
 				if (currentArg.equals("-indy")) { //$NON-NLS-1$
-					this.options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerUtils.InvokeDynamic), (String one, String two) -> {
+					this.options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerOptions.InvokeDynamic), (String one, String two) -> {
 						return String.valueOf(Integer.parseInt(one) | Integer.parseInt(two));
 					});
 					continue;

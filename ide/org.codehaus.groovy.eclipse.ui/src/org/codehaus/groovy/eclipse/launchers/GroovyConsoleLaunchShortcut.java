@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovyConsoleLaunchShortcut extends AbstractGroovyLaunchShortcut {
@@ -47,14 +46,13 @@ public class GroovyConsoleLaunchShortcut extends AbstractGroovyLaunchShortcut {
 
         if (isAtLeastGroovy(2, 5, 0)) {
             CompilerOptions compilerOptions = new CompilerOptions(javaProject.getOptions(true));
-            CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
 
             if (compilerOptions.groovyCompilerConfigScript != null && !compilerOptions.groovyCompilerConfigScript.isEmpty() &&
                     (runType == null || (javaProject.isOnClasspath(runType) && !matchesScriptFilter(runType.getResource())))) {
                 mainArgs.append(" --configscript \"${workspace_loc:").append(javaProject.getElementName()).append('}')
                     .append(File.separatorChar).append(compilerOptions.groovyCompilerConfigScript).append('"');
             }
-            if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+            if ((compilerOptions.groovyFlags & CompilerOptions.InvokeDynamic) != 0) {
                 mainArgs.append(" --indy");
             }
             if (compilerOptions.produceMethodParameters) {

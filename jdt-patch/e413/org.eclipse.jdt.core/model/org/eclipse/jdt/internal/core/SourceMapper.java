@@ -60,7 +60,6 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
@@ -1600,7 +1599,6 @@ public class SourceMapper
 				sourceFileName = TypeConstants.MODULE_INFO_CLASS_NAME_STRING; 
 			}
 			// GROOVY edit
-			CompilerUtils.configureOptionsBasedOnNature(this.options, this.binaryTypeOrModule.getJavaProject());
 			//parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/);
 			parser = LanguageSupportFactory.getSourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/, true);
 			// GROOVY end

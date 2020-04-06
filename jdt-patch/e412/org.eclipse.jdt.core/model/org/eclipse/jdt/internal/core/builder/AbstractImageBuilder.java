@@ -19,7 +19,6 @@ import org.eclipse.core.runtime.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -572,9 +571,6 @@ protected Compiler newCompiler() {
 	CompilerOptions compilerOptions = new CompilerOptions(projectOptions);
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
-	// GROOVY add -- make it behave in a groovier way if this project has the right nature
-	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, this.javaBuilder.javaProject);
-	// GROOVY end
 	Compiler newCompiler = new Compiler(
 		this.nameEnvironment,
 		DefaultErrorHandlingPolicies.proceedWithAllProblems(),

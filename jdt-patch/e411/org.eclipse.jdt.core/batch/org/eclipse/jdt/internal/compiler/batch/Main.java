@@ -77,7 +77,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -1750,9 +1749,6 @@ public boolean compile(String[] argv) {
 		if (this.progress != null)
 			this.progress.begin(this.filenames == null ? 0 : this.filenames.length * this.maxRepetition);
 		if (this.proceed) {
-//				if (this.verbose) {
-//					System.out.println(new CompilerOptions(this.options));
-//				}
 			if (this.showProgress) this.logger.compiling();
 			for (this.currentRepetition = 0; this.currentRepetition < this.maxRepetition; this.currentRepetition++) {
 				this.globalProblemsCount = 0;
@@ -2074,7 +2070,7 @@ public void configure(String[] argv) {
 					continue;
 				}
 				if (currentArg.equals("-indy")) { //$NON-NLS-1$
-					this.options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerUtils.InvokeDynamic), (String one, String two) -> {
+					this.options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerOptions.InvokeDynamic), (String one, String two) -> {
 						return String.valueOf(Integer.parseInt(one) | Integer.parseInt(two));
 					});
 					continue;
@@ -2789,7 +2785,7 @@ public void configure(String[] argv) {
 				mode = DEFAULT;
 				continue;
 			case INSIDE_RELEASE:
-				// If release is < 9, the following are diasllowed:
+				// If release is < 9, the following are disallowed:
 				// bootclasspath, -Xbootclasspath, -Xbootclasspath/a:, -Xbootclasspath/p:, 
 				// -endorseddirs, -Djava.endorsed.dirs, -extdirs, -Djava.ext.dirs
 

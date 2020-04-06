@@ -53,7 +53,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.core.search.*;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.*;
@@ -1229,9 +1228,6 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 
 	// create lookup environment
 	Map map = project.getOptions(true);
-	// GROOVY add
-	CompilerUtils.configureOptionsBasedOnNature(map, project);
-	// GROOVY end
 	map.put(CompilerOptions.OPTION_TaskTags, org.eclipse.jdt.internal.compiler.util.Util.EMPTY_STRING);
 	this.options = new CompilerOptions(map);
 	ProblemReporter problemReporter =

@@ -69,7 +69,6 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -274,7 +273,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             }
         }
 
-        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+        if ((compilerOptions.groovyFlags & CompilerOptions.InvokeDynamic) != 0) {
             config.getOptimizationOptions().put(CompilerConfiguration.INVOKEDYNAMIC, Boolean.TRUE);
         }
         if (Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {

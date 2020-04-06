@@ -43,7 +43,6 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchDocument;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -273,7 +272,6 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 
 	// GROOVY edit
 	//SourceElementParser parser = new IndexingParser(
-	CompilerUtils.configureOptionsBasedOnNature(options, project);
 	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
 	// GROOVY end
 		requestor,

@@ -1,4 +1,3 @@
-// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
@@ -25,7 +24,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
@@ -94,19 +92,12 @@ public abstract class HierarchyBuilder {
 			unitsToLookInside = workingCopies;
 		}
 		if (project != null) {
-			// GROOVY add -- pulled out of the call
-			Map<String, String> projectOptions = project.getOptions(true);
-			CompilerUtils.configureOptionsBasedOnNature(projectOptions, project);
-			// GROOVY end
 			SearchableEnvironment searchableEnvironment = project.newSearchableNameEnvironment(unitsToLookInside);
 			this.nameLookup = searchableEnvironment.nameLookup;
 			this.hierarchyResolver =
 				new HierarchyResolver(
 					searchableEnvironment,
-					// GROOVY edit
-					//project.getOptions(true),
-					projectOptions,
-					// GROOVY end
+					project.getOptions(true),
 					this,
 					new DefaultProblemFactory());
 		}

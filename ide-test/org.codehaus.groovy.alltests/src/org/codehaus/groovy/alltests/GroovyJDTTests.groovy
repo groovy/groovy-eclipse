@@ -62,7 +62,6 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.builder.ScriptFolderTests,
 
     // Location tests
-    org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests,
     org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests,
     org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests,
     org.eclipse.jdt.core.groovy.tests.locations.SourceLocationsTests,
