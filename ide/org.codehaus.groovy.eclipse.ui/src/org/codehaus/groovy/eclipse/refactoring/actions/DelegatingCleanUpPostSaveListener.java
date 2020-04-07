@@ -38,7 +38,7 @@ public class DelegatingCleanUpPostSaveListener extends org.eclipse.jdt.internal.
 
     private final IPostSaveListener jdtCleanUp, groovyCleanUp;
 
-    private DelegatingCleanUpPostSaveListener(final IPostSaveListener jdtCleanUp, final IPostSaveListener groovyCleanUp) {
+    public DelegatingCleanUpPostSaveListener(final IPostSaveListener jdtCleanUp, final IPostSaveListener groovyCleanUp) {
         this.jdtCleanUp = jdtCleanUp;
         this.groovyCleanUp = groovyCleanUp;
     }

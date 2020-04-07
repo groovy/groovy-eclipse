@@ -447,7 +447,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 	}
 
 	// GROOVY edit
-	/*private static*/ ICleanUp[] getCleanUps(IProject project) throws CoreException {
+	private ICleanUp[] getCleanUps(IProject project) throws CoreException {
 		ICleanUp[] cleanUps;
 		Map<String, String> settings= CleanUpPreferenceUtil.loadSaveParticipantOptions(new ProjectScope(project));
 		if (settings == null) {
@@ -477,7 +477,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 	}
 
 	// GROOVY edit
-	/*private static*/ ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
+	protected ICleanUp[] getCleanUps(Map<String, String> settings, Set<String> ids) {
 		ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
 
 		for (ICleanUp cleanUp : result) {
@@ -486,7 +486,6 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
 		return result;
 	}
-
 
 	private int showStatus(RefactoringStatus status) {
 		if (!status.hasError())
