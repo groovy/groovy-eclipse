@@ -601,7 +601,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM47() throws Throwable {
+    public void testDGM47() {
         String contents =
             //@formatter:off
             "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
@@ -723,6 +723,45 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
         int offset = contents.indexOf("allWhitespace");
         assertUnknownConfidence(contents, offset, offset + "allWhitespace".length());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1076
+    public void testDGM54() {
+        String contents =
+            //@formatter:off
+            "void test(String[] strings) {\n" +
+            "  strings.toString()\n" +
+            "}\n";
+            //@formatter:on
+
+        assertExprType(contents, "toString", "java.lang.String");
+        assertDeclType(contents, "toString", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1076
+    public void testDGM54a() {
+        String contents =
+            //@formatter:off
+            "void test(String[] strings) {\n" +
+            "  strings.equals([])\n" +
+            "}\n";
+            //@formatter:on
+
+        assertExprType(contents, "equals", "java.lang.Boolean");
+        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1076
+    public void testDGM54b() {
+        String contents =
+            //@formatter:off
+            "void test(String[] strings) {\n" +
+            "  [].equals(strings)\n" +
+            "}\n";
+            //@formatter:on
+
+        assertExprType(contents, "equals", "java.lang.Boolean");
+        assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // GRECLIPSE-1131

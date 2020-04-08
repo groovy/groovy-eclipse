@@ -2585,7 +2585,7 @@ assert primaryExprType != null && dependentExprType != null;
                 candidate = lookup.lookupType(node, scope, objExprType);
             }
             if (candidate != null) {
-                if (result == null || result.confidence.isLessThan(candidate.confidence)) {
+                if (result == null || result.confidence.isLessThan(candidate.confidence) && !VariableScope.OBJECT_CLASS_NODE.equals(candidate.declaringType)) {
                     result = candidate;
                 }
                 if (result.confidence.isAtLeast(TypeConfidence.INFERRED) ||

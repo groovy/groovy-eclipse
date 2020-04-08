@@ -79,6 +79,22 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testArrays4() {
+        String contents = '''\
+            |def test(String[] strings) {
+            |  return strings.toString()
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('String'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('strings'), 7, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('toString'), 8, GROOVY_CALL))
+    }
+
+    @Test
     void testFields1() {
         String contents = '''\
             |class X {

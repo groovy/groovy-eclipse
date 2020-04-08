@@ -862,6 +862,54 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
     }
 
+    @Test
+    public void testObjectMethodReferenceSearch1() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def baz(obj) {\n" +
+            "    obj.notifyAll()\n" +
+            "  }\n" +
+            "}");
+
+        IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("notifyAll", new String[0]);
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Bar.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+    }
+
+    @Test
+    public void testObjectMethodReferenceSearch2() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  def baz(String[] strings) {\n" +
+            "    println strings.toString()\n" +
+            "  }\n" +
+            "}");
+
+        IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("toString", new String[0]);
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Bar.groovy", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
+    }
+
     //--------------------------------------------------------------------------
 
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws Exception {
