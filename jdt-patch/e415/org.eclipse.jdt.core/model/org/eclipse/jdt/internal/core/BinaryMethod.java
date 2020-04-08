@@ -381,10 +381,10 @@ public String[] getParameterNames() throws JavaModelException {
 		}
 		if (methodDoc != null) {
 			// GROOVY add
-			int indexOfPre = methodDoc.indexOf("<pre>");
+			int indexOfPre = methodDoc.indexOf("<pre>"); //$NON-NLS-1$
 			if (indexOfPre != -1) { List<String> names = new ArrayList<>();
-				String methodSig = methodDoc.substring(indexOfPre, methodDoc.indexOf("</pre>", indexOfPre) + 6);
-				Matcher matcher = Pattern.compile("&nbsp;(\\p{javaJavaIdentifierPart}+)[,)]").matcher(methodSig);
+				String methodSig = methodDoc.substring(indexOfPre, methodDoc.indexOf("</pre>", indexOfPre) + 6); //$NON-NLS-1$
+				Matcher matcher = Pattern.compile("&nbsp;(\\p{javaJavaIdentifierPart}+)[,)]").matcher(methodSig); //$NON-NLS-1$
 				while (matcher.find()) {
 					names.add(matcher.group(1));
 				}
@@ -630,9 +630,9 @@ public String getSignature() throws JavaModelException {
  */
 @Override
 public int hashCode() {
-   int hash = super.hashCode();
+	int hash = super.hashCode();
 	for (int i = 0, length = this.parameterTypes.length; i < length; i++) {
-	    hash = Util.combineHashCodes(hash, getErasedParameterType(i).hashCode());
+		hash = Util.combineHashCodes(hash, getErasedParameterType(i).hashCode());
 	}
 	return hash;
 }

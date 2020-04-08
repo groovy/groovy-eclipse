@@ -217,9 +217,9 @@ public String getSignature() throws JavaModelException {
  */
 @Override
 public int hashCode() {
-   int hash = super.hashCode();
+	int hash = super.hashCode();
 	for (int i = 0, length = this.parameterTypes.length; i < length; i++) {
-	    hash = Util.combineHashCodes(hash, this.parameterTypes[i].hashCode());
+		hash = Util.combineHashCodes(hash, this.parameterTypes[i].hashCode());
 	}
 	return hash;
 }

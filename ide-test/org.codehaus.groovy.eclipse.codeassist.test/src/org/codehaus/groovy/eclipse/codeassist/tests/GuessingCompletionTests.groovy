@@ -132,7 +132,7 @@ final class GuessingCompletionTests extends CompletionTestSuite {
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |
             |pack.Util.util(MILLIS)
-            |'''.stripMargin());
+            |'''.stripMargin())
 
         // check the parameter guesses
         ICompletionProposal[] choices = proposal.choices[0]

@@ -495,7 +495,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'zzz', 2)
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
-        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A'
+            ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
     }
 
     @Test
@@ -519,7 +520,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'zzz', 2)
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
-        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - B' ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
+        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - B'
+            ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
     }
 
     @Test
@@ -543,7 +545,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'zzz', 2)
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
-        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - B' ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - B'
+            ? proposals[one] : proposals[two], contents.replace('zz //', 'zzz //')) // no qualifier
     }
 
     @Test
@@ -567,7 +570,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'zzz', 2)
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
-        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
+        applyProposalAndCheck(proposals[one].displayString == 'zzz : String - A'
+            ? proposals[one] : proposals[two], contents.replace('zz //', 'owner.zzz //'))
     }
 
     @Test
@@ -591,7 +595,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'zzz', 2)
         def one = indexOfProposal(proposals, 'zzz')
         def two = indexOfProposal(proposals, 'zzz', one + 1)
-        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A' ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
+        applyProposalAndCheck(proposals[one].displayString != 'zzz : String - A'
+            ? proposals[one] : proposals[two], contents.replace('zz //', 'delegate.zzz //'))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/803
@@ -824,7 +829,12 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testEnumReceiver1() {
-        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+        addJavaSource '''\
+            |enum E {
+            |  CONST;
+            |  public static final String VALUE = "";
+            |}
+            |'''.stripMargin(), 'E'
 
         String contents = 'E e = '
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
@@ -834,7 +844,12 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testEnumReceiver1a() {
-        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+        addJavaSource '''\
+            |enum E {
+            |  CONST;
+            |  public static final String VALUE = "";
+            |}
+            |'''.stripMargin(), 'E'
 
         String contents = 'E e = ;'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length() - 1)
@@ -844,7 +859,12 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testEnumReceiver1b() {
-        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+        addJavaSource '''\
+            |enum E {
+            |  CONST;
+            |  public static final String VALUE = "";
+            |}
+            |'''.stripMargin(), 'E'
 
         String contents = 'E e = \n'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length() - 1)
@@ -854,30 +874,42 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testEnumReceiver2() {
-        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
+        addJavaSource '''\
+            |public enum Color {
+            |  RED, BLACK
+            |}
+            |'''.stripMargin(), 'Color', 'tree.node'
 
         String contents = '''\
-            |def meth(tree.node.Color c) { }
+            |def meth(tree.node.Color c) {}
             |meth(B)
             |'''.stripMargin()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'B', 'BLACK')
         applyProposalAndCheck(proposal, '''\
             |import static tree.node.Color.BLACK
             |
-            |def meth(tree.node.Color c) { }
+            |def meth(tree.node.Color c) {}
             |meth(BLACK)
             |'''.stripMargin())
     }
 
     @Test @NotYetImplemented
     void testEnumReceiver2a() {
-        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
-        addJavaSource('public interface D { String BLACK= ""; }', 'D', 'a.b.c')
+        addJavaSource '''\
+            |public enum Color {
+            |  RED, BLACK
+            |}
+            |'''.stripMargin(), 'Color', 'tree.node'
+        addJavaSource '''\
+            |public interface D {
+            |  String BLACK= "";
+            |}
+            |'''.stripMargin(), 'D', 'a.b.c'
 
         String contents = '''\
             |import static a.b.c.D.BLACK
             |
-            |def meth(tree.node.Color c) { }
+            |def meth(tree.node.Color c) {}
             |meth(BL)
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'BL'))
@@ -888,20 +920,24 @@ final class FieldCompletionTests extends CompletionTestSuite {
             |
             |import tree.node.Color
             |
-            |def meth(tree.node.Color c) { }
+            |def meth(tree.node.Color c) {}
             |meth(Color.BLACK)
             |'''.stripMargin())
     }
 
     @Test
     void testEnumReceiver3() {
-        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
+        addJavaSource '''\
+            |public enum Color {
+            |  RED, BLACK
+            |}
+            |'''.stripMargin(), 'Color', 'tree.node'
 
         String contents = '''\
-            |def meth(tree.node.Color... colors) { }
-            |meth(RED, B)
+            |def meth(tree.node.Color... colors) {}
+            |meth(RED, BL)
             |'''.stripMargin()
-        checkUniqueProposal(contents, 'B', 'BLACK')
+        checkUniqueProposal(contents, 'BL', 'BLACK')
     }
 
     @Test // GRECLIPSE-1175

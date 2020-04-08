@@ -95,9 +95,9 @@ public class CompilationUnitResolver extends Compiler {
 			if (this.list.length == this.length) {
 				System.arraycopy(this.list, 0, this.list = new int[this.length*2], 0, this.length);
 			}
-				this.list[this.length++] = i;
-			}
+			this.list[this.length++] = i;
 		}
+	}
 
 	/*
 	 * The sources that were requested.

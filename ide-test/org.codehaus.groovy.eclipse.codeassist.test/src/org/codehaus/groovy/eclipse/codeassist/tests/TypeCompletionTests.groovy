@@ -262,49 +262,49 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testField1() {
-        String contents = 'class Foo {\n\tJFr\n}'
+        String contents = 'class Foo {\n' + '\tJFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField2() {
-        String contents = 'class Foo {\n\tprivate JFr\n}'
+        String contents = 'class Foo {\n' + '\tprivate JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField3() {
-        String contents = 'class Foo {\n\tpublic JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField4() {
-        String contents = 'class Foo {\n\tprotected JFr\n}'
+        String contents = 'class Foo {\n' + '\tprotected JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField5() {
-        String contents = 'class Foo {\n\tpublic static JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic static JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField6() {
-        String contents = 'class Foo {\n\tpublic final JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic final JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
 
     @Test
     void testField7() {
-        String contents = 'class Foo {\n\tpublic static final JFr\n}'
+        String contents = 'class Foo {\n' + '\tpublic static final JFr\n' + '}'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'JFr'))
         proposalExists(proposals, 'JFrame - javax.swing', 1)
     }
