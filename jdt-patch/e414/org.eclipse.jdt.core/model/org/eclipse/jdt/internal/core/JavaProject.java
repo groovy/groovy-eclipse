@@ -2167,8 +2167,9 @@ public class JavaProject
 
 	// GROOVY add
 	private void setGroovyOptions(final Map<String, String> options) {
-		options.put(CompilerOptions.OPTIONG_GroovyProjectName, getElementName());
+		if (!getElementName().trim().isEmpty())
 		try {
+			options.put(CompilerOptions.OPTIONG_GroovyProjectName, getElementName());
 			if (getProject().hasNature("org.eclipse.jdt.groovy.core.groovyNature")) { //$NON-NLS-1$
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				options.put(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(getProject().getFolder("grails-app").exists() ? CompilerOptions.IsGrails : 0)); //$NON-NLS-1$
