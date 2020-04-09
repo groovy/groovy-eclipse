@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -397,8 +397,12 @@ public class GroovyUtils {
         } else*/ if (target.isInterface()) {
             result = GeneralUtils.isOrImplements(source, target);
         } else if (array) {
-            // Object or Object[] is universal receiver for an array
-            result = ClassHelper.OBJECT_TYPE.equals(target) || source.isDerivedFrom(target);
+            if (target.isGenericsPlaceHolder() || target.equals(ClassHelper.OBJECT_TYPE)) {
+                // T[] or Object[] cannot accept a primitive array
+                result = !ClassHelper.isPrimitiveType(source);
+            } else {
+                result = source.isDerivedFrom(target);
+            }
         } else {
             result = getWrapperTypeIfPrimitive(source).isDerivedFrom(getWrapperTypeIfPrimitive(target));
         }

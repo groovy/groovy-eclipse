@@ -588,6 +588,31 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testDGM45b() {
+        String contents =
+            //@formatter:off
+            "String[] array = []\n" +
+            "array.sort { a, b ->\n" +
+            "  a.trim() <=> b.trim()\n" +
+            "}\n";
+            //@formatter:on
+
+        assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1077
+    public void testDGM45c() {
+        String contents =
+            //@formatter:off
+            "char[] array = []\n" +
+            "array.sort()\n";
+            //@formatter:on
+
+        int offset = contents.indexOf("sort");
+        assertUnknownConfidence(contents, offset, offset + 4);
+    }
+
+    @Test
     public void testDGM46() {
         String contents =
             //@formatter:off

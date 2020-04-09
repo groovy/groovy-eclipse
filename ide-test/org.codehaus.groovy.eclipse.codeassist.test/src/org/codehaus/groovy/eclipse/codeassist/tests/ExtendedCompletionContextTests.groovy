@@ -175,43 +175,48 @@ final class ExtendedCompletionContextTests extends CompletionTestSuite {
         assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'a', 'b')
     }
 
-    @Test
+    @Test // arrays do not follow the same autoboxing rules
     void testExtendedContextWithArrays() {
         String contents = '''\
-            |int x
-            |Integer y
-            |boolean a
-            |Boolean b
-            |int[] x1
-            |Integer[] y1
-            |boolean[] a1
-            |Boolean[] b1
-            |int[][] x2
-            |Integer[][] y2
-            |boolean[][] a2
-            |Boolean[][] b2
-            |z
+            |int     i
+            |Integer I
+            |boolean b
+            |Boolean B
+            |
+            |int[]     i1
+            |Integer[] I1
+            |boolean[] b1
+            |Boolean[] B1
+            |
+            |int[][]     i2
+            |Integer[][] I2
+            |boolean[][] b2
+            |Boolean[][] B2
+            |
+            |x
             |'''.stripMargin()
-        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), contents.lastIndexOf('z') + 1)
-        assert context.enclosingElement.elementName == 'run'
-        assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'x', 'y')
-        assertExtendedContextElements(context, 'I', 'x', 'y')
-        assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'a', 'b')
-        assertExtendedContextElements(context, 'Z', 'a', 'b')
 
-        // arrays do not follow the same autoboxing rules
-        assertExtendedContextElements(context, '[I', 'x1')
-        assertExtendedContextElements(context, '[Ljava.lang.Integer;', 'y1')
-        assertExtendedContextElements(context, '[Z', 'a1')
-        assertExtendedContextElements(context, '[Ljava.lang.Boolean;', 'b1')
-        assertExtendedContextElements(context, '[[I', 'x2')
-        assertExtendedContextElements(context, '[[Ljava.lang.Integer;', 'y2')
-        assertExtendedContextElements(context, '[[Z', 'a2')
-        assertExtendedContextElements(context, '[[Ljava.lang.Boolean;', 'b2')
+        def context = getExtendedCoreContext(addGroovySource(contents, nextUnitName()), getIndexOf(contents, 'x'))
 
-        // this also matched binding and metaClass and a bunch of stuff, so skip this check
-        //assertExtendedContextElements(context, 'Ljava.lang.Object;', 'a1', 'b1', 'a2', 'b2', 'x1', 'y1', 'x2', 'y2')
-        assertExtendedContextElements(context, '[Ljava.lang.Object;', 'a1', 'b1', 'a2', 'b2', 'x1', 'y1', 'x2', 'y2')
-        assertExtendedContextElements(context, '[[Ljava.lang.Object;', 'a2', 'b2', 'x2', 'y2')
+        assertExtendedContextElements(context, 'I', 'i', 'I')
+        assertExtendedContextElements(context, 'Ljava.lang.Integer;', 'i', 'I')
+        assertExtendedContextElements(context, 'Z', 'b', 'B')
+        assertExtendedContextElements(context, 'Ljava.lang.Boolean;', 'b', 'B')
+
+        assertExtendedContextElements(context, '[I', 'i1')
+        assertExtendedContextElements(context, '[Ljava.lang.Integer;', 'I1')
+        assertExtendedContextElements(context, '[Z', 'b1')
+        assertExtendedContextElements(context, '[Ljava.lang.Boolean;', 'B1')
+        assertExtendedContextElements(context, '[[I', 'i2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Integer;', 'I2')
+        assertExtendedContextElements(context, '[[Z', 'b2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Boolean;', 'B2')
+
+        // Object[] cannot accept primitive arrays
+        assertExtendedContextElements(context, '[Ljava.lang.Object;', 'I1', 'B1', 'i2', 'I2', 'b2', 'B2')
+        assertExtendedContextElements(context, '[[Ljava.lang.Object;', 'I2', 'B2')
+
+        // this also matches Binding, MetaClass and a bunch of stuff, so skip it
+        //assertExtendedContextElements(context, 'Ljava.lang.Object;', 'a1', 'B1', 'a2', 'B2', 'i1', 'I1', 'i2', 'I2')
     }
 }
