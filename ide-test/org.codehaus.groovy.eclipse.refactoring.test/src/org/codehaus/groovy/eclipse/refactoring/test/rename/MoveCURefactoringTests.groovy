@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,19 +17,19 @@ package org.codehaus.groovy.eclipse.refactoring.test.rename
 
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_BLANK_LINES_BETWEEN_IMPORT_GROUPS
 import static org.eclipse.jdt.ui.PreferenceConstants.ORGIMPORTS_IMPORTORDER
+import static org.eclipse.ltk.core.refactoring.RefactoringCore.getUndoManager
+
+import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameRefactoringTestSuite.TestSource
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.refactoring.descriptors.MoveDescriptor
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.ltk.core.refactoring.Refactoring
-import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -39,14 +39,14 @@ import org.junit.Test
 final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
 
     /**
-     * Moves the first test source to the specified new package.  References to
-     * any types contained within should be updated in the other test sources.
+     * Moves the first source unit to the specified new package.  References to
+     * any types contained within should be updated in the other source units.
      */
     private void performRefactoringAndUndo(String newPackageName, TestSource... sources) {
         ICompilationUnit[] units = createUnits(sources)
 
         MoveDescriptor descriptor = RefactoringSignatureDescriptorFactory.createMoveDescriptor()
-        descriptor.setMoveResources(new IFile[0], new IFolder[0], [units[0]] as ICompilationUnit[])
+        descriptor.setMoveResources(new IFile[0], new IFolder[0], units[0])
         descriptor.setDestination(getPackageFragment(newPackageName))
         descriptor.setUpdateQualifiedNames(true)
         descriptor.setUpdateReferences(true)
@@ -61,24 +61,24 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
         String typeName = sources[0].name.substring(0, sources[0].name.indexOf('.'))
         String qualName = newPackageName.length() > 0 ? newPackageName + '.' + typeName : typeName
         ICompilationUnit newUnit = packageFragmentRoot.javaProject.findType(qualName).compilationUnit
+        ICompilationUnit oldUnit = units[0]
 
-        ICompilationUnit origUnit = units[0]
         units[0] = newUnit
         assertContents(units, sources*.finalContents)
 
         // undo
-        assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
-        assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
+        assert  undoManager.anythingToUndo()
+        assert !undoManager.anythingToRedo()
+        undoManager.performUndo(null, null)
 
-        RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-
-        units[0] = origUnit
+        units[0] = oldUnit
         assertContents(units, sources*.contents)
 
         // redo
-        assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
-        assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-        RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
+        assert !undoManager.anythingToUndo()
+        assert  undoManager.anythingToRedo()
+        undoManager.performRedo(null, null)
+
         units[0] = newUnit
         assertContents(units, sources*.finalContents)
     }
@@ -95,8 +95,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testSimpleMove1() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Java.java',
-            contents: 'package p;\npublic class Java { }',
-            finalContents: 'package NEW;\npublic class Java { }'
+            contents: 'package p;\npublic class Java {}',
+            finalContents: 'package NEW;\npublic class Java {}'
         ))
     }
 
@@ -104,8 +104,8 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testSimpleMove2() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy { }',
-            finalContents: 'package NEW;\npublic class Groovy { }'
+            contents: 'package p;\npublic class Groovy {}',
+            finalContents: 'package NEW;\npublic class Groovy {}'
         ))
     }
 
@@ -113,12 +113,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testSimpleMove3() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Java.java',
-            contents: 'package p;\npublic class Java { }',
-            finalContents: 'package NEW;\npublic class Java { }'
+            contents: 'package p;\npublic class Java {}',
+            finalContents: 'package NEW;\npublic class Java {}'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy extends Java { }',
-            finalContents: 'package p;\n\nimport NEW.Java\n\npublic class Groovy extends Java { }'
+            contents: 'package p;\npublic class Groovy extends Java {}',
+            finalContents: 'package p;\n\nimport NEW.Java\n\npublic class Groovy extends Java {}'
         ))
     }
 
@@ -126,12 +126,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testSimpleMove4() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p1', name: 'Groovy.groovy',
-            contents: 'package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }',
-            finalContents: 'package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }'
+            contents: 'package p1\nimport p2.Groovy2\npublic class Groovy {\n Groovy2 g\n}',
+            finalContents: 'package NEW\nimport p2.Groovy2\npublic class Groovy {\n Groovy2 g\n}'
         ), new TestSource(
             pack: 'p2', name: 'Groovy2.groovy',
-            contents: 'package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }',
-            finalContents: 'package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy { }'
+            contents: 'package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy {}',
+            finalContents: 'package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy {}'
         ))
     }
 
@@ -139,12 +139,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testQualifiedMove1() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Java.java',
-            contents: 'package p;\npublic class Java { }',
-            finalContents: 'package NEW;\npublic class Java { }'
+            contents: 'package p;\npublic class Java {}',
+            finalContents: 'package NEW;\npublic class Java {}'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy extends p.Java { }',
-            finalContents: 'package p;\npublic class Groovy extends NEW.Java { }'
+            contents: 'package p;\npublic class Groovy extends p.Java {}',
+            finalContents: 'package p;\npublic class Groovy extends NEW.Java {}'
         ))
     }
 
@@ -152,12 +152,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testQualifiedMove2() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p1', name: 'Groovy.groovy',
-            contents: 'package p1\npublic class Groovy {\np2.Groovy2 g }',
-            finalContents: 'package NEW\npublic class Groovy {\np2.Groovy2 g }'
+            contents: 'package p1\npublic class Groovy {\n p2.Groovy2 g\n}',
+            finalContents: 'package NEW\npublic class Groovy {\n p2.Groovy2 g\n}'
         ), new TestSource(
             pack: 'p2', name: 'Groovy2.groovy',
-            contents: 'package p2\npublic class Groovy2 extends p1.Groovy { }',
-            finalContents: 'package p2\npublic class Groovy2 extends NEW.Groovy { }'
+            contents: 'package p2\npublic class Groovy2 extends p1.Groovy {}',
+            finalContents: 'package p2\npublic class Groovy2 extends NEW.Groovy {}'
         ))
     }
 
@@ -167,49 +167,49 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
         performRefactoringAndUndo('j2', new TestSource(
             pack: 'j1', name: 'Java.java',
             contents: '''\
-                package j1
-                public class Java {
-                  public static final int N = 1;
-                }
-                '''.stripIndent(),
+                |package j1
+                |public class Java {
+                |  public static final int N = 1;
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package j2
-                public class Java {
-                  public static final int N = 1;
-                }
-                '''.stripIndent()
+                |package j2
+                |public class Java {
+                |  public static final int N = 1;
+                |}
+                |'''.stripMargin()
         ), new TestSource(
             pack: 'g1', name: 'Groovy.groovy',
             contents: '''\
-                package g1
-
-                import static j1.Java.*
-                import j1.Java
-
-                class Groovy {
-                  def m1() {
-                    Java j = new j1.Java()
-                  }
-                  def m2() {
-                    def n = N
-                  }
-                }
-                '''.stripIndent(),
+                |package g1
+                |
+                |import static j1.Java.*
+                |import j1.Java
+                |
+                |class Groovy {
+                |  def m1() {
+                |    Java j = new j1.Java()
+                |  }
+                |  def m2() {
+                |    def n = N
+                |  }
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package g1
-
-                import static j2.Java.*
-                import j2.Java
-
-                class Groovy {
-                  def m1() {
-                    Java j = new j2.Java()
-                  }
-                  def m2() {
-                    def n = N
-                  }
-                }
-                '''.stripIndent(),
+                |package g1
+                |
+                |import static j2.Java.*
+                |import j2.Java
+                |
+                |class Groovy {
+                |  def m1() {
+                |    Java j = new j2.Java()
+                |  }
+                |  def m2() {
+                |    def n = N
+                |  }
+                |}
+                |'''.stripMargin(),
         ))
     }
 
@@ -217,12 +217,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testNonPrimaryMove() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p1', name: 'GroovyFoo.groovy',
-            contents: 'package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }',
-            finalContents: 'package NEW\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }'
+            contents: 'package p1\nimport p2.Groovy2\npublic class Groovy {\n Groovy2 g\n}',
+            finalContents: 'package NEW\nimport p2.Groovy2\npublic class Groovy {\n Groovy2 g\n}'
         ), new TestSource(
             pack: 'p2', name: 'GroovyFoo2.groovy',
-            contents: 'package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }',
-            finalContents: 'package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy { }'
+            contents: 'package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy {}',
+            finalContents: 'package p2\nimport NEW.Groovy\npublic class Groovy2 extends Groovy {}'
         ))
     }
 
@@ -230,12 +230,12 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testNonPrimaryQualifiedMove() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p1', name: 'GroovyFoo.groovy',
-            contents: 'package p1\npublic class Groovy {\np2.Groovy2 g }',
-            finalContents: 'package NEW\npublic class Groovy {\np2.Groovy2 g }'
+            contents: 'package p1\npublic class Groovy {\n p2.Groovy2 g\n}',
+            finalContents: 'package NEW\npublic class Groovy {\n p2.Groovy2 g\n}'
         ), new TestSource(
             pack: 'p2', name: 'GroovyFoo2.groovy',
-            contents: 'package p2\npublic class Groovy2 extends p1.Groovy { }',
-            finalContents: 'package p2\npublic class Groovy2 extends NEW.Groovy { }'
+            contents: 'package p2\npublic class Groovy2 extends p1.Groovy {}',
+            finalContents: 'package p2\npublic class Groovy2 extends NEW.Groovy {}'
         ))
     }
 
@@ -243,64 +243,64 @@ final class MoveCURefactoringTests extends RenameRefactoringTestSuite {
     void testMoveBack() {
         performRefactoringAndUndo('p2', new TestSource(
             pack: 'p1', name: 'Groovy.groovy',
-            contents: 'package p1\nimport p2.Groovy2\n\npublic class Groovy { Groovy2 g }',
-            finalContents: 'package p2\n\npublic class Groovy { Groovy2 g }'
+            contents: 'package p1\nimport p2.Groovy2\n\npublic class Groovy {\n Groovy2 g\n}',
+            finalContents: 'package p2\n\npublic class Groovy {\n Groovy2 g\n}'
         ), new TestSource(
             pack: 'p2', name: 'Groovy2.groovy',
-            contents: 'package p2\nimport p1.Groovy\n\npublic class Groovy2 extends Groovy { }',
-            finalContents: 'package p2\n\npublic class Groovy2 extends Groovy { }'
+            contents: 'package p2\nimport p1.Groovy\n\npublic class Groovy2 extends Groovy {}',
+            finalContents: 'package p2\n\npublic class Groovy2 extends Groovy {}'
         ))
     }
 
-    @Test @Ignore('see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205')
+    @Test @NotYetImplemented // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     void testInnerMove1() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
-            finalContents: 'package NEW;\npublic class Groovy {\n class Inner { }\n}'
+            contents: 'package p;\npublic class Groovy {\n class Inner {}\n}',
+            finalContents: 'package NEW;\npublic class Groovy {\n class Inner {}\n}'
         ), new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
-            contents: 'package p;\npublic class Groovy2 extends Groovy.Inner { }',
-            finalContents: 'package p;\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy.Inner { }'
+            contents: 'package p;\npublic class Groovy2 extends Groovy.Inner {}',
+            finalContents: 'package p;\nimport NEW.Groovy;\npublic class Groovy2 extends Groovy.Inner {}'
         ))
     }
 
-    @Test @Ignore('see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205')
+    @Test @NotYetImplemented // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     void testInnerMove2() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
-            contents: 'package p;\npublic class Groovy2 extends Groovy.Inner { }',
-            finalContents: 'package NEW;\nimport p.Groovy;\npublic class Groovy2 extends Groovy.Inner { }'
+            contents: 'package p;\npublic class Groovy2 extends Groovy.Inner {}',
+            finalContents: 'package NEW;\nimport p.Groovy;\npublic class Groovy2 extends Groovy.Inner {}'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
-            finalContents: 'package p;\npublic class Groovy {\n class Inner { }\n}'
+            contents: 'package p;\npublic class Groovy {\n class Inner {}\n}',
+            finalContents: 'package p;\npublic class Groovy {\n class Inner {}\n}'
         ))
     }
 
-    @Test @Ignore('see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205')
+    @Test @NotYetImplemented // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     void testInnerMove3() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
-            finalContents: 'package NEW;\npublic class Groovy {\n class Inner { }\n}'
+            contents: 'package p;\npublic class Groovy {\n class Inner {}\n}',
+            finalContents: 'package NEW;\npublic class Groovy {\n class Inner {}\n}'
         ), new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
-            contents: 'package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }',
-            finalContents: 'package p;\nimport NEW.Groovy.Inner;\npublic class Groovy2 extends Inner { }'
+            contents: 'package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner {}',
+            finalContents: 'package p;\nimport NEW.Groovy.Inner;\npublic class Groovy2 extends Inner {}'
         ))
     }
 
-    @Test @Ignore('see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205')
+    @Test @NotYetImplemented // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=350205
     void testInnerMove4() {
         performRefactoringAndUndo('NEW', new TestSource(
             pack: 'p', name: 'Groovy2.groovy',
-            contents: 'package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner { }',
-            finalContents: 'package NEW;\nimport p.Groovy.Inner;\npublic class Groovy2 extends Inner { }'
+            contents: 'package p;\nimport Groovy.Inner\npublic class Groovy2 extends Inner {}',
+            finalContents: 'package NEW;\nimport p.Groovy.Inner;\npublic class Groovy2 extends Inner {}'
         ), new TestSource(
             pack: 'p', name: 'Groovy.groovy',
-            contents: 'package p;\npublic class Groovy {\n class Inner { }\n}',
-            finalContents: 'package p;\npublic class Groovy {\n class Inner { }\n}'
+            contents: 'package p;\npublic class Groovy {\n class Inner {}\n}',
+            finalContents: 'package p;\npublic class Groovy {\n class Inner {}\n}'
         ))
     }
 }
