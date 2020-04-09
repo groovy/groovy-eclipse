@@ -226,6 +226,20 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testConvertToProperty1() {
+        assertProposalNotOffered(
+            '"".length()',
+            4, 0, new ConvertAccessorToPropertyProposal())
+    }
+
+    @Test
+    void testConvertToProperty2() {
+        assertProposalNotOffered(
+            '[].set(1, null)',
+            4, 0, new ConvertAccessorToPropertyProposal())
+    }
+
+    @Test
+    void testConvertToProperty3() {
         assertConversion(
             '"".isEmpty()',
             '"".empty',
@@ -233,7 +247,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty2() {
+    void testConvertToProperty4() {
         assertConversion(
             '"".getBytes()',
             '"".bytes',
@@ -241,14 +255,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty3() {
+    void testConvertToProperty5() {
         assertProposalNotOffered(
             '"".getBytes("UTF-8")',
             4, 0, new ConvertAccessorToPropertyProposal())
     }
 
     @Test
-    void testConvertToProperty4() {
+    void testConvertToProperty6() {
         assertConversion(
             'new Date().setTime(1L);',
             'new Date().time = 1L;',
@@ -256,7 +270,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty4a() {
+    void testConvertToProperty6a() {
         setJavaPreference(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR, JavaCore.DO_NOT_INSERT)
         try {
             assertConversion(
@@ -269,17 +283,57 @@ final class QuickAssistTests extends QuickFixTestSuite {
     }
 
     @Test
-    void testConvertToProperty5() {
-        assertProposalNotOffered(
-            '[].set(1, null)',
-            4, 0, new ConvertAccessorToPropertyProposal())
+    void testConvertToProperty7() {
+        assertConversion('''\
+            |class Foo {
+            |  def bar
+            |  void test() {
+            |    getBar()
+            |  }
+            |}
+            |'''.stripMargin(), '''\
+            |class Foo {
+            |  def bar
+            |  void test() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin(),
+            'getBar', new ConvertAccessorToPropertyProposal())
     }
 
     @Test
-    void testConvertToProperty6() {
-        assertProposalNotOffered(
-            '"".length()',
-            4, 0, new ConvertAccessorToPropertyProposal())
+    void testConvertToProperty8() {
+        assertConversion('''\
+            |class Foo {
+            |  static getBar() {}
+            |  static test() {
+            |    getBar()
+            |  }
+            |}
+            |'''.stripMargin(), '''\
+            |class Foo {
+            |  static getBar() {}
+            |  static test() {
+            |    bar
+            |  }
+            |}
+            |'''.stripMargin(),
+            'getBar', new ConvertAccessorToPropertyProposal())
+    }
+
+    @Test
+    void testConvertToProperty9() {
+        addGroovySource '''\
+            |class Bar {
+            |  static getBaz() {}
+            |}
+            |'''.stripMargin(), 'foo', 'Bar'
+
+        assertConversion(
+            'import static foo.Bar.getBaz\ngetBaz().hashCode()',
+            'import static foo.Bar.getBaz\nbaz.hashCode()',
+            'getBaz', new ConvertAccessorToPropertyProposal())
     }
 
     @Test
@@ -513,7 +567,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
         assertConversion(
             'v  && g && a',
             'g  && v && a',
-            '&&', new SwapLeftAndRightOperandsProposal())
+            '  &&', new SwapLeftAndRightOperandsProposal())
     }
 
     @Test
@@ -1964,7 +2018,7 @@ final class QuickAssistTests extends QuickFixTestSuite {
     //
 
     private void assertConversion(String original, String expected, String target, GroovyQuickAssistProposal proposal) {
-        int offset = (target == null ? 0 : original.indexOf(target)),
+        int offset = (target == null ? 0 : original.lastIndexOf(target)),
             length = (target == null ? 0 : target.length())
         assertConversion(original, expected, offset, length, proposal)
     }
