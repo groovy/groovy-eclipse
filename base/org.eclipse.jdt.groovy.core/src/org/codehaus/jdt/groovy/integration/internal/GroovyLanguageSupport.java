@@ -55,7 +55,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -198,14 +197,11 @@ public class GroovyLanguageSupport implements LanguageSupport {
                 }
             };
 
-            if (problemReporter.options.groovyCompilerConfigScript != null) {
-                IWorkspace workspace = ResourcesPlugin.getWorkspace();
-                if (workspace != null && workspace.getRoot() != null) {
-                    IFile eclipseFile = workspace.getRoot().getFile(new Path(unitName));
-                    if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
-                            !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
-                        problemReporter.options.groovyCompilerConfigScript = null;
-                    }
+            if (problemReporter.options.groovyCompilerConfigScript != null && ResourcesPlugin.getPlugin() != null) {
+                IFile eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(unitName));
+                if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                        !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+                    problemReporter.options.groovyCompilerConfigScript = null;
                 }
             }
 

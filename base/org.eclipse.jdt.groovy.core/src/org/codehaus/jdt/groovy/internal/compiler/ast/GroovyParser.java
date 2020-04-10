@@ -158,7 +158,7 @@ public class GroovyParser {
             IPath filePath = new Path(fileName);
             // needs 2 segments (project and file names) or eclipse throws assertion failed
             // GRECLIPSE-1269: ensure the workspace is available (i.e. not in batch mode)
-            if (filePath.segmentCount() >= 2 && ResourcesPlugin.getWorkspace() != null) {
+            if (filePath.segmentCount() >= 2 && ResourcesPlugin.getPlugin() != null) {
                 eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
                 IPath location = eclipseFile.getLocation();
                 if (location != null) {
