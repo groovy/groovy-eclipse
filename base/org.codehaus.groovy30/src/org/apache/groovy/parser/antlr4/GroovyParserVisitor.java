@@ -19,7 +19,7 @@ import groovyjarjarantlr4.v4.runtime.tree.ParseTreeVisitor;
 public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	/**
 	 * Visit a parse tree produced by the {@code identifierPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -27,7 +27,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code literalPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -35,7 +35,7 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 
 	/**
 	 * Visit a parse tree produced by the {@code gstringPrmrAlt}
-	 * labeled alternative in {@link GroovyParser#namedPropertyArgPrimary}.
+	 * labeled alternative in {@link GroovyParser#commandPrimary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

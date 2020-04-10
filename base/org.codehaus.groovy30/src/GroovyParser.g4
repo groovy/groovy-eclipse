@@ -97,8 +97,7 @@ options {
 
 // starting point for parsing a groovy file
 compilationUnit
-    :   nls
-        packageDeclaration? sep? scriptStatements? EOF
+    :   nls (packageDeclaration sep?)? scriptStatements? EOF
     ;
 
 scriptStatements
@@ -863,7 +862,7 @@ commandExpression
     ;
 
 commandArgument
-    :   primary
+    :   commandPrimary
         // what follows is either a normal argument, parens,
         // an appended block, an index operation, or nothing
         // parens (a b already processed):
@@ -1007,6 +1006,13 @@ options { baseContext = primary; }
     |   literal                                                                             #literalPrmrAlt
     |   gstring                                                                             #gstringPrmrAlt
     |   parExpression                                                                       #parenPrmrAlt
+    ;
+
+commandPrimary
+options { baseContext = primary; }
+    :   identifier                                                                          #identifierPrmrAlt
+    |   literal                                                                             #literalPrmrAlt
+    |   gstring                                                                             #gstringPrmrAlt
     ;
 
 list

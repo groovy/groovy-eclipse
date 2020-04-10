@@ -696,7 +696,7 @@ BooleanLiteral
 
 fragment
 EscapeSequence
-    :   Backslash [btnfr"'\\]
+    :   Backslash [btnfrs"'\\]
     |   OctalEscape
     |   UnicodeEscape
     |   DollarEscape
@@ -899,24 +899,19 @@ IdentifierInGString
     ;
 
 fragment
-JavaLetterInGString
-    :   JavaLetter {_input.LA(-1) != '$'}?
-    ;
-
-fragment
-JavaLetterOrDigitInGString
-    :   JavaLetterOrDigit {_input.LA(-1) != '$'}?
-    ;
-
-fragment
 JavaLetter
     :   [a-zA-Z$_] // these are the "java letters" below 0x7F
     |   // covers all characters above 0x7F which are not a surrogate
         ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierStart(_input.LA(-1))&&!Character.isIdentifierIgnorable(_input.LA(-1))}?
+        { Character.isJavaIdentifierStart(_input.LA(-1)) && !Character.isIdentifierIgnorable(_input.LA(-1)) }?
     |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
         [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierStart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        { Character.isJavaIdentifierStart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) }?
+    ;
+
+fragment
+JavaLetterInGString
+    :   JavaLetter { _input.LA(-1) != '$' }?
     ;
 
 fragment
@@ -924,10 +919,20 @@ JavaLetterOrDigit
     :   [a-zA-Z0-9$_] // these are the "java letters or digits" below 0x7F
     |   // covers all characters above 0x7F which are not a surrogate
         ~[\u0000-\u007F\uD800-\uDBFF]
-        {Character.isJavaIdentifierPart(_input.LA(-1))&&!Character.isIdentifierIgnorable(_input.LA(-1))}?
+        { Character.isJavaIdentifierPart(_input.LA(-1)) && !Character.isIdentifierIgnorable(_input.LA(-1)) }?
     |   // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
         [\uD800-\uDBFF] [\uDC00-\uDFFF]
-        {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+        { Character.isJavaIdentifierPart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) }?
+    ;
+
+fragment
+JavaLetterOrDigitInGString
+    :   JavaLetterOrDigit  { _input.LA(-1) != '$' }?
+    ;
+
+fragment
+ShCommand
+    :   ~[\r\n\uFFFF]*
     ;
 
 //
@@ -966,7 +971,7 @@ SL_COMMENT
 // Script-header comments.
 // The very first characters of the file may be "#!".  If so, ignore the first line.
 SH_COMMENT
-    :   '#!' { require(0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ~[\r\n\uFFFF]* -> skip
+    :   '#!' { require(0 == this.tokenIndex, "Shebang comment should appear at the first line", -2, true); } ShCommand (LineTerminator '#!' ShCommand)* -> skip
     ;
 
 // Unexpected characters will be handled by groovy parser later.

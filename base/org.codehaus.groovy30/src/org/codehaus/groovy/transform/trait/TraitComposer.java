@@ -329,7 +329,7 @@ public abstract class TraitComposer {
         );
         mce.setImplicitThis(false);
         /* GRECLIPSE edit -- GROOVY-8757
-        genericsSpec = GenericsUtils.addMethodGenerics(helperMethod,genericsSpec);
+        genericsSpec = GenericsUtils.addMethodGenerics(helperMethod, genericsSpec);
         */
         ClassNode[] exceptionNodes = correctToGenericsSpecRecurse(genericsSpec, copyExceptions(helperMethod.getExceptions()));
         ClassNode fixedReturnType = correctToGenericsSpecRecurse(genericsSpec, helperMethod.getReturnType());
