@@ -57,7 +57,7 @@ The installer then downloads the required target platform bundles, imports the G
 
 ![Done](images/oomph/done.png)
 
-Close all org.codehaus.groovyXX projects except org.codehaus.groovy25. Only one groovyXXX project should be open at all times.
+Close all org.codehaus.groovyXX projects except org.codehaus.groovy30. Only one groovyXXX project should be open at all times.
 Now try to run the GroovyJDTTests/AllGroovyTests suites.
 
 
@@ -194,6 +194,7 @@ Replace e49 with a different option to build it for another Eclipse version:
 * e4.13
 * e4.14
 * e4.15
+* e4.16
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

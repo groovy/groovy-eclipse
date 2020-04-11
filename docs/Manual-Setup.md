@@ -4,11 +4,11 @@ These are old instructions for setting up a Groovy-Eclipse development environme
 
 ### Get the Base Eclipse Package
 
-Groovy-Eclipse is intended to be developed using Eclipse. Download and install [the "Eclipse IDE for Eclipse Committers" package](https://www.eclipse.org/downloads/packages/release/2019-12/r/eclipse-ide-eclipse-committers) for your operating system.
+Groovy-Eclipse is intended to be developed using Eclipse. Download and install [the "Eclipse IDE for Eclipse Committers" package](https://www.eclipse.org/downloads/packages/release/2020-03/r/eclipse-ide-eclipse-committers) for your operating system.
 
 ### Install Groovy-Eclipse
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `https://dist.springsource.org/snapshot/GRECLIPSE/e4.14` into the *Work with:* field and press enter. Check the box next to "Main Package", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `https://dist.springsource.org/snapshot/GRECLIPSE/e4.15` into the *Work with:* field and press enter. Check the box next to "Main Package", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
 
 ### Setup Groovy Compiler
 
@@ -16,7 +16,7 @@ If you installed extran Groovy compiler versions, then you must activate Groovy 
 
 ### Install Execution Environment Descriptions
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, select `2019-12 - https://download.eclipse.org/releases/2019-12` from the *Work with:* field and enter "exeuction" in the filter. Check the boxes next to "API Tools Execution Environment Descriptions", and click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, select `2020-03 - https://download.eclipse.org/releases/2020-03` from the *Work with:* field and enter "exeuction" in the filter. Check the boxes next to "API Tools Execution Environment Descriptions", and click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
 
 ![API Baseline](images/eclipse-api-tools-execution-environment.png)
 

@@ -58,6 +58,7 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -158,50 +159,67 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
-        monitor = SubMonitor.convert(monitor, "", 6);
+    public RefactoringStatus checkInitialConditions(final IProgressMonitor monitor) throws CoreException {
+        SubMonitor submon = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 5);
 
-        IASTFragment expr = getSelectedFragment();
-        if (expr == null) {
-            return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
+        IASTFragment astFragment = getSelectedFragment();
+        if (astFragment == null) {
+            return RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractTempRefactoring_select_expression, StatusHelper.createContext(unit, new SourceRange(start, length)));
         }
+        submon.worked(1);
 
-        int trimmedLength = expr.getTrimmedLength(unit);
-        int exprLength = expr.getLength();
-        // problem is that some expressions include whitespace in the end of their sloc.
-        // need to handle this case.
+        int trimmedLength = astFragment.getTrimmedLength(unit), exprLength = astFragment.getLength();
+        // problem is that some expressions include whitespace in the end of their sloc; need to handle this case
         // the selected length must be somewhere >= the trimmed (no whitespace) length and <= the non-trimeed (w/ whitespace) length
-        if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
+        if (astFragment.getStart() != start || length > exprLength || length < trimmedLength) {
             return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
         }
+        submon.worked(1);
 
-        RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
-        if (result.hasFatalError()) {
-            return result;
+        RefactoringStatus status;
+        try {
+            try {
+                //status = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext(), submon.split(1));
+                status = (RefactoringStatus) Checks.class.getDeclaredMethod("validateModifiesFiles", IFile[].class, Object.class, IProgressMonitor.class)
+                        .invoke(Checks.class, ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext(), submon.split(4));
+            } catch (NoSuchMethodException e) {
+                //status = Checks.validateEdit(unit, getValidationContext());
+                status = (RefactoringStatus) Checks.class.getDeclaredMethod("validateModifiesFiles", IFile[].class, Object.class)
+                        .invoke(Checks.class, ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
+                submon.worked(1);
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (status.hasFatalError()) {
+            return status;
         }
 
         if (module == null) {
-            result.addFatalError("Cannot build module node for file.  Possible syntax error.");
-            return result;
+            status.addFatalError("Cannot build module node for file.  Possible syntax error.");
+            return status;
         }
+        submon.worked(1);
 
-        if (getSelectedFragment() == null) {
-            result.addFatalError("Illegal expression selected");
+        status.merge(checkExpression());
+        if (status.hasFatalError()) {
+            return status;
         }
+        submon.worked(1);
 
-        result.merge(checkSelection(((SubMonitor) monitor).split(3)));
-        /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
+        /*if (isLiteralNodeSelected()) {
             replaceAllOccurrences = false;
         }*/
-        return result;
+        return status;
     }
 
     @Override
-    public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
-        monitor = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
+    public RefactoringStatus checkFinalConditions(final IProgressMonitor monitor) throws CoreException {
+        SubMonitor submon = SubMonitor.convert(monitor, "Checking postconditions...", 4);
 
         RefactoringStatus result = new RefactoringStatus();
-        change = doCreateChange(result, ((SubMonitor) monitor).split(2));
+        change = doCreateChange(result, submon.split(2));
 
         if (getExcludedVariableNames().contains(getLocalName())) {
             result.addWarning(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));
@@ -214,7 +232,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     @Override
     public Change createChange(final IProgressMonitor monitor) throws CoreException, OperationCanceledException {
-        monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
         ExtractLocalDescriptor descriptor = createRefactoringDescriptor();
         change.setDescriptor(new RefactoringChangeDescriptor(descriptor));
         return change;
@@ -270,8 +287,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 result.addError(msg, StatusHelper.createContext(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
             if (isLeftValue(matchingExpr)) {
-                String msg = RefactoringCoreMessages.ExtractTempRefactoring_assigned_to;
-                result.addWarning(msg, StatusHelper.createContext(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
+                result.addWarning(RefactoringCoreMessages.ExtractTempRefactoring_assigned_to, StatusHelper.createContext(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
         }
         return result;
@@ -327,7 +343,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private CompilationUnitChange doCreateChange(final RefactoringStatus status, final IProgressMonitor monitor) throws CoreException {
         CompilationUnitChange newChange = new CompilationUnitChange("Extract Local Variable", unit);
-        monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 1);
         newChange.setEdit(new MultiTextEdit());
         createTempDeclaration(newChange, status);
         if (!status.hasFatalError()) {
@@ -567,37 +582,18 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return declarationExpression;
     }
 
-    private RefactoringStatus checkSelection(final IProgressMonitor monitor) throws JavaModelException {
-        monitor.beginTask("", 2);
-
-        IASTFragment selectedFragment = getSelectedFragment();
-        if (selectedFragment == null) {
-            String message = RefactoringCoreMessages.ExtractTempRefactoring_select_expression;
-            return RefactoringStatus.createFatalErrorStatus(message, createContext());
-        }
-        monitor.worked(1);
-
-        RefactoringStatus result = new RefactoringStatus();
-        result.merge(checkExpression());
-        if (result.hasFatalError())
-            return result;
-        monitor.worked(1);
-
-        return result;
-    }
-
     private RefactoringStatus checkExpression() throws JavaModelException {
-        RefactoringStatus result = new RefactoringStatus();
+        RefactoringStatus status = new RefactoringStatus();
         IASTFragment selectedFragment = getSelectedFragment();
-        result.merge(checkExpressionFragmentIsRValue(selectedFragment));
-        if (result.hasFatalError())
-            return result;
+        status.merge(checkExpressionFragmentIsRValue(selectedFragment));
+        if (status.hasFatalError())
+            return status;
 
         if ((selectedFragment instanceof ConstantExpression) && ((ConstantExpression) selectedFragment).isNullExpression()) {
-            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractTempRefactoring_null_literals));
+            status.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractTempRefactoring_null_literals));
         }
 
-        return result;
+        return status;
     }
 
     private RefactoringStatus checkExpressionFragmentIsRValue(final IASTFragment fragment) throws JavaModelException {
@@ -652,20 +648,19 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private ExtractLocalDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<>();
         String project = null;
         IJavaProject javaProject = unit.getJavaProject();
-        if (javaProject != null)
-            project = javaProject.getElementName();
-        final String description = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(getLocalName()));
-        final String expression = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
-        final String header = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description, BasicElementLabels.getJavaElementName(getLocalName()), BasicElementLabels.getJavaCodeString(expression));
-        final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
+        if (javaProject != null) project = javaProject.getElementName();
+        String description = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(getLocalName()));
+        String expression = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
+        String header = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_descriptor_description, BasicElementLabels.getJavaElementName(getLocalName()), BasicElementLabels.getJavaCodeString(expression));
+        JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
         comment.addSetting(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_name_pattern, BasicElementLabels.getJavaElementName(getLocalName())));
         comment.addSetting(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractTempRefactoring_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
-        if (replaceAllOccurrences)
-            comment.addSetting(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
-        final ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment.asString(), arguments, RefactoringDescriptor.NONE);
+        if (replaceAllOccurrences) comment.addSetting(RefactoringCoreMessages.ExtractTempRefactoring_replace_occurrences);
+
+        Map<String, String> arguments = new HashMap<>();
+        ExtractLocalDescriptor descriptor = RefactoringSignatureDescriptorFactory.createExtractLocalDescriptor(project, description, comment.asString(), arguments, RefactoringDescriptor.NONE);
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_INPUT, JavaRefactoringDescriptorUtil.elementToHandle(project, unit));
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_NAME, getLocalName());
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, start + " " + length);

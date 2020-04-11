@@ -110,6 +110,32 @@
 
 	<profiles>
 		<profile>
+			<id>e4.16</id>
+			<repositories>
+				<repository>
+					<id>2020-06</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/releases/2020-06</url>
+				</repository>
+				<repository>
+					<id>eclipse</id>
+					<layout>p2</layout>
+					<url>https://download.eclipse.org/eclipse/updates/4.16milestones</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e416/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e416/org.eclipse.jdt.core.tests.builder</module>
+				<module>jdt-patch/e416/org.eclipse.jdt.core.tests.compiler</module>
+				<module>jdt-patch/e416/Feature-org.codehaus.groovy.jdt.patch</module>
+			</modules>
+			<properties>
+				<dist.target>e4.16</dist.target>
+				<greclipse.build.qualifier>'v'yyyyMMddHHmm'-e2006${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>e4.15</id>
 			<repositories>
 				<repository>
@@ -274,7 +300,7 @@
 					<url>https://download.eclipse.org/releases/2018-09</url>
 				</repository>
 				<repository>
-					<id>eclipse49</id>
+					<id>eclipse</id>
 					<layout>p2</layout>
 					<url>https://download.eclipse.org/eclipse/updates/4.9</url>
 				</repository>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
@@ -80,7 +81,6 @@ import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.RefactoringStatusContext;
 import org.eclipse.ltk.core.refactoring.TextEditChangeGroup;
-import org.eclipse.ltk.internal.core.refactoring.Messages;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -106,13 +106,13 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private String[] fExcludedVariableNames;
 
-    public ExtractGroovyConstantRefactoring(JavaRefactoringArguments arguments, RefactoringStatus status) {
+    public ExtractGroovyConstantRefactoring(final JavaRefactoringArguments arguments, final RefactoringStatus status) {
         super(arguments, status);
         length = -1;
         start = -1;
     }
 
-    public ExtractGroovyConstantRefactoring(GroovyCompilationUnit unit, int offset, int length) {
+    public ExtractGroovyConstantRefactoring(final GroovyCompilationUnit unit, final int offset, final int length) {
         super(unit, offset, length);
         this.unit = unit;
         this.start = offset;
@@ -123,42 +123,60 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
-        monitor = SubMonitor.convert(monitor, "", 7);
+    public RefactoringStatus checkInitialConditions(final IProgressMonitor monitor) throws CoreException {
+        SubMonitor submon = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractConstantRefactoring_checking_preconditions, 7);
 
-        RefactoringStatus result = Checks.validateEdit(getCu(), getValidationContext());
-        if (result.hasFatalError()) {
-            return result;
+        RefactoringStatus status;
+        try {
+            try {
+                //status = Checks.validateEdit(unit, getValidationContext(), submon.split(4));
+                status = (RefactoringStatus) Checks.class.getDeclaredMethod("validateEdit", ICompilationUnit.class, Object.class, IProgressMonitor.class)
+                        .invoke(Checks.class, unit, getValidationContext(), submon.split(4));
+            } catch (NoSuchMethodException e) {
+                //status = Checks.validateEdit(unit, getValidationContext());
+                status = (RefactoringStatus) Checks.class.getDeclaredMethod("validateEdit", ICompilationUnit.class, Object.class)
+                        .invoke(Checks.class, unit, getValidationContext());
+                submon.worked(4);
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
         }
-        monitor.worked(4);
 
-        result.merge(checkSelection(((SubMonitor) monitor).split(3)));
-
-        if (result.hasFatalError()) {
-            return result;
+        if (status.hasFatalError()) {
+            return status;
         }
+
+        IASTFragment astFragment = getSelectedFragment();
+        if (astFragment == null) {
+            status.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_select_expression, createContext()));
+            return status;
+        }
+        submon.worked(1);
+
+        status.merge(checkFragment());
+        if (status.hasFatalError()) {
+            return status;
+        }
+        submon.worked(1);
 
         ClassNode targetType = getContainingClassNode();
         if (targetType == null) {
-            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing Class declaration."));
+            status.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing Class declaration."));
         }
         if (targetType.isScript()) {
-            result.merge(RefactoringStatus.createFatalErrorStatus("Cannot extract a constant to a Script."));
+            status.merge(RefactoringStatus.createFatalErrorStatus("Cannot extract a constant to a Script."));
         }
 
         if (targetType.isAnnotationDefinition() || targetType.isInterface()) {
-            setTargetIsInterface(true);
             setVisibility(JdtFlags.VISIBILITY_STRING_PUBLIC);
+            setTargetIsInterface(true);
         }
+        submon.worked(1);
 
-        if (getSelectedFragment() == null) {
-            result.merge(RefactoringStatus.createFatalErrorStatus("Illegal expression selected"));
-        }
-
-        return result;
+        return status;
     }
 
-    private int expandSelection(int s, int l) {
+    private int expandSelection(final int s, final int l) {
         int end = s + l;
         char[] contents = unit.getContents();
         while (end < contents.length && (contents[end] == ' ' || contents[end] == '\t')) {
@@ -171,14 +189,14 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         return ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fChange", this);
     }
 
-    private void setChange(CompilationUnitChange change) {
+    private void setChange(final CompilationUnitChange change) {
         ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fChange", this, change);
     }
 
     @Override
-    public RefactoringStatus checkFinalConditions(IProgressMonitor pm) throws CoreException {
+    public RefactoringStatus checkFinalConditions(final IProgressMonitor monitor) throws CoreException {
         try {
-            RefactoringStatus result = new RefactoringStatus();
+            RefactoringStatus status = new RefactoringStatus();
             CompilationUnitChange change = new CompilationUnitChange("Extract Groovy Constant", getCu());
             change.setEdit(new MultiTextEdit());
             TextEditGroup group = createConstantDeclaration();
@@ -192,7 +210,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
                 change.addEdit(edit);
             }
             setChange(change);
-            return result;
+            return status;
         } catch (MalformedTreeException e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (BadLocationException e) {
@@ -313,7 +331,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     @Override
-    public Change createChange(IProgressMonitor monitor) throws CoreException {
+    public Change createChange(final IProgressMonitor monitor) throws CoreException {
         ExtractConstantDescriptor descriptor = createRefactoringDescriptor();
         getChange().setDescriptor(new RefactoringChangeDescriptor(descriptor));
         return getChange();
@@ -328,14 +346,12 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         int flags = JavaRefactoringDescriptor.JAR_REFACTORING | JavaRefactoringDescriptor.JAR_SOURCE_ATTACHMENT | RefactoringDescriptor.STRUCTURAL_CHANGE;
 
         String expression = createExpressionText();
-        String description = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(constantName));
-        String header = Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description, new String[] {
-            BasicElementLabels.getJavaElementName(constantName), BasicElementLabels.getJavaCodeString(expression)
-        });
+        String description = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description_short, BasicElementLabels.getJavaElementName(constantName));
+        String header = RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractConstantRefactoring_descriptor_description, BasicElementLabels.getJavaElementName(constantName), BasicElementLabels.getJavaCodeString(expression));
         final JDTRefactoringDescriptorComment comment = new JDTRefactoringDescriptorComment(project, this, header);
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_constant_name_pattern, BasicElementLabels.getJavaElementName(constantName)));
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_constant_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
-        comment.addSetting(Messages.format(RefactoringCoreMessages.ExtractConstantRefactoring_visibility_pattern, RefactoringCoreMessages.ExtractConstantRefactoring_default_visibility));
+        comment.addSetting(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractConstantRefactoring_constant_name_pattern, BasicElementLabels.getJavaElementName(constantName)));
+        comment.addSetting(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractConstantRefactoring_constant_expression_pattern, BasicElementLabels.getJavaCodeString(expression)));
+        comment.addSetting(RefactoringCoreMessages.bind(RefactoringCoreMessages.ExtractConstantRefactoring_visibility_pattern, RefactoringCoreMessages.ExtractConstantRefactoring_default_visibility));
         if (getReplaceAllOccurrences()) {
             comment.addSetting(RefactoringCoreMessages.ExtractConstantRefactoring_replace_occurrences);
         }
@@ -396,43 +412,24 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fTargetIsInterface", this, true);
     }
 
-    private RefactoringStatus checkSelection(IProgressMonitor monitor) throws JavaModelException {
-        monitor.beginTask("", 2);
-
-        IASTFragment astFragment = getSelectedFragment();
-        if (astFragment == null) {
-            String message = RefactoringCoreMessages.ExtractConstantRefactoring_select_expression;
-            return RefactoringStatus.createFatalErrorStatus(message, createContext());
-        }
-        monitor.worked(1);
-
-        RefactoringStatus result = new RefactoringStatus();
-        result.merge(checkFragment());
-        if (result.hasFatalError())
-            return result;
-        monitor.worked(1);
-
-        return result;
-    }
-
     private RefactoringStatus checkFragment() throws JavaModelException {
-        RefactoringStatus result = new RefactoringStatus();
+        RefactoringStatus status = new RefactoringStatus();
         IASTFragment astFragment = getSelectedFragment();
-        result.merge(checkExpressionFragmentIsRValue(astFragment));
-        if (result.hasFatalError())
-            return result;
+        status.merge(checkExpressionFragmentIsRValue(astFragment));
+        if (status.hasFatalError())
+            return status;
         checkAllStaticFinal();
         if (!selectionAllStaticFinal()) {
-            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_not_load_time_constant));
+            status.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_not_load_time_constant));
         }
 
         Expression expression = astFragment.getAssociatedExpression();
 
         if ((expression instanceof ConstantExpression) && ((ConstantExpression) expression).isNullExpression()) {
-            result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_null_literals));
+            status.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_null_literals));
         }
 
-        return result;
+        return status;
     }
 
     private void checkAllStaticFinal() throws JavaModelException {
@@ -442,7 +439,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fAllStaticFinalCheckPerformed", this, true);
     }
 
-    private RefactoringStatus checkExpressionFragmentIsRValue(IASTFragment fragment) throws JavaModelException {
+    private RefactoringStatus checkExpressionFragmentIsRValue(final IASTFragment fragment) throws JavaModelException {
         if (fragment.kind() == ASTFragmentKind.SIMPLE_EXPRESSION) {
             Expression expr = fragment.getAssociatedExpression();
             if (expr instanceof VariableExpression) {
@@ -533,7 +530,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private static final String[] KNOWN_METHOD_NAME_PREFIXES = {"get", "set", "is", "to"};
 
-    private static String getBaseNameFromExpression(IJavaProject project, IASTFragment assignedFragment, int variableKind) {
+    private static String getBaseNameFromExpression(final IJavaProject project, final IASTFragment assignedFragment, final int variableKind) {
         if (assignedFragment == null) {
             return null;
         }
@@ -620,7 +617,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     @Override
-    public void setConstantName(String newName) {
+    public void setConstantName(final String newName) {
         super.setConstantName(newName);
         Assert.isNotNull(newName);
         constantName = newName;
@@ -652,7 +649,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         return length;
     }
 
-    private void setSelectionLength(int newLength) {
+    private void setSelectionLength(final int newLength) {
         ReflectionUtils.setPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this, newLength);
     }
 }

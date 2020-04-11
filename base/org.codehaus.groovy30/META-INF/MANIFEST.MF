@@ -12,7 +12,6 @@ Bundle-ClassPath: eclipse-trace.jar,
  lib/groovy-test-3.0.3-indy.jar
 Export-Package: groovy.beans;version="3.0.3",
  groovy.cli;version="3.0.3",
- groovy.cli.internal;version="3.0.3",
  groovy.grape;version="3.0.3",
  groovy.inspect;version="3.0.3",
  groovy.io;version="3.0.3",
