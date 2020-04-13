@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public class AssignmentStorer {
      * @param scope scope to store result in
      * @param rhsType inferred type of the right-hand side (right expression of {@code exp})
      */
-    public void storeAssignment(BinaryExpression exp, VariableScope scope, ClassNode rhsType) {
+    public void storeAssignment(final BinaryExpression exp, final VariableScope scope, final ClassNode rhsType) {
         assert exp.getOperation().isA(Types.ASSIGNMENT_OPERATOR);
 
         if (exp instanceof DeclarationExpression) {
@@ -80,14 +80,7 @@ public class AssignmentStorer {
         }
     }
 
-    public void storeField(FieldNode node, VariableScope scope) {
-        Expression init = node.getInitialExpression();
-        if (init != null && !VariableScope.OBJECT_CLASS_NODE.equals(init.getType())) {
-            scope.addVariable(node.getName(), init.getType(), node.getDeclaringClass());
-        }
-    }
-
-    public void storeImport(ImportNode node, VariableScope scope) {
+    public void storeImport(final ImportNode node, final VariableScope scope) {
         // if this is a static import, then add to the top level scope
         ClassNode type = node.getType();
         if (node.isStar() && type != null) {
@@ -130,7 +123,7 @@ public class AssignmentStorer {
 
     //--------------------------------------------------------------------------
 
-    private static void handleMultiAssignment(TupleExpression lhs, Expression rhs, VariableScope scope, ClassNode rhsListType) {
+    private static void handleMultiAssignment(final TupleExpression lhs, final Expression rhs, final VariableScope scope, final ClassNode rhsListType) {
         List<Expression> lhsExprs = lhs.getExpressions();
         List<Expression> rhsExprs = rhs instanceof ListExpression ? ((ListExpression) rhs).getExpressions() : Collections.emptyList();
 
@@ -146,7 +139,7 @@ public class AssignmentStorer {
         }
     }
 
-    private static void handleSingleAssignment(Expression lhs, VariableScope scope, ClassNode rhsType) {
+    private static void handleSingleAssignment(final Expression lhs, final VariableScope scope, final ClassNode rhsType) {
         if (lhs instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) lhs;
             if (var.getAccessedVariable() == var) {
@@ -177,21 +170,21 @@ public class AssignmentStorer {
         }*/
     }
 
-    private static ClassNode findComponentType(ClassNode type) {
+    private static ClassNode findComponentType(final ClassNode type) {
         return (type == null ? VariableScope.OBJECT_CLASS_NODE : VariableScope.extractElementType(type));
     }
 
     /**
      * Finds the declaring type of the accessed variable. Will be {@code null} if this is a local variable.
      */
-    private static ClassNode findDeclaringType(VariableExpression var) {
+    private static ClassNode findDeclaringType(final VariableExpression var) {
         if (var.getAccessedVariable() instanceof AnnotatedNode) {
             return ((AnnotatedNode) var.getAccessedVariable()).getDeclaringClass();
         }
         return null;
     }
 
-    private static ClassNode findVariableType(VariableExpression var, ClassNode rhsType) {
+    private static ClassNode findVariableType(final VariableExpression var, final ClassNode rhsType) {
         ClassNode varType = var.getOriginType();
         if (varType == null) {
             varType = var.getType();

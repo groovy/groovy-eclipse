@@ -1637,7 +1637,7 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testClassWithInitializer1() {
         String contents =
-            "class A {\n" +
+            "class C {\n" +
             "  static int x\n" +
             "  static {\n" +
             "    x = 42\n" +
@@ -1649,7 +1649,7 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testClassWithInitializer2() {
         String contents =
-            "class A {\n" +
+            "class C {\n" +
             "  int x\n" +
             "  {\n" +
             "    x = 42\n" +
@@ -1661,10 +1661,10 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testClassWithInitializer3() {
         String contents =
-            "class A {\n" +
+            "class C {\n" +
             "  int x\n" +
             "}\n" +
-            "new A() {\n" +
+            "new C() {\n" +
             "  {\n" +
             "    x = 42\n" +
             "  }\n" +
@@ -1675,17 +1675,110 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testFieldWithInitializer1() {
         String contents =
-            "class A {\n" +
+            "class C {\n" +
             "  def x = 42\n" +
-            "}\n" +
-            "new A().x";
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
         assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test
+    public void testFieldWithInitializer1a() {
+        String contents =
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  def x = 42\n" +
+            "}\n";
+        int offset = contents.indexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
     public void testFieldWithInitializer2() {
-        createUnit("A", "class A {\ndef x = 42\n}");
-        String contents = "new A().x";
+        String contents =
+            "class C {\n" +
+            "  static x = 42\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer2a() {
+        String contents =
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  static x = 42\n" +
+            "}\n";
+        int offset = contents.indexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer3() {
+        String contents =
+            "class C {\n" +
+            "  def x\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer3a() {
+        String contents =
+            "class C {\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def x\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer4() {
+        String contents =
+            "class C {\n" +
+            "  def x\n" +
+            "  {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer5() {
+        String contents =
+            "class C {\n" +
+            "  static x\n" +
+            "  static {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
         assertType(contents, "x", "java.lang.Integer");
     }
 

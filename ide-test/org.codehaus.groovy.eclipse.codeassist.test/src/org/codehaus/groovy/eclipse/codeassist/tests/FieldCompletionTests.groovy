@@ -316,6 +316,37 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testProperties15() {
+        String contents = '''\
+            |class C {
+            |  def x = 42
+            |  def m() {
+            |    x.
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1080
+    void testProperties16() {
+        String contents = '''\
+            |class C {
+            |  def x
+            |  C() {
+            |    x = 42
+            |  }
+            |  def m() {
+            |    x.
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 1)
+    }
+
+    @Test
     void testClosure1() {
         String contents = '''\
             |class Other {

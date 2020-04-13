@@ -508,9 +508,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     }
                 }
 
-                resolvedDeclaringType = ((AnnotatedNode) decl).getDeclaringClass();
-                variableInfo = null; // use field/method/property
                 type = getTypeFromDeclaration(decl);
+                resolvedDeclaringType = ((AnnotatedNode) decl).getDeclaringClass();
+                if (decl instanceof MethodNode || !((Variable) decl).isDynamicTyped()) variableInfo = null;
             }
         } else if (accessedVar instanceof DynamicVariable) {
             resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
@@ -545,6 +545,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 decl = candidate;
                 type = getTypeFromDeclaration(decl);
                 resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, resolvedDeclaringType);
+                if (!VariableScope.CLOSURE_CLASS_NODE.equals(resolvedDeclaringType)) variableInfo = null;
             } else {
                 type = VariableScope.OBJECT_CLASS_NODE;
                 confidence = TypeConfidence.UNKNOWN;
@@ -553,7 +554,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
 
-        if (variableInfo != null && (!(decl instanceof MethodNode || decl instanceof PropertyNode) || VariableScope.CLOSURE_CLASS_NODE.equals(resolvedDeclaringType))) {
+        if (variableInfo != null) {
             type = variableInfo.type != null ? variableInfo.type : VariableScope.OBJECT_CLASS_NODE;
             confidence = variableInfo.type != null ? TypeConfidence.INFERRED : TypeConfidence.UNKNOWN;
 
@@ -906,9 +907,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (decl instanceof FieldNode) {
             FieldNode field = (FieldNode) decl;
             type = field.getType();
-            if (field.isDynamicTyped() && field.hasInitialExpression()) {
-                type = field.getInitialExpression().getType();
-            }
         } else if (decl instanceof ConstructorNode) {
             type = ((ConstructorNode) decl).getDeclaringClass();
         } else if (decl instanceof MethodNode) {

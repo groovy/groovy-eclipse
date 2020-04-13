@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,57 +29,79 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.junit.Test
 
 /**
- * Ensures that the code select requestor properly avoids visiting ASTNodes that
- * are not in the same {@link IJavaElement} as the target node.
+ * Ensures that the {@link CodeSelectRequestor} avoids visiting {@link ASTNode}s
+ * that are not in the same {@link IJavaElement} as the target node.
  */
 final class PartialVisitTests extends BrowsingTestSuite {
 
     private final PartialCodeSelectHelper helper = new PartialCodeSelectHelper()
 
-    // should not visit the class or the main method
-    @Test
-    void testSimple() {
-        String contents = 'new Foo().x\nclass Foo {\n def x \n}\n'
-        assertCodeSelectWithSkippedNames(contents, indexOf(contents, 'x'), 'x', 'Hello()', 'Hello(context)', 'main(args)')
+    @Test // should not visit the Foo class or the main method
+    void testBasic1() {
+        String contents = 'new Foo().x\nclass Foo {\n def x\n}\n'
+        assertCodeSelectWithSkippedNames(contents, indexOf(contents, 'x'), 'x', 'main(args)')
     }
 
-    // should not visit the Hello constructor, Foo class, or the main method
-    @Test
-    void testSimple2() {
-        String contents = 'class Foo {\n def x \n}\nnew Foo().x'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'Foo', 'Hello()', 'Hello(context)', 'main(args)')
+    @Test // should not visit the Foo class or the main method
+    void testBasic2() {
+        String contents = 'class Foo {\n def x\n}\nnew Foo().x'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'Foo', 'main(args)')
     }
 
-    // should not visit the x field
     @Test
-    void testSimple3() {
-        String contents = 'class Foo {\n def x\n def blah() { \nx } }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x')
+    void testBasic3() {
+        String contents = 'class Foo {\n def x\n def blah() {\n x\n}\n}'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x')
     }
 
     @Test
     void testFieldInitializer() {
-        String contents = 'class Foo { Foo() { } \n def y \ndef x = y }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'y')
+        String contents = 'class Foo {\n Foo() {}\n def y\n def x = y\n}'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y')
     }
 
-    // static initializers are now visited in place
     @Test
     void testStaticFieldInitializer() {
-        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'z', 'y')
+        String contents = 'class Foo { Foo() {}\n static y\n def z\n static x = y }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y')
     }
 
     @Test
-    void testInnerClass() {
-        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog \n def blag = y } }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'x', 'y', 'z', 'blog')
+    void testInnerClass1() {
+        String contents = '''\
+            |class Foo {
+            |  Foo() {}
+            |  static y
+            |  def z
+            |  static x = y
+            |  def m() {}
+            |  class Inner {
+            |    def one
+            |    def two = y
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'm()')
     }
 
     @Test
     void testInnerClass2() {
-        String contents = 'class Foo { Foo() { } \n static y \n def z \nstatic x = y \n class Inner { \n def blog }\n def blag = y  }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'Foo()', 'x', 'y', 'z', 'Inner')
+        String contents = '''\
+            |class Foo {
+            |  Foo() {}
+            |  static y
+            |  def z
+            |  static x = y
+            |  def m() {}
+            |  class Inner {
+            |    def one
+            |  }
+            |  void test() {
+            |    def two = y
+            |  }
+            |}
+            |'''.stripMargin()
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y', 'm()', 'Inner')
     }
 
     //--------------------------------------------------------------------------

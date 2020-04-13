@@ -932,7 +932,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "B");
     }
 
-    @Test // Actually type should not be inferred for fields with type def
+    @Test
     public void testStaticMethod6() {
         String contents =
             "class A {}\n" +
@@ -946,9 +946,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "    col\n" +
             "  }\n" +
             "}\n";
-        int start = contents.lastIndexOf("col");
-        int end = start + "col".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertType(contents, "col", "B");
     }
 
     @Test

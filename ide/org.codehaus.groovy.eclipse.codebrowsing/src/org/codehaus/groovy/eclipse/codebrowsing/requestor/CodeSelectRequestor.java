@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,11 +91,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private ASTNode requestedNode;
     private IJavaElement requestedElement;
 
-    public CodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
+    public CodeSelectRequestor(final ASTNode node, final GroovyCompilationUnit unit) {
         this(node, null, new Region(Integer.MIN_VALUE, 0), unit);
     }
 
-    public CodeSelectRequestor(ASTNode node, Region nodeRegion, Region selectRegion, GroovyCompilationUnit unit) {
+    public CodeSelectRequestor(final ASTNode node, final Region nodeRegion, final Region selectRegion, final GroovyCompilationUnit unit) {
         nodeToLookFor = node;
         this.nodeRegion = nodeRegion;
         this.selectRegion = selectRegion;
@@ -112,7 +112,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     @Override
-    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+    public VisitStatus acceptASTNode(ASTNode node, final TypeLookupResult result, final IJavaElement enclosingElement) {
         boolean found = false;
         try {
             // check if enclosingElement does not enclose nodeToLookFor
@@ -143,14 +143,19 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     /**
-     * @return {@code true} iff {@code enclosingElement}'s source location
-     *     contains the source location of {@link #nodeToLookFor}
+     * @return {@code true} if {@code enclosingElement} contains {@link #nodeToLookFor} or is necessary for type inference
      */
-    private boolean interestingElement(IJavaElement enclosingElement) throws JavaModelException {
-        // the clinit is always interesting since the clinit contains static initializers
-        if (enclosingElement.getElementName().equals("<clinit>")) {
+    private boolean interestingElement(final IJavaElement enclosingElement) throws JavaModelException {
+        switch (enclosingElement.getElementType()) {
+        case IJavaElement.INITIALIZER:
+        case IJavaElement.FIELD:
             return true;
+        case IJavaElement.METHOD:
+            if (((IMethod) enclosingElement).isConstructor()) {
+                return true;
+            }
         }
+
         if (enclosingElement instanceof ISourceReference) {
             ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
             int start = range.getOffset(), until = range.getOffset() + range.getLength();
@@ -158,6 +163,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             covers = covers || (start <= selectRegion.getOffset() && until >= selectRegion.getEnd());
             return covers;
         }
+
         return false;
     }
 
@@ -166,7 +172,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * specified type lookup result and enclosing element that match up with
      * {@link #nodeToLookFor}.
      */
-    private void handleMatch(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {
+    private void handleMatch(final TypeLookupResult result, final IJavaElement enclosingElement) throws JavaModelException {
         requestedNode = result.declaration;
         if (requestedNode instanceof ClassNode) {
             ClassNode classNode = (ClassNode) requestedNode;
@@ -285,7 +291,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
     }
 
-    private LocalVariable createLocalVariable(TypeLookupResult result, IJavaElement enclosingElement, Variable var) {
+    private LocalVariable createLocalVariable(final TypeLookupResult result, final IJavaElement enclosingElement, final Variable var) {
         int start;
         if (var instanceof Parameter) {
             start = ((Parameter) var).getNameStart();
@@ -298,7 +304,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return new LocalVariable((JavaElement) enclosingElement, var.getName(), start, until, start, until, signature, null, 0, false);
     }
 
-    private String checkQualifiedType(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {
+    private String checkQualifiedType(final TypeLookupResult result, final IJavaElement enclosingElement) throws JavaModelException {
         if (result.declaration instanceof ClassNode ||
             result.declaration instanceof ImportNode ||
             result.declaration instanceof ConstructorNode /*||
@@ -356,7 +362,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     /**
      * Finds the declaring type of the specified lookup result.
      */
-    private ClassNode findDeclaringType(TypeLookupResult result) {
+    private ClassNode findDeclaringType(final TypeLookupResult result) {
         ClassNode declaringType = null;
         if (result.declaringType != null) {
             declaringType = result.declaringType;
@@ -376,7 +382,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return declaringType;
     }
 
-    private ImportNode findImportAlias(String name, IJavaElement enclosingElement) {
+    private ImportNode findImportAlias(final String name, final IJavaElement enclosingElement) {
         IJavaElement elem = enclosingElement;
         while (!(elem instanceof GroovyCompilationUnit)) {
             elem = elem.getParent();
@@ -385,7 +391,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return ((GroovyCompilationUnit) elem).getModuleNode().getImport(dot < 0 ? name : name.substring(0, dot));
     }
 
-    private ITypeParameter findTypeParam(String name, IJavaElement enclosingElement) throws JavaModelException {
+    private ITypeParameter findTypeParam(final String name, final IJavaElement enclosingElement) throws JavaModelException {
         ITypeParameter typeParam = null;
         if (enclosingElement instanceof IType) {
             for (ITypeParameter tp : ((IType) enclosingElement).getTypeParameters()) {
@@ -408,7 +414,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return typeParam;
     }
 
-    private IJavaElement findRequestedElement(ASTNode declaration, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
+    private IJavaElement findRequestedElement(ASTNode declaration, final ClassNode declaringType, final IType jdtDeclaringType)
+            throws JavaModelException {
         IJavaElement maybeRequested = null;
         if (declaration instanceof ClassNode) {
             maybeRequested = jdtDeclaringType;
@@ -487,7 +494,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return maybeRequested;
     }
 
-    private boolean existsOnlyInGroovyModel(FieldNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
+    private boolean existsOnlyInGroovyModel(final FieldNode node, final String name, final ClassNode declaringType, final IType jdtDeclaringType)
+            throws JavaModelException {
         // check for @Field field
         if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
             return true;
@@ -509,7 +517,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return GroovyUtils.isAnonymous(node.getDeclaringClass());
     }
 
-    private boolean existsOnlyInGroovyModel(MethodNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
+    private boolean existsOnlyInGroovyModel(final MethodNode node, final String name, final ClassNode declaringType, final IType jdtDeclaringType)
+            throws JavaModelException {
         // check for @Trait method
         List<MethodNode> traitMethods = declaringType.redirect().getNodeMetaData("trait.methods");
         if (traitMethods != null) {
@@ -520,14 +529,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         }
         // check for @Newify, @Sortable, @Singleton, etc. -- synthetic method that exists on declaring class
-        if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() && findElement(jdtDeclaringType, name, node.getParameters()) == null) {
+        if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() &&
+                findElement(jdtDeclaringType, name, node.getParameters()) == null) {
             return true;
         }
 
         return GroovyUtils.isAnonymous(node.getDeclaringClass());
     }
 
-    private boolean isSelectionInArguments(ConstructorCallExpression expr) {
+    private boolean isSelectionInArguments(final ConstructorCallExpression expr) {
         int selectOffset = selectRegion.getOffset(), startOffset = Integer.MAX_VALUE;
         if (expr.getArguments().getStart() > 0) {
             startOffset = expr.getArguments().getStart();
@@ -543,7 +553,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     /**
      * Converts the requested element into a resolved element by creating a unique key for it.
      */
-    private IJavaElement resolveRequestedElement(IJavaElement maybeRequested, TypeLookupResult result) {
+    private IJavaElement resolveRequestedElement(final IJavaElement maybeRequested, final TypeLookupResult result) {
         AnnotatedNode declaration = (AnnotatedNode) result.declaration;
         if (declaration instanceof PropertyNode) {
             if (maybeRequested.getElementType() == IJavaElement.METHOD) {
@@ -597,7 +607,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     /**
      * Creates binding keys for types, fields, methods and properties.
      */
-    private static String createUniqueKey(AnnotatedNode declaration, IJavaElement maybeRequested, TypeLookupResult result) {
+    private static String createUniqueKey(final AnnotatedNode declaration, final IJavaElement maybeRequested, final TypeLookupResult result) {
         ClassNode resolvedDeclaringType = result.declaringType;
         if (resolvedDeclaringType == null) {
             resolvedDeclaringType = Optional.ofNullable(declaration.getDeclaringClass()).orElse(VariableScope.OBJECT_CLASS_NODE);
@@ -628,7 +638,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return sb.toString();
     }
 
-    private static void appendUniqueKeyForMethod(StringBuilder sb, MethodNode node, ClassNode returnType, ClassNode declaringType) {
+    private static void appendUniqueKeyForMethod(final StringBuilder sb, final MethodNode node, final ClassNode returnType, final ClassNode declaringType) {
         String methodName = node.getName();
         if ("<init>".equals(methodName))
             methodName = node.getDeclaringClass().getNameWithoutPackage();
@@ -699,7 +709,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
     }
 
-    private static void appendUniqueKeyForResolvedType(StringBuilder sb, ClassNode resolvedType) {
+    private static void appendUniqueKeyForResolvedType(final StringBuilder sb, final ClassNode resolvedType) {
         String signature = GroovyUtils.getTypeSignatureWithoutGenerics(resolvedType, true, true).replace('.', '/');
 
         sb.append(signature);
@@ -735,7 +745,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
     }
 
-    private static IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
+    private static IJavaElement findElement(final IType type, String text, final Parameter[] parameters) throws JavaModelException {
         if (text.equals(type.getElementName())) {
             return type;
         }
@@ -802,16 +812,16 @@ if (GroovyLogManager.manager.hasLoggers()) {
         return null;
     }
 
-    private static String removeGenerics(String param) {
+    private static String removeGenerics(final String param) {
         // TODO: Check for nested generics
         int genericStart = param.indexOf('<');
         if (genericStart > 0) {
-            param = param.substring(0, genericStart) + param.substring(param.indexOf('>') + 1, param.length());
+            return param.substring(0, genericStart) + param.substring(param.indexOf('>') + 1, param.length());
         }
         return param;
     }
 
-    private static String extractPrefix(String text) {
+    private static String extractPrefix(final String text) {
         if (text.startsWith("is")) {
             if (text.length() > 2) {
                 return "is";
@@ -828,7 +838,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
         return null;
     }
 
-    private int startOffset(ClassNode type) {
+    private int startOffset(final ClassNode type) {
         int start = type.getStart();
         if (type.getEnd() < 1) {
             if (nodeRegion != null) {
@@ -840,7 +850,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
         return start;
     }
 
-    private int endOffset(ClassNode type) {
+    private int endOffset(final ClassNode type) {
         int end = type.getEnd();
         if (end < 1) {
             if (nodeRegion != null) {
@@ -852,7 +862,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
         return end;
     }
 
-    private Object typeOf(ASTNode node) {
+    private Object typeOf(final ASTNode node) {
         if (node instanceof ClassNode) {
             return ((ClassNode) node).getNameWithoutPackage();
         }

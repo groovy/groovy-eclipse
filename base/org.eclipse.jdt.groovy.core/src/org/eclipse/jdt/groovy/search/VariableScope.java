@@ -52,6 +52,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImmutableClassNode;
@@ -925,6 +926,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         }
         if (scopeNode instanceof ThrowStatement) {
             // TODO: What about throw? Could be caught by outer scope...
+        }
+        if (scopeNode instanceof MethodNode && !(scopeNode instanceof ConstructorNode || ((MethodNode) scopeNode).getName().equals("<clinit>"))) {
+            return true;
         }
         return false;
     }

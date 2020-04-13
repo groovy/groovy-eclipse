@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,7 @@ import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
@@ -109,15 +110,15 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
      */
     private final ASTNode lhsNode;
 
-    public StatementAndExpressionCompletionProcessor(ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+    public StatementAndExpressionCompletionProcessor(final ContentAssistContext context,
+            final JavaContentAssistInvocationContext javaContext, final SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
         this.completionNode = context.getPerceivedCompletionNode();
         this.lhsNode = context.lhsNode;
     }
 
     @Override
-    public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
+    public List<ICompletionProposal> generateProposals(final IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         TypeInferencingVisitorWithRequestor visitor =
             new TypeInferencingVisitorFactory().createVisitor(context.unit);
@@ -242,7 +243,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return createJavaProposals(groovyProposals, options.checkDeprecation, monitor);
     }
 
-    private List<IProposalCreator> chooseProposalCreators(ContentAssistContext context) {
+    private List<IProposalCreator> chooseProposalCreators(final ContentAssistContext context) {
         String fullCompletionExpression = context.fullCompletionExpression;
 
         if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
@@ -257,9 +258,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return creators;
     }
 
-    private void proposalCreatorOuterLoop(Collection<IGroovyProposal> groovyProposals, Collection<IProposalCreator> creators,
-            ExpressionCompletionRequestor requestor, ContentAssistContext context, AssistOptions options,
-            ClassNode completionType, boolean isStatic, boolean isPrimary) {
+    private void proposalCreatorOuterLoop(final Collection<IGroovyProposal> groovyProposals, final Collection<IProposalCreator> creators,
+            final ExpressionCompletionRequestor requestor, final ContentAssistContext context, final AssistOptions options,
+            final ClassNode completionType, final boolean isStatic, final boolean isPrimary) {
 
         int closureStrategy = -1;
         if (isPrimary && requestor.currentScope.getEnclosingClosure() != null) {
@@ -299,9 +300,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
     }
 
-    private void proposalCreatorInnerLoop(Collection<IGroovyProposal> groovyProposals, Collection<IProposalCreator> creators,
-            ExpressionCompletionRequestor requestor, ContentAssistContext context, AssistOptions options,
-            ClassNode completionType, boolean isStatic, boolean isPrimary) {
+    private void proposalCreatorInnerLoop(final Collection<IGroovyProposal> groovyProposals, final Collection<IProposalCreator> creators,
+            final ExpressionCompletionRequestor requestor, final ContentAssistContext context, final AssistOptions options,
+            final ClassNode completionType, final boolean isStatic, final boolean isPrimary) {
 
         for (IProposalCreator creator : creators) {
             if (creator instanceof AbstractProposalCreator) {
@@ -317,11 +318,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
     }
 
-    private List<ICompletionProposal> createJavaProposals(Collection<IGroovyProposal> groovyProposals, boolean checkDeprecation, IProgressMonitor monitor) {
+    private List<ICompletionProposal> createJavaProposals(final Collection<IGroovyProposal> groovyProposals, final boolean checkDeprecation, final IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         JavaContentAssistInvocationContext javaContext = getJavaContext();
         //@formatter:off
-        CompletionRequestor completionRequestor = new CompletionRequestor() { @Override public void accept(org.eclipse.jdt.core.CompletionProposal proposal) {} };
+        CompletionRequestor completionRequestor = new CompletionRequestor() { @Override public void accept(final org.eclipse.jdt.core.CompletionProposal proposal) {} };
         CompletionEngine engine = new CompletionEngine(getNameEnvironment(), completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
         //@formatter:on
 
@@ -374,7 +375,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return completionProposals;
     }
 
-    private static void setClosureQualifiers(Collection<IGroovyProposal> delegateProposals, Collection<IGroovyProposal> ownerProposals, int resolveStrategy) {
+    private static void setClosureQualifiers(final Collection<IGroovyProposal> delegateProposals, final Collection<IGroovyProposal> ownerProposals, final int resolveStrategy) {
 
         Function<IGroovyProposal, String> toName = (p) -> {
             AnnotatedNode node = ((AbstractGroovyProposal) p).getAssociatedNode();
@@ -435,7 +436,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
     }
 
-    private static ClassNode getCompletionType(ASTNode completionNode, ContentAssistContext context, ExpressionCompletionRequestor requestor) {
+    private static ClassNode getCompletionType(final ASTNode completionNode, final ContentAssistContext context, final ExpressionCompletionRequestor requestor) {
         ClassNode completionType;
 
         switch (context.location) {
@@ -468,11 +469,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return completionType;
     }
 
-    private static VariableScope createTopLevelScope(ClassNode completionType) {
+    private static VariableScope createTopLevelScope(final ClassNode completionType) {
         return new VariableScope(null, completionType, false);
     }
 
-    private static <A, B> Consumer<A> bind(BiConsumer<A, B> consumer, B b) {
+    private static <A, B> Consumer<A> bind(final BiConsumer<A, B> consumer, final B b) {
         return (A a) -> consumer.accept(a, b);
     }
 
@@ -515,7 +516,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         @Override
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        public VisitStatus acceptASTNode(final ASTNode node, final TypeLookupResult result, final IJavaElement enclosingElement) {
             // check to see if the enclosing element does not enclose the nodeToLookFor
             if (!interestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
@@ -572,7 +573,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             return VisitStatus.CONTINUE;
         }
 
-        private void setResultingType(TypeLookupResult result, boolean derefList) {
+        private void setResultingType(final TypeLookupResult result, final boolean derefList) {
             ContentAssistContext context = getContext();
 
             if (context.location == ContentAssistLocation.METHOD_CONTEXT ||
@@ -625,11 +626,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         /**
          * Determines if this is the lhs of an array access -- the 'foo' of 'foo[0]'.
          */
-        private boolean doTestForAfterArrayAccess(ASTNode node) {
+        private boolean doTestForAfterArrayAccess(final ASTNode node) {
             return (node == arrayAccessLHS);
         }
 
-        private void maybeRememberTypeOfLHS(TypeLookupResult result) {
+        private void maybeRememberTypeOfLHS(final TypeLookupResult result) {
             VariableScope.CallAndType cat;
             if (isAssignmentOfLHS(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
@@ -667,7 +668,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
         }
 
-        private boolean isAssignmentOfLHS(BinaryExpression node) {
+        private boolean isAssignmentOfLHS(final BinaryExpression node) {
             if (node != null && lhsNode != null) {
                 Expression expression = node.getLeftExpression();
                 return expression == lhsNode || (expression.getClass() == lhsNode.getClass() &&
@@ -676,7 +677,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             return false;
         }
 
-        private int getParameterPosition(ASTNode argumentCandidate, MethodCallExpression callExpression) {
+        private int getParameterPosition(final ASTNode argumentCandidate, final MethodCallExpression callExpression) {
             if (callExpression != null && callExpression.getArguments() instanceof TupleExpression) {
                 int paramIndex = -1;
                 for (Expression argument : ((TupleExpression) callExpression.getArguments()).getExpressions()) {
@@ -689,7 +690,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             return -1;
         }
 
-        private boolean doTest(ASTNode node) {
+        private boolean doTest(final ASTNode node) {
             if (node instanceof PropertyExpression || node instanceof TupleExpression) {
                 // never complete on a property expression, but rather on its getProperty() result
                 // never complete on a list of expressions, but rather on its getExpressions() result
@@ -708,27 +709,35 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         /**
-         * @return {@code true} iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
+         * @return {@code true} if {@code enclosingElement} contains {@link #completionNode} or is necessary for type inference
+         *
+         * @see org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectRequestor#interestingElement(IJavaElement)
          */
-        private boolean interestingElement(IJavaElement enclosingElement) {
-            // the clinit is always interesting since the clinit contains static initializers
-            if (enclosingElement.getElementName().equals("<clinit>")) {
-                return true;
-            }
-
-            if (enclosingElement instanceof ISourceReference) {
-                try {
-                    ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                    return range.getOffset() <= completionNode.getStart() &&
-                        range.getOffset() + range.getLength() >= completionNode.getEnd();
-                } catch (JavaModelException e) {
-                    GroovyContentAssist.logError(e);
+        private boolean interestingElement(final IJavaElement enclosingElement) {
+            try {
+                switch (enclosingElement.getElementType()) {
+                case IJavaElement.INITIALIZER:
+                case IJavaElement.FIELD:
+                    return true;
+                case IJavaElement.METHOD:
+                    if (((IMethod) enclosingElement).isConstructor()) {
+                        return true;
+                    }
                 }
+
+                if (enclosingElement instanceof ISourceReference) {
+                    ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+                    if (range.getOffset() <= completionNode.getStart() && range.getOffset() + range.getLength() >= completionNode.getEnd()) {
+                        return true;
+                    }
+                }
+            } catch (JavaModelException e) {
+                GroovyContentAssist.logError(e);
             }
             return false;
         }
 
-        private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode thatNode) {
+        private boolean isNotExpressionAndStatement(final ASTNode thisNode, final ASTNode thatNode) {
             if (thisNode instanceof Expression) {
                 return !(thatNode instanceof Statement);
             } else if (thisNode instanceof Statement) {
