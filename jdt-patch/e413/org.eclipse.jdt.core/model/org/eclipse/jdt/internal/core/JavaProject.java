@@ -3462,29 +3462,24 @@ public class JavaProject
 	 */
 	@Override
 	public void setOptions(Map<String, String> newOptions) {
-
 		IEclipsePreferences projectPreferences = getEclipsePreferences();
 		if (projectPreferences == null) return;
 		try {
-			if (newOptions == null){
+			if (newOptions == null) {
 				projectPreferences.clear();
 			} else {
-				Iterator<Map.Entry<String, String>> entries = newOptions.entrySet().iterator();
 				JavaModelManager javaModelManager = JavaModelManager.getJavaModelManager();
-				while (entries.hasNext()){
-					Map.Entry<String, String> entry = entries.next();
+				for (Map.Entry<String, String> entry : newOptions.entrySet()) {
 					String key = entry.getKey();
-					String value = entry.getValue();
-					javaModelManager.storePreference(key, value, projectPreferences, newOptions);
+					// GROOVY add -- these project options are not persistent
+					if (key.startsWith("org.eclipse.jdt.core.compiler.groovy.")) continue; //$NON-NLS-1$
+					javaModelManager.storePreference(key, entry.getValue(), projectPreferences, newOptions);
 				}
 
 				// reset to default all options not in new map
 				// @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=26255
 				// @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=49691
-				String[] pNames = projectPreferences.keys();
-				int ln = pNames.length;
-				for (int i=0; i<ln; i++) {
-					String key = pNames[i];
+				for (String key : projectPreferences.keys()) {
 					if (!newOptions.containsKey(key)) {
 						projectPreferences.remove(key); // old preferences => remove from preferences table
 					}
