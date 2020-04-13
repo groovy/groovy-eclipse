@@ -48,6 +48,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
@@ -204,21 +205,24 @@ public final class GroovyClassLoaderFactory {
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {
-        String location = classpathEntry.getLocation();
-
-        Path path = new Path(location);
-        if (!path.toFile().exists()) {
-            IProject project = findProject(path.segment(0));
-            IResource resource = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
-
-            IPath rawLocation = resource.getRawLocation();
-            if (rawLocation != null) {
-                location = rawLocation.toOSString();
-            } else if (resource.getLocation() != null) {
-                location = resource.getLocation().toOSString();
+        if (classpathEntry.getType() == IRuntimeClasspathEntry.PROJECT) {
+            try {
+                // entry.getLocation() logs if project.getOutputLocation() throws, so test it first
+                ((IJavaProject) JavaCore.create(classpathEntry.getResource())).getOutputLocation();
+            } catch (NullPointerException | JavaModelException ignore) {
+                return classpathEntry.getResource().getLocation().toOSString();
             }
         }
 
+        String location = classpathEntry.getLocation();
+        if (!new File(location).exists()) {
+            IPath path = new Path(location);
+            IProject project = findProject(path.segment(0));
+            IResource resource = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
+            if (resource.getLocation() != null) {
+                location = resource.getLocation().toOSString();
+            }
+        }
         return location;
     }
 

@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -67,9 +68,9 @@ public abstract class AbstractClasspathContainerAction implements IActionDelegat
         if (selection instanceof IStructuredSelection) {
             Object selected = ((IStructuredSelection) selection).getFirstElement();
             if (selected instanceof IProject) {
-                IProject projSelected = (IProject) selected;
-                if (GroovyNature.hasGroovyNature(projSelected)) {
-                    targetProject = JavaCore.create(projSelected);
+                IProject selectedProject = (IProject) selected;
+                if (GroovyNature.hasGroovyNature(selectedProject)) {
+                    targetProject = JavaCore.create(selectedProject);
                 }
             } else if (selected instanceof IJavaProject) {
                 IJavaProject selectedProject = (IJavaProject) selected;
@@ -79,13 +80,13 @@ public abstract class AbstractClasspathContainerAction implements IActionDelegat
             }
         }
 
-        if (targetProject != null) {
+        if (targetProject != null && targetProject.exists()) {
             action.setEnabled(true);
             try {
                 if (GroovyRuntime.findClasspathEntry(targetProject, cpe -> cpe.getPath().matchingFirstSegments(containerPath) > 0).isPresent()) {
                     action.setText(MessageFormat.format("Remove {0} from project", containerName));
                 } else {
-                    boolean isModular = (targetProject.getModuleDescription() != null);
+                    boolean isModular = (JavaProject.hasJavaNature(targetProject.getProject()) && targetProject.getModuleDescription() != null);
                     action.setText(MessageFormat.format("Add {0} to {1,choice,0#classpath|1#modulepath}", containerName, isModular ? 1 : 0));
                 }
 

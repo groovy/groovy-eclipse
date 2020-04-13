@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.launching.JavaRuntime;
 
 /**
@@ -153,7 +154,7 @@ public class GroovyRuntime {
     }
 
     public static Optional<IClasspathEntry> findClasspathEntry(final IJavaProject javaProject, final Predicate<IClasspathEntry> p) throws JavaModelException {
-        return Arrays.stream(javaProject.getRawClasspath()).filter(p).findFirst();
+        return JavaProject.hasJavaNature(javaProject.getProject()) ? Arrays.stream(javaProject.getRawClasspath()).filter(p).findFirst() : Optional.empty();
     }
 
     //--------------------------------------------------------------------------
