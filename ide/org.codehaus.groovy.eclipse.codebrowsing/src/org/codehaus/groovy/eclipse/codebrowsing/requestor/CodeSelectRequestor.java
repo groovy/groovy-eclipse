@@ -147,13 +147,18 @@ public class CodeSelectRequestor implements ITypeRequestor {
      */
     private boolean interestingElement(final IJavaElement enclosingElement) throws JavaModelException {
         switch (enclosingElement.getElementType()) {
-        case IJavaElement.INITIALIZER:
         case IJavaElement.FIELD:
-            return true;
+            if ("Qjava.lang.Object;".equals(((IField) enclosingElement).getTypeSignature())) {
+                return true;
+            }
+            break;
         case IJavaElement.METHOD:
             if (((IMethod) enclosingElement).isConstructor()) {
                 return true;
             }
+            break;
+        case IJavaElement.INITIALIZER:
+            return true;
         }
 
         if (enclosingElement instanceof ISourceReference) {

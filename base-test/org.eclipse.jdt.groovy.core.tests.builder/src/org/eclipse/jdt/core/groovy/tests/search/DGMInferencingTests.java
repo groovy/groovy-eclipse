@@ -789,6 +789,21 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
+    @Test
+    public void testDGM55() {
+        String contents =
+            //@formatter:off
+            "def str = '''\\\n" +
+            "  blah blah\n" +
+            "'''.stripIndent()\n";
+            //@formatter:on
+
+        assertExprType(contents, "stripIndent", "java.lang.String");
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        // Java 13+: @jdk.internal.PreviewFeature(feature=jdk.internal.PreviewFeature.Feature.TEXT_BLOCKS,essentialAPI=true)
+        assertDeclType(contents, "stripIndent", version > 12 ? "java.lang.String" : "org.codehaus.groovy.runtime.StringGroovyMethods");
+    }
+
     @Test // GRECLIPSE-1131
     public void testDGMClosure1() {
         String contents =

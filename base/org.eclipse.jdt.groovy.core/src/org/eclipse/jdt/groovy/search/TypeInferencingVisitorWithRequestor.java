@@ -1831,7 +1831,6 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         scopes.getLast().setCurrentNode(node);
-        visitAnnotations(node);
         if (node.getAccessedVariable() == node) {
             // this is a local variable declaration
             visitClassReference(node.getOriginType());

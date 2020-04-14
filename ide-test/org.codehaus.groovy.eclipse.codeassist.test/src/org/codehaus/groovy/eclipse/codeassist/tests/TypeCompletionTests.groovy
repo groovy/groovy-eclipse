@@ -214,8 +214,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass2() {
         String contents = 'class Foo { }\nFoo.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
-        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2, true)
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2, true)
     }
 
     @Test
@@ -229,8 +229,8 @@ final class TypeCompletionTests extends CompletionTestSuite {
     void testCompleteClass4() {
         String contents = 'class Foo { }\nFoo.class.com'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
-        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2)
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2)
     }
 
     @Test

@@ -857,7 +857,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
         assertEquals(1, matches.size());
         // TODO: Determine why the accuracy changed between Java 11 and Java 12.
-        assertEquals(Integer.parseInt(System.getProperty("java.version").split("\\.")[0]) < 12
+        assertEquals(Float.parseFloat(System.getProperty("java.specification.version")) < 12
             ? SearchMatch.A_ACCURATE : SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
     }

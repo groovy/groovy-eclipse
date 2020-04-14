@@ -459,8 +459,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |Pattern.com
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
-        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 
@@ -471,8 +471,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |Pattern.class.com
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
-        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 
@@ -484,8 +484,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |pat.com
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.com'))
-        int release = Integer.parseInt(System.getProperty('java.version').split(/\./)[0])
-        proposalExists(proposals, 'componentType', release < 12 ? 1 : 2) // from Class
+        def version = Float.parseFloat(System.getProperty('java.specification.version'))
+        proposalExists(proposals, 'componentType', version < 12 ? 1 : 2) // from Class
         proposalExists(proposals, 'compile', 2) // from Pattern
     }
 

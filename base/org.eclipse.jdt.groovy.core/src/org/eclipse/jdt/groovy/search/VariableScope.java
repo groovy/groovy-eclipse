@@ -475,16 +475,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /*package*/ VariableScope getEnclosingClosureScope() {
-        VariableScope scope = this;
-        do {
+        for (VariableScope scope = this; scope != null; scope = scope.parent) {
             if (scope.scopeNode instanceof ClosureExpression) {
                 return scope;
             }
             if (scope.scopeNode instanceof ClassNode) {
                 break;
             }
-        } while ((scope = scope.parent) != null);
-
+        }
         return null;
     }
 

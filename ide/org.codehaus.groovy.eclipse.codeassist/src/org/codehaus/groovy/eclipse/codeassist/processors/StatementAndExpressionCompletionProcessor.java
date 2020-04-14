@@ -73,6 +73,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
@@ -716,13 +717,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         private boolean interestingElement(final IJavaElement enclosingElement) {
             try {
                 switch (enclosingElement.getElementType()) {
-                case IJavaElement.INITIALIZER:
                 case IJavaElement.FIELD:
-                    return true;
+                    if ("Qjava.lang.Object;".equals(((IField) enclosingElement).getTypeSignature())) {
+                        return true;
+                    }
+                    break;
                 case IJavaElement.METHOD:
                     if (((IMethod) enclosingElement).isConstructor()) {
                         return true;
                     }
+                    break;
+                case IJavaElement.INITIALIZER:
+                    return true;
                 }
 
                 if (enclosingElement instanceof ISourceReference) {

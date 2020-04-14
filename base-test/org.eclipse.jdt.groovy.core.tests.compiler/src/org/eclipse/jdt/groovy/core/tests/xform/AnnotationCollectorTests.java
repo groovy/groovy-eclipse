@@ -109,7 +109,7 @@ public final class AnnotationCollectorTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        int release = Integer.parseInt(System.getProperty("java.version").split("\\.")[0]);
-        runConformTest(sources, release > 13 ? "@NotNull()@Length(0)" : "@NotNull()@Length(value=0)");
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        runConformTest(sources, version > 13 ? "@NotNull()@Length(0)" : "@NotNull()@Length(value=0)");
     }
 }

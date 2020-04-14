@@ -865,8 +865,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        int release = Integer.parseInt(System.getProperty("java.version").split("\\.")[0]);
-        runConformTest(sources, release < 9 ? "@Anno(value=abc)" : (release < 13 ? "@Anno(value=\"abc\")" : "@Anno(\"abc\")"));
+        float version = Float.parseFloat(System.getProperty("java.specification.version"));
+        runConformTest(sources, version < 9 ? "@Anno(value=abc)" : (version < 13 ? "@Anno(value=\"abc\")" : "@Anno(\"abc\")"));
     }
 
     @Test

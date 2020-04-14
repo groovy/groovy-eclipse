@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.junit.Assert.*
-
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectRequestor
@@ -36,41 +34,47 @@ final class PartialVisitTests extends BrowsingTestSuite {
 
     private final PartialCodeSelectHelper helper = new PartialCodeSelectHelper()
 
-    @Test // should not visit the Foo class or the main method
+    @Test // should not visit the class body or the main method
     void testBasic1() {
-        String contents = 'new Foo().x\nclass Foo {\n def x\n}\n'
+        String contents = 'new C().x\nclass C {\n int x\n}'
         assertCodeSelectWithSkippedNames(contents, indexOf(contents, 'x'), 'x', 'main(args)')
     }
 
-    @Test // should not visit the Foo class or the main method
+    @Test // should not visit the class body or the main method
     void testBasic2() {
-        String contents = 'class Foo {\n def x\n}\nnew Foo().x'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'Foo', 'main(args)')
+        String contents = 'class C {\n int x\n}\nnew C().x'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'C', 'main(args)')
     }
 
-    @Test
+    @Test // should not visit the field
     void testBasic3() {
-        String contents = 'class Foo {\n def x\n def blah() {\n x\n}\n}'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x')
+        String contents = 'class C {\n int x\n def m() {\n  x\n }\n}'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x')
     }
 
-    @Test
+    @Test // should not visit the field
+    void testBasic4() {
+        String contents = 'class C {\n Object x\n def m() {\n  x\n }\n}'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x')
+    }
+
+    @Test // should not visit the other field
     void testFieldInitializer() {
-        String contents = 'class Foo {\n Foo() {}\n def y\n def x = y\n}'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y')
+        String contents = 'class C {\n C() {}\n Number x\n private y = x\n}'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x')
     }
 
-    @Test
+    @Test // should not visit the other fields
     void testStaticFieldInitializer() {
-        String contents = 'class Foo { Foo() {}\n static y\n def z\n static x = y }'
-        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'y'), 'y')
+        String contents = 'class C {\n C() {}\n static Number x\n Number y\n static z = x }'
+        assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, 'x'), 'x', 'x', 'y')
     }
 
     @Test
     void testInnerClass1() {
         String contents = '''\
-            |class Foo {
-            |  Foo() {}
+            |class C {
+            |  C() {}
             |  static y
             |  def z
             |  static x = y
@@ -87,8 +91,8 @@ final class PartialVisitTests extends BrowsingTestSuite {
     @Test
     void testInnerClass2() {
         String contents = '''\
-            |class Foo {
-            |  Foo() {}
+            |class C {
+            |  C() {}
             |  static y
             |  def z
             |  static x = y
@@ -109,9 +113,10 @@ final class PartialVisitTests extends BrowsingTestSuite {
     private static String getElementName(IJavaElement element) {
         if (element instanceof IMethod) {
             try {
-                String[] params = ((IMethod) element).parameterNames
+                String[] params = element.parameterNames
                 return element.elementName + (params.length < 1 ? '()' : Arrays.toString(params).replace('[', '(').replace(']', ')'))
-            } catch (JavaModelException e) {}
+            } catch (JavaModelException ignore) {
+            }
         }
         return element.elementName
     }
@@ -124,22 +129,22 @@ final class PartialVisitTests extends BrowsingTestSuite {
         return new Region(contents.lastIndexOf(string), string.length())
     }
 
-    private void assertCodeSelectWithSkippedNames(String contents, Region region, String expectedElementName, String... skippedElementNames) {
-        GroovyCompilationUnit unit = addGroovySource(contents, 'Hello')
+    private void assertCodeSelectWithSkippedNames(String contents, Region region, String expectedElementName, String... expectedSkippedElements) {
+        def unit = addGroovySource(contents)
 
-        IJavaElement[] elems = helper.select(unit, region.offset, region.length)
-        assertEquals('Should have found a single selection: ' + Arrays.toString(elems), 1, elems.length)
-        assertEquals('Wrong element selected', expectedElementName, getElementName(elems[0]))
+        def selected = helper.select(unit, region.offset, region.length)
 
-        for (skipped in skippedElementNames) {
-            assertTrue('Element ' + skipped + ' should have been skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, helper.skippedElements.contains(skipped))
+        assert selected.length == 1
+        assert getElementName(selected[0]) == expectedElementName
+
+        for (shouldSkip in expectedSkippedElements) {
+            assert shouldSkip in helper.skippedElements
         }
-
-        assertEquals('Wrong number of elements skipped\nExpected: ' + Arrays.toString(skippedElementNames) + '\nWas: ' + helper.skippedElements, skippedElementNames.length, helper.skippedElements.size())
+        assert helper.skippedElements.size() == expectedSkippedElements.length
     }
 
     private static class PartialCodeSelectRequestor extends CodeSelectRequestor {
-        private final Set<String> skippedElements = new HashSet<String>()
+        private final Set<String> skippedElements = []
 
         PartialCodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
             super(node, unit)
@@ -149,16 +154,15 @@ final class PartialVisitTests extends BrowsingTestSuite {
         VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
             if (status == VisitStatus.CANCEL_MEMBER) {
-                assert !skippedElements.contains(getElementName(enclosingElement)) :
-                    "Element has been skipped twice, but should only have been skipped once: $enclosingElement"
-                skippedElements.add(getElementName(enclosingElement))
+                assert skippedElements.add(getElementName(enclosingElement)) :
+                    "Element '$enclosingElement.elementName' has been skipped more than once"
             }
             return status
         }
     }
 
     private static class PartialCodeSelectHelper extends CodeSelectHelper {
-        private Set<String> skippedElements = new HashSet<String>()
+        private Set<String> skippedElements = []
 
         @Override
         protected CodeSelectRequestor createRequestor(ASTNode node, Region r1, Region r2, GroovyCompilationUnit unit) {
