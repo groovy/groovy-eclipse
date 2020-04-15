@@ -188,7 +188,7 @@ public final class GroovyClassLoaderFactory {
             Arrays.sort(entries, Comparator.comparing(IRuntimeClasspathEntry::getType));
             for (IRuntimeClasspathEntry unresolved : entries) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
-                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, javaProject)) {
+                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved)) {
                     paths.add(getAbsoluteLocation(resolved));
                 }
             }
@@ -199,9 +199,9 @@ public final class GroovyClassLoaderFactory {
         }
     }
 
-    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, IJavaProject javaProject) throws Exception {
+    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry) throws ReflectiveOperationException {
         //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
-        return ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
+        return (IRuntimeClasspathEntry[]) JavaRuntime.class.getDeclaredMethod("resolveRuntimeClasspathEntry", IRuntimeClasspathEntry.class, IJavaProject.class).invoke(JavaRuntime.class, classpathEntry, classpathEntry.getJavaProject());
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {
