@@ -347,6 +347,50 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
+    void testRetainStaticAlias6b() {
+        createGroovyType 'p', 'Q', '''\
+            class Q {
+              static getBadName() {}
+              static getFineName() {}
+            }
+            '''
+        String contents = '''\
+            import static p.Q.getBadName as getGoodName
+            import static p.Q.getFineName
+
+            @groovy.transform.CompileStatic
+            class C {
+              def one = goodName
+              def two = fineName
+            }
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testRetainStaticAlias6c() {
+        createGroovyType 'p', 'Q', '''\
+            class Q {
+              static void setBadName(value) {}
+              static void setFineName(value) {}
+            }
+            '''
+        String contents = '''\
+            import static p.Q.setBadName as setGoodName
+            import static p.Q.setFineName
+
+            @groovy.transform.CompileStatic
+            class C {
+              def m() {
+                goodName = null
+                fineName = null
+              }
+            }
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
     void testRetainStaticAlias7() {
         createGroovyType 'other', 'Wrapper', '''
             class Wrapper {
