@@ -756,7 +756,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (isAssignment) {
                 assignmentStorer.storeAssignment(node, scopes.getLast(), primaryExprType);
 
-            } else if (node.getOperation().getType() == Types.LOGICAL_AND) { // check for instanceof guard
+            } else if (node.getOperation().isA(Types.LOGICAL_AND)) { // check for instanceof guard
                 Map<String, ClassNode[]> types = inferInstanceOfType(toVisitPrimary, scopes.getLast());
                 if (!types.isEmpty()) {
                     trueScope = new VariableScope(scopes.getLast(), toVisitPrimary, false);
@@ -1238,7 +1238,7 @@ assert primaryExprType != null && dependentExprType != null;
     public void visitIfElse(final IfStatement node) {
         scopes.add(new VariableScope(scopes.getLast(), node, false) {
             @Override
-            public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
+            public void updateVariable(final String name, ClassNode type, final ClassNode declaringType) {
                 type = WideningCategories.lowestUpperBound(type, lookupName(name).type);
                 super.updateVariable(name, type, declaringType);
             }
@@ -2421,7 +2421,7 @@ assert primaryExprType != null && dependentExprType != null;
             boolean[] result = new boolean[1];
             completeExpressionStack.getLast().visit(new GroovyCodeVisitorAdapter() {
 
-                @Override public void visitBinaryExpression(BinaryExpression expression) {
+                @Override public void visitBinaryExpression(final BinaryExpression expression) {
                     // both sides of the binary expression are primary since we need
                     // access to both of them when inferring binary expression types
                     if (expr == expression.getLeftExpression() || expr == expression.getRightExpression()) {
@@ -2435,83 +2435,83 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                 }
 
-                @Override public void visitBitwiseNegationExpression(BitwiseNegationExpression expression) {
+                @Override public void visitBitwiseNegationExpression(final BitwiseNegationExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitBooleanExpression(BooleanExpression expression) {
+                @Override public void visitBooleanExpression(final BooleanExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitCastExpression(CastExpression expression) {
+                @Override public void visitCastExpression(final CastExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitListExpression(ListExpression expression) {
+                @Override public void visitListExpression(final ListExpression expression) {
                     result[0] = (isNotEmpty(expression.getExpressions()) && expr == expression.getExpression(0));
                 }
 
-                @Override public void visitMapEntryExpression(MapEntryExpression expression) {
+                @Override public void visitMapEntryExpression(final MapEntryExpression expression) {
                     result[0] = (expr == expression.getKeyExpression() || expr == expression.getValueExpression());
                 }
 
-                @Override public void visitMapExpression(MapExpression expression) {
+                @Override public void visitMapExpression(final MapExpression expression) {
                     result[0] = (isNotEmpty(expression.getMapEntryExpressions()) && expr == expression.getMapEntryExpressions().get(0));
                 }
 
-                @Override public void visitMethodCallExpression(MethodCallExpression expression) {
+                @Override public void visitMethodCallExpression(final MethodCallExpression expression) {
                     result[0] = (expr == expression.getObjectExpression());
                 }
 
-                @Override public void visitMethodPointerExpression(MethodPointerExpression expression) {
+                @Override public void visitMethodPointerExpression(final MethodPointerExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitPrefixExpression(PrefixExpression expression) {
+                @Override public void visitPrefixExpression(final PrefixExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitPostfixExpression(PostfixExpression expression) {
+                @Override public void visitPostfixExpression(final PostfixExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitPropertyExpression(PropertyExpression expression) {
+                @Override public void visitPropertyExpression(final PropertyExpression expression) {
                     result[0] = (expr == expression.getObjectExpression());
                 }
 
-                @Override public void visitRangeExpression(RangeExpression expression) {
+                @Override public void visitRangeExpression(final RangeExpression expression) {
                     result[0] = (expr == expression.getFrom());
                 }
 
-                @Override public void visitSpreadExpression(SpreadExpression expression) {
+                @Override public void visitSpreadExpression(final SpreadExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitSpreadMapExpression(SpreadMapExpression expression) {
+                @Override public void visitSpreadMapExpression(final SpreadMapExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitTernaryExpression(TernaryExpression expression) {
+                @Override public void visitTernaryExpression(final TernaryExpression expression) {
                     result[0] = (expr == expression.getTrueExpression());
                 }
 
-                @Override public void visitUnaryMinusExpression(UnaryMinusExpression expression) {
+                @Override public void visitUnaryMinusExpression(final UnaryMinusExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
-                @Override public void visitUnaryPlusExpression(UnaryPlusExpression expression) {
+                @Override public void visitUnaryPlusExpression(final UnaryPlusExpression expression) {
                     result[0] = (expr == expression.getExpression());
                 }
 
                 // statements:
 
-                @Override public void visitForLoop(ForStatement statement) {
+                @Override public void visitForLoop(final ForStatement statement) {
                     // used to capture the type of the collection expression
                     // so that it can be assigned to the for loop variable
                     result[0] = (expr == statement.getCollectionExpression());
                 }
 
-                @Override public void visitReturnStatement(ReturnStatement statement) {
+                @Override public void visitReturnStatement(final ReturnStatement statement) {
                     // used to capture the return type of a closure expression
                     result[0] = (expr == statement.getExpression());
                 }
