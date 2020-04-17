@@ -53,6 +53,8 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.JavaCoreUtil;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -116,7 +118,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         boolean found = false;
         try {
             // check if enclosingElement does not enclose nodeToLookFor
-            if (!interestingElement(enclosingElement)) {
+            if (!isInterestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
             }
 
@@ -145,7 +147,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     /**
      * @return {@code true} if {@code enclosingElement} contains {@link #nodeToLookFor} or is necessary for type inference
      */
-    private boolean interestingElement(final IJavaElement enclosingElement) throws JavaModelException {
+    private boolean isInterestingElement(final IJavaElement enclosingElement) throws JavaModelException {
         switch (enclosingElement.getElementType()) {
         case IJavaElement.FIELD:
             if ("Qjava.lang.Object;".equals(((IField) enclosingElement).getTypeSignature())) {
@@ -153,7 +155,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
             break;
         case IJavaElement.METHOD:
-            if (((IMethod) enclosingElement).isConstructor()) {
+            if (isInitializerMethod((IMethod) enclosingElement)) {
                 return true;
             }
             break;
@@ -164,11 +166,26 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (enclosingElement instanceof ISourceReference) {
             ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
             int start = range.getOffset(), until = range.getOffset() + range.getLength();
-            boolean covers = start <= nodeToLookFor.getStart() && until >= nodeToLookFor.getEnd();
-            covers = covers || (start <= selectRegion.getOffset() && until >= selectRegion.getEnd());
+            boolean covers = (start <= nodeToLookFor.getStart() && until >= nodeToLookFor.getEnd());
+            covers = (covers || (start <= selectRegion.getOffset() && until >= selectRegion.getEnd()));
             return covers;
         }
 
+        return false;
+    }
+
+    private boolean isInitializerMethod(final IMethod method) throws JavaModelException {
+        if (method.isConstructor()) {
+            return true;
+        }
+        if (!Flags.isStatic(method.getFlags())) {
+            for (IAnnotation annotation : method.getAnnotations()) {
+                String name = annotation.getElementName();
+                if (name.endsWith("PostConstruct")) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 

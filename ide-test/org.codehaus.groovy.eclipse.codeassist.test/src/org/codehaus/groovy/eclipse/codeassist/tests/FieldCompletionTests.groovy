@@ -347,6 +347,96 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testProperties16a() {
+        String contents = '''\
+            |class C {
+            |  def m() {
+            |    x.
+            |  }
+            |  C() {
+            |    x = 42
+            |  }
+            |  def x
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1080
+    void testProperties17() {
+        String contents = '''\
+            |import javax.annotation.PostConstruct
+            |class C {
+            |  def x
+            |  @PostConstruct
+            |  void init() {
+            |    x = 42
+            |  }
+            |  def m() {
+            |    x.
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 1)
+    }
+
+    @Test
+    void testProperties17a() {
+        String contents = '''\
+            |class C {
+            |  def x
+            |  @javax.annotation.PostConstruct
+            |  void init() {
+            |    x = 42
+            |  }
+            |  def m() {
+            |    x.
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 1)
+    }
+
+    @Test
+    void testProperties17b() {
+        String contents = '''\
+            |class C {
+            |  def x
+            |  C() {
+            |    x.
+            |  }
+            |  @javax.annotation.PostConstruct
+            |  void init() {
+            |    x = 42
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 0)
+    }
+
+    @Test
+    void testProperties17c() {
+        String contents = '''\
+            |class C {
+            |  @javax.annotation.PostConstruct
+            |  void init() {
+            |    x = 42
+            |  }
+            |  C() {
+            |    x.
+            |  }
+            |  def x
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'intValue() : int', 0)
+    }
+
+    @Test
     void testClosure1() {
         String contents = '''\
             |class Other {

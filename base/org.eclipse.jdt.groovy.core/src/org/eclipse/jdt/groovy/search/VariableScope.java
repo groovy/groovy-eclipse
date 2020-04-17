@@ -925,7 +925,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (scopeNode instanceof ThrowStatement) {
             // TODO: What about throw? Could be caught by outer scope...
         }
-        if (scopeNode instanceof MethodNode && !(scopeNode instanceof ConstructorNode || ((MethodNode) scopeNode).getName().equals("<clinit>"))) {
+        if (scopeNode instanceof MethodNode && !(scopeNode instanceof ConstructorNode ||
+                (((MethodNode) scopeNode).isStatic() && ((MethodNode) scopeNode).getName().equals("<clinit>")) ||
+                (!((MethodNode) scopeNode).isStatic() && GroovyUtils.getAnnotations((MethodNode) scopeNode, "javax.annotation.PostConstruct").anyMatch(x -> true)))) {
             return true;
         }
         return false;

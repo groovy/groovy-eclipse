@@ -73,6 +73,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -519,7 +520,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         @Override
         public VisitStatus acceptASTNode(final ASTNode node, final TypeLookupResult result, final IJavaElement enclosingElement) {
             // check to see if the enclosing element does not enclose the nodeToLookFor
-            if (!interestingElement(enclosingElement)) {
+            if (!isInterestingElement(enclosingElement)) {
                 return VisitStatus.CANCEL_MEMBER;
             }
 
@@ -714,7 +715,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
          *
          * @see org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectRequestor#interestingElement(IJavaElement)
          */
-        private boolean interestingElement(final IJavaElement enclosingElement) {
+        private boolean isInterestingElement(final IJavaElement enclosingElement) {
             try {
                 switch (enclosingElement.getElementType()) {
                 case IJavaElement.FIELD:
@@ -723,7 +724,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     }
                     break;
                 case IJavaElement.METHOD:
-                    if (((IMethod) enclosingElement).isConstructor()) {
+                    if (isInitializerMethod((IMethod) enclosingElement)) {
                         return true;
                     }
                     break;
@@ -739,6 +740,21 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 }
             } catch (JavaModelException e) {
                 GroovyContentAssist.logError(e);
+            }
+            return false;
+        }
+
+        private boolean isInitializerMethod(final IMethod method) throws JavaModelException {
+            if (method.isConstructor()) {
+                return true;
+            }
+            if (!Flags.isStatic(method.getFlags())) {
+                for (IAnnotation annotation : method.getAnnotations()) {
+                    String name = annotation.getElementName();
+                    if (name.endsWith("PostConstruct")) {
+                        return true;
+                    }
+                }
             }
             return false;
         }

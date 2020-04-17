@@ -1753,6 +1753,22 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testFieldWithInitializer3b() {
+        String contents =
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  C() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def x\n" +
+            "}\n";
+        int offset = contents.indexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test
     public void testFieldWithInitializer4() {
         String contents =
             "class C {\n" +
@@ -1780,6 +1796,57 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer6() {
+        String contents =
+            "class C {\n" +
+            "  def x\n" +
+            "  @javax.annotation.PostConstruct\n" +
+            "  void init() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer6a() {
+        String contents =
+            "import javax.annotation.PostConstruct\n" +
+            "class C {\n" +
+            "  def x\n" +
+            "  @PostConstruct\n" +
+            "  void init() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testFieldWithInitializer6b() {
+        String contents =
+            "import javax.annotation.PostConstruct\n" +
+            "class C {\n" +
+            "  def m() {\n" +
+            "    x\n" +
+            "  }\n" +
+            "  @PostConstruct\n" +
+            "  void init() {\n" +
+            "    x = 42\n" +
+            "  }\n" +
+            "  def x\n" +
+            "}\n";
+        int offset = contents.indexOf('x', contents.indexOf("def"));
+        assertType(contents, offset, offset + 1, "java.lang.Object"); // TODO: Make independent of declaration order?
     }
 
     @Test // GRECLIPSE-731
