@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -54,17 +54,16 @@ public class EnclosingCallPointcut extends AbstractPointcut {
         }
     }
 
-    private List<MethodCallExpression> asCallList(List<CallAndType> enclosing) {
-        List<MethodCallExpression> types = new ArrayList<>(enclosing.size());
+    private List<MethodCall> asCallList(List<CallAndType> enclosing) {
+        List<MethodCall> calls = new ArrayList<>(enclosing.size());
         for (CallAndType callAndType : enclosing) {
-            types.add(callAndType.call);
+            calls.add(callAndType.call);
         }
-        return types;
+        return calls;
     }
 
-    private List<MethodCallExpression> matchesInCalls(List<CallAndType> enclosing,
-            String callName, GroovyDSLDContext pattern) {
-        List<MethodCallExpression> calls = null;
+    private List<MethodCall> matchesInCalls(List<CallAndType> enclosing, String callName, GroovyDSLDContext pattern) {
+        List<MethodCall> calls = null;
         for (CallAndType callAndType : enclosing) {
             if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
                 if (calls == null) {

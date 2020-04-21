@@ -982,6 +982,8 @@ assert primaryExprType != null && dependentExprType != null;
     @Override
     public void visitConstructorCallExpression(final ConstructorCallExpression node) {
         handleSimpleExpression(node, () -> {
+            Tuple t = dependentDeclarationStack.removeLast();
+
             final ClassNode type = node.getType();
             if (node.isUsingAnonymousInnerClass()) {
                 // in "new Type() { ... }", Type is super class or interface
@@ -1004,7 +1006,11 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                 }
             }
-            super.visitConstructorCallExpression(node);
+
+            VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
+            scopes.getLast().addEnclosingMethodCall(cat);
+              super.visitConstructorCallExpression(node);
+            scopes.getLast().forgetEnclosingMethodCall();
 
             // visit anonymous inner class body
             if (node.isUsingAnonymousInnerClass()) {
@@ -1447,7 +1453,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
+        VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
 
         ClassNode catNode = isCategoryDeclaration(node, scope);
         if (catNode != null) {
@@ -1455,7 +1461,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         // remember that we are inside a method call while analyzing the arguments
-        scope.addEnclosingMethodCall(call);
+        scope.addEnclosingMethodCall(cat);
         node.getArguments().visit(this);
         scope.forgetEnclosingMethodCall();
 
@@ -1980,6 +1986,10 @@ assert primaryExprType != null && dependentExprType != null;
         }
         switch (status) {
         case CONTINUE:
+            if (node instanceof ConstructorCallExpression) {
+                dependentDeclarationStack.add(new Tuple(result.declaringType, result.declaration));
+            }
+            // fall through
         case CANCEL_BRANCH:
             postVisit(node, result.type, rememberedDeclaringType, result.declaration);
             return (status == VisitStatus.CONTINUE);
@@ -2288,11 +2298,11 @@ assert primaryExprType != null && dependentExprType != null;
                             String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), sourceUnit.getConfiguration()));
 
                             // determine closure param types from ClosureSignatureHint
-                            List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, resolver.compilationUnit, opts, cat.call);
+                            List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, resolver.compilationUnit, opts, (Expression) cat.call);
                             if (isNotEmpty(sigs)) {
                                 for (ClassNode[] sig : sigs) {
                                     if (sig.length == inferredTypes.length) {
-                                        GenericsType[] generics = getMethodCallGenericsTypes(cat.call);
+                                        GenericsType[] generics = getMethodCallGenericsTypes((Expression) cat.call);
                                         List<ClassNode> arguments = GroovyUtils.getParameterTypes(methodNode.getParameters());
                                         GenericsMapper map = GenericsMapper.gatherGenerics(arguments, cat.declaringType, methodNode.getOriginal(), generics);
 
@@ -2844,7 +2854,7 @@ assert primaryExprType != null && dependentExprType != null;
             .findFirst().map(an -> an.getMember("value")).orElse(null);
     }
 
-    private static Parameter findTargetParameter(final Expression arg, final MethodCallExpression call, final MethodNode declaration, final boolean isGroovyMethod) {
+    private static Parameter findTargetParameter(final Expression arg, final MethodCall call, final MethodNode declaration, final boolean isGroovyMethod) {
         // see ExpressionCompletionRequestor.getParameterPosition(ASTNode, MethodCallExpression)
         // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
         String key = null;

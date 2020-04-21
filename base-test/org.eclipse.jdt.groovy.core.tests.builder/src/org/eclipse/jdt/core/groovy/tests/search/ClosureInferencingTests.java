@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1436,51 +1436,64 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosureParamsAnnotation3() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.stc.*\n" +
+            "class C {\n" +
+            "  C(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
+            "  }\n" +
+            "}\n" +
+            "new C('str', { list -> null })\n";
+            //@formatter:on
+
+        assertType(contents, "list", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test
     public void testClosureReferencesSuperClass() {
         String contents =
             //@formatter:off
-            "class MySuper {\n" +
-            "  public void insuper() {}\n" +
+            "class A {\n" +
+            "  void insuper() {}\n" +
             "}\n" +
-            "class MySub extends MySuper {\n" +
-            "  public void foo() {\n" +
+            "class B extends A {\n" +
+            "  def m() {\n" +
             "    [1].each {\n" +
             "      insuper('3')\n" +
             "    }\n" +
             "  }\n" +
             "}";
             //@formatter:on
-        int offset = contents.lastIndexOf("insuper");
-        assertDeclaringType(contents, offset, offset + "insuper".length(), "MySuper");
+
+        assertDeclaringType(contents, "insuper", "A");
     }
 
     @Test
     public void testGRECLIPSE1348() {
         String contents =
             //@formatter:off
-            "class A {\n" +
-            "  def myMethod(String owner) {\n" +
+            "class C {\n" +
+            "  def m(String owner) {\n" +
             "    return { return owner }\n" +
             "  }\n" +
             "}";
             //@formatter:on
-        int start = contents.lastIndexOf("owner");
-        int end = start + "owner".length();
-        assertType(contents, start, end, "java.lang.String");
+
+        assertType(contents, "owner", "java.lang.String");
     }
 
     @Test
     public void testGRECLIPSE1348a() {
         String contents =
             //@formatter:off
-            "class A {\n" +
-            "  def myMethod(String notOwner) {\n" +
+            "class C {\n" +
+            "  def m(String notOwner) {\n" +
             "    return { return owner }\n" +
             "  }\n" +
             "}";
             //@formatter:on
-        int start = contents.lastIndexOf("owner");
-        int end = start + "owner".length();
-        assertType(contents, start, end, "A");
+
+        assertType(contents, "owner", "C");
     }
 }

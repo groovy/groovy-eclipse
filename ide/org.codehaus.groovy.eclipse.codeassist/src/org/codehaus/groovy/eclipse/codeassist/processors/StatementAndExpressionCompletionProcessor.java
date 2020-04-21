@@ -49,6 +49,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -633,7 +634,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         private void maybeRememberTypeOfLHS(final TypeLookupResult result) {
-            VariableScope.CallAndType cat;
             if (isAssignmentOfLHS(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
                 // if so, then attempt to use the type of the lhs for
@@ -645,12 +645,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     lhsType = ((PropertyExpression) lhsNode).getProperty().getType();
                 }
             } else {
-                cat = result.scope.getEnclosingMethodCallExpression();
-                if (cat != null) {
+                VariableScope.CallAndType cat = result.scope.getEnclosingMethodCallExpression();
+                if (cat != null && cat.declaration instanceof MethodNode) {
+                    Parameter[] params = ((MethodNode) cat.declaration).getParameters();
                     // is a method parameter the receiver of the completion expression?
                     int paramIndex = getParameterPosition(result.declaration, cat.call);
-                    if (paramIndex >= 0 && cat.declaration instanceof MethodNode) {
-                        Parameter[] params = ((MethodNode) cat.declaration).getParameters();
+                    if (paramIndex != -1 && params.length > 0) {
                         lhsType = params[Math.min(paramIndex, params.length - 1)].getType();
                         if (lhsType.isArray() && paramIndex >= params.length - 1) {
                             lhsType = lhsType.getComponentType();
@@ -679,10 +679,10 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             return false;
         }
 
-        private int getParameterPosition(final ASTNode argumentCandidate, final MethodCallExpression callExpression) {
-            if (callExpression != null && callExpression.getArguments() instanceof TupleExpression) {
+        private int getParameterPosition(final ASTNode argumentCandidate, final MethodCall methodCall) {
+            if (methodCall != null && methodCall.getArguments() instanceof TupleExpression) {
                 int paramIndex = -1;
-                for (Expression argument : ((TupleExpression) callExpression.getArguments()).getExpressions()) {
+                for (Expression argument : ((TupleExpression) methodCall.getArguments()).getExpressions()) {
                     paramIndex += 1;
                     if (argument == argumentCandidate) {
                         return paramIndex;

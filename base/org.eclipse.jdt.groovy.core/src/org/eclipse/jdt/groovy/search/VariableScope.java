@@ -65,7 +65,7 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -1176,9 +1176,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static class CallAndType {
 
+        public final MethodCall call;
         public final ASTNode declaration;
         public final ClassNode declaringType;
-        public final MethodCallExpression call;
         private Map<ClosureExpression, Object[]> delegatesTo;
 
         /**
@@ -1186,7 +1186,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          *        if {@code call} is a category method it's likely the calling object
          *        type; if {@code call} is an implicit-this call in a closure, then...
          */
-        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringType, ModuleNode enclosingModule) {
+        public CallAndType(final MethodCall call, final ASTNode declaration, final ClassNode declaringType, final ModuleNode enclosingModule) {
             this.call = call;
             this.declaration = declaration;
             this.declaringType = declaringType;
@@ -1309,17 +1309,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             return declaringType;
         }
 
-        public ClassNode getDelegateType(ClosureExpression closure) {
+        public ClassNode getDelegateType(final ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
             return (tuple != null ? (ClassNode) tuple[0] : null);
         }
 
-        public int getResolveStrategy(ClosureExpression closure) {
+        public int getResolveStrategy(final ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
             return (tuple != null && tuple[1] != null ? (Integer) tuple[1] : Closure.OWNER_FIRST);
         }
 
-        private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
+        private void addDelegatesToClosure(final ClosureExpression closure, final ClassNode delegateType, final Integer resolveStrategy) {
             if (delegatesTo == null) {
                 delegatesTo = new HashMap<>();
             }
@@ -1329,7 +1329,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * Finds param with DelegatesTo.Target annotation that has matching value string.
          */
-        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) throws NoSuchMethodException {
+        private static int indexOfDelegatesToTarget(final Parameter[] parameters, final String target, final CompilerConfiguration config)
+                throws NoSuchMethodException {
             for (int i = 0, n = parameters.length; i < n; i += 1) {
                 List<AnnotationNode> annotations = parameters[i].getAnnotations();
                 if (annotations != null && !annotations.isEmpty()) {
