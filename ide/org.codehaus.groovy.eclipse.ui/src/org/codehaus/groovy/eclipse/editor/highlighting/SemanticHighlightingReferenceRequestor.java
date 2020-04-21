@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -175,7 +175,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             if (var != null) {
                 typedPositions.add(new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED));
             }
-            pos = handleVariableExpression((Parameter) node, result.scope);
+            pos = handleParameterReference((Parameter) node, result.scope);
 
         } else if (node instanceof VariableExpression) {
             if (result.declaration instanceof MethodNode) {
@@ -404,15 +404,15 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         return new HighlightedTypedPosition(offset, length, kind);
     }
 
-    private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {
+    private HighlightedTypedPosition handleParameterReference(final Parameter param, final VariableScope scope) {
         HighlightKind kind;
-        if (isCatchParam(expr, scope) || isForLoopParam(expr, scope)) {
+        if (isCatchParam(param, scope) || isForLoopParam(param, scope)) {
             kind = HighlightKind.VARIABLE; // treat block params as vars
         } else {
             kind = HighlightKind.PARAMETER;
         }
 
-        return new HighlightedTypedPosition(expr.getNameStart(), expr.getNameEnd() - expr.getNameStart(), kind);
+        return new HighlightedTypedPosition(param.getNameStart(), param.getNameEnd() - param.getNameStart() + 1, kind);
     }
 
     // could be local variable declaration, local variable reference, for-each parameter reference, or method parameter reference

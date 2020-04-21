@@ -735,10 +735,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testParamsAndLocals() {
         String contents = '''\
             |class X {
-            |  def loop(int n) {
+            |  def loop(int n ) {
             |    def f = { int x -> x * n }
             |    for (int i = 0; i < n; i += 1) {
-            |      f(i) // ignore result
+            |      f(i)
             |    }
             |  }
             |}
@@ -747,7 +747,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
             new HighlightedTypedPosition(contents.indexOf('loop'), 4, METHOD),
-            new HighlightedTypedPosition(contents.indexOf('n)'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('n )'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('x ->'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('x *'), 1, PARAMETER),

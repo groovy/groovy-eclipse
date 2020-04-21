@@ -931,8 +931,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 new Parameter(this.visitType(ctx.type()), this.visitVariableDeclaratorId(ctx.variableDeclaratorId()).getName()),
                 ctx.variableDeclaratorId());
         // GRECLIPSE add
-        parameter.setNameEnd(parameter.getEnd());
         parameter.setNameStart(parameter.getStart());
+        parameter.setNameEnd(parameter.getEnd() - 1);
         parameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
         parameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
         parameter.setStart(locationSupport.findOffset(parameter.getLineNumber(), parameter.getColumnNumber()));
@@ -1105,7 +1105,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     ctx);
             catchParameter = configureAST(catchStatement.getVariable(), ctx.catchType() != null ? ctx.catchType() : ctx.identifier());
             nameNode = configureAST(new ConstantExpression(catchParameter.getName()), ctx.identifier());
-            catchParameter.setNameStart(nameNode.getStart()); catchParameter.setNameEnd(nameNode.getEnd());
+            catchParameter.setNameStart(nameNode.getStart());
+            catchParameter.setNameEnd(nameNode.getEnd() - 1);
             list.add(catchStatement);
         }
         if (catchParameter != null) {
@@ -4057,7 +4058,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Parameter parameter = new Parameter(ClassHelper.OBJECT_TYPE, variable.getName());
             // GRECLIPSE add
             parameter.setNameStart(variable.getStart());
-            parameter.setNameEnd(variable.getEnd());
+            parameter.setNameEnd(variable.getEnd() - 1);
             // GRECLIPSE end
             configureAST(parameter, variable);
             return new Parameter[]{parameter};
@@ -4133,7 +4134,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 Parameter parameter = this.visitFormalParameter(formalParameterContext);
                                 ASTNode nameNode = configureAST(new ConstantExpression(parameter.getName()), formalParameterContext.variableDeclaratorId());
                                 parameter.setNameStart(nameNode.getStart());
-                                parameter.setNameEnd(nameNode.getEnd());
+                                parameter.setNameEnd(nameNode.getEnd() - 1);
                                 return parameter;
                             })
                             // GRECLIPSE end

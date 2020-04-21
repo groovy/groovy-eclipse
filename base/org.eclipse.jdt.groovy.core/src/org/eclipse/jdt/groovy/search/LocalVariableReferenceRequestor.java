@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,12 +45,13 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
     private SearchRequestor requestor;
     private SearchParticipant participant;
 
-    public LocalVariableReferenceRequestor(Variable variable, IJavaElement enclosingElement) {
+    public LocalVariableReferenceRequestor(final Variable variable, final IJavaElement enclosingElement) {
         this(variable.getName(), enclosingElement, null, null, -1);
         this.variable = variable;
     }
 
-    public LocalVariableReferenceRequestor(String variableName, IJavaElement enclosingElement, SearchRequestor requestor, SearchParticipant participant, int declStart) {
+    public LocalVariableReferenceRequestor(final String variableName, final IJavaElement enclosingElement,
+                final SearchRequestor requestor, final SearchParticipant participant, final int declStart) {
         this.variableName = variableName;
         this.enclosingElement = enclosingElement;
 
@@ -64,43 +65,30 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
     }
 
     @Override
-    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+    public VisitStatus acceptASTNode(final ASTNode node, final TypeLookupResult result, final IJavaElement enclosingElement) {
         if (enclosingElement.equals(this.enclosingElement)) {
             foundEnclosingElement = true;
             if (node instanceof Variable && isMatchForVariable((Variable) node)) {
-                IRegion realSourceLocation = getRealSourceLocation(node);
-                references.add(realSourceLocation);
-                if (requestor != null && realSourceLocation.getOffset() >= declStart) {
+                IRegion region = new Region(node instanceof Parameter ? ((Parameter) node).getNameStart() : node.getStart(), variableName.length());
+                references.add(region);
+                if (requestor != null && region.getOffset() >= declStart) {
                     try {
-                        requestor.acceptSearchMatch(new LocalVariableReferenceMatch(enclosingElement, SearchMatch.A_ACCURATE,
-                                realSourceLocation.getOffset(), realSourceLocation.getLength(), true /* isReadAccess */,
-                                true /* isWriteAccess */, false, participant, enclosingElement.getResource()));
+                        requestor.acceptSearchMatch(new LocalVariableReferenceMatch(
+                            enclosingElement, SearchMatch.A_ACCURATE, region.getOffset(), region.getLength(),
+                            /*isReadAccess:*/true, /*isWriteAccess:*/true, /*insideDocComment:*/false, participant, enclosingElement.getResource()));
                     } catch (CoreException e) {
                         Util.log(e);
                     }
                 }
             }
-        } else {
-            if (foundEnclosingElement) {
-                // end the visit once we have visited the element we are looking for
-                return VisitStatus.STOP_VISIT;
-            }
+        } else if (foundEnclosingElement) {
+            // end the visit once we have visited the element we are looking for
+            return VisitStatus.STOP_VISIT;
         }
         return VisitStatus.CONTINUE;
     }
 
-    /**
-     * Different behavior if selecting a parameter definition.
-     */
-    private IRegion getRealSourceLocation(ASTNode node) {
-        if (node instanceof Parameter) {
-            Parameter parameter = (Parameter) node;
-            return new Region(parameter.getNameStart(), parameter.getNameEnd() - parameter.getNameStart());
-        }
-        return new Region(node.getStart(), variableName.length());
-    }
-
-    private boolean isMatchForVariable(Variable var) {
+    private boolean isMatchForVariable(final Variable var) {
         if (variable != null) {
             if (var instanceof VariableExpression) {
                 return ((VariableExpression) var).getAccessedVariable() == variable;

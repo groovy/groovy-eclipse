@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -311,7 +311,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         // check parameter name
-        if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd()) {
+        if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd() + 1) {
             boolean isCatchParam = (blockStack.getLast() instanceof CatchStatement &&
                 (node.getStart() == node.getNameStart() || node.getName().equals("?")));
             createContext(node, blockStack.getLast(), isCatchParam ? ContentAssistLocation.EXCEPTIONS : ContentAssistLocation.PARAMETER);

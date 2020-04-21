@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,27 +126,18 @@ public class ConvertToMethodRefactoring {
     }
 
     /**
-     * @return the index after the last parameter, or -1 if no parameters
+     * @return offset after the last parameter, or -1 if no parameters
      */
     private static int findAfterLastParam(FieldNode targetField) {
         Parameter[] parameters = getClosureParameters(targetField);
-        if (parameters == null || parameters.length == 0) {
-            return -1;
-        } else {
-            Parameter lastParam = parameters[parameters.length - 1];
-            if (lastParam.getInitialExpression() != null) {
-                // hmmm...this is always null even when there are default values.   Maybe doesn't work?
-                return lastParam.getInitialExpression().getEnd();
-            } else {
-                return lastParam.getNameEnd();
-            }
+        if (parameters != null && parameters.length > 0) {
+            return parameters[parameters.length - 1].getEnd();
         }
+        return -1;
     }
 
     private static Parameter[] getClosureParameters(FieldNode targetField) {
-        ClosureExpression closure = (ClosureExpression) targetField.getInitialExpression();
-        Parameter[] parameters = closure.getParameters();
-        return parameters;
+        return ((ClosureExpression) targetField.getInitialExpression()).getParameters();
     }
 
     /**

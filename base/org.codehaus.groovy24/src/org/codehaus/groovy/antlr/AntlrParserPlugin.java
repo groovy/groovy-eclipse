@@ -1565,12 +1565,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         int nameEnd = nameStart + name.length();
         // GRECLIPSE end
         node = node.getNextSibling();
-
+        /* GRECLIPSE edit
         VariableExpression leftExpression = new VariableExpression(name, type);
         leftExpression.setModifiers(modifiers);
         configureAST(leftExpression, paramNode);
-
-        Parameter parameter = null;
+        */
+        Parameter parameter;
         if (node != null) {
             assertNodeType(ASSIGN, node);
             Expression rightExpression = expression(node.getFirstChild());
@@ -1578,15 +1578,23 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 throw new ASTRuntimeException(node, "Cannot specify default value for method parameter '" + name + " = " + rightExpression.getText() + "' inside an interface");
             }
             parameter = new Parameter(type, name, rightExpression);
-        } else
+        } else {
             parameter = new Parameter(type, name);
-
+        }
         if (firstParam) firstParamIsVarArg = variableParameterDef;
 
         configureAST(parameter, paramNode);
         // GRECLIPSE add
         parameter.setNameStart(nameStart);
-        parameter.setNameEnd(nameEnd);
+        parameter.setNameEnd(nameEnd - 1);
+        // paramNode includes space(s) before arrow, comma or paren
+        if (parameter.hasInitialExpression()) {
+            setSourceEnd(parameter, parameter.getInitialExpression());
+        } else if (parameter.getEnd() > nameEnd) {
+            parameter.setEnd(nameEnd);
+            int[] row_col = locations.getRowCol(nameEnd);
+            parameter.setLastLineNumber(row_col[0]); parameter.setLastColumnNumber(row_col[1]);
+        }
         // GRECLIPSE end
         parameter.addAnnotations(annotations);
         parameter.setModifiers(modifiers);
@@ -1912,7 +1920,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(forParameter, variableNode);
             // GRECLIPSE add
             forParameter.setNameStart(forParameter.getStart());
-            forParameter.setNameEnd(forParameter.getEnd());
+            forParameter.setNameEnd(forParameter.getEnd() - 1);
             if (type.getStart() > 0) {
                 // set start of parameter node to start of parameter type
                 setSourceStart(forParameter, type);
@@ -1952,7 +1960,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         }
         // GRECLIPSE end
-
         IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;
@@ -2180,7 +2187,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 Parameter catchParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, variable);
                 // GRECLIPSE add
                 configureAST(catchParameter, multicatches);
-                catchParameter.setNameEnd(catchParameter.getEnd());
+                catchParameter.setNameEnd(catchParameter.getEnd() - 1);
                 catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                 // GRECLIPSE end
                 CatchStatement answer = new CatchStatement(catchParameter, code);
@@ -2204,7 +2211,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     int lastCol = paramAST.getColumnLast();
                     catchParameter.setLastColumnNumber(lastCol);
                     catchParameter.setEnd(locations.findOffset(lastLine, lastCol));
-                    catchParameter.setNameEnd(catchParameter.getEnd());
+                    catchParameter.setNameEnd(catchParameter.getEnd() - 1);
                     catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                     // GRECLIPSE end
                     CatchStatement answer = new CatchStatement(catchParameter, code);
