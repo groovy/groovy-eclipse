@@ -2252,18 +2252,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitConstructorCallExpression(ConstructorCallExpression call) {
         typeCheckingContext.pushEnclosingConstructorCall(call);
         try {
+            /* GRECLIPSE edit -- GROOVY-9518
             super.visitConstructorCallExpression(call);
+            */
             if (extension.beforeMethodCall(call)) {
                 extension.afterMethodCall(call);
                 return;
             }
-            ClassNode receiver = call.isThisCall() ? typeCheckingContext.getEnclosingClassNode() :
-                    call.isSuperCall() ? typeCheckingContext.getEnclosingClassNode().getSuperClass() : call.getType();
+            ClassNode receiver = call.getType();
+            if (call.isThisCall()) {
+                receiver = typeCheckingContext.getEnclosingClassNode();
+            } else if (call.isSuperCall()) {
+                receiver = typeCheckingContext.getEnclosingClassNode().getSuperClass();
+            }
             Expression arguments = call.getArguments();
-
             ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
 
             checkForbiddenSpreadArgument(argumentList);
+            // GRECLIPSE add -- GROOVY-9518
+            visitMethodCallArguments(receiver, argumentList, false, null);
+            // GRECLIPSE end
 
             ClassNode[] args = getArgumentTypes(argumentList);
             if (args.length > 0 &&
@@ -2275,7 +2283,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     !call.getType().isStaticClass()) {
                 args[0] = CLOSURE_TYPE;
             }
-
 
             MethodNode node;
             if (looksLikeNamedArgConstructor(receiver, args)
@@ -2296,7 +2303,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     typeCheckMethodsWithGenericsOrFail(receiver, args, node, call);
                 }
-                if (node != null) storeTargetMethod(call, node);
+                if (node != null) {
+                    storeTargetMethod(call, node);
+                    // GRECLIPSE add -- GROOVY-9518
+                    visitMethodCallArguments(receiver, argumentList, true, node);
+                    // GRECLIPSE end
+                }
             }
             // GRECLIPSE add -- GROOVY-9327: check for AIC in STC method with non-STC enclosing class
             if (call.isUsingAnonymousInnerClass()) {
