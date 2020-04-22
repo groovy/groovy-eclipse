@@ -1451,6 +1451,23 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosureParamsAnnotation4() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.stc.*\n" +
+            "class C {\n" +
+            "  static m(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
+            "  }\n" +
+            "  static test() {\n" +
+            "    m('str', { list -> null })\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        assertType(contents, "list", "java.util.List<java.lang.Integer>");
+    }
+
+    @Test
     public void testClosureReferencesSuperClass() {
         String contents =
             //@formatter:off

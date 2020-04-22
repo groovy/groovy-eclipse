@@ -193,4 +193,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test
+    public void testTypeChecked9() {
+        //@formatter:off
+        String[] sources = {
+            "Foo.groovy",
+            "class C {\n" +
+            "  static m(String s, Comparable<List<Integer>> c) {\n" +
+            "  }\n" +
+            "  @groovy.transform.TypeChecked\n" +
+            "  static test() {\n" +
+            "    m('blah', { list -> list.get(0) })\n" +
+            "  }\n" +
+            "}\n" +
+            "C.test()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }

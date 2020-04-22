@@ -1648,18 +1648,20 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitStaticMethodCallExpression(final StaticMethodCallExpression node) {
-        ClassNode type = node.getOwnerType();
-        if (isPrimaryExpression(node)) {
-            visitMethodCallExpression(new MethodCallExpression(new ClassExpression(type), node.getMethod(), node.getArguments()));
-        }
         handleSimpleExpression(node, () -> {
+            Tuple t = dependentDeclarationStack.removeLast();
             boolean isPresentInSource = (node.getEnd() > 0);
+            ClassNode type = node.getOwnerType();
             if (isPresentInSource) {
                 visitClassReference(type);
             }
             if (isPresentInSource || isEnumInit(node)) {
                 // visit static method call arguments
+                scopes.getLast().addEnclosingMethodCall(
+                    new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule));
                 super.visitStaticMethodCallExpression(node);
+                scopes.getLast().forgetEnclosingMethodCall();
+
                 // visit anonymous inner class members
                 if (GroovyUtils.isAnonymous(type)) {
                     visitMethodOverrides(type);
@@ -1986,7 +1988,8 @@ assert primaryExprType != null && dependentExprType != null;
         }
         switch (status) {
         case CONTINUE:
-            if (node instanceof ConstructorCallExpression) {
+            // TODO: (node instanceof MethodCall && !(node instanceof MethodCallExpression))
+            if (node instanceof ConstructorCallExpression || node instanceof StaticMethodCallExpression) {
                 dependentDeclarationStack.add(new Tuple(result.declaringType, result.declaration));
             }
             // fall through
