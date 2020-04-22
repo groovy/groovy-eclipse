@@ -3813,4 +3813,20 @@ public final class InferencingTests extends InferencingTestSuite {
 
         assertType(contents, "meth", "java.lang.Character");
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1090
+    public void testMethodOverloadsArgumentMatching11() {
+        String contents =
+            "class C {\n" +
+            "  C(String s, Map m) {\n" +
+            "  }\n" +
+            "  C(String s, ... v) {\n" +
+            "  }\n" +
+            "}\n" +
+            "new C('')\n";
+
+        int offset = contents.indexOf("new");
+        MethodNode m = assertDeclaration(contents, offset, offset + 9, "C", "<init>", DeclarationKind.METHOD);
+        assertTrue("Expected array, but was " + m.getParameters()[1].getType().getNameWithoutPackage(), m.getParameters()[1].getType().isArray());
+    }
 }

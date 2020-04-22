@@ -340,7 +340,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s) {}\n" +
             "}");
         createUnit("", "Bar", "import p.Foo\n" +
-            "def bar = new Foo(0) {\n" + // yes
+            "def foo = new Foo(0) {\n" + // yes
             "}\n");
 
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
@@ -357,13 +357,26 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s) {}\n" + // search for this
             "}");
         createUnit("", "Bar", "import p.Foo\n" +
-            "def bar = new Foo(0) {\n" + // no
+            "def foo = new Foo(0) {\n" + // no
             "}\n");
 
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
         assertEquals(0, ctorRefs);
+    }
+
+    @Test
+    public void testConstructorReferences15() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(String s, Map m) {}\n" +
+            "  Foo(String s, ... v) {}\n" + // search for this
+            "}");
+        createUnit("", "Bar", "def foo = new p.Foo('')"); // yes
+
+        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream().count();
+        assertEquals(1, ctorRefs);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/796

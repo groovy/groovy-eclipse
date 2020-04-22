@@ -287,6 +287,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 resolvedDeclaringType = resolvedDeclaringType.getUnresolvedSuperClass(false);
             }
 
+            ASTNode declaration;
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = resolvedDeclaringType.getDeclaredConstructors();
             if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
@@ -297,23 +298,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         callTypes.remove(0);
                     }
                 }
-
-                List<ConstructorNode> looseMatches = new ArrayList<>();
-                for (ConstructorNode ctor : declaredConstructors) {
-                    if (callTypes != null && callTypes.size() == ctor.getParameters().length) {
-                        if (Boolean.TRUE.equals(isTypeCompatible(callTypes, ctor.getParameters()))) {
-                            return new TypeLookupResult(nodeType, resolvedDeclaringType, ctor, confidence, scope);
-                        }
-                        // argument types may not be fully resolved; at least the number of arguments matched
-                        looseMatches.add(ctor);
-                    }
-                }
-                if (!looseMatches.isEmpty()) {
-                    declaredConstructors = looseMatches;
-                }
+                declaration = findMethodDeclaration0(declaredConstructors, callTypes, false);
+            } else {
+                declaration = (!declaredConstructors.isEmpty() ? declaredConstructors.get(0) : resolvedDeclaringType);
             }
 
-            ASTNode declaration = (!declaredConstructors.isEmpty() ? declaredConstructors.get(0) : resolvedDeclaringType);
             return new TypeLookupResult(nodeType, resolvedDeclaringType, declaration, confidence, scope);
 
         } else if (node instanceof StaticMethodCallExpression) {
@@ -753,7 +742,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return outerCandidate;
     }
 
-    protected static MethodNode findMethodDeclaration0(final List<MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
+    protected static MethodNode findMethodDeclaration0(final List<? extends MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
         int argumentCount = (argumentTypes == null ? -1 : argumentTypes.size());
 
         MethodNode closestMatch = null;
