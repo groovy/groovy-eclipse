@@ -3873,4 +3873,21 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testCompileStatic9517() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void listSortedFiles(File directory) {\n" +
+            "  File[] files = directory.listFiles()\n" +
+            "  files = files?.sort { it.name }\n" +
+            "}\n" +
+            "println 'works'\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }

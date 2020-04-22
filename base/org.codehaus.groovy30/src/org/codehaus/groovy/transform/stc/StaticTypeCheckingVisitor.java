@@ -1185,6 +1185,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
         }
         // if left type is array, we should check the right component types
+        /* GRECLIPSE edit -- GROOVY-9517
         if (!lhsType.isArray()) return;
         ClassNode leftComponentType = lhsType.getComponentType();
         ClassNode rightRedirect = rightExpression.getType().redirect();
@@ -1202,6 +1203,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
         }
+        */
+        if (!leftRedirect.isArray()) return;
+        if (rightExpression instanceof ListExpression) {
+            ClassNode leftComponentType = leftRedirect.getComponentType();
+            for (Expression expression : ((ListExpression) rightExpression).getExpressions()) {
+                ClassNode rightComponentType = getType(expression);
+                if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType) && !(isNullConstant(expression) && !isPrimitiveType(leftComponentType))) {
+                    addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
+                }
+            }
+        } else if (inferredrhsType.redirect().isArray()) {
+            ClassNode leftComponentType = leftRedirect.getComponentType();
+            ClassNode rightComponentType = inferredrhsType.redirect().getComponentType();
+            if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)) {
+                addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
+            }
+        }
+        // GRECLIPSE end
     }
 
     private void addListAssignmentConstructorErrors(final ClassNode leftRedirect, final ClassNode leftExpressionType, final ClassNode inferredRightExpressionType, final Expression rightExpression, final Expression assignmentExpression) {
