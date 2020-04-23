@@ -1059,9 +1059,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (i >= parameters.length) {
                 // argument that does not align with a parameter must be vararg
                 assert parameter.isArray(); parameter = parameter.getComponentType();
-            } else if (i == (n - 1) && arguments.size() == parameters.length && parameter.isArray()) {
+            } else if (i == (parameters.length - 1) && arguments.size() >= parameters.length && parameter.isArray()) {
                 // argument aligned with the last parameter (an array) may be a vararg
-                if (!argument.isArray()) parameter = parameter.getComponentType();
+                if (!argument.isArray() || !GroovyUtils.isAssignable(argument, parameter)) parameter = parameter.getComponentType();
             }
 
             // test parameter and argument for exact and loose match
