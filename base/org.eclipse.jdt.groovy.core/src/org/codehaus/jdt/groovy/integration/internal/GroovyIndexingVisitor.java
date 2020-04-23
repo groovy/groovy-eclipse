@@ -141,14 +141,16 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitBinaryExpression(final BinaryExpression expression) {
-        if (expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR) &&
-                expression.getLeftExpression() instanceof VariableExpression) {
+        if (expression.getLeftExpression() instanceof VariableExpression &&
+                expression.getOperation().isA(Types.ASSIGNMENT_OPERATOR)) {
             String name = expression.getLeftExpression().getText();
             int offset = expression.getLeftExpression().getStart();
-            // index "setName(x)" for Call Hierarchy/Find References
-            visitNameReference(AccessorSupport.SETTER, name, offset);
+            // index "name"
+            requestor.acceptFieldReference(name.toCharArray(), offset);
             // index "name(x)" for SyntheticAccessorsRenameParticipant
             requestor.acceptMethodReference(name.toCharArray(), 1, offset);
+            // index "setName(x)"
+            visitNameReference(AccessorSupport.SETTER, name, offset);
 
             expression.getRightExpression().visit(this);
         } else {
@@ -305,15 +307,14 @@ class GroovyIndexingVisitor extends DepthFirstVisitor {
         if (expression.getEnd() > 0) {
             String name = expression.getName();
             int offset = expression.getStart();
+            // index "name"
+            requestor.acceptFieldReference(name.toCharArray(), offset);
+            // index "name()" for SyntheticAccessorsRenameParticipant
+            requestor.acceptMethodReference(name.toCharArray(), 0, offset);
             // index "getName()" and "isName()"
             visitNameReference(AccessorSupport.GETTER, name, offset);
             visitNameReference(AccessorSupport.ISSER,  name, offset);
-            // index "name()" for SyntheticAccessorsRenameParticipant
-            requestor.acceptMethodReference(name.toCharArray(), 0, offset);
-            // index "name" for package references and anything else?
-            requestor.acceptUnknownReference(name.toCharArray(), offset);
         }
-        //super.visitVariableExpression(expression);
     }
 
     //--------------------------------------------------------------------------

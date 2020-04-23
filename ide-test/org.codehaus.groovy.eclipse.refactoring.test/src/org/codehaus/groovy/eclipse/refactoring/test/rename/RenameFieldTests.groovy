@@ -227,4 +227,10 @@ final class RenameFieldTests extends RefactoringTestSuite {
         def status = runTest('MyBean', 'foo', 'fooBar')
         assert status.entries[0].message.startsWith('Found potential matches.')
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1091
+    void test16() {
+        def status = runTest('MyBean', 'fooBar', 'foo')
+        assert status.isOK()
+    }
 }

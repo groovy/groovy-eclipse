@@ -433,45 +433,45 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         performRefactoringAndUndo('setBar', new TestSource(
             pack: 'p', name: 'Pojo.java',
             contents: '''\
-                package p;
-                public class Pojo {
-                  public void setFoo(int foo) { this.foo = foo; }
-                  public int getFoo() { return this.foo; }
-                  private int foo = -1;
-                }
-                '''.stripIndent(),
+                |package p;
+                |public class Pojo {
+                |  public void setFoo(int foo) { this.foo = foo; }
+                |  public int getFoo() { return this.foo; }
+                |  private int foo = -1;
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package p;
-                public class Pojo {
-                  public void setBar(int foo) { this.foo = foo; }
-                  public int getFoo() { return this.foo; }
-                  private int foo = -1;
-                }
-                '''.stripIndent()
+                |package p;
+                |public class Pojo {
+                |  public void setBar(int foo) { this.foo = foo; }
+                |  public int getFoo() { return this.foo; }
+                |  private int foo = -1;
+                |}
+                |'''.stripMargin()
         ), new TestSource(
             pack: 'q', name: 'Script.groovy',
             contents: '''\
-                package q
-                import p.Pojo
-                new Pojo().with {
-                    foo = 1
-                    foo += 1
-                    getFoo()
-                    setFoo(3)
-                    def val = foo + 456
-                }
-                '''.stripIndent(),
+                |package q
+                |import p.Pojo
+                |new Pojo().with {
+                |  foo = 1
+                |  foo += 1
+                |  getFoo()
+                |  setFoo(3)
+                |  def val = foo + 456
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package q
-                import p.Pojo
-                new Pojo().with {
-                    bar = 1
-                    bar += 1
-                    getFoo()
-                    setBar(3)
-                    def val = foo + 456
-                }
-                '''.stripIndent()
+                |package q
+                |import p.Pojo
+                |new Pojo().with {
+                |  bar = 1
+                |  bar += 1
+                |  getFoo()
+                |  setBar(3)
+                |  def val = foo + 456
+                |}
+                |'''.stripMargin()
         ))
     }
 
@@ -482,45 +482,84 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         performRefactoringAndUndo('bar', new TestSource(
             pack: 'p', name: 'Pojo.java',
             contents: '''\
-                package p;
-                public class Pojo {
-                  private int foo = -1;
-                  public int getFoo() { return this.foo; }
-                  public void setFoo(int val) { this.foo = val; }
-                }
-                '''.stripIndent(),
+                |package p;
+                |public class Pojo {
+                |  private int foo = -1;
+                |  public int getFoo() { return this.foo; }
+                |  public void setFoo(int val) { this.foo = val; }
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package p;
-                public class Pojo {
-                  private int bar = -1;
-                  public int getBar() { return this.bar; }
-                  public void setBar(int val) { this.bar = val; }
-                }
-                '''.stripIndent()
+                |package p;
+                |public class Pojo {
+                |  private int bar = -1;
+                |  public int getBar() { return this.bar; }
+                |  public void setBar(int val) { this.bar = val; }
+                |}
+                |'''.stripMargin()
         ), new TestSource(
             pack: 'q', name: 'Script.groovy',
             contents: '''\
-                package q
-                import p.Pojo
-                new Pojo().with {
-                    foo = 1
-                    foo += 1
-                    getFoo()
-                    setFoo(3)
-                    def val = foo + 456
-                }
-                '''.stripIndent(),
+                |package q
+                |import p.Pojo
+                |new Pojo().with {
+                |  foo = 1
+                |  foo += 1
+                |  getFoo()
+                |  setFoo(3)
+                |  def val = foo + 456
+                |}
+                |'''.stripMargin(),
             finalContents: '''\
-                package q
-                import p.Pojo
-                new Pojo().with {
-                    bar = 1
-                    bar += 1
-                    getBar()
-                    setBar(3)
-                    def val = bar + 456
-                }
-                '''.stripIndent()
+                |package q
+                |import p.Pojo
+                |new Pojo().with {
+                |  bar = 1
+                |  bar += 1
+                |  getBar()
+                |  setBar(3)
+                |  def val = bar + 456
+                |}
+                |'''.stripMargin()
+        ))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1091
+    void testMultiFileRename8() {
+        performRefactoringAndUndo('foo', new TestSource(
+            pack: 'p', name: 'Pogo.groovy',
+            contents: '''\
+                |package p
+                |class Pogo {
+                |  def fooBar, bar
+                |}
+                |'''.stripMargin(),
+            finalContents: '''\
+                |package p
+                |class Pogo {
+                |  def foo, bar
+                |}
+                |'''.stripMargin()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                |package q
+                |import p.Pogo
+                |new Pogo().with {
+                |  fooBar = 1
+                |  fooBar += 1
+                |  def val = fooBar + 456
+                |}
+                |'''.stripMargin(),
+            finalContents: '''\
+                |package q
+                |import p.Pogo
+                |new Pogo().with {
+                |  foo = 1
+                |  foo += 1
+                |  def val = foo + 456
+                |}
+                |'''.stripMargin()
         ))
     }
 
