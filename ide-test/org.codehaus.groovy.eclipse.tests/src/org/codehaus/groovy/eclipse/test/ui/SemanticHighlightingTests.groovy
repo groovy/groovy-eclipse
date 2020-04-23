@@ -2616,35 +2616,36 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testWithBlock2() {
+        addGroovySource '''\
+            |class Foo {
+            |  String val
+            |}
+            |'''.stripMargin()
+
         String contents = '''\
-            |class X { static {
-            |  new Date().with {
-            |    setTime(1234L)
-            |    time = 5678L
-            |    not1
-            |    not2 = hours
+            |@groovy.transform.CompileStatic
+            |def bar(Foo foo) {
+            |  foo.with {
+            |    val = ''
+            |    val.length()
             |  }
-            |}}
+            |}
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
-            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('foo'), 3, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
-            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
-            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
-            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
-            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('length'), 6, METHOD_CALL))
     }
 
     @Test
     void testWithBlock3() {
         String contents = '''\
-            |@groovy.transform.TypeChecked
             |class X { static {
             |  new Date().with {
             |    setTime(1234L)
@@ -2672,7 +2673,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testWithBlock4() {
         String contents = '''\
-            |@groovy.transform.CompileStatic
+            |@groovy.transform.TypeChecked
             |class X { static {
             |  new Date().with {
             |    setTime(1234L)
@@ -2701,6 +2702,34 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testWithBlock5() {
         String contents = '''\
             |@groovy.transform.CompileStatic
+            |class X { static {
+            |  new Date().with {
+            |    setTime(1234L)
+            |    time = 5678L
+            |    not1
+            |    not2 = hours
+            |  }
+            |}}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('X'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('Date'), 4, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('with'), 4, GROOVY_CALL),
+            new HighlightedTypedPosition(contents.indexOf('setTime'), 7, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('1234L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('time'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('5678L'), 5, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('not1'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('not2'), 4, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('hours'), 5, DEPRECATED))
+    }
+
+    @Test
+    void testWithBlock6() {
+        String contents = '''\
+            |@groovy.transform.CompileStatic
             |class X {
             |  def getReadOnly() {}
             |  static {
@@ -2724,7 +2753,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testWithBlock6() {
+    void testWithBlock7() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class X {
@@ -2751,7 +2780,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1015
-    void testWithBlock7() {
+    void testWithBlock8() {
         addGroovySource '''\
             |class Pogo {
             |  String prop

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,46 +56,9 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyRenameLinkedMode extends RenameLinkedMode {
 
-    // copy from super
-    private class EditorSynchronizer implements ILinkedModeListener {
-
-        @Override
-        public void left(LinkedModeModel model, int flags) {
-            doLinkedModeLeft();
-            // don't actually do the refactorings for local variables
-            // just let the change in text work itself
-            // this is because doRename wants to use the JDT Rename Temp
-            // Refactoring
-            // which will not work for groovy locals
-            if ((flags & ILinkedModeListener.UPDATE_CARET) != 0 && getJavaElement().getElementType() != IJavaElement.LOCAL_VARIABLE) {
-                doDoRename(getShowPreview());
-            }
-        }
-
-        @Override
-        public void resume(LinkedModeModel model, int flags) {}
-
-        @Override
-        public void suspend(LinkedModeModel model) {}
-    }
-
-    // copy from super
-    private class ExitPolicy extends DeleteBlockingExitPolicy {
-
-        ExitPolicy(IDocument document) {
-            super(document);
-        }
-
-        @Override
-        public ExitFlags doExit(LinkedModeModel model, VerifyEvent event, int offset, int length) {
-            setShowPreview((event.stateMask & SWT.CTRL) != 0 && (event.character == SWT.CR || event.character == SWT.LF));
-            return super.doExit(model, event, offset, length);
-        }
-    }
-
     private final GroovyEditor editor;
 
-    public GroovyRenameLinkedMode(IJavaElement element, GroovyEditor editor) {
+    public GroovyRenameLinkedMode(final IJavaElement element, final GroovyEditor editor) {
         super(element, editor);
         this.editor = editor;
     }
@@ -110,10 +73,10 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
 
         ISourceViewer viewer = editor.getViewer();
         IDocument document = viewer.getDocument();
-        Point fOriginalSelection = viewer.getSelectedRange();
-        setOriginalSelection(fOriginalSelection);
-        int offset = fOriginalSelection.x;
-        int length = fOriginalSelection.y;
+        Point selection = viewer.getSelectedRange();
+        setOriginalSelection(selection);
+        int offset = selection.x;
+        int length = selection.y;
 
         try {
             if (viewer instanceof ITextViewerExtension6) {
@@ -145,15 +108,16 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             // convert from array of OccurrenceLocation to ordered collection of Position
             Set<Position> positions = new TreeSet<>(new Comparator<Position>() {
                 @Override
-                public int compare(Position p1, Position p2) {
+                public int compare(final Position p1, final Position p2) {
                     return rank(p1) - rank(p2);
                 }
+
                 /**
                  * Returns the absolute rank of an <code>ASTNode</code>. Nodes preceding <code>pos</code> are ranked last.
                  *
                  * @return the rank of the position with respect to the invocation offset
                  */
-                private int rank(Position p) {
+                private int rank(final Position p) {
                     int relativeRank = p.getOffset() + p.getLength() - pos;
                     if (relativeRank < 0)
                         return Integer.MAX_VALUE + relativeRank;
@@ -204,7 +168,7 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             ui.enter();
 
             // by default, full word is selected; restore original selection
-            viewer.setSelectedRange(fOriginalSelection.x, fOriginalSelection.y);
+            viewer.setSelectedRange(selection.x, selection.y);
 
             if (viewer instanceof IEditingSupportRegistry) {
                 IEditingSupportRegistry registry = (IEditingSupportRegistry) viewer;
@@ -220,11 +184,11 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
         }
     }
 
-    private void setOriginalSelection(Point p) {
+    private void setOriginalSelection(final Point p) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fOriginalSelection", this, p);
     }
 
-    private void setLinkedPositionGroup(LinkedPositionGroup group) {
+    private void setLinkedPositionGroup(final LinkedPositionGroup group) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fLinkedPositionGroup", this, group);
     }
 
@@ -244,27 +208,27 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
         return ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fgActiveLinkedMode", null);
     }
 
-    private void setShowPreview(boolean show) {
+    private void setShowPreview(final boolean show) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fShowPreview", this, show);
     }
 
-    private void setNamePosition(LinkedPosition pos) {
+    private void setNamePosition(final LinkedPosition pos) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fNamePosition", this, pos);
     }
 
-    private void setStartingUndoOperation(IUndoableOperation op) {
+    private void setStartingUndoOperation(final IUndoableOperation op) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fStartingUndoOperation", this, op);
     }
 
-    private void setLinkedModeModel(LinkedModeModel model) {
+    private void setLinkedModeModel(final LinkedModeModel model) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fLinkedModeModel", this, model);
     }
 
-    private void setOriginalName(String name) {
+    private void setOriginalName(final String name) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fOriginalName", this, name);
     }
 
-    private void setActiveLinkedMode(RenameLinkedMode active) {
+    private void setActiveLinkedMode(final RenameLinkedMode active) {
         ReflectionUtils.setPrivateField(RenameLinkedMode.class, "fgActiveLinkedMode", this, active);
     }
 
@@ -276,7 +240,7 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
         ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "linkedModeLeft", this);
     }
 
-    private void doDoRename(boolean showPreview) {
+    private void doDoRename(final boolean showPreview) {
         ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "doRename", new Class[] {boolean.class}, this, new Object[] {showPreview});
     }
 
@@ -289,5 +253,44 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             }
         }
         return null;
+    }
+
+    // copy from super
+    private class EditorSynchronizer implements ILinkedModeListener {
+
+        @Override
+        public void left(final LinkedModeModel model, final int flags) {
+            doLinkedModeLeft();
+            // don't actually do the refactorings for local variables
+            // just let the change in text work itself
+            // this is because doRename wants to use the JDT Rename Temp
+            // Refactoring
+            // which will not work for groovy locals
+            if ((flags & ILinkedModeListener.UPDATE_CARET) != 0 && getJavaElement().getElementType() != IJavaElement.LOCAL_VARIABLE) {
+                doDoRename(getShowPreview());
+            }
+        }
+
+        @Override
+        public void resume(final LinkedModeModel model, final int flags) {
+        }
+
+        @Override
+        public void suspend(final LinkedModeModel model) {
+        }
+    }
+
+    // copy from super
+    private class ExitPolicy extends DeleteBlockingExitPolicy {
+
+        ExitPolicy(final IDocument document) {
+            super(document);
+        }
+
+        @Override
+        public ExitFlags doExit(final LinkedModeModel model, final VerifyEvent event, final int offset, final int length) {
+            setShowPreview((event.stateMask & SWT.CTRL) != 0 && (event.character == SWT.CR || event.character == SWT.LF));
+            return super.doExit(model, event, offset, length);
+        }
     }
 }

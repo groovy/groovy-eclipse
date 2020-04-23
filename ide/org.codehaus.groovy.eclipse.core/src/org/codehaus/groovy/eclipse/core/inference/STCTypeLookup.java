@@ -107,6 +107,12 @@ public class STCTypeLookup implements ITypeLookup {
                 ASTNode enclosingNode = scope.getEnclosingNode(), methodTarget = null;
                 if (enclosingNode instanceof PropertyExpression && ((PropertyExpression) enclosingNode).getProperty() == expr) {
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                    if (methodTarget instanceof MethodNode && ((MethodNode) methodTarget).isSynthetic()) {
+                        declaringType = ((MethodNode) methodTarget).getOriginal().getDeclaringClass();
+                        inferredType = enclosingNode.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                        declaration  = declaringType.getProperty(expr.getText());
+                        if (declaration != null) methodTarget = null;
+                    }
                 } else if (enclosingNode instanceof MethodCallExpression && ((MethodCallExpression) enclosingNode).getMethod() == expr) {
                     methodTarget = enclosingNode.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                     if (methodTarget == null) methodTarget = getMopMethodTarget((MethodCallExpression) enclosingNode);
