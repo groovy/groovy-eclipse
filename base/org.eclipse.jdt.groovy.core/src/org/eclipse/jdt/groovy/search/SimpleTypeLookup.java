@@ -54,6 +54,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
@@ -235,7 +236,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
             ConstantExpression cexp = (ConstantExpression) node;
             if (cexp.isNullExpression()) {
-                return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
+                return new TypeLookupResult(VariableScope.NULL_TYPE, null, null, confidence, scope);
             } else if (cexp.isTrueExpression() || cexp.isFalseExpression()) {
                 return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
             } else if (cexp.isEmptyStringExpression() || VariableScope.STRING_CLASS_NODE.equals(nodeType)) {
@@ -252,14 +253,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof GStringExpression) {
             return new TypeLookupResult(VariableScope.GSTRING_CLASS_NODE, null, null, confidence, scope);
 
+        } else if (node instanceof EmptyExpression) {
+            return new TypeLookupResult(null, null, null, confidence, scope);
+
         } else if (node instanceof CastExpression) {
-            return new TypeLookupResult(node.getType(), null, null, confidence, scope);
+            return new TypeLookupResult(nodeType, null, null, confidence, scope);
 
         } else if (node instanceof ClassExpression) {
-            ClassNode classType = VariableScope.newClassClassNode(node.getType());
-            classType.setSourcePosition(node);
-
-            return new TypeLookupResult(classType, null, node.getType(), confidence, scope);
+            ClassNode classType = VariableScope.newClassClassNode(nodeType);
+            return new TypeLookupResult(classType, null, nodeType, confidence, scope);
 
         } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
             ClassNode returnType = node.getNodeMetaData("returnType");
@@ -545,10 +547,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (variableInfo != null) {
             type = variableInfo.type != null ? variableInfo.type : VariableScope.OBJECT_CLASS_NODE;
-            confidence = variableInfo.type != null ? TypeConfidence.INFERRED : TypeConfidence.UNKNOWN;
-
-            if (VariableScope.isThisOrSuper(var)) decl = type;
             resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
+            if (VariableScope.isThisOrSuper(var)) decl = type;
+            confidence = TypeConfidence.INFERRED;
         }
 
         return new TypeLookupResult(type, resolvedDeclaringType, decl, confidence, scope);

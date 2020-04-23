@@ -1942,7 +1942,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
 
     @Test
     void testGString3() {
-        String contents = 'def a, b = "/$a/b/c"' // no regex at offset 15
+        String contents = 'def a = null, b = "/$a/b/c"' // no regex at offset 15
 
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),

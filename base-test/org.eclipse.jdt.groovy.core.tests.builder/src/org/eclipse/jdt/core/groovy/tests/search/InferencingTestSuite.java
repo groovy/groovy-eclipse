@@ -290,7 +290,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         if (type.isGenericsPlaceHolder()) {
             return type.getUnresolvedName() + arraySuffix;
         }
-        return type.getName() + printGenerics(type) + arraySuffix;
+        return type.getText() + printGenerics(type) + arraySuffix;
     }
 
     public static String printGenerics(ClassNode type) {

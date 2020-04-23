@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -72,6 +73,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -555,7 +557,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if (info == null && parent != null) {
             info = parent.lookupName(name);
         }
-        if (info != null && info.type != null) {
+        if (info != null) {
             nameVariableMap.put(name, merge(info, type, declaringType));
             // if variable is declared in a parent scope, mark it dirty
             if (info.scopeNode != this.scopeNode) {
@@ -595,6 +597,28 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
         }
         dirtyNames = null;
+    }
+
+    void bubbleUpdates(final VariableScope defaultBranch, final VariableScope... conditionalBranches) {
+
+        VariableScope[] nonTerminalBranches = Stream.concat(Stream.of(conditionalBranches), Stream.of(defaultBranch)).filter(it -> !it.isTerminal()).toArray(VariableScope[]::new);
+
+        Stream.of(nonTerminalBranches).flatMap(it -> it.dirtyNames != null ? it.dirtyNames.stream() : Stream.empty()).distinct().forEach(name -> {
+            ClassNode type = null;
+
+            // if name is not set in all branches, mix with current type (if non-null), otherwise replace current type
+            if (!Stream.of(nonTerminalBranches).allMatch(it -> it.dirtyNames != null && it.dirtyNames.contains(name))) {
+                type = lookupName(name).type;
+            }
+
+            type = Stream.of(nonTerminalBranches).filter(it -> it.dirtyNames != null && it.dirtyNames.contains(name))
+                .map(it -> it.nameVariableMap.get(name).type).reduce(type, (t0, t1) -> t0 == null ? t1 : WideningCategories.lowestUpperBound(t0, t1));
+
+            parent.updateVariable(name, type, lookupName(name).declaringType);
+            if (dirtyNames != null) dirtyNames.remove(name);
+        });
+
+        bubbleUpdates();
     }
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {

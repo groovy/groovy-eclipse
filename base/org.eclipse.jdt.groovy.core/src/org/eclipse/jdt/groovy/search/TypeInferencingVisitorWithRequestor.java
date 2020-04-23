@@ -778,9 +778,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         ClassNode completeExprType = primaryExprType;
         ClassNode dependentExprType = primaryTypeStack.removeLast();
 
-// TODO: Is it an illegal state to have either as null?
-assert primaryExprType != null && dependentExprType != null;
-
         if (!isAssignment && primaryExprType != null && dependentExprType != null) {
             // type of RHS of binary expression
             // find the type of the complete expression
@@ -1242,20 +1239,13 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitIfElse(final IfStatement node) {
-        scopes.add(new VariableScope(scopes.getLast(), node, false) {
-            @Override
-            public void updateVariable(final String name, ClassNode type, final ClassNode declaringType) {
-                type = WideningCategories.lowestUpperBound(type, lookupName(name).type);
-                super.updateVariable(name, type, declaringType);
-            }
-        });
-        VariableScope trueScope = null, falseScope = null;
+        scopes.add(new VariableScope(scopes.getLast(), node, false));
         try {
             // TODO: Assignment within expression may be conditional or unconditional due to short-circuit evaluation.
             node.getBooleanExpression().visit(this);
 
             Map<String, ClassNode[]> types = inferInstanceOfType(node.getBooleanExpression(), scopes.getLast());
-            trueScope = new VariableScope(scopes.getLast(), node.getIfBlock(), false);
+            VariableScope trueScope = new VariableScope(scopes.getLast(), node.getIfBlock(), false);
             scopes.add(trueScope);
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
@@ -1268,7 +1258,8 @@ assert primaryExprType != null && dependentExprType != null;
                 scopes.removeLast();
             }
 
-            falseScope = new VariableScope(scopes.getLast(), node.getElseBlock(), false);
+            // TODO: If else is empty block/statement or false path can be determined to be dead code, skip over.
+            VariableScope falseScope = new VariableScope(scopes.getLast(), node.getElseBlock(), false);
             scopes.add(falseScope);
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
@@ -1276,18 +1267,15 @@ assert primaryExprType != null && dependentExprType != null;
                         falseScope.updateVariableSoft(entry.getKey(), entry.getValue()[1]);
                     }
                 }
-                // TODO: If the else block sets unconditionally, exclude current type from the LUB computation.
                 node.getElseBlock().visit(this);
             } finally {
                 scopes.removeLast();
             }
-        } finally {
+
             // apply variable updates
-            if (trueScope != null)
-                trueScope.bubbleUpdates();
-            if (falseScope != null)
-                falseScope.bubbleUpdates();
-            scopes.removeLast().bubbleUpdates();
+            scopes.getLast().bubbleUpdates(falseScope, trueScope);
+        } finally {
+            scopes.removeLast();
         }
     }
 
@@ -2659,10 +2647,8 @@ assert primaryExprType != null && dependentExprType != null;
 
     private void postVisit(final Expression node, final ClassNode type, final ClassNode declaringType, final ASTNode declaration) {
         if (isPrimaryExpression(node)) {
-            assert type != null;
             primaryTypeStack.add(type);
         } else if (isDependentExpression(node)) {
-            // TODO: null has been seen here for type; is that okay?
             dependentTypeStack.add(type);
             dependentDeclarationStack.add(new Tuple(declaringType, declaration));
         }
@@ -2941,7 +2927,7 @@ assert primaryExprType != null && dependentExprType != null;
             if (isInstanceOf(be) && be.getLeftExpression() instanceof VariableExpression) {
                 VariableExpression ve = (VariableExpression) be.getLeftExpression();
                 VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
-                if (vi != null && vi.type != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
+                if (vi != null && (vi.type == null || GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type))) {
                     return Collections.singletonMap(vi.name, be.getOperation().getType() == Types.KEYWORD_INSTANCEOF
                         ? new ClassNode[] {be.getRightExpression().getType(), null} // instanceof
                         : new ClassNode[] {null, be.getRightExpression().getType()} // !instanceof

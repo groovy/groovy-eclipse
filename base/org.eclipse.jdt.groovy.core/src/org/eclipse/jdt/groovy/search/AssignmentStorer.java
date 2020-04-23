@@ -192,7 +192,7 @@ public class AssignmentStorer {
         if (varType != null && !VariableScope.isVoidOrObject(varType)) {
             return varType;
         }
-        if (rhsType != null && !VariableScope.isVoidOrObject(rhsType)) {
+        if (!VariableScope.isVoidOrObject(rhsType)) {
             return rhsType;
         }
         return VariableScope.OBJECT_CLASS_NODE;
