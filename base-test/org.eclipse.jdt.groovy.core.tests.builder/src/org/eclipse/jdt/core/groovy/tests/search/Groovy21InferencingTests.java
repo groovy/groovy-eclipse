@@ -506,6 +506,66 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertType(contents, "xxx", "java.lang.Integer");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides4() {
+        String contents =
+            //@formatter:off
+            "class C {\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides4a() {
+        String contents =
+            //@formatter:off
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  @groovy.transform.CompileDynamic\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1100
+    public void testEnumOverrides4b() {
+        String contents =
+            //@formatter:off
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  enum E {\n" +
+            "    X {\n" +
+            "      void meth() { helper() }\n" +
+            "      private char helper() {}\n" +
+            "    }\n" +
+            "    abstract void meth()\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Character");
+    }
+
     @Test
     public void testTypeCheckingExtension() {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);

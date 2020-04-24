@@ -609,6 +609,33 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
+    /**
+     * @param node anonymous inner class for enum constant
+     */
+    private void visitEnumConstBody(final ClassNode node) {
+        assert node.isEnum() && node.getEnclosingMethod() == null;
+        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+        IJavaElement enclosingElement0 = enclosingElement; // enum
+        enclosingDeclarationNode = scopes.getLast().getEnclosingFieldDeclaration();
+        scopes.add(new VariableScope(scopes.getLast(), node, false)); // anon. body
+        try {
+            IField enumConstant = ((IType) enclosingElement).getField(((FieldNode) enclosingDeclarationNode).getName());
+            assert enumConstant != null && enumConstant.exists();
+            for (MethodNode method : node.getMethods()) {
+                if (method.getEnd() > 0) {
+                    enclosingElement = JavaCoreUtil.findMethod(method, (IType) enumConstant.getChildren()[0]);
+                    visitMethodInternal(method);
+                }
+            }
+        } catch (JavaModelException e) {
+            log(e, "Error visiting children of %s", enclosingDeclarationNode);
+        } finally {
+            scopes.removeLast().bubbleUpdates();
+            enclosingElement = enclosingElement0;
+            enclosingDeclarationNode = enclosingDeclaration0;
+        }
+    }
+
     private void visitFieldInternal(final FieldNode node) {
         try {
             visitField(node);
@@ -631,31 +658,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         } finally {
             scopes.removeLast().bubbleUpdates();
-            enclosingDeclarationNode = enclosingDeclaration0;
-        }
-    }
-
-    /**
-     * @param node anonymous inner class for enum constant
-     */
-    private void visitMethodOverrides(final ClassNode node) {
-        assert node.isEnum() && node.getEnclosingMethod() == null;
-        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
-        IJavaElement enclosingElement0 = enclosingElement; // enum
-        enclosingDeclarationNode = scopes.getLast().getEnclosingFieldDeclaration();
-        try {
-            IField enumConstant = ((IType) enclosingElement).getField(((FieldNode) enclosingDeclarationNode).getName());
-            assert enumConstant != null && enumConstant.exists();
-            for (MethodNode method : node.getMethods()) {
-                if (method.getEnd() > 0) {
-                    enclosingElement = JavaCoreUtil.findMethod(method, (IType) enumConstant.getChildren()[0]);
-                    visitMethodInternal(method);
-                }
-            }
-        } catch (JavaModelException e) {
-            log(e, "Error visiting children of %s", enclosingDeclarationNode);
-        } finally {
-            enclosingElement = enclosingElement0;
             enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
@@ -1455,7 +1457,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         ClassNode type = node.getType().redirect();
         if (isEnumInit(node) && GroovyUtils.isAnonymous(type)) {
-            visitMethodOverrides(type);
+            visitEnumConstBody(type);
         }
 
         if (t.declaration instanceof MethodNode) {
@@ -1652,8 +1654,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 scopes.getLast().forgetEnclosingMethodCall();
             }
             if (isEnumInit && GroovyUtils.isAnonymous(type)) {
-                // visit enum constant members
-                visitMethodOverrides(type);
+                visitEnumConstBody(type);
             }
         });
     }

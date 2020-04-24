@@ -398,19 +398,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public boolean isOwnerStatic() {
-        if (isStatic()) {
-            return true;
-        }
-
-        FieldNode field = getEnclosingFieldDeclaration();
-        if (field != null && field.isStatic()) {
-            return true;
-        }
-
-        MethodNode method = getEnclosingMethodDeclaration();
-        if (method != null && method.isStatic()) {
-            return true;
-        }
+        VariableScope scope = this;
+        do {
+            if (scope.isStatic()) {
+                return true;
+            }
+            if (scope.scopeNode instanceof ClassNode ||
+                scope.scopeNode instanceof FieldNode ||
+                scope.scopeNode instanceof MethodNode) {
+                break;
+            }
+        } while ((scope = scope.parent) != null);
 
         return false;
     }
