@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -526,10 +526,11 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         // check for trait field re-written as call to helper method
         visitIfPresent(getTraitFieldExpression(expression));
 
-        ClassNode type = expression.getType(); // check for enum init body
-        if (type.isEnum() && GroovyUtils.isAnonymous(type.redirect()) &&
+        // check for enum init body
+        ClassNode type = expression.getType().redirect();
+        if (type.isEnum() && GroovyUtils.isAnonymous(type) &&
                 expression.getMethodAsString().equals("$INIT")) {
-            visitClass(type.redirect());
+            visitClass(type); // visit enum constant methods
         }
 
         visitExpression(expression);
@@ -600,11 +601,15 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
-        ClassNode ownerType = expression.getOwnerType();
         expression.getArguments().visit(this);
-        if (GroovyUtils.isAnonymous(ownerType)) {
-            visitClass(ownerType);
+
+        // check for enum init body
+        ClassNode type = expression.getOwnerType();
+        if (type.isEnum() && GroovyUtils.isAnonymous(type) &&
+                expression.getMethodAsString().equals("$INIT")) {
+            visitClass(type); // visit enum constant methods
         }
+
         visitExpression(expression);
     }
 

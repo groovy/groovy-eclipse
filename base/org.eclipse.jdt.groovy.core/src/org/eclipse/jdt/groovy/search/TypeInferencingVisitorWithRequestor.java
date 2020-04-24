@@ -1639,21 +1639,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         handleSimpleExpression(node, () -> {
             Tuple t = dependentDeclarationStack.removeLast();
             boolean isPresentInSource = (node.getEnd() > 0);
+            boolean isEnumInit = isEnumInit(node);
             ClassNode type = node.getOwnerType();
+
             if (isPresentInSource) {
                 visitClassReference(type);
             }
-            if (isPresentInSource || isEnumInit(node)) {
+            if (isPresentInSource || isEnumInit) {
                 // visit static method call arguments
-                scopes.getLast().addEnclosingMethodCall(
-                    new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule));
+                scopes.getLast().addEnclosingMethodCall(new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule));
                 super.visitStaticMethodCallExpression(node);
                 scopes.getLast().forgetEnclosingMethodCall();
-
-                // visit anonymous inner class members
-                if (GroovyUtils.isAnonymous(type)) {
-                    visitMethodOverrides(type);
-                }
+            }
+            if (isEnumInit && GroovyUtils.isAnonymous(type)) {
+                // visit enum constant members
+                visitMethodOverrides(type);
             }
         });
     }

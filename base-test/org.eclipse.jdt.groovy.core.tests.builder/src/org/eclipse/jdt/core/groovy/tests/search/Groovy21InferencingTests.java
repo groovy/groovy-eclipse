@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -442,7 +442,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
-    public void testEnumOverrides() {
+    public void testEnumOverrides1() {
         String contents =
             //@formatter:off
             "enum E {\n" +
@@ -478,6 +478,32 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
         int offset = contents.indexOf("println param") + "println ".length();
         assertType(contents, offset, offset + "param".length(), "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1099
+    public void testEnumOverrides3() {
+        String contents =
+            //@formatter:off
+            "class C {\n" +
+            "  enum E {\n" +
+            "    ONE() {\n" +
+            "      void meth(Number param) { helper() }\n" +
+            "    },\n" +
+            "    TWO() {\n" +
+            "      void meth(Number param) { helper() }\n" +
+            "    }\n" +
+            "    abstract void meth(Number param)\n" +
+            "    private static Number helper() {\n" +
+            "      def xxx = 42" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("helper");
+        assertType(contents, offset, offset + "helper".length(), "java.lang.Number");
+
+        assertType(contents, "xxx", "java.lang.Integer");
     }
 
     @Test
