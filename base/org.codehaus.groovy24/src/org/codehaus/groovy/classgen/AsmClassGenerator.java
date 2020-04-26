@@ -957,7 +957,7 @@ public class AsmClassGenerator extends ClassGenerator {
                             FieldNode outerClassField;
                             while (outer!=null) {
                                 outerClassField = outer.getDeclaredField(name);
-                                if (outerClassField!=null && outerClassField.isStatic() && outerClassField.isFinal()) {
+                                if (outerClassField!=null && outerClassField.isStatic()/*GROOVY-9501 && outerClassField.isFinal()*/) {
                                     if (outer!=classNode.getOuterClass() && Modifier.isPrivate(outerClassField.getModifiers())) {
                                         throw new GroovyBugError("Trying to access private constant field ["+outerClassField.getDeclaringClass()+"#"+outerClassField.getName()+"] from inner class");
                                     }
