@@ -653,6 +653,19 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertConstructor('new Foo()', 'Foo')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1103
+    void testCodeSelectConstuctorJavaFile2() {
+        addJavaSource('''\
+            |class Foo {
+            |  Foo(String s, Map<String, ? extends Iterable<String>> m) {}
+            |  Foo(String s, String... strings) {}
+            |}
+            |'''.stripMargin(), nextUnitName(), 'p')
+
+        IMethod ctor = assertConstructor('new Foo()', 'Foo')
+        assert ctor.parameterNames[1] == 'm'
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/452
     void testCodeSelectConstuctorMapStyle() {
         addGroovySource('class Bean { Number number; String string }', 'Bean', 'p')

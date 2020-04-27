@@ -787,9 +787,8 @@ StringBuilder checked = new StringBuilder();
 checked.append("\n\t").append(text).append('(');
                     for (int i = 0, n = parameters.length; i < n; i += 1) {
                         // remove generics from the type signatures to make matching simpler
-                        String jdtMethodParam = removeGenerics(method.getParameterTypes()[i]);
-                        String astMethodParam = GroovyUtils.getTypeSignatureWithoutGenerics(
-                            parameters[i].getOriginType(), jdtMethodParam.indexOf('.') > 0, type.isBinary());
+                        String jdtMethodParam = Signature.getTypeErasure(method.getParameterTypes()[i]);
+                        String astMethodParam = GroovyUtils.getTypeSignatureWithoutGenerics(parameters[i].getOriginType(), jdtMethodParam.indexOf('.') > 0, type.isBinary());
 checked.append(jdtMethodParam).append(' ');
                         if (!astMethodParam.equals(jdtMethodParam)) {
                             continue next_method;
@@ -832,15 +831,6 @@ if (GroovyLogManager.manager.hasLoggers()) {
         }
 
         return null;
-    }
-
-    private static String removeGenerics(final String param) {
-        // TODO: Check for nested generics
-        int genericStart = param.indexOf('<');
-        if (genericStart > 0) {
-            return param.substring(0, genericStart) + param.substring(param.indexOf('>') + 1, param.length());
-        }
-        return param;
     }
 
     private static String extractPrefix(final String text) {
