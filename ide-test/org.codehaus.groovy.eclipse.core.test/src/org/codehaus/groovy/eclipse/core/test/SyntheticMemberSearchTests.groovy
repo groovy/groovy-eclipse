@@ -53,7 +53,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
             |new p.G().proper
             |new p.G().isProper()
             |new p.G().getProper()
-            |new p.G().setProper()
+            |new p.G().setProper(true)
             |'''.stripMargin()
         addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('proper')

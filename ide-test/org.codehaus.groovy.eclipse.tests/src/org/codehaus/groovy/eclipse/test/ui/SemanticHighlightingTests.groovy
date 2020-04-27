@@ -832,7 +832,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('map'), 'map'.length(), VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('Collections'), 'Collections'.length(), CLASS),
-            new HighlightedTypedPosition(contents.indexOf('singletonMap'), 'singletonMap'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('singletonMap'), 'singletonMap'.length(), UNKNOWN),
             new HighlightedTypedPosition(contents.indexOf('key'), 'key'.length(), MAP_KEY),
             new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), MAP_KEY))
     }

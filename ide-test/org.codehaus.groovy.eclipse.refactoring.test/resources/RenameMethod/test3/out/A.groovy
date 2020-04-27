@@ -17,10 +17,10 @@ class D {
             this.m
             this.k()
             new A().m
-            new A().k()
+            new A().m()
             def x = new A()
             x.m
-            x.k()
+            x.m()
         }
         m
         m()

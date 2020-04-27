@@ -1,18 +1,18 @@
 package p
 
-class A implements I1 {
+class A implements I {
      def k(a) {
          k(a)
          m(a,b)
-         k(a,b,c)
+         m(a,b,c)
      }
      def m(a,b) {
-         I1 i 
-         i.k()
+         I i
+         i.m()
          i.k(a)
          i.m(a,b)
-         i.k(a,b,c)
-         I2 i 
+         i.m(a,b,c)
+         J j
          j.m()
          j.m(a)
          j.m(a,b)
@@ -20,12 +20,12 @@ class A implements I1 {
      }
 }
 
-interface I1 {
+interface I {
     def k(a)
     def m(a,b)
 }
 
-interface I2 {
+interface J {
     def m(a)
     def m(a,b,c)
 }

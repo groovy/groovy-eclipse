@@ -32,7 +32,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectDefaultParams1() {
         String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
         String two = 'class Java { { new Structure().meth(0, 0, 0); } }'
-        assertCodeSelect([one, two, 'new Structure().meth()'], 'meth')
+        assertCodeSelect([one, two, 'new Structure().meth(0)'], 'meth')
     }
 
     @Test
@@ -109,17 +109,36 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectMethodInClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action) { }\n' +
-            'def checkUser() {\nredirect(controller:"user",action:"login")\n}}\n'
+        String contents = '''\
+            |class PlantController {
+            |  def redirect(Map args) {
+            |  }
+            |  def checkUser() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
         assertCodeSelect([contents], 'redirect')
     }
 
     @Test
     void testCodeSelectMethodInOtherClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action) { }\n' +
-            'def checkUser() {\nredirect(controller:\"user\",action:\"login\")\n}}\n'
-        String contents2 =
-            'class Other {\ndef doNothing() {\nnew PlantController().redirect(controller:\"user\",action:\"login\")\n}}'
+        String contents = '''\
+            |class PlantController {
+            |  def redirect(Map args) {
+            |  }
+            |  def checkUser() {
+            |    redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
+        String contents2 = '''\
+            |class Other {
+            |  def whatever() {
+            |    new PlantController().redirect(controller:'user', action:'login')
+            |  }
+            |}
+            |'''.stripMargin()
 
         assertCodeSelect([contents, contents2], 'redirect')
     }
@@ -128,13 +147,14 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectMethodInSuperClass() {
         String contents1 = '''\
             |class PlantController {
-            |  def redirect(controller, action) { }
+            |  def redirect(Map args) {
+            |  }
             |}
             |'''.stripMargin()
         String contents2 = '''\
             |class Other extends PlantController {
             |  def checkUser() {
-            |    redirect(controller: 'user', action: 'login')
+            |    redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
@@ -297,17 +317,17 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectStaticMethodInOtherClass() {
         String contents = '''\
             |class PlantController {
-            |  static def redirect(controller, action) {
+            |  static def redirect(Map args) {
             |  }
             |  def checkUser() {
-            |    redirect(controller:"user", action:"login")
+            |    redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
         String contents2 = '''\
             |class Other {
-            |  def doNothing() {
-            |    PlantController.redirect(controller:"user", action:"login")
+            |  def whatever() {
+            |    PlantController.redirect(controller:'user', action:'login')
             |  }
             |}
             |'''.stripMargin()
@@ -662,7 +682,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin(), nextUnitName(), 'p')
 
-        IMethod ctor = assertConstructor('new Foo()', 'Foo')
+        IMethod ctor = assertConstructor('new Foo("", [:])', 'Foo')
         assert ctor.parameterNames[1] == 'm'
     }
 

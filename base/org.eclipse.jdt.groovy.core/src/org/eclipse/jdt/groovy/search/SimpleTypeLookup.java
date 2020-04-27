@@ -294,9 +294,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             List<ConstructorNode> declaredConstructors = resolvedDeclaringType.getDeclaredConstructors();
             if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
-                if (callTypes != null && callTypes.size() > 1) {
-                    // non-static inner types may have extra argument for enclosing type
-                    if (callTypes.get(0).equals(resolvedDeclaringType.getOuterClass()) && !Flags.isStatic(resolvedDeclaringType.getModifiers())) {
+                if (callTypes != null && !callTypes.isEmpty()) {
+                    // non-static inner types have extra argument for instance of enclosing type
+                    if (callTypes.get(0).equals(declaringType.getOuterClass()) &&
+                            (call.isUsingAnonymousInnerClass() ? !scope.isStatic() : !Flags.isStatic(declaringType.getModifiers()))) {
                         callTypes.remove(0);
                     }
                 }
@@ -566,8 +567,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
-                int enclosingResolveStrategy = outer.getEnclosingClosureResolveStrategy();
-                candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, isAssignTarget, enclosingResolveStrategy);
+                List<ClassNode> types = outer.getMethodCallArgumentTypes();
+                try {
+                    outer.setMethodCallArgumentTypes(callArgs);
+                    candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, isAssignTarget, outer.getEnclosingClosureResolveStrategy());
+                } finally {
+                    outer.setMethodCallArgumentTypes(types);
+                }
             } else {
                 candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
             }
@@ -715,11 +721,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             List<MethodNode> candidates = getMethods(name, type);
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
-                if (isTraitBridge(innerCandidate)) {
-                    continue;
-                }
-                if (outerCandidate == null) {
-                    outerCandidate = innerCandidate;
+                if (innerCandidate != null) {
+                    if (isTraitBridge(innerCandidate)) {
+                        continue;
+                    }
+                    if (outerCandidate == null) {
+                        outerCandidate = innerCandidate;
+                    }
                 }
             }
             if (innerCandidate != null && argumentTypes != null) {
@@ -744,9 +752,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     protected static MethodNode findMethodDeclaration0(final List<? extends MethodNode> candidates, final List<ClassNode> argumentTypes, final boolean isStaticExpression) {
-        int argumentCount = (argumentTypes == null ? -1 : argumentTypes.size());
+        if (argumentTypes == null) {
+            for (MethodNode candidate : candidates) {
+                if (isCompatible(candidate, isStaticExpression)) {
+                    return candidate;
+                }
+            }
+            return candidates.get(0);
+        }
 
         MethodNode closestMatch = null;
+        int argumentCount = argumentTypes.size();
         for (MethodNode candidate : candidates) {
             Parameter[] parameters = candidate.getParameters();
             if (parameters.length == 0) {
@@ -765,34 +781,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
         }
-        if (closestMatch != null) {
-            return closestMatch;
-        }
-
-        // prefer method with the same number of parameters as arguments
-        if (argumentCount > 0) {
+        if (closestMatch == null && argumentCount > 0) {
+            // prefer method with the same number of parameters as arguments
             for (MethodNode candidate : candidates) {
-                if (argumentCount == candidate.getParameters().length) {
+                Parameter[] parameters = candidate.getParameters();
+                if (argumentCount == parameters.length || (argumentCount >= parameters.length - 1 && GenericsMapper.isVargs(parameters))) {
                     if (isCompatible(candidate, isStaticExpression)) {
                         return candidate;
                     }
                     closestMatch = candidate;
                 }
             }
-            if (closestMatch != null) {
-                return closestMatch;
-            }
         }
-
-        if (isStaticExpression) {
-            for (MethodNode candidate : candidates) {
-                if (candidate.isStatic()) {
-                    return candidate;
-                }
-            }
-        }
-
-        return candidates.get(0);
+        return closestMatch;
     }
 
     protected static Optional<MethodNode> findPropertyAccessorMethod(final String propertyName, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final List<ClassNode> methodCallArgumentTypes) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -379,9 +379,9 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
               def t = staticMethod()
               def x() {
                 def a = staticMethod()
-                def b = staticMethod
-                Static.staticMethod 3, 4, 5
-                Static.staticMethod(3, 4, 5)
+                Static.&staticMethod
+                Static.staticMethod 1, 2, 3
+                Static.staticMethod(1, 2, 3)
               }
             }
             '''.stripIndent()
@@ -398,7 +398,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         int start7 = contents.indexOf(target, start6 + 1)
         int start8 = contents.indexOf(target, start7 + 1)
         int start9 = contents.indexOf(target, start8 + 1)
-        doTest(contents, start1, length, start1, length, start2, length, start3, length, start4, length, start5, length, start6, length, /*start7, length,*/ start8, length, start9, length)
+        doTest(contents, start1, length, start1, length, start2, length, start3, length, start4, length, start5, length, start6, length, start7, length/*, start8, length, start9, length*/)
     }
 
     @Test // GRECLIPSE-1031
@@ -406,13 +406,13 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         //@formatter:off
         String contents = '''\
             class Static {
-              static staticMethod(nuthin)  { }
+              static staticMethod(... args)  { }
               def x() {
                 def z = staticMethod
-                def a = staticMethod 3, 4, 5
-                def b = staticMethod(3, 4, 5)
-                def c = Static.staticMethod 3, 4, 5
-                def d = Static.staticMethod(3, 4, 5)
+                def a = staticMethod 1, 2, 3
+                def b = staticMethod(1, 2, 3)
+                def c = Static.staticMethod 1, 2, 3
+                def d = Static.staticMethod(1, 2, 3)
               }
             }
             '''.stripIndent()
@@ -722,7 +722,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         //@formatter:off
         String contents = '''\
             class Default {
-              def meth(int a, b = 1, c = 2) { }
+              def meth(int a, b = 2, c = 3) { }
             }
             new Default().meth(1)
             new Default().meth(1, 2)
@@ -744,7 +744,7 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         int start4 = contents.indexOf('meth', start3 + 1)
         int start5 = contents.indexOf('meth', start4 + 1)
         int start6 = contents.indexOf('meth', start5 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, /*start6, len*/)
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len/*, start5, len, start6, len*/)
     }
 
     @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments

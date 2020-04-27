@@ -2176,63 +2176,61 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
         if (node instanceof MethodCall) {
             Expression arguments = ((MethodCall) node).getArguments();
-            if (arguments instanceof TupleExpression) {
-                List<Expression> expressions = ((TupleExpression) arguments).getExpressions();
-                if (isNotEmpty(expressions)) {
-                    if (expressions.get(0) instanceof NamedArgumentListExpression) {
-                        if (node instanceof ConstructorCallExpression) {
-                            return Collections.emptyList(); // default constructor
-                        } else {
-                            return Collections.singletonList(createParameterizedMap(
-                                VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
-                        }
+            List<Expression> expressions = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
+            if (isNotEmpty(expressions)) {
+                if (expressions.get(0) instanceof NamedArgumentListExpression) {
+                    if (node instanceof ConstructorCallExpression) {
+                        return Collections.emptyList(); // default constructor
+                    } else {
+                        return Collections.singletonList(createParameterizedMap(
+                            VariableScope.STRING_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE));
                     }
-
-                    List<ClassNode> types = new ArrayList<>(expressions.size());
-                    for (Expression expression : expressions) {
-                        ClassNode exprType = expression.getType();
-                        /*if (expression instanceof MapExpression) {
-                            types.add(VariableScope.MAP_CLASS_NODE);
-                        } else if (expression instanceof ListExpression) {
-                            types.add(VariableScope.LIST_CLASS_NODE);
-                        } else if (expression instanceof ClosureExpression ||
-                                expression instanceof MethodPointerExpression) {
-                            types.add(VariableScope.CLOSURE_CLASS_NODE);
-                        } else*/ if (expression instanceof ClassExpression) {
-                            types.add(VariableScope.newClassClassNode(exprType));
-                        } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
-                            types.add(exprType);
-                        } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
-                            types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
-                        } else if (expression instanceof VariableExpression && expression.getText().endsWith(Traits.THIS_OBJECT) && Traits.isTrait(expression.getType())) {
-                            continue; // skip synthetic this argument expression
-                        } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
-                            types.add(GroovyUtils.getWrapperTypeIfPrimitive(exprType));
-                        } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
-                            types.add(VariableScope.STRING_CLASS_NODE);
-                        } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {
-                            types.add(VariableScope.BOOLEAN_CLASS_NODE);
-                        } else {
-                            scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
-
-                            TypeLookupResult tlr;
-                            if (expression instanceof PropertyExpression) {
-                                PropertyExpression path = (PropertyExpression) expression;
-                                tlr = lookupExpressionType(path.getObjectExpression(), null, false, scopes.getLast());
-                                tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
-                            } else if (expression instanceof MethodCallExpression) {
-                                MethodCallExpression call = (MethodCallExpression) expression;
-                                tlr = lookupExpressionType(call.getObjectExpression(), null, false, scopes.getLast());
-                                tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
-                            } else {
-                                tlr = lookupExpressionType(expression, null, false, scopes.getLast());
-                            }
-
-                            types.add(tlr.type);
-                        }
-                    }
-                    return types;
                 }
+
+                List<ClassNode> types = new ArrayList<>(expressions.size());
+                for (Expression expression : expressions) {
+                    ClassNode exprType = expression.getType();
+                    /*if (expression instanceof MapExpression) {
+                        types.add(VariableScope.MAP_CLASS_NODE);
+                    } else if (expression instanceof ListExpression) {
+                        types.add(VariableScope.LIST_CLASS_NODE);
+                    } else if (expression instanceof ClosureExpression ||
+                            expression instanceof MethodPointerExpression) {
+                        types.add(VariableScope.CLOSURE_CLASS_NODE);
+                    } else*/ if (expression instanceof ClassExpression) {
+                        types.add(VariableScope.newClassClassNode(exprType));
+                    } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
+                        types.add(exprType);
+                    } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
+                        types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
+                    } else if (expression instanceof VariableExpression && expression.getText().endsWith(Traits.THIS_OBJECT) && Traits.isTrait(expression.getType())) {
+                        continue; // skip synthetic this argument expression
+                    } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
+                        types.add(GroovyUtils.getWrapperTypeIfPrimitive(exprType));
+                    } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
+                        types.add(VariableScope.STRING_CLASS_NODE);
+                    } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {
+                        types.add(VariableScope.BOOLEAN_CLASS_NODE);
+                    } else {
+                        scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
+
+                        TypeLookupResult tlr;
+                        if (expression instanceof PropertyExpression) {
+                            PropertyExpression path = (PropertyExpression) expression;
+                            tlr = lookupExpressionType(path.getObjectExpression(), null, false, scopes.getLast());
+                            tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                        } else if (expression instanceof MethodCallExpression) {
+                            MethodCallExpression call = (MethodCallExpression) expression;
+                            tlr = lookupExpressionType(call.getObjectExpression(), null, false, scopes.getLast());
+                            tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                        } else {
+                            tlr = lookupExpressionType(expression, null, false, scopes.getLast());
+                        }
+
+                        types.add(tlr.type);
+                    }
+                }
+                return types;
             }
             return Collections.emptyList();
         }

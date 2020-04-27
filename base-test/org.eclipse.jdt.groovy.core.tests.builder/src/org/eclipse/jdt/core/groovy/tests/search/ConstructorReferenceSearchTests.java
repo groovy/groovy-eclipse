@@ -133,14 +133,14 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s) {}\n" +
             "}");
         createUnit("", "Bar", "import p.Foo\n" +
-            "new Foo()\n" + // yes
+            "new Foo()\n" + // no
             "new Foo(0)\n" + // yes
             "new Foo('')\n"); // no
 
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     @Test
@@ -171,12 +171,12 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
             "new Foo(a)\n" + // no
-            "new Foo(a,b)\n"); // yes
+            "new Foo(a,b)\n"); // no
 
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     @Test
@@ -393,7 +393,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Bar", "import p.Foo\n" +
             "@Newify\n" +
             "def m() {\n" +
-            "  Foo.new()\n" + // yes
+            "  Foo.new()\n" + // no
             "  Foo.new(0)\n" + // yes
             "  Foo.new('')\n" + // no
             "}\n");
@@ -401,7 +401,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/796
@@ -414,7 +414,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Bar", "import p.Foo\n" +
             "@Newify\n" +
             "def m() {\n" +
-            "  Foo.new()\n" + // yes
+            "  Foo.new()\n" + // no
             "  Foo.new(0)\n" + // yes
             "  Foo.new('')\n" + // no
             "}\n");
@@ -422,7 +422,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/797
@@ -435,7 +435,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Bar", "import p.Foo\n" +
             "@Newify(Foo)\n" +
             "def m() {\n" +
-            "  Foo()\n" + // yes
+            "  Foo()\n" + // no
             "  Foo(0)\n" + // yes
             "  Foo('')\n" + // no
             "}\n");
@@ -443,7 +443,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/797
@@ -456,7 +456,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Bar", "import p.Foo\n" +
             "@Newify(Foo)\n" +
             "def m() {\n" +
-            "  Foo()\n" + // yes
+            "  Foo()\n" + // no
             "  Foo(0)\n" + // yes
             "  Foo('')\n" + // no
             "}\n");
@@ -464,7 +464,7 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
         long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
             .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
             .count();
-        assertEquals(2, ctorRefs);
+        assertEquals(1, ctorRefs);
     }
 
     //--------------------------------------------------------------------------

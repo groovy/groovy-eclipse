@@ -150,103 +150,105 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testOverloadedMethodReferences1() throws Exception {
-        // search for "First.xxx()" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx()" should match on the method reference with precise # of args as well as the method pointer reference
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx()\n" +
-            "    void xxx(a)\n" +
+            "  void xxx()\n" +
+            "  void xxx(a)\n" +
             "}\n",
-            "public class Second implements First {\n" +
-            "    public void other() {\n" +
-            "        xxx()\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx(a)\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements First {\n" +
+            "  void other() {\n" +
+            "    xxx()\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx(a)\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences2() throws Exception {
-        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as the method pointer reference
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx()\n" +
+            "  void xxx(a)\n" +
+            "  void xxx()\n" +
             "}\n",
-            "public class Second implements First {\n" +
-            "    public void other() {\n" +
-            "        xxx(a)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx()\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements First {\n" +
+            "  void other() {\n" +
+            "    xxx(a)\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx()\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences3() throws Exception {
-        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a)" should match on the method reference with precise # of args as well as the method pointer reference
         createUnit("Sub",
             "interface Sub extends First {\n" +
-            "    void xxx(a)\n" +
+            "  void xxx(a)\n" +
             "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx()\n" +
+            "  void xxx(a)\n" +
+            "  void xxx()\n" +
             "}\n",
-            "public class Second implements Sub {\n" +
-            "    public void other() {\n" +
-            "        xxx(a)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx()\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        xxx(a,b)\n" + //yes
-            "    }\n" +
+            "class Second implements Sub {\n" +
+            "  void other() {\n" +
+            "    xxx(a)\n" + // yes
+            "  }\n" +
+            "  void xxx() {\n" +
+            "    xxx()\n" + // no!
+            "    xxx(a,b)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    def ptr = this.&xxx\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }
 
     @Test
     public void testOverloadedMethodReferences4() throws Exception {
-        // search for "First.xxx(a,b)" should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        // search for "First.xxx(a,b)" should match on the method reference with precise # of args as well as the method pointer reference
         createUnit("Sub",
             "interface Sub extends First {\n" +
-            "    void xxx(a)\n" +
-            "    void xxx(a,b,c)\n" +
+            "  void xxx(a)\n" +
+            "  void xxx(a,b,c)\n" +
             "}\n");
         doTestForTwoMethodReferences(
             "interface First {\n" +
-            "    void xxx(a,b)\n" +
-            "    void xxx(a)\n" +
+            "  void xxx(a,b)\n" +
+            "  void xxx(a)\n" +
             "}\n",
             "public class Second implements Sub {\n" +
-            "    public void other() {\n" +
-            "        First f\n" +
-            "        f.xxx(a,b,c)\n" + //yes
-            "    }\n" +
-            "    public void xxx() {\n" +
-            "        xxx(a)\n" + //no!
-            "        xxx(a,b,c)\n" + //no!
-            "        Sub s\n" +
-            "        s.xxx(a)\n" + //no!
-            "        s.xxx(a,b,c)\n" + //no!
-            "    }\n" +
-            "    void xxx(a) {\n" +
-            "        Sub s\n" +
-            "        s.xxx(a,b)\n" + //yes
-            "    }\n" +
+            "  public void other(Sub s) {\n" +
+            "    def ptr = s.&xxx\n" + // yes
+            "  }\n" +
+            "  public void xxx() {\n" +
+            "    xxx(a)\n" + // no!
+            "    xxx(a,b,c)\n" + // no!
+            "    Sub s\n" +
+            "    s.xxx(a)\n" + // no!
+            "    s.xxx(a,b,c)\n" + // no!
+            "  }\n" +
+            "  void xxx(a) {\n" +
+            "    Sub s\n" +
+            "    s.xxx(a,b)\n" + // yes
+            "  }\n" +
             "}\n",
             false, 0, "xxx");
     }

@@ -82,7 +82,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test3() {
         def status = runTest('A', 'm', 'k', ['QD;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
@@ -94,7 +94,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test5() {
         def status = runTest('A', 'm', 'k')
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
@@ -118,7 +118,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
     @Test
     void test9() {
         def status = runTest('A', 'm', 'k')
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
@@ -233,20 +233,20 @@ final class RenameMethodTests extends RefactoringTestSuite {
     void testOverload1() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testOverload2() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 
     @Test
     void testOverload3() {
         // rename single-parameter method 'm' to 'k'
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
-        assert status.entries[0].message.startsWith('Found potential matches.')
+        assert status.isOK() : 'rename failed'
     }
 }

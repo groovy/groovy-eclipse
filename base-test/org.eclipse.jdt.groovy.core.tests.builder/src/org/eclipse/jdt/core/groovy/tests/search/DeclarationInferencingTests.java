@@ -664,7 +664,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "a.field('')";
             //@formatter:on
 
-        assertKnown(contents, "field", "A", "field", DeclarationKind.METHOD);
+        assertKnown(contents, "field", "A", "field", DeclarationKind.PROPERTY);
     }
 
     @Test
@@ -683,7 +683,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "a.field('').field";
             //@formatter:on
 
-        assertKnown(contents, "field", "A", "field", DeclarationKind.PROPERTY);
+        assertUnknown(contents, "field");
     }
 
     @Test

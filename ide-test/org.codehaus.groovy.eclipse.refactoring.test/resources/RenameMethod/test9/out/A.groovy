@@ -2,12 +2,12 @@ package p;
 
 class A{
     def k(){
-        k foo, bar, baz
+        m foo, bar, baz
     }
 }
 class Child extends A{
     def k(){
-        k foo, bar, baz
+        m foo, bar, baz
     }
 }
 class Animal{
