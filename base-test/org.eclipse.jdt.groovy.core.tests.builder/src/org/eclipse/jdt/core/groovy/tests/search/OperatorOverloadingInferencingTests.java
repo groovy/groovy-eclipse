@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo plus() {}\n" +
+            "  Foo plus(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() + nuthin\n" +
             "xxx";
@@ -40,7 +40,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo plus() {}\n" +
+            "  Foo plus(that) {}\n" +
             "}\n" +
             "class Sub extends Bar {}\n" +
             "def xxx = new Sub() + nuthin\n" +
@@ -63,7 +63,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo minus() {}\n" +
+            "  Foo minus(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() - nuthin\n" +
             "xxx";
@@ -85,7 +85,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo multiply() {}\n" +
+            "  Foo multiply(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() * nuthin\n" +
             "xxx";
@@ -98,7 +98,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo div() {}\n" +
+            "  Foo div(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() / nuthin\n" +
             "xxx";
@@ -111,7 +111,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo mod() {}\n" +
+            "  Foo mod(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() % nuthin\n" +
             "xxx";
@@ -124,7 +124,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo and() {}\n" +
+            "  Foo and(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() & nuthin\n" +
             "xxx";
@@ -137,7 +137,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo or() {}\n" +
+            "  Foo or(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() | nuthin\n" +
             "xxx";
@@ -150,7 +150,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo xor() {}\n" +
+            "  Foo xor(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() ^ nuthin\n" +
             "xxx";
@@ -163,7 +163,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo rightShift(a) {}\n" +
+            "  Foo rightShift(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() >> nuthin\n" +
             "xxx";
@@ -176,7 +176,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo leftShift(a) {}\n" +
+            "  Foo leftShift(that) {}\n" +
             "}\n" +
             "def xxx = new Bar() << nuthin\n" +
             "xxx";
@@ -189,12 +189,12 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
         String contents =
             "class Foo {}\n" +
             "class Bar {\n" +
-            "  Foo getAt() {}\n" +
+            "  Foo getAt(that) {}\n" +
             "}\n" +
-            "def xxx = new Bar()[nuthin]\n" + // should be DGM.getAt(Object, String): Object
+            "def xxx = new Bar()[nuthin]\n" +
             "xxx";
 
-        assertType(contents, "xxx", "java.lang.Object");
+        assertType(contents, "xxx", "Foo");
     }
 
     @Test

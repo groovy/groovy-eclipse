@@ -488,7 +488,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.foo {\n" +
-            "  substring()" +
+            "  substring(0)\n" +
             "}";
             //@formatter:on
 
@@ -501,7 +501,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.foo {\n" +
-            "  delegate.substring()" +
+            "  delegate.substring(0)\n" +
             "}";
             //@formatter:on
 
@@ -514,7 +514,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.foo {\n" +
-            "  this.substring()" +
+            "  this.substring(0)\n" +
             "}";
             //@formatter:on
 
@@ -527,7 +527,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  substring()" +
+            "  substring(0)\n" +
             "}";
             //@formatter:on
 
@@ -904,7 +904,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             //@formatter:off
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
-            "  boolean meth(args) {}\n" +
+            "  boolean meth(... args) {}\n" +
             "}\n" +
             "class C {\n" +
             "  B bean\n" +
@@ -1472,7 +1472,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "class A {\n" +
-            "  void insuper() {}\n" +
+            "  void insuper(x) {}\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def m() {\n" +

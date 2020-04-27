@@ -316,8 +316,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence or " +
-            "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence");
     }
 
     @Test
@@ -339,8 +338,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence or " +
-            "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
+        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence");
     }
 
     @Test
@@ -2105,34 +2103,34 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testAnonInner2() {
-        String contents = "def foo = new Runnable() { void run() {}}";
+        String contents = "def foo = new Runnable() {\n void run() {}\n}";
         assertType(contents, "Runnable", "java.lang.Runnable");
     }
 
     @Test
     public void testAnonInner3() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {}}";
+        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {}\n}";
         assertType(contents, "Comparable", "java.lang.Comparable<java.lang.String>");
     }
 
     @Test
     public void testAnonInner4() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()}}";
+        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {\n  compareTo('x')\n}\n}";
         assertDeclaringType(contents, "compareTo", "Search$1");
     }
 
     @Test
     public void testAnonInner5() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {}}\n" +
-            "foo.compareTo('one', 'two')";
+        String contents = "def foo = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
+            "foo.compareTo('x')";
         assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
     }
 
     @Test
     public void testAnonInner6() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {}}\n" +
-            "foo = new Comparable<String>() { int compareTo(String a, String b) {}}\n" +
-            "foo.compareTo('one', 'two')";
+        String contents = "def foo = new Comparable<Integer>() {\n int compareTo(Integer that) {}\n}\n" +
+            "foo = new Comparable<String>() {\n int compareTo(String that) {}\n}\n" +
+            "foo.compareTo('x')";
         assertDeclaringType(contents, "compareTo", "java.lang.Comparable<java.lang.String>");
     }
 
@@ -2264,17 +2262,17 @@ public final class InferencingTests extends InferencingTestSuite {
         "  String getAt(foo) {}\n" +
         "}\n" +
         "\n" +
-        "new GetAt()[0].startsWith()\n" +
+        "new GetAt()[0].startsWith('x')\n" +
         "GetAt g\n" +
-        "g[0].startsWith()";
+        "g[0].startsWith('x')";
 
     private static final String CONTENTS_GETAT2 =
         "class GetAt {\n" +
         "}\n" +
         "\n" +
-        "new GetAt()[0].startsWith()\n" +
+        "new GetAt()[0].startsWith('x')\n" +
         "GetAt g\n" +
-        "g[0].startsWith()";
+        "g[0].startsWith('x')";
 
     @Test
     public void testGetAt1() {
@@ -2719,23 +2717,23 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testNothingIsUnknownWithCategories() {
         assertNoUnknowns(
             "class Me {\n" +
-            "    def meth() {\n" +
-            "        use (MeCat) {\n" +
-            "            println getVal()\n" +
-            "            println val\n" +
-            "        }\n" +
+            "  def meth() {\n" +
+            "    use (MeCat) {\n" +
+            "      println getVal()\n" +
+            "      println val\n" +
             "    }\n" +
+            "  }\n" +
             "} \n" +
             "\n" +
             "class MeCat { \n" +
-            "    static String getVal(Me self) {\n" +
-            "        \"val\"\n" +
-            "    }\n" +
+            "  static String getVal(Me self) {\n" +
+            "    'val'\n" +
+            "  }\n" +
             "}\n" +
             "\n" +
             "use (MeCat) {\n" +
-            "    println new Me().getVal()\n" +
-            "    println new Me().val\n" +
+            "  println new Me().getVal()\n" +
+            "  println new Me().val\n" +
             "}\n" +
             "new Me().meth()");
     }
