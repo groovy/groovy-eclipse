@@ -191,12 +191,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 // handle method or property with "owner" object expression like a free variable in the outer scope
                 VariableScope outer = declaringType.getNodeMetaData("outer.scope");
                 if (outer != null) {
-                    List<ClassNode> types = outer.getMethodCallArgumentTypes();
                     try {
                         outer.setMethodCallArgumentTypes(scope.getMethodCallArgumentTypes());
                         return findTypeForVariable(new VariableExpression(new DynamicVariable(node.getText(), false)), outer, declaringType);
                     } finally {
-                        outer.setMethodCallArgumentTypes(types);
+                        outer.setMethodCallArgumentTypes(null);
                     }
                 }
 
@@ -263,10 +262,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             ClassNode classType = VariableScope.newClassClassNode(nodeType);
             return new TypeLookupResult(classType, null, nodeType, confidence, scope);
 
-        } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
-            ClassNode returnType = node.getNodeMetaData("returnType");
-            if (returnType != null && !VariableScope.isVoidOrObject(returnType))
-                GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
+        } else if (node instanceof ClosureExpression) {
+            if (VariableScope.isPlainClosure(nodeType)) {
+                ClassNode returnType = node.getNodeMetaData("returnType");
+                if (returnType != null && !VariableScope.isVoidOrObject(returnType))
+                    GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
+            }
+            return new TypeLookupResult(nodeType, null, node, confidence, scope);
 
         } else if (node instanceof BitwiseNegationExpression) {
             ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
@@ -338,19 +340,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }*/
 
             candidates.removeIf(candidate -> !candidate.isStatic());
-
-            if (!candidates.isEmpty()) {
-                MethodNode closestMatch;
-                if (scope.isMethodCall()) {
-                    closestMatch = findMethodDeclaration0(candidates, scope.getMethodCallArgumentTypes(), isStaticObjectExpression);
-                    confidence = TypeConfidence.INFERRED;
-                } else {
-                    closestMatch = candidates.get(0);
-                    confidence = TypeConfidence.LOOSELY_INFERRED;
-                }
-
-                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
-            }
+            MethodNode closestMatch = findMethodDeclaration0(candidates, scope.getMethodCallArgumentTypes(), true);
+            return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, TypeConfidence.INFERRED, scope);
         }
 
         if (VariableScope.OBJECT_CLASS_NODE.equals(nodeType)) {
@@ -569,12 +560,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
-                List<ClassNode> types = outer.getMethodCallArgumentTypes();
                 try {
                     outer.setMethodCallArgumentTypes(callArgs);
                     candidate = findDeclarationForDynamicVariable(var, getBaseDeclaringType(outer.getOwner()), outer, isAssignTarget, outer.getEnclosingClosureResolveStrategy());
                 } finally {
-                    outer.setMethodCallArgumentTypes(types);
+                    outer.setMethodCallArgumentTypes(null);
                 }
             } else {
                 candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
