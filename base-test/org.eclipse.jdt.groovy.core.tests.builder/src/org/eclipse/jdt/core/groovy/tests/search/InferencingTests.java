@@ -480,6 +480,15 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "x", "java.lang.String");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1105
+    public void testLocalVar29() {
+        String contents = "void test(a) {\n" +
+            "  def x = a.b\n" +
+            "}";
+        assertType(contents, "b", "java.lang.Object");
+        assertType(contents, "x", "java.lang.Object");
+    }
+
     @Test
     public void testLocalMethod1() {
         String contents =
@@ -953,14 +962,14 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticMethod1() {
-        String contents = "class Two { static String x() {\"\"}}\n Two.x()";
-        assertType(contents, "x", "java.lang.String");
+        String contents = "class Two { static Number x() { 42\n}\n}\n" + "Two.x()";
+        assertType(contents, "x", "java.lang.Number");
     }
 
     @Test
     public void testStaticMethod2() {
-        String contents = "class Two { static String x() {\"\"}}\n Two.x";
-        assertType(contents, "x", "java.lang.String");
+        String contents = "class Two { static Number x() { 42\n}\n}\n" + "Two.x";
+        assertUnknown(contents, "x");
     }
 
     @Test
@@ -2750,7 +2759,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  String action() {}\n" +
             "  def meth() {\n" +
             "    def x = action()\n" +
-            "    x.substring()\n" +
+            "    x.substring(0)\n" +
             "  }\n" +
             "}\n";
         assertType(contents, "substring", "java.lang.String");

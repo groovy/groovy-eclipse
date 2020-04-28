@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,8 +107,8 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/763
     public void testArrayGenerics3() {
-        String contents = "Collection<List<String>>[] array = []; array*.trim()";
-        assertType(contents, "trim", "java.lang.String");
+        String contents = "class C {\n int x\n}\n" + "Collection<List<C> >[] array = []; array*.x";
+        assertType(contents, "x", "java.lang.Integer");
     }
 
     @Test

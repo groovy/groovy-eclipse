@@ -288,8 +288,8 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     @Test
     public void testAttributeExpr1() throws Exception {
         String contents =
-            "class Foo { boolean str\n}\n" +
-            "def xxx = new Foo().@str\n" +
+            "class Foo { boolean flag\n}\n" +
+            "def xxx = new Foo().@flag\n" +
             "xxx";
 
         assertType(contents, "xxx", "java.lang.Boolean");
@@ -309,7 +309,7 @@ public final class OperatorOverloadingInferencingTests extends InferencingTestSu
     public void testLongExpr1() throws Exception {
         String contents =
             "class Foo { String str\n}\n" +
-            "def xxx = ([ new Foo() ].str.length() + 4 - 9) % 7\n" +
+            "def xxx = (new Foo().str.length() + 4 - 9) % 7\n" +
             "xxx";
 
         assertType(contents, "xxx", "java.lang.Integer");

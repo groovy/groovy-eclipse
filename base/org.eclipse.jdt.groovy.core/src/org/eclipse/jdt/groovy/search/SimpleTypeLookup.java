@@ -370,18 +370,20 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
         }
 
-        ClassNode resolvedType = type, resolvedDeclaringType;
+        ClassNode resolvedType, resolvedDeclaringType;
         if (declaration != null) {
             resolvedType = getTypeFromDeclaration(declaration);
             resolvedDeclaringType = getDeclaringTypeFromDeclaration(declaration, declaringType);
         } else if ("call".equals(name)) {
             // assume that this is a synthetic call method for calling a closure
+            resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = resolvedDeclaringType.getMethods("call").get(0);
         } else if ("this".equals(name) && VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
             declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
         } else {
+            resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = declaringType;
             confidence = TypeConfidence.UNKNOWN;
         }
