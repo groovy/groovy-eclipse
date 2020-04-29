@@ -45,7 +45,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -294,7 +293,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             ASTNode declaration;
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = resolvedDeclaringType.getDeclaredConstructors();
-            if (declaredConstructors.size() > 1 && call.getArguments() instanceof ArgumentListExpression) {
+            if (declaredConstructors.size() > 1) {
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 if (callTypes != null && !callTypes.isEmpty()) {
                     // non-static inner types have extra argument for instance of enclosing type

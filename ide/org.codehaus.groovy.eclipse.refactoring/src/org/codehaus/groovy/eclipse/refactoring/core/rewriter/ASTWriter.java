@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -601,8 +601,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
 
             if (!methCallExpr.isImplicitThis()) {
                 methCallExpr.getObjectExpression().visit(this);
-                ArgumentListExpression ale = ((ArgumentListExpression) methCallExpr.getArguments());
-                printArgumentsOfaMethodCall(methCallExpr, ale);
+                printArgumentsOfaMethodCall(methCallExpr, (TupleExpression) methCallExpr.getArguments());
             } else {
                 super.visitExpressionStatement(statement);
             }
@@ -612,8 +611,8 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         postVisitStatement(statement);
     }
 
-    private void printArgumentsOfaMethodCall(MethodCallExpression methCallExpr, ArgumentListExpression ale) {
-        if (ale != null) {
+    private void printArgumentsOfaMethodCall(MethodCallExpression methCallExpr, TupleExpression args) {
+        if (args != null) {
             groovyCode.append('.');
             groovyCode.append(methCallExpr.getMethod().getText());
 
@@ -621,8 +620,8 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
              * Methodcall has a certain number of
              * arguments
              */
-            if (!ale.getExpressions().isEmpty()) {
-                List<Expression> listOfAllExpressions = ale.getExpressions();
+            if (!args.getExpressions().isEmpty()) {
+                List<Expression> listOfAllExpressions = args.getExpressions();
                 ArgumentListExpression listOfMethodArguments = new ArgumentListExpression();
                 ClosureExpression closure = null;
 

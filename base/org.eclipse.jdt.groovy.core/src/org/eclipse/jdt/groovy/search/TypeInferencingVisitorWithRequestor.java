@@ -46,7 +46,6 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -2345,8 +2344,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private ClassNode isCategoryDeclaration(final MethodCallExpression node, final VariableScope scope) {
         if ("use".equals(node.getMethodAsString())) {
-            if (node.getArguments() instanceof ArgumentListExpression) {
-                ArgumentListExpression args = (ArgumentListExpression) node.getArguments();
+            if (node.getArguments() instanceof TupleExpression) {
+                TupleExpression args = (TupleExpression) node.getArguments();
                 if (args.getExpressions().size() >= 2 && args.getExpression(1) instanceof ClosureExpression) {
                     // really, should be doing inference on the first expression and seeing if it
                     // is a class node, but looking up in scope is good enough for now
@@ -2552,7 +2551,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private boolean isSpockValueRecorderArgument(final Expression expr) {
         VariableScope.CallAndType cat = scopes.getLast().getEnclosingMethodCallExpression();
         if (cat != null && cat.declaration instanceof MethodNode && cat.declaringType.getName().equals("org.spockframework.runtime.ValueRecorder")) {
-            ArgumentListExpression args = (ArgumentListExpression) cat.call.getArguments();
+            TupleExpression args = (TupleExpression) cat.call.getArguments();
             MethodNode meth = (MethodNode) cat.declaration;
             switch (meth.getName()) {
             case "record":
@@ -2847,9 +2846,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
         String key = null;
         int pos = -1;
-        if (call.getArguments() instanceof ArgumentListExpression) {
+        if (call.getArguments() instanceof TupleExpression) {
             int idx = -1;
-            out: for (Expression exp : (ArgumentListExpression) call.getArguments()) {
+            out: for (Expression exp : (TupleExpression) call.getArguments()) {
                 if (exp instanceof MapExpression) {
                     for (MapEntryExpression ent : ((MapExpression) exp).getMapEntryExpressions()) {
                         if (arg == ent.getValueExpression()) {
