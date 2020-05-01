@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.DSLDStore
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences
@@ -25,8 +26,12 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IStorage
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.junit.Test
@@ -126,7 +131,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
     @Test
     void testNothing() {
-        assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP)
+        assertDSLStore(0, [:], [:])
     }
 
     @Test
@@ -279,7 +284,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
     @Test
     void testAddAndRemove() {
-        assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP)
+        assertDSLStore(0, [:], [:])
 
         // add one
         createDsls('currentType().accept { }')
@@ -326,7 +331,7 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
 
         // remove first
         deleteDslFile(0)
-        assertDSLStore(0, Collections.EMPTY_MAP, Collections.EMPTY_MAP)
+        assertDSLStore(0, [:], [:])
     }
 
     @Test
@@ -412,49 +417,32 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         )
     }
 
-    /*@Test
+    @Test
     void testDisabledOfJar() {
-        addJarToProject('simple_dsld.jar')
+        def jarPath = FileLocator.resolve(getTestResourceURL('simple_dsld.jar')).file
+        def cpEntry = JavaCore.newLibraryEntry(new Path(jarPath), null, null)
+        GroovyRuntime.appendClasspathEntry(javaProject, cpEntry)
+        project.refreshLocal(IResource.DEPTH_INFINITE, null)
+        buildProject()
 
-        IStorage storage = (IStorage) javaProject
-            .getPackageFragmentRoot(findExternalFilePath('simple_dsld.jar'))
-            .getPackageFragment('dsld').getNonJavaResources()[0]
+        IStorage storage = javaProject.getPackageFragmentRoot(jarPath).getPackageFragment('dsld').nonJavaResources[0]
+        String dsld = DSLDStore.toUniqueString(storage), pcut = createSemiUniqueName(CurrentTypePointcut, storage)
 
-        assertDSLStore(1,
-            createExpectedPointcuts(
-                        new IStorage[] { storage }, new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }
-            ),
-            createExpectedContributionCount(
-                new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }, new Integer[] { 1 }
-            )
-        )
+        assertDSLStore(1, [(dsld): [pcut]], [(pcut): 1])
 
         // disable script
-        setDisabledScripts(DSLDStore.toUniqueString(storage))
-
-        assertDSLStore(1,
-            createExpectedPointcuts([]),
-            createExpectedContributionCount([],[])
-        )
+        setDisabledScripts(dsld)
+        assertDSLStore(1, [:], [:])
 
         // re-enable
         setDisabledScripts()
-
-        assertDSLStore(1,
-                createExpectedPointcuts(
-                        new IStorage[] { storage }, new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) }
-                    ),
-                createExpectedContributionCount(
-                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) }, new Integer[] { 1 }
-                    )
-            )
+        assertDSLStore(1, [(dsld): [pcut]], [(pcut): 1])
 
         // remove from classpath
-        removeJarFromProject('simple_dsld.jar')
+        GroovyRuntime.removeClasspathEntry(javaProject, cpEntry)
+        project.refreshLocal(IResource.DEPTH_INFINITE, null)
+        buildProject()
 
-        assertDSLStore(0,
-            createExpectedPointcuts([]),
-            createExpectedContributionCount(new String[] { }, new Integer[] { })
-        )
-    }*/
+        assertDSLStore(0, [:], [:])
+    }
 }

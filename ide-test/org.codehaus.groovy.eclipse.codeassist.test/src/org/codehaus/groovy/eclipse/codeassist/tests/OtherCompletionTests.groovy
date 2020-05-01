@@ -221,7 +221,13 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test
     void testArrayCompletion4() {
-        String contents = 'class XX {\n XX[] xx\n XX yy\n}\nnew XX().getXx()[0].x'
+        String contents = '''\
+            |class XX {
+            |  XX[] xx
+            |  XX yy
+            |}
+            |new XX().getXx()[0].x
+            |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
         checkReplacementString(proposals, 'xx', 1)
     }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
+import org.junit.Assert
 import org.junit.Test
 
 /**
@@ -36,41 +37,41 @@ final class AstPositionTests {
     }
 
     @Test
-    void testASTPositionForBlock() {
+    void testPositionForBlock() {
         String text = '''\
-            def foo() {
-                zor(1,2)
-                bar(a,b)
-            }'''.stripIndent()
-        GroovySnippetParser sp = new GroovySnippetParser()
+            |def foo() {
+            |    zor(1,2)
+            |    bar(a,b)
+            |}'''.stripMargin()
+        def sp = new GroovySnippetParser()
         IDocument doc = new Document(text)
         ModuleNode module = sp.parse(doc.get())
-        assert getTextOfNode(module, doc) == text
+        Assert.assertEquals(text, getTextOfNode(module, doc))
 
-        // Check the method node
-        ClassNode classNode = module.getClasses().get(0)
-        MethodNode fooMethod = classNode.getMethods("foo").get(0)
-        assert getTextOfNode(fooMethod, doc) == text
+        // check the method node
+        ClassNode classNode = module.classes[0]
+        MethodNode fooMethod = classNode.getMethods('foo')[0]
+        Assert.assertEquals(text, getTextOfNode(fooMethod, doc))
 
-        // Check the body of method
-        BlockStatement bodyNode = (BlockStatement)fooMethod.getCode()
+        // check the body of method
+        BlockStatement bodyNode = (BlockStatement) fooMethod.code
         String body = getTextOfNode(bodyNode, doc)
         assert body.trim() == '''\
-            {
-                zor(1,2)
-                bar(a,b)
-            }'''.stripIndent()
+            |{
+            |    zor(1,2)
+            |    bar(a,b)
+            |}'''.stripMargin()
 
-        // Check each statement (one per line)
-        List<Statement> statements = bodyNode.getStatements()
+        // check each statement (one per line)
+        List<Statement> statements = bodyNode.statements
         assert statements.size() == 2
         int startLine = 1
-        for (int i = 0; i < statements.size(); i += 1) {
-            Statement stmNode = statements.get(i)
-            String stm = getTextOfNode(stmNode, doc)
+        for (i in 0..1) {
+            Statement statement = statements[i]
+            String statementText = getTextOfNode(statement, doc)
             int line = startLine + i
             String lineStr = doc.get(doc.getLineOffset(line), doc.getLineLength(line))
-            assert stm.trim() == lineStr.trim()
+            Assert.assertEquals(lineStr.trim(), statementText.trim())
         }
     }
 }

@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils
 import org.eclipse.jface.text.IDocument
 import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.dnd.Clipboard
 import org.eclipse.swt.dnd.TextTransfer
 import org.eclipse.swt.dnd.Transfer
@@ -76,11 +75,11 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
     }
 
     /**
-     * Pretend to type a string of characters into the editor.
+     * Simulates typing characters into the editor.
      */
-    protected void send(String text) {
-        for (c in text.toCharArray()) {
-            send(c)
+    protected void send(CharSequence text) {
+        text.chars().forEach {
+            send((char) it)
         }
     }
 
@@ -88,12 +87,13 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
      * Pretend to type a single character into the editor.
      */
     protected void send(char c) {
-        Event e = new Event(
-            widget: editor.viewer.textWidget,
-            character: c,
-            doit: true
-        )
-        e.widget.notifyListeners(SWT.KeyDown, e)
+        editor.viewer.textWidget.with {
+            notifyListeners(SWT.KeyDown, new Event(
+                character: c,
+                widget: it,
+                doit: true
+            ))
+        }
         // Note: I don't think it matters if we send a KeyDown event.
         // The editor/widget doesn't seem to care about it.
     }
@@ -102,11 +102,11 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
      * Pretend to type a backwards tab character (i.e. Shift+Tab).
      */
     protected void sendBackTab() {
-        editor.viewer.textWidget.with { widget ->
-            widget.notifyListeners(SWT.KeyDown, new Event(
+        editor.viewer.textWidget.with {
+            notifyListeners(SWT.KeyDown, new Event(
                 stateMask: SWT.SHIFT,
                 character: '\t',
-                widget: widget,
+                widget: it,
                 doit: true
             ))
         }
@@ -118,43 +118,44 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
      * Send a string of characters all at once, as if pasted into the editor by a paste command.
      */
     protected void sendPaste(CharSequence pasted) {
-        StyledText widget = editor.viewer.textWidget
+        editor.viewer.textWidget.with {
+            Object[] chars = [pasted.toString()]
+            Transfer[] types = [TextTransfer.instance]
 
-        Object[] chars = [pasted.toString()]
-        Transfer[] types = [TextTransfer.instance]
-        // transfer the characters to the system clipboard
-        Clipboard clipboard = new Clipboard(widget.display)
-        clipboard.setContents(chars, types)
-        clipboard.dispose()
+            // transfer the characters to the system clipboard
+            Clipboard clipboard = new Clipboard(it.display)
+            clipboard.setContents(chars, types)
+            clipboard.dispose()
 
-        widget.paste()
+            paste()
+        }
     }
 
     /**
-     * @return the text of the editor (does not include cursor position marker).
-     */
-    protected String getText() {
-        return document.get()
-    }
-
-    /**
-     * @return The document that the editor is working on.
-     */
-    protected IDocument getDocument() {
-        return editor.viewer.document
-    }
-
-    /**
-     * @return the current position of the caret in the Editor
+     * @return the current position of the caret in the editor
      */
     private int getCaret() {
         return editor.caretOffset
     }
 
     /**
-     * Check the contents of the editor. If the text that is expected contains
-     * the CURSOR marker, then the cursor position of the editor will be
-     * verified to be in that position as well.
+     * @return the document that the editor is working on
+     */
+    protected IDocument getDocument() {
+        return editor.viewer.document
+    }
+
+    /**
+     * @return the text of the editor (does not include cursor position marker)
+     */
+    protected String getText() {
+        return editor.viewer.document.get()
+    }
+
+    /**
+     * Checks the contents of the editor. If the text that is expected contains
+     * the CARET marker, then the cursor position of the editor will be verified
+     * to be in that position as well.
      */
     protected void assertEditorContents(String expected) {
         String actual = getText()
