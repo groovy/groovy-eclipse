@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -102,11 +102,11 @@ final class GroovyTagScannerTests {
 
     private RGB getActualColor(IToken token) {
         Color c = token.data.foreground
-        (c != null ? c.getRGB() : new RGB(0, 0, 0))
+        return (c != null ? c.RGB : new RGB(0, 0, 0))
     }
 
     private RGB getExpectedColor(String foregroundColorPreference) {
-        if (foregroundColorPreference.equals('black')) {
+        if (foregroundColorPreference == 'black') {
             return new RGB(0, 0, 0)
         }
         return PreferenceConverter.getColor(GroovyPlugin.default.preferenceStore, foregroundColorPreference)

@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,7 @@ import org.junit.Assert
 import org.junit.Test
 
 /**
- * Tests {@link GroovyEditor.BracketInserter}.
+ * Tests {@link GroovyEditor.GroovyBracketInserter}.
  */
 final class BracketInserterTests extends GroovyEclipseTestSuite {
 
@@ -33,57 +33,56 @@ final class BracketInserterTests extends GroovyEclipseTestSuite {
         expectedDoc += '\n'
 
         def unit = addGroovySource(initialDoc, nextUnitName())
-        GroovyEditor editor = (GroovyEditor) openInEditor(unit)
+        def editor = (GroovyEditor) openInEditor(unit)
 
         assert inserted.length() == 1
-        Event e = new Event(
+        def ve = new VerifyEvent(new Event(
             widget: editor.viewer.textWidget,
             character: inserted as char,
             doit: true
-        )
-        VerifyEvent ve = new VerifyEvent(e)
-        editor.getViewer().setSelectedRange(location, 0)
-        editor.getGroovyBracketInserter().verifyKey(ve)
+        ))
+        editor.viewer.setSelectedRange(location, 0)
+        editor.groovyBracketInserter.verifyKey(ve)
         if (ve.doit) {
-            editor.getViewer().getDocument().replace(location, 0, inserted)
+            editor.viewer.document.replace(location, 0, inserted)
         }
-        String actual = editor.getViewer().getDocument().get()
-        Assert.assertEquals('Invalid bracket insertion.\nInserted char: \'' + inserted + '\' at location ' + location, expectedDoc, actual)
+        String actual = editor.viewer.document.get()
+        Assert.assertEquals("Invalid bracket insertion.\nInserted char: '$inserted' at location $location", expectedDoc, actual)
     }
 
     @Test
     void testInsertDQuote1() {
-        assertClosing('', '\"\"', '\"', 0)
+        assertClosing('', '""', '"', 0)
     }
 
     @Test
     void testInsertDQuote2() {
-        assertClosing('\"', '\"\"', '\"', 1)
+        assertClosing('"', '""', '"', 1)
     }
 
     @Test
     void testInsertDQuote3() {
-        assertClosing('\"\"', '\"\"\"\"\"\"', '\"', 2)
+        assertClosing('""', '""""""', '"', 2)
     }
 
     @Test
     void testInsertDQuote4() {
-        assertClosing('\"\"\"', '\"\"\"\"\"\"', '\"', 3)
+        assertClosing('"""', '""""""', '"', 3)
     }
 
     @Test
     void testInsertDQuote5() {
-        assertClosing('assert ', 'assert \"\"', '\"', 7)
+        assertClosing('assert ', 'assert ""', '"', 7)
     }
 
     @Test
     void testInsertDQuote6() {
-        assertClosing('assert \"', 'assert \"\"', '\"', 8)
+        assertClosing('assert "', 'assert ""', '"', 8)
     }
 
     @Test
     void testInsertDQuote7() {
-        assertClosing('\'\'', '\'\"\'', '\"', 1)
+        assertClosing(/''/, /'"'/, /"/, 1)
     }
 
     @Test
@@ -118,17 +117,17 @@ final class BracketInserterTests extends GroovyEclipseTestSuite {
 
     @Test
     void testInsertAngle() {
-        assertClosing('', '<>', '<', 0)
+        assertClosing('', '<' + '>', '<', 0)
     }
 
     @Test
     void testInsertBraces1() {
-        assertClosing('\"$\"', '\"${}\"', '{', 2)
+        assertClosing('"$"', '"${}"', '{', 2)
     }
 
     @Test
     void testInsertBraces2() {
-        assertClosing('\"\"\"$\"\"\"', '\"\"\"${}\"\"\"', '{', 4)
+        assertClosing('"""$"""', '"""${}"""', '{', 4)
     }
 
     @Test
@@ -138,6 +137,6 @@ final class BracketInserterTests extends GroovyEclipseTestSuite {
 
     @Test
     void testInsertBraces4() {
-        assertClosing('\"\"\"\n$\"\"\"', '\"\"\"\n${}\"\"\"', '{', 5)
+        assertClosing('"""\n$"""', '"""\n${}"""', '{', 5)
     }
 }

@@ -152,6 +152,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.test.ui.HighlightingExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.OutlineExtenderTests,
     org.codehaus.groovy.eclipse.test.ui.SemanticHighlightingTests,
+    org.codehaus.groovy.eclipse.test.ui.SmartInsertTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTestWizardTests,
     org.codehaus.groovy.eclipse.test.wizards.NewGroovyTypeWizardTests,
 ])

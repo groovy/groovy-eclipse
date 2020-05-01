@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
-import java.util.Stack;
+import java.util.Deque;
+import java.util.LinkedList;
 
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -70,7 +71,7 @@ public class OutlineExtender2 extends OutlineExtender1 {
     public static class Finder extends ASTNodeFinder {
 
         private ModuleNode moduleNode;
-        private Stack<TType> methodStack = new Stack<>();
+        private Deque<TType> methodStack = new LinkedList<>();
 
         public Finder(final ModuleNode moduleNode, final TType rootType) {
             super(new Region(moduleNode));

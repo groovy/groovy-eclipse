@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -104,7 +104,7 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
         makeEditor """\
             class Foo {
             \tdef foo () {
-            \t\tdef foo = [""]${CARET}
+            \t\tdef foo = ['']${CARET}
             \t}
             }
             """.stripIndent()
@@ -114,7 +114,7 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
         assertEditorContents """\
             class Foo {
             \tdef foo () {
-            \t\tdef foo = [""]
+            \t\tdef foo = ['']
             \t\t${CARET}
             \t}
             }
@@ -125,7 +125,7 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
         assertEditorContents """\
             class Foo {
             \tdef foo () {
-            \t\tdef foo = [""]
+            \t\tdef foo = ['']
             \t\treturn []
             \t\t${CARET}
             \t}
@@ -243,8 +243,7 @@ final class GroovyAutoIndenterTests extends GroovyEditorTestSuite {
     }
 
     /**
-     * GRE_751: Pasting text into a multiline string should not perform any
-     * transformations.
+     * GRE_751: Pasting text into a multiline string should not perform any transformations.
      */
     @Test
     void testPasteInMultiLineString() {

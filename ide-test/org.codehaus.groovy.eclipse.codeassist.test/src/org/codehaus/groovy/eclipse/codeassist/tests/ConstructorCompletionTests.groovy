@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.internal.ui.JavaPlugin.getDefault as getJavaPlugin
 import static org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.MODIFIER_TOGGLE_COMPLETION_MODE
 
 import groovy.transform.NotYetImplemented
@@ -1248,7 +1249,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |'''.stripMargin()
 
         String contents = 'new Foo()'
-        setJavaPreference(PreferenceConstants.EDITOR_SMART_SEMICOLON, 'true')
+        javaPlugin.preferenceStore.setValue(PreferenceConstants.EDITOR_SMART_SEMICOLON, true)
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __);', ';' as char)
     }
