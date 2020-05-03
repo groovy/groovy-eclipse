@@ -269,55 +269,62 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     /**
      * Borrowed from {@link CompilationUnitEditor.BracketInserter}
-     *
-     * Changes marked with // GROOVY
      */
     private class GroovyBracketInserter implements VerifyKeyListener, ILinkedModeListener {
 
-        private boolean fCloseBrackets= true;
-
-        private boolean fCloseBraces = true; // GROOVY change
+        private boolean fCloseBraces= true; // GROOVY add
         private boolean fCloseStrings= true;
+        private boolean fCloseBrackets= true;
         private boolean fCloseAngularBrackets= true;
         private final String CATEGORY= toString();
-        private final Stack<GroovyBracketLevel> fBracketLevelStack= new Stack<>();
         private final IPositionUpdater fUpdater= new GroovyExclusivePositionUpdater(CATEGORY);
+        private final Stack<GroovyBracketLevel> fBracketLevelStack= new Stack<>();
 
-        public void setCloseBracketsEnabled(boolean enabled) {
-            fCloseBrackets= enabled;
+        // GROOVY add
+        public void setCloseBracesEnabled(boolean enabled) {
+            fCloseBraces= enabled;
         }
+        // GROOVY end
 
         public void setCloseStringsEnabled(boolean enabled) {
             fCloseStrings= enabled;
         }
 
-        public void setCloseBracesEnabled(boolean enabled) {
-            fCloseBraces = enabled;
+        public void setCloseBracketsEnabled(boolean enabled) {
+            fCloseBrackets= enabled;
         }
 
         public void setCloseAngularBracketsEnabled(boolean enabled) {
             fCloseAngularBrackets= enabled;
         }
 
+        private boolean isTypeArgumentStart(String identifier) {
+            return !identifier.isEmpty()
+                    && Character.isUpperCase(identifier.charAt(0));
+        }
+
         private boolean isAngularIntroducer(String identifier) {
-            return identifier.length() > 0 &&
-                (Character.isUpperCase(identifier.charAt(0)) ||
-                    identifier.startsWith("final") ||
-                    identifier.startsWith("public") ||
-                    identifier.startsWith("public") ||
-                    identifier.startsWith("protected") ||
-                    identifier.startsWith("private"));
+            return !identifier.isEmpty()
+                    && (Character.isUpperCase(identifier.charAt(0))
+                            || identifier.startsWith("final") //$NON-NLS-1$
+                            || identifier.startsWith("public") //$NON-NLS-1$
+                            || identifier.startsWith("public") //$NON-NLS-1$
+                            || identifier.startsWith("protected") //$NON-NLS-1$
+                            || identifier.startsWith("private")); //$NON-NLS-1$
         }
 
         private boolean isMultilineSelection() {
             ISelection selection= getSelectionProvider().getSelection();
             if (selection instanceof ITextSelection) {
                 ITextSelection ts= (ITextSelection) selection;
-                return  ts.getStartLine() != ts.getEndLine();
+                return ts.getStartLine() != ts.getEndLine();
             }
             return false;
         }
 
+        /*
+         * @see org.eclipse.swt.custom.VerifyKeyListener#verifyKey(org.eclipse.swt.events.VerifyEvent)
+         */
         @Override
         public void verifyKey(VerifyEvent event) {
             // early pruning to slow down normal typing as little as possible
@@ -329,10 +336,9 @@ public class GroovyEditor extends CompilationUnitEditor {
                 case '[':
                 case '\'':
                 case '\"':
-                    // GROOVY change. Allow autoclosing of curly braces in
-                    // GStrings
+                // GROOVY add -- allow auto-closing of curly braces in GStrings
                 case '{':
-                    // GROOVy end change
+                // GROOVY end
                     break;
                 default:
                     return;
@@ -342,7 +348,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             IDocument document= sourceViewer.getDocument();
 
             final Point selection= sourceViewer.getSelectedRange();
-            int offset= selection.x;
+            /*final*/ int offset= selection.x; // GROOVY edit
             final int length= selection.y;
 
             try {
@@ -368,13 +374,15 @@ public class GroovyEditor extends CompilationUnitEditor {
                     case '<':
                         if (!(fCloseAngularBrackets && fCloseBrackets)
                                 || nextToken == Symbols.TokenLESSTHAN
-                                || prevToken != Symbols.TokenLBRACE
-                                && prevToken != Symbols.TokenRBRACE
-                                && prevToken != Symbols.TokenSEMICOLON
-                                && prevToken != Symbols.TokenSYNCHRONIZED
-                                && prevToken != Symbols.TokenSTATIC
-                                && (prevToken != Symbols.TokenIDENT || !isAngularIntroducer(previous))
-                                && prevToken != Symbols.TokenEOF)
+                                || nextToken == Symbols.TokenQUESTIONMARK
+                                || nextToken == Symbols.TokenIDENT && isTypeArgumentStart(next)
+                                ||         prevToken != Symbols.TokenLBRACE
+                                        && prevToken != Symbols.TokenRBRACE
+                                        && prevToken != Symbols.TokenSEMICOLON
+                                        && prevToken != Symbols.TokenSYNCHRONIZED
+                                        && prevToken != Symbols.TokenSTATIC
+                                        &&(prevToken != Symbols.TokenIDENT || !isAngularIntroducer(previous))
+                                        && prevToken != Symbols.TokenEOF)
                             return;
                         break;
 
@@ -387,66 +395,64 @@ public class GroovyEditor extends CompilationUnitEditor {
 
                     case '\'':
                     case '"':
-                        // GROOVY change, allow quote closing when there are no parens
-                        if (!fCloseStrings
+                        if (!fCloseStrings // GROOVY edit -- allow quote closing when there are no parens
                                 || nextToken == Symbols.TokenIDENT
-//                                || prevToken == Symbols.TokenIDENT
+                              /*|| prevToken == Symbols.TokenIDENT*/
                                 || next != null && next.length() > 1
-//                                || previous != null && previous.length() > 1
-                                )
-                            // GROOVY end change
+                              /*|| previous != null && previous.length() > 1*/)
                             return;
                         break;
 
-                        // GROOVY change, allow curly braces closing in GStrings
+                    // GROOVY add
                     case '{':
-                        if (!fCloseBraces || nextToken == Symbols.TokenIDENT || next != null && next.length() > 1)
+                        if (!fCloseBraces
+                                || nextToken == Symbols.TokenIDENT
+                                || next != null && next.length() > 1)
                             return;
                         break;
-                        // GROOVY end change
+                    // GROOVY end
+
                     default:
                         return;
                 }
 
                 ITypedRegion partition= TextUtilities.getPartition(document, IJavaPartitions.JAVA_PARTITIONING, offset, true);
-                if (event.character != '{' && !IDocument.DEFAULT_CONTENT_TYPE.equals(partition.getType()) && // original
-                        // GROOVY change autoclose triple quotes
-                        !shouldCloseTripleQuotes(document, offset, partition, getPeerCharacter(event.character))) { // GROOVY
-                    // change
+                if (!IDocument.DEFAULT_CONTENT_TYPE.equals(partition.getType())
+                    // GROOVY add -- auto-close triple quotes
+                    && event.character != '{' && !shouldCloseTripleQuotes(document, offset, partition, getPeerCharacter(event.character))
+                    // GROOVY end
+                )
                     return;
-                }
 
-                // GROOVY change check for autoclose curly braces
-                if (event.character == '{' && !shouldCloseCurly(document, offset, partition, getPeerCharacter(event.character))) {
+                // GROOVY add -- check for autoclose curly braces
+                if (event.character == '{' && !shouldCloseCurly(document, offset, partition, getPeerCharacter(event.character)))
                     return;
-                }
+                // GROOVY end
 
                 if (!validateEditorInputState())
                     return;
 
                 final char character= event.character;
                 final char closingCharacter= getPeerCharacter(character);
-                final StringBuffer buffer= new StringBuffer();
+                final StringBuilder buffer= new StringBuilder();
                 buffer.append(character);
                 buffer.append(closingCharacter);
 
-                // GROOVY special case: multiline strings
-                // Insert the closing of a triple quoted string whenever
-                // there is a "" or a """ before
+                // GROOVY add -- insert the closing of a triple quoted string whenever there is a "" or a """ before
                 int insertedLength = 1;
                 if (fCloseStrings && offset > 1) {
-                    String start = document.get(offset-2, 2);
+                    String start = document.get(offset - 2, 2);
                     boolean doit = false;
                     if (event.character == closingCharacter) {
                         doit = start.equals(Character.toString(closingCharacter) + closingCharacter);
                     }
                     if (doit) {
                         buffer.append(closingCharacter);
-                        insertedLength ++;
+                        insertedLength += 1;
                         // now check for a preexisting third quote
-                        insertedLength ++;
-                        if (offset > 2 && document.getChar(offset-3) == closingCharacter) {
-                            offset--;
+                        insertedLength += 1;
+                        if (offset > 2 && document.getChar(offset - 3) == closingCharacter) {
+                            offset -= 1;
                         } else {
                             // if no third quote already, must add another
                             buffer.append(closingCharacter);
@@ -462,8 +468,10 @@ public class GroovyEditor extends CompilationUnitEditor {
                 fBracketLevelStack.push(level);
 
                 LinkedPositionGroup group= new LinkedPositionGroup();
-                //                group.addPosition(new LinkedPosition(document, offset + 1, 0, LinkedPositionGroup.NO_STOP));
-                group.addPosition(new LinkedPosition(document, offset + insertedLength, 0, LinkedPositionGroup.NO_STOP)); // GROOVY change
+                // GROOVY edit
+                //group.addPosition(new LinkedPosition(document, offset + 1, 0, LinkedPositionGroup.NO_STOP));
+                group.addPosition(new LinkedPosition(document, offset + insertedLength, 0, LinkedPositionGroup.NO_STOP));
+                // GROOVY end
 
                 LinkedModeModel model= new LinkedModeModel();
                 model.addLinkingListener(this);
@@ -476,23 +484,29 @@ public class GroovyEditor extends CompilationUnitEditor {
                     document.addPositionUpdater(fUpdater);
                 }
                 level.fFirstPosition= new Position(offset, 1);
-                //                level.fSecondPosition= new Position(offset + 1, 1);
-                level.fSecondPosition= new Position(offset + insertedLength, 1); // GROOVY change
+                // GROOVY edit
+                //level.fSecondPosition= new Position(offset + 1, 1);
+                level.fSecondPosition= new Position(offset + insertedLength, 1);
+                // GROOVY end
                 document.addPosition(CATEGORY, level.fFirstPosition);
                 document.addPosition(CATEGORY, level.fSecondPosition);
 
                 level.fUI= new EditorLinkedModeUI(model, sourceViewer);
                 level.fUI.setSimpleMode(true);
                 level.fUI.setExitPolicy(new GroovyExitPolicy(closingCharacter, getEscapeCharacter(closingCharacter), fBracketLevelStack));
-                //                level.fUI.setExitPosition(sourceViewer, offset + 2, 0, Integer.MAX_VALUE);
-                level.fUI.setExitPosition(sourceViewer, offset + 1 + insertedLength, 0, Integer.MAX_VALUE); // GROOVY change
+                // GROOVY edit
+                //level.fUI.setExitPosition(sourceViewer, offset + 2, 0, Integer.MAX_VALUE);
+                level.fUI.setExitPosition(sourceViewer, offset + 1 + insertedLength, 0, Integer.MAX_VALUE);
+                // GROOVY end
                 level.fUI.setCyclingMode(LinkedModeUI.CYCLE_NEVER);
                 level.fUI.enter();
 
 
                 IRegion newSelection= level.fUI.getSelectedRegion();
-                //                sourceViewer.setSelectedRange(newSelection.getOffset(), newSelection.getLength());
-                sourceViewer.setSelectedRange(newSelection.getOffset() - insertedLength + 1, newSelection.getLength()); // GROOVY change
+                // GROOVY edit
+                //sourceViewer.setSelectedRange(newSelection.getOffset(), newSelection.getLength());
+                sourceViewer.setSelectedRange(newSelection.getOffset() - insertedLength + 1, newSelection.getLength());
+                // GROOVY end
 
                 event.doit= false;
 
@@ -504,20 +518,11 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         /**
-         * GROOVY change
-         *
-         * @param document
-         * @param offset
-         * @param partition
-         * @param peer
-         * @return true iff we should be closing a curly bracket. Only happens
-         *         as part of a GString
-         * @throws BadLocationException
+         * @return true iff we should be closing a curly bracket. Only happens as part of a GString
          */
-        private boolean shouldCloseCurly(IDocument document, int offset, ITypedRegion partition, char peer)
-                throws BadLocationException {
-            if (offset < 2 || !(IJavaPartitions.JAVA_STRING.equals(partition.getType()) ||
-                    GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType()))) {
+        private boolean shouldCloseCurly(IDocument document, int offset, ITypedRegion partition, char peer) throws BadLocationException {
+            if (offset < 2 || !(IJavaPartitions.JAVA_STRING.equals(partition.getType())
+                    || GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType()))) {
                 return false;
             }
 
@@ -531,41 +536,40 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
 
         /**
-         * GROOVY change
-         *
-         * @param document
-         * @param offset
-         * @param partition
-         * @param quote
          * @return true if we are at a position of triple quotes
-         * @throws BadLocationException
          */
         private boolean shouldCloseTripleQuotes(IDocument document, int offset, ITypedRegion partition, char quote) throws BadLocationException {
             if (offset < 3 || GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType())) {
                 return false;
             }
-            String maybequotes = document.get(offset-3, 3);
-            return maybequotes.equals(Character.toString(quote)+quote+quote);
+            String maybequotes = document.get(offset - 3, 3);
+            return maybequotes.equals(Character.toString(quote) + quote + quote);
         }
 
+        /*
+         * @see org.eclipse.jface.text.link.ILinkedModeListener#left(org.eclipse.jface.text.link.LinkedModeModel, int)
+         */
         @Override
         public void left(LinkedModeModel environment, int flags) {
-            final GroovyBracketLevel level = fBracketLevelStack.pop();
+            final GroovyBracketLevel level= fBracketLevelStack.pop();
 
             if (flags != ILinkedModeListener.EXTERNAL_MODIFICATION)
                 return;
 
             // remove brackets
-            final ISourceViewer sourceViewer = getSourceViewer();
-            final IDocument document = sourceViewer.getDocument();
+            final ISourceViewer sourceViewer= getSourceViewer();
+            final IDocument document= sourceViewer.getDocument();
             if (document instanceof IDocumentExtension) {
-                IDocumentExtension extension = (IDocumentExtension) document;
+                IDocumentExtension extension= (IDocumentExtension) document;
                 extension.registerPostNotificationReplace(null, (IDocument d, IDocumentListener owner) -> {
-                    if ((level.fFirstPosition.isDeleted || level.fFirstPosition.length == 0) &&
-                            !level.fSecondPosition.isDeleted &&
-                            level.fSecondPosition.offset == level.fFirstPosition.offset) {
+
+                    if ((level.fFirstPosition.isDeleted || level.fFirstPosition.length == 0)
+                            && !level.fSecondPosition.isDeleted
+                            && level.fSecondPosition.offset == level.fFirstPosition.offset) {
                         try {
-                            document.replace(level.fSecondPosition.offset, level.fSecondPosition.length, "");
+                                document.replace(level.fSecondPosition.offset,
+                                                 level.fSecondPosition.length,
+                                                 ""); //$NON-NLS-1$
                         } catch (BadLocationException e1) {
                             JavaPlugin.log(e1);
                         }
@@ -574,18 +578,24 @@ public class GroovyEditor extends CompilationUnitEditor {
                         document.removePositionUpdater(fUpdater);
                         try {
                             document.removePositionCategory(CATEGORY);
-                        } catch (BadPositionCategoryException e2) {
-                            JavaPlugin.log(e2);
+                        } catch (BadPositionCategoryException e) {
+                            JavaPlugin.log(e);
                         }
                     }
                 });
             }
         }
 
+        /*
+         * @see org.eclipse.jface.text.link.ILinkedModeListener#suspend(org.eclipse.jface.text.link.LinkedModeModel)
+         */
         @Override
         public void suspend(LinkedModeModel environment) {
         }
 
+        /*
+         * @see org.eclipse.jface.text.link.ILinkedModeListener#resume(org.eclipse.jface.text.link.LinkedModeModel, int)
+         */
         @Override
         public void resume(LinkedModeModel environment, int flags) {
         }
@@ -801,29 +811,25 @@ public class GroovyEditor extends CompilationUnitEditor {
         installGroovySemanticHighlighting();
 
         IPreferenceStore preferenceStore = getPreferenceStore();
-        groovyBracketInserter.setCloseBracesEnabled(preferenceStore.getBoolean(CLOSE_BRACES));
-        groovyBracketInserter.setCloseBracketsEnabled(preferenceStore.getBoolean(CLOSE_BRACKETS));
-        groovyBracketInserter.setCloseStringsEnabled(preferenceStore.getBoolean(CLOSE_STRINGS));
+        groovyBracketInserter.setCloseBracesEnabled(preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_BRACES));
+        groovyBracketInserter.setCloseStringsEnabled(preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_STRINGS));
+        groovyBracketInserter.setCloseBracketsEnabled(preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_BRACKETS));
         groovyBracketInserter.setCloseAngularBracketsEnabled(preferenceStore.getString(JavaCore.COMPILER_SOURCE).compareTo(JavaCore.VERSION_1_5) >= 0);
 
         ISourceViewer sourceViewer = getSourceViewer();
         if (sourceViewer instanceof ITextViewerExtension) {
             ((ITextViewerExtension) sourceViewer).prependVerifyKeyListener(groovyBracketInserter);
+            ((ITextViewerExtension) sourceViewer).removeVerifyKeyListener(ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this));
+        } else {
+            // ensure the bracket inserter from the superclass is disabled
+            Object fBracketInserter = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
+            Class<?> fBracketInserterClass = fBracketInserter.getClass();
+            Class<?>[] bool = {boolean.class};
+            Object[] disabled = {Boolean.FALSE};
+            ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", bool, fBracketInserter, disabled);
+            ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseBracketsEnabled", bool, fBracketInserter, disabled);
+            ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", bool, fBracketInserter, disabled);
         }
-
-        // ensure the bracket inserter from the superclass is disabled
-        disableBracketInserter();
-    }
-
-    private void disableBracketInserter() {
-        Object fBracketInserterField = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fBracketInserter", this);
-        Class<?> fBracketInserterClass = fBracketInserterField.getClass();
-        Class<?>[] bool = {boolean.class};
-        Object[] disabled = {Boolean.FALSE};
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseBracketsEnabled", bool, fBracketInserterField, disabled);
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", bool, fBracketInserterField, disabled);
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseStringsEnabled", bool, fBracketInserterField, disabled);
-        ReflectionUtils.executePrivateMethod(fBracketInserterClass, "setCloseAngularBracketsEnabled", bool, fBracketInserterField, disabled);
     }
 
     @Override
@@ -902,34 +908,21 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    /** Preference key for automatically closing strings */
-    private static final String CLOSE_STRINGS = PreferenceConstants.EDITOR_CLOSE_STRINGS;
-    /** Preference key for automatically closing brackets and parenthesis */
-    private static final String CLOSE_BRACKETS = PreferenceConstants.EDITOR_CLOSE_BRACKETS;
-    /** Preference key for automatically closing curly braces */
-    private static final String CLOSE_BRACES = PreferenceConstants.EDITOR_CLOSE_BRACES;
-
     @Override
     protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
         super.handlePreferenceStoreChanged(event);
         ISourceViewer sv = getSourceViewer();
         if (sv != null) {
-            String p = event.getProperty();
-
-            if (CLOSE_BRACKETS.equals(p)) {
-                groovyBracketInserter.setCloseBracketsEnabled(getPreferenceStore().getBoolean(p));
-                disableBracketInserter();
+            // TODO: is newValue the same as getPreferenceStore().getBoolean(event.getProperty())
+            switch (event.getProperty()) {
+            case PreferenceConstants.EDITOR_CLOSE_BRACKETS:
+                groovyBracketInserter.setCloseBracketsEnabled(getPreferenceStore().getBoolean(event.getProperty()));
                 return;
-            }
-
-            if (CLOSE_STRINGS.equals(p)) {
-                groovyBracketInserter.setCloseStringsEnabled(getPreferenceStore().getBoolean(p));
-                disableBracketInserter();
+            case PreferenceConstants.EDITOR_CLOSE_STRINGS:
+                groovyBracketInserter.setCloseStringsEnabled(getPreferenceStore().getBoolean(event.getProperty()));
                 return;
-            }
-            if (CLOSE_BRACES.equals(p)) {
-                groovyBracketInserter.setCloseBracesEnabled(getPreferenceStore().getBoolean(p));
-                disableBracketInserter();
+            case PreferenceConstants.EDITOR_CLOSE_BRACES:
+                groovyBracketInserter.setCloseBracesEnabled(getPreferenceStore().getBoolean(event.getProperty()));
                 return;
             }
         }
@@ -973,10 +966,10 @@ public class GroovyEditor extends CompilationUnitEditor {
             case '\'':
                 return character;
 
-                // GROOVY change
+            // GROOVY add
             case '{':
                 return '}';
-                // GROOVY change end
+            // GROOVY end
 
             default:
                 throw new IllegalArgumentException();

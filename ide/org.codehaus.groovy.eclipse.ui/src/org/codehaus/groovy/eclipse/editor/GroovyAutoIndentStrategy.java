@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.DocumentCommand;
+import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 
@@ -30,34 +31,35 @@ import org.eclipse.jface.text.IRegion;
  * requests. However, whenever the Java strategy doesn't quite do what we want
  * it do for Groovy code, we can intercept the request and handle it ourselves.
  */
-public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
+class GroovyAutoIndentStrategy implements IAutoEditStrategy {
 
     private final GroovyIndentationService indentService;
     private final JavaAutoIndentStrategy javaStrategy;
     private final boolean closeBraces;
 
-    public GroovyAutoIndentStrategy(JavaAutoIndentStrategy javaStrategy) {
+    GroovyAutoIndentStrategy(final JavaAutoIndentStrategy javaStrategy) {
         this.javaStrategy = javaStrategy;
         ReflectionUtils.executePrivateMethod(JavaAutoIndentStrategy.class, "clearCachedValues", javaStrategy);
-        this.closeBraces = (Boolean) ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fCloseBrace", javaStrategy);
+        this.closeBraces = ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fCloseBrace", javaStrategy);
         this.indentService = GroovyIndentationService.get(ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fProject", javaStrategy));
     }
 
     @Override
-    public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
-        if (c.doit)
-        try {
-            if (c.length == 0 && isNewline(d, c.text)) {
-                autoEditAfterNewline(d, c);
-            } else if (c.text.length() > 2) {
-                smartPaste(d, c);
-            } else if ("{".equals(c.text) || "}".equals(c.text)) {
-                // delegate for some simple cases like braces
-                javaStrategy.customizeDocumentCommand(d, c);
+    public void customizeDocumentCommand(final IDocument d, final DocumentCommand c) {
+        if (c.doit) {
+            try {
+                if (c.length == 0 && isNewline(d, c.text)) {
+                    autoEditAfterNewline(d, c);
+                } else if (c.text.length() > 2) {
+                    smartPaste(d, c);
+                } else if ("{".equals(c.text) || "}".equals(c.text)) {
+                    // delegate for some simple cases like braces
+                    javaStrategy.customizeDocumentCommand(d, c);
+                }
+            } finally {
+                // ensures that prefs will refresh each time they are needed; also saves a little bit of memory
+                indentService.disposePrefs();
             }
-        } finally {
-            // ensures that prefs will refresh each time they are needed; also saves a little bit of memory
-            indentService.disposePrefs();
         }
     }
 
@@ -65,7 +67,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      * This method is called when pasting text into the editor. It can decide to
      * modify the command, for example to adjust indentation of the pasted text.
      */
-    private void smartPaste(IDocument d, DocumentCommand c) {
+    private void smartPaste(final IDocument d, final DocumentCommand c) {
         try {
             if (indentService.getPrefs().isSmartPaste() && indentService.isInEmptyLine(d, c.offset)) {
                 int pasteLine = d.getLineOfOffset(c.offset);
@@ -79,9 +81,8 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
 
                 int indentDiff = 0;
 
-                boolean isMultiLineComment = false;
-                boolean isMultiLineString= false;
-                for (int line = startLine; line <= endLine; line++) {
+                boolean isMultiLineComment = false, isMultiLineString = false;
+                for (int line = startLine; line <= endLine; line += 1) {
                     IRegion lineRegion = workCopy.getLineInformation(line);
                     String text = workCopy.get(lineRegion.getOffset(), lineRegion.getLength());
 
@@ -133,10 +134,22 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
         }
     }
 
+    private boolean isNewline(final IDocument d, final String s) {
+        String[] delimiters = d.getLegalLineDelimiters();
+        if (delimiters != null) {
+            for (String nl : delimiters) {
+                if (nl.equals(s)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Applies edits upon newline presses.
      */
-    private void autoEditAfterNewline(IDocument d, DocumentCommand c) {
+    private void autoEditAfterNewline(final IDocument d, final DocumentCommand c) {
         try {
             int orgIndentLevel = indentService.getIndentLevel(d, c.offset);
 
@@ -169,7 +182,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      * Determines whether an offset in a document would be a good one
      * to insert an automatic closing brace for on the next line.
      */
-    private boolean shouldInsertBrace(IDocument d, int enterPos, boolean nextTokenIsCloseBrace) throws BadLocationException {
+    private boolean shouldInsertBrace(final IDocument d, final int enterPos, final boolean nextTokenIsCloseBrace) throws BadLocationException {
         if (indentService.moreOpenThanCloseBefore(d, enterPos) &&
                 (nextTokenIsCloseBrace || indentService.isEndOfLine(d, enterPos))) {
             int lineNum = d.getLineOfOffset(enterPos);
@@ -178,7 +191,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
             do {
                 line = GroovyIndentationService.getLine(d, ++lineNum);
                 line = line.trim();
-            } while (line.equals("") && lineNum < d.getNumberOfLines());
+            } while (line.isEmpty() && lineNum < d.getNumberOfLines());
             int nextIndentLevel = indentService.getLineIndentLevel(d, lineNum);
             if (nextIndentLevel > indentLevel)
                 return false;

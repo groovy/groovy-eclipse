@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegis
 import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
@@ -33,6 +34,7 @@ import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
 import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
+import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -53,7 +55,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
-    public GroovyConfiguration(GroovyColorManager colorManager, IPreferenceStore preferenceStore, ITextEditor editor) {
+    public GroovyConfiguration(final GroovyColorManager colorManager, final IPreferenceStore preferenceStore, final ITextEditor editor) {
         super(colorManager, preferenceStore, editor, IJavaPartitions.JAVA_PARTITIONING);
 
         // replace Java's string scanner to enable Groovy's color choice
@@ -78,32 +80,47 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 registry.getExtraGroovyKeywordsForProject(project),
                 registry.getExtraGJDKKeywordsForProject(project));
             ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this, codeScanner);
-
         } catch (Exception e) {
             GroovyCore.logException("Error creating and registering GroovyTagScanner", e);
         }
     }
 
     @Override
-    public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
-        IAutoEditStrategy[] strategies;
-        if (GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(contentType) || IJavaPartitions.JAVA_STRING.equals(contentType)) {
-            // TODO: Should GroovyMultilineStringAutoEditStrategy delegate to JavaStringAutoIndentStrategy instead of DefaultIndentLineAutoEditStrategy?
-            // TODO: GroovyMultilineStringAutoEditStrategy does nothing; was there some intended behavior that is incomplete?
-            strategies = new IAutoEditStrategy[] {new GroovyMultilineStringAutoEditStrategy(contentType)};
-        } else {
-            strategies = super.getAutoEditStrategies(sourceViewer, contentType);
+    public IAutoEditStrategy[] getAutoEditStrategies(final ISourceViewer sourceViewer, final String contentType) {
+        switch (contentType) {
+        case GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS:
+        case IJavaPartitions.JAVA_STRING:
+            // TODO: Should GroovyStringAutoEditStrategy delegate to JavaStringAutoIndentStrategy instead of DefaultIndentLineAutoEditStrategy?
+            // TODO: GroovyStringAutoEditStrategy does nothing; was there some intended behavior that is incomplete?
+            return new IAutoEditStrategy[] {new GroovyStringAutoEditStrategy(contentType)};
+        default:
+            IAutoEditStrategy[] strategies = super.getAutoEditStrategies(sourceViewer, contentType);
             for (int i = 0, n = strategies.length; i < n; i += 1) {
                 if (strategies[i] instanceof JavaAutoIndentStrategy) {
                     strategies[i] = new GroovyAutoIndentStrategy((JavaAutoIndentStrategy) strategies[i]);
+                } else if (strategies[i] instanceof SmartSemicolonAutoEditStrategy) {
+                    String partitioning = getConfiguredDocumentPartitioning(sourceViewer);
+                    // split up semicolon and opening brace handling
+                    strategies[i] = (document, command) -> {
+                        if (";".equals(command.text)) {
+                            IAutoEditStrategy delegate = new SmartSemicolonAutoEditStrategy(partitioning);
+                            delegate.customizeDocumentCommand(document, command);
+                        }
+                    };
+                    strategies = (IAutoEditStrategy[]) ArrayUtils.add(strategies, (IAutoEditStrategy) (document, command) -> {
+                        if ("{".equals(command.text)) {
+                            IAutoEditStrategy delegate = new SmartSemicolonAutoEditStrategy(partitioning);
+                            delegate.customizeDocumentCommand(document, command);
+                        }
+                    });
                 }
             }
+            return strategies;
         }
-        return strategies;
     }
 
     @Override
-    public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {
+    public String[] getConfiguredContentTypes(final ISourceViewer sourceViewer) {
         // TODO: Copy from GroovyPartitionScanner.LEGAL_CONTENT_TYPES?
         return new String[] {
             IDocument.DEFAULT_CONTENT_TYPE,
@@ -117,7 +134,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     }
 
     @Override
-    public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
+    public IContentAssistant getContentAssistant(final ISourceViewer sourceViewer) {
         ContentAssistant assistant = (ContentAssistant) super.getContentAssistant(sourceViewer);
 
         String contentType = GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS;
@@ -136,17 +153,18 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
         return assistant;
     }
+
     private static final Pattern GROOVY_CONTENT_ASSIST = Pattern.compile("org.codehaus.groovy.+|org.eclipse.jdt.ui.(default|text)ProposalCategory");
 
     @Override
-    protected Map<String, IAdaptable> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
+    protected Map<String, IAdaptable> getHyperlinkDetectorTargets(final ISourceViewer sourceViewer) {
         Map<String, IAdaptable> targets = super.getHyperlinkDetectorTargets(sourceViewer);
         targets.put("org.codehaus.groovy.eclipse.groovyCode", getEditor()); //$NON-NLS-1$
         return targets;
     }
 
     @Override
-    public IInformationPresenter getOutlinePresenter(ISourceViewer sourceViewer, boolean doCodeResolve) {
+    public IInformationPresenter getOutlinePresenter(final ISourceViewer sourceViewer, final boolean doCodeResolve) {
         IInformationPresenter presenter = super.getOutlinePresenter(sourceViewer, doCodeResolve);
         if (presenter instanceof InformationPresenter) {
             IInformationProvider provider = presenter.getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
@@ -156,7 +174,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     }
 
     @Override
-    public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer) {
+    public IPresentationReconciler getPresentationReconciler(final ISourceViewer sourceViewer) {
         PresentationReconciler reconciler = (PresentationReconciler) super.getPresentationReconciler(sourceViewer);
         DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getStringScanner());
         reconciler.setDamager(dr, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);

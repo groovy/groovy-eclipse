@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -67,7 +67,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         setPredicateRules(rules.toArray(new IPredicateRule[rules.size()]));
     }
 
-    public static List<IRule> createRules(boolean withColor) {
+    public static List<IRule> createRules(final boolean withColor) {
         List<IRule> rules = new ArrayList<>(8);
 
         IToken javadocComment = new Token(JAVA_DOC);
@@ -111,12 +111,12 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 
     static class EmptyCommentDetector implements IWordDetector {
         @Override
-        public boolean isWordStart(char c) {
+        public boolean isWordStart(final char c) {
             return (c == '/');
         }
 
         @Override
-        public boolean isWordPart(char c) {
+        public boolean isWordPart(final char c) {
             return (c == '*' || c == '/');
         }
     }
@@ -125,14 +125,14 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 
         private final IToken fSuccessToken;
 
-        WordPredicateRule(IToken successToken) {
+        WordPredicateRule(final IToken successToken) {
             super(new EmptyCommentDetector());
             fSuccessToken = successToken;
             addWord("/**/", fSuccessToken); //$NON-NLS-1$
         }
 
         @Override
-        public IToken evaluate(ICharacterScanner scanner, boolean resume) {
+        public IToken evaluate(final ICharacterScanner scanner, final boolean resume) {
             return super.evaluate(scanner);
         }
 

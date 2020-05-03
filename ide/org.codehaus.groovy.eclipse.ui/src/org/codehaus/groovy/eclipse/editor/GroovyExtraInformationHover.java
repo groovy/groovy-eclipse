@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,18 +60,18 @@ public class GroovyExtraInformationHover extends JavadocHover {
         this(false);
     }
 
-    public GroovyExtraInformationHover(boolean alwaysReturnInformation) {
+    public GroovyExtraInformationHover(final boolean alwaysReturnInformation) {
         this.alwaysReturnInformation = alwaysReturnInformation;
     }
 
     @Override
-    public void setEditor(IEditorPart editor) {
+    public void setEditor(final IEditorPart editor) {
         super.setEditor(editor);
         debugHover.setEditor(editor);
     }
 
     @Override
-    public Object getHoverInfo2(ITextViewer textViewer, IRegion hoverRegion) {
+    public Object getHoverInfo2(final ITextViewer textViewer, final IRegion hoverRegion) {
         IEditorPart editor = getEditor();
         if (editor == null) {
             return null;
@@ -108,7 +108,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
      * Only compute hover if thie is an {@link IGroovyResolvedElement} that has
      * an extraDoc.
      */
-    private boolean shouldComputeHover(IJavaElement[] elements) {
+    private boolean shouldComputeHover(final IJavaElement[] elements) {
         if (elements != null && elements.length == 1) {
             if (alwaysReturnInformation) {
                 return true;
@@ -126,7 +126,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
     /**
      * Possibly compute the hover. Might return null.
      */
-    private Object computeHover(IRegion hoverRegion, IJavaElement[] elements) {
+    private Object computeHover(final IRegion hoverRegion, final IJavaElement[] elements) {
         Class<?>[] types = {IJavaElement[].class, ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class};
         Object[] values = {elements, getEditorInputJavaElement(), hoverRegion, null};
 
@@ -139,7 +139,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return hover;
     }
 
-    protected String wrapHTML(JavadocBrowserInformationControlInput input, IGroovyResolvedElement elt) {
+    protected String wrapHTML(final JavadocBrowserInformationControlInput input, final IGroovyResolvedElement elt) {
         // only use a preamble if the name of the inferred element is not the same as the resolved element
         String preamble;
         if (!elt.getElementName().equals(elt.getInferredElementName())) {
@@ -154,7 +154,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         }
     }
 
-    protected String extraDocAsHtml(IGroovyResolvedElement elem) {
+    protected String extraDocAsHtml(final IGroovyResolvedElement elem) {
         String extraDoc = elem.getExtraDoc();
         if (!extraDoc.startsWith("/**")) {
             extraDoc = "/**" + extraDoc;
@@ -195,7 +195,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return "<b>" + label + "</b><br>\n";
     }
 
-    private String createFieldLabel(FieldNode node) {
+    private String createFieldLabel(final FieldNode node) {
         StringBuilder sb = new StringBuilder();
         sb.append(createTypeLabel(node.getType()));
         sb.append(' ');
@@ -206,7 +206,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return sb.toString();
     }
 
-    private String createMethodLabel(MethodNode node) {
+    private String createMethodLabel(final MethodNode node) {
         StringBuilder sb = new StringBuilder();
         sb.append(createTypeLabel(node.getReturnType()));
         sb.append(' ');
@@ -229,7 +229,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         return sb.toString();
     }
 
-    private String createTypeLabel(ClassNode node) {
+    private String createTypeLabel(final ClassNode node) {
         return Signature.toString(GroovyUtils.getTypeSignature(node, false, false));
     }
 }

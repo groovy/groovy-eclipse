@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,7 +55,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     protected GroovyEditor editor;
 
     @Override
-    public void install(ITextEditor editor, ProjectionViewer viewer) {
+    public void install(final ITextEditor editor, final ProjectionViewer viewer) {
         super.install(editor, viewer);
         if (editor instanceof GroovyEditor)
             this.editor = (GroovyEditor) editor;
@@ -68,7 +68,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
     }
 
     @Override
-    protected void computeFoldingStructure(IJavaElement element, FoldingStructureComputationContext context) {
+    protected void computeFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
         // NOTE: be sure to call super.computeFoldingStructure when editor is null to preserve Java behavior
         if (editor != null && editor.getModuleNode() != null) {
             if (isMainType(element)) {
@@ -92,10 +92,10 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         super.computeFoldingStructure(element, context);
     }
 
-    protected void computeClosureFoldingStructure(IJavaElement element, FoldingStructureComputationContext context) {
+    protected void computeClosureFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
         DepthFirstVisitor visitor = new DepthFirstVisitor() {
             @Override
-            public void visitClosureExpression(ClosureExpression expression) {
+            public void visitClosureExpression(final ClosureExpression expression) {
                 if (expression.getEnd() > 0) {
                     IRegion normalized = alignRegion(new Region(expression.getStart(), expression.getLength()), context);
                     if (normalized != null) {
@@ -113,7 +113,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         visitor.visitModule(editor.getModuleNode());
     }
 
-    protected void computeCommentFoldingStructure(IJavaElement element, FoldingStructureComputationContext context) {
+    protected void computeCommentFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
         for (Comment comment : editor.getModuleNode().getContext().getComments()) {
             if (!comment.isJavadoc() && comment.eline > comment.sline) {
                 try {
@@ -137,15 +137,14 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         }
     }
 
-    protected void computeTraitMethodFoldingStructure(IType maybeTrait, FoldingStructureComputationContext context) {
+    protected void computeTraitMethodFoldingStructure(final IType maybeTrait, final FoldingStructureComputationContext context) {
         findType(maybeTrait).filter(Traits::isTrait).ifPresent(traitType -> {
             List<MethodNode> traitMethods = traitType.getNodeMetaData("trait.methods");
             if (traitMethods != null && !traitMethods.isEmpty()) {
                 for (MethodNode traitMethod : traitMethods) {
                     IRegion normalized = alignRegion(new Region(traitMethod.getStart(), traitMethod.getLength()), context);
                     if (normalized != null) {
-                        IMember method = maybeTrait.getMethod(traitMethod.getName(),
-                            GroovyUtils.getParameterTypeSignatures(traitMethod, true));
+                        IMember method = maybeTrait.getMethod(traitMethod.getName(), GroovyUtils.getParameterTypeSignatures(traitMethod, true));
                         Position position = createMemberPosition(normalized, method);
                         if (position != null) {
                             boolean isCollapsed = false, isComment = false;
@@ -159,7 +158,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     //--------------------------------------------------------------------------
 
-    protected final Optional<ClassNode> findType(IType type) {
+    protected final Optional<ClassNode> findType(final IType type) {
         String typeName = type.getFullyQualifiedName();
         Queue<ClassNode> classNodes = new LinkedList<>(editor.getModuleNode().getClasses());
         while (!classNodes.isEmpty()) {
@@ -174,7 +173,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         return Optional.empty();
     }
 
-    protected final boolean isMainType(IJavaElement element) {
+    protected final boolean isMainType(final IJavaElement element) {
         if (element instanceof IType) {
             String typeName = ((IType) element).getFullyQualifiedName();
             return typeName.equals(editor.getModuleNode().getMainClassName());
@@ -182,14 +181,14 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         return false;
     }
 
-    protected final boolean isScriptMethod(IJavaElement element) {
+    protected final boolean isScriptMethod(final IJavaElement element) {
         if (element instanceof IMethod && "run".equals(element.getElementName()) && ((IMethod) element).getNumberOfParameters() == 0) {
             return findType(((IMethod) element).getDeclaringType()).filter(ClassNode::isScript).isPresent();
         }
         return false;
     }
 
-    protected final boolean isScriptMethodElement(IRegion region) {
+    protected final boolean isScriptMethodElement(final IRegion region) {
         FindSurroundingNode fsn = new FindSurroundingNode(
             new org.codehaus.groovy.eclipse.codebrowsing.requestor.Region(region.getOffset(), region.getLength()),
             FindSurroundingNode.VisitKind.SURROUNDING_NODE);
@@ -203,7 +202,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         return false;
     }
 
-    protected static IDocument getDocument(FoldingStructureComputationContext context) {
+    protected static IDocument getDocument(final FoldingStructureComputationContext context) {
         return ReflectionUtils.executePrivateMethod(context.getClass(), "getDocument", context);
     }
 }
