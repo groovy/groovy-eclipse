@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
 
@@ -43,12 +42,12 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
      * @param which name of completion proposal to select and apply
      */
     protected void runTest(CharSequence contents, CharSequence expected, String target, String which = target) {
-        def editor = openInEditor(addGroovySource(contents.stripIndent(), nextUnitName()))
-        int offset = contents.stripIndent().toString().indexOf(target) + target.length()
+        def editor = openInEditor(addGroovySource(contents, nextUnitName()))
+        int offset = contents.toString().indexOf(target) + target.length()
         def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
 
         // find proposal
-        List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
+        def proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
         assert proposals != null && !proposals.empty : 'Expected some proposals, but got none'
         def matches = proposals.findAll { it.displayString.startsWith(which + ' - ') }
         assert matches.size() == 1 : 'Expected a match, but got ' + matches.size()
@@ -57,7 +56,7 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         matches[0].apply(editor.viewer, 'x' as char, 0, offset)
         SynchronizationUtils.runEventQueue() // allow the change to show in the editor
 
-        String expect = expected.stripIndent().toString().replace('|', '').normalize()
+        String expect = expected.toString().replace('#', '').normalize()
         String actual = editor.viewer.document.get().normalize()
         assert actual == expect
     }
@@ -69,9 +68,9 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
         String target = 'try'
         for (input in ['var. try', 'var.@ try', 'var.& try']) {
             def editor = openInEditor(addGroovySource(input, nextUnitName()))
-            int offset = input.stripIndent().toString().indexOf(target) + target.length()
+            int offset = input.indexOf(target) + target.length()
             def context = new JavaContentAssistInvocationContext(editor.viewer, offset, editor)
-            List<ICompletionProposal> proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
+            def proposals = new TemplateProposalComputer().computeCompletionProposals(context, null)
 
             assert proposals.isEmpty()
         }
@@ -81,15 +80,15 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testBasicTemplate() {
         //@formatter:off
         String input = '''\
-            try
-            '''
+            |try
+            |'''.stripMargin()
         String output = '''\
-            try {
-              |
-            } catch (Exception e) {
-              e.printStackTrace()
-            }
-            '''
+            |try {
+            |  #
+            |} catch (Exception e) {
+            |  e.printStackTrace()
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'try')
     }
@@ -98,20 +97,20 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testJUnitBefore() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Bef
-            }
-            '''
+            |final class SomeTest {
+            |  Bef
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.junit.Before
-
-            final class SomeTest {
-              @Before
-              void before() {
-                |
-              }
-            }
-            '''
+            |import org.junit.Before
+            |
+            |final class SomeTest {
+            |  @Before
+            |  void before() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Bef', 'Before')
     }
@@ -120,20 +119,20 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testJUnitAfter() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Aft
-            }
-            '''
+            |final class SomeTest {
+            |  Aft
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.junit.After
-
-            final class SomeTest {
-              @After
-              void after() {
-                |
-              }
-            }
-            '''
+            |import org.junit.After
+            |
+            |final class SomeTest {
+            |  @After
+            |  void after() {
+            |    #
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Aft', 'After')
     }
@@ -142,21 +141,21 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testGContractsEnsures() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Ens
-              def meth() {
-              }
-            }
-            '''
+            |final class SomeTest {
+            |  Ens
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.gcontracts.annotations.Ensures
-
-            final class SomeTest {
-              @Ensures({ predicate })
-              def meth() {
-              }
-            }
-            '''
+            |import org.gcontracts.annotations.Ensures
+            |
+            |final class SomeTest {
+            |  @Ensures({ predicate })
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Ens', 'Ensures')
     }
@@ -165,21 +164,21 @@ final class GroovyTemplatesCompletionTests extends QuickFixTestSuite {
     void testGContractsRequires() {
         //@formatter:off
         String input = '''\
-            final class SomeTest {
-              Req
-              def meth() {
-              }
-            }
-            '''
+            |final class SomeTest {
+            |  Req
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         String output = '''\
-            import org.gcontracts.annotations.Requires
-
-            final class SomeTest {
-              @Requires({ predicate })
-              def meth() {
-              }
-            }
-            '''
+            |import org.gcontracts.annotations.Requires
+            |
+            |final class SomeTest {
+            |  @Requires({ predicate })
+            |  def meth() {
+            |  }
+            |}
+            |'''.stripMargin()
         //@formatter:on
         runTest(input, output, 'Req', 'Requires')
     }

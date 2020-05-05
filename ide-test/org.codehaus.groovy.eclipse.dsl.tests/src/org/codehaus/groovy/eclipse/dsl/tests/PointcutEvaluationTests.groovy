@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,13 +118,13 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
         Assert.assertNotNull('Should have found some bindings.  Expected:\n' + Arrays.toString(results), bindings)
 
         for (result in results) {
-            Collection<?> o = bindings.getBinding(result.bindingName)
-            if (o == null) {
-                Assert.fail('Expected binding "' + result.bindingName + '", but not found.\n' + 'Actual bindings:\n' + bindings.bindings)
+            def binding = bindings.getBinding(result.bindingName)
+            if (binding == null) {
+                Assert.fail("Expected binding $result.bindingName, but not found.\nActual bindings:\n$bindings.bindings")
             }
-            assertSingleBinding(o, result.bindingToString)
+            assertSingleBinding(binding, result.bindingToString)
         }
-        Assert.assertEquals('Wrong number of bindings.  Expected Bindings: \n' + Arrays.toString(results) + '\nActualBindings:\n' + bindings.bindings, results.length, bindings.bindings.size())
+        assert bindings.bindings.size() == results.length
     }
 
     private void assertSingleBinding(Collection<?> binding, String expected) {
@@ -661,87 +661,109 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     @Test
     void testAnnotatedByBinding8() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
-        doTestOfLastBindingSet('Foo', 'currentType( bind( b : fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) ) )',
+
+        doTestOfLastBindingSet('Foo', '''\
+            |currentType(bind(b:
+            |  fields( annotatedBy("java.lang.Deprecated") ) &
+            |    methods( annotatedBy("java.lang.Deprecated") )
+            |))
+            |'''.stripMargin(),
             new BindingResult('b', 'p.Foo.f, p.Foo.g'))
     }
 
     @Test
     void testAnnotatedByBinding9() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', 'Foo', 'p')
-        doTestOfLastBindingSet('Foo', 'currentType( fields( bind ( b : annotatedBy("java.lang.Deprecated") ) ) & methods( bind ( b : annotatedBy("java.lang.Deprecated") ) ) )',
+
+        doTestOfLastBindingSet('Foo', '''\
+            |currentType(
+            |  fields( bind(b: annotatedBy("java.lang.Deprecated")) ) &
+            |    methods( bind(b: annotatedBy("java.lang.Deprecated")) )
+            |)
+            |'''.stripMargin(),
             new BindingResult('b', '@java.lang.Deprecated, @java.lang.Deprecated'))
     }
 
     @Test
     void testNestedCalls1() {
-        doTestOfLastBindingSet(
-            'bar {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |bar {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), bar()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCalls2() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  bar {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  bar {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar(), foo()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCalls3() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCall()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo(), foo()'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallNames1() {
-        doTestOfLastBindingSet(
-            'bar {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |bar {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'foo, bar'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallNames2() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  bar {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}', 'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  bar {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
+            'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
             new BindingResult('x', 'bar, foo'),
             new BindingResult('y', 'Var: XXX'))
     }
 
     @Test
     void testNestedCallsName3() {
-        doTestOfLastBindingSet(
-            'foo {\n' +
-            '  foo {\n' +
-            '    XXX\n' +
-            '  }\n' +
-            '}',
+        doTestOfLastBindingSet('''\
+            |foo {
+            |  foo {
+            |    XXX
+            |  }
+            |}
+            |'''.stripMargin(),
             'bind( x: enclosingCallName()) & bind(y: currentIdentifier("XXX"))',
-
             // since we are matching on names and there are 2 names that are the same, they get collapsed
             new BindingResult('x', 'foo'),
             new BindingResult('y', 'Var: XXX'))

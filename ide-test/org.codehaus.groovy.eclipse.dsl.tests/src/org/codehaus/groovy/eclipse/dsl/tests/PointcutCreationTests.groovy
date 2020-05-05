@@ -293,8 +293,6 @@ final class PointcutCreationTests {
         assertEquals('java.lang.String', ((IPointcut) pc.firstArgument).firstArgument)
 
         assertEquals('Should have 2 arguments', 2, pc.argumentValues.length)
-
-
         assertEquals(AndPointcut, pc.argumentValues[1].class)
 
         assertEquals(CurrentTypePointcut, ((IPointcut) pc.argumentValues[1]).argumentValues[0].class)
