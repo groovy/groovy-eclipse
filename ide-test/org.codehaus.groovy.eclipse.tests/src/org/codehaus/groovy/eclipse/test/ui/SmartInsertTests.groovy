@@ -51,7 +51,23 @@ final class SmartInsertTests extends GroovyEditorTestSuite {
 
         send('{')
 
-        assertEditorContents("new C(1, 2, ) {${CARET}") // TODO
+        assertEditorContents("new C(1, 2, {${CARET})")
+    }
+
+    @Test
+    void testInsertCurlyBrace3() {
+        addGroovySource '''\
+            |class C {
+            |  def setX(x) {
+            |  }
+            |}
+            |'''.stripMargin()
+
+        makeEditor("new C(x: ${CARET})")
+
+        send('{')
+
+        assertEditorContents("new C(x: {${CARET})")
     }
 
     //

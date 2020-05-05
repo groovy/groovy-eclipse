@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
@@ -58,7 +59,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     public GroovyConfiguration(final GroovyColorManager colorManager, final IPreferenceStore preferenceStore, final ITextEditor editor) {
         super(colorManager, preferenceStore, editor, IJavaPartitions.JAVA_PARTITIONING);
 
-        // replace Java's string scanner to enable Groovy's color choice
+        // replace Java's string scanner to enable Groovy's color choices
         AbstractJavaScanner stringScanner = new SingleTokenJavaScanner(colorManager,
             PreferenceConstants.getPreferenceStore(), PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
         ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fStringScanner", this, stringScanner);
@@ -109,6 +110,21 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                     };
                     strategies = (IAutoEditStrategy[]) ArrayUtils.add(strategies, (IAutoEditStrategy) (document, command) -> {
                         if ("{".equals(command.text)) {
+                            //int offset = SmartSemicolonAutoEditStrategy.firstNonWhitespaceBackward(document, command.offset-1, partitioning, -1);
+                            Integer prev = ReflectionUtils.executePrivateMethod(SmartSemicolonAutoEditStrategy.class, "firstNonWhitespaceBackward",
+                                new Class[] {IDocument.class, int.class, String.class, int.class}, SmartSemicolonAutoEditStrategy.class,
+                                new Object[] {document, command.offset - 1, partitioning, -1});
+                            try {
+                                if (prev != null && prev != -1) {
+                                    switch (document.getChar(prev)) {
+                                    case ',':
+                                    case ':':
+                                        return;
+                                    }
+                                }
+                            } catch (BadLocationException ignore) {
+                            }
+
                             IAutoEditStrategy delegate = new SmartSemicolonAutoEditStrategy(partitioning);
                             delegate.customizeDocumentCommand(document, command);
                         }
