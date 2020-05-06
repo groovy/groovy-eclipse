@@ -3462,6 +3462,32 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testEqualsClassTest4() {
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return that in C &&\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that in ");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
+    @Test
     public void testSwitchClassCase1() {
         String contents =
             "void test(obj) {\n" +

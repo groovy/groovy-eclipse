@@ -2932,8 +2932,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             case Types.LOGICAL_AND:
                 // check for "x instanceof T && ... && ..." flow typing
                 return inferInstanceOfType(be.getLeftExpression(), scope);
+            case Types.KEYWORD_IN:
+            case 129/*Types.COMPARE_NOT_IN*/:
+                if (!(be.getRightExpression() instanceof ClassExpression)) {
+                    break;
+                }
+                // fall through
             case Types.KEYWORD_INSTANCEOF:
-            case 130/*Types.NOT_INSTANCEOF*/:
+            case 130/*Types.COMPARE_NOT_INSTANCEOF*/:
                 if (be.getLeftExpression() instanceof VariableExpression) {
                     String name = be.getLeftExpression().getText();
                     ClassNode type = be.getRightExpression().getType();
