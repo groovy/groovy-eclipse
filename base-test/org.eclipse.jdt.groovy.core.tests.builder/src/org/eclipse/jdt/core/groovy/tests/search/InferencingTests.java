@@ -3308,18 +3308,48 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
+    public void testInstanceOf13() {
+        String contents =
+            "class C {\n" +
+            "  private Number one, two\n" +
+            "  boolean equals(Object that) {\n" +
+            "    that instanceof C && that.one == this.one && that.two == this.two\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that instanceof");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that.one");
+        assertType(contents, offset, offset + 4, "C");
+        assertType(contents, offset + 5, offset + 8, "java.lang.Number");
+
+        offset = contents.indexOf("that.two");
+        assertType(contents, offset, offset + 4, "C");
+        assertType(contents, offset + 5, offset + 8, "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1101
     public void testEqualsClassTest1() {
         String contents =
             "class C {\n" +
             "  def foo, bar, baz\n" +
             "  boolean equals(Object that) {\n" +
             "    return that.class == C &&\n" +
-            "      that.foo == this.foo\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
             "  }\n" +
             "}\n";
 
         int offset = contents.indexOf("that.class");
         assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
 
         offset = contents.indexOf("that", offset + 4);
         assertType(contents, offset, offset + 4, "C");
@@ -3332,12 +3362,20 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def foo, bar, baz\n" +
             "  boolean equals(Object that) {\n" +
             "    return that.getClass() == C &&\n" +
-            "      that.foo == this.foo\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
             "  }\n" +
             "}\n";
 
         int offset = contents.indexOf("that.getClass()");
         assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
 
         offset = contents.indexOf("that", offset + 4);
         assertType(contents, offset, offset + 4, "C");
@@ -3350,12 +3388,20 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def foo, bar, baz\n" +
             "  boolean equals(Object that) {\n" +
             "    return C == that.class &&\n" +
-            "      that.foo == this.foo\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
             "  }\n" +
             "}\n";
 
         int offset = contents.indexOf("that.class");
         assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
 
         offset = contents.indexOf("that", offset + 4);
         assertType(contents, offset, offset + 4, "C");
@@ -3368,12 +3414,20 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def foo, bar, baz\n" +
             "  boolean equals(Object that) {\n" +
             "    return C == that.getClass() &&\n" +
-            "      that.foo == this.foo\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
             "  }\n" +
             "}\n";
 
         int offset = contents.indexOf("that.getClass()");
         assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
 
         offset = contents.indexOf("that", offset + 4);
         assertType(contents, offset, offset + 4, "C");
@@ -3388,12 +3442,20 @@ public final class InferencingTests extends InferencingTestSuite {
             "  def foo, bar, baz\n" +
             "  boolean equals(Object that) {\n" +
             "    return that.class === C &&\n" +
-            "      that.foo == this.foo\n" +
+            "      that.foo == this.foo &&\n" +
+            "      that.bar == this.bar &&\n" +
+            "      that.baz == this.baz\n" +
             "  }\n" +
             "}\n";
 
         int offset = contents.indexOf("that.class");
         assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
 
         offset = contents.indexOf("that", offset + 4);
         assertType(contents, offset, offset + 4, "C");

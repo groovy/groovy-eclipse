@@ -2929,6 +2929,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 be = nsbe;
             }
             switch (be.getOperation().getType()) {
+            case Types.LOGICAL_AND:
+                // check for "x instanceof T && ... && ..." flow typing
+                return inferInstanceOfType(be.getLeftExpression(), scope);
             case Types.KEYWORD_INSTANCEOF:
             case 130/*Types.NOT_INSTANCEOF*/:
                 if (be.getLeftExpression() instanceof VariableExpression) {
