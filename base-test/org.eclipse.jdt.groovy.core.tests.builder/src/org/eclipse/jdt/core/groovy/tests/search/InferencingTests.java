@@ -3307,6 +3307,98 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 5, "java.lang.Number");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1101
+    public void testEqualsClassTest1() {
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return that.class == C &&\n" +
+            "      that.foo == this.foo\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that.class");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1101
+    public void testEqualsClassTest1a() {
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return that.getClass() == C &&\n" +
+            "      that.foo == this.foo\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that.getClass()");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
+    @Test
+    public void testEqualsClassTest2() {
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return C == that.class &&\n" +
+            "      that.foo == this.foo\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that.class");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
+    @Test
+    public void testEqualsClassTest2a() {
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return C == that.getClass() &&\n" +
+            "      that.foo == this.foo\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that.getClass()");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
+    @Test
+    public void testEqualsClassTest3() {
+        assumeTrue(isParrotParser());
+
+        String contents =
+            "class C {\n" +
+            "  def foo, bar, baz\n" +
+            "  boolean equals(Object that) {\n" +
+            "    return that.class === C &&\n" +
+            "      that.foo == this.foo\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("that.class");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        offset = contents.indexOf("that", offset + 4);
+        assertType(contents, offset, offset + 4, "C");
+    }
+
     @Test
     public void testSwitchClassCase1() {
         String contents =

@@ -102,6 +102,7 @@ import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.FieldASTTransformation;
@@ -2913,40 +2914,77 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
-        // check for "if (x instanceof y) { ... }" flow typing
+        java.util.function.BiPredicate<String, ClassNode> isSubType = (name, type) -> {
+            VariableScope.VariableInfo vi = scope.lookupName(name); // known type of "name"
+            return (vi == null || vi.type == null || GroovyUtils.isAssignable(type, vi.type));
+        };
+
+        // check for "if (x instanceof T) { ... }" or "if (x.getClass() == T) { ... }" flow typing
         if (expression instanceof BinaryExpression) {
             BinaryExpression be = (BinaryExpression) expression;
-            // check for "if (x == null || x instanceof y) { .. }" or
-            //  "if (x != null && x instanceof y) { .. }" flow typing
+            // check for "if (x == null || x instanceof T) { ... }" or
+            //  "if (x != null && x instanceof T) { ... }" flow typing
             BinaryExpression nsbe = nullSafeBinaryExpression(be);
             if (nsbe != null) {
                 be = nsbe;
             }
-            if (isInstanceOf(be) && be.getLeftExpression() instanceof VariableExpression) {
-                VariableExpression ve = (VariableExpression) be.getLeftExpression();
-                VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
-                if (vi != null && (vi.type == null || GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type))) {
-                    return Collections.singletonMap(vi.name, be.getOperation().getType() == Types.KEYWORD_INSTANCEOF
-                        ? new ClassNode[] {be.getRightExpression().getType(), null} // instanceof
-                        : new ClassNode[] {null, be.getRightExpression().getType()} // !instanceof
-                    );
+            switch (be.getOperation().getType()) {
+            case Types.KEYWORD_INSTANCEOF:
+            case 130/*Types.NOT_INSTANCEOF*/:
+                if (be.getLeftExpression() instanceof VariableExpression) {
+                    String name = be.getLeftExpression().getText();
+                    ClassNode type = be.getRightExpression().getType();
+                    if (isSubType.test(name, type))
+                        return instanceOfBinding(name, type, be.getOperation());
                 }
+                break;
+            case Types.COMPARE_EQUAL:
+            case Types.COMPARE_NOT_EQUAL:
+            case Types.COMPARE_IDENTICAL:
+            case Types.COMPARE_NOT_IDENTICAL:
+                ASTNode expr = null;
+                ClassNode type = null;
+                if (be.getRightExpression() instanceof ClassExpression) {
+                    expr = be.getLeftExpression();
+                    type = be.getRightExpression().getType();
+                } else if (be.getLeftExpression() instanceof ClassExpression) {
+                    expr = be.getRightExpression();
+                    type = be.getLeftExpression().getType();
+                }
+                if (expr instanceof PropertyExpression) {
+                    PropertyExpression pe = (PropertyExpression) expr;
+                    if (pe.getObjectExpression() instanceof VariableExpression && pe.getPropertyAsString().equals("class")) {
+                        String name = pe.getObjectExpression().getText();
+                        if (isSubType.test(name, type))
+                            return instanceOfBinding(name, type, be.getOperation());
+                    }
+                } else if (expr instanceof MethodCallExpression) {
+                    MethodCallExpression mce = (MethodCallExpression) expr;
+                    if (mce.getObjectExpression() instanceof VariableExpression && mce.getMethodAsString().equals("getClass")) {
+                        String name = mce.getObjectExpression().getText();
+                        if (isSubType.test(name, type))
+                            return instanceOfBinding(name, type, be.getOperation());
+                    }
+                }
+                break;
             }
         } else if (expression instanceof BooleanExpression) {
             Map<String, ClassNode[]> types = inferInstanceOfType(((BooleanExpression) expression).getExpression(), scope);
             if (!types.isEmpty()) {
-                // check for "if (!(x instanceof y)) { ... } else { ... }"
+                // check for "if (!(x instanceof T)) { ... } else { ... }" flow typing
                 if (expression instanceof NotExpression) {
                     for (ClassNode[] value : types.values()) {
-                        ClassNode type = value[0];
-                        value[0] = value[1];
-                        value[1] = type;
+                        DefaultGroovyMethods.swap(value, 0, 1);
                     }
                 }
                 return types;
             }
         }
         return Collections.emptyMap();
+    }
+
+    private static Map<String, ClassNode[]> instanceOfBinding(final String name, final ClassNode type, final Token operator) {
+        return Collections.singletonMap(name, operator.getText().startsWith("!") ? new ClassNode[] {null, type} : new ClassNode[] {type, null});
     }
 
     /**
@@ -2980,17 +3018,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private static boolean isEnumInit(final StaticMethodCallExpression node) {
         return (node.getOwnerType().isEnum() && node.getMethodAsString().equals("$INIT"));
-    }
-
-    private static boolean isInstanceOf(final BinaryExpression node) {
-        // Groovy 3+: return node.getOperation().isA(Types.INSTANCEOF_OPERATOR);
-        switch (node.getOperation().getType()) {
-        case Types.KEYWORD_INSTANCEOF:
-        case 130/*NOT_INSTANCEOF*/:
-            return true;
-        default:
-            return false;
-        }
     }
 
     private static boolean isLazy(final FieldNode fieldNode) {
