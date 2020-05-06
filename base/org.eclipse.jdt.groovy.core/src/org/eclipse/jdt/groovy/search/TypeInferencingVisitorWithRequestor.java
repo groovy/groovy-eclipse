@@ -2916,7 +2916,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private static Map<String, ClassNode[]> inferInstanceOfType(final Expression expression, final VariableScope scope) {
         java.util.function.BiPredicate<String, ClassNode> isSubType = (name, type) -> {
             VariableScope.VariableInfo vi = scope.lookupName(name); // known type of "name"
-            return (vi == null || vi.type == null || GroovyUtils.isAssignable(type, vi.type));
+            return (vi != null && (vi.type == null || GroovyUtils.isAssignable(type, vi.type)));
         };
 
         // check for "if (x instanceof T) { ... }" or "if (x.getClass() == T) { ... }" flow typing
