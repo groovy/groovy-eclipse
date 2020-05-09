@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -190,6 +191,10 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         // something " in " something
         else if (node instanceof MethodCallExpression && ((MethodCallExpression) node).getMethodAsString().equals("isCase") && length == 2) {
             keyword = String.valueOf(contents, start, length).equals("in");
+        }
+        // something "::" something
+        else if (node instanceof MethodPointerExpression && length == 2) {
+            keyword = String.valueOf(contents, start, length).equals("::");
         }
         // "import " or "import static " something
         else if (node instanceof ImportNode && length == 6 && (start == node.getStart() ||

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
+import static org.junit.Assume.assumeTrue
 
 import org.junit.Test
 
@@ -38,15 +41,23 @@ final class CodeSelectMiscellaneousTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectColonInAssert1() {
+    void testSelectColonInAssert() {
         String contents = 'assert false : "message"'
         assertCodeSelect([contents], ':', null)
     }
 
     @Test
-    void testSelectColonInForEach1() {
+    void testSelectColonInForEach() {
         String contents = 'for (Object item : []){}'
         assertCodeSelect([contents], ':', null)
+    }
+
+    @Test
+    void testSelectColonInMethRef() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def maker = String[]::new'
+        assertCodeSelect([contents], '::', null)
     }
 
     @Test
@@ -62,7 +73,7 @@ final class CodeSelectMiscellaneousTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSelectStatementLabel1() {
+    void testSelectStatementLabel() {
         String contents = 'def m(){ label: for (item in []){} }'
         assertCodeSelect([contents], 'label', null)
     }
