@@ -213,10 +213,8 @@ public class Javadoc extends ASTNode {
 		// @param tags
 		int paramTagsSize = this.paramReferences == null ? 0 : this.paramReferences.length;
 		for (int i = 0; i < paramTagsSize; i++) {
-			if(scope.referenceContext instanceof RecordDeclaration) {
-				RecordDeclaration rd = (RecordDeclaration)scope.referenceContext;
-				if(  rd.nRecordComponents > 0)
-					break;
+			if(scope.referenceContext.nRecordComponents > 0) {
+				break;
 			}
 			JavadocSingleNameReference param = this.paramReferences[i];
 			scope.problemReporter().javadocUnexpectedTag(param.tagSourceStart, param.tagSourceEnd);
@@ -735,10 +733,12 @@ public class Javadoc extends ASTNode {
 	 */
 	private void resolveTypeParameterTags(Scope scope, boolean reportMissing) {
 		int paramTypeParamLength = this.paramTypeParameters == null ? 0 : this.paramTypeParameters.length;
+		int paramReferencesLength = this.paramReferences == null ? 0 : this.paramReferences.length;
 
 		// Get declaration infos
 		TypeParameter[] parameters = null;
 		TypeVariableBinding[] typeVariables = null;
+		Argument[] recordParameters = null;
 		int modifiers = -1;
 		switch (scope.kind) {
 			case Scope.METHOD_SCOPE:
@@ -760,16 +760,82 @@ public class Javadoc extends ASTNode {
 				parameters = typeDeclaration.typeParameters;
 				typeVariables = typeDeclaration.binding.typeVariables;
 				modifiers = typeDeclaration.binding.modifiers;
+				recordParameters = typeDeclaration.args;
 				break;
 		}
 
 		// If no type variables then report a problem for each param type parameter tag
-		if (typeVariables == null || typeVariables.length == 0) {
+		if ((recordParameters == null || recordParameters.length == 0)
+				&& (typeVariables == null || typeVariables.length == 0)) {
 			for (int i = 0; i < paramTypeParamLength; i++) {
 				JavadocSingleTypeReference param = this.paramTypeParameters[i];
 				scope.problemReporter().javadocUnexpectedTag(param.tagSourceStart, param.tagSourceEnd);
 			}
 			return;
+		}
+
+		// If no param tags then report a problem for each record parameter
+		if (recordParameters != null) {
+			reportMissing = reportMissing && scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
+			int recordParametersLength = recordParameters.length;
+			String argNames[] = new String[paramReferencesLength];
+			if (paramReferencesLength == 0) {
+				if (reportMissing) {
+					for (int i = 0, l=recordParametersLength; i<l; i++) {
+						scope.problemReporter().javadocMissingParamTag(recordParameters[i].name, recordParameters[i].sourceStart, recordParameters[i].sourceEnd, modifiers);
+					}
+				}
+			} else {
+				// Otherwise verify that all param tags match record args
+				// Scan all @param tags
+				for (int i = 0; i < paramReferencesLength; ++i) {
+					JavadocSingleNameReference param = this.paramReferences[i];
+					String paramName = new String(param.getName()[0]);
+					// Verify duplicated tags
+					boolean duplicate = false;
+					for (int j = 0; j < i && !duplicate; j++) {
+						if (paramName.equals(argNames[j])) {
+							scope.problemReporter().javadocDuplicatedParamTag(param.token, param.sourceStart, param.sourceEnd, modifiers);
+							duplicate = true;
+						}
+					}
+					if (!duplicate) {
+						argNames[i] = paramName;
+					}
+				}
+				// Look for undocumented arguments
+				if (reportMissing) {
+					for (int i = 0; i < recordParameters.length; i++) {
+						Argument arg = recordParameters[i];
+						boolean found = false;
+						for (int j = 0; j < paramReferencesLength && !found; j++) {
+							JavadocSingleNameReference param = this.paramReferences[j];
+							String paramName = new String(param.getName()[0]);
+							if (paramName.equals(new String(arg.name))) {
+								found = true;
+							}
+						}
+						if (!found) {
+							scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, modifiers);
+						}
+					}
+				}
+				// Look for param tags that specify non-existent arguments
+				for (int i = 0; i < paramReferencesLength; i++) {
+					JavadocSingleNameReference param = this.paramReferences[i];
+					String paramName = new String(param.getName()[0]);
+					boolean found = false;
+					for (int j = 0; j < recordParameters.length; j++) {
+						Argument arg = recordParameters[j];
+						if (paramName.equals(new String(arg.name))) {
+							found = true;
+						}
+					}
+					if (!found) {
+						scope.problemReporter().javadocInvalidParamTagName(param.sourceStart, param.sourceEnd);
+					}
+				}
+			}
 		}
 
 		// If no param tags then report a problem for each declaration type parameter

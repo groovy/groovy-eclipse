@@ -4611,4 +4611,63 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 				"----------\n");
 
 	}
+
+	public void testBug562129() {
+		if (this.complianceLevel < ClassFileConstants.JDK14) return;
+		runNegativeTest(
+			new String[] {
+				"SwitchExpressionError.java",
+				"class SwitchExpressionError {\n" +
+				"\n" +
+				"    static boolean howMany(int k) {\n" +
+				"        return false || switch (k) {\n" +
+				"            case 1 -> true;\n" +
+				"            case 2 -> Boolean.FALSE;\n" +
+				"            case 3 -> r;\n" +
+				"        };\n" +
+				"    }\n" +
+				"\n" +
+				"}\n"
+			},
+			"----------\n" +
+			"1. ERROR in SwitchExpressionError.java (at line 4)\n" +
+			"	return false || switch (k) {\n" +
+			"	                        ^\n" +
+			"A switch expression should have a default case\n" +
+			"----------\n" +
+			"2. ERROR in SwitchExpressionError.java (at line 7)\n" +
+			"	case 3 -> r;\n" +
+			"	          ^\n" +
+			"r cannot be resolved to a variable\n" +
+			"----------\n");
+	}
+	public void testBug562198_001() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"    int a[] = {1, 2, 3};\n"+
+				"    public int foo() {\n"+
+				"        return switch (0) {\n"+
+				"               case 0 -> {\n"+
+				"                       yield a[0];\n"+
+				"               }\n"+
+				"            default -> {\n"+
+				"                try {\n"+
+				"                    // do nothing\n"+
+				"                } finally {\n"+
+				"                    // do nothing\n"+
+				"                }\n"+
+				"                yield 0;\n"+
+				"            }\n"+
+				"        };\n"+
+				"    }\n"+
+				"    public static void main(String[] args) {\n"+
+				"               System.out.println(new X().foo());\n"+
+				"       }\n"+
+				"}\n"
+			},
+			"1");
+	}
+
 }

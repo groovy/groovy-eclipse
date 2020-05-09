@@ -2722,7 +2722,62 @@ public void test078() {
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47227
  */
 // TODO: Enable after Bug 552769 is fixed
-public void _test079() {
+public void test079() {
+
+	String expectedErrorLog = 		"----------\n" +
+			"1. ERROR in Hello.java (at line 1)\n" +
+			"	void ___eval() {\n" +
+			"	^^^^\n" +
+			"Syntax error on token \"void\", @ expected\n" +
+			"----------\n" +
+			"2. ERROR in Hello.java (at line 1)\n" +
+			"	void ___eval() {\n" +
+			"	             ^\n" +
+			"Syntax error on token \")\", delete this token\n" +
+			"----------\n" +
+			"3. ERROR in Hello.java (at line 9)\n" +
+			"	};\n" +
+			"}\n" +
+			"	^^^^\n" +
+			"Syntax error on tokens, delete these tokens\n" +
+			"----------\n" +
+			"4. ERROR in Hello.java (at line 23)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \"}\" to complete ClassBody\n" +
+			"----------\n" +
+			"5. ERROR in Hello.java (at line 23)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \"}\" to complete MemberValue\n" +
+			"----------\n" +
+			"6. ERROR in Hello.java (at line 23)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \")\" to complete Modifiers\n" +
+			"----------\n" +
+			"7. ERROR in Hello.java (at line 23)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \"enum Identifier\" to complete EnumHeader\n" +
+			"----------\n" +
+			"8. ERROR in Hello.java (at line 23)\n" +
+			"	}\n" +
+			"	^\n" +
+			"Syntax error, insert \"EnumBody\" to complete CompilationUnit\n" +
+			"----------\n";
+	String expectedErrorLog_J14 = "----------\n" +
+			"1. ERROR in Hello.java (at line 1)\n" +
+			"	void ___eval() {\n" +
+			"	^^^^\n" +
+			"Syntax error on token \"void\", record expected\n" +
+			"----------\n" +
+			"2. ERROR in Hello.java (at line 2)\n" +
+			"	new Runnable() {\n" +
+			"	^^^\n" +
+			"Syntax error on token \"new\", record expected\n" +
+			"----------\n";
+
 	this.runNegativeTest(
 		new String[] {
 			"Hello.java",
@@ -2750,22 +2805,8 @@ public void _test079() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" +
-		"1. ERROR in Hello.java (at line 1)\n" +
-		"	void ___eval() {\n" +
-		"	^^^^\n" +
-		"Syntax error on token \"void\", record expected\n" +
-		"----------\n" +
-		"2. ERROR in Hello.java (at line 1)\n" +
-		"	void ___eval() {\n" +
-		"	             ^\n" +
-		"Syntax error on token \")\", { expected after this token\n" +
-		"----------\n" +
-		"3. ERROR in Hello.java (at line 23)\n" +
-		"	}\n" +
-		"	^\n" +
-		"Syntax error, insert \"}\" to complete RecordBody\n" +
-		"----------\n"
+		this.complianceLevel < ClassFileConstants.JDK14 ?
+		expectedErrorLog :expectedErrorLog_J14
 	);
 }
 /*

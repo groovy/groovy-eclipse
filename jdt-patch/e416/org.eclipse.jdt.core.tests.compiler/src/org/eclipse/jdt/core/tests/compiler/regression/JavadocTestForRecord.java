@@ -33,6 +33,8 @@ public class JavadocTestForRecord extends JavadocTest {
 
 	String docCommentSupport = CompilerOptions.ENABLED;
 	String reportInvalidJavadoc = CompilerOptions.ERROR;
+	String reportInvalidJavadocTags = CompilerOptions.ENABLED;
+	String reportInavlidJavadocTagsVisibility = CompilerOptions.PRIVATE;
 	String reportInvalidJavadocVisibility = CompilerOptions.PRIVATE;
 	String reportMissingJavadocTags = CompilerOptions.ERROR;
 	String reportMissingJavadocTagsOverriding = CompilerOptions.ENABLED;
@@ -83,6 +85,8 @@ public class JavadocTestForRecord extends JavadocTest {
 		}
 		if (this.reportMissingJavadocComments != null)
 			options.put(CompilerOptions.OPTION_ReportMissingJavadocComments, this.reportMissingJavadocComments);
+		options.put(CompilerOptions.OPTION_ReportInvalidJavadocTags, this.reportInvalidJavadocTags);
+		options.put(CompilerOptions.OPTION_ReportInvalidJavadocTagsVisibility, this.reportInavlidJavadocTagsVisibility);
 		options.put(CompilerOptions.OPTION_ReportFieldHiding, CompilerOptions.IGNORE);
 		options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
 		options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
@@ -129,6 +133,8 @@ public class JavadocTestForRecord extends JavadocTest {
 		super.setUp();
 		this.docCommentSupport = CompilerOptions.ENABLED;
 		this.reportInvalidJavadoc = CompilerOptions.ERROR;
+		this.reportInvalidJavadocTags = CompilerOptions.ENABLED;
+		this.reportInvalidJavadocVisibility = CompilerOptions.PRIVATE;
 		this.reportInvalidJavadocVisibility = CompilerOptions.PRIVATE;
 		this.reportMissingJavadocTags = CompilerOptions.ERROR;
 		this.reportMissingJavadocComments = CompilerOptions.ERROR;
@@ -168,6 +174,100 @@ public class JavadocTestForRecord extends JavadocTest {
 						+ "		 *   @param args \n" + "		 */  \n" + "  public static void main(String[] args){\n"
 						+ "     System.out.println(0);\n" + "  }\n" + "}" },
 				"0");
+	}
+
+	public void test004() {
+		if(this.complianceLevel < ClassFileConstants.JDK14) {
+			return;
+		}
+		runConformTest(new String[] { "X.java",
+				"		/**  \n" +
+				"		 * @param a\n" +
+				"		 */  \n" +
+				"		public record X(int a) {\n" +
+				"			/**  \n" +
+				"			 *   @param args \n" + "		 */  \n" +
+				"			public static void main(String[] args){\n" +
+				"				System.out.println(0);\n" +
+				"			}\n" +
+				"		}" },
+				"0");
+	}
+
+	public void test005() {
+		if(this.complianceLevel < ClassFileConstants.JDK14) {
+			return;
+		}
+		runNegativeTest(new String[] { "X.java",
+				"		/**  \n" +
+				"		 */  \n" +
+				"		public record X(int a) {\n" +
+				"			/**  \n" +
+				"			 *   @param args \n" +
+				"			 */  \n" +
+				"			public static void main(String[] args){\n" +
+				"				System.out.println(0);\n" +
+				"			}\n" +
+				"		}" },
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	public record X(int a) {\n" +
+				"	                    ^\n" +
+				"Javadoc: Missing tag for parameter a\n" +
+				"----------\n",
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	}
+
+	public void test006() {
+		if(this.complianceLevel < ClassFileConstants.JDK14) {
+			return;
+		}
+		runNegativeTest(new String[] { "X.java",
+				"		/**  \n" +
+				"		 * @param a\n" +
+				"		 * @param a\n" +
+				"		 */  \n" +
+				"		public record X(int a) {\n" +
+				"			/**  \n" +
+				"			 *   @param args \n" +
+				"			 */  \n" +
+				"			public static void main(String[] args){\n" +
+				"				System.out.println(0);\n" +
+				"			}\n" +
+				"		}" },
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	* @param a\n" +
+				"	         ^\n" +
+				"Javadoc: Duplicate tag for parameter\n" +
+				"----------\n",
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	}
+
+	public void test007() {
+		if(this.complianceLevel < ClassFileConstants.JDK14) {
+			return;
+		}
+		runNegativeTest(new String[] { "X.java",
+				"		/**  \n" +
+				"		 * @param a\n" +
+				"		 * @param b\n" +
+				"		 */  \n" +
+				"		public record X(int a) {\n" +
+				"			/**  \n" +
+				"			 *   @param args \n" +
+				"			 */  \n" +
+				"			public static void main(String[] args){\n" +
+				"				System.out.println(0);\n" +
+				"			}\n" +
+				"		}" },
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	* @param b\n" +
+				"	         ^\n" +
+				"Javadoc: Invalid param tag name\n" +
+				"----------\n",
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
 
 }

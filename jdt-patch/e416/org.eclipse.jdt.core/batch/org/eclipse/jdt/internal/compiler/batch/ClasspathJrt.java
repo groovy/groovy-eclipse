@@ -128,14 +128,14 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			return null; // most common case
 		final char[] packageArray = qualifiedPackageName.toCharArray();
 		final ArrayList answers = new ArrayList();
-	
+
 		try {
 			JRTUtil.walkModuleImage(this.file, new JRTUtil.JrtFileVisitor<java.nio.file.Path>() {
 
 				@Override
 				public FileVisitResult visitPackage(java.nio.file.Path dir, java.nio.file.Path modPath, BasicFileAttributes attrs) throws IOException {
 					if (qualifiedPackageName.startsWith(dir.toString())) {
-						return FileVisitResult.CONTINUE;	
+						return FileVisitResult.CONTINUE;
 					}
 					return FileVisitResult.SKIP_SUBTREE;
 				}
@@ -168,7 +168,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		} catch (IOException e) {
 			// Ignore and move on
 		}
-		
+
 		int size = answers.size();
 		if (size != 0) {
 			char[][][] result = new char[size][][];
@@ -193,7 +193,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		loadModules();
 	}
 //	public void acceptModule(IModuleDeclaration mod) {
-//		if (this.isJrt) 
+//		if (this.isJrt)
 //			return;
 //		this.module = mod;
 //	}
@@ -220,12 +220,8 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 
 					@Override
 					public FileVisitResult visitModule(Path p, String name) throws IOException {
-						try {
-							ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name), newCache);
-							ClasspathJrt.this.moduleNamesCache.add(name);
-						} catch (ClassFormatException e) {
-							e.printStackTrace();
-						}
+						ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, name), newCache);
+						ClasspathJrt.this.moduleNamesCache.add(name);
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 				}, JRTUtil.NOTIFY_MODULES);
@@ -252,7 +248,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	}
 
 	void acceptModule(byte[] content, Map<String, IModule> cache) {
-		if (content == null) 
+		if (content == null)
 			return;
 		ClassFileReader reader = null;
 		try {
@@ -264,7 +260,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			acceptModule(reader, cache);
 		}
 	}
-	
+
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModule, Function<String, IModule> getModule) {
 		Map<String, IModule> cache = ModulesCache.get(this.file.getPath());
@@ -288,7 +284,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			boolean isPotentialRoot = !isJavaDotStart;	// always include non-java.*
 			if (!hasJavaDotSE)
 				isPotentialRoot |= isJavaDotStart;		// no java.se => add all java.*
-			
+
 			if (isPotentialRoot) {
 				IModule m = getModule.apply(mod);
 				if (m != null) {
@@ -320,7 +316,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 //
 //		this.packageCache = new HashSet<>(41);
 //		this.packageCache.add(Util.EMPTY_STRING);
-//		
+//
 //			try {
 //				JRTUtil.walkModuleImage(this.file, new JRTUtil.JrtFileVisitor<java.nio.file.Path>() {
 //

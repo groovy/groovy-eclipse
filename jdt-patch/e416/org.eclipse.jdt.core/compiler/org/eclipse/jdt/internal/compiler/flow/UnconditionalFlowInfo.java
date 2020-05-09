@@ -1815,8 +1815,7 @@ public UnconditionalFlowInfo mergedWith(UnconditionalFlowInfo otherInits) {
 
 	// treating extra storage
 	if (this.extra != null || otherInits.extra != null) {
-		// four areas, but not all combinations are possible: only one of copyLimit/resetLimit will be > 0, takeLimit is exclusive to all others
-		int takeLimit = 0;  // [..takeLimit]			: this is unreachable, take null info from other as-is
+		// three areas, but not all combinations are possible: only one of copyLimit/resetLimit will be > 0
 		int mergeLimit = 0; // [0..mergeLimit]			: both flows have extra bits. Merge'em
 		int copyLimit = 0;  // (mergeLimit..copyLimit] 	: only other has extra bits. Copy'em, sheding some doubt
 		int resetLimit = 0; // (copyLimit..resetLimit]  : only this has extra bits. Shed doubt on them.
@@ -1899,87 +1898,95 @@ public UnconditionalFlowInfo mergedWith(UnconditionalFlowInfo otherInits) {
 			copyLimit = 0; // no need to carry inexisting nulls
 			mergeLimit = 0;
 		}
+		i = 0;
 		if (thisWasUnreachable) {
-			// completely ignore unreachable info (don't shed any doubts on other)
-			takeLimit = Math.max(resetLimit, mergeLimit);
-			mergeLimit = 0;
-			resetLimit = 0;
-		}
-		// compose nulls
-		for (i = 0; i < takeLimit; i++) {
-    		this.extra[1 + 1][i] = otherInits.extra[1+1][i];
-    		this.extra[2 + 1][i] = otherInits.extra[2+1][i];
-    		this.extra[3 + 1][i] = otherInits.extra[3+1][i];
-    		this.extra[4 + 1][i] = otherInits.extra[4+1][i];
-		}
-		for (; i < mergeLimit; i++) {
-    		this.extra[1 + 1][i] = (a1=this.extra[1+1][i]) & (b1=otherInits.extra[1+1][i]) & (
-    				((a2=this.extra[2+1][i]) & (((b2=otherInits.extra[2+1][i]) &
-    												~(((a3=this.extra[3+1][i]) & (a4=this.extra[4+1][i])) ^ ((b3=otherInits.extra[3+1][i]) & (b4=otherInits.extra[4+1][i]))))
-    											|(a3 & a4 & (nb2=~b2))))
-    				|((na2=~a2) & ((b2 & b3 & b4)
-    						|(nb2 & ((na3=~a3) ^ b3)))));
-    		this.extra[2 + 1][i] = b2 & ((nb3=~b3) | (nb1 = ~b1) | a3 & (a4 | (na1 = ~a1)) & (nb4=~b4))
-        			| a2 & (b2 | (na4=~a4) & b3 & (b4 | nb1) | na3 | na1);
-    		this.extra[3 + 1][i] =   a3 & (na1 | a1 & na2 | b3 & (na4 ^ b4))
-								   | b3 & (nb1 | b1 & nb2);
-    		this.extra[4 + 1][i] = na3 & (nb1 & nb3 & b4
-              			| b1 & (nb2 & nb3 | a4 & b2 & nb4)
-              			| na1 & a4 & (nb3 | b1 & b2))
-        			| a3 & a4 & (b3 & b4 | b1 & nb2 | na1 & a2)
-        			| na2 & (nb1 & b4 | b1 & nb3 | na1 & a4) & nb2
-        			| a1 & (na3 & (nb3 & b4
-                        			| b1 & b2 & b3 & nb4
-                        			| na2 & (nb3 | nb2))
-                			| na2 & b3 & b4
-                			| a2 & (nb1 & b4 | a3 & na4 & b1) & nb3)
-                	|nb1 & b2 & b3 & b4;
-    		this.extra[IN][i] |= otherInits.extra[IN][i];
-    		this.extra[INN][i] |= otherInits.extra[INN][i];
-			thisHasNulls = thisHasNulls ||
-				this.extra[3][i] != 0 ||
-				this.extra[4][i] != 0 ||
-				this.extra[5][i] != 0 ;
-			if (COVERAGE_TEST_FLAG) {
-				if(CoverageTestId == 37) {
-					this.extra[5][i] = ~0;
+			if (otherInits.extra != null) {
+				// take null info only from other, as much as available and without shedding doubt:
+				for (; i < mergeLimit; i++) {
+					this.extra[1 + 1][i] = otherInits.extra[1+1][i];
+					this.extra[2 + 1][i] = otherInits.extra[2+1][i];
+					this.extra[3 + 1][i] = otherInits.extra[3+1][i];
+					this.extra[4 + 1][i] = otherInits.extra[4+1][i];
 				}
 			}
-		}
-		for (; i < copyLimit; i++) {
-    		this.extra[1 + 1][i] = 0;
-    		this.extra[2 + 1][i] = (b2 = otherInits.extra[2 + 1][i]) & (nb3 = ~(b3 = otherInits.extra[3 + 1][i]) | (nb1 = ~(b1 = otherInits.extra[1 + 1][i])));
-    		this.extra[3 + 1][i] = b3 & ((nb2 = ~b2) & (b4 = otherInits.extra[4 + 1][i]) | nb1) | b1 & nb2 & ~b4;
-    		this.extra[4 + 1][i] = (nb3 | nb2) & nb1 & b4	| b1 & nb3 & nb2;
-    		this.extra[IN][i] |= otherInits.extra[IN][i];
-    		this.extra[INN][i] |= otherInits.extra[INN][i];
-			thisHasNulls = thisHasNulls ||
-				this.extra[3][i] != 0 ||
-				this.extra[4][i] != 0 ||
-				this.extra[5][i] != 0;
-			if (COVERAGE_TEST_FLAG) {
-				if(CoverageTestId == 38) {
-					this.extra[5][i] = ~0;
-				}
+			// clear the remaining length of this.extra
+			for (; i < resetLimit; i++) {
+				this.extra[1 + 1][i] = 0;
+				this.extra[2 + 1][i] = 0;
+				this.extra[3 + 1][i] = 0;
+				this.extra[4 + 1][i] = 0;
 			}
-		}
-		for (; i < resetLimit; i++) {
-    		a1 = this.extra[1 + 1][i];
-      		this.extra[1 + 1][i] = 0;
-      		this.extra[2 + 1][i] = (a2 = this.extra[2 + 1][i]) & (na3 = ~(a3 = this.extra[3 + 1][i]) | (na1 = ~a1));
-      		this.extra[3 + 1][i] = a3 & ((na2 = ~a2) & (a4 = this.extra[4 + 1][i]) | na1) | a1 & na2 & ~a4;
-      		this.extra[4 + 1][i] = (na3 | na2) & na1 & a4	| a1 & na3 & na2;
-      		if (otherInits.extra != null && otherInits.extra[0].length > i) {
+		} else {
+			// compose nulls
+			for (; i < mergeLimit; i++) {
+	    		this.extra[1 + 1][i] = (a1=this.extra[1+1][i]) & (b1=otherInits.extra[1+1][i]) & (
+	    				((a2=this.extra[2+1][i]) & (((b2=otherInits.extra[2+1][i]) &
+	    												~(((a3=this.extra[3+1][i]) & (a4=this.extra[4+1][i])) ^ ((b3=otherInits.extra[3+1][i]) & (b4=otherInits.extra[4+1][i]))))
+	    											|(a3 & a4 & (nb2=~b2))))
+	    				|((na2=~a2) & ((b2 & b3 & b4)
+	    						|(nb2 & ((na3=~a3) ^ b3)))));
+	    		this.extra[2 + 1][i] = b2 & ((nb3=~b3) | (nb1 = ~b1) | a3 & (a4 | (na1 = ~a1)) & (nb4=~b4))
+	        			| a2 & (b2 | (na4=~a4) & b3 & (b4 | nb1) | na3 | na1);
+	    		this.extra[3 + 1][i] =   a3 & (na1 | a1 & na2 | b3 & (na4 ^ b4))
+									   | b3 & (nb1 | b1 & nb2);
+	    		this.extra[4 + 1][i] = na3 & (nb1 & nb3 & b4
+	              			| b1 & (nb2 & nb3 | a4 & b2 & nb4)
+	              			| na1 & a4 & (nb3 | b1 & b2))
+	        			| a3 & a4 & (b3 & b4 | b1 & nb2 | na1 & a2)
+	        			| na2 & (nb1 & b4 | b1 & nb3 | na1 & a4) & nb2
+	        			| a1 & (na3 & (nb3 & b4
+	                        			| b1 & b2 & b3 & nb4
+	                        			| na2 & (nb3 | nb2))
+	                			| na2 & b3 & b4
+	                			| a2 & (nb1 & b4 | a3 & na4 & b1) & nb3)
+	                	|nb1 & b2 & b3 & b4;
 	    		this.extra[IN][i] |= otherInits.extra[IN][i];
 	    		this.extra[INN][i] |= otherInits.extra[INN][i];
-      		}
-			thisHasNulls = thisHasNulls ||
-				this.extra[3][i] != 0 ||
-				this.extra[4][i] != 0 ||
-				this.extra[5][i] != 0;
-			if (COVERAGE_TEST_FLAG) {
-				if(CoverageTestId == 39) {
-					this.extra[5][i] = ~0;
+				thisHasNulls = thisHasNulls ||
+					this.extra[3][i] != 0 ||
+					this.extra[4][i] != 0 ||
+					this.extra[5][i] != 0 ;
+				if (COVERAGE_TEST_FLAG) {
+					if(CoverageTestId == 37) {
+						this.extra[5][i] = ~0;
+					}
+				}
+			}
+			for (; i < copyLimit; i++) {
+	    		this.extra[1 + 1][i] = 0;
+	    		this.extra[2 + 1][i] = (b2 = otherInits.extra[2 + 1][i]) & (nb3 = ~(b3 = otherInits.extra[3 + 1][i]) | (nb1 = ~(b1 = otherInits.extra[1 + 1][i])));
+	    		this.extra[3 + 1][i] = b3 & ((nb2 = ~b2) & (b4 = otherInits.extra[4 + 1][i]) | nb1) | b1 & nb2 & ~b4;
+	    		this.extra[4 + 1][i] = (nb3 | nb2) & nb1 & b4	| b1 & nb3 & nb2;
+	    		this.extra[IN][i] |= otherInits.extra[IN][i];
+	    		this.extra[INN][i] |= otherInits.extra[INN][i];
+				thisHasNulls = thisHasNulls ||
+					this.extra[3][i] != 0 ||
+					this.extra[4][i] != 0 ||
+					this.extra[5][i] != 0;
+				if (COVERAGE_TEST_FLAG) {
+					if(CoverageTestId == 38) {
+						this.extra[5][i] = ~0;
+					}
+				}
+			}
+			for (; i < resetLimit; i++) {
+	    		a1 = this.extra[1 + 1][i];
+	      		this.extra[1 + 1][i] = 0;
+	      		this.extra[2 + 1][i] = (a2 = this.extra[2 + 1][i]) & (na3 = ~(a3 = this.extra[3 + 1][i]) | (na1 = ~a1));
+	      		this.extra[3 + 1][i] = a3 & ((na2 = ~a2) & (a4 = this.extra[4 + 1][i]) | na1) | a1 & na2 & ~a4;
+	      		this.extra[4 + 1][i] = (na3 | na2) & na1 & a4	| a1 & na3 & na2;
+	      		if (otherInits.extra != null && otherInits.extra[0].length > i) {
+		    		this.extra[IN][i] |= otherInits.extra[IN][i];
+		    		this.extra[INN][i] |= otherInits.extra[INN][i];
+	      		}
+				thisHasNulls = thisHasNulls ||
+					this.extra[3][i] != 0 ||
+					this.extra[4][i] != 0 ||
+					this.extra[5][i] != 0;
+				if (COVERAGE_TEST_FLAG) {
+					if(CoverageTestId == 39) {
+						this.extra[5][i] = ~0;
+					}
 				}
 			}
 		}

@@ -542,6 +542,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 			 */
 			if (typeBbolean) {
 				for (int i = 0; i < resultExpressionsCount; ++i) {
+					if (this.originalValueResultExpressionTypes[i] == null) continue;
 					if (this.originalValueResultExpressionTypes[i].id == T_boolean) continue;
 					this.finalValueResultExpressionTypes[i] = env.computeBoxingType(this.originalValueResultExpressionTypes[i]);
 					this.resultExpressions.get(i).computeConversion(this.scope, this.finalValueResultExpressionTypes[i], this.originalValueResultExpressionTypes[i]);
@@ -604,7 +605,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 				resultNumeric = resultNumeric != null ? resultNumeric : check_nonconstant_int();
 
 				resultNumeric = resultNumeric != null ? resultNumeric : // one among the first few rules applied.
-					getResultNumeric(typeSet, this.originalValueResultExpressionTypes); // check the rest
+					getResultNumeric(typeSet); // check the rest
 				typeSet = null; // hey gc!
 				for (int i = 0; i < resultExpressionsCount; ++i) {
 					this.resultExpressions.get(i).computeConversion(this.scope,
@@ -701,7 +702,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		return areAllIntegerResultExpressionsConvertibleToTargetType(candidate) ?
 				candidate : null;
 	}
-	private TypeBinding getResultNumeric(Set<TypeBinding> typeSet, TypeBinding[] armTypes) {
+	private TypeBinding getResultNumeric(Set<TypeBinding> typeSet) {
 		// note: if an expression has a type integer, then it will be a constant
 		// since non-constant integers are already processed before reaching here.
 

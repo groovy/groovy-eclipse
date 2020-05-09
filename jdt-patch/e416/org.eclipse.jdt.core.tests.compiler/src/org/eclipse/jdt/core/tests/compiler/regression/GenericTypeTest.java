@@ -5400,6 +5400,47 @@ public class GenericTypeTest extends AbstractComparableTest {
 			true,
 			customOptions);
 	}
+	public void _test0178a() {
+		if (this.complianceLevel < ClassFileConstants.JDK14)
+			return;
+		Map customOptions = getCompilerOptions();
+		this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X <T> {\n" +
+				"	\n" +
+				"	T foo(T t) {\n" +
+				"		boolean b = false;\n" +
+				"		if (t instanceof X<T>) {\n" +
+				"			return t;\n" +
+				"		} else if (t instanceof X<String>) {\n" +
+				"			return t;\n" +
+				"		} else if (t instanceof X<?>) {\n" +  // ok
+				"			return t;\n" +
+				"		} else 	if (t instanceof T) {\n" +
+				"			return t;\n" +
+				"		} else if (t instanceof X) {\n" +
+				"			return t;\n" +
+				"		}\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"}\n",
+			},
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\n" +
+			"	if (t instanceof X<T>) {\n" +
+			"	    ^^^^^^^^^^^^^^\n" +
+			"Type mismatch: cannot convert from T to X<T>\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 7)\n" +
+			"	} else if (t instanceof X<String>) {\n" +
+			"	           ^^^^^^^^^^^^^^\n" +
+			"Type mismatch: cannot convert from T to X<String>\n" +
+			"----------\n",
+			null,
+			true,
+			customOptions);
+	}
 	// 61507
 	public void test0179() {
 		this.runConformTest(

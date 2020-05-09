@@ -669,8 +669,15 @@ public void test012(){
         "    -1.7 -7 -7.0       use 1.7 compliance (-source 1.7 -target 1.7)\n" +
         "    -1.8 -8 -8.0       use 1.8 compliance (-source 1.8 -target 1.8)\n" +
         "    -1.9 -9 -9.0       use 1.9 compliance (-source 1.9 -target 1.9)\n" +
-        "    -source <version>  set source level: 1.3 to 1.9 (or 6, 6.0, etc)\n" +
-        "    -target <version>  set classfile target: 1.1 to 1.9 (or 6, 6.0, etc)\n" +
+        "    -10 -10.0          use 10  compliance (-source 10  -target 10)\n" +
+        "    -11 -11.0          use 11  compliance (-source 11  -target 11)\n" +
+        "    -12 -12.0          use 12  compliance (-source 12  -target 12)\n" +
+        "    -13 -13.0          use 13  compliance (-source 13  -target 13)\n" +
+        "    -14 -14.0          use 14  compliance (-source 14  -target 14)\n" +
+        "    -source <version>  set source level: 1.3 to 1.9, 10 to 14\n" +
+        "                       (or 6, 6.0, etc)\n" +
+        "    -target <version>  set classfile target: 1.3 to 1.9, 10 to 14\n" +
+        "                       (or 6, 6.0, etc)\n" +
         "                       cldc1.1 can also be used to generate the StackMap\n" +
         "                       attribute\n" +
         " \n" +

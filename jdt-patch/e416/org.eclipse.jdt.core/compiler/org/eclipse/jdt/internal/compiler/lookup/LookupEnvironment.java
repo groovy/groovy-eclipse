@@ -469,7 +469,9 @@ public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction
 		scope = new CompilationUnitScope(unit, this.globalOptions);
 		unitModule = unit.moduleDeclaration.setBinding(new SourceModuleBinding(moduleName, scope, this.root));
 	} else {
-		unitModule = unit.module(this);
+		if (this.globalOptions.sourceLevel >= ClassFileConstants.JDK9) {
+			unitModule = unit.module(this);
+		}
 		// GROOVY edit
 		//scope = new CompilationUnitScope(unit, unitModule != null ? unitModule.environment : this);
 		scope = unit.buildCompilationUnitScope(unitModule != null ? unitModule.environment : this);

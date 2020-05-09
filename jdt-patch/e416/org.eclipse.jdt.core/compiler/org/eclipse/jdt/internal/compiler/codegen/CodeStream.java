@@ -1471,8 +1471,8 @@ private void fieldAccess(byte opcode, int returnTypeSize, char[] declaringClass,
 		case Opcodes.OPC_getfield :
 			if (returnTypeSize == 2) {
 				this.stackDepth++;
-				pushTypeBinding(1, typeBinding);
 			}
+			pushTypeBinding(1, typeBinding);
 			break;
 		case Opcodes.OPC_getstatic :
 			if (returnTypeSize == 2) {

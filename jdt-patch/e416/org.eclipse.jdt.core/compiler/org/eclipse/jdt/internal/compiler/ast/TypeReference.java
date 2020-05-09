@@ -388,7 +388,7 @@ protected Annotation[][] getMergedAnnotationsOnDimensions(int additionalDimensio
 	final int totalDimensions = dimensions + additionalDimensions;
 	Annotation [][] mergedAnnotations = new Annotation[totalDimensions][];
 	if (annotationsOnDimensions != null) {
-		System.arraycopy(annotationsOnDimensions, 0, mergedAnnotations, 0, dimensions); 
+		System.arraycopy(annotationsOnDimensions, 0, mergedAnnotations, 0, dimensions);
 	}
 	if (additionalAnnotations != null) {
 		for (int i = dimensions, j = 0; i < totalDimensions; i++, j++) {
@@ -533,7 +533,7 @@ protected TypeBinding internalResolveType(Scope scope, int location) {
 		} else {
 			reportInvalidType(scope);
 		}
-		RecordDeclaration.checkAndFlagRecordNameErrors(getTypeName(0), this, scope);
+		TypeDeclaration.checkAndFlagRecordNameErrors(getTypeName(0), this, scope);
 		switch (type.problemId()) {
 			case ProblemReasons.NotFound :
 			case ProblemReasons.NotVisible :

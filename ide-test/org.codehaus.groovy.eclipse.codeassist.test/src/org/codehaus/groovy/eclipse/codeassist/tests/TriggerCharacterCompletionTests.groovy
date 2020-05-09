@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
     @Test
     void testTriggerForMethodProposals() {
         String contents = '[].sort'; int offset = contents.length()
-        setJavaPreference(AssistOptions.OPTION_SubstringMatch, 'disabled')
+        try {
+            setJavaPreference(AssistOptions.OPTION_SubstringMatch, 'disabled')
+        } catch (MissingPropertyException e) {
+            System.setProperty(AssistOptions.PROPERTY_SubstringMatch, 'false')
+        }
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, offset))
         /* expecting:
         sort(Comparator c) : void - List

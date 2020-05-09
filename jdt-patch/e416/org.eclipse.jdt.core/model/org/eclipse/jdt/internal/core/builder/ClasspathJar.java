@@ -252,7 +252,7 @@ public boolean equals(Object o) {
 	if (!Util.equalOrNull(this.compliance, jar.compliance)) {
 		return false;
 	}
-	return this.zipFilename.equals(jar.zipFilename) 
+	return this.zipFilename.equals(jar.zipFilename)
 			&& lastModified() == jar.lastModified()
 			&& this.isOnModulePath == jar.isOnModulePath
 			&& areAllModuleOptionsEqual(jar);
@@ -293,8 +293,8 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 			}
 			if (this.accessRuleSet == null)
 				return new NameEnvironmentAnswer(reader, null, modName);
-			return new NameEnvironmentAnswer(reader, 
-					this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()), 
+			return new NameEnvironmentAnswer(reader,
+					this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()),
 					modName);
 		}
 	} catch (IOException | ClassFormatException e) { // treat as if class file is missing
@@ -326,6 +326,15 @@ public boolean isPackage(String qualifiedPackageName, String moduleName) {
 @Override
 public boolean hasCompilationUnit(String pkgName, String moduleName) {
 	if (scanContent()) {
+		if (!this.knownPackageNames.includes(pkgName)) {
+			// Don't waste time walking through the zip if we know that it doesn't
+			// contain a directory that matches pkgName
+			return false;
+		}
+
+		// Even if knownPackageNames contained the pkg we're looking for, we still need to verify
+		// that the package in this jar actually contains at least one .class file (since
+		// knownPackageNames includes empty packages)
 		for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {
 			String fileName = e.nextElement().getName();
 			if (fileName.startsWith(pkgName)
@@ -334,6 +343,7 @@ public boolean hasCompilationUnit(String pkgName, String moduleName) {
 				return true;
 		}
 	}
+
 	return false;
 }
 
@@ -388,7 +398,7 @@ public IModule getModule() {
 
 @Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
-	// 
+	//
 	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 public Manifest getManifest() {

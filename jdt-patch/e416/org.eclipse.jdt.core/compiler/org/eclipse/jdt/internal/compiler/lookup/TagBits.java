@@ -128,8 +128,6 @@ public interface TagBits {
 	long SE7AnnotationTargetMASK = AnnotationForType | AnnotationForField | AnnotationForMethod
 				| AnnotationForParameter | AnnotationForConstructor | AnnotationForLocalVariable
 				| AnnotationForAnnotationType | AnnotationForPackage;
-	long AnnotationTargetMASK = SE7AnnotationTargetMASK | AnnotationTarget
-				| AnnotationForTypeUse | AnnotationForTypeParameter | AnnotationForModule;
 	// 2-bits for retention (should check (tagBits & RetentionMask) == RuntimeRetention
 	long AnnotationSourceRetention = ASTNode.Bit45L;
 	long AnnotationClassRetention = ASTNode.Bit46L;
@@ -164,6 +162,9 @@ public interface TagBits {
 	long AnnotationTerminallyDeprecated = ASTNode.Bit63L;
 	/** From Java 14 */
 	long AnnotationForRecordComponent = ASTNode.Bit31;
+
+	long AnnotationTargetMASK = SE7AnnotationTargetMASK | AnnotationTarget
+			| AnnotationForTypeUse | AnnotationForTypeParameter | AnnotationForModule | AnnotationForRecordComponent;
 
 	long AllStandardAnnotationsMask =
 				  AnnotationTargetMASK

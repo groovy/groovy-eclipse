@@ -118,9 +118,9 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
 	    BinaryType type = (BinaryType) getType();
-		// GROOVY edit
-		//BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()), this);
-		// handle code select for Groovy files differently
+		/* GROOVY edit -- handle code select for Groovy files differently
+		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()), this);
+		*/
 		IBinaryType typeInfo = (IBinaryType) type.getElementInfo();
 		if (LanguageSupportFactory.isInterestingBinary(type, typeInfo)) {
 			return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);

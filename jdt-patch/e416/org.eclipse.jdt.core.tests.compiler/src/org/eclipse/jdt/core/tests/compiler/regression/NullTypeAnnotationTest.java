@@ -18142,4 +18142,108 @@ public void testBug560310try_finally() {
 		"----------\n";
 	runner.runWarningTest();
 }
+public void testBug562347_561280c9() {
+	runNegativeTestWithLibs(
+		new String[] {
+			"Example.java",
+			"import java.util.HashMap;\n" +
+			"import java.util.Map;\n" +
+			"\n" +
+			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" +
+			"\n" +
+			"@NonNullByDefault\n" +
+			"public class Example {\n" +
+			"    static <X> X f(X x) {\n" +
+			"        return x;\n" +
+			"    }\n" +
+			"\n" +
+			"    public void g() {\n" +
+			"        Object x0, x1, x2, x3, x4, x5, x6, x7, x8, x9;\n" +
+			"        Object x10, x11, x12, x13, x14, x15, x16, x17, x18, x19;\n" +
+			"        Object x20, x21, x22, x23, x24, x25, x26, x27, x28, x29;\n" +
+			"        Object x30, x31, x32, x33, x34, x35, x36, x37, x38, x39;\n" +
+			"        Object x40, x41, x42, x43, x44, x45, x46, x47, x48, x49;\n" +
+			"        Object x50, x51, x52, x53, x54, x55, x56, x57, x58, x59;\n" +
+			"        Object x60;\n" +
+			"        Object x61;\n" +
+			"        for (Map.Entry<String, String> entry : new HashMap<String, String>().entrySet()) {\n" +
+			"            if (f(entry.getKey()) != null) {\n" +
+			"                continue;\n" +
+			"            }\n" +
+			"            String x = \"asdf\";\n" +
+			"            x.hashCode();\n" +
+			"        }\n" +
+			"    }\n" +
+			"}\n" +
+			"\n"
+		},
+		getCompilerOptions(),
+		"----------\n" +
+		"1. ERROR in Example.java (at line 22)\n" +
+		"	if (f(entry.getKey()) != null) {\n" +
+		"	    ^^^^^^^^^^^^^^^^^\n" +
+		"Redundant null check: comparing \'@NonNull String\' against null\n" +
+		"----------\n" +
+		"2. WARNING in Example.java (at line 25)\n" +
+		"	String x = \"asdf\";\n" +
+		"	^^^^^^^^^^^^^^^^^^\n" +
+		"Dead code\n" +
+		"----------\n");
+}
+public void testBug562347() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"NotificationListingHolder.java",
+			"@SuppressWarnings(\"unused\")\n" +
+			"public final class NotificationListingHolder {\n" +
+			"    private String f1,f2,f3,f4;\n" +
+			"\n" +
+			"    private void setupActionButtons() {\n" +
+			"        Test listItemNotificationsBinding2;\n" +
+			"        boolean z;\n" +
+			"        String a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,a29,a30,a31,a32,a33,a34,a35,a36,a37,a38,a39,a40,a41,a42,a43,a44,a45,a46,a47,a48,a49,a50,a51,a52,a53,a54,a55,a56,a57,a58;\n" +
+			"        if (z) {\n" +
+			"            String button4 = listItemNotificationsBinding2.field;\n" +
+			"            if (listItemNotificationsBinding2 != null) {\n" +
+			"                return;\n" +
+			"            }\n" +
+			"        }\n" +
+			"    }\n" +
+			"}\n" +
+			"\n" +
+			"class Test {\n" +
+			"    public final String field;\n" +
+			"}"
+		};
+	runner.expectedCompilerLog =
+		"----------\n" +
+		"1. ERROR in NotificationListingHolder.java (at line 9)\n" +
+		"	if (z) {\n" +
+		"	    ^\n" +
+		"The local variable z may not have been initialized\n" +
+		"----------\n" +
+		"2. ERROR in NotificationListingHolder.java (at line 10)\n" +
+		"	String button4 = listItemNotificationsBinding2.field;\n" +
+		"	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The local variable listItemNotificationsBinding2 may not have been initialized\n" +
+		"----------\n" +
+		"3. ERROR in NotificationListingHolder.java (at line 11)\n" +
+		"	if (listItemNotificationsBinding2 != null) {\n" +
+		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The local variable listItemNotificationsBinding2 may not have been initialized\n" +
+		"----------\n" +
+		"4. ERROR in NotificationListingHolder.java (at line 11)\n" +
+		"	if (listItemNotificationsBinding2 != null) {\n" +
+		"	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Redundant null check: The variable listItemNotificationsBinding2 cannot be null at this location\n" +
+		"----------\n" +
+		"5. ERROR in NotificationListingHolder.java (at line 19)\n" +
+		"	public final String field;\n" +
+		"	                    ^^^^^\n" +
+		"The blank final field field may not have been initialized\n" +
+		"----------\n";
+	runner.classLibraries = this.LIBS;
+	runner.runNegativeTest();
+}
 }

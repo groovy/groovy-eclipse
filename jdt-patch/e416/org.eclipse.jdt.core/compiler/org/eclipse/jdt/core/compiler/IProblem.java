@@ -2316,6 +2316,9 @@ void setSourceStart(int sourceStart);
 	/** @since 3.22
 	 * @noreference preview feature error */
 	int RecordStaticReferenceToOuterLocalVariable= PreviewRelated + 1755;
+	/** @since 3.22
+	 * @noreference preview feature error */
+	int RecordCannotDefineRecordInLocalType= PreviewRelated + 1756;
 	/* records - end */
 	/* instanceof pattern: */
 	/** @since 3.22

@@ -549,6 +549,7 @@ public class BuilderTests extends TestCase {
 			Bug531382Test.class,
 			Bug549457Test.class,
 			Bug561287Test.class,
+			Bug562420Test.class,
 			LeakTestsBefore9.class,
 		};
 		List<Class<?>> list = new ArrayList<>(Arrays.asList(classes));

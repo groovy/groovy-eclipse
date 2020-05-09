@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -47,6 +47,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 		ALL_CLASSES.add(JavadocTestMixed.class);
 		ALL_CLASSES.add(JavadocTestForClass.class);
 		ALL_CLASSES.add(JavadocTestForRecord.class);
+		ALL_CLASSES.add(JavadocTestForModule.class);
 		ALL_CLASSES.add(JavadocTestForConstructor.class);
 		ALL_CLASSES.add(JavadocTestForField.class);
 		ALL_CLASSES.add(JavadocTestForInterface.class);

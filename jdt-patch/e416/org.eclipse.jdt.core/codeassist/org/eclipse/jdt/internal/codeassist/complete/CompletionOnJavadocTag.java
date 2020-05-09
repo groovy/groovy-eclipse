@@ -16,7 +16,7 @@ package org.eclipse.jdt.internal.codeassist.complete;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.JavadocSingleNameReference;
-import org.eclipse.jdt.internal.compiler.ast.RecordDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
@@ -132,11 +132,8 @@ public class CompletionOnJavadocTag extends JavadocSingleNameReference implement
 							switch (scope.kind) {
 								case Scope.CLASS_SCOPE:
 									if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5) {
-										boolean isRecordWithComponent = false;
-										if( ((ClassScope)scope).referenceContext instanceof RecordDeclaration) {
-											RecordDeclaration rd = (RecordDeclaration)((ClassScope)scope).referenceContext;
-											isRecordWithComponent = rd.nRecordComponents >0 ;
-										}
+										TypeDeclaration typeDecl = ((ClassScope)scope).referenceContext;
+										boolean isRecordWithComponent = typeDecl.isRecord() && typeDecl.nRecordComponents >0 ;
 										if (((ClassScope)scope).referenceContext.binding.isGenericType() || isRecordWithComponent) {
 											filteredTags[size++] = possibleTag;
 										}

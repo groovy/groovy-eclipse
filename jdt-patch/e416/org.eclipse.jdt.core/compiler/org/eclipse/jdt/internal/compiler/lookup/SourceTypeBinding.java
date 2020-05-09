@@ -77,7 +77,6 @@ import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.RecordDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
@@ -149,7 +148,7 @@ public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassSc
 	this.fields = Binding.UNINITIALIZED_FIELDS;
 	this.methods = Binding.UNINITIALIZED_METHODS;
 	this.prototype = this;
-	this.isRecordDeclaration = scope.referenceContext instanceof RecordDeclaration;
+	this.isRecordDeclaration = scope.referenceContext.isRecord();
 	computeId();
 }
 
@@ -972,7 +971,24 @@ public SyntheticMethodBinding addSyntheticRecordComponentAccessor(char[] selecto
 
 	SyntheticMethodBinding accessMethod = null;
 	SyntheticMethodBinding[] accessors = (SyntheticMethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(selector);
-	accessMethod = new SyntheticMethodBinding(this, getField(selector, true), index);
+	FieldBinding field = getField(selector, true);
+	accessMethod = new SyntheticMethodBinding(this, field, index);
+	AnnotationBinding[] annotations = field.getAnnotations();
+	if (annotations.length > 0) {
+		List<AnnotationBinding> list = new ArrayList<>();
+		for (AnnotationBinding binding : annotations) {
+			long bits = binding.getAnnotationType().getAnnotationTagBits();
+			if ((bits & TagBits.AnnotationForMethod) != 0
+					|| (bits & TagBits.AnnotationTargetMASK) == 0) {
+				list.add(binding);
+			}
+		}
+		if (list.size() > 0) {
+			AnnotationBinding[] annots = new AnnotationBinding[list.size()];
+			annotations = list.toArray(annots);
+			accessMethod.setAnnotations(annotations, true);
+		}
+	}
 	if (accessors == null) {
 		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(selector, accessors = new SyntheticMethodBinding[2]);
 		accessors[0] = accessMethod;
@@ -3091,7 +3107,7 @@ public MethodBinding getRecordComponentAccessor(char[] name) {
 public void computeRecordComponents() {
 	if (!this.isRecordDeclaration || this.recordComponents != null)
 		return;
-	Argument[] recComps = ((RecordDeclaration) this.scope.referenceContext).getArgs();
+	Argument[] recComps = this.scope.referenceContext.args;
 	List<FieldBinding> list = new ArrayList<>();
 	if (recComps != null && recComps.length > 0 && this.fields != null) {
 		List<String> recordComponentNames = new ArrayList<>(0);

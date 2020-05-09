@@ -201,13 +201,15 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		if (this.arguments != null && this.arguments.length != 0)
 			return null;
 		ClassScope skope = this.scope.classScope();
-		if (!(skope.referenceContext instanceof RecordDeclaration))
+		TypeDeclaration typeDecl = skope.referenceContext;
+		if (!typeDecl.isRecord())
 			return null;
-		RecordDeclaration rd = (RecordDeclaration) skope.referenceContext;
-		Argument[] args = rd.getArgs();
+		if (!(skope.referenceContext.isRecord()))
+			return null;
+		Argument[] args = typeDecl.args;
 		if (args == null || args.length == 0)
 			return null;
-		for (Argument arg : rd.getArgs()) {
+		for (Argument arg : args) {
 			if (arg == null || arg.name == null)
 				continue;
 			if (CharOperation.equals(this.selector, arg.name)) {

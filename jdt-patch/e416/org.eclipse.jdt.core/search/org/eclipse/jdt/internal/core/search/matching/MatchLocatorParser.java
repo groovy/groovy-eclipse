@@ -446,6 +446,17 @@ protected void consumeMethodHeaderName(boolean isAnnotationMethod) {
 		this.patternLocator.match(methodDeclaration.returnType, this.nodeSet);
 	}
 }
+
+@Override
+protected void consumeMethodHeaderNameWithTypeParameters(boolean isAnnotationMethod) {
+	super.consumeMethodHeaderNameWithTypeParameters(isAnnotationMethod);
+	if ((this.patternFineGrain & IJavaSearchConstants.RETURN_TYPE_REFERENCE) != 0) {
+		// when no fine grain flag is set, type reference match is evaluated in getTypeReference(int) method
+		MethodDeclaration methodDeclaration = (MethodDeclaration) this.astStack[this.astPtr];
+		this.patternLocator.match(methodDeclaration.returnType, this.nodeSet);
+	}
+}
+
 @Override
 protected void consumeMethodHeaderRightParen() {
 	super.consumeMethodHeaderRightParen();

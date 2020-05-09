@@ -741,7 +741,7 @@ private boolean getLineContent(StringBuilder result, char[] line, int start, int
 		char c = line[i];
 		if (c == '\\') {
 			if (i < end) {
-				if (lastPointer + 1 == i) {
+				if (lastPointer == i) {
 					lastPointer = i+1;
 				} else {
 					result.append(CharOperation.subarray(line, lastPointer == 0 ? start : lastPointer+1, i));

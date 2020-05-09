@@ -180,6 +180,12 @@ public boolean isFinal() {
 		return this.binding.isFinal();
 	return (this.modifiers & ClassFileConstants.AccFinal) != 0;
 }
+@Override
+public StringBuffer print(int indent, StringBuffer output) {
+	if (this.isARecordComponent)
+		output.append("/* Implicit */"); //$NON-NLS-1$
+	return super.print(indent, output);
+}
 
 @Override
 public StringBuffer printStatement(int indent, StringBuffer output) {

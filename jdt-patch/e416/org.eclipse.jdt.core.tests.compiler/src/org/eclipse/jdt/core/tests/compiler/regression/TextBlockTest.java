@@ -1337,4 +1337,20 @@ public class TextBlockTest extends AbstractRegressionTest {
 				true,
 				copy);
 	}
+	public void testBug562460() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n" +
+						"	public static String textb = \"\"\"\n" +
+						"a\\sb\\sc\"\"\";\n" +
+						"	public static void main(String[] args) {\n" +
+						"		System.out.println(textb.equals(\"a b c\"));\n" +
+						"	}\n" +
+						"}\n"
+				},
+				"true",
+				getCompilerOptions(),
+				new String[] {"--enable-preview"});
+	}
 }

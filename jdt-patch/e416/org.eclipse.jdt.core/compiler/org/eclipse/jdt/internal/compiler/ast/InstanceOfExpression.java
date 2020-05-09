@@ -60,38 +60,39 @@ public InstanceOfExpression(Expression expression, LocalDeclaration local) {
 @Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	LocalVariableBinding local = this.expression.localVariableBinding();
+	FlowInfo initsWhenTrue = null;
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo).
 			unconditionalInits();
-		FlowInfo initsWhenTrue = flowInfo.copy();
+		initsWhenTrue = flowInfo.copy();
 		initsWhenTrue.markAsComparedEqualToNonNull(local);
 		flowContext.recordUsingNullReference(currentScope, local,
 				this.expression, FlowContext.CAN_ONLY_NULL | FlowContext.IN_INSTANCEOF, flowInfo);
-		if (this.elementVariable != null) {
-			if (this.elementVariable.duplicateCheckObligation != null) {
-				this.elementVariable.duplicateCheckObligation.accept(flowInfo);
-			}
-			initsWhenTrue.markAsDefinitelyAssigned(this.elementVariable.binding);
-		}
 		// no impact upon enclosing try context
-		return FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
+		flowInfo =  FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
+	} else if (this.expression instanceof Reference) {
+		if (currentScope.compilerOptions().enableSyntacticNullAnalysisForFields) {
+			FieldBinding field = ((Reference)this.expression).lastFieldBinding();
+			if (field != null && (field.type.tagBits & TagBits.IsBaseType) == 0) {
+				flowContext.recordNullCheckedFieldReference((Reference) this.expression, 1);
+			}
+		}
 	}
-	if (this.expression instanceof Reference && this.elementVariable != null) {
-		//FieldBinding field = ((Reference)this.expression).lastFieldBinding();
+	if (initsWhenTrue == null) {
 		flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo).
 				unconditionalInits();
-		FlowInfo initsWhenTrue = flowInfo.copy();
-		initsWhenTrue.markAsDefinitelyAssigned(this.elementVariable.binding);
-		return FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
-	}
-	if (this.expression instanceof Reference && currentScope.compilerOptions().enableSyntacticNullAnalysisForFields) {
-		FieldBinding field = ((Reference)this.expression).lastFieldBinding();
-		if (field != null && (field.type.tagBits & TagBits.IsBaseType) == 0) {
-			flowContext.recordNullCheckedFieldReference((Reference) this.expression, 1);
+		if (this.elementVariable != null) {
+			initsWhenTrue = flowInfo.copy();
 		}
 	}
-	return this.expression.analyseCode(currentScope, flowContext, flowInfo).
-			unconditionalInits();
+	if (this.elementVariable != null) {
+		if (this.elementVariable.duplicateCheckObligation != null) {
+			this.elementVariable.duplicateCheckObligation.accept(flowInfo);
+		}
+		initsWhenTrue.markAsDefinitelyAssigned(this.elementVariable.binding);
+	}
+	return (initsWhenTrue == null) ? flowInfo :
+			FlowInfo.conditional(initsWhenTrue, flowInfo.copy());
 }
 /**
  * Code generation for instanceOfExpression

@@ -316,6 +316,10 @@ public class UnaryExpression extends OperatorExpression {
 		}
 		return this.resolvedType;
 	}
+	@Override
+	public boolean containsPatternVariable() {
+		return this.expression.containsPatternVariable();
+	}
 
 	@Override
 	public void traverse(

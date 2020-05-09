@@ -446,6 +446,9 @@ public class SyntheticMethodBinding extends MethodBinding {
 		assert declaringSourceType.isRecord();
 		this.declaringClass = declaringSourceType;
 		this.modifiers = ClassFileConstants.AccPublic;
+		if (targetField.type instanceof TypeVariableBinding ||
+				targetField.type instanceof ParameterizedTypeBinding)
+			this.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		if (this.declaringClass.isStrictfp())
 			this.modifiers |= ClassFileConstants.AccStrictfp;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);

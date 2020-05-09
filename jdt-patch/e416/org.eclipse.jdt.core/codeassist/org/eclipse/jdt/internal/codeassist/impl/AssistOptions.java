@@ -55,12 +55,12 @@ public class AssistOptions {
 		"org.eclipse.jdt.core.codeComplete.discouragedReferenceCheck"; 	//$NON-NLS-1$
 	public static final String OPTION_CamelCaseMatch =
 		"org.eclipse.jdt.core.codeComplete.camelCaseMatch"; 	//$NON-NLS-1$
-	public static final String OPTION_SubstringMatch =
-			"org.eclipse.jdt.core.codeComplete.substringMatch"; 	//$NON-NLS-1$
 	public static final String OPTION_SubwordMatch =
 			"org.eclipse.jdt.core.codeComplete.subwordMatch"; 	//$NON-NLS-1$
 	public static final String OPTION_SuggestStaticImports =
 		"org.eclipse.jdt.core.codeComplete.suggestStaticImports"; 	//$NON-NLS-1$
+
+	public static final String PROPERTY_SubstringMatch = "jdt.codeCompleteSubstringMatch"; //$NON-NLS-1$
 
 	public static final String ENABLED = "enabled"; //$NON-NLS-1$
 	public static final String DISABLED = "disabled"; //$NON-NLS-1$
@@ -239,12 +239,8 @@ public class AssistOptions {
 				this.camelCaseMatch = false;
 			}
 		}
-		if ((optionValue = optionsMap.get(OPTION_SubstringMatch)) != null) {
-			if (ENABLED.equals(optionValue)) {
-				this.substringMatch = true;
-			} else if (DISABLED.equals(optionValue)) {
-				this.substringMatch = false;
-			}
+		if ("false".equals(System.getProperty(PROPERTY_SubstringMatch))) {  //$NON-NLS-1$
+			this.substringMatch = false;
 		}
 		if ((optionValue = optionsMap.get(OPTION_SubwordMatch)) != null) {
 			if (ENABLED.equals(optionValue)) {

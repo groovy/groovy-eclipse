@@ -178,6 +178,7 @@ public static Test suite() {
 	ArrayList since_11 = new ArrayList();
 	 since_11.add(JEP323VarLambdaParamsTest.class);
 	 since_11.add(JEP181NestTest.class);
+	 since_11.add(BatchCompilerTest2.class);
 
 	// add 12 specific test here (check duplicates)
 	 ArrayList since_12 = new ArrayList();

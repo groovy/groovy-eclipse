@@ -2594,7 +2594,7 @@ public void test078() {
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=47227
  */
-public void _test079() {
+public void test079() {
 	this.runNegativeTest(
 		new String[] {
 			"Hello.java",
@@ -2625,18 +2625,21 @@ public void _test079() {
 		"----------\n" +
 		"1. ERROR in Hello.java (at line 1)\n" +
 		"	void ___eval() {\n" +
-		"	^^^^\n" +
-		"Syntax error on token \"void\", record expected\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"Syntax error on tokens, delete these tokens\n" +
 		"----------\n" +
-		"2. ERROR in Hello.java (at line 1)\n" +
-		"	void ___eval() {\n" +
-		"	             ^\n" +
-		"Syntax error on token \")\", { expected after this token\n" +
-		"----------\n" +
-		"3. ERROR in Hello.java (at line 23)\n" +
-		"	}\n" +
-		"	^\n" +
-		"Syntax error, insert \"}\" to complete RecordBody\n" +
+		"2. ERROR in Hello.java (at line 2)\n" +
+		"	new Runnable() {\n" +
+		"		int ___run() throws Throwable {\n" +
+		"			return blah;\n" +
+		"		}\n" +
+		"		private String blarg;\n" +
+		"		public void run() {\n" +
+		"		}\n" +
+		"	};\n" +
+		"}\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Syntax error on tokens, delete these tokens\n" +
 		"----------\n"
 	);
 }

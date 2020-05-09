@@ -663,7 +663,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				int infos = 0;
 				for (int i = 0; i < count; i++) {
 					CategorizedProblem problem = problems.get(i);
-					if (problem != null) {
+					if (!this.main.isIgnored(problem)) {
 						currentMain.globalProblemsCount++;
 						logExtraProblem(problem, localProblemCount, currentMain.globalProblemsCount);
 						localProblemCount++;
@@ -684,7 +684,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 						startLoggingExtraProblems(count);
 						for (int i = 0; i < count; i++) {
 							CategorizedProblem problem = problems.get(i);
-							if (problem!= null) {
+							if (!this.main.isIgnored(problem)) {
 								if (problem.getID() != IProblem.Task) {
 									logXmlExtraProblem(problem, localProblemCount, currentMain.globalProblemsCount);
 								}
@@ -2121,125 +2121,18 @@ public void configure(String[] argv) {
 					mode = INSIDE_DEFAULT_ENCODING;
 					continue;
 				}
-				if (currentArg.equals("-1.3")) { //$NON-NLS-1$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg));//$NON-NLS-1$
+				if (currentArg.startsWith("-")) { //$NON-NLS-1$
+					String version = optionStringToVersion(currentArg.substring(1));
+					if (version != null) {
+						if (didSpecifyCompliance) {
+							throw new IllegalArgumentException(
+								this.bind("configure.duplicateCompliance", currentArg));//$NON-NLS-1$
+						}
+						didSpecifyCompliance = true;
+						this.options.put(CompilerOptions.OPTION_Compliance, version);
+						mode = DEFAULT;
+						continue;
 					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_3);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.4")) { //$NON-NLS-1$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_4);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.5") || currentArg.equals("-5") || currentArg.equals("-5.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.6") || currentArg.equals("-6") || currentArg.equals("-6.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_6);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.7") || currentArg.equals("-7") || currentArg.equals("-7.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_7);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.8") || currentArg.equals("-8") || currentArg.equals("-8.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_8);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-1.9") || currentArg.equals("-9") || currentArg.equals("-9.0")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_9);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-10") || currentArg.equals("-10.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_10);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-11") || currentArg.equals("-11.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_11);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-12") || currentArg.equals("-12.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_12);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-13") || currentArg.equals("-13.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_13);
-					mode = DEFAULT;
-					continue;
-				}
-				if (currentArg.equals("-14") || currentArg.equals("-14.0")) { //$NON-NLS-1$ //$NON-NLS-2$
-					if (didSpecifyCompliance) {
-						throw new IllegalArgumentException(
-							this.bind("configure.duplicateCompliance", currentArg)); //$NON-NLS-1$
-					}
-					didSpecifyCompliance = true;
-					this.options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_14);
-					mode = DEFAULT;
-					continue;
 				}
 				if (currentArg.equals("-d")) { //$NON-NLS-1$
 					if (this.destinationPath != null) {
@@ -2779,36 +2672,18 @@ public void configure(String[] argv) {
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
 				} else if (currentArg.equals("1.2")) { //$NON-NLS-1$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_2);
-				} else if (currentArg.equals("1.3")) { //$NON-NLS-1$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_3);
-				} else if (currentArg.equals("1.4")) { //$NON-NLS-1$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_4);
-				} else if (currentArg.equals("1.5") || currentArg.equals("5") || currentArg.equals("5.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
-				} else if (currentArg.equals("1.6") || currentArg.equals("6") || currentArg.equals("6.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_6);
-				} else if (currentArg.equals("1.7") || currentArg.equals("7") || currentArg.equals("7.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_7);
-				} else if (currentArg.equals("1.8") || currentArg.equals("8") || currentArg.equals("8.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
-				} else if (currentArg.equals("1.9") || currentArg.equals("9") || currentArg.equals("9.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_9);
-				} else if (currentArg.equals("10") || currentArg.equals("10.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_10);
-				} else if (currentArg.equals("11") || currentArg.equals("11.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_11);
-				} else if (currentArg.equals("12") || currentArg.equals("12.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_12);
-				} else if (currentArg.equals("13") || currentArg.equals("13.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_13);
-				}
-				else if (currentArg.equals("jsr14")) { //$NON-NLS-1$
+				} else if (currentArg.equals("jsr14")) { //$NON-NLS-1$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_JSR14);
 				} else if (currentArg.equals("cldc1.1")) { //$NON-NLS-1$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_CLDC1_1);
 					this.options.put(CompilerOptions.OPTION_InlineJsr, CompilerOptions.ENABLED);
-				}else {
-					throw new IllegalArgumentException(this.bind("configure.targetJDK", currentArg)); //$NON-NLS-1$
+				} else {
+					String version = optionStringToVersion(currentArg);
+					if (version != null) {
+						this.options.put(CompilerOptions.OPTION_TargetPlatform, version);
+					} else {
+						throw new IllegalArgumentException(this.bind("configure.targetJDK", currentArg)); //$NON-NLS-1$
+					}
 				}
 				mode = DEFAULT;
 				continue;
@@ -2872,28 +2747,9 @@ public void configure(String[] argv) {
 							this.bind("configure.unsupportedWithRelease", "-source"));//$NON-NLS-1$ //$NON-NLS-2$
 				}
 				this.didSpecifySource = true;
-				if (currentArg.equals("1.3")) { //$NON-NLS-1$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_3);
-				} else if (currentArg.equals("1.4")) { //$NON-NLS-1$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
-				} else if (currentArg.equals("1.5") || currentArg.equals("5") || currentArg.equals("5.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
-				} else if (currentArg.equals("1.6") || currentArg.equals("6") || currentArg.equals("6.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_6);
-				} else if (currentArg.equals("1.7") || currentArg.equals("7") || currentArg.equals("7.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_7);
-				} else if (currentArg.equals("1.8") || currentArg.equals("8") || currentArg.equals("8.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);
-				} else if (currentArg.equals("1.9") || currentArg.equals("9") || currentArg.equals("9.0")) { //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_9);
-				} else if (currentArg.equals("10") ||  currentArg.equals("10.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_10);
-				} else if (currentArg.equals("11") ||  currentArg.equals("11.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_11);
-				} else if (currentArg.equals("12") ||  currentArg.equals("12.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_12);
-				} else if (currentArg.equals("13") ||  currentArg.equals("13.0")) { //$NON-NLS-1$//$NON-NLS-2$
-					this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_13);
+				String version = optionStringToVersion(currentArg);
+				if (version != null) {
+					this.options.put(CompilerOptions.OPTION_Source, version);
 				} else {
 					throw new IllegalArgumentException(this.bind("configure.source", currentArg)); //$NON-NLS-1$
 				}
@@ -3302,6 +3158,51 @@ public void configure(String[] argv) {
 		this.pendingErrors = null;
 	}
 }
+/** Translates any supported standarde version starting at 1.3 up-to latest into the corresponding constant from CompilerOptions */
+@SuppressWarnings("nls")
+private String optionStringToVersion(String currentArg) {
+	switch (currentArg) {
+		case "1.3": return CompilerOptions.VERSION_1_3;
+		case "1.4": return CompilerOptions.VERSION_1_4;
+		case "1.5":
+		case "5":
+		case "5.0":
+			return CompilerOptions.VERSION_1_5;
+		case "1.6":
+		case "6":
+		case "6.0":
+			return CompilerOptions.VERSION_1_6;
+		case "1.7":
+		case "7":
+		case "7.0":
+			return CompilerOptions.VERSION_1_7;
+		case "1.8":
+		case "8":
+		case "8.0":
+			return CompilerOptions.VERSION_1_8;
+		case "1.9":
+		case "9":
+		case "9.0":
+			return CompilerOptions.VERSION_9;
+		case "10":
+		case "10.0":
+			return CompilerOptions.VERSION_10;
+		case "11":
+		case "11.0":
+			return CompilerOptions.VERSION_11;
+		case "12":
+		case "12.0":
+			return CompilerOptions.VERSION_12;
+		case "13":
+		case "13.0":
+			return CompilerOptions.VERSION_13;
+		case "14":
+		case "14.0":
+			return CompilerOptions.VERSION_14;
+		default:
+			return null;
+	}
+}
 private String validateModuleVersion(String versionString) {
 	try {
 		Class<?> versionClass = Class.forName("java.lang.module.ModuleDescriptor$Version"); //$NON-NLS-1$
@@ -3353,24 +3254,33 @@ private IModule extractModuleDesc(String fileName) {
 
 private static char[][] decodeIgnoreOptionalProblemsFromFolders(String folders) {
 	StringTokenizer tokenizer = new StringTokenizer(folders, File.pathSeparator);
-	char[][] result = new char[tokenizer.countTokens()][];
+	char[][] result = new char[2 * tokenizer.countTokens()][];
 	int count = 0;
 	while (tokenizer.hasMoreTokens()) {
 		String fileName = tokenizer.nextToken();
 		// relative folder names are created relative to the current user dir
 		File file = new File(fileName);
 		if (file.exists()) {
+			String absolutePath = file.getAbsolutePath();
+			result[count++] = absolutePath.toCharArray();
 			// if the file exists, we should try to use its canonical path
 			try {
-				result[count++] = file.getCanonicalPath().toCharArray();
+				String canonicalPath = file.getCanonicalPath();
+				if (!absolutePath.equals(canonicalPath)) {
+					result[count++] = canonicalPath.toCharArray();
+				}
 			} catch (IOException e) {
-				// if we got exception during canonicalization, fall back to the name that was specified
-				result[count++] = fileName.toCharArray();
+				// ignore
 			}
 		} else {
 			// if the file does not exist, use the name that was specified
 			result[count++] = fileName.toCharArray();
 		}
+	}
+	if (count < result.length) {
+		char[][] shortened = new char[count][];
+		System.arraycopy(result, 0, shortened, 0, count);
+		result = shortened;
 	}
 	return result;
 }
@@ -3452,6 +3362,9 @@ protected void enableAll(int severity) {
 		}
 	}
 	this.options.put(CompilerOptions.OPTION_TaskTags, Util.EMPTY_STRING);
+	if (newValue != null) {
+		this.options.remove(newValue);
+	}
 }
 protected void disableAll(int severity) {
 	String checkedValue = null;
@@ -3471,6 +3384,9 @@ protected void disableAll(int severity) {
 		if (entry.getValue().equals(checkedValue)) {
 			this.options.put(entry.getKey(), CompilerOptions.IGNORE);
 		}
+	}
+	if (checkedValue != null) {
+		this.options.put(checkedValue, CompilerOptions.IGNORE);
 	}
 	if (severity == ProblemSeverities.Warning) {
 		disableAll(ProblemSeverities.Info);
@@ -3910,6 +3826,26 @@ protected ArrayList<FileSystem.Classpath> handleExtdirs(ArrayList<String> extdir
 	}
 
 	return FileSystem.EMPTY_CLASSPATH;
+}
+
+protected boolean isIgnored(IProblem problem) {
+	if (problem == null) {
+		return true;
+	}
+	if (problem.isError()) {
+		return false;
+	}
+	String key = problem.isInfo() ? CompilerOptions.INFO : CompilerOptions.WARNING;
+	if (CompilerOptions.IGNORE.equals(this.options.get(key))) {
+		return true;
+	}
+	if (this.ignoreOptionalProblemsFromFolders != null) {
+		char[] fileName = problem.getOriginatingFileName();
+		if (fileName != null) {
+			return shouldIgnoreOptionalProblems(this.ignoreOptionalProblemsFromFolders, fileName);
+		}
+	}
+	return false;
 }
 
 /*
@@ -5365,7 +5301,7 @@ protected void setPaths(ArrayList<String> bootclasspaths,
 		}
 	}
 }
-protected final static boolean shouldIgnoreOptionalProblems(char[][] folderNames, char[] fileName) {
+public final static boolean shouldIgnoreOptionalProblems(char[][] folderNames, char[] fileName) {
 	if (folderNames == null || fileName == null) {
 		return false;
 	}

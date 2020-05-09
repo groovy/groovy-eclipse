@@ -2771,11 +2771,10 @@ public final class JavaCore extends Plugin {
 	 *    be found as a substring in a case-insensitive way.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.codeComplete.substringMatch"</code></dd>
-	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
-	 * <dt>Default:</dt><dd><code>"enabled"</code></dd>
 	 * </dl>
 	 * @since 3.12
-	 * @category CodeAssistOptionID
+	 * @deprecated - this option has no effect
+	 * @category DeprecatedOptionID
 	 */
 	public static final String CODEASSIST_SUBSTRING_MATCH = PLUGIN_ID + ".codeComplete.substringMatch"; //$NON-NLS-1$
 	/**

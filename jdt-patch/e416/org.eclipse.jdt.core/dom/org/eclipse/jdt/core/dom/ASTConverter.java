@@ -3575,7 +3575,7 @@ class ASTConverter {
 				recordDeclaration.typeParameters().add(convert(typeParameter));
 			}
 		}
-		Argument[] args = ((org.eclipse.jdt.internal.compiler.ast.RecordDeclaration)typeDeclaration).getArgs();
+		Argument[] args = typeDeclaration.args;
 		if (args != null) {
 			for (Argument arg : args) {
 				recordDeclaration.recordComponents().add(convert(arg));

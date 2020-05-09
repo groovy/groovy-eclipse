@@ -230,12 +230,13 @@ public void evaluateCodeSnippet(
 	}
 	INameEnvironment environment = null;
 	try {
+		String fullyQualifiedName = declaringType == null? null : declaringType.getFullyQualifiedName('.');
 		this.context.evaluate(
 			codeSnippet.toCharArray(),
 			varTypeNames,
 			varNames,
 			localVariableModifiers,
-			declaringType == null? null : declaringType.getFullyQualifiedName().toCharArray(),
+			fullyQualifiedName == null? null : fullyQualifiedName.toCharArray(),
 			isStatic,
 			isConstructorCall,
 			environment = getBuildNameEnvironment(),

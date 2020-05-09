@@ -487,7 +487,7 @@ public class SourceTypeConverter extends TypeConverter {
 		if ((TypeDeclaration.kind(typeInfo.getModifiers()) == TypeDeclaration.RECORD_DECL)) {
 			// The first choice constructor that takes CompilationResult as arg is not setting all the fields
 			// Hence, use the one that does
-			type = new RecordDeclaration(type);
+			type.modifiers |= ExtraCompilerModifiers.AccRecord;
 		}
 		if (typeInfo.getEnclosingType() == null) {
 			if (typeHandle.isAnonymous()) {

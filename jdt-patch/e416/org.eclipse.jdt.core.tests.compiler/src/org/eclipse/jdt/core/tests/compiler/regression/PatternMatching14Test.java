@@ -1674,7 +1674,7 @@ public class PatternMatching14Test extends AbstractRegressionTest {
 						"		foo(new String[] {\"abcd\"});\n" +
 						"	}\n" +
 						"  public static void foo(Object[] obj) {\n" +
-						"		for(int i = 0; (obj[i] instanceof String s) && s.length() > 0 ; i++) {\n" +
+						"		for(int i = 0; (obj[i] instanceof String s) && s.length() > 0 ;) {\n" +
 						"			throw new IllegalArgumentException();\n" +
 						"		}\n" +
 						"		System.out.println(s);\n" +
@@ -1685,7 +1685,7 @@ public class PatternMatching14Test extends AbstractRegressionTest {
 				"1. ERROR in X38.java (at line 10)\n" +
 				"	System.out.println(s);\n" +
 				"	                   ^\n" +
-				"s cannot be resolved to a variable\n" +
+				"The pattern variable s is not in scope in this location\n" +
 				"----------\n",
 				"",
 				null,
@@ -1887,4 +1887,262 @@ public class PatternMatching14Test extends AbstractRegressionTest {
 				compilerOptions);
 		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
 	}
+	public void test047() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runConformTest(
+				new String[] {
+						"InstanceOfPatternTest.java",
+						"public class InstanceOfPatternTest {\n" +
+						"	public static void main(String[] args) {\n" +
+						"		if (getChars() instanceof String s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"	}\n" +
+						"	static CharSequence getChars() {\n" +
+						"		return \"xyz\";\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"xyz",
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void test048() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runConformTest(
+				new String[] {
+						"InstanceOfPatternTest.java",
+						"public class InstanceOfPatternTest {\n" +
+						"	public static void main(String[] args) {\n" +
+						"		if (getChars() instanceof String s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"	}\n" +
+						"	static CharSequence getChars() {\n" +
+						"		return \"xyz\";\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"xyz",
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void test049() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runConformTest(
+				new String[] {
+						"InstanceOfPatternTest.java",
+						"public class InstanceOfPatternTest {\n" +
+						"	public static void main(String[] args) {\n" +
+						"		if ( ((CharSequence) getChars()) instanceof String s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"	}\n" +
+						"	static Object getChars() {\n" +
+						"		return \"xyz\";\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"xyz",
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void test050() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runNegativeTest(
+				new String[] {
+						"InstanceOfPatternTest.java",
+						"@SuppressWarnings(\"preview\")\n" +
+						"public class InstanceOfPatternTest {\n" +
+						"	public static void main(String[] args) {\n" +
+						"		if ( ((s) -> {return s;}) instanceof I s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"	}\n" +
+						"} \n" +
+						"interface I {\n" +
+						"	public String foo(String s);\n" +
+						"}\n",
+				},
+				"----------\n" +
+				"1. ERROR in InstanceOfPatternTest.java (at line 4)\n" +
+				"	if ( ((s) -> {return s;}) instanceof I s) {\n" +
+				"	     ^^^^^^^\n" +
+				"The target type of this expression must be a functional interface\n" +
+				"----------\n",
+				"",
+				null,
+				true,
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void _test051() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runConformTest(
+				new String[] {
+						"InstanceOfPatternTest.java",
+						"public class InstanceOfPatternTest {\n" +
+						"	static String STR = \"2\";\n" +
+						"	public static void main(String[] args) {\n" +
+						"		if ( switch(STR) {\n" +
+						"				case \"1\" -> \"one\";\n" +
+						"				default -> \"Unknown\";\n" +
+						"			  } \n" +
+						"				instanceof String s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"	}\n" +
+						"	public CharSequence chars() {\n" +
+						"		return \"abc\";\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"Unknown",
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void test052() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		String old = compilerOptions.get(CompilerOptions.OPTION_PreserveUnusedLocal);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.OPTIMIZE_OUT);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n" +
+						"	@SuppressWarnings(\"preview\")\n" +
+						"	public static void main(String args[]) {\n" +
+						"		String result = null;\n" +
+						"		Object obj = \"abc\";\n" +
+						"		int i = switch (0) {\n" +
+						"			case 1 -> {\n" +
+						"				yield 1;\n" +
+						"			}\n" +
+						"			default -> {\n" +
+						"				for (int j = 0; !(obj instanceof String s);) {\n" +
+						"					obj = null;\n" +
+						"				}\n" +
+						"				result = s;\n" +
+						"				System.out.println(result);\n" +
+						"				yield 2;\n" +
+						"			}\n" +
+						"		};\n" +
+						"		System.out.println(i);\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"abc\n" +
+				"2",
+				compilerOptions);
+		compilerOptions.put(CompilerOptions.OPTION_PreserveUnusedLocal, old);
+	}
+	public void _testBug562392a() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X<T> {\n" +
+						"	public boolean foo(T obj) {\n" +
+						"		if (obj instanceof T s) {\n" +
+						"			System.out.println(s);\n" +
+						"		}\n" +
+						"		return true;\n" +
+						"	}\n" +
+						"	public static void main(String argv[]) {\n" +
+						"		String s = \"x\";\n" +
+						"		System.out.println(new X<String>().foo(s));\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"x\n" +
+				"true",
+				compilerOptions);
+		}
+	public void _testBug562392b() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		runNegativeTest(
+				new String[] {
+						"X.java",
+						"public class X<T> {\n" +
+						"	public boolean foo(Object obj) {\n" +
+						"        if (obj instanceof T) {\n" +
+						"            return false;\n" +
+						"        }\n" +
+						"        return true;\n" +
+						"    }\n" +
+						"	public static void main(String argv[]) {\n" +
+						"		System.out.println(\"\");\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 3)\n" +
+				"	if (obj instanceof T) {\n" +
+				"	    ^^^^^^^^^^^^^^^^\n" +
+				"Type mismatch: cannot convert from Object to T\n" +
+				"----------\n",
+				"",
+				null,
+				true,
+				compilerOptions);
+		}
+	public void _testBug562392c() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		runNegativeTest(
+				new String[] {
+						"X.java",
+						"@SuppressWarnings(\"preview\")\n" +
+						"public class X<T> {\n" +
+						"	public boolean foo(Object obj) {\n" +
+						"        if (obj instanceof T t) {\n" +
+						"            return false;\n" +
+						"        }\n" +
+						"        return true;\n" +
+						"    }\n" +
+						"	public static void main(String argv[]) {\n" +
+						"		System.out.println(\"\");\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	if (obj instanceof T t) {\n" +
+				"	    ^^^^^^^^^^^^^^^^^^\n" +
+				"Type mismatch: cannot convert from Object to T\n" +
+				"----------\n",
+				"",
+				null,
+				true,
+				compilerOptions);
+		}
+	public void _testBug562392d() {
+		Map<String, String> compilerOptions = getCompilerOptions(true);
+		runConformTest(
+				new String[] {
+						"X.java",
+						"@SuppressWarnings(\"preview\")\n" +
+						"public class X<T> {\n" +
+						"	public boolean foo(Object obj) {\n" +
+						"        if (null instanceof T t) {\n" +
+						"            return false;\n" +
+						"        }\n" +
+						"        return true;\n" +
+						"    }\n" +
+						"	public static void main(String argv[]) {\n" +
+						"		System.out.println(\"\");\n" +
+						"	}\n" +
+						"}\n",
+				},
+				"",
+				compilerOptions);
+		}
 }
