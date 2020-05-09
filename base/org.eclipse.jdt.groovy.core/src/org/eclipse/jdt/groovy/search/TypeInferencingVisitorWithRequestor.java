@@ -1366,9 +1366,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                     VariableScope scope = scopes.getLast();
                     // look for a non-synthetic setter followed by a property or field
-                    scope.setMethodCallArgumentTypes(Collections.singletonList(value.getType()));
                     String setterName = AccessorSupport.SETTER.createAccessorName(key.getText());
-                    TypeLookupResult result = lookupExpressionType(new ConstantExpression(setterName), ctorType, false, scope);
+                    scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(GeneralUtils.callX(ctorType, setterName, value)));
+                    TypeLookupResult result = lookupExpressionType(GeneralUtils.constX(setterName), ctorType, false, scope);
                     if (result.confidence == TypeConfidence.UNKNOWN || !(result.declaration instanceof MethodNode) ||
                             ((MethodNode) result.declaration).isSynthetic()) {
                         scope.getWormhole().put("lhs", key);

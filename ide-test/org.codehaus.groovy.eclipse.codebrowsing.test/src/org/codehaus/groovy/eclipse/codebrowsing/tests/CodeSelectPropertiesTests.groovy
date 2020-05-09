@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,98 @@ import org.junit.Test
 
 final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
+    private static final String XX = '''\
+        |class XX {
+        |  XX[] getXx() { null }
+        |  XX   getYy() { null }
+        |}
+        |'''.stripMargin()
+    private static final String YY = '''\
+        |class YY {
+        |  YY[] xx
+        |  YY   yy
+        |}
+        |'''.stripMargin()
+
     @Test
-    void testGetProperty1() {
+    void testCodeSelectArray1() {
+        String contents = 'new XX().xx[0].xx'
+        String toFind = 'xx'
+        String elementName = 'getXx'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray2() {
+        String contents = 'new XX().xx[0].yy'
+        String toFind = 'yy'
+        String elementName = 'getYy'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray3() {
+        String contents = 'new XX().xx[0].getXx()'
+        String toFind = 'getXx'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test
+    void testCodeSelectArray4() {
+        String contents = 'new XX().xx[0].getYy()'
+        String toFind = 'getYy'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test
+    void testCodeSelectArray5() {
+        String contents = 'new YY().xx[0].setXx()'
+        String toFind = 'setXx'
+        String elementName = 'xx'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray6() {
+        String contents = 'new YY().xx[0].setYy(null)'
+        String toFind = 'setYy'
+        String elementName = 'yy'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray7() {
+        String contents = 'new YY().xx[0].getXx()'
+        String toFind = 'getXx'
+        String elementName = 'xx'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectArray8() {
+        String contents = 'new YY().xx[0].getYy()'
+        String toFind = 'getYy'
+        String elementName = 'yy'
+        assertCodeSelect([XX, YY, contents], toFind, elementName)
+    }
+
+    @Test // GRECLIPSE-1050
+    void testCodeSelectArray9() {
+        String contents = 'org.codehaus.groovy.ast.ClassHelper.make(List)'
+        String toFind = 'make'
+        assertCodeSelect([XX, contents], toFind)
+    }
+
+    @Test // GRECLIPSE-1050
+    void testCodeSelectArray10() {
+        String contents = 'org.codehaus.groovy.ast.ClassHelper.make(new Class[0])[0].nameWithoutPackage'
+        String toFind = 'nameWithoutPackage'
+        String elementName = 'getNameWithoutPackage'
+        assertCodeSelect([XX, contents], toFind, elementName)
+    }
+
+    @Test
+    void testCodeSelectGetProperty1() {
         String contents = '''\
             |class C {
             |  String string = ""
@@ -33,7 +123,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty1a() {
+    void testCodeSelectGetProperty1a() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
@@ -47,7 +137,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetProperty1b() {
+    void testCodeSelectGetProperty1b() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
@@ -61,7 +151,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1() {
+    void testCodeSelectSetProperty1() {
         String contents = '''\
             |class C {
             |  String string
@@ -74,7 +164,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1a() {
+    void testCodeSelectSetProperty1a() {
         String contents = '''\
             |@groovy.transform.TypeChecked
             |class C {
@@ -88,7 +178,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testSetProperty1b() {
+    void testCodeSelectSetProperty1b() {
         String contents = '''\
             |@groovy.transform.CompileStatic
             |class C {
@@ -102,7 +192,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField1() {
+    void testCodeSelectGettersAndField1() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -114,7 +204,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField2() {
+    void testCodeSelectGettersAndField2() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -126,7 +216,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField3() {
+    void testCodeSelectGettersAndField3() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -137,7 +227,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField4() {
+    void testCodeSelectGettersAndField4() {
         String contents = '''\
             |class C {
             |  def getXxx() { xxx }
@@ -148,7 +238,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField5() {
+    void testCodeSelectGettersAndField5() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -160,7 +250,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField6() {
+    void testCodeSelectGettersAndField6() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -172,7 +262,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField7() {
+    void testCodeSelectGettersAndField7() {
         String contents = '''\
             |class C {
             |  public getXxx() { xxx }
@@ -183,7 +273,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGettersAndField8() {
+    void testCodeSelectGettersAndField8() {
         String contents = '''\
             |class C {
             |  String xxx
@@ -194,7 +284,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/888
-    void testGetter1() {
+    void testCodeSelectGetter1() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -223,7 +313,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetter1a() {
+    void testCodeSelectGetter1a() {
         addGroovySource('''\
             |class Pogo {
             |  private String string
@@ -250,7 +340,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testGetter1b() {
+    void testCodeSelectGetter1b() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -277,7 +367,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/888
-    void testSetter1() {
+    void testCodeSelectSetter1() {
         addGroovySource('''\
             |class Pogo {
             |  String string
@@ -306,7 +396,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test // GRECLIPSE-1162
-    void testIsGetter1() {
+    void testCodeSelectIsGetter1() {
         String contents = '''\
             |class C {
             |  boolean xxx
@@ -317,7 +407,7 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testIsGetter2() {
+    void testCodeSelectIsGetter2() {
         addGroovySource('''\
             |class Pogo {
             |  boolean value

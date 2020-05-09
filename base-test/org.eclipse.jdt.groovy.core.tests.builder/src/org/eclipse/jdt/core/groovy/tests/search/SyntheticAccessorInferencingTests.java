@@ -41,7 +41,7 @@ public final class SyntheticAccessorInferencingTests extends InferencingTestSuit
             "  void method() {\n" +
             "    isBar()\n" +
             "    getBar()\n" +
-            "    setBar(null)\n" +
+            "    setBar(true)\n" +
             "  }\n" +
             "}\n";
 

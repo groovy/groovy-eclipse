@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 
 import static org.eclipse.jdt.core.IJavaElement.TYPE
 
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
@@ -54,38 +52,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         String one = 'class Structure {\n  def meth(int a, int b = 9, int c=8) {}\n}'
         String two = 'class Java { { new Structure().meth(0, 0, 0); } }'
         assertCodeSelect([one, two, 'new Structure().meth(0, 0, 0)'], 'meth')
-    }
-
-    @Test
-    void testCodeSelectGenericMethod1() {
-        String contents = '[a: Number].keySet()'
-        IJavaElement elem = assertCodeSelect([contents], 'keySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Set <java.lang.String>'
-    }
-
-    @Test
-    void testCodeSelectGenericMethod2() {
-        String contents = '[a: Number].values()'
-        IJavaElement elem = assertCodeSelect([contents], 'values')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Collection <java.lang.Class>'
-    }
-
-    @Test
-    void testCodeSelectGenericMethod3() {
-        String contents = '[a: Number].entrySet()'
-        IJavaElement elem = assertCodeSelect([contents], 'entrySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
-    }
-
-    @Test
-    void testCodeSelectGenericCategoryMethod3() {
-        String contents = '[a: Number].getAt("a")'
-        IJavaElement elem = assertCodeSelect([contents], 'getAt')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
-        assert method.returnType.toString(false) == 'java.lang.Class <java.lang.Number>'
     }
 
     @Test

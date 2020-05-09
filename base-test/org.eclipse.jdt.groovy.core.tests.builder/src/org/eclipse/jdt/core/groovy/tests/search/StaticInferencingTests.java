@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -261,14 +261,15 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/646
     public void testStaticReference8() {
-        String contents = "class Unit {}\n" +
+        String contents =
+            "class Unit {}\n" +
             "class Assert {\n" +
             "  protected void assertType(String src, String expected) {}\n" +
             "  protected void assertType(String src, int off, int len, String expected) {}\n" +
             "  public static void assertType(Unit src, int off, int len, String expected) {}\n" +
             "}\n" +
-            "Unit unit = null; int offset = 0" +
-            "Assert.assertType(unit, offset, offset + 'string'.length(), 'java.util.Collection')";
+            "Unit unit = null; int offset = 0\n" +
+            "Assert.assertType(unit, offset, offset + 'string'.length(), 'java.util.Collection')\n";
 
         assertKnown(contents, "assertType", "Assert", "java.lang.Void");
     }
