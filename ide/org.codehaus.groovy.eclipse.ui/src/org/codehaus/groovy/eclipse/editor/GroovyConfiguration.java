@@ -118,6 +118,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                                 if (prev != null && prev != -1) {
                                     switch (document.getChar(prev)) {
                                     case ',':
+                                    case '.':
+                                    case '?':
                                     case ':':
                                         return;
                                     }
