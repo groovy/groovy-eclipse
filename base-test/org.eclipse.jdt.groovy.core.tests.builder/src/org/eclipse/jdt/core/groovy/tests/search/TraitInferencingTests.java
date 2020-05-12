@@ -242,6 +242,42 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "number", "java.lang.Void");
     }
 
+    @Test
+    public void testProperty15() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    def n = number\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test
+    public void testProperty16() {
+        createUnit("T",
+            "trait T {\n" +
+            "  Number number\n" +
+            "}\n");
+
+        String source =
+            "class C implements T {\n" +
+            "  void meth() {\n" +
+            "    number = 42\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
     //
 
     @Test

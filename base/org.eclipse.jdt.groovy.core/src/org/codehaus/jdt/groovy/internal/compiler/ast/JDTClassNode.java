@@ -15,14 +15,10 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import static java.beans.Introspector.decapitalize;
-
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import groovy.lang.MissingClassException;
 
@@ -46,7 +42,6 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
@@ -109,7 +104,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * but are intended to represent parameterized types will have their generics info available (from the parameterized
      * jdt binding).
      */
-    public void setJdtBinding(ReferenceBinding jdtBinding) {
+    public void setJdtBinding(final ReferenceBinding jdtBinding) {
         this.jdtBinding = jdtBinding;
     }
 
@@ -125,7 +120,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     //--------------------------------------------------------------------------
 
-    public JDTClassNode(ReferenceBinding jdtReferenceBinding, JDTResolver resolver) {
+    public JDTClassNode(final ReferenceBinding jdtReferenceBinding, final JDTResolver resolver) {
         super(getName(jdtReferenceBinding), getMods(jdtReferenceBinding), null);
         this.jdtBinding = jdtReferenceBinding;
         this.resolver = resolver;
@@ -137,7 +132,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         this.isPrimaryNode = false;
     }
 
-    private static String getName(TypeBinding tb) {
+    private static String getName(final TypeBinding tb) {
         if (tb instanceof ArrayBinding) {
             return String.valueOf(((ArrayBinding) tb).signature());
         } else if (tb instanceof MemberTypeBinding) {
@@ -150,7 +145,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private static int getMods(TypeBinding tb) {
+    private static int getMods(final TypeBinding tb) {
         if (tb instanceof ReferenceBinding) {
             return ((ReferenceBinding) tb).modifiers;
         } else {
@@ -261,10 +256,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     }
                 }
             } else if (jdtBinding instanceof SourceTypeBinding && (jdtBinding.tagBits & TagBits.HasMissingType) == 0) {
-                SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
-                if (jdtSourceTypeBinding.isPrototype()) {
-                    ClassScope classScope = jdtSourceTypeBinding.scope;
-                    // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
+                SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
+                if (sourceTypeBinding.isPrototype()) {
+                    ClassScope classScope = sourceTypeBinding.scope;
+                    // a null scope indicates it has already been "cleaned up" (CompilationUnitDeclaration#cleanUp())
                     if (classScope != null) {
                         CompilationUnitScope cuScope = classScope.compilationUnitScope();
                         LookupEnvironment environment = classScope.environment();
@@ -272,7 +267,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     }
                     // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
                     // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
-                    SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
+                    SyntheticMethodBinding[] syntheticMethodBindings = sourceTypeBinding.syntheticMethods();
                     if (syntheticMethodBindings != null) {
                         for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
                             if (syntheticBinding.isConstructor()) {
@@ -306,7 +301,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
+    private MethodNode methodBindingToMethodNode(final MethodBinding methodBinding) {
         try {
             int modifiers = methodBinding.modifiers;
             if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !Traits.isTrait(this)) {
@@ -339,7 +334,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
+    private ConstructorNode constructorBindingToConstructorNode(final MethodBinding methodBinding) {
         Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames, methodBinding.getParameterAnnotations());
 
         ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
@@ -360,7 +355,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return ctorNode;
     }
 
-    private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration typeDeclaration) {
+    private FieldNode fieldBindingToFieldNode(final FieldBinding fieldBinding, final TypeDeclaration typeDeclaration) {
         String name = String.valueOf(fieldBinding.name);
         int modifiers = fieldBinding.modifiers;
         ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
@@ -403,7 +398,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * @param t type
      * @param e erasure of type
      */
-    private ClassNode makeClassNode(TypeBinding t, TypeBinding e) {
+    private ClassNode makeClassNode(final TypeBinding t, final TypeBinding e) {
         ClassNode back = resolver.convertToClassNode(e);
         if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
             ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
@@ -413,7 +408,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return back;
     }
 
-    private Parameter makeParameter(TypeBinding parameterType, String parameterName) {
+    private Parameter makeParameter(final TypeBinding parameterType, final String parameterName) {
         TypeBinding erasureType;
         if (parameterType instanceof ParameterizedTypeBinding) {
             erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
@@ -427,7 +422,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
     }
 
-    private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames, AnnotationBinding[][] parameterAnnotations) {
+    private Parameter[] makeParameters(final TypeBinding[] parameterTypes, final char[][] parameterNames, final AnnotationBinding[][] parameterAnnotations) {
         Parameter[] parameters = Parameter.EMPTY_ARRAY;
         if (parameterTypes != null && parameterTypes.length > 0) {
             parameters = new Parameter[parameterTypes.length];
@@ -451,7 +446,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return parameters;
     }
 
-    private void populateOriginal(MethodBinding methodBinding, MethodNode methodNode) {
+    private void populateOriginal(final MethodBinding methodBinding, final MethodNode methodNode) {
         if (methodBinding instanceof DelegateMethodBinding) {
             MethodBinding target = ((DelegateMethodBinding) methodBinding).delegateMethod.binding;
             for (MethodNode candidate : methodNode instanceof ConstructorNode ? constructors : methods.getNotNull(methodNode.getName())) {
@@ -485,7 +480,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public List<AnnotationNode> getAnnotations(ClassNode type) {
+    public List<AnnotationNode> getAnnotations(final ClassNode type) {
         if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
             @SuppressWarnings("unused") // ensure initialized
             List<AnnotationNode> annotations = getAnnotations();
@@ -510,17 +505,17 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public void setUsingGenerics(boolean b) {
+    public void setUsingGenerics(final boolean b) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setGenericsPlaceHolder(boolean b) {
+    public void setGenericsPlaceHolder(final boolean b) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setGenericsTypes(GenericsType[] genericsTypes) {
+    public void setGenericsTypes(final GenericsType[] genericsTypes) {
         anyGenericsInitialized = true;
         super.setGenericsTypes(genericsTypes);
     }
@@ -540,12 +535,13 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public void addProperty(PropertyNode node) {
+    public void addProperty(final PropertyNode node) {
         throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + node.getName());
     }
 
     @Override
-    public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression, Statement getterBlock, Statement setterBlock) {
+    public PropertyNode addProperty(final String name, final int modifiers, final ClassNode type,
+            final Expression initialValueExpression, final Statement getterBlock, final Statement setterBlock) {
         throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + name);
     }
 
@@ -556,28 +552,23 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 if ((bits & PROPERTIES_INITIALIZED) == 0) {
                     lazyClassInit();
                     if (groovyTypeDecl != null) {
-                        Set<String> names = new HashSet<>();
                         List<PropertyNode> nodes = super.getProperties();
-                        getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
-                            String methodName = methodNode.getName();
-                            String propertyName = decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
 
-                            // STS-2628: don't double-add properties if there is a getter and an isser variant
-                            if (names.add(propertyName)) {
-                                FieldNode field = getField(propertyName);
-                                boolean synth = (field == null);
-                                if (synth) {
-                                    field = new FieldNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), this, null);
-                                    field.setDeclaringClass(this);
-                                    field.setSynthetic(true);
-                                }
-                                PropertyNode property = new PropertyNode(field, methodNode.getModifiers(), null, null);
-                                property.setDeclaringClass(this);
-                                property.setSynthetic(synth);
-
-                                nodes.add(property);
+                        for (PropertyNode node : groovyTypeDecl.getClassNode().getProperties()) {
+                            FieldNode field = getField(node.getName());
+                            boolean synth = (field == null);
+                            if (synth) {
+                                field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic), resolver.resolve(node.getType().getName()), this, null);
+                                field.setDeclaringClass(this);
+                                field.setSynthetic(true);
                             }
-                        });
+
+                            PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);
+                            clone.setDeclaringClass(this);
+                            clone.setSynthetic(synth);
+
+                            nodes.add(clone);
+                        }
                     }
                     bits |= PROPERTIES_INITIALIZED;
                 }
@@ -628,7 +619,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public FieldNode getOuterField(String name) {
+    public FieldNode getOuterField(final String name) {
         return getOuterClass().getDeclaredField(name);
     }
 
