@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
@@ -278,6 +279,34 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (FieldBinding fieldBinding : fieldBindings) {
                     FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyTypeDecl);
                     addField(fNode);
+                }
+            }
+
+            if (groovyTypeDecl != null && isTrait()) {
+                for (PropertyNode pNode : getProperties()) {
+                    String pName = pNode.getName(), capitalizedName = MetaClassHelper.capitalize(pName);
+                    int mMods = Flags.AccPublic | (pNode.getModifiers() & Flags.AccStatic);
+                    if (ClassHelper.boolean_TYPE.equals(pNode.getType())) {
+                        MethodNode mNode = addMethod("is" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                        if (!(mNode instanceof JDTNode)) {
+                            mNode.setSynthetic(true);
+                                   mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                                   if (!(mNode instanceof JDTNode)) {
+                                       mNode.setSynthetic(true);
+                                   }
+                        }
+                    } else {
+                        MethodNode mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                        if (!(mNode instanceof JDTNode)) {
+                            mNode.setSynthetic(true);
+                        }
+                    }
+                    if (!Flags.isFinal(pNode.getModifiers())) {
+                        MethodNode mNode = addMethod("set" + capitalizedName, mMods, ClassHelper.VOID_TYPE, new Parameter[] {new Parameter(pNode.getType(), pName)}, ClassNode.EMPTY_ARRAY, null);
+                        if (!(mNode instanceof JDTNode)) {
+                            mNode.setSynthetic(true);
+                        }
+                    }
                 }
             }
         } catch (AbortCompilation e) {
