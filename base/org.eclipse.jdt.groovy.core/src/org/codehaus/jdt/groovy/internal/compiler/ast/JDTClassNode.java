@@ -35,7 +35,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
@@ -73,6 +72,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
@@ -80,12 +80,12 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
  * Groovy can use these to ask questions of JDT bindings. They are only built as
  * required (as Groovy references to Java files are resolved). They remain unset
  * until Groovy starts digging into them. At that time the details are filled in
- * (eg. members).
+ * (e.g. members).
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
     private volatile int bits;
-    private boolean beingInitialized;
+    private boolean lazyInitStarted;
     private boolean anyGenericsInitialized;
 
     private GroovyTypeDeclaration groovyTypeDecl;
@@ -156,46 +156,32 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public void lazyClassInit() {
-        synchronized (lazyInitLock) {
-            if (lazyInitDone) {
-                return;
-            }
-            initialize();
-            lazyInitDone = true;
-        }
-    }
+        if (!lazyInitDone) {
+            synchronized (lazyInitLock) {
+                if (lazyInitDone || lazyInitStarted) return; lazyInitStarted = true;
 
-    /**
-     * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front: superclass, superinterfaces
-     */
-    // FIXASC confusing (and problematic?) that the superclass is setup after the generics information
-    private void initialize() {
-        if (beingInitialized) {
-            return;
-        }
-        try {
-            beingInitialized = true;
+                // defer most type resolution, but some items are worth getting correct up front: super class, super interfaces
 
-            if (!jdtBinding.isInterface()) {
-                ReferenceBinding superClass = jdtBinding.superclass();
-                if (superClass != null) {
-                    setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+                if (!jdtBinding.isInterface()) {
+                    ReferenceBinding superClass = jdtBinding.superclass();
+                    if (superClass != null) {
+                        setUnresolvedSuperClass(resolver.convertToClassNode(superClass));
+                    }
                 }
-            }
 
-            ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
-            if (superInterfaceBindings == null)
-                superInterfaceBindings = Binding.NO_SUPERINTERFACES;
-            int n = superInterfaceBindings.length;
-            ClassNode[] interfaces = new ClassNode[n];
-            for (int i = 0; i < n; i += 1) {
-                interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
-            }
-            setInterfaces(interfaces);
+                ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
+                if (superInterfaceBindings == null)
+                    superInterfaceBindings = Binding.NO_SUPERINTERFACES;
+                int n = superInterfaceBindings.length;
+                ClassNode[] interfaces = new ClassNode[n];
+                for (int i = 0; i < n; i += 1) {
+                    interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
+                }
+                setInterfaces(interfaces);
 
-            initializeMembers();
-        } finally {
-            beingInitialized = false;
+                initializeMembers();
+                lazyInitDone = true;
+            }
         }
     }
 
@@ -304,7 +290,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     private MethodNode methodBindingToMethodNode(final MethodBinding methodBinding) {
         try {
             int modifiers = methodBinding.modifiers;
-            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !Traits.isTrait(this)) {
+            if (isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !isTrait()) {
                 modifiers |= Flags.AccAbstract;
             }
 
@@ -586,7 +572,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     bits |= INNER_TYPES_INITIALIZED;
                     if (jdtBinding.hasMemberTypes()) {
                         // workaround for https://github.com/groovy/groovy-eclipse/issues/714
-                        if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && Traits.isTrait(this)) {
+                        if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && isTrait()) {
                             ReferenceBinding[] memberTypes = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding);
                             for (int i = 0; i < memberTypes.length; i += 1) {
                                 if (String.valueOf(memberTypes[i].sourceName).endsWith("$Trait$FieldHelper$1")) {
@@ -660,4 +646,20 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     public boolean isResolved() {
         return true; // JDTClassNode created because of a JDT ReferenceBinding, so it is always "resolved" (although not initialized upon creation)
     }
+
+    public boolean isTrait() {
+        if (isTrait == null) {
+            if (isInterface() && !isAnnotationDefinition() && !CharOperation.equals(jdtBinding.compoundName[0], TypeConstants.JAVA)) {
+                if (groovyTypeDecl != null) {
+                    isTrait = org.codehaus.groovy.transform.trait.Traits.isTrait(groovyTypeDecl.getClassNode());
+                } else {
+                    isTrait = org.codehaus.groovy.transform.trait.Traits.isTrait(this); // populates annotations
+                }
+            } else {
+                isTrait = Boolean.FALSE;
+            }
+        }
+        return isTrait.booleanValue();
+    }
+    private Boolean isTrait;
 }
