@@ -289,21 +289,31 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     if (ClassHelper.boolean_TYPE.equals(pNode.getType())) {
                         MethodNode mNode = addMethod("is" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
                         if (!(mNode instanceof JDTNode)) {
+                            mNode.setNameStart(pNode.getField().getNameStart());
+                            mNode.setNameEnd(pNode.getField().getNameEnd());
                             mNode.setSynthetic(true);
-                                   mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
-                                   if (!(mNode instanceof JDTNode)) {
-                                       mNode.setSynthetic(true);
-                                   }
+
+                            // GROOVY-9382: include "getter" if "isser" was not declared
+                            mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+                            if (!(mNode instanceof JDTNode)) {
+                                mNode.setNameStart(pNode.getField().getNameStart());
+                                mNode.setNameEnd(pNode.getField().getNameEnd());
+                                mNode.setSynthetic(true);
+                            }
                         }
                     } else {
                         MethodNode mNode = addMethod("get" + capitalizedName, mMods, pNode.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
                         if (!(mNode instanceof JDTNode)) {
+                            mNode.setNameStart(pNode.getField().getNameStart());
+                            mNode.setNameEnd(pNode.getField().getNameEnd());
                             mNode.setSynthetic(true);
                         }
                     }
                     if (!Flags.isFinal(pNode.getModifiers())) {
                         MethodNode mNode = addMethod("set" + capitalizedName, mMods, ClassHelper.VOID_TYPE, new Parameter[] {new Parameter(pNode.getType(), pName)}, ClassNode.EMPTY_ARRAY, null);
                         if (!(mNode instanceof JDTNode)) {
+                            mNode.setNameStart(pNode.getField().getNameStart());
+                            mNode.setNameEnd(pNode.getField().getNameEnd());
                             mNode.setSynthetic(true);
                         }
                     }
@@ -575,11 +585,13 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                             if (synth) {
                                 field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic), resolver.resolve(node.getType().getName()), this, null);
                                 field.setDeclaringClass(this);
+                                field.setSourcePosition(node.getField());
                                 field.setSynthetic(true);
                             }
 
                             PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);
                             clone.setDeclaringClass(this);
+                            clone.setSourcePosition(node);
                             clone.setSynthetic(synth);
 
                             nodes.add(clone);

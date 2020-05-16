@@ -126,7 +126,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |'''.stripMargin()
 
         IJavaElement elem = assertCodeSelect([contents1, contents2], 'redirect')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'PlantController'
+        assert elem.declaringType.fullyQualifiedName == 'PlantController'
     }
 
     @Test // GRECLIPSE-1755
@@ -157,7 +157,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |'''.stripMargin()
 
         IJavaElement elem = assertCodeSelect([contents1, contents2, contents3, contents4], 'foo')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'SuperInterface'
+        assert elem.declaringType.fullyQualifiedName == 'SuperInterface'
     }
 
     @Test
@@ -276,7 +276,77 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |}
             |'''.stripMargin()
         IJavaElement elem = assertCodeSelect([contents], 'x')
-        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+        assert elem.declaringType.fullyQualifiedName == 'T'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait4() {
+        String contents = '''\
+            |trait T {
+            |  Number number
+            |}
+            |class C implements T {
+            |  def m() {
+            |    getNumber()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement elem = assertCodeSelect([contents], 'getNumber')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == contents.indexOf('number')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait5() {
+        String contents = '''\
+            |trait T {
+            |  Number number
+            |}
+            |class C implements T {
+            |  def m() {
+            |    setNumber(42)
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement elem = assertCodeSelect([contents], 'setNumber')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == contents.indexOf('number')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/960
+    void testCodeSelectStaticMethodFromTrait6() {
+        String contents = '''\
+            |trait T {
+            |  boolean condition
+            |}
+            |class C implements T {
+            |  def m() {
+            |    isCondition()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement elem = assertCodeSelect([contents], 'isCondition')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == contents.indexOf('condition')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1113
+    void testCodeSelectStaticMethodFromTrait7() {
+        addGroovySource'''\
+            |trait T {
+            |  String foo
+            |}
+            |'''.stripMargin()
+        String contents = '''\
+            |class C implements T {
+            |  def m() {
+            |    getFoo()
+            |  }
+            |}
+            |'''.stripMargin()
+        IJavaElement elem = assertCodeSelect([contents], 'getFoo')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 19
     }
 
     @Test
@@ -372,7 +442,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectStaticMethod4() {
         String contents = 'List<String> empty = Collections.&emptyList'
         IJavaElement elem = assertCodeSelect([contents], 'emptyList')
-        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <T>' // want T to be java.lang.String
+        assert elem.inferredElement.returnType.toString(false) == 'java.util.List <T>' // TODO: want T to be java.lang.String
     }
 
     @Test

@@ -49,6 +49,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceFie
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -523,6 +524,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return true;
         }
         // check for @Trait field
+        if (!node.isFinal() && !node.isStatic() && Traits.isTrait(node.getDeclaringClass())) {
+            return true;
+        }
         List<FieldNode> traitFields = declaringType.redirect().getNodeMetaData("trait.fields");
         if (traitFields != null) {
             for (FieldNode traitField : traitFields) {
