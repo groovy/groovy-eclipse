@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -47,7 +48,7 @@ public class GenericsMapper {
      * @param resolvedType unredirected type that has generic types already parameterized
      * @param declaringType a type that is somewhere in resolvedType's hierarchy used to find the target of the mapping
      */
-    public static GenericsMapper gatherGenerics(ClassNode resolvedType, ClassNode declaringType) {
+    public static GenericsMapper gatherGenerics(final ClassNode resolvedType, final ClassNode declaringType) {
         GenericsMapper mapper = new GenericsMapper();
 
         ClassNode rCandidate = resolvedType;
@@ -90,8 +91,8 @@ public class GenericsMapper {
         return mapper;
     }
 
-    public static GenericsMapper gatherGenerics(List<ClassNode> argumentTypes, ClassNode delegateOrThisType, MethodNode methodDeclaration, GenericsType... methodGenerics) {
-        // GOAL: resolve return type of something like "static <T> Iterator<T> iterator(T[] array)"
+    public static GenericsMapper gatherGenerics(final List<ClassNode> argumentTypes, final ClassNode delegateOrThisType, final MethodNode methodDeclaration, final GenericsType... methodGenerics) {
+        // GOAL: resolve return type of something like "<T> Iterator<T> iterator(T[] array)"
 
         // inspect owner type for generics
         GenericsMapper mapper = gatherGenerics(delegateOrThisType, methodDeclaration.getDeclaringClass());
@@ -123,25 +124,28 @@ public class GenericsMapper {
                             ubt = ubt.getComponentType();
                         }
 
-                        // rbt could be "String" and ubt could be "T" or "T extends CharSequence"
                         if (ubt.isGenericsPlaceHolder() && ubt.getUnresolvedName().equals(ugt.getName())) {
-                            if (GroovyUtils.isAssignable(rbt, ubt))
-                                saveParameterType(resolved, ugt.getName(), rbt, true);
+                            // ubt could be "T" or "T extends CharSequence" and rbt could be "String" or whatever
+                            if (GroovyUtils.isAssignable(rbt, ubt)) saveParameterType(resolved, ugt.getName(), rbt, true);
                         } else {
-                            // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
+                            // ubt could be "Foo<K, V>" and rbt could be "Foo<String, Object>" or "Closure<Object>"
                             GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
                             for (int j = 0; j < ubt_gts.length; j += 1) {
-                                if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) {
-                                    // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
-                                    String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
-                                    GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
-                                    ClassNode rt = map.findParameter(key, null);
+                                ClassNode ubt_gt_t = GroovyUtils.getBaseType(ubt_gts[j].getType()); // ubt_gt_t is "T" from "Foo<T>" or "Foo<T[]>"
+                                if (ubt_gt_t.isGenericsPlaceHolder() && ubt_gt_t.getUnresolvedName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) {
+                                    if (rbt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.equals(ClassHelper.CLOSURE_TYPE) && !ubt.isGenericsPlaceHolder()) {
+                                        // TODO
+                                    } else {
+                                        // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
+                                        String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
+                                        GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
+                                        ClassNode rt = map.findParameter(key, null);
 
-                                    // rt could be "String" and ubt_gts[j] could be "T" or "T extends CharSequence"
-                                    if (rt != null && GroovyUtils.isAssignable(rt, ubt_gts[j].getType())) {
-                                        saveParameterType(resolved, ugt.getName(), rt, false);
+                                        if (rt != null && GroovyUtils.isAssignable(rt, ubt_gt_t)) {
+                                            saveParameterType(resolved, ugt.getName(), rt, false);
+                                        }
+                                        break; // ugt resolved; no need to look at more ubt_gts
                                     }
-                                    break;
                                 }
                             }
                             // TODO: What about "Foo<Bar<T>>", "Foo<? extends T>", or "Foo<? super T>"?
@@ -159,7 +163,7 @@ public class GenericsMapper {
      *
      * @param depth ensure that we don't recur forever, bottom out after a certain depth
      */
-    public ClassNode resolveParameter(GenericsType topGT, int depth) {
+    public ClassNode resolveParameter(final GenericsType topGT, final int depth) {
         if (allGenerics.isEmpty()) {
             if (!topGT.isWildcard()) {
                 return topGT.getType();
@@ -216,7 +220,7 @@ public class GenericsMapper {
      *
      * @param defaultType type to return if parameter name doesn't exist
      */
-    protected ClassNode findParameter(String parameterName, ClassNode defaultType) {
+    protected ClassNode findParameter(final String parameterName, final ClassNode defaultType) {
         if (allGenerics.isEmpty()) {
             return defaultType;
         }
@@ -227,7 +231,7 @@ public class GenericsMapper {
         return type;
     }
 
-    protected static Iterator<ClassNode> getTypeHierarchy(ClassNode type, boolean useResolved) {
+    protected static Iterator<ClassNode> getTypeHierarchy(final ClassNode type, final boolean useResolved) {
         Set<ClassNode> hierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(type, hierarchy, useResolved);
         hierarchy.remove(VariableScope.GROOVY_OBJECT_CLASS_NODE);
@@ -239,7 +243,7 @@ public class GenericsMapper {
      * @see org.codehaus.groovy.classgen.AsmClassGenerator#isVargs(Parameter[])
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator#isVargs(Parameter[])
      */
-    protected static boolean isVargs(Parameter[] parameters) {
+    protected static boolean isVargs(final Parameter[] parameters) {
         if (parameters.length > 0) {
             Parameter last = parameters[parameters.length - 1];
             ClassNode type = last.getType();
@@ -250,7 +254,7 @@ public class GenericsMapper {
         return false;
     }
 
-    protected static void saveParameterType(Map<String, ClassNode> map, String key, ClassNode val, boolean weak) {
+    protected static void saveParameterType(final Map<String, ClassNode> map, final String key, ClassNode val, final boolean weak) {
         // special case 1: Arrays.asList(T...): List<T> -- each param has a chance to influence the LUB
         // special case 2: Collections.replaceAll(List<T>, T, T) -- list should dictate type unless it's dynamic
         // special case 3: Collections.checkedSet(Set<E>, Class<E>): Set<E> -- set type and class type should agree

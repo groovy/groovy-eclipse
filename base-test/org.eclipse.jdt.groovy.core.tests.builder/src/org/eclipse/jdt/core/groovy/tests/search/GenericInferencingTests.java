@@ -488,85 +488,58 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "def x = 1..4\n" +
             "for (a in x) {\n" +
             "  a\n" +
-            "}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+            "}\n";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop2() {
         String contents = "for (a in 1..4) {\n" +
             "  a\n" +
-            "}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+            "}\n";
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop2a() {
         String contents = "for (a in 1..4) {\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop3() {
         String contents = "for (a in [1, 2].iterator()) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop4() {
         String contents = "for (a in (1..4).iterator()) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop5() {
         String contents = "for (a in [1 : 1]) {\n a.key\n}";
-        String toFind = "key";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "key", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop6() {
         String contents = "for (a in [1 : 1]) {\n a.value\n}";
-        String toFind = "value";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testForLoop7() {
         String contents = "InputStream x\nfor (a in x) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Byte");
+        assertType(contents, "a", "java.lang.Byte");
     }
 
     @Test
     public void testForLoop8() {
         String contents = "DataInputStream x\nfor (a in x) {\n a\n}";
-        String toFind = "a";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Byte");
+        assertType(contents, "a", "java.lang.Byte");
     }
 
     @Test
@@ -577,10 +550,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "def sample = new X()\n" + "for (img in sample.images) {\n" +
             "  img\n" +
             "}";
-        String toFind = "img";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, "img", "java.lang.String");
     }
 
     @Test
@@ -594,56 +564,56 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             " }\n" +
             "}\n";
-        String toFind = "foo";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, "foo", "java.lang.String");
     }
 
     @Test
     public void testClosure1() {
         String contents = "def fn = { int a, int b ->\n a + b\n}";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
     }
 
     @Test
     public void testClosure2() {
         String contents = "def fn = 'abc'.&length";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Integer>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Integer>");
     }
 
     @Test
     public void testClosure3() {
         String contents = "def fn = Collections.&emptyList";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.util.List<T>>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.util.List<T>>");
     }
 
     @Test
     public void testClosure4() {
         String contents = "def fn = (String.&trim) >> (Class.&forName)";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.Class<?>>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.Class<?>>");
     }
 
     @Test
     public void testClosure5() {
         String contents = "def fn = String[].&new";
-        assertType(contents, 4, 6, isAtLeastGroovy(30) ? "groovy.lang.Closure<java.lang.String[]>" : "groovy.lang.Closure");
+        assertType(contents, "fn", isAtLeastGroovy(30) ? "groovy.lang.Closure<java.lang.String[]>" : "groovy.lang.Closure");
     }
 
     @Test
-    public void testClosure6() {
+    public void testClosure5a() {
         assumeTrue(isParrotParser());
         String contents = "def fn = String[]::new";
-        assertType(contents, 4, 6, "groovy.lang.Closure<java.lang.String[]>");
+        assertType(contents, "fn", "groovy.lang.Closure<java.lang.String[]>");
     }
 
     @Test
     public void testArrayDGM() {
-        String contents = "String[] strings = ['1', '2'];  strings.iterator()";
-        String toFind = "iterator";
-        int start = contents.lastIndexOf(toFind), end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Iterator<java.lang.String>");
-        MethodNode dgm = assertDeclaration(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "iterator", DeclarationKind.METHOD);
+        String contents =
+            "void test(String[] array) {\n" +
+            "  array.iterator()\n" +
+            "}\n";
+        String target = "iterator";
+        int offset = contents.lastIndexOf(target), end = offset + target.length();
+        assertType(contents, offset, end, "java.util.Iterator<java.lang.String>");
+        MethodNode dgm = assertDeclaration(contents, offset, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "iterator", DeclarationKind.METHOD);
         assertEquals("First parameter type should be resolved from object expression", "java.lang.String[]", printTypeName(dgm.getParameters()[0].getType()));
     }
 

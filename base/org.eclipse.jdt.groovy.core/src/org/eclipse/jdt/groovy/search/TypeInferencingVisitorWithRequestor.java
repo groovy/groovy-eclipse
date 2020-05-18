@@ -193,14 +193,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private final Deque<Tuple> dependentDeclarationStack = new LinkedList<>();
 
     /**
-     * Tracks the type of the type of the property field corresponding to each
-     * frame of the property expression.
+     * Stores the inferred types of visited dependent expressions.
+     *
+     * @see #isDependentExpression(Expression)
      */
     private final Deque<ClassNode> dependentTypeStack = new LinkedList<>();
 
     /**
-     * Tracks the type of the object expression corresponding to each frame of
-     * the property expression.
+     * Stores the inferred types of visited primary expressions. When the first
+     * dependent expression is visited, the primary type is taken off the stack.
+     *
+     * @see #isPrimaryExpression(Expression)
+     * @see #handleSimpleExpression(Expression)
      */
     private final Deque<ClassNode> primaryTypeStack = new LinkedList<>();
 
@@ -1463,7 +1467,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (t.declaration instanceof MethodNode) {
             MethodNode meth = (MethodNode) t.declaration;
             // if return type depends on any Closure argument return types, deal with that
-            if (meth.getGenericsTypes() != null && Arrays.stream(meth.getParameters())
+            if (meth.getGenericsTypes() != null && Stream.of(meth.getParameters())
                     .anyMatch(p -> p.getType().equals(VariableScope.CLOSURE_CLASS_NODE))) {
                 scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
                 scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
@@ -1640,21 +1644,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitStaticMethodCallExpression(final StaticMethodCallExpression node) {
         handleSimpleExpression(node, () -> {
             Tuple t = dependentDeclarationStack.removeLast();
-            boolean isPresentInSource = (node.getEnd() > 0);
-            boolean isEnumInit = isEnumInit(node);
-            ClassNode type = node.getOwnerType();
+            VariableScope.CallAndType cat = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
 
-            if (isPresentInSource) {
-                visitClassReference(type);
-            }
-            if (isPresentInSource || isEnumInit) {
-                // visit static method call arguments
-                scopes.getLast().addEnclosingMethodCall(new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule));
-                super.visitStaticMethodCallExpression(node);
-                scopes.getLast().forgetEnclosingMethodCall();
-            }
-            if (isEnumInit && GroovyUtils.isAnonymous(type)) {
-                visitEnumConstBody(type);
+            // visit static method call arguments
+            scopes.getLast().addEnclosingMethodCall(cat);
+            super.visitStaticMethodCallExpression(node);
+            scopes.getLast().forgetEnclosingMethodCall();
+
+            if (isEnumInit(node) && GroovyUtils.isAnonymous(node.getOwnerType())) {
+                visitEnumConstBody(node.getOwnerType());
             }
         });
     }
@@ -2398,19 +2396,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * Primary expressions are:
+     * Primary (another expression depends upon type) expressions are:
      * <ul>
-     * <li>right side of an assignment expression
-     * <li>either side of a non-assignment binary expression
-     * <li>object (ie- left side) of a property expression
-     * <li>object (ie- left side) of a method call expression
-     * <li>true expression of a ternary expression
+     * <li>either side of a binary expression
+     * <li>object (i.e. left side) of a property/attribute expression
+     * <li>object (i.e. left side) of a method call expression
+     * <li>object (i.e. left side) of a method pointer/reference expression
+     * <li>first result of a ternary expression (the first result is assumed to be representative of both results)
      * <li>first element of a map expression (the first element is assumed to be representative of all map elements)
      * <li>first element of a list expression (the first element is assumed to be representative of all list elements)
      * <li>first element of a range expression (the first element is assumed to be representative of the range components)
      * <li>either the key or the value expression of a {@link MapEntryExpression}
-     * <li>expression of a {@link PrefixExpression}, {@link PostfixExpression},
-     *     {@link UnaryMinusExpression}, {@link UnaryPlusExpression}, or {@link BitwiseNegationExpression}
+     * <li>expression of a {@link ReturnStatement}, {@link BooleanExpression}, {@link CastExpression}, {@link PrefixExpression}, {@link PostfixExpression},
+     *     {@link SpreadExpression}, {@link SpreadMapExpression}, {@link UnaryMinusExpression}, {@link UnaryPlusExpression}, {@link BitwiseNegationExpression}
      * <li>collection expression of a for statement
      * </ul>
      *
@@ -2906,7 +2904,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private static Parameter[] getPositionalParameters(final MethodNode methodNode) {
-        if (Arrays.stream(methodNode.getClass().getInterfaces()).anyMatch(face -> face.getSimpleName().equals("MethodNodeWithNamedParams"))) {
+        if (Stream.of(methodNode.getClass().getInterfaces()).anyMatch(face -> face.getSimpleName().equals("MethodNodeWithNamedParams"))) {
             Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getPositionalParams", methodNode);
             return parameters;
         }
