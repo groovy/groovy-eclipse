@@ -2215,20 +2215,43 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         types.add(VariableScope.STRING_CLASS_NODE);
                     } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {
                         types.add(VariableScope.BOOLEAN_CLASS_NODE);
+                    } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.COMPARE_TO)) {
+                        types.add(VariableScope.INTEGER_CLASS_NODE);
+                    } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.FIND_REGEX)) {
+                        types.add(VariableScope.MATCHER_CLASS_NODE);
+                    } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isOneOf(new int[] {Types.COMPARISON_OPERATOR, Types.LOGICAL_OPERATOR, Types.MATCH_REGEX, Types.KEYWORD_IN, Types.KEYWORD_INSTANCEOF, 129, 130})) {
+                        types.add(VariableScope.BOOLEAN_CLASS_NODE);
                     } else {
-                        scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
+                        while (expression instanceof BinaryExpression && !((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
+                            expression = ((BinaryExpression) expression).getLeftExpression();
+                        }
+                        VariableScope scope = scopes.getLast();
+                        scope.setMethodCallArgumentTypes(null);
 
                         TypeLookupResult tlr;
                         if (expression instanceof PropertyExpression) {
                             PropertyExpression path = (PropertyExpression) expression;
-                            tlr = lookupExpressionType(path.getObjectExpression(), null, false, scopes.getLast());
-                            tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                            tlr = lookupExpressionType(path.getObjectExpression(), null, false, scope);
+                            tlr = lookupExpressionType(path.getProperty(), tlr.type, path.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+
                         } else if (expression instanceof MethodCallExpression) {
                             MethodCallExpression call = (MethodCallExpression) expression;
-                            tlr = lookupExpressionType(call.getObjectExpression(), null, false, scopes.getLast());
-                            tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scopes.getLast());
+                            tlr = lookupExpressionType(call.getObjectExpression(), null, false, scope);
+                            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(call));
+                            tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
+
+                        } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
+                            tlr = lookupExpressionType(((BinaryExpression) expression).getLeftExpression(), null, false, scope);
+                            scope.setMethodCallArgumentTypes(Collections.singletonList(
+                                lookupExpressionType(((BinaryExpression) expression).getRightExpression(), null, false, scope).type));
+
+                            if (tlr.type.isArray() && ClassHelper.isNumberType(scope.getMethodCallArgumentTypes().get(0))) {
+                                tlr = new TypeLookupResult(tlr.type.getComponentType(), null, null, null, scope);
+                            } else {
+                                tlr = lookupExpressionType(GeneralUtils.constX("getAt"), tlr.type, false, scope);
+                            }
                         } else {
-                            tlr = lookupExpressionType(expression, null, false, scopes.getLast());
+                            tlr = lookupExpressionType(expression, null, false, scope);
                         }
 
                         types.add(tlr.type);
