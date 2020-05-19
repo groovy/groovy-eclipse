@@ -1467,8 +1467,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (t.declaration instanceof MethodNode) {
             MethodNode meth = (MethodNode) t.declaration;
             // if return type depends on any Closure argument return types, deal with that
-            if (meth.getGenericsTypes() != null && Stream.of(meth.getParameters())
-                    .anyMatch(p -> p.getType().equals(VariableScope.CLOSURE_CLASS_NODE))) {
+            if (meth.getGenericsTypes() != null && Stream.of(meth.getParameters()).map(Parameter::getType)
+                    .anyMatch(pt -> pt.equals(VariableScope.CLOSURE_CLASS_NODE) || ClassHelper.isSAMType(pt))) {
                 scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
                 scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
                 try {
@@ -1759,11 +1759,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitTupleExpression(final TupleExpression node) {
         completeExpressionStack.add(node);
         try {
+            node.removeNodeMetaData("tuple.types");
             if (isNotEmpty(node.getExpressions())) {
                 for (Expression expr : node) {
                     // prevent revisit of statically-compiled chained assignment nodes
                     if (!(expr instanceof TemporaryVariableExpression)) {
                         expr.visit(this);
+
+                        node.getNodeMetaData("tuple.types", x -> new ArrayList<>()).add(primaryTypeStack.removeLast());
                     }
                 }
             }
@@ -2174,6 +2177,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
         if (node instanceof MethodCall) {
             Expression arguments = ((MethodCall) node).getArguments();
+            if (arguments.getNodeMetaData("tuple.types") != null) {
+                return arguments.getNodeMetaData("tuple.types");
+            }
             List<Expression> expressions = arguments instanceof TupleExpression ? ((TupleExpression) arguments).getExpressions() : Collections.singletonList(arguments);
             if (isNotEmpty(expressions)) {
                 if (expressions.get(0) instanceof NamedArgumentListExpression) {
@@ -2400,7 +2406,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * <ul>
      * <li>either side of a binary expression
      * <li>object (i.e. left side) of a property/attribute expression
-     * <li>object (i.e. left side) of a method call expression
+     * <li>object (i.e. left side) or argument of a method call expression
      * <li>object (i.e. left side) of a method pointer/reference expression
      * <li>first result of a ternary expression (the first result is assumed to be representative of both results)
      * <li>first element of a map expression (the first element is assumed to be representative of all map elements)
@@ -2491,6 +2497,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 @Override public void visitTernaryExpression(final TernaryExpression expression) {
                     result[0] = (expr == expression.getTrueExpression());
+                }
+
+                @Override public void visitTupleExpression(final TupleExpression expression) {
+                    result[0] = (expression.getExpressions().stream().anyMatch(item -> expr == item));
                 }
 
                 @Override public void visitUnaryMinusExpression(final UnaryMinusExpression expression) {

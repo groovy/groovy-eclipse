@@ -605,6 +605,37 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosure6() {
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray {\n" +
+            "    int n -> new String[n]\n" +
+            "  }\n" +
+            "}\n";
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
+    public void testClosure6a() {
+        assumeTrue(isAtLeastGroovy(30));
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray(String[].&new)\n" +
+            "}\n";
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
+    public void testClosure6b() {
+        assumeTrue(isParrotParser());
+        String contents =
+            "void test(List<String> list) {\n" +
+            "  def array = list.stream().toArray(String[]::new)\n" +
+            "}\n";
+        assertType(contents, "array", "java.lang.String[]");
+    }
+
+    @Test
     public void testArrayDGM() {
         String contents =
             "void test(String[] array) {\n" +
