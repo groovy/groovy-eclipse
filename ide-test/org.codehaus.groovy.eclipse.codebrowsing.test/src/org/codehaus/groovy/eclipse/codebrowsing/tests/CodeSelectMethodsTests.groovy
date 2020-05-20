@@ -771,7 +771,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectConstuctorMultipleConstructors3() {
-        IMethod method = assertConstructor('new Date(0)', 'Date')
+        IMethod method = assertConstructor('new Date(0L)', 'Date')
         assert method.parameters.length == 1: 'Should have found constructor with 1 arg'
         assert method.parameterTypes[0] == 'J' : 'Should have found constructor Date(long)'
     }

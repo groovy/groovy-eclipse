@@ -4018,4 +4018,10 @@ public final class InferencingTests extends InferencingTestSuite {
         MethodNode m = assertDeclaration(contents, offset, offset + 9, "C", "<init>", DeclarationKind.METHOD);
         assertTrue("Expected array, but was " + m.getParameters()[1].getType().getNameWithoutPackage(), m.getParameters()[1].getType().isArray());
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1111
+    public void testMethodOverloadsArgumentMatching12() {
+        String contents = "['x'].stream().toArray(String)\n";
+        assertUnknown(contents, "toArray");
+    }
 }

@@ -680,35 +680,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "result", "java.lang.Object");
     }
 
-    @Test
-    public void testDGM50() {
-        // SimpleTypeLookup returns first method in case of no type-compatible matches
-        // TODO: primitive array is not compatible with derived-from-boxed-type array
-        String contents =
-            //@formatter:off
-            "int[] ints = [1, 2, 3]\n" +
-            "Number dgm(Number[] arr) { null }\n" +
-            "def result = dgm(ints)\n";
-            //@formatter:on
-
-        assertExprType(contents, "result", "java.lang.Number");
-        //assertUnknownConfidence(contents, contents.lastIndexOf("dgm"), contents.lastIndexOf("dgm") + 3);
-    }
-
-    @Test
-    public void testDGM50a() {
-        String contents =
-            //@formatter:off
-            "Integer[] ints = [1, 2, 3]\n" +
-            "Number dgm(Number[] arr) { null }\n" +
-            "def result = dgm(ints)\n";
-            //@formatter:on
-
-        assertExprType(contents, "result", "java.lang.Number");
-    }
-
     @Test // https://github.com/groovy/groovy-eclipse/issues/804
-    public void testDGM51() {
+    public void testDGM50() {
         String contents =
             //@formatter:off
             "def answer = (-42).&abs\n";
@@ -718,7 +691,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1027
-    public void testDGM52() {
+    public void testDGM51() {
         String contents =
             //@formatter:off
             "def result = '42'.number\n";
@@ -729,7 +702,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1027
-    public void testDGM53() {
+    public void testDGM52() {
         String contents =
             //@formatter:off
             "def result = ' '.allWhitespace\n";
@@ -740,7 +713,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM53a() {
+    public void testDGM53() {
         String contents =
             //@formatter:off
             "def result = ' '.&allWhitespace\n";

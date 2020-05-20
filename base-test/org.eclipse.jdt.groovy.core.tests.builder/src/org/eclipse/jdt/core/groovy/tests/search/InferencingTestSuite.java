@@ -136,7 +136,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         } else {
             if (requestor.result.confidence == TypeConfidence.UNKNOWN) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Expected Confidence should not have been UNKNOWN, but it was.\n");
+                sb.append("Confidence should *not* have been UNKNOWN.\n");
                 sb.append("\tExpected declaring type: ").append(expectedDeclType).append("\n");
                 sb.append("\tFound type: ").append(printTypeName(requestor.result.type)).append("\n");
                 sb.append("\tFound declaring type: ").append(printTypeName(requestor.result.declaringType)).append("\n");

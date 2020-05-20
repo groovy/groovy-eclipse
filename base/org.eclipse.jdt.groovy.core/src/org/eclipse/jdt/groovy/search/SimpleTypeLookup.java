@@ -772,7 +772,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
         }
-        if (closestMatch == null && argumentCount > 0) {
+        if (closestMatch == null && argumentCount > 0 && argumentTypes.stream().anyMatch(t -> ClassHelper.isPrimitiveType(ClassHelper.getUnwrapper(t)) || ClassHelper.OBJECT_TYPE.equals(t) || ClassHelper.STRING_TYPE.equals(t))) {
             // prefer method with the same number of parameters as arguments
             for (MethodNode candidate : candidates) {
                 Parameter[] parameters = candidate.getParameters();
