@@ -158,7 +158,8 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         }
         for (IMethod method : type.getMethods()) {
             ClassNode methodReturnTypeClassNode = toClassNode(method.getReturnType());
-            if (GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
+            if (!VariableScope.VOID_CLASS_NODE.equals(methodReturnTypeClassNode) &&
+                    GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
                 if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0) &&
                         (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
                     visibleElements.putIfAbsent(method.getElementName(), method);

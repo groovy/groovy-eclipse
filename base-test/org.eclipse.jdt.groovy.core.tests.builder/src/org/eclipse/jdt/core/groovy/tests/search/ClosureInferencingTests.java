@@ -696,7 +696,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  1L.with {\n" +
             "    abs\n" +
             "  }\n" +
             "}";
@@ -711,13 +711,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  1L.with {\n" +
             "    abs()\n" +
             "  }\n" +
             "}";
             //@formatter:on
 
-        assertType(contents, "abs", "java.lang.Integer");
+        assertType(contents, "abs", "java.lang.Long");
     }
 
     @Test
@@ -725,13 +725,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  1L.with {\n" +
             "    delegate.abs()\n" +
             "  }\n" +
             "}";
             //@formatter:on
 
-        assertType(contents, "abs", "java.lang.Integer");
+        assertType(contents, "abs", "java.lang.Long");
     }
 
     @Test
@@ -739,7 +739,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  1L.with {\n" +
             "    this.abs()\n" +
             "  }\n" +
             "}";
@@ -754,7 +754,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  42.with {\n" +
             "    this\n" +
             "  }\n" +
             "}";
@@ -768,7 +768,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             //@formatter:off
             "''.with {\n" +
-            "  1.with {\n" +
+            "  42.with {\n" +
             "    owner.thisObject\n" +
             "    owner.getThisObject()\n" +
             "  }\n" +

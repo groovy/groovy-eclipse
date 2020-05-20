@@ -390,6 +390,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGM30() {
         String contents =
             //@formatter:off
+            "import groovy.io.FileType\n" +
             "new File('test').eachFileMatch(FileType.FILES, 1) { it.name }";
             //@formatter:on
 
@@ -684,10 +685,10 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     public void testDGM50() {
         String contents =
             //@formatter:off
-            "def answer = (-42).&abs\n";
+            "def answer = (-42L).&abs\n";
             //@formatter:on
 
-        assertExprType(contents, "abs", "java.lang.Integer");
+        assertExprType(contents, "abs", "java.lang.Long");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1027

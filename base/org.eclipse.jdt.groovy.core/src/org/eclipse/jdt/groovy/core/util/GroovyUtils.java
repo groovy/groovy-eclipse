@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImmutableClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -50,6 +51,7 @@ import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -391,10 +393,7 @@ public class GroovyUtils {
         }
 
         boolean result;
-        /*if (source.hasClass() && target.hasClass()) {
-            // this matches primitives more thoroughly, but getTypeClass can fail if class has not been loaded
-            result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
-        } else*/ if (target.isInterface()) {
+        if (target.isInterface()) {
             result = GeneralUtils.isOrImplements(source, target);
         } else if (array) {
             if (target.isGenericsPlaceHolder() || target.equals(ClassHelper.OBJECT_TYPE)) {
@@ -404,7 +403,12 @@ public class GroovyUtils {
                 result = source.isDerivedFrom(target);
             }
         } else {
-            result = getWrapperTypeIfPrimitive(source).isDerivedFrom(getWrapperTypeIfPrimitive(target));
+            if (source.redirect() instanceof ImmutableClassNode && target.redirect() instanceof ImmutableClassNode) {
+                // this matches primitives more thoroughly, but getTypeClass fails if class isn't loaded
+                result = MetaClassHelper.isAssignableFrom(target.getTypeClass(), source.getTypeClass());
+            } else {
+                result = getWrapperTypeIfPrimitive(source).isDerivedFrom(target);
+            }
         }
 
         // if target is like <T extends A & B>, check source against B
