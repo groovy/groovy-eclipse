@@ -653,7 +653,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
-            "m.get()";
+            "m.get('')";
         String toFind = "get";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();

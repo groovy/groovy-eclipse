@@ -785,13 +785,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         ClassNode dependentExprType = primaryTypeStack.removeLast();
 
         if (!isAssignment && primaryExprType != null && dependentExprType != null) {
-            // type of RHS of binary expression
-            // find the type of the complete expression
-            String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
-            if (isArithmeticOperationOnListOrNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
+            String associatedMethod;
+            if (node.getOperation().isA(Types.LEFT_SQUARE_BRACKET) && primaryExprType.isArray() && ClassHelper.isNumberType(dependentExprType)) {
+                completeExprType = primaryExprType.getComponentType();
+
+            } else if (isArithmeticOperationOnListOrNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
                 // in 1.8 and later, Groovy will not go through the MOP for standard arithmetic operations on numbers
                 completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) || dependentExprType.equals(VariableScope.GSTRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE : primaryExprType;
-            } else if (associatedMethod != null) {
+
+            } else if ((associatedMethod = findBinaryOperatorName(node.getOperation().getText())) != null) {
                 scopes.getLast().setMethodCallArgumentTypes(Collections.singletonList(dependentExprType));
                 // there is an overloadable method associated with this operation; convert to a constant expression and look it up
                 TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.getLast());

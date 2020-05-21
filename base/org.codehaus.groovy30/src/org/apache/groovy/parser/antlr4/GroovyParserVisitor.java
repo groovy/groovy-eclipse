@@ -1381,11 +1381,11 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	Result visitArguments(@NotNull GroovyParser.ArgumentsContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentList}.
+	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentListInPar}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	Result visitEnhancedArgumentList(@NotNull GroovyParser.EnhancedArgumentListContext ctx);
+	Result visitEnhancedArgumentListInPar(@NotNull GroovyParser.EnhancedArgumentListInParContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link GroovyParser#enhancedArgumentListElement}.

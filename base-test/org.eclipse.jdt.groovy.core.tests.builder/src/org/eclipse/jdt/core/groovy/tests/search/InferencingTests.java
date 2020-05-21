@@ -2315,7 +2315,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-743
     public void testGetAt5() {
-        String contents = "class A {}\n new A().getAt() ";
+        String contents = "class A {}\n new A().getAt('')\n";
         int start = contents.lastIndexOf("getAt");
         int end = start + "getAt".length();
         assertType(contents, start, end, "java.lang.Object");
@@ -4021,7 +4021,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1111
     public void testMethodOverloadsArgumentMatching12() {
-        String contents = "['x'].stream().toArray(String)\n";
-        assertUnknown(contents, "toArray");
+        String contents = "def array = ['x'].stream().toArray(String)\n";
+        if (isAtLeastGroovy(30)) {
+            assertType(contents, "array", "java.lang.String[]");
+        } else {
+            assertUnknown(contents, "toArray");
+        }
     }
 }

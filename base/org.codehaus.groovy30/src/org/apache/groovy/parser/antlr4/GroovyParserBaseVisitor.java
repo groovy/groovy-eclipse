@@ -1520,7 +1520,7 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public Result visitEnhancedArgumentList(@NotNull GroovyParser.EnhancedArgumentListContext ctx) { return visitChildren(ctx); }
+	@Override public Result visitEnhancedArgumentListInPar(@NotNull GroovyParser.EnhancedArgumentListInParContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

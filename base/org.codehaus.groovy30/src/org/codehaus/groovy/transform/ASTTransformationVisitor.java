@@ -54,6 +54,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -302,7 +303,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             Enumeration<URL> globalServices = transformLoader.getResources("META-INF/services/org.codehaus.groovy.transform.ASTTransformation");
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
-                try (BufferedReader svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), "UTF-8"))) {
+                try (BufferedReader svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), StandardCharsets.UTF_8))) {
                     String className;
                     try {
                         className = svcIn.readLine();
