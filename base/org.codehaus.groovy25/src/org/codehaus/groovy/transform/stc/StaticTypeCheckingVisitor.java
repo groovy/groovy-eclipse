@@ -1171,34 +1171,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return true;
     }
 
-    private void addPrecisionErrors(ClassNode leftRedirect, ClassNode lhsType, ClassNode inferredrhsType, Expression rightExpression) {
-        if (isNumberType(leftRedirect) && isNumberType(inferredrhsType)) {
-            if (checkPossibleLossOfPrecision(leftRedirect, inferredrhsType, rightExpression)) {
-                addStaticTypeError("Possible loss of precision from " + inferredrhsType + " to " + leftRedirect, rightExpression);
+    private void addPrecisionErrors(ClassNode leftRedirect, ClassNode lhsType, ClassNode rhsType, Expression rightExpression) {
+        if (isNumberType(leftRedirect)) {
+            if (isNumberType(rhsType) && checkPossibleLossOfPrecision(leftRedirect, rhsType, rightExpression)) {
+                addStaticTypeError("Possible loss of precision from " + rhsType.toString(false) + " to " + lhsType.toString(false), rightExpression);
                 return;
             }
         }
-        // if left type is array, we should check the right component types
-        /* GRECLIPSE edit -- GROOVY-9517
-        if (!lhsType.isArray()) return;
-        ClassNode leftComponentType = lhsType.getComponentType();
-        ClassNode rightRedirect = rightExpression.getType().redirect();
-        if (rightRedirect.isArray()) {
-            ClassNode rightComponentType = rightRedirect.getComponentType();
-            if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)) {
-                addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
-            }
-        } else if (rightExpression instanceof ListExpression) {
-            for (Expression element : ((ListExpression) rightExpression).getExpressions()) {
-                ClassNode rightComponentType = this.getType(element);
-                if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)
-                        && !(isNullConstant(element) && !isPrimitiveType(leftComponentType))) {
-                    addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
-                }
-            }
-        }
-        */
         if (!leftRedirect.isArray()) return;
+        // left type is array, check the right component types
         if (rightExpression instanceof ListExpression) {
             ClassNode leftComponentType = leftRedirect.getComponentType();
             for (Expression expression : ((ListExpression) rightExpression).getExpressions()) {
@@ -1207,14 +1188,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
                 }
             }
-        } else if (inferredrhsType.redirect().isArray()) {
+        } else if (rhsType.redirect().isArray()) {
             ClassNode leftComponentType = leftRedirect.getComponentType();
-            ClassNode rightComponentType = inferredrhsType.redirect().getComponentType();
+            ClassNode rightComponentType = rhsType.redirect().getComponentType();
             if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)) {
                 addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + lhsType.toString(false), rightExpression);
             }
         }
-        // GRECLIPSE end
     }
 
     private void addListAssignmentConstructorErrors(
@@ -1506,7 +1486,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         HashSet<ClassNode> handledNodes = new HashSet<ClassNode>();
         for (Receiver<String> receiver : receivers) {
             ClassNode testClass = receiver.getType();
-            // GRECLIPSE add
+
             if (testClass.isArray() && "length".equals(propertyName)) {
                 storeType(pexp, int_TYPE);
                 if (visitor != null) {
@@ -1515,7 +1495,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 return true;
             }
-            // GRECLIPSE end
+
             LinkedList<ClassNode> queue = new LinkedList<>();
             queue.add(testClass);
             if (isPrimitiveType(testClass)) {
@@ -2271,9 +2251,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     public void visitConstructorCallExpression(ConstructorCallExpression call) {
         typeCheckingContext.pushEnclosingConstructorCall(call);
         try {
-            /* GRECLIPSE edit -- GROOVY-9518
-            super.visitConstructorCallExpression(call);
-            */
             if (extension.beforeMethodCall(call)) {
                 extension.afterMethodCall(call);
                 return;
@@ -2288,9 +2265,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
 
             checkForbiddenSpreadArgument(argumentList);
-            // GRECLIPSE add -- GROOVY-9518
             visitMethodCallArguments(receiver, argumentList, false, null);
-            // GRECLIPSE end
 
             ClassNode[] args = getArgumentTypes(argumentList);
             if (args.length > 0 &&
@@ -2324,9 +2299,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 if (node != null) {
                     storeTargetMethod(call, node);
-                    // GRECLIPSE add -- GROOVY-9518
                     visitMethodCallArguments(receiver, argumentList, true, node);
-                    // GRECLIPSE end
                 }
             }
             // GRECLIPSE add -- GROOVY-9327: check for AIC in STC method with non-STC enclosing class
