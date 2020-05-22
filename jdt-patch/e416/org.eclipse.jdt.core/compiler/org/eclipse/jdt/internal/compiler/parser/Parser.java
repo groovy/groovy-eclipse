@@ -9876,7 +9876,7 @@ protected void consumeDefaultLabelExpr() {
 		}
 		@Override
 		public boolean visit(SwitchStatement stmt, BlockScope blockScope) {
-			return false;
+			return true;
 		}
 		@Override
 		public boolean visit(TypeDeclaration stmt, BlockScope blockScope) {
@@ -10878,15 +10878,17 @@ protected void consumeRecordComponentHeaderRightParen() {
 	this.astStack[this.astPtr] = typeDecl;
 //	rd.sourceEnd = 	this.rParenPos;
 	if (length != 0) {
-		Argument[] args = new Argument[length];
+		RecordComponent[] recComps = new RecordComponent[length];
 		System.arraycopy(
 				this.astStack,
 				this.astPtr + 1,
-				args,
+				recComps,
 				0,
 				length);
-		typeDecl.args = args;
-		convertToFields(typeDecl, args);
+		typeDecl.recordComponents = recComps;
+		convertToFields(typeDecl, recComps);
+	} else {
+		typeDecl.recordComponents = ASTNode.NO_RECORD_COMPONENTS;
 	}
 	typeDecl.bodyStart = this.rParenPos+1;
 	this.listLength = 0; // reset this.listLength after having read all parameters
@@ -10896,38 +10898,37 @@ protected void consumeRecordComponentHeaderRightParen() {
 		if (this.currentElement.parseTree() == typeDecl) return;
 	}
 }
-private void convertToFields(TypeDeclaration typeDecl, Argument[] args) {
-	int length = args.length;
+private void convertToFields(TypeDeclaration typeDecl, RecordComponent[] recComps) {
+	int length = recComps.length;
 	FieldDeclaration[] fields = new FieldDeclaration[length];
 	int nFields = 0;
 	Set<String> argsSet = new HashSet<>();
-	for (int i = 0, max = args.length; i < max; i++) {
-		Argument arg = args[i];
-		arg.bits |= ASTNode.IsRecordComponent;
-		String argName = new String(arg.name);
+	for (int i = 0, max = recComps.length; i < max; i++) {
+		RecordComponent recComp = recComps[i];
+		String argName = new String(recComp.name);
 		if (TypeDeclaration.disallowedComponentNames.contains(argName)) {
-			problemReporter().recordIllegalComponentNameInRecord(arg, typeDecl);
+			problemReporter().recordIllegalComponentNameInRecord(recComp, typeDecl);
 			continue;
 		}
 		if (argsSet.contains(argName)) {
 			// flag the error at the place where duplicate params of methods would have been flagged.
 			continue;
 		}
-		if (arg.type.getLastToken() == TypeConstants.VOID) {
-			problemReporter().recordComponentCannotBeVoid(typeDecl, arg);
+		if (recComp.type.getLastToken() == TypeConstants.VOID) {
+			problemReporter().recordComponentCannotBeVoid(recComp);
 			continue;
 		}
-		if (arg.isVarArgs() && i < max - 1)
-			problemReporter().recordIllegalVararg(arg, typeDecl);
+		if (recComp.isVarArgs() && i < max - 1)
+			problemReporter().recordIllegalVararg(recComp, typeDecl);
 
 		argsSet.add(argName);
-		FieldDeclaration f = fields[nFields++] = createFieldDeclaration(arg.name, arg.sourceStart, arg.sourceEnd);
-		f.bits = arg.bits;
-		f.declarationSourceStart = arg.declarationSourceStart;
-		f.declarationEnd = arg.declarationEnd;
-		f.declarationSourceEnd = arg.declarationSourceEnd;
-		f.endPart1Position = arg.sourceEnd; //TODO BETA_JAVA14 - recheck
-		f.endPart2Position = arg.declarationSourceEnd;
+		FieldDeclaration f = fields[nFields++] = createFieldDeclaration(recComp.name, recComp.sourceStart, recComp.sourceEnd);
+		f.bits = recComp.bits;
+		f.declarationSourceStart = recComp.declarationSourceStart;
+		f.declarationEnd = recComp.declarationEnd;
+		f.declarationSourceEnd = recComp.declarationSourceEnd;
+		f.endPart1Position = recComp.sourceEnd; //TODO BETA_JAVA14 - recheck
+		f.endPart2Position = recComp.declarationSourceEnd;
 		f.modifiers = ClassFileConstants.AccPrivate | ClassFileConstants.AccFinal;
 		// Note: JVMS 14 S 4.7.8 The Synthetic Attribute mandates do not mark Synthetic for Record compoents.
 		// hence marking this "explicitly" as implicit.
@@ -10945,10 +10946,11 @@ private void convertToFields(TypeDeclaration typeDecl, Argument[] args) {
 		 * component and the type as the declared type of the record component.
 		 */
 		f.modifiers |= ClassFileConstants.AccPrivate | ClassFileConstants.AccFinal;
-		f.modifiersSourceStart = arg.modifiersSourceStart;
-		f.sourceStart = arg.sourceStart;
-		f.sourceEnd = arg.sourceEnd;
-		f.type = arg.type;
+		f.modifiers |= ExtraCompilerModifiers.AccRecord;
+		f.modifiersSourceStart = recComp.modifiersSourceStart;
+		f.sourceStart = recComp.sourceStart;
+		f.sourceEnd = recComp.sourceEnd;
+		f.type = recComp.type;
 		/*
 		 * JLS 14 SEC 8.10.3 Item 1 says the following:
 		 *  "This field is annotated with the annotation that appears on the corresponding
@@ -10959,9 +10961,9 @@ private void convertToFields(TypeDeclaration typeDecl, Argument[] args) {
 		 *  targeted by the annotation. Hence, do a blanket assignment for now and later (read binding
 		 *  time) weed out the irrelevant ones.
 		 */
-		f.annotations = arg.annotations;
-		arg.annotations = null;
-		if ((args[i].bits & ASTNode.HasTypeAnnotations) != 0) {
+//		f.annotations = recComp.annotations;
+//		comp.annotations = null;
+		if ((recComp.bits & ASTNode.HasTypeAnnotations) != 0) {
 			f.bits |= ASTNode.HasTypeAnnotations;
 		}
 	}
@@ -11031,28 +11033,28 @@ protected void consumeRecordComponent(boolean isVarArgs) {
 		type.bits |= ASTNode.IsVarArgs; // set isVarArgs
 	}
 	int modifierPositions = this.intStack[this.intPtr--];
-	Argument arg;
-	arg = new Argument(
+	RecordComponent recordComponent;
+	recordComponent = new RecordComponent(
 			identifierName,
 			namePositions,
 			type,
 			this.intStack[this.intPtr--] & ~ClassFileConstants.AccDeprecated); // modifiers
-	arg.declarationSourceStart = modifierPositions;
-	arg.bits |= (type.bits & ASTNode.HasTypeAnnotations);
+	recordComponent.declarationSourceStart = modifierPositions;
+	recordComponent.bits |= (type.bits & ASTNode.HasTypeAnnotations);
 	// consume annotations
 	if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
 		System.arraycopy(
 			this.expressionStack,
 			(this.expressionPtr -= length) + 1,
-			arg.annotations = new Annotation[length],
+			recordComponent.annotations = new Annotation[length],
 			0,
 			length);
-		arg.bits |= ASTNode.HasTypeAnnotations;
+		recordComponent.bits |= ASTNode.HasTypeAnnotations;
 		RecoveredType currentRecoveryType = this.currentRecoveryType();
 		if (currentRecoveryType != null)
-			currentRecoveryType.annotationsConsumed(arg.annotations);
+			currentRecoveryType.annotationsConsumed(recordComponent.annotations);
 	}
-	pushOnAstStack(arg);
+	pushOnAstStack(recordComponent);
 
 	/* if incomplete record header, this.listLength counter will not have been reset,
 		indicating that some arguments are available on the stack */
@@ -11061,10 +11063,10 @@ protected void consumeRecordComponent(boolean isVarArgs) {
 		if (!this.statementRecoveryActivated &&
 				this.options.sourceLevel < ClassFileConstants.JDK1_5 &&
 				this.lastErrorEndPositionBeforeRecovery < this.scanner.currentPosition) {
-				problemReporter().invalidUsageOfVarargs(arg);
+				problemReporter().invalidUsageOfVarargs(recordComponent);
 		} else if (!this.statementRecoveryActivated &&
 				extendedDimensions > 0) {
-			problemReporter().illegalExtendedDimensions(arg);
+			problemReporter().illegalExtendedDimensions(recordComponent);
 		}
 	}
 }

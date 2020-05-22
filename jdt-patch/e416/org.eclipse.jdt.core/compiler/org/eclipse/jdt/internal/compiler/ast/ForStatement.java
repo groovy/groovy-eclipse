@@ -471,4 +471,23 @@ public class ForStatement extends Statement {
 	public boolean completesByContinue() {
 		return this.action.continuesAtOuterLabel();
 	}
+	@Override
+	public boolean canCompleteNormally() {
+		Constant cst = this.condition == null ? null : this.condition.constant;
+		boolean isConditionTrue = cst == null || cst != Constant.NotAConstant && cst.booleanValue() == true;
+		cst = this.condition == null ? null : this.condition.optimizedBooleanConstant();
+		boolean isConditionOptimizedTrue = cst == null ? true : cst != Constant.NotAConstant && cst.booleanValue() == true;
+
+		if (!(isConditionTrue || isConditionOptimizedTrue))
+			return true;
+		if (this.action != null && this.action.breaksOut(null))
+			return true;
+		return false;
+	}
+
+	@Override
+	public boolean continueCompletes() {
+		return this.action.continuesAtOuterLabel();
+	}
+
 }

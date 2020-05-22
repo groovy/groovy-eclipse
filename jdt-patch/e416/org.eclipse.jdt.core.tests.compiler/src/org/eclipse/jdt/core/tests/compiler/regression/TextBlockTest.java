@@ -15,7 +15,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;

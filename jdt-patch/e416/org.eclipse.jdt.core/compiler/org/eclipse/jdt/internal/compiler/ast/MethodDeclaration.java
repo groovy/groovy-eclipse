@@ -197,7 +197,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 	}
 
 	@Override
-	public Argument getRecordComponent() {
+	public RecordComponent getRecordComponent() {
 		if (this.arguments != null && this.arguments.length != 0)
 			return null;
 		ClassScope skope = this.scope.classScope();
@@ -206,14 +206,14 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			return null;
 		if (!(skope.referenceContext.isRecord()))
 			return null;
-		Argument[] args = typeDecl.args;
-		if (args == null || args.length == 0)
+		RecordComponent[] recComps = typeDecl.recordComponents;
+		if (recComps == null || recComps.length == 0)
 			return null;
-		for (Argument arg : args) {
-			if (arg == null || arg.name == null)
+		for (RecordComponent recComp : recComps) {
+			if (recComp == null || recComp.name == null)
 				continue;
-			if (CharOperation.equals(this.selector, arg.name)) {
-				return arg;
+			if (CharOperation.equals(this.selector, recComp.name)) {
+				return recComp;
 			}
 		}
 		return null;
@@ -240,7 +240,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			this.returnType.resolvedType = this.binding.returnType;
 			// record the return type binding
 		}
-		Argument recordComponent = getRecordComponent();
+		RecordComponent recordComponent = getRecordComponent();
 		if (recordComponent != null) {
 			/* JLS 14 Records Sec 8.10.3 */
 			if (this.returnType != null && TypeBinding.notEquals(this.returnType.resolvedType, recordComponent.type.resolvedType))

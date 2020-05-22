@@ -517,6 +517,9 @@ public abstract class ASTVisitor {
 	public void endVisit(SwitchExpression switchExpression,	BlockScope scope) {
 		// do nothing by default
 	}
+	public void endVisit(RecordComponent recordComponent, BlockScope scope) {
+		// do nothing by default, keep traversing
+	}
 	public boolean visit(
     		AllocationExpression allocationExpression,
     		BlockScope scope) {
@@ -1015,6 +1018,9 @@ public abstract class ASTVisitor {
 		return true; // do nothing by default, keep traversing
 	}
 	public boolean visit(SwitchExpression switchExpression, BlockScope blockScope) {
+		return true; // do nothing by default, keep traversing
+	}
+	public  boolean visit(RecordComponent recordComponent, BlockScope scope) {
 		return true; // do nothing by default, keep traversing
 	}
 }

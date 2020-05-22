@@ -665,14 +665,14 @@ protected void acceptSourceMethod(
 	if (this.elementIndex == -1) {
 		try {
 			if (type.isRecord()) {
-				IField field= type.getField(name);
-				if (field != null) {
-					 if (!Flags.isStatic(field.getFlags())) {
+				IField comp = type.getRecordComponent(name);
+				if (comp != null) {
+					 if (!Flags.isStatic(comp.getFlags())) {
 						// no match was actually found, but a method was originally given -> default accessor
-						 addElement(field);
+						 addElement(comp);
 						 if(SelectionEngine.DEBUG){
 								System.out.print("SELECTION - accept field("); //$NON-NLS-1$
-								System.out.print(field.toString());
+								System.out.print(comp.toString());
 								System.out.println(")"); //$NON-NLS-1$
 						 }
 					 }

@@ -414,7 +414,8 @@ public final int kind() {
 	return FIELD;
 }
 public boolean isRecordComponent() {
-	return this.declaringClass != null && this.declaringClass.isRecord() && !this.isStatic();
+	return this.declaringClass != null && this.declaringClass.isRecord() && !this.isStatic()
+			&& (this.modifiers & ExtraCompilerModifiers.AccRecord) != 0;
 }
 /* Answer true if the receiver is visible to the invocationPackage.
 */

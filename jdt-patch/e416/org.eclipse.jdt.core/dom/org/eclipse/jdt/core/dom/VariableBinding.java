@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.core.JavaElement;
@@ -258,6 +259,9 @@ class VariableBinding implements IVariableBinding {
 		char[] typeSig = this.binding.type.genericTypeSignature();
 		JavaElement parent = null;
 		IMethodBinding declaringMethod = getDeclaringMethod();
+		if (this.binding instanceof RecordComponentBinding) {
+			return null; // TODO : SEE Bug 562736/ BUG 562637
+		}
 		final LocalVariableBinding localVariableBinding = (LocalVariableBinding) this.binding;
 		if (declaringMethod == null) {
 			ReferenceContext referenceContext = localVariableBinding.declaringScope.referenceContext();

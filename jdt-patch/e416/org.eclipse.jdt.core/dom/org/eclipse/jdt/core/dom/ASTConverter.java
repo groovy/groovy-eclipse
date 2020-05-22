@@ -56,6 +56,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedSuperReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteralConcatenation;
@@ -1633,6 +1634,84 @@ class ASTConverter {
 			Util.log(e, message.toString());
 			throw e;
 		}
+	}
+
+	public SingleVariableDeclaration convert(org.eclipse.jdt.internal.compiler.ast.RecordComponent component) {
+		SingleVariableDeclaration variableDecl = new SingleVariableDeclaration(this.ast);
+		setModifiers(variableDecl, component);
+		final SimpleName name = new SimpleName(this.ast);
+		name.internalSetIdentifier(new String(component.name));
+		int start = component.sourceStart;
+		int nameEnd = component.sourceEnd;
+		name.setSourceRange(start, nameEnd - start + 1);
+		variableDecl.setName(name);
+		final int typeSourceEnd = component.type.sourceEnd;
+		TypeReference typeReference = component.type;
+		final int extraDimensions = typeReference.extraDimensions();
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
+			setExtraAnnotatedDimensions(nameEnd + 1, typeSourceEnd, typeReference,
+										variableDecl.extraDimensions(), extraDimensions);
+		} else {
+			internalSetExtraDimensions(variableDecl, extraDimensions);
+		}
+		final boolean isVarArgs = component.isVarArgs();
+		if (isVarArgs && extraDimensions == 0) {
+			// remove the ellipsis from the type source end
+			component.type.sourceEnd = retrieveEllipsisStartPosition(component.type.sourceStart, typeSourceEnd);
+		}
+		Type type = convertType(component.type);
+		int typeEnd = type.getStartPosition() + type.getLength() - 1;
+		int rightEnd = Math.max(typeEnd, component.declarationSourceEnd);
+		/*
+		 * There is extra work to do to set the proper type positions
+		 * See PR http://bugs.eclipse.org/bugs/show_bug.cgi?id=23284
+		 */
+		if (isVarArgs) {
+			Dimension lastDimension = null;
+			if (this.ast.apiLevel() >= AST.JLS8_INTERNAL) {
+				if (type.isArrayType()) { // should always be true
+					List dimensions = ((ArrayType) type).dimensions();
+					if (!dimensions.isEmpty()) {
+						lastDimension = (Dimension) dimensions.get(dimensions.size() - 1);
+					}
+				}
+			}
+			setTypeForSingleVariableDeclaration(variableDecl, type, extraDimensions + 1);
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=391898
+			if (this.ast.apiLevel() >= AST.JLS8_INTERNAL) {
+				if (lastDimension != null) { // should always be true
+					List annotations = lastDimension.annotations();
+					Iterator iter = annotations.iterator();
+					while (iter.hasNext()) {
+						Annotation annotation = (Annotation) iter.next();
+						annotation.setParent(null, null);
+						variableDecl.varargsAnnotations().add(annotation);
+					}
+				}
+			}
+			if (extraDimensions != 0) {
+				variableDecl.setFlags(variableDecl.getFlags() | ASTNode.MALFORMED);
+			}
+		} else {
+			setTypeForSingleVariableDeclaration(variableDecl, type, extraDimensions);
+		}
+		variableDecl.setSourceRange(component.declarationSourceStart, rightEnd - component.declarationSourceStart + 1);
+
+		if (isVarArgs) {
+			switch(this.ast.apiLevel) {
+				case AST.JLS2_INTERNAL :
+					variableDecl.setFlags(variableDecl.getFlags() | ASTNode.MALFORMED);
+					break;
+				default :
+					variableDecl.setVarargs(true);
+			}
+		}
+		if (this.resolveBindings) {
+			recordNodes(name, component);
+			recordNodes(variableDecl, component);
+			variableDecl.resolveBinding();
+		}
+		return variableDecl;
 	}
 
 	public Assignment convert(org.eclipse.jdt.internal.compiler.ast.CompoundAssignment expression) {
@@ -3575,10 +3654,10 @@ class ASTConverter {
 				recordDeclaration.typeParameters().add(convert(typeParameter));
 			}
 		}
-		Argument[] args = typeDeclaration.args;
-		if (args != null) {
-			for (Argument arg : args) {
-				recordDeclaration.recordComponents().add(convert(arg));
+		RecordComponent[] recComps = typeDeclaration.recordComponents;
+		if (recComps != null) {
+			for (RecordComponent recComp : recComps) {
+				recordDeclaration.recordComponents().add(convert(recComp));
 			}
 		}
 		buildBodyDeclarations(typeDeclaration, recordDeclaration, false);
@@ -5920,6 +5999,86 @@ class ASTConverter {
 		}
 	}
 
+	/**
+	 * @param variableDecl
+	 * @param component
+	 *
+	 * TODO: just plain copy of sM(SVD, Argument) - need to cut the flab here.
+	 */
+	protected void setModifiers(SingleVariableDeclaration variableDecl, RecordComponent component) {
+		switch(this.ast.apiLevel) {
+			case AST.JLS2_INTERNAL :
+				variableDecl.internalSetModifiers(component.modifiers & ExtraCompilerModifiers.AccJustFlag);
+				if (component.annotations != null) {
+					variableDecl.setFlags(variableDecl.getFlags() | ASTNode.MALFORMED);
+				}
+				break;
+			default :
+				this.scanner.resetTo(component.declarationSourceStart, component.sourceStart);
+				org.eclipse.jdt.internal.compiler.ast.Annotation[] annotations = component.annotations;
+				int indexInAnnotations = 0;
+				try {
+					int token;
+					while ((token = this.scanner.getNextToken()) != TerminalTokens.TokenNameEOF) {
+						IExtendedModifier modifier = null;
+						switch(token) {
+							case TerminalTokens.TokenNameabstract:
+								modifier = createModifier(Modifier.ModifierKeyword.ABSTRACT_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamepublic:
+								modifier = createModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamestatic:
+								modifier = createModifier(Modifier.ModifierKeyword.STATIC_KEYWORD);
+								break;
+							case TerminalTokens.TokenNameprotected:
+								modifier = createModifier(Modifier.ModifierKeyword.PROTECTED_KEYWORD);
+								break;
+							case TerminalTokens.TokenNameprivate:
+								modifier = createModifier(Modifier.ModifierKeyword.PRIVATE_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamefinal:
+								modifier = createModifier(Modifier.ModifierKeyword.FINAL_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamenative:
+								modifier = createModifier(Modifier.ModifierKeyword.NATIVE_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamesynchronized:
+								modifier = createModifier(Modifier.ModifierKeyword.SYNCHRONIZED_KEYWORD);
+								break;
+							case TerminalTokens.TokenNametransient:
+								modifier = createModifier(Modifier.ModifierKeyword.TRANSIENT_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamevolatile:
+								modifier = createModifier(Modifier.ModifierKeyword.VOLATILE_KEYWORD);
+								break;
+							case TerminalTokens.TokenNamestrictfp:
+								modifier = createModifier(Modifier.ModifierKeyword.STRICTFP_KEYWORD);
+								break;
+							case TerminalTokens.TokenNameAT :
+								// we have an annotation
+								if (annotations != null && indexInAnnotations < annotations.length) {
+									org.eclipse.jdt.internal.compiler.ast.Annotation annotation = annotations[indexInAnnotations++];
+									modifier = convert(annotation);
+									this.scanner.resetTo(annotation.declarationSourceEnd + 1, this.compilationUnitSourceLength);
+								}
+								break;
+							case TerminalTokens.TokenNameCOMMENT_BLOCK :
+							case TerminalTokens.TokenNameCOMMENT_LINE :
+							case TerminalTokens.TokenNameCOMMENT_JAVADOC :
+								break;
+							default :
+								return;
+						}
+						if (modifier != null) {
+							variableDecl.modifiers().add(modifier);
+						}
+					}
+				} catch(InvalidInputException e) {
+					// ignore
+				}
+		}
+	}
 	/**
 	 * @param typeDecl
 	 * @param typeDeclaration

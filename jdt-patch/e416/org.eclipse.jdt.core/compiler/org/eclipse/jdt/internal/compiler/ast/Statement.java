@@ -73,7 +73,7 @@ public abstract class Statement extends ASTNode {
 //				case OperatorIds.AND_AND :
 //				case OperatorIds.OR_OR :
 //					break;
-//				default: 
+//				default:
 //					// if (DEBUG_LEVEL > 0) print(); - tolerated
 //					if ((binary.left instanceof Reference) && binary.right.constant != Constant.NotAConstant)
 //						return true;
@@ -88,26 +88,43 @@ public abstract FlowInfo analyseCode(BlockScope currentScope, FlowContext flowCo
 
 /** Lambda shape analysis: *Assuming* this is reachable, analyze if this completes normally i.e control flow can reach the textually next statement.
    For blocks, we don't perform intra-reachability analysis. We assume the lambda body is free of intrinsic control flow errors (if such errors
-   exist they will not be flagged by this analysis, but are guaranteed to surface later on.) 
-   
-   @see Block#doesNotCompleteNormally
+   exist they will not be flagged by this analysis, but are guaranteed to surface later on.)
+
+   @see Block#doesNotCompleteNormally()
 */
 public boolean doesNotCompleteNormally() {
 	return false;
 }
 
 /** Lambda shape analysis: *Assuming* this is reachable, analyze if this completes by continuing i.e control flow cannot reach the textually next statement.
-    This is necessitated by the fact that continue claims to not complete normally. So this is necessary to discriminate between do { continue; } while (false); 
+    This is necessitated by the fact that continue claims to not complete normally. So this is necessary to discriminate between do { continue; } while (false);
     which completes normally and do { throw new Exception(); } while (false); which does not complete normally.
 */
 public boolean completesByContinue() {
 	return false;
 }
 
+/**
+ * Switch Expression analysis: *Assuming* this is reachable, analyze if this completes normally
+ *  i.e control flow can reach the textually next statement, as per JLS 14 Sec 14.22
+ *  For blocks, we don't perform intra-reachability analysis.
+ *  Note: delinking this from a similar (opposite) {@link #doesNotCompleteNormally()} since that was
+ *  coded for a specific purpose of Lambda Shape Analysis.
+ */
+public boolean canCompleteNormally() {
+	return true;
+}
+/**
+ * The equivalent function of completesByContinue - implements both the rules concerning continue with
+ * and without a label.
+ */
+public boolean continueCompletes() {
+	return false;
+}
 	public static final int NOT_COMPLAINED = 0;
 	public static final int COMPLAINED_FAKE_REACHABLE = 1;
 	public static final int COMPLAINED_UNREACHABLE = 2;
-	
+
 
 /** Analysing arguments of MessageSend, ExplicitConstructorCall, AllocationExpression. */
 protected void analyseArguments(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, MethodBinding methodBinding, Expression[] arguments)
@@ -165,7 +182,7 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 						flowContext.recordNullityMismatch(currentScope, argument, argument.resolvedType, expectedType, flowInfo, nullStatus, null);
 				}
 			}
-		} 
+		}
 	}
 }
 void analyseOneArgument18(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo,
@@ -191,16 +208,16 @@ void analyseOneArgument18(BlockScope currentScope, FlowContext flowContext, Flow
 									nullStatus, expectedNonNullness, originalExpected);
 }
 void internalAnalyseOneArgument18(BlockScope currentScope, FlowContext flowContext, TypeBinding expectedType,
-		Expression argument, FlowInfo flowInfo, int nullStatus, Boolean expectedNonNullness, TypeBinding originalExpected) 
+		Expression argument, FlowInfo flowInfo, int nullStatus, Boolean expectedNonNullness, TypeBinding originalExpected)
 {
 	// here we consume special case information generated in the ctor of ParameterizedGenericMethodBinding (see there):
-	int statusFromAnnotatedNull = expectedNonNullness == Boolean.TRUE ? nullStatus : 0;  
-	
+	int statusFromAnnotatedNull = expectedNonNullness == Boolean.TRUE ? nullStatus : 0;
+
 	NullAnnotationMatching annotationStatus = NullAnnotationMatching.analyse(expectedType, argument.resolvedType, nullStatus);
-	
+
 	if (!annotationStatus.isAnyMismatch() && statusFromAnnotatedNull != 0)
 		expectedType = originalExpected; // to avoid reports mentioning '@NonNull null'!
-	
+
 	if (statusFromAnnotatedNull == FlowInfo.NULL) {
 		// immediate reporting:
 		currentScope.problemReporter().nullityMismatchingTypeAnnotation(argument, argument.resolvedType, expectedType, annotationStatus);
@@ -224,7 +241,7 @@ void internalAnalyseOneArgument18(BlockScope currentScope, FlowContext flowConte
 	} catch (NullPointerException npe) {
 		// chain of references in try-block has several potential nulls;
 		// any null means we cannot perform the following check
-		return;			
+		return;
 	}
 	if (useTypeAnnotations) {
 		checkAgainstNullTypeAnnotation(scope, methodBinding.returnType, expr, flowContext, flowInfo);
@@ -246,8 +263,8 @@ protected void checkAgainstNullTypeAnnotation(BlockScope scope, TypeBinding requ
 	} else 	if (expression instanceof SwitchExpression && expression.isPolyExpression()) {
 		SwitchExpression se = (SwitchExpression) expression;
 		for (int i = 0; i < se.resultExpressions.size(); i++) {
-			internalCheckAgainstNullTypeAnnotation(scope, requiredType, 
-					se.resultExpressions.get(i), 
+			internalCheckAgainstNullTypeAnnotation(scope, requiredType,
+					se.resultExpressions.get(i),
 					se.resultExpressionNullStatus.get(i), flowContext, flowInfo);
 		}
 		return;
@@ -280,7 +297,7 @@ public void branchChainTo(BranchLabel label) {
 // Inspect AST nodes looking for a break statement, descending into nested control structures only when necessary (looking for a break with a specific label.)
 public boolean breaksOut(final char[] label) {
 	return new ASTVisitor() {
-		
+
 		boolean breaksOut;
 		@Override
 		public boolean visit(TypeDeclaration type, BlockScope skope) { return label != null; }
@@ -298,7 +315,7 @@ public boolean breaksOut(final char[] label) {
 		public boolean visit(ForStatement forStatement, BlockScope skope) { return label != null; }
 		@Override
 		public boolean visit(SwitchStatement switchStatement, BlockScope skope) { return label != null; }
-		
+
 		@Override
 		public boolean visit(BreakStatement breakStatement, BlockScope skope) {
 			if (label == null || CharOperation.equals(label,  breakStatement.label))
@@ -344,7 +361,8 @@ public int complainIfUnreachable(FlowInfo flowInfo, BlockScope scope, int previo
 			this.bits &= ~ASTNode.IsReachable;
 		if (flowInfo == FlowInfo.DEAD_END) {
 			if (previousComplaintLevel < COMPLAINED_UNREACHABLE) {
-				scope.problemReporter().unreachableCode(this);
+				if (!this.doNotReportUnreachable())
+					scope.problemReporter().unreachableCode(this);
 				if (endOfBlock)
 					scope.checkUnclosedCloseables(flowInfo, null, null, null);
 			}
@@ -361,6 +379,9 @@ public int complainIfUnreachable(FlowInfo flowInfo, BlockScope scope, int previo
 	return previousComplaintLevel;
 }
 
+protected boolean doNotReportUnreachable() {
+	return false;
+}
 /**
  * Generate invocation arguments, considering varargs methods
  */
@@ -479,7 +500,7 @@ public Constant[] resolveCase(BlockScope scope, TypeBinding testType, SwitchStat
 public TypeBinding resolveExpressionType(BlockScope scope) {
 	return null;
 }
-/** 
+/**
  * Implementation of {@link org.eclipse.jdt.internal.compiler.lookup.InvocationSite#invocationTargetType}
  * suitable at this level. Subclasses should override as necessary.
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#invocationTargetType()
@@ -496,7 +517,7 @@ public ExpressionContext getExpressionContext() {
 	return ExpressionContext.VANILLA_CONTEXT;
 }
 /**
- * For all constructor invocations: find the constructor binding; 
+ * For all constructor invocations: find the constructor binding;
  * if site.innersNeedUpdate() perform some post processing for those and produce
  * any updates as side-effects into 'argumentTypes'.
  */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 IBM Corporation and others.
+ * Copyright (c) 2012, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -80,11 +80,11 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 	}
 	public void checkParse(int parserToCheck, char[] source, String expectedSyntaxErrorDiagnosis,
 			String testName, String expectedUnitToString, ASTVisitor visitor, CompilerOptions options) throws IOException {
-			
+
 				ICompilationUnit sourceUnit = null;
 				CompilationResult compilationResult = null;
 				CompilationUnitDeclaration unit = null;
-			
+
 				if (this.referenceCompiler != null && (parserToCheck & CHECK_JAVAC_PARSER) != 0) {
 					String javaFilePath = this.referenceCompilerTestsScratchArea + "\\Xyz.java";
 					File f = new File(javaFilePath);
@@ -125,7 +125,7 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 					}
 					parser1 = null;
 				}
-			
+
 				if ((parserToCheck & CHECK_COMPLETION_PARSER) != 0) {
 					CompletionParser parser2 = new CompletionParser(
 							new ProblemReporter(
@@ -273,65 +273,65 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 
 	public void acceptImport(int declarationStart, int declarationEnd, int[] javaDocPositions,
 			char[] name, int nameStartPosition, boolean onDemand, int modifiers) {
-			
-			
+
+
 			}
 
 	public void acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions,
 			int modifiers, int modifiersStart, int bodyStart, int bodyEnd) {
-			
-			
+
+
 			}
 
 	public void acceptLineSeparatorPositions(int[] positions) {
-	
-	
+
+
 	}
 
 	public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions,
 			char[] name, int nameStartPosition) {
-			
-			
+
+
 			}
 
 	public void acceptProblem(CategorizedProblem problem) {
-	
-	
+
+
 	}
 
 	public void enterClass(int declarationStart, int[] javaDocPositions, int modifiers,
 			int modifiersStart, int classStart, char[] name, int nameStart, int nameEnd,
 			char[] superclass, int superclassStart, int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts,
 			int[] superinterfaceEnds, int bodyStart) {
-			
-			
+
+
 			}
 
 	public void enterCompilationUnit() {
-	
-	
+
+
 	}
 
 	public void enterConstructor(int declarationStart, int[] javaDocPositions, int modifiers,
 			int modifiersStart, char[] name, int nameStart, int nameEnd, char[][] parameterTypes,
 			int[] parameterTypeStarts, int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts, int[] parameterNameEnds,
 			int parametersEnd, char[][] exceptionTypes, int[] exceptionTypeStarts, int[] exceptionTypeEnds, int bodyStart) {
-			
-			
+
+
 			}
 
 	public void enterField(int declarationStart, int[] javaDocPositions, int modifiers,
 			int modifiersStart, char[] type, int typeStart, int typeEnd, int typeDimensionCount,
 			char[] name, int nameStart, int nameEnd, int extendedTypeDimensionCount, int extendedTypeDimensionEnd) {
-			
-			
+
+
 			}
 
 	public void enterInterface(int declarationStart, int[] javaDocPositions, int modifiers,
 			int modifiersStart, int interfaceStart, char[] name, int nameStart, int nameEnd,
 			char[][] superinterfaces, int[] superinterfaceStarts, int[] superinterfaceEnds, int bodyStart) {
-			
-			
+
+
 			}
 
 	public void enterMethod(int declarationStart, int[] javaDocPositions, int modifiers,
@@ -340,146 +340,152 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 			int[] parameterTypeEnds, char[][] parameterNames, int[] parameterNameStarts, int[] parameterNameEnds, int parametersEnd,
 			int extendedReturnTypeDimensionCount, int extendedReturnTypeDimensionEnd, char[][] exceptionTypes, int[] exceptionTypeStarts, int[] exceptionTypeEnds,
 			int bodyStart) {
-			
-			
+
+
 			}
 
 	public void exitClass(int bodyEnd, int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitCompilationUnit(int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitConstructor(int bodyEnd, int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitField(int bodyEnd, int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitInterface(int bodyEnd, int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitMethod(int bodyEnd, int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void acceptAnnotationTypeReference(char[][] annotation, int sourceStart,
 			int sourceEnd) {
-			
-			
+
+
 			}
 
 	public void acceptAnnotationTypeReference(char[] annotation, int sourcePosition) {
-	
-	
+
+
 	}
 
 	public void acceptConstructorReference(char[] typeName, int argCount,
 			int sourcePosition) {
-			
-			
+
+
 			}
 
 	public void acceptFieldReference(char[] fieldName, int sourcePosition) {
-	
-	
+
+
 	}
 
 	public void acceptImport(int declarationStart, int declarationEnd, int nameStart,
 			int nameEnd, char[][] tokens, boolean onDemand, int modifiers) {
-			
-			
+
+
 			}
 
 	public void acceptMethodReference(char[] methodName, int argCount, int sourcePosition) {
-	
-	
+
+
 	}
 
 	public void acceptPackage(ImportReference importReference) {
-	
-	
+
+
 	}
 
 	public void acceptTypeReference(char[][] typeName, int sourceStart, int sourceEnd) {
-	
-	
+
+
 	}
 
 	public void acceptTypeReference(char[] typeName, int sourcePosition) {
-	
-	
+
+
 	}
 
 	public void acceptUnknownReference(char[][] name, int sourceStart, int sourceEnd) {
-	
-	
+
+
 	}
 
 	public void acceptUnknownReference(char[] name, int sourcePosition) {
-	
-	
+
+
 	}
 
 	public void enterConstructor(MethodInfo methodInfo) {
-	
-	
+
+
 	}
 
 	public void enterField(FieldInfo fieldInfo) {
-	
-	
+
+
+	}
+	public void enterRecordComponent(RecordComponentInfo recordComponentInfo) {
 	}
 
 	public void enterInitializer(int declarationStart, int modifiers) {
-	
-	
+
+
 	}
 
 	public void enterMethod(MethodInfo methodInfo) {
-	
-	
+
+
 	}
 
 	public void enterType(TypeInfo typeInfo) {
-	
-	
+
+
 	}
 
 	public void exitConstructor(int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
-	
-	
+
+
 	}
 
 	public void exitInitializer(int declarationEnd) {
-	
-	
+
+
 	}
 
 	public void exitMethod(int declarationEnd, Expression defaultValue) {
-	
-	
+
+
 	}
 
 	public void exitType(int declarationEnd) {
-	
-	
+
+
+	}
+	@Override
+	public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
+
 	}
 
 }

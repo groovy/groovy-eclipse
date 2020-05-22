@@ -168,12 +168,6 @@ public class AbstractCompilerTest extends TestCase {
 
 	 public static void setpossibleComplianceLevels(int complianceLevel) {
          possibleComplianceLevels = complianceLevel;
-         int lessthan9 = F_1_3 | F_1_4 | F_1_5 | F_1_6 | F_1_7 | F_1_8;
-         isJRE9Plus = !isJRELevel(lessthan9);
-         isJRE14Plus = isJRELevel(F_14);
-         isJRE13Plus = isJRELevel(F_13) || isJRE14Plus;
-         isJRE12Plus = isJRE13Plus || isJRELevel(F_12);
-         isJRE11Plus = isJRE12Plus || isJRELevel(F_11);
 	 }
 
 	/**

@@ -26,9 +26,12 @@ package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference.AnnotationPosition;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.*;
 import org.eclipse.jdt.internal.compiler.flow.*;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class InstanceOfExpression extends OperatorExpression {
@@ -176,7 +179,21 @@ public TypeBinding resolveType(BlockScope scope) {
 		return null;
 
 	if (!checkedType.isReifiable()) {
-		scope.problemReporter().illegalInstanceOfGenericType(checkedType, this);
+		CompilerOptions options = scope.compilerOptions();
+		// If preview is disabled, report same as before, even at Java 14
+		if (options.complianceLevel < ClassFileConstants.JDK14 || !options.enablePreviewFeatures) {
+			scope.problemReporter().illegalInstanceOfGenericType(checkedType, this);
+		} else {
+			if (options.isAnyEnabled(IrritantSet.PREVIEW)) {
+				scope.problemReporter().previewFeatureUsed(this.type.sourceStart, this.type.sourceEnd);
+			}
+			if (expressionType != TypeBinding.NULL) {
+				boolean isLegal = checkCastTypesCompatibility(scope, checkedType, expressionType, this.expression, true);
+				if (!isLegal || (this.bits & ASTNode.UnsafeCast) != 0) {
+					scope.problemReporter().unsafeCastInInstanceof(this.expression, checkedType, expressionType);
+				}
+			}
+		}
 	} else if (checkedType.isValidBinding()) {
 		// if not a valid binding, an error has already been reported for unresolved type
 		if ((expressionType != TypeBinding.NULL && expressionType.isBaseType()) // disallow autoboxing
@@ -187,10 +204,17 @@ public TypeBinding resolveType(BlockScope scope) {
 	}
 	return this.resolvedType = TypeBinding.BOOLEAN;
 }
-
+@Override
+public boolean checkUnsafeCast(Scope scope, TypeBinding castType, TypeBinding expressionType, TypeBinding match, boolean isNarrowing) {
+	if (!castType.isReifiable())
+		return CastExpression.checkUnsafeCast(this, scope, castType, expressionType, match, isNarrowing);
+	else
+		return super.checkUnsafeCast(scope, castType, expressionType, match, isNarrowing);
+}
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#tagAsUnnecessaryCast(Scope,TypeBinding)
  */
+
 @Override
 public void tagAsUnnecessaryCast(Scope scope, TypeBinding castType) {
 	// null is not instanceof Type, recognize direct scenario

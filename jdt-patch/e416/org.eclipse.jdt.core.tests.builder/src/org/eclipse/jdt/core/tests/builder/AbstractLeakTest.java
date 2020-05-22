@@ -14,14 +14,12 @@
 package org.eclipse.jdt.core.tests.builder;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -168,21 +166,21 @@ public abstract class AbstractLeakTest extends BuilderTests {
 
 	private static List<String> getOpenDescriptors() throws Exception {
 		int pid = getPid();
-		if (pid > 0) {
-			// -F n : to print only name column (note: all lines start with "n")
-			// -a : to "and" all following options
-			// -b :to avoid blocking calls
-			// -p <pid>: to select process with opened files
-			List<String> lines = readLsofLines("lsof -F n -a -p " + pid + " / -b ", true);
-			return lines;
-		}
-		return Collections.emptyList();
+		assertTrue("JVM PID must be > 0 : " + pid, pid > 0);
+		// -F n : to print only name column (note: all lines start with "n")
+		// -a : to "and" all following options
+		// -b :to avoid blocking calls
+		// -p <pid>: to select process with opened files
+		List<String> lines = readLsofLines("lsof -F n -a -p " + pid + " / -b ", true);
+		return lines;
 	}
 
 	private static int getPid() throws Exception {
-		try (BufferedReader rdr = new BufferedReader(new FileReader("/proc/self/stat"));) {
-			return Integer.parseInt(new StringTokenizer(rdr.readLine()).nextToken());
-		}
+        String jvmName = ManagementFactory.getRuntimeMXBean().getName();
+        int indexOfAt = jvmName.indexOf('@');
+        String pidSubstring = jvmName.substring(0, indexOfAt);
+        int pid = Integer.valueOf(pidSubstring);
+        return pid;
 	}
 
 	private static List<String> readLsofLines(String cmd, boolean skipFirst) throws Exception {

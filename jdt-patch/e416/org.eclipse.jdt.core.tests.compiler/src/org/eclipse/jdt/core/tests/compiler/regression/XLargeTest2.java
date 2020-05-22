@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Andrey Loskutov and others.
+ * Copyright (c) 2018, 2020 Andrey Loskutov and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -163,10 +163,10 @@ public class XLargeTest2 extends AbstractRegressionTest {
 		runConformTest(
 			new String[] {
 				"p001/bip.java",
-				"package p001;\n" + 
-				"\n" + 
+				"package p001;\n" +
+				"\n" +
 				getManyInterfaceDeclarations() +
-				"\n" + 
+				"\n" +
 				"class bip implements brj, brk, cem, cen, cey, cez, cfk, cfl, cgu, cgx, che, chh, chq, chr, cji, cjj, ckk, ckl, clb, clc, clf, cli, cnk,\n" +
 				"	cnl, cok, cqa, cqd, cqw, cqx, crs, crv, csu, csv, ctq, ctt, cvg, cvj, cvo, cvp, cwk, cwn, cwu, cww, cxh, cxk, daz, dba, dbr, dbu, dck,\n" +
 				"	dcl, deh, dei, dep, deq, dff, dfg, dfl, dfo, dsp, dss, dtp, dtq, dtt, dtw, duj, duk, dvm, dvp, dvs, dvv, dwe, dwh, dxd, dxg, dyq, dys,\n" +
@@ -174,7 +174,7 @@ public class XLargeTest2 extends AbstractRegressionTest {
 				"	eqj, erv, erw, etd, etg, etm, eto, fbc, fbd, feu, fev, ffc, fff, fgf, fgh, fgo, fgp, fhm, fhn, fib, fki, fkj, fkw, fkx, fmh, fmk, fnk,\n" +
 				"	fnl, fnz, foc, fof, foi, fvk, fvn, fvv, fvw, fwy, fxb, fyb, fye, fyl, fym, fyv, fyy, fzq, fzs, gad, gag, gaq, gas, gav, gax, gbc, gbd,\n" +
 				"	gco, gcr, gdc, gdf, gdn, gdq, gei, gej, gih, gik, gku, gkx, gln, glo, gmi, gmj, gmu, gmv, gpx, gpy, gqb, gqe, gqp, gqs, grb, grc, grh,\n" +
-				"	gri, grn, gro, grv, grw, gtr, gtu, gxc, gvt, gvw, gwz {\n" + 
+				"	gri, grn, gro, grv, grw, gtr, gtu, gxc, gvt, gvw, gwz {\n" +
 				"}\n"
 			});
 	}
@@ -183,10 +183,10 @@ public class XLargeTest2 extends AbstractRegressionTest {
 		runNegativeTest(
 			new String[] {
 				"p001/bip.java",
-				"package p001;\n" + 
-				"\n" + 
+				"package p001;\n" +
+				"\n" +
 				getManyInterfaceDeclarations() +
-				"\n" + 
+				"\n" +
 				"class bop implements missing,\n" +
 				"	brj, brk, cem, cen, cey, cez, cfk, cfl, cgu, cgx, che, chh, chq, chr, cji, cjj, ckk, ckl, clb, clc, clf, cli, cnk,\n" +
 				"	cnl, cok, cqa, cqd, cqw, cqx, crs, crv, csu, csv, ctq, ctt, cvg, cvj, cvo, cvp, cwk, cwn, cwu, cww, cxh, cxk, daz, dba, dbr, dbu, dck,\n" +
@@ -195,213 +195,231 @@ public class XLargeTest2 extends AbstractRegressionTest {
 				"	eqj, erv, erw, etd, etg, etm, eto, fbc, fbd, feu, fev, ffc, fff, fgf, fgh, fgo, fgp, fhm, fhn, fib, fki, fkj, fkw, fkx, fmh, fmk, fnk,\n" +
 				"	fnl, fnz, foc, fof, foi, fvk, fvn, fvv, fvw, fwy, fxb, fyb, fye, fyl, fym, fyv, fyy, fzq, fzs, gad, gag, gaq, gas, gav, gax, gbc, gbd,\n" +
 				"	gco, gcr, gdc, gdf, gdn, gdq, gei, gej, gih, gik, gku, gkx, gln, glo, gmi, gmj, gmu, gmv, gpx, gpy, gqb, gqe, gqp, gqs, grb, grc, grh,\n" +
-				"	gri, grn, gro, grv, grw, gtr, gtu, gxc, gvt, gvw, gwz {\n" + 
+				"	gri, grn, gro, grv, grw, gtr, gtu, gxc, gvt, gvw, gwz {\n" +
 				"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in p001\\bip.java (at line 200)\n" + 
-			"	class bop implements missing,\n" + 
-			"	                     ^^^^^^^\n" + 
-			"missing cannot be resolved to a type\n" + 
+			"----------\n" +
+			"1. ERROR in p001\\bip.java (at line 200)\n" +
+			"	class bop implements missing,\n" +
+			"	                     ^^^^^^^\n" +
+			"missing cannot be resolved to a type\n" +
 			"----------\n");
 	}
 
 	private String getManyInterfaceDeclarations() {
-		return 	"interface brj {}\n" + 
-				"interface brk {}\n" + 
-				"interface cem {}\n" + 
-				"interface cen {}\n" + 
-				"interface cey {}\n" + 
-				"interface cez {}\n" + 
-				"interface cfk {}\n" + 
-				"interface cfl {}\n" + 
-				"interface cgu {}\n" + 
-				"interface cgx {}\n" + 
-				"interface che {}\n" + 
-				"interface chh {}\n" + 
-				"interface chq {}\n" + 
-				"interface chr {}\n" + 
-				"interface cji {}\n" + 
-				"interface cjj {}\n" + 
-				"interface ckk {}\n" + 
-				"interface ckl {}\n" + 
-				"interface clb {}\n" + 
-				"interface clc {}\n" + 
-				"interface clf {}\n" + 
-				"interface cli {}\n" + 
-				"interface cnk {}\n" + 
-				"interface cnl {}\n" + 
-				"interface cok {}\n" + 
-				"interface cqa {}\n" + 
-				"interface cqd {}\n" + 
-				"interface cqw {}\n" + 
-				"interface cqx {}\n" + 
-				"interface crs {}\n" + 
-				"interface crv {}\n" + 
-				"interface csu {}\n" + 
-				"interface csv {}\n" + 
-				"interface ctq {}\n" + 
-				"interface ctt {}\n" + 
-				"interface cvg {}\n" + 
-				"interface cvj {}\n" + 
-				"interface cvo {}\n" + 
-				"interface cvp {}\n" + 
-				"interface cwk {}\n" + 
-				"interface cwn {}\n" + 
-				"interface cwu {}\n" + 
-				"interface cww {}\n" + 
-				"interface cxh {}\n" + 
-				"interface cxk {}\n" + 
-				"interface daz {}\n" + 
-				"interface dba {}\n" + 
-				"interface dbr {}\n" + 
-				"interface dbu {}\n" + 
-				"interface dck {}\n" + 
-				"interface dcl {}\n" + 
-				"interface deh {}\n" + 
-				"interface dei {}\n" + 
-				"interface dep {}\n" + 
-				"interface deq {}\n" + 
-				"interface dff {}\n" + 
-				"interface dfg {}\n" + 
-				"interface dfl {}\n" + 
-				"interface dfo {}\n" + 
-				"interface dsp {}\n" + 
-				"interface dss {}\n" + 
-				"interface dtp {}\n" + 
-				"interface dtq {}\n" + 
-				"interface dtt {}\n" + 
-				"interface dtw {}\n" + 
-				"interface duj {}\n" + 
-				"interface duk {}\n" + 
-				"interface dvm {}\n" + 
-				"interface dvp {}\n" + 
-				"interface dvs {}\n" + 
-				"interface dvv {}\n" + 
-				"interface dwe {}\n" + 
-				"interface dwh {}\n" + 
-				"interface dxd {}\n" + 
-				"interface dxg {}\n" + 
-				"interface dyq {}\n" + 
-				"interface dys {}\n" + 
-				"interface dyv {}\n" + 
-				"interface dyw {}\n" + 
-				"interface dzh {}\n" + 
-				"interface dzk {}\n" + 
-				"interface dzn {}\n" + 
-				"interface dzo {}\n" + 
-				"interface dzx {}\n" + 
-				"interface eaa {}\n" + 
-				"interface ecw {}\n" + 
-				"interface ecx {}\n" + 
-				"interface edr {}\n" + 
-				"interface eds {}\n" + 
-				"interface efc {}\n" + 
-				"interface efd {}\n" + 
-				"interface eiw {}\n" + 
-				"interface eiz {}\n" + 
-				"interface ejy {}\n" + 
-				"interface ekb {}\n" + 
-				"interface emi {}\n" + 
-				"interface eml {}\n" + 
-				"interface eor {}\n" + 
-				"interface eou {}\n" + 
-				"interface epe {}\n" + 
-				"interface eph {}\n" + 
-				"interface epk {}\n" + 
-				"interface epl {}\n" + 
-				"interface eqi {}\n" + 
-				"interface eqj {}\n" + 
-				"interface erv {}\n" + 
-				"interface erw {}\n" + 
-				"interface etd {}\n" + 
-				"interface etg {}\n" + 
-				"interface etm {}\n" + 
-				"interface eto {}\n" + 
-				"interface fbc {}\n" + 
-				"interface fbd {}\n" + 
-				"interface feu {}\n" + 
-				"interface fev {}\n" + 
-				"interface ffc {}\n" + 
-				"interface fff {}\n" + 
-				"interface fgf {}\n" + 
-				"interface fgh {}\n" + 
-				"interface fgo {}\n" + 
-				"interface fgp {}\n" + 
-				"interface fhm {}\n" + 
-				"interface fhn {}\n" + 
-				"interface fib {}\n" + 
-				"interface fki {}\n" + 
-				"interface fkj {}\n" + 
-				"interface fkw {}\n" + 
-				"interface fkx {}\n" + 
-				"interface fmh {}\n" + 
-				"interface fmk {}\n" + 
-				"interface fnk {}\n" + 
-				"interface fnl {}\n" + 
-				"interface fnz {}\n" + 
-				"interface foc {}\n" + 
-				"interface fof {}\n" + 
-				"interface foi {}\n" + 
-				"interface fvk {}\n" + 
-				"interface fvn {}\n" + 
-				"interface fvv {}\n" + 
-				"interface fvw {}\n" + 
-				"interface fwy {}\n" + 
-				"interface fxb {}\n" + 
-				"interface fyb {}\n" + 
-				"interface fye {}\n" + 
-				"interface fyl {}\n" + 
-				"interface fym {}\n" + 
-				"interface fyv {}\n" + 
-				"interface fyy {}\n" + 
-				"interface fzq {}\n" + 
-				"interface fzs {}\n" + 
-				"interface gad {}\n" + 
-				"interface gag {}\n" + 
-				"interface gaq {}\n" + 
-				"interface gas {}\n" + 
-				"interface gav {}\n" + 
-				"interface gax {}\n" + 
-				"interface gbc {}\n" + 
-				"interface gbd {}\n" + 
-				"interface gco {}\n" + 
-				"interface gcr {}\n" + 
-				"interface gdc {}\n" + 
-				"interface gdf {}\n" + 
-				"interface gdn {}\n" + 
-				"interface gdq {}\n" + 
-				"interface gei {}\n" + 
-				"interface gej {}\n" + 
-				"interface gih {}\n" + 
-				"interface gik {}\n" + 
-				"interface gku {}\n" + 
-				"interface gkx {}\n" + 
-				"interface gln {}\n" + 
-				"interface glo {}\n" + 
-				"interface gmi {}\n" + 
-				"interface gmj {}\n" + 
-				"interface gmu {}\n" + 
-				"interface gmv {}\n" + 
-				"interface gpx {}\n" + 
-				"interface gpy {}\n" + 
-				"interface gqb {}\n" + 
-				"interface gqe {}\n" + 
-				"interface gqp {}\n" + 
-				"interface gqs {}\n" + 
-				"interface grb {}\n" + 
-				"interface grc {}\n" + 
-				"interface grh {}\n" + 
-				"interface gri {}\n" + 
-				"interface grn {}\n" + 
-				"interface gro {}\n" + 
-				"interface grv {}\n" + 
-				"interface grw {}\n" + 
-				"interface gtr {}\n" + 
-				"interface gtu {}\n" + 
-				"interface gvt {}\n" + 
-				"interface gvw {}\n" + 
-				"interface gwz {}\n" + 
+		return 	"interface brj {}\n" +
+				"interface brk {}\n" +
+				"interface cem {}\n" +
+				"interface cen {}\n" +
+				"interface cey {}\n" +
+				"interface cez {}\n" +
+				"interface cfk {}\n" +
+				"interface cfl {}\n" +
+				"interface cgu {}\n" +
+				"interface cgx {}\n" +
+				"interface che {}\n" +
+				"interface chh {}\n" +
+				"interface chq {}\n" +
+				"interface chr {}\n" +
+				"interface cji {}\n" +
+				"interface cjj {}\n" +
+				"interface ckk {}\n" +
+				"interface ckl {}\n" +
+				"interface clb {}\n" +
+				"interface clc {}\n" +
+				"interface clf {}\n" +
+				"interface cli {}\n" +
+				"interface cnk {}\n" +
+				"interface cnl {}\n" +
+				"interface cok {}\n" +
+				"interface cqa {}\n" +
+				"interface cqd {}\n" +
+				"interface cqw {}\n" +
+				"interface cqx {}\n" +
+				"interface crs {}\n" +
+				"interface crv {}\n" +
+				"interface csu {}\n" +
+				"interface csv {}\n" +
+				"interface ctq {}\n" +
+				"interface ctt {}\n" +
+				"interface cvg {}\n" +
+				"interface cvj {}\n" +
+				"interface cvo {}\n" +
+				"interface cvp {}\n" +
+				"interface cwk {}\n" +
+				"interface cwn {}\n" +
+				"interface cwu {}\n" +
+				"interface cww {}\n" +
+				"interface cxh {}\n" +
+				"interface cxk {}\n" +
+				"interface daz {}\n" +
+				"interface dba {}\n" +
+				"interface dbr {}\n" +
+				"interface dbu {}\n" +
+				"interface dck {}\n" +
+				"interface dcl {}\n" +
+				"interface deh {}\n" +
+				"interface dei {}\n" +
+				"interface dep {}\n" +
+				"interface deq {}\n" +
+				"interface dff {}\n" +
+				"interface dfg {}\n" +
+				"interface dfl {}\n" +
+				"interface dfo {}\n" +
+				"interface dsp {}\n" +
+				"interface dss {}\n" +
+				"interface dtp {}\n" +
+				"interface dtq {}\n" +
+				"interface dtt {}\n" +
+				"interface dtw {}\n" +
+				"interface duj {}\n" +
+				"interface duk {}\n" +
+				"interface dvm {}\n" +
+				"interface dvp {}\n" +
+				"interface dvs {}\n" +
+				"interface dvv {}\n" +
+				"interface dwe {}\n" +
+				"interface dwh {}\n" +
+				"interface dxd {}\n" +
+				"interface dxg {}\n" +
+				"interface dyq {}\n" +
+				"interface dys {}\n" +
+				"interface dyv {}\n" +
+				"interface dyw {}\n" +
+				"interface dzh {}\n" +
+				"interface dzk {}\n" +
+				"interface dzn {}\n" +
+				"interface dzo {}\n" +
+				"interface dzx {}\n" +
+				"interface eaa {}\n" +
+				"interface ecw {}\n" +
+				"interface ecx {}\n" +
+				"interface edr {}\n" +
+				"interface eds {}\n" +
+				"interface efc {}\n" +
+				"interface efd {}\n" +
+				"interface eiw {}\n" +
+				"interface eiz {}\n" +
+				"interface ejy {}\n" +
+				"interface ekb {}\n" +
+				"interface emi {}\n" +
+				"interface eml {}\n" +
+				"interface eor {}\n" +
+				"interface eou {}\n" +
+				"interface epe {}\n" +
+				"interface eph {}\n" +
+				"interface epk {}\n" +
+				"interface epl {}\n" +
+				"interface eqi {}\n" +
+				"interface eqj {}\n" +
+				"interface erv {}\n" +
+				"interface erw {}\n" +
+				"interface etd {}\n" +
+				"interface etg {}\n" +
+				"interface etm {}\n" +
+				"interface eto {}\n" +
+				"interface fbc {}\n" +
+				"interface fbd {}\n" +
+				"interface feu {}\n" +
+				"interface fev {}\n" +
+				"interface ffc {}\n" +
+				"interface fff {}\n" +
+				"interface fgf {}\n" +
+				"interface fgh {}\n" +
+				"interface fgo {}\n" +
+				"interface fgp {}\n" +
+				"interface fhm {}\n" +
+				"interface fhn {}\n" +
+				"interface fib {}\n" +
+				"interface fki {}\n" +
+				"interface fkj {}\n" +
+				"interface fkw {}\n" +
+				"interface fkx {}\n" +
+				"interface fmh {}\n" +
+				"interface fmk {}\n" +
+				"interface fnk {}\n" +
+				"interface fnl {}\n" +
+				"interface fnz {}\n" +
+				"interface foc {}\n" +
+				"interface fof {}\n" +
+				"interface foi {}\n" +
+				"interface fvk {}\n" +
+				"interface fvn {}\n" +
+				"interface fvv {}\n" +
+				"interface fvw {}\n" +
+				"interface fwy {}\n" +
+				"interface fxb {}\n" +
+				"interface fyb {}\n" +
+				"interface fye {}\n" +
+				"interface fyl {}\n" +
+				"interface fym {}\n" +
+				"interface fyv {}\n" +
+				"interface fyy {}\n" +
+				"interface fzq {}\n" +
+				"interface fzs {}\n" +
+				"interface gad {}\n" +
+				"interface gag {}\n" +
+				"interface gaq {}\n" +
+				"interface gas {}\n" +
+				"interface gav {}\n" +
+				"interface gax {}\n" +
+				"interface gbc {}\n" +
+				"interface gbd {}\n" +
+				"interface gco {}\n" +
+				"interface gcr {}\n" +
+				"interface gdc {}\n" +
+				"interface gdf {}\n" +
+				"interface gdn {}\n" +
+				"interface gdq {}\n" +
+				"interface gei {}\n" +
+				"interface gej {}\n" +
+				"interface gih {}\n" +
+				"interface gik {}\n" +
+				"interface gku {}\n" +
+				"interface gkx {}\n" +
+				"interface gln {}\n" +
+				"interface glo {}\n" +
+				"interface gmi {}\n" +
+				"interface gmj {}\n" +
+				"interface gmu {}\n" +
+				"interface gmv {}\n" +
+				"interface gpx {}\n" +
+				"interface gpy {}\n" +
+				"interface gqb {}\n" +
+				"interface gqe {}\n" +
+				"interface gqp {}\n" +
+				"interface gqs {}\n" +
+				"interface grb {}\n" +
+				"interface grc {}\n" +
+				"interface grh {}\n" +
+				"interface gri {}\n" +
+				"interface grn {}\n" +
+				"interface gro {}\n" +
+				"interface grv {}\n" +
+				"interface grw {}\n" +
+				"interface gtr {}\n" +
+				"interface gtu {}\n" +
+				"interface gvt {}\n" +
+				"interface gvw {}\n" +
+				"interface gwz {}\n" +
 				"interface gxc {}\n";
 	}
+	public void testBug550480() {
+		StringBuilder source = new StringBuilder();
+		source.append("package p;\n");
+		String[] names = new String[571];
+		for (int i = 0; i < 571; i++) {
+			names[i] = "I"+i;
+			source.append("interface ").append(names[i]).append(" {}\n");
+		}
+		source.append("public abstract class hft implements ");
+		source.append(String.join(", ", names));
+		source.append("\n{\n}\n");
+		runConformTest(
+			new String[] {
+				"p/hft.java",
+				source.toString()
+			});
+	}
+
 }

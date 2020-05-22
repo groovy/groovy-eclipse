@@ -738,7 +738,7 @@ public class Javadoc extends ASTNode {
 		// Get declaration infos
 		TypeParameter[] parameters = null;
 		TypeVariableBinding[] typeVariables = null;
-		Argument[] recordParameters = null;
+		RecordComponent[] recordParameters = null;
 		int modifiers = -1;
 		switch (scope.kind) {
 			case Scope.METHOD_SCOPE:
@@ -760,7 +760,7 @@ public class Javadoc extends ASTNode {
 				parameters = typeDeclaration.typeParameters;
 				typeVariables = typeDeclaration.binding.typeVariables;
 				modifiers = typeDeclaration.binding.modifiers;
-				recordParameters = typeDeclaration.args;
+				recordParameters = typeDeclaration.recordComponents;
 				break;
 		}
 
@@ -806,17 +806,17 @@ public class Javadoc extends ASTNode {
 				// Look for undocumented arguments
 				if (reportMissing) {
 					for (int i = 0; i < recordParameters.length; i++) {
-						Argument arg = recordParameters[i];
+						RecordComponent component = recordParameters[i];
 						boolean found = false;
 						for (int j = 0; j < paramReferencesLength && !found; j++) {
 							JavadocSingleNameReference param = this.paramReferences[j];
 							String paramName = new String(param.getName()[0]);
-							if (paramName.equals(new String(arg.name))) {
+							if (paramName.equals(new String(component.name))) {
 								found = true;
 							}
 						}
 						if (!found) {
-							scope.problemReporter().javadocMissingParamTag(arg.name, arg.sourceStart, arg.sourceEnd, modifiers);
+							scope.problemReporter().javadocMissingParamTag(component.name, component.sourceStart, component.sourceEnd, modifiers);
 						}
 					}
 				}
@@ -826,8 +826,8 @@ public class Javadoc extends ASTNode {
 					String paramName = new String(param.getName()[0]);
 					boolean found = false;
 					for (int j = 0; j < recordParameters.length; j++) {
-						Argument arg = recordParameters[j];
-						if (paramName.equals(new String(arg.name))) {
+						RecordComponent component = recordParameters[j];
+						if (paramName.equals(new String(component.name))) {
 							found = true;
 						}
 					}

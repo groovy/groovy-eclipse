@@ -757,6 +757,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("JavadocNonGenericConstructor", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
 		expectedProblemAttributes.put("JavadocNonGenericMethod", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
 		expectedProblemAttributes.put("JavadocNonStaticTypeFromStaticInvocation", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
+		expectedProblemAttributes.put("JavadocNotAccessibleType", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleConstructor", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleField", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleMethod", new ProblemAttributes(CategorizedProblem.CAT_JAVADOC));
@@ -1096,6 +1097,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("UnqualifiedFieldAccess", new ProblemAttributes(CategorizedProblem.CAT_CODE_STYLE));
 		expectedProblemAttributes.put("UnreachableCatch", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("UnresolvedVariable", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
+		expectedProblemAttributes.put("UnsafeCast", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
 		expectedProblemAttributes.put("UnsafeElementTypeConversion", new ProblemAttributes(CategorizedProblem.CAT_UNCHECKED_RAW));
 		expectedProblemAttributes.put("UnsafeGenericArrayForVarargs", new ProblemAttributes(CategorizedProblem.CAT_UNCHECKED_RAW));
 		expectedProblemAttributes.put("UnsafeGenericCast", new ProblemAttributes(CategorizedProblem.CAT_UNCHECKED_RAW));
@@ -1223,6 +1225,7 @@ public void test011_problem_categories() {
 	    expectedProblemAttributes.put("SwitchExpressionsNotSupported", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsBreakOutOfSwitchExpression", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("SwitchExpressionsContinueOutOfSwitchExpression", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+	    expectedProblemAttributes.put("SwitchExpressionsReturnWithinSwitchExpression", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 	    expectedProblemAttributes.put("RecordIllegalModifierForRecord", new ProblemAttributes(CategorizedProblem.CAT_PREVIEW_RELATED));
 	    expectedProblemAttributes.put("RecordIllegalModifierForInnerRecord", new ProblemAttributes(CategorizedProblem.CAT_PREVIEW_RELATED));
 	    expectedProblemAttributes.put("RecordIllegalComponentNameInRecord", new ProblemAttributes(CategorizedProblem.CAT_PREVIEW_RELATED));
@@ -1779,6 +1782,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("JavadocNonGenericConstructor", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
 		expectedProblemAttributes.put("JavadocNonGenericMethod", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
 		expectedProblemAttributes.put("JavadocNonStaticTypeFromStaticInvocation", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
+		expectedProblemAttributes.put("JavadocNotAccessibleType", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleConstructor", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleField", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
 		expectedProblemAttributes.put("JavadocNotVisibleMethod", new ProblemAttributes(JavaCore.COMPILER_PB_INVALID_JAVADOC));
@@ -2119,6 +2123,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("UnqualifiedFieldAccess", new ProblemAttributes(JavaCore.COMPILER_PB_UNQUALIFIED_FIELD_ACCESS));
 		expectedProblemAttributes.put("UnreachableCatch", SKIP);
 		expectedProblemAttributes.put("UnresolvedVariable", SKIP);
+		expectedProblemAttributes.put("UnsafeCast", SKIP);
 		expectedProblemAttributes.put("UnsafeElementTypeConversion", new ProblemAttributes(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION));
 		expectedProblemAttributes.put("UnsafeGenericArrayForVarargs", new ProblemAttributes(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION));
 		expectedProblemAttributes.put("UnsafeGenericCast", new ProblemAttributes(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION));
@@ -2245,6 +2250,7 @@ public void test012_compiler_problems_tuning() {
 	    expectedProblemAttributes.put("SwitchExpressionsNotSupported", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsBreakOutOfSwitchExpression", SKIP);
 	    expectedProblemAttributes.put("SwitchExpressionsContinueOutOfSwitchExpression", SKIP);
+	    expectedProblemAttributes.put("SwitchExpressionsReturnWithinSwitchExpression", SKIP);
 	    expectedProblemAttributes.put("RecordIllegalModifierForRecord", SKIP);
 	    expectedProblemAttributes.put("RecordIllegalModifierForInnerRecord", SKIP);
 	    expectedProblemAttributes.put("RecordIllegalComponentNameInRecord", SKIP);

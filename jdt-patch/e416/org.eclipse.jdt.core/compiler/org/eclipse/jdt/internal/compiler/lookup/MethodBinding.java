@@ -45,6 +45,7 @@ import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference.AnnotationPosition;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -295,9 +296,9 @@ public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invoca
 			return true;
 		return false;
 	}
-	
+
 	if (isPublic()) return true;
-	
+
 
 	if (TypeBinding.equalsEquals(invocationType, this.declaringClass) && TypeBinding.equalsEquals(invocationType, receiverType)) return true;
 
@@ -499,8 +500,8 @@ public final char[] constantPoolName() {
 
 /**
  * After method verifier has finished, fill in missing @NonNull specification from the applicable default.
- * @param needToApplyParameterNonNullDefault 
- * @param needToApplyReturnNonNullDefault 
+ * @param needToApplyParameterNonNullDefault
+ * @param needToApplyReturnNonNullDefault
  */
 protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod, boolean needToApplyReturnNonNullDefault, ParameterNonNullDefaultProvider needToApplyParameterNonNullDefault) {
 	if (this.parameterNonNullness == null)
@@ -572,7 +573,7 @@ protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod
 	if (original.returnType != null && hasNonNullDefaultForReturnType(sourceMethod) && original.returnType.acceptsNonNullDefault()) {
 		if ((this.returnType.tagBits & TagBits.AnnotationNullMASK) == 0) {
 			this.returnType = env.createAnnotatedType(this.returnType, new AnnotationBinding[]{env.getNonNullAnnotation()});
-		} else if (sourceMethod instanceof MethodDeclaration && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0 
+		} else if (sourceMethod instanceof MethodDeclaration && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0
 						&& ((MethodDeclaration)sourceMethod).hasNullTypeAnnotation(AnnotationPosition.MAIN_TYPE)) {
 			sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, -1/*signifies method return*/);
 		}
@@ -1265,6 +1266,9 @@ public AbstractMethodDeclaration sourceMethod() {
 public LambdaExpression sourceLambda() {
 	return null;
 }
+public RecordComponent sourceRecordComponent() {
+	return null;
+}
 public final int sourceStart() {
 	AbstractMethodDeclaration method = sourceMethod();
 	if (method == null) {
@@ -1411,9 +1415,9 @@ public boolean redeclaresPublicObjectMethod(Scope scope) {
 	MethodBinding [] methods = javaLangObject.getMethods(this.selector);
 	for (int i = 0, length = methods == null ? 0 : methods.length; i < length; i++) {
 		final MethodBinding method = methods[i];
-		if (!method.isPublic() || method.isStatic() || method.parameters.length != this.parameters.length) 
+		if (!method.isPublic() || method.isStatic() || method.parameters.length != this.parameters.length)
 			continue;
-		if (MethodVerifier.doesMethodOverride(this, method, scope.environment())) 
+		if (MethodVerifier.doesMethodOverride(this, method, scope.environment()))
 			return true;
 	}
 	return false;

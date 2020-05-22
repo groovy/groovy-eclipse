@@ -45,6 +45,7 @@ public class SourceType extends NamedMember implements IType {
  * Currently this is computed and used only for anonymous types.
  */
 public int localOccurrenceCount = 1;
+private static final IField[] NO_FIELDS = new IField[0];
 
 protected SourceType(JavaElement parent, String name) {
 	super(parent, name);
@@ -282,10 +283,47 @@ public IField getField(String fieldName) {
  */
 @Override
 public IField[] getFields() throws JavaModelException {
+	if (!isRecord()) {
+		ArrayList list = getChildrenOfType(FIELD);
+		if (list.size() == 0) {
+			return NO_FIELDS;
+		}
+		IField[] array= new IField[list.size()];
+		list.toArray(array);
+		return array;
+	}
+	return getFieldsOrComponents(false);
+}
+@Override
+public IField[] getRecordComponents() throws JavaModelException {
+	if (!isRecord())
+		return NO_FIELDS;
+	return getFieldsOrComponents(true);
+}
+private IField[] getFieldsOrComponents(boolean component) throws JavaModelException {
 	ArrayList list = getChildrenOfType(FIELD);
-	IField[] array= new IField[list.size()];
-	list.toArray(array);
+	if (list.size() == 0) {
+		return NO_FIELDS;
+	}
+	ArrayList<IField> fields = new ArrayList<>();
+	for (Object object : list) {
+		IField field = (IField) object;
+		if (field.isRecordComponent() == component)
+			fields.add(field);
+	}
+	IField[] array= new IField[fields.size()];
+	fields.toArray(array);
 	return array;
+}
+@Override
+public IField getRecordComponent(String compName) {
+	try {
+		if (isRecord())
+			return new SourceField(this, compName);
+	} catch (JavaModelException e) {
+		// Should throw an exception instead?
+	}
+	return null;
 }
 /**
  * @see IType#getFullyQualifiedName()

@@ -90,7 +90,7 @@ public class TypeDeclaration extends Statement implements ProblemSeverities, Ref
 	public TypeParameter[] typeParameters;
 
 	// 14 Records preview support
-	public Argument[] args;
+	public RecordComponent[] recordComponents;
 	public int nRecordComponents;
 	public boolean isLocalRecord;
 	public static Set<String> disallowedComponentNames;
@@ -371,7 +371,7 @@ public ConstructorDeclaration createDefaultConstructorForRecord(boolean needExpl
 //	constructor.modifiers = this.modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
 	constructor.modifiers = this.modifiers & ClassFileConstants.AccPublic;
 	constructor.modifiers |= ClassFileConstants.AccPublic; // JLS 14 8.10.5
-	constructor.arguments = this.args;
+	constructor.arguments = getArgumentsFromComponents(this.recordComponents);
 
 	constructor.declarationSourceStart = constructor.sourceStart =
 			constructor.bodyStart = this.sourceStart;
@@ -388,19 +388,19 @@ public ConstructorDeclaration createDefaultConstructorForRecord(boolean needExpl
 	 * to a record component with the corresponding formal parameter in the order that they appear
 	 * in the record component list.*/
 	List<Statement> statements = new ArrayList<>();
-	int l = this.args != null ? this.args.length : 0;
+	int l = this.recordComponents != null ? this.recordComponents.length : 0;
 	if (l > 0 && this.fields != null) {
 		List<String> fNames = Arrays.stream(this.fields)
 				.filter(f -> f.isARecordComponent)
 				.map(f ->new String(f.name))
 				.collect(Collectors.toList());
 		for (int i = 0; i < l; ++i) {
-			Argument arg = this.args[i];
-			if (!fNames.contains(new String(arg.name)))
+			RecordComponent component = this.recordComponents[i];
+			if (!fNames.contains(new String(component.name)))
 				continue;
-			FieldReference lhs = new FieldReference(arg.name, 0);
+			FieldReference lhs = new FieldReference(component.name, 0);
 			lhs.receiver = ThisReference.implicitThis();
-			statements.add(new Assignment(lhs, new SingleNameReference(arg.name, 0), 0));
+			statements.add(new Assignment(lhs, new SingleNameReference(component.name, 0), 0));
 		}
 	}
 	constructor.statements = statements.toArray(new Statement[0]);
@@ -424,6 +424,18 @@ public ConstructorDeclaration createDefaultConstructorForRecord(boolean needExpl
 	return constructor;
 }
 
+
+private Argument[] getArgumentsFromComponents(RecordComponent[] comps) {
+	Argument[] args2 = comps == null || comps.length == 0 ? ASTNode.NO_ARGUMENTS :
+		new Argument[comps.length];
+	int count = 0;
+	for (RecordComponent comp : comps) {
+		Argument argument = new Argument(comp.name, ((long)comp.sourceStart) << 32 | comp.sourceEnd,
+				comp.type, comp.modifiers);
+		args2[count++] = argument;
+	}
+	return args2;
+}
 
 public ConstructorDeclaration createDefaultConstructor(	boolean needExplicitConstructorCall, boolean needToInsert) {
 	if (this.isRecord())
@@ -603,6 +615,20 @@ public AbstractMethodDeclaration declarationOf(MethodBinding methodBinding) {
 }
 
 /**
+ * Find the matching parse node, answers null if nothing found
+ */
+public RecordComponent declarationOf(RecordComponentBinding recordComponentBinding) {
+	if (recordComponentBinding != null && this.recordComponents != null) {
+		for (int i = 0, max = this.fields.length; i < max; i++) {
+			RecordComponent recordComponent;
+			if ((recordComponent = this.recordComponents[i]).binding == recordComponentBinding)
+				return recordComponent;
+		}
+	}
+	return null;
+}
+
+/**
  * Finds the matching type amoung this type's member types.
  * Returns null if no type with this name is found.
  * The type name is a compound name relative to this type
@@ -655,11 +681,11 @@ public ConstructorDeclaration getConstructor(Parser parser) {
 						CompactConstructorDeclaration ccd = (CompactConstructorDeclaration) am;
 						ccd.recordDeclaration = this;
 						if (ccd.arguments == null)
-							ccd.arguments = this.args;
+							ccd.arguments = getArgumentsFromComponents(this.recordComponents);
 						return ccd;
 					}
 					// now we are looking at a "normal" constructor
-					if (this.args == null && am.arguments == null)
+					if (this.recordComponents == null && am.arguments == null)
 						return (ConstructorDeclaration) am;
 				}
 			}
@@ -1359,6 +1385,11 @@ public void resolve() {
 				this.memberTypes[i].resolve(this.scope);
 			}
 		}
+		if (this.recordComponents != null) {
+			for (RecordComponent rc : this.recordComponents) {
+				rc.resolve(this.initializerScope);
+			}
+		}
 		if (this.fields != null) {
 			for (int i = 0, count = this.fields.length; i < count; i++) {
 				FieldDeclaration field = this.fields[i];
@@ -1624,6 +1655,11 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
 			}
+			if (this.recordComponents != null) {
+				int length = this.recordComponents.length;
+				for (int i = 0; i < length; i++)
+					this.recordComponents[i].traverse(visitor, this.initializerScope);
+			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;
 				for (int i = 0; i < length; i++)
@@ -1680,6 +1716,11 @@ public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
 			}
+			if (this.recordComponents != null) {
+				int length = this.recordComponents.length;
+				for (int i = 0; i < length; i++)
+					this.recordComponents[i].traverse(visitor, this.initializerScope);
+			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;
 				for (int i = 0; i < length; i++)
@@ -1735,6 +1776,11 @@ public void traverse(ASTVisitor visitor, ClassScope classScope) {
 				for (int i = 0; i < length; i++) {
 					this.typeParameters[i].traverse(visitor, this.scope);
 				}
+			}
+			if (this.recordComponents != null) {
+				int length = this.recordComponents.length;
+				for (int i = 0; i < length; i++)
+					this.recordComponents[i].traverse(visitor, this.initializerScope);
 			}
 			if (this.memberTypes != null) {
 				int length = this.memberTypes.length;

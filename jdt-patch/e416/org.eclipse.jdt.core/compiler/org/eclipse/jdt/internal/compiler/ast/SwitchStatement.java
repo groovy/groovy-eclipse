@@ -84,14 +84,14 @@ public class SwitchStatement extends Expression {
 		if (this.switchLabeledRules) {
 			if ((stmt instanceof Expression && ((Expression) stmt).isTrulyExpression()) || stmt instanceof ThrowStatement)
 				return BREAKING;
+			if (!stmt.canCompleteNormally())
+				return BREAKING;
 
 			if (stmt instanceof Block) {
 				Block block = (Block) stmt;
-				if (block.doesNotCompleteNormally()) {
-					return BREAKING;
-				}
-				// else add an implicit break
+				// Note implicit break anyway - Let the flow analysis do the dead code analysis
 				BreakStatement breakStatement = new BreakStatement(null, block.sourceEnd -1, block.sourceEnd);
+				breakStatement.isSynthetic = true; // suppress dead code flagging - codegen will not generate dead code anyway
 
 				int l = block.statements == null ? 0 : block.statements.length;
 				if (l == 0) {
@@ -899,6 +899,55 @@ public class SwitchStatement extends Expression {
 			return false;
 		for (int i = 0, length = this.statements.length; i < length; i++) {
 			if (this.statements[i].completesByContinue())
+				return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean canCompleteNormally() {
+		if (this.statements == null || this.statements.length == 0)
+			return true;
+		if (!this.switchLabeledRules) { // switch labeled statement group
+			if (this.statements[this.statements.length - 1].canCompleteNormally())
+				return true; // last statement as well as last switch label after blocks if exists.
+			if (this.defaultCase == null)
+				return true;
+			for (int i = 0, length = this.statements.length; i < length; i++) {
+				if (this.statements[i].breaksOut(null))
+					return true;
+			}
+		} else {
+			// switch block consists of switch rules
+			for (Statement stmt : this.statements) {
+				if (stmt instanceof CaseStatement)
+					continue; // skip case
+				if (this.defaultCase == null)
+					return true;
+				if (stmt instanceof Expression)
+					return true;
+				if (stmt.canCompleteNormally())
+					return true;
+				if (stmt instanceof YieldStatement && ((YieldStatement) stmt).isImplicit) // note: artificially introduced
+					return true;
+				if (stmt instanceof Block) {
+					Block block = (Block) stmt;
+					if (block.canCompleteNormally())
+						return true;
+					if (block.breaksOut(null))
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean continueCompletes() {
+		if (this.statements == null || this.statements.length == 0)
+			return false;
+		for (int i = 0, length = this.statements.length; i < length; i++) {
+			if (this.statements[i].continueCompletes())
 				return true;
 		}
 		return false;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2013 IBM Corporation and others.
+ * Copyright (c) 2008, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,6 +18,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMemberValuePair;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMarkerAnnotationName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnMemberValueName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnParameterizedQualifiedTypeReference;
@@ -36,9 +37,11 @@ import org.eclipse.jdt.internal.codeassist.impl.AssistSourceType;
 import org.eclipse.jdt.internal.codeassist.impl.AssistTypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.core.AnnotatableInfo;
@@ -91,13 +94,32 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 	protected SourceField createField(JavaElement parent, FieldInfo fieldInfo) {
 		String fieldName = JavaModelManager.getJavaModelManager().intern(new String(fieldInfo.name));
 		AssistSourceField field = new AssistSourceField(parent, fieldName, this.bindingCache, this.newElements);
-		if (fieldInfo.node.binding != null) {
-			this.bindingCache.put(field, fieldInfo.node.binding);
-			this.elementCache.put(fieldInfo.node.binding, field);
+		FieldDeclaration decl = (fieldInfo.node);
+		if (decl.binding != null) {
+			this.bindingCache.put(field, decl.binding);
+			this.elementCache.put(decl.binding, field);
 		} else {
 			this.elementWithProblemCache.put(fieldInfo.node, field);
 		}
 		return field;
+	}
+	@Override
+	protected SourceField createRecordComponent(JavaElement parent, RecordComponentInfo compInfo) {
+		String compName = JavaModelManager.getJavaModelManager().intern(new String(compInfo.name));
+		SourceField comp = new AssistSourceField(parent, compName, this.bindingCache, this.newElements) {
+			@Override
+			public boolean isRecordComponent() throws JavaModelException {
+				return true;
+			}
+		};
+		RecordComponent decl = (compInfo.node);
+		if (decl.binding != null) {
+			this.bindingCache.put(compName, decl.binding);
+			this.elementCache.put(decl.binding, compName);
+		} else {
+			this.elementWithProblemCache.put(compInfo.node, compName);
+		}
+		return comp;
 	}
 
 	@Override

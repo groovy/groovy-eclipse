@@ -292,6 +292,14 @@ public void enterField(FieldInfo fieldInfo) {
 	this.methodDepth++;
 }
 /**
+ * @see ISourceElementRequestor#enterRecordComponent(ISourceElementRequestor.RecordComponentInfo)
+ */
+@Override
+public void enterRecordComponent(RecordComponentInfo componentInfo) {
+	this.indexer.addFieldDeclaration(componentInfo.type, componentInfo.name);
+	this.methodDepth++;
+}
+/**
  * @see ISourceElementRequestor#enterInitializer(int, int)
  */
 @Override
@@ -455,6 +463,13 @@ public void exitConstructor(int declarationEnd) {
 @Override
 public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 	this.methodDepth--;
+}
+/**
+ * @see ISourceElementRequestor#exitRecordComponent(int, int)
+ */
+@Override
+public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
+	//Nothing by default
 }
 /**
  * @see ISourceElementRequestor#exitInitializer(int)

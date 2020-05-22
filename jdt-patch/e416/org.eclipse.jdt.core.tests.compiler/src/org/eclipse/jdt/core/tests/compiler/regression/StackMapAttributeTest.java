@@ -2655,3431 +2655,3431 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			},
 		"SUCCESS");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=236336
 	public void test037() {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void main(String[] args) {\n" + 
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
 				"		System.out.print(\"SUCCESS\");\n" +
-				"	}\n" + 
-				"	String field;\n" + 
-				"	String field2;\n" + 
-				"	public void foo(int index, Object[] objs, Object[] objs2) {\n" + 
-				"		String methodName = \"foo\";\n" + 
-				"		int i = -1;\n" + 
-				"		try {\n" + 
-				"			switch (index) {\n" + 
-				"				case 1130: {\n" + 
-				"					int j = ((Integer) objs[0]).intValue();\n" + 
-				"					int k = ((Integer) objs[0]).intValue();\n" + 
-				"					{\n" + 
-				"						String s = field;\n" + 
-				"						String s2 = field2;\n" + 
-				"						synchronized (s2) {\n" + 
-				"							String s3 = s2;\n" + 
-				"							try {\n" + 
-				"								System.out.println(s);\n" + 
-				"								System.out.println(s2);\n" + 
-				"								System.out.println(s3);\n" + 
-				"							} finally {\n" + 
-				"								s2.toString();\n" + 
-				"							}\n" + 
-				"						}\n" + 
-				"						}\n" + 
-				"				}\n" + 
-				"				break;\n" + 
-				"				case 0 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 2 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 3 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 4 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 5 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 6 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 7 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 8 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 9 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 10 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 11 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 12 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 13 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 14 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 15 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 16 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 17 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 18 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 19 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 20 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 21 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 22 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 23 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 24 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 25 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 26 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 27 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 28 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 29 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 30 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 31 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 32 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 33 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 34 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 35 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 36 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 37 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 38 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 39 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 40 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 41 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 42 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 43 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 44 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 45 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 46 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 47 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 48 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 49 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 50 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 51 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 52 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 53 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 54 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 55 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 56 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 57 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 58 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 59 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 60 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 61 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 62 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 63 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 64 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 65 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 66 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 67 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 68 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 69 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 70 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 71 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 72 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 73 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 74 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 75 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 76 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 77 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 78 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 79 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 80 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 81 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 82 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 83 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 84 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 85 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 86 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 87 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 88 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 89 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 90 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 91 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 92 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 93 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 94 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 95 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 96 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 97 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 98 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 99 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 100 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 101 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 102 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 103 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 104 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 105 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 106 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 107 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 108 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 109 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 110 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 111 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 112 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 113 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 114 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 115 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 116 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 117 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 118 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 119 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 120 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 121 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 122 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 123 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 124 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 125 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 126 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 127 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 128 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 129 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 130 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 131 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 132 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 133 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 134 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 135 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 136 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 137 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 138 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 139 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 140 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 141 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 142 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 143 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 144 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 145 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 146 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 147 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 148 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 149 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 150 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 151 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 152 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 153 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 154 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 155 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 156 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 157 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 158 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 159 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 160 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 161 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 162 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 163 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 164 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 165 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 166 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 167 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 168 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 169 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 170 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 171 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 172 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 173 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 174 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 175 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 176 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 177 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 178 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 179 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 180 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 181 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 182 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 183 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 184 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 185 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 186 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 187 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 188 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 189 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 190 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 191 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 192 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 193 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 194 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 195 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 196 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 197 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 198 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 199 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 200 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 201 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 202 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 203 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 204 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 205 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 206 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 207 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 208 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 209 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 210 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 211 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 212 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 213 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 214 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 215 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 216 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 217 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 218 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 219 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 220 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 221 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 222 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 223 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 224 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 225 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 226 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 227 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 228 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 229 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 230 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 231 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 232 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 233 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 234 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 235 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 236 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 237 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 238 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 239 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 240 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 241 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 242 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 243 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 244 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 245 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 246 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 247 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 248 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 249 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 250 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 251 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 252 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 253 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 254 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 255 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 256 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 257 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 258 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 259 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 260 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 261 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 262 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 263 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 264 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 265 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 266 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 267 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 268 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 269 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 270 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 271 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 272 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 273 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 274 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 275 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 276 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 277 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 278 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 279 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 280 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 281 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 282 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 283 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 284 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 285 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 286 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 287 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 288 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 289 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 290 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 291 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 292 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 293 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 294 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 295 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 296 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 297 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 298 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 299 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 300 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 301 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 302 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 303 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 304 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 305 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 306 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 307 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 308 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 309 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 310 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 311 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 312 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 313 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 314 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 315 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 316 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 317 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 318 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 319 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 320 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 321 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 322 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 323 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 324 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 325 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 326 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 327 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 328 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 329 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 330 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 331 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 332 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 333 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 334 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 335 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 336 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 337 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 338 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 339 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 340 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 341 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 342 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 343 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 344 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 345 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 346 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 347 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 348 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 349 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 350 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 351 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 352 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 353 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 354 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 355 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 356 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 357 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 358 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 359 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 360 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 361 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 362 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 363 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 364 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 365 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 366 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 367 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 368 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 369 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 370 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 371 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 372 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 373 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 374 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 375 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 376 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 377 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 378 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 379 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 380 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 381 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 382 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 383 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 384 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 385 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 386 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 387 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 388 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 389 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 390 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 391 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 392 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 393 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 394 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 395 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 396 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 397 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 398 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 399 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 400 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 401 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 402 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 403 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 404 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 405 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 406 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 407 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 408 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 409 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 410 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 411 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 412 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 413 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 414 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 415 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 416 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 417 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 418 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 419 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 420 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 421 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 422 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 423 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 424 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 425 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 426 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 427 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 428 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 429 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 430 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 431 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 432 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 433 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 434 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 435 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 436 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 437 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 438 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 439 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 440 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 441 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 442 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 443 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 444 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 445 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 446 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 447 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 448 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 449 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 450 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 451 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 452 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 453 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 454 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 455 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 456 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 457 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 458 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 459 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 460 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 461 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 462 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 463 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 464 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 465 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 466 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 467 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 468 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 469 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 470 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 471 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 472 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 473 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 474 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 475 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 476 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 477 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 478 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 479 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 480 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 481 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 482 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 483 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 484 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 485 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 486 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 487 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 488 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 489 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 490 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 491 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 492 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 493 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 494 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 495 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 496 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 497 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 498 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 499 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 500 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 501 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 502 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 503 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 504 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 505 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 506 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 507 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 508 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 509 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 510 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 511 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 512 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 513 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 514 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 515 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 516 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 517 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 518 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 519 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 520 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 521 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 522 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 523 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 524 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 525 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 526 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 527 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 528 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 529 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 530 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 531 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 532 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 533 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 534 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 535 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 536 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 537 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 538 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 539 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 540 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 541 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 542 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 543 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 544 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 545 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 546 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 547 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 548 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 549 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 550 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 551 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 552 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 553 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 554 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 555 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 556 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 557 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 558 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 559 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 560 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 561 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 562 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 563 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 564 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 565 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 566 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 567 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 568 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 569 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 570 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 571 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 572 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 573 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 574 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 575 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 576 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 577 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 578 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 579 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 580 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 581 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 582 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 583 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 584 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 585 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 586 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 587 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 588 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 589 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 590 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 591 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 592 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 593 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 594 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 595 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 596 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 597 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 598 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 599 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 600 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 601 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 602 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 603 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 604 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 605 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 606 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 607 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 608 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 609 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 610 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 611 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 612 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 613 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 614 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 615 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 616 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 617 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 618 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 619 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 620 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 621 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 622 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 623 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 624 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 625 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 626 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 627 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 628 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 629 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 630 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 631 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 632 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 633 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 634 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 635 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 636 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 637 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 638 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 639 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 640 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 641 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 642 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 643 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 644 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 645 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 646 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 647 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 648 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 649 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 650 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 651 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 652 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 653 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 654 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 655 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 656 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 657 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 658 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 659 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 660 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 661 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 662 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 663 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 664 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 665 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 666 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 667 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 668 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 669 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 670 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 671 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 672 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 673 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 674 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 675 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 676 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 677 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 678 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 679 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 680 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 681 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 682 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 683 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 684 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 685 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 686 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 687 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 688 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 689 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 690 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 691 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 692 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 693 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 694 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 695 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 696 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 697 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 698 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 699 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 700 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 701 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 702 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 703 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 704 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 705 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 706 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 707 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 708 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 709 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 710 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 711 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 712 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 713 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 714 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 715 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 716 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 717 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 718 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 719 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 720 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 721 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 722 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 723 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 724 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 725 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 726 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 727 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 728 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 729 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 730 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 731 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 732 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 733 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 734 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 735 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 736 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 737 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 738 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 739 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 740 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 741 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 742 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 743 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 744 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 745 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 746 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 747 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 748 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 749 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 750 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 751 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 752 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 753 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 754 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 755 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 756 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 757 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 758 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 759 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 760 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 761 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 762 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 763 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 764 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 765 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 766 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 767 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 768 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 769 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 770 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 771 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 772 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 773 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 774 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 775 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 776 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 777 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 778 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 779 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 780 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 781 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 782 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 783 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 784 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 785 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 786 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 787 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 788 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 789 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 790 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 791 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 792 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 793 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 794 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 795 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 796 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 797 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 798 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 799 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 800 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 801 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 802 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 803 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 804 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 805 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 806 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 807 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 808 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 809 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 810 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 811 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 812 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 813 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 814 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 815 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 816 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 817 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 818 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 819 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 820 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 821 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 822 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 823 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 824 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 825 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 826 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 827 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 828 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 829 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 830 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 831 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 832 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 833 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 834 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 835 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 836 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 837 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 838 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 839 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 840 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 841 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 842 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 843 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 844 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 845 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 846 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 847 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 848 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 849 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 850 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 851 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 852 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 853 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 854 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 855 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 856 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 857 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 858 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 859 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 860 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 861 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 862 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 863 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 864 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 865 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 866 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 867 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 868 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 869 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 870 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 871 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 872 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 873 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 874 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 875 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 876 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 877 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 878 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 879 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 880 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 881 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 882 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 883 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 884 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 885 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 886 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 887 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 888 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 889 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 890 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 891 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 892 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 893 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 894 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 895 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 896 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 897 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 898 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 899 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 900 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 901 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 902 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 903 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 904 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 905 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 906 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 907 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 908 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 909 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 910 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 911 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 912 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 913 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 914 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 915 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 916 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 917 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 918 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 919 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 920 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 921 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 922 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 923 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 924 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 925 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 926 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 927 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 928 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 929 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 930 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 931 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 932 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 933 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 934 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 935 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 936 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 937 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 938 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 939 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 940 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 941 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 942 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 943 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 944 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 945 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 946 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 947 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 948 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 949 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 950 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 951 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 952 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 953 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 954 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 955 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 956 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 957 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 958 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 959 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 960 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 961 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 962 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 963 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 964 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 965 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 966 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 967 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 968 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 969 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 970 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 971 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 972 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 973 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 974 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 975 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 976 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 977 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 978 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 979 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 980 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 981 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 982 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 983 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 984 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 985 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 986 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 987 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 988 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 989 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 990 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 991 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 992 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 993 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 994 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 995 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 996 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 997 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 998 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 999 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1000 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1001 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1002 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1003 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1004 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1005 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1006 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1007 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1008 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1009 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1010 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1011 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1012 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1013 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1014 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1015 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1016 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1017 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1018 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1019 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1020 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1021 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1022 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1023 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1024 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1025 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1026 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1027 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1028 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1029 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1030 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1031 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1032 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1033 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1034 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1035 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1036 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1037 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1038 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1039 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1040 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1041 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1042 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1043 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1044 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1045 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1046 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1047 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1048 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1049 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1050 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1051 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1052 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1053 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1054 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1055 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1056 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1057 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1058 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1059 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1060 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1061 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1062 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1063 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1064 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1065 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1066 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1067 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1068 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1069 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1070 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1071 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1072 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1073 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1074 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1075 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1076 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1077 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1078 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1079 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1080 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1081 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1082 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1083 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1084 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1085 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1086 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1087 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1088 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1089 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1090 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1091 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1092 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1093 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1094 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1095 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1096 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1097 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1098 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1099 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1100 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1101 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1102 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1103 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1104 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1105 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1106 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1107 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1108 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1109 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1110 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1111 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1112 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1113 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1114 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1115 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1116 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1117 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1118 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1119 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1120 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1121 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1122 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1123 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1124 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1125 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1126 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1127 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1128 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
-				"				break;\n" + 
-				"				case 1129 :\n" + 
-				"					System.out.println(methodName + i);\n" + 
+				"	}\n" +
+				"	String field;\n" +
+				"	String field2;\n" +
+				"	public void foo(int index, Object[] objs, Object[] objs2) {\n" +
+				"		String methodName = \"foo\";\n" +
+				"		int i = -1;\n" +
+				"		try {\n" +
+				"			switch (index) {\n" +
+				"				case 1130: {\n" +
+				"					int j = ((Integer) objs[0]).intValue();\n" +
+				"					int k = ((Integer) objs[0]).intValue();\n" +
+				"					{\n" +
+				"						String s = field;\n" +
+				"						String s2 = field2;\n" +
+				"						synchronized (s2) {\n" +
+				"							String s3 = s2;\n" +
+				"							try {\n" +
+				"								System.out.println(s);\n" +
+				"								System.out.println(s2);\n" +
+				"								System.out.println(s3);\n" +
+				"							} finally {\n" +
+				"								s2.toString();\n" +
+				"							}\n" +
+				"						}\n" +
+				"						}\n" +
+				"				}\n" +
+				"				break;\n" +
+				"				case 0 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 2 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 3 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 4 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 5 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 6 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 7 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 8 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 9 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 10 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 11 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 12 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 13 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 14 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 15 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 16 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 17 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 18 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 19 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 20 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 21 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 22 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 23 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 24 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 25 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 26 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 27 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 28 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 29 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 30 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 31 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 32 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 33 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 34 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 35 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 36 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 37 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 38 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 39 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 40 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 41 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 42 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 43 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 44 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 45 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 46 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 47 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 48 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 49 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 50 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 51 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 52 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 53 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 54 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 55 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 56 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 57 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 58 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 59 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 60 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 61 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 62 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 63 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 64 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 65 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 66 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 67 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 68 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 69 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 70 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 71 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 72 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 73 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 74 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 75 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 76 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 77 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 78 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 79 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 80 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 81 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 82 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 83 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 84 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 85 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 86 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 87 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 88 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 89 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 90 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 91 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 92 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 93 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 94 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 95 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 96 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 97 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 98 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 99 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 100 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 101 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 102 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 103 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 104 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 105 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 106 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 107 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 108 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 109 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 110 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 111 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 112 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 113 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 114 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 115 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 116 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 117 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 118 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 119 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 120 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 121 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 122 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 123 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 124 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 125 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 126 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 127 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 128 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 129 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 130 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 131 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 132 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 133 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 134 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 135 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 136 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 137 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 138 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 139 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 140 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 141 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 142 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 143 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 144 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 145 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 146 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 147 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 148 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 149 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 150 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 151 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 152 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 153 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 154 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 155 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 156 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 157 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 158 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 159 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 160 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 161 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 162 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 163 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 164 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 165 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 166 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 167 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 168 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 169 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 170 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 171 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 172 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 173 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 174 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 175 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 176 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 177 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 178 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 179 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 180 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 181 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 182 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 183 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 184 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 185 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 186 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 187 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 188 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 189 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 190 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 191 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 192 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 193 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 194 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 195 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 196 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 197 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 198 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 199 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 200 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 201 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 202 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 203 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 204 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 205 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 206 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 207 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 208 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 209 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 210 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 211 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 212 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 213 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 214 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 215 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 216 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 217 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 218 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 219 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 220 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 221 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 222 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 223 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 224 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 225 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 226 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 227 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 228 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 229 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 230 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 231 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 232 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 233 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 234 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 235 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 236 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 237 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 238 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 239 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 240 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 241 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 242 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 243 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 244 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 245 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 246 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 247 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 248 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 249 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 250 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 251 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 252 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 253 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 254 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 255 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 256 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 257 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 258 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 259 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 260 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 261 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 262 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 263 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 264 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 265 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 266 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 267 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 268 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 269 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 270 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 271 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 272 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 273 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 274 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 275 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 276 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 277 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 278 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 279 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 280 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 281 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 282 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 283 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 284 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 285 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 286 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 287 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 288 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 289 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 290 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 291 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 292 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 293 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 294 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 295 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 296 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 297 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 298 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 299 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 300 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 301 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 302 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 303 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 304 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 305 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 306 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 307 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 308 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 309 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 310 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 311 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 312 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 313 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 314 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 315 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 316 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 317 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 318 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 319 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 320 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 321 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 322 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 323 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 324 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 325 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 326 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 327 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 328 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 329 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 330 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 331 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 332 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 333 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 334 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 335 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 336 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 337 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 338 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 339 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 340 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 341 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 342 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 343 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 344 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 345 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 346 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 347 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 348 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 349 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 350 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 351 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 352 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 353 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 354 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 355 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 356 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 357 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 358 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 359 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 360 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 361 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 362 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 363 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 364 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 365 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 366 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 367 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 368 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 369 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 370 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 371 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 372 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 373 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 374 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 375 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 376 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 377 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 378 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 379 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 380 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 381 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 382 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 383 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 384 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 385 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 386 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 387 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 388 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 389 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 390 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 391 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 392 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 393 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 394 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 395 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 396 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 397 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 398 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 399 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 400 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 401 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 402 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 403 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 404 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 405 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 406 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 407 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 408 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 409 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 410 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 411 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 412 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 413 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 414 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 415 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 416 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 417 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 418 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 419 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 420 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 421 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 422 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 423 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 424 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 425 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 426 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 427 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 428 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 429 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 430 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 431 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 432 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 433 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 434 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 435 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 436 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 437 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 438 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 439 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 440 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 441 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 442 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 443 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 444 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 445 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 446 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 447 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 448 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 449 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 450 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 451 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 452 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 453 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 454 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 455 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 456 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 457 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 458 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 459 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 460 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 461 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 462 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 463 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 464 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 465 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 466 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 467 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 468 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 469 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 470 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 471 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 472 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 473 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 474 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 475 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 476 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 477 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 478 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 479 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 480 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 481 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 482 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 483 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 484 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 485 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 486 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 487 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 488 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 489 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 490 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 491 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 492 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 493 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 494 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 495 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 496 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 497 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 498 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 499 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 500 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 501 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 502 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 503 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 504 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 505 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 506 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 507 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 508 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 509 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 510 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 511 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 512 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 513 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 514 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 515 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 516 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 517 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 518 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 519 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 520 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 521 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 522 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 523 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 524 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 525 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 526 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 527 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 528 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 529 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 530 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 531 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 532 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 533 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 534 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 535 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 536 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 537 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 538 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 539 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 540 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 541 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 542 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 543 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 544 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 545 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 546 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 547 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 548 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 549 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 550 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 551 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 552 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 553 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 554 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 555 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 556 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 557 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 558 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 559 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 560 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 561 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 562 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 563 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 564 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 565 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 566 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 567 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 568 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 569 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 570 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 571 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 572 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 573 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 574 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 575 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 576 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 577 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 578 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 579 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 580 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 581 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 582 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 583 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 584 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 585 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 586 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 587 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 588 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 589 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 590 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 591 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 592 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 593 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 594 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 595 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 596 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 597 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 598 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 599 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 600 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 601 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 602 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 603 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 604 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 605 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 606 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 607 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 608 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 609 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 610 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 611 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 612 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 613 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 614 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 615 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 616 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 617 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 618 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 619 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 620 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 621 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 622 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 623 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 624 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 625 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 626 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 627 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 628 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 629 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 630 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 631 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 632 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 633 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 634 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 635 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 636 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 637 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 638 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 639 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 640 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 641 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 642 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 643 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 644 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 645 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 646 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 647 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 648 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 649 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 650 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 651 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 652 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 653 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 654 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 655 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 656 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 657 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 658 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 659 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 660 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 661 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 662 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 663 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 664 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 665 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 666 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 667 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 668 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 669 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 670 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 671 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 672 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 673 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 674 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 675 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 676 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 677 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 678 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 679 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 680 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 681 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 682 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 683 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 684 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 685 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 686 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 687 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 688 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 689 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 690 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 691 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 692 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 693 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 694 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 695 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 696 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 697 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 698 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 699 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 700 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 701 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 702 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 703 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 704 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 705 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 706 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 707 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 708 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 709 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 710 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 711 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 712 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 713 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 714 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 715 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 716 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 717 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 718 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 719 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 720 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 721 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 722 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 723 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 724 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 725 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 726 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 727 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 728 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 729 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 730 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 731 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 732 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 733 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 734 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 735 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 736 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 737 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 738 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 739 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 740 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 741 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 742 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 743 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 744 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 745 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 746 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 747 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 748 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 749 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 750 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 751 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 752 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 753 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 754 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 755 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 756 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 757 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 758 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 759 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 760 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 761 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 762 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 763 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 764 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 765 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 766 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 767 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 768 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 769 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 770 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 771 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 772 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 773 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 774 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 775 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 776 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 777 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 778 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 779 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 780 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 781 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 782 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 783 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 784 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 785 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 786 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 787 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 788 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 789 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 790 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 791 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 792 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 793 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 794 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 795 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 796 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 797 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 798 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 799 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 800 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 801 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 802 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 803 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 804 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 805 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 806 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 807 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 808 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 809 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 810 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 811 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 812 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 813 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 814 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 815 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 816 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 817 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 818 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 819 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 820 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 821 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 822 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 823 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 824 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 825 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 826 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 827 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 828 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 829 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 830 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 831 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 832 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 833 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 834 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 835 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 836 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 837 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 838 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 839 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 840 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 841 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 842 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 843 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 844 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 845 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 846 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 847 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 848 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 849 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 850 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 851 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 852 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 853 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 854 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 855 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 856 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 857 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 858 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 859 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 860 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 861 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 862 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 863 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 864 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 865 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 866 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 867 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 868 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 869 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 870 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 871 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 872 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 873 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 874 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 875 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 876 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 877 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 878 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 879 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 880 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 881 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 882 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 883 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 884 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 885 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 886 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 887 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 888 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 889 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 890 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 891 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 892 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 893 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 894 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 895 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 896 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 897 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 898 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 899 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 900 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 901 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 902 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 903 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 904 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 905 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 906 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 907 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 908 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 909 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 910 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 911 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 912 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 913 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 914 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 915 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 916 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 917 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 918 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 919 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 920 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 921 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 922 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 923 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 924 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 925 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 926 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 927 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 928 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 929 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 930 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 931 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 932 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 933 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 934 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 935 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 936 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 937 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 938 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 939 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 940 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 941 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 942 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 943 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 944 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 945 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 946 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 947 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 948 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 949 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 950 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 951 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 952 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 953 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 954 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 955 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 956 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 957 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 958 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 959 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 960 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 961 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 962 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 963 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 964 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 965 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 966 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 967 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 968 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 969 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 970 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 971 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 972 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 973 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 974 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 975 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 976 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 977 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 978 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 979 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 980 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 981 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 982 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 983 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 984 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 985 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 986 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 987 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 988 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 989 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 990 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 991 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 992 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 993 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 994 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 995 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 996 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 997 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 998 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 999 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1000 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1001 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1002 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1003 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1004 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1005 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1006 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1007 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1008 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1009 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1010 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1011 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1012 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1013 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1014 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1015 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1016 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1017 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1018 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1019 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1020 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1021 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1022 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1023 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1024 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1025 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1026 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1027 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1028 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1029 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1030 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1031 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1032 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1033 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1034 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1035 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1036 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1037 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1038 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1039 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1040 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1041 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1042 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1043 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1044 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1045 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1046 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1047 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1048 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1049 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1050 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1051 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1052 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1053 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1054 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1055 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1056 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1057 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1058 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1059 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1060 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1061 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1062 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1063 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1064 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1065 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1066 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1067 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1068 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1069 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1070 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1071 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1072 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1073 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1074 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1075 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1076 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1077 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1078 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1079 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1080 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1081 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1082 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1083 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1084 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1085 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1086 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1087 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1088 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1089 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1090 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1091 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1092 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1093 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1094 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1095 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1096 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1097 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1098 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1099 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1100 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1101 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1102 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1103 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1104 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1105 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1106 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1107 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1108 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1109 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1110 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1111 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1112 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1113 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1114 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1115 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1116 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1117 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1118 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1119 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1120 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1121 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1122 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1123 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1124 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1125 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1126 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1127 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1128 :\n" +
+				"					System.out.println(methodName + i);\n" +
+				"				break;\n" +
+				"				case 1129 :\n" +
+				"					System.out.println(methodName + i);\n" +
 				"				break;\n" +
 				"			}\n" +
 				"		} catch(Exception e) {\n" +
@@ -6096,15 +6096,15 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	{\n" + 
-				"		for (boolean b : new boolean[] {}) {}\n" + 
+				"public class X {\n" +
+				"	{\n" +
+				"		for (boolean b : new boolean[] {}) {}\n" +
 				"	}\n" +
 				"	public X() {}\n" +
 				"	public X(boolean b) {}\n" +
-				"	public static void main(String[] args) {\n" + 
+				"	public static void main(String[] args) {\n" +
 				"		System.out.print(\"SUCCESS\");\n" +
-				"	}\n" + 
+				"	}\n" +
 				"}",
 			},
 		"SUCCESS");
@@ -6115,17 +6115,17 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public String[][] foo(String s) {\n" + 
-				"		return\n" + 
-				"			new String[][] { {\" \", s != null ? s : \"\" },\n" + 
-				"				{\" \", s != null ? s : \"\" },\n" + 
-				"				{\" \", s != null ? s : \"\" },\n" + 
-				"				{\" \", s != null ? s : \"\" } };\n" + 
-				"	}\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		System.out.println(\"SUCCESS\");\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	public String[][] foo(String s) {\n" +
+				"		return\n" +
+				"			new String[][] { {\" \", s != null ? s : \"\" },\n" +
+				"				{\" \", s != null ? s : \"\" },\n" +
+				"				{\" \", s != null ? s : \"\" },\n" +
+				"				{\" \", s != null ? s : \"\" } };\n" +
+				"	}\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"	}\n" +
 				"}",
 			},
 		"SUCCESS");
@@ -6136,62 +6136,62 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"I.java",
-				"public interface I {\n" + 
-				"\n" + 
-				"	public Object foo();\n" + 
-				"\n" + 
-				"	public static class B implements I {\n" + 
-				"		public Object foo() {\n" + 
-				"			return X.myI.foo();\n" + 
-				"		}\n" + 
-				"	}\n" + 
+				"public interface I {\n" +
+				"\n" +
+				"	public Object foo();\n" +
+				"\n" +
+				"	public static class B implements I {\n" +
+				"		public Object foo() {\n" +
+				"			return X.myI.foo();\n" +
+				"		}\n" +
+				"	}\n" +
 				"}",
 				"X.java",
-				"public class X {\n" + 
-				"	public static final I myI = new I.B() {\n" + 
-				"		int a = 0;\n" + 
-				"		int b = 1;\n" + 
-				"	};\n" + 
-				"\n" + 
-				"	private Object bar2() {\n" + 
-				"		return null;\n" + 
-				"	}\n" + 
-				"	private Object bar() {\n" + 
-				"		Object o = bar2();\n" + 
-				"		if (o != null) {\n" + 
-				"			o.toString();\n" + 
-				"		}\n" + 
-				"		return null;\n" + 
-				"	}\n" + 
-				"\n" + 
+				"public class X {\n" +
+				"	public static final I myI = new I.B() {\n" +
+				"		int a = 0;\n" +
+				"		int b = 1;\n" +
+				"	};\n" +
+				"\n" +
+				"	private Object bar2() {\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"	private Object bar() {\n" +
+				"		Object o = bar2();\n" +
+				"		if (o != null) {\n" +
+				"			o.toString();\n" +
+				"		}\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"\n" +
 				"}",
 			},
 		"");
 		String expectedOutput =
-			"  // Method descriptor #23 ()Ljava/lang/Object;\n" + 
-			"  // Stack: 1, Locals: 2\n" + 
-			"  private java.lang.Object bar();\n" + 
-			"     0  aload_0 [this]\n" + 
-			"     1  " + 
+			"  // Method descriptor #23 ()Ljava/lang/Object;\n" +
+			"  // Stack: 1, Locals: 2\n" +
+			"  private java.lang.Object bar();\n" +
+			"     0  aload_0 [this]\n" +
+			"     1  " +
 			(isMinimumCompliant(ClassFileConstants.JDK11) ? "invokevirtual" : "invokespecial") +
-			" X.bar2() : java.lang.Object [25]\n" + 
-			"     4  astore_1 [o]\n" + 
-			"     5  aload_1 [o]\n" + 
-			"     6  ifnull 14\n" + 
-			"     9  aload_1 [o]\n" + 
-			"    10  invokevirtual java.lang.Object.toString() : java.lang.String [27]\n" + 
-			"    13  pop\n" + 
-			"    14  aconst_null\n" + 
-			"    15  areturn\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 11]\n" + 
-			"        [pc: 5, line: 12]\n" + 
-			"        [pc: 9, line: 13]\n" + 
-			"        [pc: 14, line: 15]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 0, pc: 16] local: this index: 0 type: X\n" + 
-			"        [pc: 5, pc: 16] local: o index: 1 type: java.lang.Object\n" + 
-			"      Stack map table: number of frames 1\n" + 
+			" X.bar2() : java.lang.Object [25]\n" +
+			"     4  astore_1 [o]\n" +
+			"     5  aload_1 [o]\n" +
+			"     6  ifnull 14\n" +
+			"     9  aload_1 [o]\n" +
+			"    10  invokevirtual java.lang.Object.toString() : java.lang.String [27]\n" +
+			"    13  pop\n" +
+			"    14  aconst_null\n" +
+			"    15  areturn\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 11]\n" +
+			"        [pc: 5, line: 12]\n" +
+			"        [pc: 9, line: 13]\n" +
+			"        [pc: 14, line: 15]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 0, pc: 16] local: this index: 0 type: X\n" +
+			"        [pc: 5, pc: 16] local: o index: 1 type: java.lang.Object\n" +
+			"      Stack map table: number of frames 1\n" +
 			"        [pc: 14, append: {java.lang.Object}]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
@@ -6200,66 +6200,66 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"I.java",
-				"public interface I {\n" + 
-				"\n" + 
-				"	public Object foo();\n" + 
-				"\n" + 
-				"	public static class B implements I {\n" + 
-				"		public Object foo() {\n" + 
-				"			return String.valueOf(X.myI.foo()) + String.valueOf(X.myU.foo());\n" + 
-				"		}\n" + 
-				"	}\n" + 
+				"public interface I {\n" +
+				"\n" +
+				"	public Object foo();\n" +
+				"\n" +
+				"	public static class B implements I {\n" +
+				"		public Object foo() {\n" +
+				"			return String.valueOf(X.myI.foo()) + String.valueOf(X.myU.foo());\n" +
+				"		}\n" +
+				"	}\n" +
 				"}",
 				"X.java",
-				"public class X {\n" + 
-				"	public static final I myI = new I.B() {\n" + 
-				"		int a = 0;\n" + 
-				"		int b = 1;\n" + 
-				"	};\n" + 
-				"	public static final I myU = new I.B() {\n" + 
-				"		int a = 0;\n" + 
-				"		int b = 1;\n" + 
-				"		int c = 2;\n" + 
+				"public class X {\n" +
+				"	public static final I myI = new I.B() {\n" +
+				"		int a = 0;\n" +
+				"		int b = 1;\n" +
 				"	};\n" +
-				"	private Object bar2() {\n" + 
-				"		return null;\n" + 
-				"	}\n" + 
-				"	private Object bar() {\n" + 
-				"		Object o = bar2();\n" + 
-				"		if (o != null) {\n" + 
-				"			o.toString();\n" + 
-				"		}\n" + 
-				"		return null;\n" + 
-				"	}\n" + 
+				"	public static final I myU = new I.B() {\n" +
+				"		int a = 0;\n" +
+				"		int b = 1;\n" +
+				"		int c = 2;\n" +
+				"	};\n" +
+				"	private Object bar2() {\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"	private Object bar() {\n" +
+				"		Object o = bar2();\n" +
+				"		if (o != null) {\n" +
+				"			o.toString();\n" +
+				"		}\n" +
+				"		return null;\n" +
+				"	}\n" +
 				"}",
 			},
 		"");
-	
+
 		String expectedOutput =
-			"  // Method descriptor #29 ()Ljava/lang/Object;\n" + 
-			"  // Stack: 1, Locals: 2\n" + 
-			"  private java.lang.Object bar();\n" + 
-			"     0  aload_0 [this]\n" + 
-			"     1  " + 
+			"  // Method descriptor #29 ()Ljava/lang/Object;\n" +
+			"  // Stack: 1, Locals: 2\n" +
+			"  private java.lang.Object bar();\n" +
+			"     0  aload_0 [this]\n" +
+			"     1  " +
 			(isMinimumCompliant(ClassFileConstants.JDK11) ? "invokevirtual" : "invokespecial") +
-			" X.bar2() : java.lang.Object [31]\n" + 
-			"     4  astore_1 [o]\n" + 
-			"     5  aload_1 [o]\n" + 
-			"     6  ifnull 14\n" + 
-			"     9  aload_1 [o]\n" + 
-			"    10  invokevirtual java.lang.Object.toString() : java.lang.String [33]\n" + 
-			"    13  pop\n" + 
-			"    14  aconst_null\n" + 
-			"    15  areturn\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 15]\n" + 
-			"        [pc: 5, line: 16]\n" + 
-			"        [pc: 9, line: 17]\n" + 
-			"        [pc: 14, line: 19]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 0, pc: 16] local: this index: 0 type: X\n" + 
-			"        [pc: 5, pc: 16] local: o index: 1 type: java.lang.Object\n" + 
-			"      Stack map table: number of frames 1\n" + 
+			" X.bar2() : java.lang.Object [31]\n" +
+			"     4  astore_1 [o]\n" +
+			"     5  aload_1 [o]\n" +
+			"     6  ifnull 14\n" +
+			"     9  aload_1 [o]\n" +
+			"    10  invokevirtual java.lang.Object.toString() : java.lang.String [33]\n" +
+			"    13  pop\n" +
+			"    14  aconst_null\n" +
+			"    15  areturn\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 15]\n" +
+			"        [pc: 5, line: 16]\n" +
+			"        [pc: 9, line: 17]\n" +
+			"        [pc: 14, line: 19]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 0, pc: 16] local: this index: 0 type: X\n" +
+			"        [pc: 5, pc: 16] local: o index: 1 type: java.lang.Object\n" +
+			"      Stack map table: number of frames 1\n" +
 			"        [pc: 14, append: {java.lang.Object}]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
@@ -6268,33 +6268,33 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	private static void foo(Class<?> c, int n) { }\n" + 
-				"	public static void main(String... args) {\n" + 
-				"		foo(Integer.class, (args == null ? -1 : 1));\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	private static void foo(Class<?> c, int n) { }\n" +
+				"	public static void main(String... args) {\n" +
+				"		foo(Integer.class, (args == null ? -1 : 1));\n" +
+				"	}\n" +
 				"}",
 			},
 		"");
-	
+
 		String expectedOutput =
-			"  // Stack: 2, Locals: 1\n" + 
-			"  public static void main(java.lang.String... args);\n" + 
-			"     0  ldc <Class java.lang.Integer> [26]\n" + 
-			"     2  aload_0 [args]\n" + 
-			"     3  ifnonnull 10\n" + 
-			"     6  iconst_m1\n" + 
-			"     7  goto 11\n" + 
-			"    10  iconst_1\n" + 
-			"    11  invokestatic X.foo(java.lang.Class, int) : void [28]\n" + 
-			"    14  return\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 4]\n" + 
-			"        [pc: 14, line: 5]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 0, pc: 15] local: args index: 0 type: java.lang.String[]\n" + 
-			"      Stack map table: number of frames 2\n" + 
-			"        [pc: 10, same_locals_1_stack_item, stack: {java.lang.Class}]\n" + 
+			"  // Stack: 2, Locals: 1\n" +
+			"  public static void main(java.lang.String... args);\n" +
+			"     0  ldc <Class java.lang.Integer> [26]\n" +
+			"     2  aload_0 [args]\n" +
+			"     3  ifnonnull 10\n" +
+			"     6  iconst_m1\n" +
+			"     7  goto 11\n" +
+			"    10  iconst_1\n" +
+			"    11  invokestatic X.foo(java.lang.Class, int) : void [28]\n" +
+			"    14  return\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 4]\n" +
+			"        [pc: 14, line: 5]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 0, pc: 15] local: args index: 0 type: java.lang.String[]\n" +
+			"      Stack map table: number of frames 2\n" +
+			"        [pc: 10, same_locals_1_stack_item, stack: {java.lang.Class}]\n" +
 			"        [pc: 11, full, stack: {java.lang.Class, int}, locals: {java.lang.String[]}]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
@@ -6304,145 +6304,145 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		System.out.println(\"ok\");\n" + 
-				"	}\n" + 
-				"	private static int willNotVerify() {\n" + 
-				"		int limit = 100;\n" + 
-				"		int match;\n" + 
-				"		int result = 200;\n" + 
-				"		do {\n" + 
-				"			if (limit > 0) {\n" + 
-				"				continue;\n" + 
-				"			}\n" + 
-				"			match = 0;\n" + 
-				"			while (++match < 100) {\n" + 
-				"				System.out.println();\n" + 
-				"			}\n" + 
-				"		} while (--limit != 0);\n" + 
-				"		return result;\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"ok\");\n" +
+				"	}\n" +
+				"	private static int willNotVerify() {\n" +
+				"		int limit = 100;\n" +
+				"		int match;\n" +
+				"		int result = 200;\n" +
+				"		do {\n" +
+				"			if (limit > 0) {\n" +
+				"				continue;\n" +
+				"			}\n" +
+				"			match = 0;\n" +
+				"			while (++match < 100) {\n" +
+				"				System.out.println();\n" +
+				"			}\n" +
+				"		} while (--limit != 0);\n" +
+				"		return result;\n" +
+				"	}\n" +
 				"}",
 			},
 		"ok");
-	
+
 		String expectedOutput =
-			"  // Method descriptor #33 ()I\n" + 
-			"  // Stack: 2, Locals: 3\n" + 
-			"  private static int willNotVerify();\n" + 
-			"     0  bipush 100\n" + 
-			"     2  istore_0 [limit]\n" + 
-			"     3  sipush 200\n" + 
-			"     6  istore_2 [result]\n" + 
-			"     7  iload_0 [limit]\n" + 
-			"     8  ifle 14\n" + 
-			"    11  goto 34\n" + 
-			"    14  iconst_0\n" + 
-			"    15  istore_1 [match]\n" + 
-			"    16  goto 25\n" + 
-			"    19  getstatic java.lang.System.out : java.io.PrintStream [16]\n" + 
-			"    22  invokevirtual java.io.PrintStream.println() : void [34]\n" + 
-			"    25  iinc 1 1 [match]\n" + 
-			"    28  iload_1 [match]\n" + 
-			"    29  bipush 100\n" + 
-			"    31  if_icmplt 19\n" + 
-			"    34  iinc 0 -1 [limit]\n" + 
-			"    37  iload_0 [limit]\n" + 
-			"    38  ifne 7\n" + 
-			"    41  iload_2 [result]\n" + 
-			"    42  ireturn\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 6]\n" + 
-			"        [pc: 3, line: 8]\n" + 
-			"        [pc: 7, line: 10]\n" + 
-			"        [pc: 11, line: 11]\n" + 
-			"        [pc: 14, line: 13]\n" + 
-			"        [pc: 16, line: 14]\n" + 
-			"        [pc: 19, line: 15]\n" + 
-			"        [pc: 25, line: 14]\n" + 
-			"        [pc: 34, line: 17]\n" + 
-			"        [pc: 41, line: 18]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 3, pc: 43] local: limit index: 0 type: int\n" + 
-			"        [pc: 16, pc: 34] local: match index: 1 type: int\n" + 
-			"        [pc: 7, pc: 43] local: result index: 2 type: int\n" + 
-			"      Stack map table: number of frames 5\n" + 
-			"        [pc: 7, full, stack: {}, locals: {int, _, int}]\n" + 
-			"        [pc: 14, same]\n" + 
-			"        [pc: 19, full, stack: {}, locals: {int, int, int}]\n" + 
-			"        [pc: 25, same]\n" + 
+			"  // Method descriptor #33 ()I\n" +
+			"  // Stack: 2, Locals: 3\n" +
+			"  private static int willNotVerify();\n" +
+			"     0  bipush 100\n" +
+			"     2  istore_0 [limit]\n" +
+			"     3  sipush 200\n" +
+			"     6  istore_2 [result]\n" +
+			"     7  iload_0 [limit]\n" +
+			"     8  ifle 14\n" +
+			"    11  goto 34\n" +
+			"    14  iconst_0\n" +
+			"    15  istore_1 [match]\n" +
+			"    16  goto 25\n" +
+			"    19  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
+			"    22  invokevirtual java.io.PrintStream.println() : void [34]\n" +
+			"    25  iinc 1 1 [match]\n" +
+			"    28  iload_1 [match]\n" +
+			"    29  bipush 100\n" +
+			"    31  if_icmplt 19\n" +
+			"    34  iinc 0 -1 [limit]\n" +
+			"    37  iload_0 [limit]\n" +
+			"    38  ifne 7\n" +
+			"    41  iload_2 [result]\n" +
+			"    42  ireturn\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 6]\n" +
+			"        [pc: 3, line: 8]\n" +
+			"        [pc: 7, line: 10]\n" +
+			"        [pc: 11, line: 11]\n" +
+			"        [pc: 14, line: 13]\n" +
+			"        [pc: 16, line: 14]\n" +
+			"        [pc: 19, line: 15]\n" +
+			"        [pc: 25, line: 14]\n" +
+			"        [pc: 34, line: 17]\n" +
+			"        [pc: 41, line: 18]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 3, pc: 43] local: limit index: 0 type: int\n" +
+			"        [pc: 16, pc: 34] local: match index: 1 type: int\n" +
+			"        [pc: 7, pc: 43] local: result index: 2 type: int\n" +
+			"      Stack map table: number of frames 5\n" +
+			"        [pc: 7, full, stack: {}, locals: {int, _, int}]\n" +
+			"        [pc: 14, same]\n" +
+			"        [pc: 19, full, stack: {}, locals: {int, int, int}]\n" +
+			"        [pc: 25, same]\n" +
 			"        [pc: 34, full, stack: {}, locals: {int, _, int}]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=279183
 	public void test044() throws Exception {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		System.out.println(\"ok\");\n" + 
-				"	}\n" + 
-				"	private static int willNotVerify() {\n" + 
-				"		int limit = 100;\n" + 
-				"		int match;\n" + 
-				"		int result = 200;\n" + 
-				"		do {\n" + 
-				"			if (limit > 0) {\n" + 
-				"				continue;\n" + 
-				"			}\n" + 
-				"			match = 0;\n" + 
-				"			while (++match < 100) {\n" + 
-				"				// empty\n" + 
-				"			}\n" + 
-				"		} while (--limit != 0);\n" + 
-				"		return result;\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"ok\");\n" +
+				"	}\n" +
+				"	private static int willNotVerify() {\n" +
+				"		int limit = 100;\n" +
+				"		int match;\n" +
+				"		int result = 200;\n" +
+				"		do {\n" +
+				"			if (limit > 0) {\n" +
+				"				continue;\n" +
+				"			}\n" +
+				"			match = 0;\n" +
+				"			while (++match < 100) {\n" +
+				"				// empty\n" +
+				"			}\n" +
+				"		} while (--limit != 0);\n" +
+				"		return result;\n" +
+				"	}\n" +
 				"}",
 			},
 		"ok");
-	
+
 		String expectedOutput =
-			"  // Method descriptor #33 ()I\n" + 
-			"  // Stack: 2, Locals: 3\n" + 
-			"  private static int willNotVerify();\n" + 
-			"     0  bipush 100\n" + 
-			"     2  istore_0 [limit]\n" + 
-			"     3  sipush 200\n" + 
-			"     6  istore_2 [result]\n" + 
-			"     7  iload_0 [limit]\n" + 
-			"     8  ifle 14\n" + 
-			"    11  goto 25\n" + 
-			"    14  iconst_0\n" + 
-			"    15  istore_1 [match]\n" + 
-			"    16  iinc 1 1 [match]\n" + 
-			"    19  iload_1 [match]\n" + 
-			"    20  bipush 100\n" + 
-			"    22  if_icmplt 16\n" + 
-			"    25  iinc 0 -1 [limit]\n" + 
-			"    28  iload_0 [limit]\n" + 
-			"    29  ifne 7\n" + 
-			"    32  iload_2 [result]\n" + 
-			"    33  ireturn\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 6]\n" + 
-			"        [pc: 3, line: 8]\n" + 
-			"        [pc: 7, line: 10]\n" + 
-			"        [pc: 11, line: 11]\n" + 
-			"        [pc: 14, line: 13]\n" + 
-			"        [pc: 16, line: 14]\n" + 
-			"        [pc: 25, line: 17]\n" + 
-			"        [pc: 32, line: 18]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 3, pc: 34] local: limit index: 0 type: int\n" + 
-			"        [pc: 16, pc: 25] local: match index: 1 type: int\n" + 
-			"        [pc: 7, pc: 34] local: result index: 2 type: int\n" + 
-			"      Stack map table: number of frames 4\n" + 
-			"        [pc: 7, full, stack: {}, locals: {int, _, int}]\n" + 
-			"        [pc: 14, same]\n" + 
-			"        [pc: 16, full, stack: {}, locals: {int, int, int}]\n" + 
+			"  // Method descriptor #33 ()I\n" +
+			"  // Stack: 2, Locals: 3\n" +
+			"  private static int willNotVerify();\n" +
+			"     0  bipush 100\n" +
+			"     2  istore_0 [limit]\n" +
+			"     3  sipush 200\n" +
+			"     6  istore_2 [result]\n" +
+			"     7  iload_0 [limit]\n" +
+			"     8  ifle 14\n" +
+			"    11  goto 25\n" +
+			"    14  iconst_0\n" +
+			"    15  istore_1 [match]\n" +
+			"    16  iinc 1 1 [match]\n" +
+			"    19  iload_1 [match]\n" +
+			"    20  bipush 100\n" +
+			"    22  if_icmplt 16\n" +
+			"    25  iinc 0 -1 [limit]\n" +
+			"    28  iload_0 [limit]\n" +
+			"    29  ifne 7\n" +
+			"    32  iload_2 [result]\n" +
+			"    33  ireturn\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 6]\n" +
+			"        [pc: 3, line: 8]\n" +
+			"        [pc: 7, line: 10]\n" +
+			"        [pc: 11, line: 11]\n" +
+			"        [pc: 14, line: 13]\n" +
+			"        [pc: 16, line: 14]\n" +
+			"        [pc: 25, line: 17]\n" +
+			"        [pc: 32, line: 18]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 3, pc: 34] local: limit index: 0 type: int\n" +
+			"        [pc: 16, pc: 25] local: match index: 1 type: int\n" +
+			"        [pc: 7, pc: 34] local: result index: 2 type: int\n" +
+			"      Stack map table: number of frames 4\n" +
+			"        [pc: 7, full, stack: {}, locals: {int, _, int}]\n" +
+			"        [pc: 14, same]\n" +
+			"        [pc: 16, full, stack: {}, locals: {int, int, int}]\n" +
 			"        [pc: 25, full, stack: {}, locals: {int, _, int}]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
@@ -6451,54 +6451,54 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void main(String args[]) {\n" + 
-				"		int i;\n" + 
-				"		do {\n" + 
-				"		} while ((i = 2) < 0);\n" + 
-				"		if (i != 2) {\n" + 
-				"			System.out.println(\"FAILED\");\n" + 
-				"		} else {\n" + 
-				"			System.out.println(\"SUCCESS\");\n" + 
-				"		}\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	public static void main(String args[]) {\n" +
+				"		int i;\n" +
+				"		do {\n" +
+				"		} while ((i = 2) < 0);\n" +
+				"		if (i != 2) {\n" +
+				"			System.out.println(\"FAILED\");\n" +
+				"		} else {\n" +
+				"			System.out.println(\"SUCCESS\");\n" +
+				"		}\n" +
+				"	}\n" +
 				"}",
 			},
 		"SUCCESS");
-	
+
 		String expectedOutput =
-			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
-			"  // Stack: 2, Locals: 2\n" + 
-			"  public static void main(java.lang.String[] args);\n" + 
-			"     0  iconst_2\n" + 
-			"     1  dup\n" + 
-			"     2  istore_1 [i]\n" + 
-			"     3  iflt 0\n" + 
-			"     6  iload_1 [i]\n" + 
-			"     7  iconst_2\n" + 
-			"     8  if_icmpeq 22\n" + 
-			"    11  getstatic java.lang.System.out : java.io.PrintStream [16]\n" + 
-			"    14  ldc <String \"FAILED\"> [22]\n" + 
-			"    16  invokevirtual java.io.PrintStream.println(java.lang.String) : void [24]\n" + 
-			"    19  goto 30\n" + 
-			"    22  getstatic java.lang.System.out : java.io.PrintStream [16]\n" + 
-			"    25  ldc <String \"SUCCESS\"> [30]\n" + 
-			"    27  invokevirtual java.io.PrintStream.println(java.lang.String) : void [24]\n" + 
-			"    30  return\n" + 
-			"      Line numbers:\n" + 
-			"        [pc: 0, line: 5]\n" + 
-			"        [pc: 3, line: 4]\n" + 
-			"        [pc: 6, line: 6]\n" + 
-			"        [pc: 11, line: 7]\n" + 
-			"        [pc: 19, line: 8]\n" + 
-			"        [pc: 22, line: 9]\n" + 
-			"        [pc: 30, line: 11]\n" + 
-			"      Local variable table:\n" + 
-			"        [pc: 0, pc: 31] local: args index: 0 type: java.lang.String[]\n" + 
-			"        [pc: 3, pc: 31] local: i index: 1 type: int\n" + 
-			"      Stack map table: number of frames 3\n" + 
-			"        [pc: 0, same]\n" + 
-			"        [pc: 22, append: {int}]\n" + 
+			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
+			"  // Stack: 2, Locals: 2\n" +
+			"  public static void main(java.lang.String[] args);\n" +
+			"     0  iconst_2\n" +
+			"     1  dup\n" +
+			"     2  istore_1 [i]\n" +
+			"     3  iflt 0\n" +
+			"     6  iload_1 [i]\n" +
+			"     7  iconst_2\n" +
+			"     8  if_icmpeq 22\n" +
+			"    11  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
+			"    14  ldc <String \"FAILED\"> [22]\n" +
+			"    16  invokevirtual java.io.PrintStream.println(java.lang.String) : void [24]\n" +
+			"    19  goto 30\n" +
+			"    22  getstatic java.lang.System.out : java.io.PrintStream [16]\n" +
+			"    25  ldc <String \"SUCCESS\"> [30]\n" +
+			"    27  invokevirtual java.io.PrintStream.println(java.lang.String) : void [24]\n" +
+			"    30  return\n" +
+			"      Line numbers:\n" +
+			"        [pc: 0, line: 5]\n" +
+			"        [pc: 3, line: 4]\n" +
+			"        [pc: 6, line: 6]\n" +
+			"        [pc: 11, line: 7]\n" +
+			"        [pc: 19, line: 8]\n" +
+			"        [pc: 22, line: 9]\n" +
+			"        [pc: 30, line: 11]\n" +
+			"      Local variable table:\n" +
+			"        [pc: 0, pc: 31] local: args index: 0 type: java.lang.String[]\n" +
+			"        [pc: 3, pc: 31] local: i index: 1 type: int\n" +
+			"      Stack map table: number of frames 3\n" +
+			"        [pc: 0, same]\n" +
+			"        [pc: 22, append: {int}]\n" +
 			"        [pc: 30, same]\n";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + "X.class", "X", expectedOutput);
 	}
@@ -6509,31 +6509,31 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	class E1 extends RuntimeException {\n" + 
-				"		private static final long serialVersionUID = 1L;\n" + 
-				"	}\n" + 
-				"	static Object bar() {\n" + 
-				"		return new Object() {\n" + 
-				"			public void foo() {\n" + 
-				"				if (condition())\n" + 
-				"					throw new E1();\n" + 
-				"			}\n" + 
-				"		};\n" + 
-				"	}\n" + 
-				"	static boolean condition() {\n" + 
-				"		return false;\n" + 
-				"	}\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"	}\n" + 
-				"}\n" + 
+				"public class X {\n" +
+				"	class E1 extends RuntimeException {\n" +
+				"		private static final long serialVersionUID = 1L;\n" +
+				"	}\n" +
+				"	static Object bar() {\n" +
+				"		return new Object() {\n" +
+				"			public void foo() {\n" +
+				"				if (condition())\n" +
+				"					throw new E1();\n" +
+				"			}\n" +
+				"		};\n" +
+				"	}\n" +
+				"	static boolean condition() {\n" +
+				"		return false;\n" +
+				"	}\n" +
+				"	public static void main(String[] args) {\n" +
+				"	}\n" +
+				"}\n" +
 				"",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 9)\n" + 
-			"	throw new E1();\n" + 
-			"	      ^^^^^^^^\n" + 
-			"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 9)\n" +
+			"	throw new E1();\n" +
+			"	      ^^^^^^^^\n" +
+			"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
 			"----------\n",
 			null,
 			true,
@@ -6544,25 +6544,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void test() {\n" + 
-				"		final boolean x = true;\n" + 
-				"		new Runnable() {\n" + 
-				"			@Override\n" + 
-				"			public void run() {\n" + 
-				"				synchronized (X.this) {\n" + 
-				"					System.out.println(x);\n" + 
-				"				}\n" + 
-				"			}\n" + 
-				"		};\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	public static void test() {\n" +
+				"		final boolean x = true;\n" +
+				"		new Runnable() {\n" +
+				"			@Override\n" +
+				"			public void run() {\n" +
+				"				synchronized (X.this) {\n" +
+				"					System.out.println(x);\n" +
+				"				}\n" +
+				"			}\n" +
+				"		};\n" +
+				"	}\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 7)\n" + 
-			"	synchronized (X.this) {\n" + 
-			"	              ^^^^^^\n" + 
-			"No enclosing instance of the type X is accessible in scope\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 7)\n" +
+			"	synchronized (X.this) {\n" +
+			"	              ^^^^^^\n" +
+			"No enclosing instance of the type X is accessible in scope\n" +
 			"----------\n");
 	}
 
@@ -6591,72 +6591,72 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"import java.io.IOException;\n" + 
-				"import java.io.InputStream;\n" + 
-				"\n" + 
-				"public class X implements Runnable {\n" + 
-				"\n" + 
-				"	private boolean contentEquals(final String src, final String tar)\n" + 
-				"			throws IOException {\n" + 
-				"		if (src == null && tar == null) {\n" + 
-				"			return true;\n" + 
-				"		}\n" + 
-				"		if (!isFile(src) || !isFile(tar))\n" + 
-				"			throw new IOException(\"cannot compare non-files\");\n" + 
-				"		if (size(src) != size(tar))\n" + 
-				"			return false;\n" + 
-				"		final byte[] baSrc = new byte[8192];\n" + 
-				"		final byte[] baTar = new byte[baSrc.length];\n" + 
-				"		int lrSrc;\n" + 
-				"		int lrTar;\n" + 
-				"		InputStream isSrc = null;\n" + 
-				"		InputStream isTar = null;\n" + 
-				"		try {\n" + 
-				"			isSrc = newInputStream(src);\n" + 
-				"			if (isSrc == null)\n" + 
-				"				return false;\n" + 
-				"			isTar = newInputStream(tar);\n" + 
-				"			if (isTar == null)\n" + 
-				"				return false;\n" + 
-				"			do {\n" + 
-				"				lrSrc = isSrc.read(baSrc);\n" + 
-				"				lrTar = isTar.read(baTar);\n" + 
-				"				if (lrSrc != lrTar)\n" + 
-				"					return false;\n" + 
-				"				for (int i = 0; i < lrSrc; i++)\n" + 
-				"					if (baSrc[i] != baTar[i])\n" + 
-				"						return false;\n" + 
-				"			} while ((lrSrc >= 0) && (lrSrc == lrTar));\n" + 
-				"		} finally {\n" + 
-				"			try {\n" + 
-				"				close(isSrc);\n" + 
-				"			} finally {\n" + 
-				"				close(isTar);\n" + 
-				"			}\n" + 
-				"		}\n" + 
-				"		return true;\n" + 
-				"	}\n" + 
-				"	private void close(final InputStream isSrc) {\n" + 
-				"	}\n" + 
-				"	private boolean isFile(final String src) {\n" + 
-				"		return false;\n" + 
-				"	}\n" + 
-				"	public void run() {\n" + 
-				"		try {\n" + 
-				"			System.out.println(contentEquals(null, null));\n" + 
-				"		} catch (final IOException e) {\n" + 
-				"			e.printStackTrace();\n" + 
-				"		}\n" + 
+				"import java.io.IOException;\n" +
+				"import java.io.InputStream;\n" +
+				"\n" +
+				"public class X implements Runnable {\n" +
+				"\n" +
+				"	private boolean contentEquals(final String src, final String tar)\n" +
+				"			throws IOException {\n" +
+				"		if (src == null && tar == null) {\n" +
+				"			return true;\n" +
+				"		}\n" +
+				"		if (!isFile(src) || !isFile(tar))\n" +
+				"			throw new IOException(\"cannot compare non-files\");\n" +
+				"		if (size(src) != size(tar))\n" +
+				"			return false;\n" +
+				"		final byte[] baSrc = new byte[8192];\n" +
+				"		final byte[] baTar = new byte[baSrc.length];\n" +
+				"		int lrSrc;\n" +
+				"		int lrTar;\n" +
+				"		InputStream isSrc = null;\n" +
+				"		InputStream isTar = null;\n" +
+				"		try {\n" +
+				"			isSrc = newInputStream(src);\n" +
+				"			if (isSrc == null)\n" +
+				"				return false;\n" +
+				"			isTar = newInputStream(tar);\n" +
+				"			if (isTar == null)\n" +
+				"				return false;\n" +
+				"			do {\n" +
+				"				lrSrc = isSrc.read(baSrc);\n" +
+				"				lrTar = isTar.read(baTar);\n" +
+				"				if (lrSrc != lrTar)\n" +
+				"					return false;\n" +
+				"				for (int i = 0; i < lrSrc; i++)\n" +
+				"					if (baSrc[i] != baTar[i])\n" +
+				"						return false;\n" +
+				"			} while ((lrSrc >= 0) && (lrSrc == lrTar));\n" +
+				"		} finally {\n" +
+				"			try {\n" +
+				"				close(isSrc);\n" +
+				"			} finally {\n" +
+				"				close(isTar);\n" +
+				"			}\n" +
+				"		}\n" +
+				"		return true;\n" +
+				"	}\n" +
+				"	private void close(final InputStream isSrc) {\n" +
+				"	}\n" +
+				"	private boolean isFile(final String src) {\n" +
+				"		return false;\n" +
+				"	}\n" +
+				"	public void run() {\n" +
+				"		try {\n" +
+				"			System.out.println(contentEquals(null, null));\n" +
+				"		} catch (final IOException e) {\n" +
+				"			e.printStackTrace();\n" +
+				"		}\n" +
 				"	}\n" +
 				"	static InputStream newInputStream(String path) {\n" +
 				"		return null;\n" +
-				"	}\n" + 
+				"	}\n" +
 				"	static int size(String path) {\n" +
 				"		return 0;\n" +
-				"	}\n" + 
-				"	public static void main(final String[] args) {\n" + 
-				"		new X().run();\n" + 
-				"	}\n" + 
+				"	}\n" +
+				"	public static void main(final String[] args) {\n" +
+				"		new X().run();\n" +
+				"	}\n" +
 				"}"
 			},
 			"true");
@@ -6666,50 +6666,50 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"import java.io.File;\n" + 
-				"import java.io.FileFilter;\n" + 
-				"import java.io.FileNotFoundException;\n" + 
-				"import java.io.IOException;\n" + 
-				"import java.util.ArrayList;\n" + 
-				"import java.util.List;\n" + 
-				"\n" + 
-				"public class X {\n" + 
-				"\n" + 
-				"	public static final List<File> copyDir(List<File> lf,\n" + 
-				"			final boolean overwrite, final boolean recursive,\n" + 
-				"			final boolean returnSrc, final File src, final File tar,\n" + 
-				"			final FileFilter filter) throws IOException {\n" + 
-				"		if (!src.isDirectory())\n" + 
-				"			throw new FileNotFoundException(\"not a directory: \" + src);\n" + 
-				"		if (!tar.isDirectory())\n" + 
-				"			throw new FileNotFoundException(\"not a directory: \" + tar);\n" + 
-				"		final File[] fa = src.listFiles();\n" + 
-				"		if (fa == null)\n" + 
-				"			throw new FileNotFoundException(\"directory not accessible: \" + src);\n" + 
-				"		if (lf == null)\n" + 
-				"			lf = new ArrayList<File>(fa.length);\n" + 
-				"		for (final File f : fa) {\n" + 
-				"			final File right = new File(tar, f.getName());\n" + 
-				"			if (f.isDirectory()) {\n" + 
-				"				if (recursive && filter.accept(f)) {\n" + 
-				"					if (!right.exists())\n" + 
-				"						right.mkdir();\n" + 
-				"					copyDir(lf, overwrite, recursive, returnSrc, f, right,\n" + 
-				"							filter);\n" + 
-				"				}\n" + 
-				"			} else {\n" + 
-				"				if (overwrite || (!right.exists() && filter.accept(f))) {\n" + 
-				"					lf.add(returnSrc ? f : right);\n" + 
-				"				}\n" + 
-				"			}\n" + 
-				"		}\n" + 
-				"		return lf;\n" + 
-				"	}\n" + 
-				"\n" + 
-				"	public static void main(final String[] args) {\n" + 
-				"		System.out.println(\"SUCCESS\");\n" + 
-				"	}\n" + 
-				"\n" + 
+				"import java.io.File;\n" +
+				"import java.io.FileFilter;\n" +
+				"import java.io.FileNotFoundException;\n" +
+				"import java.io.IOException;\n" +
+				"import java.util.ArrayList;\n" +
+				"import java.util.List;\n" +
+				"\n" +
+				"public class X {\n" +
+				"\n" +
+				"	public static final List<File> copyDir(List<File> lf,\n" +
+				"			final boolean overwrite, final boolean recursive,\n" +
+				"			final boolean returnSrc, final File src, final File tar,\n" +
+				"			final FileFilter filter) throws IOException {\n" +
+				"		if (!src.isDirectory())\n" +
+				"			throw new FileNotFoundException(\"not a directory: \" + src);\n" +
+				"		if (!tar.isDirectory())\n" +
+				"			throw new FileNotFoundException(\"not a directory: \" + tar);\n" +
+				"		final File[] fa = src.listFiles();\n" +
+				"		if (fa == null)\n" +
+				"			throw new FileNotFoundException(\"directory not accessible: \" + src);\n" +
+				"		if (lf == null)\n" +
+				"			lf = new ArrayList<File>(fa.length);\n" +
+				"		for (final File f : fa) {\n" +
+				"			final File right = new File(tar, f.getName());\n" +
+				"			if (f.isDirectory()) {\n" +
+				"				if (recursive && filter.accept(f)) {\n" +
+				"					if (!right.exists())\n" +
+				"						right.mkdir();\n" +
+				"					copyDir(lf, overwrite, recursive, returnSrc, f, right,\n" +
+				"							filter);\n" +
+				"				}\n" +
+				"			} else {\n" +
+				"				if (overwrite || (!right.exists() && filter.accept(f))) {\n" +
+				"					lf.add(returnSrc ? f : right);\n" +
+				"				}\n" +
+				"			}\n" +
+				"		}\n" +
+				"		return lf;\n" +
+				"	}\n" +
+				"\n" +
+				"	public static void main(final String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"	}\n" +
+				"\n" +
 				"}"
 			},
 			"SUCCESS");
@@ -6719,31 +6719,31 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
-				"import java.io.File;\n" + 
-				"import java.io.IOException;\n" + 
-				"import java.util.List;\n" + 
-				"\n" + 
-				"public class X {\n" + 
-				"\n" + 
-				"	public static final List<File> copyDir(int j, List<File> lf,\n" + 
-				"			final boolean returnSrc, final File[] fa) throws IOException {\n" + 
-				"		if (lf == null)\n" + 
-				"			lf = null;\n" + 
-				"		for (int i = 0, max = fa.length; i < max; i++) {\n" + 
-				"			final File f = fa[i];\n" + 
-				"			final File right = new File(f.getName());\n" + 
-				"			if (f.isDirectory()) {\n" + 
-				"			} else {\n" + 
-				"				lf.add(returnSrc ? f : right);\n" + 
-				"			}\n" + 
-				"		}\n" + 
-				"		return lf;\n" + 
-				"	}\n" + 
-				"\n" + 
-				"	public static void main(final String[] args) {\n" + 
-				"		System.out.println(\"SUCCESS\");\n" + 
-				"	}\n" + 
-				"\n" + 
+				"import java.io.File;\n" +
+				"import java.io.IOException;\n" +
+				"import java.util.List;\n" +
+				"\n" +
+				"public class X {\n" +
+				"\n" +
+				"	public static final List<File> copyDir(int j, List<File> lf,\n" +
+				"			final boolean returnSrc, final File[] fa) throws IOException {\n" +
+				"		if (lf == null)\n" +
+				"			lf = null;\n" +
+				"		for (int i = 0, max = fa.length; i < max; i++) {\n" +
+				"			final File f = fa[i];\n" +
+				"			final File right = new File(f.getName());\n" +
+				"			if (f.isDirectory()) {\n" +
+				"			} else {\n" +
+				"				lf.add(returnSrc ? f : right);\n" +
+				"			}\n" +
+				"		}\n" +
+				"		return lf;\n" +
+				"	}\n" +
+				"\n" +
+				"	public static void main(final String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"	}\n" +
+				"\n" +
 				"}"
 			},
 			"SUCCESS");
@@ -6771,25 +6771,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	static {\n" + 
-				"		for(int i = 0; i < 10; i++){\n" + 
-				"			A a = new A();\n" + 
-				"			a.foo();\n" + 
-				"		}\n" + 
-				"	}\n" + 
-				"	private class A {\n" + 
-				"		private A() {\n" + 
-				"		}\n" + 
-				"		void foo() {}\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	static {\n" +
+				"		for(int i = 0; i < 10; i++){\n" +
+				"			A a = new A();\n" +
+				"			a.foo();\n" +
+				"		}\n" +
+				"	}\n" +
+				"	private class A {\n" +
+				"		private A() {\n" +
+				"		}\n" +
+				"		void foo() {}\n" +
+				"	}\n" +
 				"}",
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 4)\n" + 
-			"	A a = new A();\n" + 
-			"	      ^^^^^^^\n" + 
-			"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	A a = new A();\n" +
+			"	      ^^^^^^^\n" +
+			"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
 			"----------\n",
 			null,
 			true,
@@ -6819,7 +6819,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			},
 			"SUCCESS");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=359495
 	public void testBug359495a() throws Exception {
 		this.runConformTest(
@@ -6856,62 +6856,62 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
-					"  // Stack: 2, Locals: 6\n" + 
-					"  public static void main(java.lang.String[] args);\n" + 
-					"     0  new java.util.concurrent.locks.ReentrantLock [16]\n" + 
-					"     3  dup\n" + 
-					"     4  invokespecial java.util.concurrent.locks.ReentrantLock() [18]\n" + 
-					"     7  astore_1 [lock]\n" + 
-					"     8  aload_0 [args]\n" + 
-					"     9  invokestatic java.util.Arrays.asList(java.lang.Object[]) : java.util.List [19]\n" + 
-					"    12  astore_2 [strings]\n" + 
-					"    13  aload_1 [lock]\n" + 
-					"    14  invokeinterface java.util.concurrent.locks.Lock.lock() : void [25] [nargs: 1]\n" + 
-					"    19  aload_2 [strings]\n" + 
-					"    20  invokeinterface java.util.List.iterator() : java.util.Iterator [30] [nargs: 1]\n" + 
-					"    25  astore 4\n" + 
-					"    27  aload 4\n" + 
-					"    29  invokeinterface java.util.Iterator.hasNext() : boolean [36] [nargs: 1]\n" + 
-					"    34  ifeq 55\n" + 
-					"    37  aload 4\n" + 
-					"    39  invokeinterface java.util.Iterator.next() : java.lang.Object [42] [nargs: 1]\n" + 
-					"    44  checkcast java.lang.String [46]\n" + 
-					"    47  astore_3 [string]\n" + 
-					"    48  aload_1 [lock]\n" + 
-					"    49  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" + 
-					"    54  return\n" + 
-					"    55  aload_1 [lock]\n" + 
-					"    56  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" + 
-					"    61  return\n" + 
-					"    62  astore 5\n" + 
-					"    64  aload_1 [lock]\n" + 
-					"    65  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" + 
-					"    70  aload 5\n" + 
-					"    72  athrow\n" + 
-					"      Exception Table:\n" + 
-					"        [pc: 19, pc: 48] -> 62 when : any\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 7]\n" + 
-					"        [pc: 8, line: 8]\n" + 
-					"        [pc: 13, line: 9]\n" + 
-					"        [pc: 19, line: 11]\n" + 
-					"        [pc: 48, line: 16]\n" + 
-					"        [pc: 54, line: 12]\n" + 
-					"        [pc: 55, line: 16]\n" + 
-					"        [pc: 61, line: 14]\n" + 
-					"        [pc: 62, line: 15]\n" + 
-					"        [pc: 64, line: 16]\n" + 
-					"        [pc: 70, line: 17]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 73] local: args index: 0 type: java.lang.String[]\n" + 
-					"        [pc: 8, pc: 73] local: lock index: 1 type: java.util.concurrent.locks.Lock\n" + 
-					"        [pc: 13, pc: 73] local: strings index: 2 type: java.util.List\n" + 
-					"        [pc: 48, pc: 55] local: string index: 3 type: java.lang.String\n" + 
-					"      Local variable type table:\n" + 
-					"        [pc: 13, pc: 73] local: strings index: 2 type: java.util.List<java.lang.String>\n" + 
-					"      Stack map table: number of frames 2\n" + 
-					"        [pc: 55, append: {java.util.concurrent.locks.Lock, java.util.List}]\n" + 
+					"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
+					"  // Stack: 2, Locals: 6\n" +
+					"  public static void main(java.lang.String[] args);\n" +
+					"     0  new java.util.concurrent.locks.ReentrantLock [16]\n" +
+					"     3  dup\n" +
+					"     4  invokespecial java.util.concurrent.locks.ReentrantLock() [18]\n" +
+					"     7  astore_1 [lock]\n" +
+					"     8  aload_0 [args]\n" +
+					"     9  invokestatic java.util.Arrays.asList(java.lang.Object[]) : java.util.List [19]\n" +
+					"    12  astore_2 [strings]\n" +
+					"    13  aload_1 [lock]\n" +
+					"    14  invokeinterface java.util.concurrent.locks.Lock.lock() : void [25] [nargs: 1]\n" +
+					"    19  aload_2 [strings]\n" +
+					"    20  invokeinterface java.util.List.iterator() : java.util.Iterator [30] [nargs: 1]\n" +
+					"    25  astore 4\n" +
+					"    27  aload 4\n" +
+					"    29  invokeinterface java.util.Iterator.hasNext() : boolean [36] [nargs: 1]\n" +
+					"    34  ifeq 55\n" +
+					"    37  aload 4\n" +
+					"    39  invokeinterface java.util.Iterator.next() : java.lang.Object [42] [nargs: 1]\n" +
+					"    44  checkcast java.lang.String [46]\n" +
+					"    47  astore_3 [string]\n" +
+					"    48  aload_1 [lock]\n" +
+					"    49  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" +
+					"    54  return\n" +
+					"    55  aload_1 [lock]\n" +
+					"    56  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" +
+					"    61  return\n" +
+					"    62  astore 5\n" +
+					"    64  aload_1 [lock]\n" +
+					"    65  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [48] [nargs: 1]\n" +
+					"    70  aload 5\n" +
+					"    72  athrow\n" +
+					"      Exception Table:\n" +
+					"        [pc: 19, pc: 48] -> 62 when : any\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 7]\n" +
+					"        [pc: 8, line: 8]\n" +
+					"        [pc: 13, line: 9]\n" +
+					"        [pc: 19, line: 11]\n" +
+					"        [pc: 48, line: 16]\n" +
+					"        [pc: 54, line: 12]\n" +
+					"        [pc: 55, line: 16]\n" +
+					"        [pc: 61, line: 14]\n" +
+					"        [pc: 62, line: 15]\n" +
+					"        [pc: 64, line: 16]\n" +
+					"        [pc: 70, line: 17]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 73] local: args index: 0 type: java.lang.String[]\n" +
+					"        [pc: 8, pc: 73] local: lock index: 1 type: java.util.concurrent.locks.Lock\n" +
+					"        [pc: 13, pc: 73] local: strings index: 2 type: java.util.List\n" +
+					"        [pc: 48, pc: 55] local: string index: 3 type: java.lang.String\n" +
+					"      Local variable type table:\n" +
+					"        [pc: 13, pc: 73] local: strings index: 2 type: java.util.List<java.lang.String>\n" +
+					"      Stack map table: number of frames 2\n" +
+					"        [pc: 55, append: {java.util.concurrent.locks.Lock, java.util.List}]\n" +
 					"        [pc: 62, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" ;
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -6922,7 +6922,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				assertEquals("Wrong contents", expectedOutput, actualOutput);
 			}
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=359495
 	public void testBug359495b() throws Exception {
 		this.runConformTest(
@@ -6960,58 +6960,58 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
-					"  // Stack: 2, Locals: 5\n" + 
-					"  public static void main(java.lang.String[] args);\n" + 
-					"     0  new java.util.concurrent.locks.ReentrantLock [16]\n" + 
-					"     3  dup\n" + 
-					"     4  invokespecial java.util.concurrent.locks.ReentrantLock() [18]\n" + 
-					"     7  astore_1 [lock]\n" + 
-					"     8  aload_0 [args]\n" + 
-					"     9  invokestatic java.util.Arrays.asList(java.lang.Object[]) : java.util.List [19]\n" + 
-					"    12  astore_2 [strings]\n" + 
-					"    13  aload_1 [lock]\n" + 
-					"    14  invokeinterface java.util.concurrent.locks.Lock.lock() : void [25] [nargs: 1]\n" + 
-					"    19  aload_2 [strings]\n" + 
-					"    20  invokeinterface java.util.List.iterator() : java.util.Iterator [30] [nargs: 1]\n" + 
-					"    25  astore_3 [i]\n" + 
-					"    26  aload_3 [i]\n" + 
-					"    27  invokeinterface java.util.Iterator.hasNext() : boolean [36] [nargs: 1]\n" + 
-					"    32  ifeq 42\n" + 
-					"    35  aload_1 [lock]\n" + 
-					"    36  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" + 
-					"    41  return\n" + 
-					"    42  aload_1 [lock]\n" + 
-					"    43  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" + 
-					"    48  return\n" + 
-					"    49  astore 4\n" + 
-					"    51  aload_1 [lock]\n" + 
-					"    52  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" + 
-					"    57  aload 4\n" + 
-					"    59  athrow\n" + 
-					"      Exception Table:\n" + 
-					"        [pc: 19, pc: 35] -> 49 when : any\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 8]\n" + 
-					"        [pc: 8, line: 9]\n" + 
-					"        [pc: 13, line: 10]\n" + 
-					"        [pc: 19, line: 12]\n" + 
-					"        [pc: 35, line: 17]\n" + 
-					"        [pc: 41, line: 13]\n" + 
-					"        [pc: 42, line: 17]\n" + 
-					"        [pc: 48, line: 15]\n" + 
-					"        [pc: 49, line: 16]\n" + 
-					"        [pc: 51, line: 17]\n" + 
-					"        [pc: 57, line: 18]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 60] local: args index: 0 type: java.lang.String[]\n" + 
-					"        [pc: 8, pc: 60] local: lock index: 1 type: java.util.concurrent.locks.Lock\n" + 
-					"        [pc: 13, pc: 60] local: strings index: 2 type: java.util.List\n" + 
-					"        [pc: 26, pc: 42] local: i index: 3 type: java.util.Iterator\n" + 
-					"      Local variable type table:\n" + 
-					"        [pc: 13, pc: 60] local: strings index: 2 type: java.util.List<java.lang.String>\n" + 
-					"      Stack map table: number of frames 2\n" + 
-					"        [pc: 42, append: {java.util.concurrent.locks.Lock, java.util.List}]\n" + 
+					"  // Method descriptor #15 ([Ljava/lang/String;)V\n" +
+					"  // Stack: 2, Locals: 5\n" +
+					"  public static void main(java.lang.String[] args);\n" +
+					"     0  new java.util.concurrent.locks.ReentrantLock [16]\n" +
+					"     3  dup\n" +
+					"     4  invokespecial java.util.concurrent.locks.ReentrantLock() [18]\n" +
+					"     7  astore_1 [lock]\n" +
+					"     8  aload_0 [args]\n" +
+					"     9  invokestatic java.util.Arrays.asList(java.lang.Object[]) : java.util.List [19]\n" +
+					"    12  astore_2 [strings]\n" +
+					"    13  aload_1 [lock]\n" +
+					"    14  invokeinterface java.util.concurrent.locks.Lock.lock() : void [25] [nargs: 1]\n" +
+					"    19  aload_2 [strings]\n" +
+					"    20  invokeinterface java.util.List.iterator() : java.util.Iterator [30] [nargs: 1]\n" +
+					"    25  astore_3 [i]\n" +
+					"    26  aload_3 [i]\n" +
+					"    27  invokeinterface java.util.Iterator.hasNext() : boolean [36] [nargs: 1]\n" +
+					"    32  ifeq 42\n" +
+					"    35  aload_1 [lock]\n" +
+					"    36  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" +
+					"    41  return\n" +
+					"    42  aload_1 [lock]\n" +
+					"    43  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" +
+					"    48  return\n" +
+					"    49  astore 4\n" +
+					"    51  aload_1 [lock]\n" +
+					"    52  invokeinterface java.util.concurrent.locks.Lock.unlock() : void [42] [nargs: 1]\n" +
+					"    57  aload 4\n" +
+					"    59  athrow\n" +
+					"      Exception Table:\n" +
+					"        [pc: 19, pc: 35] -> 49 when : any\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 8]\n" +
+					"        [pc: 8, line: 9]\n" +
+					"        [pc: 13, line: 10]\n" +
+					"        [pc: 19, line: 12]\n" +
+					"        [pc: 35, line: 17]\n" +
+					"        [pc: 41, line: 13]\n" +
+					"        [pc: 42, line: 17]\n" +
+					"        [pc: 48, line: 15]\n" +
+					"        [pc: 49, line: 16]\n" +
+					"        [pc: 51, line: 17]\n" +
+					"        [pc: 57, line: 18]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 60] local: args index: 0 type: java.lang.String[]\n" +
+					"        [pc: 8, pc: 60] local: lock index: 1 type: java.util.concurrent.locks.Lock\n" +
+					"        [pc: 13, pc: 60] local: strings index: 2 type: java.util.List\n" +
+					"        [pc: 26, pc: 42] local: i index: 3 type: java.util.Iterator\n" +
+					"      Local variable type table:\n" +
+					"        [pc: 13, pc: 60] local: strings index: 2 type: java.util.List<java.lang.String>\n" +
+					"      Stack map table: number of frames 2\n" +
+					"        [pc: 42, append: {java.util.concurrent.locks.Lock, java.util.List}]\n" +
 					"        [pc: 49, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -7028,14 +7028,14 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X.java",
-					"public class X {\n" + 
-					"	public static void main(String[] args) {\n" + 
-					"		testError(3, 4, \"d\");\n" + 
-					"	}\n" + 
-					"	public static void testError(Number n0, Number n1, String refValue) {\n" + 
-					"		Number result = refValue.equals(\"ttt\") ? n0 : (n1 == null ? null : n1.intValue());\n" + 
-					"		System.out.println(String.valueOf(result));\n" + 
-					"	}\n" + 
+					"public class X {\n" +
+					"	public static void main(String[] args) {\n" +
+					"		testError(3, 4, \"d\");\n" +
+					"	}\n" +
+					"	public static void testError(Number n0, Number n1, String refValue) {\n" +
+					"		Number result = refValue.equals(\"ttt\") ? n0 : (n1 == null ? null : n1.intValue());\n" +
+					"		System.out.println(String.valueOf(result));\n" +
+					"	}\n" +
 					"}",
 				},
 				"4");
@@ -7049,40 +7049,40 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-				"  // Method descriptor #27 (Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/String;)V\n" + 
-				"  // Stack: 2, Locals: 4\n" + 
-				"  public static void testError(java.lang.Number n0, java.lang.Number n1, java.lang.String refValue);\n" + 
-				"     0  aload_2 [refValue]\n" + 
-				"     1  ldc <String \"ttt\"> [30]\n" + 
-				"     3  invokevirtual java.lang.String.equals(java.lang.Object) : boolean [32]\n" + 
-				"     6  ifeq 13\n" + 
-				"     9  aload_0 [n0]\n" + 
-				"    10  goto 28\n" + 
-				"    13  aload_1 [n1]\n" + 
-				"    14  ifnonnull 21\n" + 
-				"    17  aconst_null\n" + 
-				"    18  goto 28\n" + 
-				"    21  aload_1 [n1]\n" + 
-				"    22  invokevirtual java.lang.Number.intValue() : int [38]\n" + 
-				"    25  invokestatic java.lang.Integer.valueOf(int) : java.lang.Integer [16]\n" + 
-				"    28  astore_3 [result]\n" + 
-				"    29  getstatic java.lang.System.out : java.io.PrintStream [44]\n" + 
-				"    32  aload_3 [result]\n" + 
-				"    33  invokestatic java.lang.String.valueOf(java.lang.Object) : java.lang.String [50]\n" + 
-				"    36  invokevirtual java.io.PrintStream.println(java.lang.String) : void [53]\n" + 
-				"    39  return\n" + 
-				"      Line numbers:\n" + 
-				"        [pc: 0, line: 6]\n" + 
-				"        [pc: 29, line: 7]\n" + 
-				"        [pc: 39, line: 8]\n" + 
-				"      Local variable table:\n" + 
-				"        [pc: 0, pc: 40] local: n0 index: 0 type: java.lang.Number\n" + 
-				"        [pc: 0, pc: 40] local: n1 index: 1 type: java.lang.Number\n" + 
-				"        [pc: 0, pc: 40] local: refValue index: 2 type: java.lang.String\n" + 
-				"        [pc: 29, pc: 40] local: result index: 3 type: java.lang.Number\n" + 
-				"      Stack map table: number of frames 3\n" + 
-				"        [pc: 13, same]\n" + 
-				"        [pc: 21, same]\n" + 
+				"  // Method descriptor #27 (Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/String;)V\n" +
+				"  // Stack: 2, Locals: 4\n" +
+				"  public static void testError(java.lang.Number n0, java.lang.Number n1, java.lang.String refValue);\n" +
+				"     0  aload_2 [refValue]\n" +
+				"     1  ldc <String \"ttt\"> [30]\n" +
+				"     3  invokevirtual java.lang.String.equals(java.lang.Object) : boolean [32]\n" +
+				"     6  ifeq 13\n" +
+				"     9  aload_0 [n0]\n" +
+				"    10  goto 28\n" +
+				"    13  aload_1 [n1]\n" +
+				"    14  ifnonnull 21\n" +
+				"    17  aconst_null\n" +
+				"    18  goto 28\n" +
+				"    21  aload_1 [n1]\n" +
+				"    22  invokevirtual java.lang.Number.intValue() : int [38]\n" +
+				"    25  invokestatic java.lang.Integer.valueOf(int) : java.lang.Integer [16]\n" +
+				"    28  astore_3 [result]\n" +
+				"    29  getstatic java.lang.System.out : java.io.PrintStream [44]\n" +
+				"    32  aload_3 [result]\n" +
+				"    33  invokestatic java.lang.String.valueOf(java.lang.Object) : java.lang.String [50]\n" +
+				"    36  invokevirtual java.io.PrintStream.println(java.lang.String) : void [53]\n" +
+				"    39  return\n" +
+				"      Line numbers:\n" +
+				"        [pc: 0, line: 6]\n" +
+				"        [pc: 29, line: 7]\n" +
+				"        [pc: 39, line: 8]\n" +
+				"      Local variable table:\n" +
+				"        [pc: 0, pc: 40] local: n0 index: 0 type: java.lang.Number\n" +
+				"        [pc: 0, pc: 40] local: n1 index: 1 type: java.lang.Number\n" +
+				"        [pc: 0, pc: 40] local: refValue index: 2 type: java.lang.String\n" +
+				"        [pc: 29, pc: 40] local: result index: 3 type: java.lang.Number\n" +
+				"      Stack map table: number of frames 3\n" +
+				"        [pc: 13, same]\n" +
+				"        [pc: 21, same]\n" +
 				"        [pc: 28, same_locals_1_stack_item, stack: {java.lang.Number}]\n";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -7093,7 +7093,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				assertEquals("Wrong contents", expectedOutput, actualOutput);
 			}
 	}
-	
+
 	public void test055a() throws Exception {
 		this.runConformTest(
 				new String[] {
@@ -7112,39 +7112,39 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X.java",
-					"import java.io.BufferedReader;\n" + 
-					"import java.io.Closeable;\n" + 
-					"import java.io.File;\n" + 
-					"import java.io.FileReader;\n" + 
-					"import java.io.IOException;\n" + 
-					"\n" + 
-					"public class X {\n" + 
-					"\n" + 
-					"	static class C implements Closeable {\n" + 
-					"		@Override\n" + 
-					"		public void close() throws IOException {\n" + 
-					"			//\n" + 
-					"		}\n" + 
-					"	}\n" + 
-					"\n" + 
-					"	int run() throws IOException {\n" + 
-					"		int lcnt = 0;\n" + 
-					"		try (C c = new C();) {\n" + 
-					"			try (final BufferedReader br = new BufferedReader(new FileReader(\n" + 
-					"					new File(\"logging.properties\")))) {\n" + 
-					"				String s = null;\n" + 
-					"				while ((s = br.readLine()) != null)\n" + 
-					"					lcnt++;\n" + 
-					"				return lcnt;\n" + 
-					"			}\n" + 
-					"		} finally {\n" + 
-					"			System.out.println(\"read \" + lcnt + \" lines\");\n" + 
-					"		}\n" + 
-					"	}\n" + 
-					"\n" + 
-					"	public static void main(final String[] args) throws IOException {\n" + 
-					"		System.out.println(\"SUCCESS\");\n" + 
-					"	}\n" + 
+					"import java.io.BufferedReader;\n" +
+					"import java.io.Closeable;\n" +
+					"import java.io.File;\n" +
+					"import java.io.FileReader;\n" +
+					"import java.io.IOException;\n" +
+					"\n" +
+					"public class X {\n" +
+					"\n" +
+					"	static class C implements Closeable {\n" +
+					"		@Override\n" +
+					"		public void close() throws IOException {\n" +
+					"			//\n" +
+					"		}\n" +
+					"	}\n" +
+					"\n" +
+					"	int run() throws IOException {\n" +
+					"		int lcnt = 0;\n" +
+					"		try (C c = new C();) {\n" +
+					"			try (final BufferedReader br = new BufferedReader(new FileReader(\n" +
+					"					new File(\"logging.properties\")))) {\n" +
+					"				String s = null;\n" +
+					"				while ((s = br.readLine()) != null)\n" +
+					"					lcnt++;\n" +
+					"				return lcnt;\n" +
+					"			}\n" +
+					"		} finally {\n" +
+					"			System.out.println(\"read \" + lcnt + \" lines\");\n" +
+					"		}\n" +
+					"	}\n" +
+					"\n" +
+					"	public static void main(final String[] args) throws IOException {\n" +
+					"		System.out.println(\"SUCCESS\");\n" +
+					"	}\n" +
 					"}",
 				},
 				"SUCCESS");
@@ -7214,27 +7214,27 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"		System.out.println(\"SUCCESS\");\n" +
 					"    }\n" +
 					"}\n"				},
-					"----------\n" + 
-					"1. WARNING in X.java (at line 4)\n" + 
-					"	label1: do {\n" + 
-					"	^^^^^^\n" + 
-					"The label label1 is never explicitly referenced\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 5)\n" + 
-					"	for (;false;) {\n" + 
-					"                s = \"\";\n" + 
-					"                if (s == null) \n" + 
-					"                    continue label1;\n" + 
-					"            }\n" + 
-					"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Unreachable code\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 10)\n" + 
-					"	} while (s != null);\n" + 
-					"	         ^\n" + 
-					"The local variable s may not have been initialized\n" + 
+					"----------\n" +
+					"1. WARNING in X.java (at line 4)\n" +
+					"	label1: do {\n" +
+					"	^^^^^^\n" +
+					"The label label1 is never explicitly referenced\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 5)\n" +
+					"	for (;false;) {\n" +
+					"                s = \"\";\n" +
+					"                if (s == null) \n" +
+					"                    continue label1;\n" +
+					"            }\n" +
+					"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Unreachable code\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 10)\n" +
+					"	} while (s != null);\n" +
+					"	         ^\n" +
+					"The local variable s may not have been initialized\n" +
 						"----------\n");
-	}	
+	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
 	public void test060() throws Exception {
 		this.runConformTest(
@@ -7256,7 +7256,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"    }\n" +
 					"}\n"				},
 				"SUCCESS");
-	}	
+	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
 	public void test061() throws Exception {
 		this.runNegativeTest(
@@ -7278,16 +7278,16 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"		System.out.println(\"SUCCESS\");\n" +
 					"    }\n" +
 					"}\n"				},
-					"----------\n" + 
-					"1. WARNING in X.java (at line 9)\n" + 
-					"	continue label1;\n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"Dead code\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 11)\n" + 
-					"	} while (s != null);\n" + 
-					"	         ^\n" + 
-					"The local variable s may not have been initialized\n" + 
+					"----------\n" +
+					"1. WARNING in X.java (at line 9)\n" +
+					"	continue label1;\n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"Dead code\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 11)\n" +
+					"	} while (s != null);\n" +
+					"	         ^\n" +
+					"The local variable s may not have been initialized\n" +
 					"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
@@ -7334,25 +7334,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				"		System.out.println(\"SUCCESS\");\n" +
 				"    }\n" +
 				"}\n"				},
-				"----------\n" + 
-				"1. WARNING in X.java (at line 5)\n" + 
-				"	label1: do {\n" + 
-				"	^^^^^^\n" + 
-				"The label label1 is never explicitly referenced\n" + 
-				"----------\n" + 
-				"2. ERROR in X.java (at line 6)\n" + 
-				"	for (; five > ten;) {\n" + 
-				"                s = \"\";\n" + 
-				"                if (s == null) \n" + 
-				"                    continue label1;\n" + 
-				"            }\n" + 
-				"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"Unreachable code\n" + 
-				"----------\n" + 
-				"3. ERROR in X.java (at line 11)\n" + 
-				"	} while (s != null);\n" + 
-				"	         ^\n" + 
-				"The local variable s may not have been initialized\n" + 
+				"----------\n" +
+				"1. WARNING in X.java (at line 5)\n" +
+				"	label1: do {\n" +
+				"	^^^^^^\n" +
+				"The label label1 is never explicitly referenced\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	for (; five > ten;) {\n" +
+				"                s = \"\";\n" +
+				"                if (s == null) \n" +
+				"                    continue label1;\n" +
+				"            }\n" +
+				"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Unreachable code\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 11)\n" +
+				"	} while (s != null);\n" +
+				"	         ^\n" +
+				"The local variable s may not have been initialized\n" +
 				"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
@@ -7398,25 +7398,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"		System.out.println(\"SUCCESS\");\n" +
 					"    }\n" +
 					"}\n"				},
-					"----------\n" + 
-					"1. WARNING in X.java (at line 4)\n" + 
-					"	label1: do {\n" + 
-					"	^^^^^^\n" + 
-					"The label label1 is never explicitly referenced\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 5)\n" + 
-					"	while (false) {\n" + 
-					"                s = \"\";\n" + 
-					"                if (s == null) \n" + 
-					"                    continue label1;\n" + 
-					"            }\n" + 
-					"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Unreachable code\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 10)\n" + 
-					"	} while (s != null);\n" + 
-					"	         ^\n" + 
-					"The local variable s may not have been initialized\n" + 
+					"----------\n" +
+					"1. WARNING in X.java (at line 4)\n" +
+					"	label1: do {\n" +
+					"	^^^^^^\n" +
+					"The label label1 is never explicitly referenced\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 5)\n" +
+					"	while (false) {\n" +
+					"                s = \"\";\n" +
+					"                if (s == null) \n" +
+					"                    continue label1;\n" +
+					"            }\n" +
+					"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Unreachable code\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 10)\n" +
+					"	} while (s != null);\n" +
+					"	         ^\n" +
+					"The local variable s may not have been initialized\n" +
 					"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
@@ -7440,7 +7440,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"    }\n" +
 					"}\n"				},
 				"SUCCESS");
-	}	
+	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
 	public void test067() throws Exception {
 		this.runNegativeTest(
@@ -7462,16 +7462,16 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"		System.out.println(\"SUCCESS\");\n" +
 					"    }\n" +
 					"}\n"				},
-					"----------\n" + 
-					"1. WARNING in X.java (at line 9)\n" + 
-					"	continue label1;\n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"Dead code\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 11)\n" + 
-					"	} while (s != null);\n" + 
-					"	         ^\n" + 
-					"The local variable s may not have been initialized\n" + 
+					"----------\n" +
+					"1. WARNING in X.java (at line 9)\n" +
+					"	continue label1;\n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"Dead code\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 11)\n" +
+					"	} while (s != null);\n" +
+					"	         ^\n" +
+					"The local variable s may not have been initialized\n" +
 					"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
@@ -7518,25 +7518,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				"		System.out.println(\"SUCCESS\");\n" +
 				"    }\n" +
 				"}\n"				},
-				"----------\n" + 
-				"1. WARNING in X.java (at line 5)\n" + 
-				"	label1: do {\n" + 
-				"	^^^^^^\n" + 
-				"The label label1 is never explicitly referenced\n" + 
-				"----------\n" + 
-				"2. ERROR in X.java (at line 6)\n" + 
-				"	while (five > ten) {\n" + 
-				"                s = \"\";\n" + 
-				"                if (s == null) \n" + 
-				"                    continue label1;\n" + 
-				"            }\n" + 
-				"	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-				"Unreachable code\n" + 
-				"----------\n" + 
-				"3. ERROR in X.java (at line 11)\n" + 
-				"	} while (s != null);\n" + 
-				"	         ^\n" + 
-				"The local variable s may not have been initialized\n" + 
+				"----------\n" +
+				"1. WARNING in X.java (at line 5)\n" +
+				"	label1: do {\n" +
+				"	^^^^^^\n" +
+				"The label label1 is never explicitly referenced\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	while (five > ten) {\n" +
+				"                s = \"\";\n" +
+				"                if (s == null) \n" +
+				"                    continue label1;\n" +
+				"            }\n" +
+				"	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+				"Unreachable code\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 11)\n" +
+				"	} while (s != null);\n" +
+				"	         ^\n" +
+				"The local variable s may not have been initialized\n" +
 				"----------\n");
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023
@@ -7632,7 +7632,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				},
 				"SUCCESS");
 	}
-	
+
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=380313
 	// Verify the generated code does not have same branch target for the 2 return statements
 	public void testBug380313() throws Exception {
@@ -7640,29 +7640,29 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				new String[] {
 						"X.java",
 						"public class X {\n" +
-						"public void foo() throws Exception {\n" + 
-						"        int i = 1;\n" + 
-						"        try {\n" + 
-						"            if (i == 1) {\n" + 
-						"                int n = bar();\n" + 
-						"                if (n == 35)\n" + 
-						"                   return;\n" + 
-						"            } else {\n" + 
-						"                throw new Exception();\n" + 
-						"            }\n" + 
-						"            if (i == 0)\n" + 
-						"               return;\n" + 
-						"        } finally {\n" + 
-						"            bar();\n" + 
-						"        }\n" + 
-						"    }\n" + 
-						"\n" + 
-						"    private int bar() {\n" + 
-						"        return 0;\n" + 
-						"    }\n" + 
-						"\n" + 
+						"public void foo() throws Exception {\n" +
+						"        int i = 1;\n" +
+						"        try {\n" +
+						"            if (i == 1) {\n" +
+						"                int n = bar();\n" +
+						"                if (n == 35)\n" +
+						"                   return;\n" +
+						"            } else {\n" +
+						"                throw new Exception();\n" +
+						"            }\n" +
+						"            if (i == 0)\n" +
+						"               return;\n" +
+						"        } finally {\n" +
+						"            bar();\n" +
+						"        }\n" +
+						"    }\n" +
+						"\n" +
+						"    private int bar() {\n" +
+						"        return 0;\n" +
+						"    }\n" +
+						"\n" +
 						"    public static void main(String[] args) {\n" +
-						"		System.out.println(\"SUCCESS\");\n" + 
+						"		System.out.println(\"SUCCESS\");\n" +
 						"    }\n" +
 						"}\n"
 				},
@@ -7679,71 +7679,71 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			String xBarCall = isMinimumCompliant(ClassFileConstants.JDK11) ?
 					"invokevirtual X.bar() : int [18]\n" : "invokespecial X.bar() : int [18]\n";
 			String expectedOutput =
-					"  // Method descriptor #6 ()V\n" + 
-					"  // Stack: 2, Locals: 4\n" + 
-					"  public void foo() throws java.lang.Exception;\n" + 
-					"     0  iconst_1\n" + 
-					"     1  istore_1 [i]\n" + 
-					"     2  iload_1 [i]\n" + 
-					"     3  iconst_1\n" + 
-					"     4  if_icmpne 24\n" + 
-					"     7  aload_0 [this]\n" + 
-					"     8  " + xBarCall + 
-					"    11  istore_2 [n]\n" + 
-					"    12  iload_2 [n]\n" + 
-					"    13  bipush 35\n" + 
-					"    15  if_icmpne 32\n" + 
-					"    18  aload_0 [this]\n" + 
-					"    19  " + xBarCall + 
-					"    22  pop\n" + 
-					"    23  return\n" + 
-					"    24  new java.lang.Exception [16]\n" + 
-					"    27  dup\n" + 
-					"    28  invokespecial java.lang.Exception() [22]\n" + 
-					"    31  athrow\n" + 
-					"    32  iload_1 [i]\n" + 
-					"    33  ifne 50\n" + 
-					"    36  aload_0 [this]\n" + 
-					"    37  " + xBarCall + 
-					"    40  pop\n" + 
-					"    41  return\n" + 
-					"    42  astore_3\n" + 
-					"    43  aload_0 [this]\n" + 
-					"    44  " + xBarCall + 
-					"    47  pop\n" + 
-					"    48  aload_3\n" + 
-					"    49  athrow\n" + 
-					"    50  aload_0 [this]\n" + 
-					"    51  " + xBarCall + 
-					"    54  pop\n" + 
-					"    55  return\n" + 
-					"      Exception Table:\n" + 
-					"        [pc: 2, pc: 18] -> 42 when : any\n" + 
-					"        [pc: 24, pc: 36] -> 42 when : any\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 3]\n" + 
-					"        [pc: 2, line: 5]\n" + 
-					"        [pc: 7, line: 6]\n" + 
-					"        [pc: 12, line: 7]\n" + 
-					"        [pc: 18, line: 15]\n" + 
-					"        [pc: 23, line: 8]\n" + 
-					"        [pc: 24, line: 10]\n" + 
-					"        [pc: 32, line: 12]\n" + 
-					"        [pc: 36, line: 15]\n" + 
-					"        [pc: 41, line: 13]\n" + 
-					"        [pc: 42, line: 14]\n" + 
-					"        [pc: 43, line: 15]\n" + 
-					"        [pc: 48, line: 16]\n" + 
-					"        [pc: 50, line: 15]\n" + 
-					"        [pc: 55, line: 17]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 56] local: this index: 0 type: X\n" + 
-					"        [pc: 2, pc: 56] local: i index: 1 type: int\n" + 
-					"        [pc: 12, pc: 24] local: n index: 2 type: int\n" + 
-					"      Stack map table: number of frames 4\n" + 
-					"        [pc: 24, append: {int}]\n" + 
-					"        [pc: 32, same]\n" + 
-					"        [pc: 42, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" + 
+					"  // Method descriptor #6 ()V\n" +
+					"  // Stack: 2, Locals: 4\n" +
+					"  public void foo() throws java.lang.Exception;\n" +
+					"     0  iconst_1\n" +
+					"     1  istore_1 [i]\n" +
+					"     2  iload_1 [i]\n" +
+					"     3  iconst_1\n" +
+					"     4  if_icmpne 24\n" +
+					"     7  aload_0 [this]\n" +
+					"     8  " + xBarCall +
+					"    11  istore_2 [n]\n" +
+					"    12  iload_2 [n]\n" +
+					"    13  bipush 35\n" +
+					"    15  if_icmpne 32\n" +
+					"    18  aload_0 [this]\n" +
+					"    19  " + xBarCall +
+					"    22  pop\n" +
+					"    23  return\n" +
+					"    24  new java.lang.Exception [16]\n" +
+					"    27  dup\n" +
+					"    28  invokespecial java.lang.Exception() [22]\n" +
+					"    31  athrow\n" +
+					"    32  iload_1 [i]\n" +
+					"    33  ifne 50\n" +
+					"    36  aload_0 [this]\n" +
+					"    37  " + xBarCall +
+					"    40  pop\n" +
+					"    41  return\n" +
+					"    42  astore_3\n" +
+					"    43  aload_0 [this]\n" +
+					"    44  " + xBarCall +
+					"    47  pop\n" +
+					"    48  aload_3\n" +
+					"    49  athrow\n" +
+					"    50  aload_0 [this]\n" +
+					"    51  " + xBarCall +
+					"    54  pop\n" +
+					"    55  return\n" +
+					"      Exception Table:\n" +
+					"        [pc: 2, pc: 18] -> 42 when : any\n" +
+					"        [pc: 24, pc: 36] -> 42 when : any\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 3]\n" +
+					"        [pc: 2, line: 5]\n" +
+					"        [pc: 7, line: 6]\n" +
+					"        [pc: 12, line: 7]\n" +
+					"        [pc: 18, line: 15]\n" +
+					"        [pc: 23, line: 8]\n" +
+					"        [pc: 24, line: 10]\n" +
+					"        [pc: 32, line: 12]\n" +
+					"        [pc: 36, line: 15]\n" +
+					"        [pc: 41, line: 13]\n" +
+					"        [pc: 42, line: 14]\n" +
+					"        [pc: 43, line: 15]\n" +
+					"        [pc: 48, line: 16]\n" +
+					"        [pc: 50, line: 15]\n" +
+					"        [pc: 55, line: 17]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 56] local: this index: 0 type: X\n" +
+					"        [pc: 2, pc: 56] local: i index: 1 type: int\n" +
+					"        [pc: 12, pc: 24] local: n index: 2 type: int\n" +
+					"      Stack map table: number of frames 4\n" +
+					"        [pc: 24, append: {int}]\n" +
+					"        [pc: 32, same]\n" +
+					"        [pc: 42, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" +
 					"        [pc: 50, same]\n";
 			int index = actualOutput.indexOf(expectedOutput);
 			if (index == -1 || expectedOutput.length() == 0) {
@@ -7764,31 +7764,31 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 						"import java.io.FileInputStream;\n" +
 						"import java.io.IOException;\n" +
 						"public class X {\n" +
-						"public void foo() throws Exception {\n" + 
-						"        int i = 1;\n" + 
-						"        try {\n" + 
+						"public void foo() throws Exception {\n" +
+						"        int i = 1;\n" +
+						"        try {\n" +
 						"            try (FileInputStream fis = new FileInputStream(\"\")) {\n" +
-						"				 if (i == 2)" + 
-						"                	return;\n" + 
-						" 			 }\n" + 
-						"            if (i == 35) \n" + 
-						"                return;\n" + 
-						"        } catch(IOException e) {\n" + 
-						"            bar();\n" + 
-						"        } finally {\n" + 
-						"            bar();\n" + 
-						"        }\n" + 
-						"    }\n" + 
-						"\n" + 
-						"    private int bar() {\n" + 
-						"        return 0;\n" + 
-						"    }\n" + 
-						"\n" + 
+						"				 if (i == 2)" +
+						"                	return;\n" +
+						" 			 }\n" +
+						"            if (i == 35) \n" +
+						"                return;\n" +
+						"        } catch(IOException e) {\n" +
+						"            bar();\n" +
+						"        } finally {\n" +
+						"            bar();\n" +
+						"        }\n" +
+						"    }\n" +
+						"\n" +
+						"    private int bar() {\n" +
+						"        return 0;\n" +
+						"    }\n" +
+						"\n" +
 						"    public static void main(String[] args) {\n" +
-						"		System.out.println(\"SUCCESS\");\n" + 
+						"		System.out.println(\"SUCCESS\");\n" +
 						"    }\n" +
 						"}\n"
-					}, 
+					},
 				"SUCCESS");
 
 			ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
@@ -7802,127 +7802,127 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			String xBarCall = (isMinimumCompliant(ClassFileConstants.JDK11) ?
 					"invokevirtual" : "invokespecial") + " X.bar() : int [28]\n";
 			String expectedOutput =
-					"  // Method descriptor #6 ()V\n" + 
-					"  // Stack: 3, Locals: 6\n" + 
-					"  public void foo() throws java.lang.Exception;\n" + 
-					"      0  iconst_1\n" + 
-					"      1  istore_1 [i]\n" + 
-					"      2  aconst_null\n" + 
-					"      3  astore_2\n" + 
-					"      4  aconst_null\n" + 
-					"      5  astore_3\n" + 
-					"      6  new java.io.FileInputStream [18]\n" + 
-					"      9  dup\n" + 
-					"     10  ldc <String \"\"> [20]\n" + 
-					"     12  invokespecial java.io.FileInputStream(java.lang.String) [22]\n" + 
-					"     15  astore 4 [fis]\n" + 
-					"     17  iload_1 [i]\n" + 
-					"     18  iconst_2\n" + 
-					"     19  if_icmpne 38\n" + 
-					"     22  aload 4 [fis]\n" + 
-					"     24  ifnull 32\n" + 
-					"     27  aload 4 [fis]\n" + 
-					"     29  invokevirtual java.io.FileInputStream.close() : void [25]\n" + 
+					"  // Method descriptor #6 ()V\n" +
+					"  // Stack: 3, Locals: 6\n" +
+					"  public void foo() throws java.lang.Exception;\n" +
+					"      0  iconst_1\n" +
+					"      1  istore_1 [i]\n" +
+					"      2  aconst_null\n" +
+					"      3  astore_2\n" +
+					"      4  aconst_null\n" +
+					"      5  astore_3\n" +
+					"      6  new java.io.FileInputStream [18]\n" +
+					"      9  dup\n" +
+					"     10  ldc <String \"\"> [20]\n" +
+					"     12  invokespecial java.io.FileInputStream(java.lang.String) [22]\n" +
+					"     15  astore 4 [fis]\n" +
+					"     17  iload_1 [i]\n" +
+					"     18  iconst_2\n" +
+					"     19  if_icmpne 38\n" +
+					"     22  aload 4 [fis]\n" +
+					"     24  ifnull 32\n" +
+					"     27  aload 4 [fis]\n" +
+					"     29  invokevirtual java.io.FileInputStream.close() : void [25]\n" +
 					"     32  aload_0 [this]\n" + // return 1
-					"     33  " + xBarCall + 
-					"     36  pop\n" + 
-					"     37  return\n" + 
-					"     38  aload 4 [fis]\n" + 
-					"     40  ifnull 86\n" + 
-					"     43  aload 4 [fis]\n" + 
-					"     45  invokevirtual java.io.FileInputStream.close() : void [25]\n" + 
-					"     48  goto 86\n" + 
-					"     51  astore_2\n" + 
-					"     52  aload 4 [fis]\n" + 
-					"     54  ifnull 62\n" + 
-					"     57  aload 4 [fis]\n" + 
-					"     59  invokevirtual java.io.FileInputStream.close() : void [25]\n" + 
-					"     62  aload_2\n" + 
-					"     63  athrow\n" + 
-					"     64  astore_3\n" + 
-					"     65  aload_2\n" + 
-					"     66  ifnonnull 74\n" + 
-					"     69  aload_3\n" + 
-					"     70  astore_2\n" + 
-					"     71  goto 84\n" + 
-					"     74  aload_2\n" + 
-					"     75  aload_3\n" + 
-					"     76  if_acmpeq 84\n" + 
-					"     79  aload_2\n" + 
-					"     80  aload_3\n" + 
-					"     81  invokevirtual java.lang.Throwable.addSuppressed(java.lang.Throwable) : void [32]\n" + 
-					"     84  aload_2\n" + 
-					"     85  athrow\n" + 
-					"     86  iload_1 [i]\n" + 
-					"     87  bipush 35\n" + 
-					"     89  if_icmpne 122\n" + 
+					"     33  " + xBarCall +
+					"     36  pop\n" +
+					"     37  return\n" +
+					"     38  aload 4 [fis]\n" +
+					"     40  ifnull 86\n" +
+					"     43  aload 4 [fis]\n" +
+					"     45  invokevirtual java.io.FileInputStream.close() : void [25]\n" +
+					"     48  goto 86\n" +
+					"     51  astore_2\n" +
+					"     52  aload 4 [fis]\n" +
+					"     54  ifnull 62\n" +
+					"     57  aload 4 [fis]\n" +
+					"     59  invokevirtual java.io.FileInputStream.close() : void [25]\n" +
+					"     62  aload_2\n" +
+					"     63  athrow\n" +
+					"     64  astore_3\n" +
+					"     65  aload_2\n" +
+					"     66  ifnonnull 74\n" +
+					"     69  aload_3\n" +
+					"     70  astore_2\n" +
+					"     71  goto 84\n" +
+					"     74  aload_2\n" +
+					"     75  aload_3\n" +
+					"     76  if_acmpeq 84\n" +
+					"     79  aload_2\n" +
+					"     80  aload_3\n" +
+					"     81  invokevirtual java.lang.Throwable.addSuppressed(java.lang.Throwable) : void [32]\n" +
+					"     84  aload_2\n" +
+					"     85  athrow\n" +
+					"     86  iload_1 [i]\n" +
+					"     87  bipush 35\n" +
+					"     89  if_icmpne 122\n" +
 					"     92  aload_0 [this]\n" + 	// return 2
-					"     93  " + xBarCall + 
-					"     96  pop\n" + 
-					"     97  return\n" + 
-					"     98  astore_2 [e]\n" + 
-					"     99  aload_0 [this]\n" + 
-					"    100  " + xBarCall + 
-					"    103  pop\n" + 
-					"    104  aload_0 [this]\n" + 
-					"    105  " + xBarCall + 
-					"    108  pop\n" + 
-					"    109  goto 127\n" + 
-					"    112  astore 5\n" + 
-					"    114  aload_0 [this]\n" + 
-					"    115  " + xBarCall + 
-					"    118  pop\n" + 
-					"    119  aload 5\n" + 
-					"    121  athrow\n" + 
-					"    122  aload_0 [this]\n" + 
-					"    123  " + xBarCall + 
-					"    126  pop\n" + 
-					"    127  return\n" + 
-					"      Exception Table:\n" + 
-					"        [pc: 17, pc: 22] -> 51 when : any\n" + 
+					"     93  " + xBarCall +
+					"     96  pop\n" +
+					"     97  return\n" +
+					"     98  astore_2 [e]\n" +
+					"     99  aload_0 [this]\n" +
+					"    100  " + xBarCall +
+					"    103  pop\n" +
+					"    104  aload_0 [this]\n" +
+					"    105  " + xBarCall +
+					"    108  pop\n" +
+					"    109  goto 127\n" +
+					"    112  astore 5\n" +
+					"    114  aload_0 [this]\n" +
+					"    115  " + xBarCall +
+					"    118  pop\n" +
+					"    119  aload 5\n" +
+					"    121  athrow\n" +
+					"    122  aload_0 [this]\n" +
+					"    123  " + xBarCall +
+					"    126  pop\n" +
+					"    127  return\n" +
+					"      Exception Table:\n" +
+					"        [pc: 17, pc: 22] -> 51 when : any\n" +
 					"        [pc: 6, pc: 32] -> 64 when : any\n" +
 					"        [pc: 38, pc: 64] -> 64 when : any\n" +
-					"        [pc: 2, pc: 32] -> 98 when : java.io.IOException\n" + 
-					"        [pc: 38, pc: 92] -> 98 when : java.io.IOException\n" + 
-					"        [pc: 2, pc: 32] -> 112 when : any\n" + 
-					"        [pc: 38, pc: 92] -> 112 when : any\n" + 
-					"        [pc: 98, pc: 104] -> 112 when : any\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 5]\n" + 
-					"        [pc: 2, line: 7]\n" + 
-					"        [pc: 17, line: 8]\n" + 
-					"        [pc: 22, line: 9]\n" + 
-					"        [pc: 32, line: 15]\n" + 
-					"        [pc: 37, line: 8]\n" + 
-					"        [pc: 38, line: 9]\n" + 
-					"        [pc: 86, line: 10]\n" + 
-					"        [pc: 92, line: 15]\n" + 
-					"        [pc: 97, line: 11]\n" + 
-					"        [pc: 98, line: 12]\n" + 
-					"        [pc: 99, line: 13]\n" + 
-					"        [pc: 104, line: 15]\n" + 
-					"        [pc: 112, line: 14]\n" + 
-					"        [pc: 114, line: 15]\n" + 
-					"        [pc: 119, line: 16]\n" + 
-					"        [pc: 122, line: 15]\n" + 
-					"        [pc: 127, line: 17]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 128] local: this index: 0 type: X\n" + 
-					"        [pc: 2, pc: 128] local: i index: 1 type: int\n" + 
-					"        [pc: 17, pc: 62] local: fis index: 4 type: java.io.FileInputStream\n" + 
-					"        [pc: 99, pc: 104] local: e index: 2 type: java.io.IOException\n" + 
-					"      Stack map table: number of frames 12\n" + 
-					"        [pc: 32, full, stack: {}, locals: {X, int, java.lang.Throwable, java.lang.Throwable, java.io.FileInputStream}]\n" + 
-					"        [pc: 38, same]\n" + 
-					"        [pc: 51, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" + 
-					"        [pc: 62, chop 1 local(s)]\n" + 
-					"        [pc: 64, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" + 
-					"        [pc: 74, same]\n" + 
-					"        [pc: 84, same]\n" + 
-					"        [pc: 86, chop 2 local(s)]\n" + 
-					"        [pc: 98, same_locals_1_stack_item, stack: {java.io.IOException}]\n" + 
-					"        [pc: 112, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" + 
-					"        [pc: 122, same]\n" + 
+					"        [pc: 2, pc: 32] -> 98 when : java.io.IOException\n" +
+					"        [pc: 38, pc: 92] -> 98 when : java.io.IOException\n" +
+					"        [pc: 2, pc: 32] -> 112 when : any\n" +
+					"        [pc: 38, pc: 92] -> 112 when : any\n" +
+					"        [pc: 98, pc: 104] -> 112 when : any\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 5]\n" +
+					"        [pc: 2, line: 7]\n" +
+					"        [pc: 17, line: 8]\n" +
+					"        [pc: 22, line: 9]\n" +
+					"        [pc: 32, line: 15]\n" +
+					"        [pc: 37, line: 8]\n" +
+					"        [pc: 38, line: 9]\n" +
+					"        [pc: 86, line: 10]\n" +
+					"        [pc: 92, line: 15]\n" +
+					"        [pc: 97, line: 11]\n" +
+					"        [pc: 98, line: 12]\n" +
+					"        [pc: 99, line: 13]\n" +
+					"        [pc: 104, line: 15]\n" +
+					"        [pc: 112, line: 14]\n" +
+					"        [pc: 114, line: 15]\n" +
+					"        [pc: 119, line: 16]\n" +
+					"        [pc: 122, line: 15]\n" +
+					"        [pc: 127, line: 17]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 128] local: this index: 0 type: X\n" +
+					"        [pc: 2, pc: 128] local: i index: 1 type: int\n" +
+					"        [pc: 17, pc: 62] local: fis index: 4 type: java.io.FileInputStream\n" +
+					"        [pc: 99, pc: 104] local: e index: 2 type: java.io.IOException\n" +
+					"      Stack map table: number of frames 12\n" +
+					"        [pc: 32, full, stack: {}, locals: {X, int, java.lang.Throwable, java.lang.Throwable, java.io.FileInputStream}]\n" +
+					"        [pc: 38, same]\n" +
+					"        [pc: 51, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" +
+					"        [pc: 62, chop 1 local(s)]\n" +
+					"        [pc: 64, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" +
+					"        [pc: 74, same]\n" +
+					"        [pc: 84, same]\n" +
+					"        [pc: 86, chop 2 local(s)]\n" +
+					"        [pc: 98, same_locals_1_stack_item, stack: {java.io.IOException}]\n" +
+					"        [pc: 112, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" +
+					"        [pc: 122, same]\n" +
 					"        [pc: 127, same]\n";
 			int index = actualOutput.indexOf(expectedOutput);
 			if (index == -1 || expectedOutput.length() == 0) {
@@ -7971,33 +7971,33 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #15 ()Ljava/lang/Object;\n" + 
-					"  // Stack: 1, Locals: 2\n" + 
-					"  public static final java.lang.Object f();\n" + 
-					"     0  aconst_null\n" + 
-					"     1  astore_0 [a]\n" + 
-					"     2  iconst_0\n" + 
-					"     3  tableswitch default: 25\n" + 
-					"          case 1: 20\n" + 
-					"    20  aload_0 [a]\n" + 
-					"    21  astore_1 [b]\n" + 
-					"    22  goto 2\n" + 
-					"    25  aload_0 [a]\n" + 
-					"    26  areturn\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 3]\n" + 
-					"        [pc: 2, line: 6]\n" + 
-					"        [pc: 20, line: 8]\n" + 
-					"        [pc: 22, line: 10]\n" + 
-					"        [pc: 25, line: 15]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 2, pc: 27] local: a index: 0 type: java.lang.Object\n" + 
-					"        [pc: 22, pc: 25] local: b index: 1 type: java.lang.Object\n" + 
-					"      Stack map table: number of frames 3\n" + 
-					"        [pc: 2, append: {java.lang.Object}]\n" + 
-					"        [pc: 20, same]\n" + 
-					"        [pc: 25, same]\n" + 
-					"  \n"; 
+					"  // Method descriptor #15 ()Ljava/lang/Object;\n" +
+					"  // Stack: 1, Locals: 2\n" +
+					"  public static final java.lang.Object f();\n" +
+					"     0  aconst_null\n" +
+					"     1  astore_0 [a]\n" +
+					"     2  iconst_0\n" +
+					"     3  tableswitch default: 25\n" +
+					"          case 1: 20\n" +
+					"    20  aload_0 [a]\n" +
+					"    21  astore_1 [b]\n" +
+					"    22  goto 2\n" +
+					"    25  aload_0 [a]\n" +
+					"    26  areturn\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 3]\n" +
+					"        [pc: 2, line: 6]\n" +
+					"        [pc: 20, line: 8]\n" +
+					"        [pc: 22, line: 10]\n" +
+					"        [pc: 25, line: 15]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 2, pc: 27] local: a index: 0 type: java.lang.Object\n" +
+					"        [pc: 22, pc: 25] local: b index: 1 type: java.lang.Object\n" +
+					"      Stack map table: number of frames 3\n" +
+					"        [pc: 2, append: {java.lang.Object}]\n" +
+					"        [pc: 20, same]\n" +
+					"        [pc: 25, same]\n" +
+					"  \n";
 			int index = actualOutput.indexOf(expectedOutput);
 			if (index == -1 || expectedOutput.length() == 0) {
 				System.out.println(Util.displayString(actualOutput, 2));
@@ -8012,34 +8012,34 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 					"stackmap/StackMapTableFormatError.java",
-					"package stackmap;\n" + 
-					"\n" + 
-					"import java.util.Collection;\n" + 
-					"import java.util.Collections;\n" + 
-					"\n" + 
-					"/**\n" + 
-					" * If compiled with Eclipse (compiler target >= 1.6) this snippet causes the\n" + 
-					" * error \"java.lang.ClassFormatError: StackMapTable format error: bad\n" + 
-					" * verification type\" when executed with JaCoCo code coverage. JaCoCo seems to\n" + 
-					" * get confused by unexpected stackmap frames generated by ECJ.\n" + 
-					" */\n" + 
-					"public class StackMapTableFormatError {\n" + 
-					"\n" + 
-					"	public static Object exec(Collection<Object> set, Object a,\n" + 
-					"			boolean b) {\n" + 
-					"		for (Object e : set) {\n" + 
-					"			if (a != null && (e == null || b)) {\n" + 
-					"				continue;\n" + 
-					"			}\n" + 
-					"			return null;\n" + 
-					"		}\n" + 
-					"		return null;\n" + 
-					"	}\n" + 
-					"	\n" + 
-					"	public static void main(String[] args) {\n" + 
-					"		exec(Collections.emptySet(), null, false);\n" + 
-					"	}\n" + 
-					"\n" + 
+					"package stackmap;\n" +
+					"\n" +
+					"import java.util.Collection;\n" +
+					"import java.util.Collections;\n" +
+					"\n" +
+					"/**\n" +
+					" * If compiled with Eclipse (compiler target >= 1.6) this snippet causes the\n" +
+					" * error \"java.lang.ClassFormatError: StackMapTable format error: bad\n" +
+					" * verification type\" when executed with JaCoCo code coverage. JaCoCo seems to\n" +
+					" * get confused by unexpected stackmap frames generated by ECJ.\n" +
+					" */\n" +
+					"public class StackMapTableFormatError {\n" +
+					"\n" +
+					"	public static Object exec(Collection<Object> set, Object a,\n" +
+					"			boolean b) {\n" +
+					"		for (Object e : set) {\n" +
+					"			if (a != null && (e == null || b)) {\n" +
+					"				continue;\n" +
+					"			}\n" +
+					"			return null;\n" +
+					"		}\n" +
+					"		return null;\n" +
+					"	}\n" +
+					"	\n" +
+					"	public static void main(String[] args) {\n" +
+					"		exec(Collections.emptySet(), null, false);\n" +
+					"	}\n" +
+					"\n" +
 					"}\n"
 			});
 
@@ -8052,49 +8052,49 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				ClassFileBytesDisassembler.DETAILED);
 
 		String expectedOutput =
-				"  // Method descriptor #15 (Ljava/util/Collection;Ljava/lang/Object;Z)Ljava/lang/Object;\n" + 
-				"  // Signature: (Ljava/util/Collection<Ljava/lang/Object;>;Ljava/lang/Object;Z)Ljava/lang/Object;\n" + 
-				"  // Stack: 1, Locals: 5\n" + 
-				"  public static java.lang.Object exec(java.util.Collection set, java.lang.Object a, boolean b);\n" + 
-				"     0  aload_0 [set]\n" + 
-				"     1  invokeinterface java.util.Collection.iterator() : java.util.Iterator [18] [nargs: 1]\n" + 
-				"     6  astore 4\n" + 
-				"     8  goto 36\n" + 
-				"    11  aload 4\n" + 
-				"    13  invokeinterface java.util.Iterator.next() : java.lang.Object [24] [nargs: 1]\n" + 
-				"    18  astore_3 [e]\n" + 
-				"    19  aload_1 [a]\n" + 
-				"    20  ifnull 34\n" + 
-				"    23  aload_3 [e]\n" + 
-				"    24  ifnull 36\n" + 
-				"    27  iload_2 [b]\n" + 
-				"    28  ifeq 34\n" + 
-				"    31  goto 36\n" + 
-				"    34  aconst_null\n" + 
-				"    35  areturn\n" + 
-				"    36  aload 4\n" + 
-				"    38  invokeinterface java.util.Iterator.hasNext() : boolean [30] [nargs: 1]\n" + 
-				"    43  ifne 11\n" + 
-				"    46  aconst_null\n" + 
-				"    47  areturn\n" + 
-				"      Line numbers:\n" + 
-				"        [pc: 0, line: 16]\n" + 
-				"        [pc: 19, line: 17]\n" + 
-				"        [pc: 31, line: 18]\n" + 
-				"        [pc: 34, line: 20]\n" + 
-				"        [pc: 36, line: 16]\n" + 
-				"        [pc: 46, line: 22]\n" + 
-				"      Local variable table:\n" + 
-				"        [pc: 0, pc: 48] local: set index: 0 type: java.util.Collection\n" + 
-				"        [pc: 0, pc: 48] local: a index: 1 type: java.lang.Object\n" + 
-				"        [pc: 0, pc: 48] local: b index: 2 type: boolean\n" + 
-				"        [pc: 19, pc: 36] local: e index: 3 type: java.lang.Object\n" + 
-				"      Local variable type table:\n" + 
-				"        [pc: 0, pc: 48] local: set index: 0 type: java.util.Collection<java.lang.Object>\n" + 
-				"      Stack map table: number of frames 3\n" + 
-				"        [pc: 11, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, _, java.util.Iterator}]\n" + 
-				"        [pc: 34, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, java.lang.Object, java.util.Iterator}]\n" + 
-				"        [pc: 36, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, _, java.util.Iterator}]"; 
+				"  // Method descriptor #15 (Ljava/util/Collection;Ljava/lang/Object;Z)Ljava/lang/Object;\n" +
+				"  // Signature: (Ljava/util/Collection<Ljava/lang/Object;>;Ljava/lang/Object;Z)Ljava/lang/Object;\n" +
+				"  // Stack: 1, Locals: 5\n" +
+				"  public static java.lang.Object exec(java.util.Collection set, java.lang.Object a, boolean b);\n" +
+				"     0  aload_0 [set]\n" +
+				"     1  invokeinterface java.util.Collection.iterator() : java.util.Iterator [18] [nargs: 1]\n" +
+				"     6  astore 4\n" +
+				"     8  goto 36\n" +
+				"    11  aload 4\n" +
+				"    13  invokeinterface java.util.Iterator.next() : java.lang.Object [24] [nargs: 1]\n" +
+				"    18  astore_3 [e]\n" +
+				"    19  aload_1 [a]\n" +
+				"    20  ifnull 34\n" +
+				"    23  aload_3 [e]\n" +
+				"    24  ifnull 36\n" +
+				"    27  iload_2 [b]\n" +
+				"    28  ifeq 34\n" +
+				"    31  goto 36\n" +
+				"    34  aconst_null\n" +
+				"    35  areturn\n" +
+				"    36  aload 4\n" +
+				"    38  invokeinterface java.util.Iterator.hasNext() : boolean [30] [nargs: 1]\n" +
+				"    43  ifne 11\n" +
+				"    46  aconst_null\n" +
+				"    47  areturn\n" +
+				"      Line numbers:\n" +
+				"        [pc: 0, line: 16]\n" +
+				"        [pc: 19, line: 17]\n" +
+				"        [pc: 31, line: 18]\n" +
+				"        [pc: 34, line: 20]\n" +
+				"        [pc: 36, line: 16]\n" +
+				"        [pc: 46, line: 22]\n" +
+				"      Local variable table:\n" +
+				"        [pc: 0, pc: 48] local: set index: 0 type: java.util.Collection\n" +
+				"        [pc: 0, pc: 48] local: a index: 1 type: java.lang.Object\n" +
+				"        [pc: 0, pc: 48] local: b index: 2 type: boolean\n" +
+				"        [pc: 19, pc: 36] local: e index: 3 type: java.lang.Object\n" +
+				"      Local variable type table:\n" +
+				"        [pc: 0, pc: 48] local: set index: 0 type: java.util.Collection<java.lang.Object>\n" +
+				"      Stack map table: number of frames 3\n" +
+				"        [pc: 11, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, _, java.util.Iterator}]\n" +
+				"        [pc: 34, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, java.lang.Object, java.util.Iterator}]\n" +
+				"        [pc: 36, full, stack: {}, locals: {java.util.Collection, java.lang.Object, int, _, java.util.Iterator}]";
 		int index = actualOutput.indexOf(expectedOutput);
 		if (index == -1 || expectedOutput.length() == 0) {
 			System.out.println(Util.displayString(actualOutput, 2));
@@ -8109,44 +8109,44 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 					"snippet/X.java",
-					"package snippet;\n" + 
-					"\n" + 
-					"\n" + 
-					"public class X { \n" + 
-					"	private void foo(boolean delete) { \n" + 
-					"		 \n" + 
-					"		String s = bar(); \n" + 
-					"		StringBuffer buffer =new StringBuffer(); \n" + 
-					"		 \n" + 
-					"		try { \n" + 
-					"			 \n" + 
-					"			String[] datas = new String[] { \"\" }; \n" + 
-					"			Object[] data= new Object[] { s }; \n" + 
-					"			try { \n" + 
-					"				buffer.append(datas).append(data); \n" + 
-					"			} catch (Exception e) { \n" + 
-					"				if (e != null) \n" + 
-					"					throw e; \n" + 
-					"				return; \n" + 
-					"			} \n" + 
-					"				 \n" + 
-					"			if (delete) \n" + 
-					"				buffer.delete(0, buffer.length()); \n" + 
-					"			 \n" + 
-					"		} catch (Exception x) { \n" + 
-					"		} finally { \n" + 
-					"			buffer = null; \n" + 
-					"		} \n" + 
-					"	} \n" + 
-					"	 \n" + 
-					"	String bar() { \n" + 
-					"		return \"\"; \n" + 
-					"	} \n" + 
-					"	 \n" + 
-					"	public static void main(String[] args) { \n" + 
-					"		new X().foo(false); \n" + 
-					"		System.out.println(\"SUCCESS\"); \n" + 
-					"	} \n" + 
+					"package snippet;\n" +
+					"\n" +
+					"\n" +
+					"public class X { \n" +
+					"	private void foo(boolean delete) { \n" +
+					"		 \n" +
+					"		String s = bar(); \n" +
+					"		StringBuffer buffer =new StringBuffer(); \n" +
+					"		 \n" +
+					"		try { \n" +
+					"			 \n" +
+					"			String[] datas = new String[] { \"\" }; \n" +
+					"			Object[] data= new Object[] { s }; \n" +
+					"			try { \n" +
+					"				buffer.append(datas).append(data); \n" +
+					"			} catch (Exception e) { \n" +
+					"				if (e != null) \n" +
+					"					throw e; \n" +
+					"				return; \n" +
+					"			} \n" +
+					"				 \n" +
+					"			if (delete) \n" +
+					"				buffer.delete(0, buffer.length()); \n" +
+					"			 \n" +
+					"		} catch (Exception x) { \n" +
+					"		} finally { \n" +
+					"			buffer = null; \n" +
+					"		} \n" +
+					"	} \n" +
+					"	 \n" +
+					"	String bar() { \n" +
+					"		return \"\"; \n" +
+					"	} \n" +
+					"	 \n" +
+					"	public static void main(String[] args) { \n" +
+					"		new X().foo(false); \n" +
+					"		System.out.println(\"SUCCESS\"); \n" +
+					"	} \n" +
 					"}\n"
 			});
 
@@ -8159,15 +8159,15 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 				ClassFileBytesDisassembler.DETAILED);
 
 		String expectedOutput =
-				"Stack map table: number of frames 7\n" + 
-				"        [pc: 49, full, stack: {java.lang.Exception}, locals: {snippet.X, int, java.lang.String, java.lang.StringBuffer, java.lang.String[], java.lang.Object[]}]\n" + 
-				"        [pc: 59, append: {java.lang.Exception}]\n" + 
-				"        [pc: 62, chop 1 local(s)]\n" + 
-				"        [pc: 79, full, stack: {java.lang.Exception}, locals: {snippet.X, int, java.lang.String, java.lang.StringBuffer}]\n" + 
-				"        [pc: 86, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" + 
-				"        [pc: 93, same]\n" + 
-				"        [pc: 95, same]\n"; 
-		
+				"Stack map table: number of frames 7\n" +
+				"        [pc: 49, full, stack: {java.lang.Exception}, locals: {snippet.X, int, java.lang.String, java.lang.StringBuffer, java.lang.String[], java.lang.Object[]}]\n" +
+				"        [pc: 59, append: {java.lang.Exception}]\n" +
+				"        [pc: 62, chop 1 local(s)]\n" +
+				"        [pc: 79, full, stack: {java.lang.Exception}, locals: {snippet.X, int, java.lang.String, java.lang.StringBuffer}]\n" +
+				"        [pc: 86, same_locals_1_stack_item, stack: {java.lang.Throwable}]\n" +
+				"        [pc: 93, same]\n" +
+				"        [pc: 95, same]\n";
+
 		int index = actualOutput.indexOf(expectedOutput);
 		if (index == -1 || expectedOutput.length() == 0) {
 			System.out.println(Util.displayString(actualOutput, 2));
@@ -8181,40 +8181,40 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 			new String[] {
 					"X.java",
-					"public class X\n" + 
-					"{\n" + 
-					"	public static Boolean test() throws Exception\n" + 
-					"	{\n" + 
-					"		try\n" + 
-					"		{\n" + 
-					"			for (int i = 0; i < 1; i++)\n" + 
-					"			{\n" + 
-					"				long status = System.currentTimeMillis();\n" + 
-					"				if (status < 0)\n" + 
-					"					return false;\n" + 
-					"				if (status == 1)\n" + 
-					"					return false;\n" + 
-					"			}\n" + 
-					"			\n" + 
-					"			return false;\n" + 
-					"		}\n" + 
-					"		finally\n" + 
-					"		{\n" + 
-					"			System.currentTimeMillis();\n" + 
-					"		}\n" + 
-					"	}\n" + 
-					"	\n" + 
-					"	public static void main(String[] args) throws Exception\n" + 
-					"	{\n" + 
-					"		System.out.print(\"Starting\");\n" + 
-					"		test();\n" + 
-					"		System.out.println(\"Done\");\n" + 
-					"	}\n" + 
+					"public class X\n" +
+					"{\n" +
+					"	public static Boolean test() throws Exception\n" +
+					"	{\n" +
+					"		try\n" +
+					"		{\n" +
+					"			for (int i = 0; i < 1; i++)\n" +
+					"			{\n" +
+					"				long status = System.currentTimeMillis();\n" +
+					"				if (status < 0)\n" +
+					"					return false;\n" +
+					"				if (status == 1)\n" +
+					"					return false;\n" +
+					"			}\n" +
+					"			\n" +
+					"			return false;\n" +
+					"		}\n" +
+					"		finally\n" +
+					"		{\n" +
+					"			System.currentTimeMillis();\n" +
+					"		}\n" +
+					"	}\n" +
+					"	\n" +
+					"	public static void main(String[] args) throws Exception\n" +
+					"	{\n" +
+					"		System.out.print(\"Starting\");\n" +
+					"		test();\n" +
+					"		System.out.println(\"Done\");\n" +
+					"	}\n" +
 					"}"
 			},
 			"StartingDone");
 	}
-	
+
 	// https://bugs.eclipse.org/412203
 	public void testBug412203_a() throws Exception {
 		if (this.complianceLevel < ClassFileConstants.JDK1_7) return; // using <>
@@ -8227,59 +8227,59 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X2.java",
-					"import java.util.*;\n" + 
-					"\n" + 
-					"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
-					"\n" + 
-					"class Y {\n" + 
-					"	public Y() { }\n" + 
-					"}\n" + 
-					"\n" + 
-					"@NonNullByDefault\n" + 
-					"abstract class X1 {\n" + 
-					"\n" + 
-					"	private Object a;\n" + 
-					"	private Object b;\n" + 
-					"	private Object c;\n" + 
-					"	private Object d;\n" + 
-					"	private Object e;\n" + 
-					"	private Object f;\n" + 
-					"\n" + 
-					"	protected Object name;\n" + 
-					"\n" + 
-					"	@SuppressWarnings(\"null\")\n" + 
-					"	protected X1() {\n" + 
-					"		super ();\n" + 
-					"	}\n" + 
-					"\n" + 
-					"}\n" + 
-					"public class X2 extends X1 {\n" + 
-					"\n" + 
-					"\n" + 
-					"	public static final int ID = 4711;\n" + 
-					"\n" + 
-					"	private Object x;\n" + 
-					"	private Object y;\n" + 
-					"	private Object z;\n" + 
-					"\n" + 
-					"	private Runnable runable = new Runnable () {\n" + 
-					"		@Override\n" + 
-					"		public void run () {\n" + 
-					"			// whatever\n" + 
-					"		}\n" + 
-					"	};\n" + 
-					"\n" + 
-					"	private void init () {\n" + 
-					"		final Object selector = new Object ();\n" + 
-					"		this.name = new Object ();\n" + 
-					"		LinkedList<Character> invalidCharactersList = new LinkedList<> ();\n" + 
-					"		char[] invalidCharacters = new char[invalidCharactersList.size ()];\n" + 
-					"		for (int i = 0; i < invalidCharacters.length; i++) {\n" + 
-					"			invalidCharacters[i] = invalidCharactersList.get (i).charValue ();\n" + 
-					"		}\n" + 
-					"		Y inputVerifier = new Y();\n" + 
-					"	}\n" + 
-					"\n" + 
+					"import java.util.*;\n" +
+					"\n" +
+					"import org.eclipse.jdt.annotation.NonNullByDefault;\n" +
+					"\n" +
+					"class Y {\n" +
+					"	public Y() { }\n" +
+					"}\n" +
+					"\n" +
+					"@NonNullByDefault\n" +
+					"abstract class X1 {\n" +
+					"\n" +
+					"	private Object a;\n" +
+					"	private Object b;\n" +
+					"	private Object c;\n" +
+					"	private Object d;\n" +
+					"	private Object e;\n" +
+					"	private Object f;\n" +
+					"\n" +
+					"	protected Object name;\n" +
+					"\n" +
+					"	@SuppressWarnings(\"null\")\n" +
+					"	protected X1() {\n" +
+					"		super ();\n" +
+					"	}\n" +
+					"\n" +
+					"}\n" +
+					"public class X2 extends X1 {\n" +
+					"\n" +
+					"\n" +
+					"	public static final int ID = 4711;\n" +
+					"\n" +
+					"	private Object x;\n" +
+					"	private Object y;\n" +
+					"	private Object z;\n" +
+					"\n" +
+					"	private Runnable runable = new Runnable () {\n" +
+					"		@Override\n" +
+					"		public void run () {\n" +
+					"			// whatever\n" +
+					"		}\n" +
+					"	};\n" +
+					"\n" +
+					"	private void init () {\n" +
+					"		final Object selector = new Object ();\n" +
+					"		this.name = new Object ();\n" +
+					"		LinkedList<Character> invalidCharactersList = new LinkedList<> ();\n" +
+					"		char[] invalidCharacters = new char[invalidCharactersList.size ()];\n" +
+					"		for (int i = 0; i < invalidCharacters.length; i++) {\n" +
+					"			invalidCharacters[i] = invalidCharactersList.get (i).charValue ();\n" +
+					"		}\n" +
+					"		Y inputVerifier = new Y();\n" +
+					"	}\n" +
+					"\n" +
 					"}\n",
 				},
 				"",
@@ -8299,68 +8299,68 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #16 ()V\n" + 
-					"  // Stack: 4, Locals: 5\n" + 
-					"  private void init();\n" + 
-					"     0  new java.lang.Object [32]\n" + 
-					"     3  dup\n" + 
-					"     4  invokespecial java.lang.Object() [34]\n" + 
-					"     7  astore_1 [selector]\n" + 
-					"     8  aload_0 [this]\n" + 
-					"     9  new java.lang.Object [32]\n" + 
-					"    12  dup\n" + 
-					"    13  invokespecial java.lang.Object() [34]\n" + 
-					"    16  putfield X2.name : java.lang.Object [35]\n" + 
-					"    19  new java.util.LinkedList [38]\n" + 
-					"    22  dup\n" + 
-					"    23  invokespecial java.util.LinkedList() [40]\n" + 
-					"    26  astore_2 [invalidCharactersList]\n" + 
-					"    27  aload_2 [invalidCharactersList]\n" + 
-					"    28  invokevirtual java.util.LinkedList.size() : int [41]\n" + 
-					"    31  newarray char [5]\n" + 
-					"    33  astore_3 [invalidCharacters]\n" + 
-					"    34  iconst_0\n" + 
-					"    35  istore 4 [i]\n" + 
-					"    37  goto 59\n" + 
-					"    40  aload_3 [invalidCharacters]\n" + 
-					"    41  iload 4 [i]\n" + 
-					"    43  aload_2 [invalidCharactersList]\n" + 
-					"    44  iload 4 [i]\n" + 
-					"    46  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [45]\n" + 
-					"    49  checkcast java.lang.Character [49]\n" + 
-					"    52  invokevirtual java.lang.Character.charValue() : char [51]\n" + 
-					"    55  castore\n" + 
-					"    56  iinc 4 1 [i]\n" + 
-					"    59  iload 4 [i]\n" + 
-					"    61  aload_3 [invalidCharacters]\n" + 
-					"    62  arraylength\n" + 
-					"    63  if_icmplt 40\n" + 
-					"    66  new Y [55]\n" + 
-					"    69  dup\n" + 
-					"    70  invokespecial Y() [57]\n" + 
-					"    73  astore 4 [inputVerifier]\n" + 
-					"    75  return\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 44]\n" + 
-					"        [pc: 8, line: 45]\n" + 
-					"        [pc: 19, line: 46]\n" + 
-					"        [pc: 27, line: 47]\n" + 
-					"        [pc: 34, line: 48]\n" + 
-					"        [pc: 40, line: 49]\n" + 
-					"        [pc: 56, line: 48]\n" + 
-					"        [pc: 66, line: 51]\n" + 
-					"        [pc: 75, line: 52]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 76] local: this index: 0 type: X2\n" + 
-					"        [pc: 8, pc: 76] local: selector index: 1 type: java.lang.Object\n" + 
-					"        [pc: 27, pc: 76] local: invalidCharactersList index: 2 type: java.util.LinkedList\n" + 
-					"        [pc: 34, pc: 76] local: invalidCharacters index: 3 type: char[]\n" + 
-					"        [pc: 37, pc: 66] local: i index: 4 type: int\n" + 
-					"        [pc: 75, pc: 76] local: inputVerifier index: 4 type: Y\n" + 
-					"      Local variable type table:\n" + 
-					"        [pc: 27, pc: 76] local: invalidCharactersList index: 2 type: java.util.LinkedList<java.lang.Character>\n" + 
-					"      Stack map table: number of frames 2\n" + 
-					"        [pc: 40, full, stack: {}, locals: {X2, java.lang.Object, java.util.LinkedList, char[], int}]\n" + 
+					"  // Method descriptor #16 ()V\n" +
+					"  // Stack: 4, Locals: 5\n" +
+					"  private void init();\n" +
+					"     0  new java.lang.Object [32]\n" +
+					"     3  dup\n" +
+					"     4  invokespecial java.lang.Object() [34]\n" +
+					"     7  astore_1 [selector]\n" +
+					"     8  aload_0 [this]\n" +
+					"     9  new java.lang.Object [32]\n" +
+					"    12  dup\n" +
+					"    13  invokespecial java.lang.Object() [34]\n" +
+					"    16  putfield X2.name : java.lang.Object [35]\n" +
+					"    19  new java.util.LinkedList [38]\n" +
+					"    22  dup\n" +
+					"    23  invokespecial java.util.LinkedList() [40]\n" +
+					"    26  astore_2 [invalidCharactersList]\n" +
+					"    27  aload_2 [invalidCharactersList]\n" +
+					"    28  invokevirtual java.util.LinkedList.size() : int [41]\n" +
+					"    31  newarray char [5]\n" +
+					"    33  astore_3 [invalidCharacters]\n" +
+					"    34  iconst_0\n" +
+					"    35  istore 4 [i]\n" +
+					"    37  goto 59\n" +
+					"    40  aload_3 [invalidCharacters]\n" +
+					"    41  iload 4 [i]\n" +
+					"    43  aload_2 [invalidCharactersList]\n" +
+					"    44  iload 4 [i]\n" +
+					"    46  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [45]\n" +
+					"    49  checkcast java.lang.Character [49]\n" +
+					"    52  invokevirtual java.lang.Character.charValue() : char [51]\n" +
+					"    55  castore\n" +
+					"    56  iinc 4 1 [i]\n" +
+					"    59  iload 4 [i]\n" +
+					"    61  aload_3 [invalidCharacters]\n" +
+					"    62  arraylength\n" +
+					"    63  if_icmplt 40\n" +
+					"    66  new Y [55]\n" +
+					"    69  dup\n" +
+					"    70  invokespecial Y() [57]\n" +
+					"    73  astore 4 [inputVerifier]\n" +
+					"    75  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 44]\n" +
+					"        [pc: 8, line: 45]\n" +
+					"        [pc: 19, line: 46]\n" +
+					"        [pc: 27, line: 47]\n" +
+					"        [pc: 34, line: 48]\n" +
+					"        [pc: 40, line: 49]\n" +
+					"        [pc: 56, line: 48]\n" +
+					"        [pc: 66, line: 51]\n" +
+					"        [pc: 75, line: 52]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 76] local: this index: 0 type: X2\n" +
+					"        [pc: 8, pc: 76] local: selector index: 1 type: java.lang.Object\n" +
+					"        [pc: 27, pc: 76] local: invalidCharactersList index: 2 type: java.util.LinkedList\n" +
+					"        [pc: 34, pc: 76] local: invalidCharacters index: 3 type: char[]\n" +
+					"        [pc: 37, pc: 66] local: i index: 4 type: int\n" +
+					"        [pc: 75, pc: 76] local: inputVerifier index: 4 type: Y\n" +
+					"      Local variable type table:\n" +
+					"        [pc: 27, pc: 76] local: invalidCharactersList index: 2 type: java.util.LinkedList<java.lang.Character>\n" +
+					"      Stack map table: number of frames 2\n" +
+					"        [pc: 40, full, stack: {}, locals: {X2, java.lang.Object, java.util.LinkedList, char[], int}]\n" +
 					"        [pc: 59, same]\n";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -8384,24 +8384,24 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X2.java",
-					"import java.util.LinkedList;\n" + 
-					"\n" + 
-					"import org.eclipse.jdt.annotation.NonNull;\n" + 
-					"\n" + 
-					"abstract class X1 {\n" + 
-					"	protected @NonNull Object name = new Object();\n" + 
-					"}\n" + 
-					"\n" + 
-					"public class X2 extends X1 {\n" + 
-					"	void init () {\n" + 
-					"		this.name = new Object ();\n" + 
-					"		LinkedList<Character> l = new LinkedList<Character> ();\n" + 
-					"		char[] cs = new char[l.size ()];\n" + 
-					"		for (int i = 0; i < cs.length; i++) {\n" + 
-					"			cs[i] = l.get (i).charValue ();\n" + 
-					"		}\n" + 
-					"		Object o2 = new Object();\n" + 
-					"	}\n" + 
+					"import java.util.LinkedList;\n" +
+					"\n" +
+					"import org.eclipse.jdt.annotation.NonNull;\n" +
+					"\n" +
+					"abstract class X1 {\n" +
+					"	protected @NonNull Object name = new Object();\n" +
+					"}\n" +
+					"\n" +
+					"public class X2 extends X1 {\n" +
+					"	void init () {\n" +
+					"		this.name = new Object ();\n" +
+					"		LinkedList<Character> l = new LinkedList<Character> ();\n" +
+					"		char[] cs = new char[l.size ()];\n" +
+					"		for (int i = 0; i < cs.length; i++) {\n" +
+					"			cs[i] = l.get (i).charValue ();\n" +
+					"		}\n" +
+					"		Object o2 = new Object();\n" +
+					"	}\n" +
 					"}\n",
 				},
 				"",
@@ -8421,63 +8421,63 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #6 ()V\n" + 
-					"  // Stack: 4, Locals: 4\n" + 
-					"  void init();\n" + 
-					"     0  aload_0 [this]\n" + 
-					"     1  new java.lang.Object [15]\n" + 
-					"     4  dup\n" + 
-					"     5  invokespecial java.lang.Object() [17]\n" + 
-					"     8  putfield X2.name : java.lang.Object [18]\n" + 
-					"    11  new java.util.LinkedList [22]\n" + 
-					"    14  dup\n" + 
-					"    15  invokespecial java.util.LinkedList() [24]\n" + 
-					"    18  astore_1 [l]\n" + 
-					"    19  aload_1 [l]\n" + 
-					"    20  invokevirtual java.util.LinkedList.size() : int [25]\n" + 
-					"    23  newarray char [5]\n" + 
-					"    25  astore_2 [cs]\n" + 
-					"    26  iconst_0\n" + 
-					"    27  istore_3 [i]\n" + 
-					"    28  goto 48\n" + 
-					"    31  aload_2 [cs]\n" + 
-					"    32  iload_3 [i]\n" + 
-					"    33  aload_1 [l]\n" + 
-					"    34  iload_3 [i]\n" + 
-					"    35  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [29]\n" + 
-					"    38  checkcast java.lang.Character [33]\n" + 
-					"    41  invokevirtual java.lang.Character.charValue() : char [35]\n" + 
-					"    44  castore\n" + 
-					"    45  iinc 3 1 [i]\n" + 
-					"    48  iload_3 [i]\n" + 
-					"    49  aload_2 [cs]\n" + 
-					"    50  arraylength\n" + 
-					"    51  if_icmplt 31\n" + 
-					"    54  new java.lang.Object [15]\n" + 
-					"    57  dup\n" + 
-					"    58  invokespecial java.lang.Object() [17]\n" + 
-					"    61  astore_3 [o2]\n" + 
-					"    62  return\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 11]\n" + 
-					"        [pc: 11, line: 12]\n" + 
-					"        [pc: 19, line: 13]\n" + 
-					"        [pc: 26, line: 14]\n" + 
-					"        [pc: 31, line: 15]\n" + 
-					"        [pc: 45, line: 14]\n" + 
-					"        [pc: 54, line: 17]\n" + 
-					"        [pc: 62, line: 18]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 63] local: this index: 0 type: X2\n" + 
-					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList\n" + 
-					"        [pc: 26, pc: 63] local: cs index: 2 type: char[]\n" + 
-					"        [pc: 28, pc: 54] local: i index: 3 type: int\n" + 
-					"        [pc: 62, pc: 63] local: o2 index: 3 type: java.lang.Object\n" + 
-					"      Local variable type table:\n" + 
-					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList<java.lang.Character>\n" + 
-					"      Stack map table: number of frames 2\n" + 
-					"        [pc: 31, append: {java.util.LinkedList, char[], int}]\n" + 
-					"        [pc: 48, same]\n" + 
+					"  // Method descriptor #6 ()V\n" +
+					"  // Stack: 4, Locals: 4\n" +
+					"  void init();\n" +
+					"     0  aload_0 [this]\n" +
+					"     1  new java.lang.Object [15]\n" +
+					"     4  dup\n" +
+					"     5  invokespecial java.lang.Object() [17]\n" +
+					"     8  putfield X2.name : java.lang.Object [18]\n" +
+					"    11  new java.util.LinkedList [22]\n" +
+					"    14  dup\n" +
+					"    15  invokespecial java.util.LinkedList() [24]\n" +
+					"    18  astore_1 [l]\n" +
+					"    19  aload_1 [l]\n" +
+					"    20  invokevirtual java.util.LinkedList.size() : int [25]\n" +
+					"    23  newarray char [5]\n" +
+					"    25  astore_2 [cs]\n" +
+					"    26  iconst_0\n" +
+					"    27  istore_3 [i]\n" +
+					"    28  goto 48\n" +
+					"    31  aload_2 [cs]\n" +
+					"    32  iload_3 [i]\n" +
+					"    33  aload_1 [l]\n" +
+					"    34  iload_3 [i]\n" +
+					"    35  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [29]\n" +
+					"    38  checkcast java.lang.Character [33]\n" +
+					"    41  invokevirtual java.lang.Character.charValue() : char [35]\n" +
+					"    44  castore\n" +
+					"    45  iinc 3 1 [i]\n" +
+					"    48  iload_3 [i]\n" +
+					"    49  aload_2 [cs]\n" +
+					"    50  arraylength\n" +
+					"    51  if_icmplt 31\n" +
+					"    54  new java.lang.Object [15]\n" +
+					"    57  dup\n" +
+					"    58  invokespecial java.lang.Object() [17]\n" +
+					"    61  astore_3 [o2]\n" +
+					"    62  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 11]\n" +
+					"        [pc: 11, line: 12]\n" +
+					"        [pc: 19, line: 13]\n" +
+					"        [pc: 26, line: 14]\n" +
+					"        [pc: 31, line: 15]\n" +
+					"        [pc: 45, line: 14]\n" +
+					"        [pc: 54, line: 17]\n" +
+					"        [pc: 62, line: 18]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 63] local: this index: 0 type: X2\n" +
+					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList\n" +
+					"        [pc: 26, pc: 63] local: cs index: 2 type: char[]\n" +
+					"        [pc: 28, pc: 54] local: i index: 3 type: int\n" +
+					"        [pc: 62, pc: 63] local: o2 index: 3 type: java.lang.Object\n" +
+					"      Local variable type table:\n" +
+					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList<java.lang.Character>\n" +
+					"      Stack map table: number of frames 2\n" +
+					"        [pc: 31, append: {java.util.LinkedList, char[], int}]\n" +
+					"        [pc: 48, same]\n" +
 					"}";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -8501,24 +8501,24 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X2.java",
-					"import java.util.LinkedList;\n" + 
-					"\n" + 
-					"import org.eclipse.jdt.annotation.NonNull;\n" + 
-					"\n" + 
-					"abstract class X1 {\n" + 
-					"	protected @NonNull Object name = new Object();\n" + 
-					"}\n" + 
-					"\n" + 
-					"public class X2 extends X1 {\n" + 
-					"	void init () {\n" + 
-					"		name = new Object ();\n" + 
-					"		LinkedList<Character> l = new LinkedList<Character> ();\n" + 
-					"		char[] cs = new char[l.size ()];\n" + 
-					"		for (int i = 0; i < cs.length; i++) {\n" + 
-					"			cs[i] = l.get (i).charValue ();\n" + 
-					"		}\n" + 
-					"		Object o2 = new Object();\n" + 
-					"	}\n" + 
+					"import java.util.LinkedList;\n" +
+					"\n" +
+					"import org.eclipse.jdt.annotation.NonNull;\n" +
+					"\n" +
+					"abstract class X1 {\n" +
+					"	protected @NonNull Object name = new Object();\n" +
+					"}\n" +
+					"\n" +
+					"public class X2 extends X1 {\n" +
+					"	void init () {\n" +
+					"		name = new Object ();\n" +
+					"		LinkedList<Character> l = new LinkedList<Character> ();\n" +
+					"		char[] cs = new char[l.size ()];\n" +
+					"		for (int i = 0; i < cs.length; i++) {\n" +
+					"			cs[i] = l.get (i).charValue ();\n" +
+					"		}\n" +
+					"		Object o2 = new Object();\n" +
+					"	}\n" +
 					"}\n",
 				},
 				"",
@@ -8538,63 +8538,63 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					ClassFileBytesDisassembler.DETAILED);
 
 			String expectedOutput =
-					"  // Method descriptor #6 ()V\n" + 
-					"  // Stack: 4, Locals: 4\n" + 
-					"  void init();\n" + 
-					"     0  aload_0 [this]\n" + 
-					"     1  new java.lang.Object [15]\n" + 
-					"     4  dup\n" + 
-					"     5  invokespecial java.lang.Object() [17]\n" + 
-					"     8  putfield X2.name : java.lang.Object [18]\n" + 
-					"    11  new java.util.LinkedList [22]\n" + 
-					"    14  dup\n" + 
-					"    15  invokespecial java.util.LinkedList() [24]\n" + 
-					"    18  astore_1 [l]\n" + 
-					"    19  aload_1 [l]\n" + 
-					"    20  invokevirtual java.util.LinkedList.size() : int [25]\n" + 
-					"    23  newarray char [5]\n" + 
-					"    25  astore_2 [cs]\n" + 
-					"    26  iconst_0\n" + 
-					"    27  istore_3 [i]\n" + 
-					"    28  goto 48\n" + 
-					"    31  aload_2 [cs]\n" + 
-					"    32  iload_3 [i]\n" + 
-					"    33  aload_1 [l]\n" + 
-					"    34  iload_3 [i]\n" + 
-					"    35  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [29]\n" + 
-					"    38  checkcast java.lang.Character [33]\n" + 
-					"    41  invokevirtual java.lang.Character.charValue() : char [35]\n" + 
-					"    44  castore\n" + 
-					"    45  iinc 3 1 [i]\n" + 
-					"    48  iload_3 [i]\n" + 
-					"    49  aload_2 [cs]\n" + 
-					"    50  arraylength\n" + 
-					"    51  if_icmplt 31\n" + 
-					"    54  new java.lang.Object [15]\n" + 
-					"    57  dup\n" + 
-					"    58  invokespecial java.lang.Object() [17]\n" + 
-					"    61  astore_3 [o2]\n" + 
-					"    62  return\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 11]\n" + 
-					"        [pc: 11, line: 12]\n" + 
-					"        [pc: 19, line: 13]\n" + 
-					"        [pc: 26, line: 14]\n" + 
-					"        [pc: 31, line: 15]\n" + 
-					"        [pc: 45, line: 14]\n" + 
-					"        [pc: 54, line: 17]\n" + 
-					"        [pc: 62, line: 18]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 63] local: this index: 0 type: X2\n" + 
-					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList\n" + 
-					"        [pc: 26, pc: 63] local: cs index: 2 type: char[]\n" + 
-					"        [pc: 28, pc: 54] local: i index: 3 type: int\n" + 
-					"        [pc: 62, pc: 63] local: o2 index: 3 type: java.lang.Object\n" + 
-					"      Local variable type table:\n" + 
-					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList<java.lang.Character>\n" + 
-					"      Stack map table: number of frames 2\n" + 
-					"        [pc: 31, append: {java.util.LinkedList, char[], int}]\n" + 
-					"        [pc: 48, same]\n" + 
+					"  // Method descriptor #6 ()V\n" +
+					"  // Stack: 4, Locals: 4\n" +
+					"  void init();\n" +
+					"     0  aload_0 [this]\n" +
+					"     1  new java.lang.Object [15]\n" +
+					"     4  dup\n" +
+					"     5  invokespecial java.lang.Object() [17]\n" +
+					"     8  putfield X2.name : java.lang.Object [18]\n" +
+					"    11  new java.util.LinkedList [22]\n" +
+					"    14  dup\n" +
+					"    15  invokespecial java.util.LinkedList() [24]\n" +
+					"    18  astore_1 [l]\n" +
+					"    19  aload_1 [l]\n" +
+					"    20  invokevirtual java.util.LinkedList.size() : int [25]\n" +
+					"    23  newarray char [5]\n" +
+					"    25  astore_2 [cs]\n" +
+					"    26  iconst_0\n" +
+					"    27  istore_3 [i]\n" +
+					"    28  goto 48\n" +
+					"    31  aload_2 [cs]\n" +
+					"    32  iload_3 [i]\n" +
+					"    33  aload_1 [l]\n" +
+					"    34  iload_3 [i]\n" +
+					"    35  invokevirtual java.util.LinkedList.get(int) : java.lang.Object [29]\n" +
+					"    38  checkcast java.lang.Character [33]\n" +
+					"    41  invokevirtual java.lang.Character.charValue() : char [35]\n" +
+					"    44  castore\n" +
+					"    45  iinc 3 1 [i]\n" +
+					"    48  iload_3 [i]\n" +
+					"    49  aload_2 [cs]\n" +
+					"    50  arraylength\n" +
+					"    51  if_icmplt 31\n" +
+					"    54  new java.lang.Object [15]\n" +
+					"    57  dup\n" +
+					"    58  invokespecial java.lang.Object() [17]\n" +
+					"    61  astore_3 [o2]\n" +
+					"    62  return\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 11]\n" +
+					"        [pc: 11, line: 12]\n" +
+					"        [pc: 19, line: 13]\n" +
+					"        [pc: 26, line: 14]\n" +
+					"        [pc: 31, line: 15]\n" +
+					"        [pc: 45, line: 14]\n" +
+					"        [pc: 54, line: 17]\n" +
+					"        [pc: 62, line: 18]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 63] local: this index: 0 type: X2\n" +
+					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList\n" +
+					"        [pc: 26, pc: 63] local: cs index: 2 type: char[]\n" +
+					"        [pc: 28, pc: 54] local: i index: 3 type: int\n" +
+					"        [pc: 62, pc: 63] local: o2 index: 3 type: java.lang.Object\n" +
+					"      Local variable type table:\n" +
+					"        [pc: 19, pc: 63] local: l index: 1 type: java.util.LinkedList<java.lang.Character>\n" +
+					"      Stack map table: number of frames 2\n" +
+					"        [pc: 31, append: {java.util.LinkedList, char[], int}]\n" +
+					"        [pc: 48, same]\n" +
 					"}";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -8609,33 +8609,33 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
 				new String[] {
 					"X.java",
-					"public class X {\n" + 
-					"\n" + 
-					"	public static void main(String[] args) {\n" + 
-					"		X error = new X();\n" + 
-					"		error.reproduce(\"hello\");\n" + 
-					"		System.out.println(\"DONE\");\n" + 
-					"	}\n" + 
-					"	\n" + 
-					"	public Object reproduce(Object param) throws RuntimeException {\n" + 
-					"		Object local;\n" + 
-					"		try {\n" + 
-					"			return param; \n" + 
-					"		} \n" + 
-					"		catch (RuntimeException e) {\n" + 
-					"			return null;\n" + 
-					"		} \n" + 
-					"		finally {\n" + 
-					"			if (param != null) {\n" + 
-					"				System.out.println(\"FINALLY\");\n" + 
-					"			}\n" + 
-					"			local = null;\n" + 
-					"		}\n" + 
-					"	}\n" + 
-					"}\n" + 
+					"public class X {\n" +
+					"\n" +
+					"	public static void main(String[] args) {\n" +
+					"		X error = new X();\n" +
+					"		error.reproduce(\"hello\");\n" +
+					"		System.out.println(\"DONE\");\n" +
+					"	}\n" +
+					"	\n" +
+					"	public Object reproduce(Object param) throws RuntimeException {\n" +
+					"		Object local;\n" +
+					"		try {\n" +
+					"			return param; \n" +
+					"		} \n" +
+					"		catch (RuntimeException e) {\n" +
+					"			return null;\n" +
+					"		} \n" +
+					"		finally {\n" +
+					"			if (param != null) {\n" +
+					"				System.out.println(\"FINALLY\");\n" +
+					"			}\n" +
+					"			local = null;\n" +
+					"		}\n" +
+					"	}\n" +
+					"}\n" +
 					"",
 				},
-				"FINALLY\n" + 
+				"FINALLY\n" +
 				"DONE");
 
 			ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
@@ -8646,72 +8646,72 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"\n",
 					ClassFileBytesDisassembler.DETAILED);
 			String expectedOutput =
-					"  // Stack: 2, Locals: 6\n" + 
-					"  public java.lang.Object reproduce(java.lang.Object param) throws java.lang.RuntimeException;\n" + 
-					"     0  aload_1 [param]\n" + 
-					"     1  astore 5\n" + 
-					"     3  aload_1 [param]\n" + 
-					"     4  ifnull 15\n" + 
-					"     7  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
-					"    10  ldc <String \"FINALLY\"> [43]\n" + 
-					"    12  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
-					"    15  aconst_null\n" + 
-					"    16  astore_2 [local]\n" + 
-					"    17  aload 5\n" + 
-					"    19  areturn\n" + 
-					"    20  astore_3 [e]\n" + 
-					"    21  aload_1 [param]\n" + 
-					"    22  ifnull 33\n" + 
-					"    25  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
-					"    28  ldc <String \"FINALLY\"> [43]\n" + 
-					"    30  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
-					"    33  aconst_null\n" + 
-					"    34  astore_2 [local]\n" + 
-					"    35  aconst_null\n" + 
-					"    36  areturn\n" + 
-					"    37  astore 4\n" + 
-					"    39  aload_1 [param]\n" + 
-					"    40  ifnull 51\n" + 
-					"    43  getstatic java.lang.System.out : java.io.PrintStream [23]\n" + 
-					"    46  ldc <String \"FINALLY\"> [43]\n" + 
-					"    48  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" + 
-					"    51  aconst_null\n" + 
-					"    52  astore_2 [local]\n" + 
-					"    53  aload 4\n" + 
-					"    55  athrow\n" + 
-					"      Exception Table:\n" + 
-					"        [pc: 0, pc: 3] -> 20 when : java.lang.RuntimeException\n" + 
-					"        [pc: 0, pc: 3] -> 37 when : any\n" + 
-					"        [pc: 20, pc: 21] -> 37 when : any\n" + 
-					"      Line numbers:\n" + 
-					"        [pc: 0, line: 12]\n" + 
-					"        [pc: 3, line: 18]\n" + 
-					"        [pc: 7, line: 19]\n" + 
-					"        [pc: 15, line: 21]\n" + 
-					"        [pc: 17, line: 12]\n" + 
-					"        [pc: 20, line: 14]\n" + 
-					"        [pc: 21, line: 18]\n" + 
-					"        [pc: 25, line: 19]\n" + 
-					"        [pc: 33, line: 21]\n" + 
-					"        [pc: 35, line: 15]\n" + 
-					"        [pc: 37, line: 17]\n" + 
-					"        [pc: 39, line: 18]\n" + 
-					"        [pc: 43, line: 19]\n" + 
-					"        [pc: 51, line: 21]\n" + 
-					"        [pc: 53, line: 22]\n" + 
-					"      Local variable table:\n" + 
-					"        [pc: 0, pc: 56] local: this index: 0 type: X\n" + 
-					"        [pc: 0, pc: 56] local: param index: 1 type: java.lang.Object\n" + 
-					"        [pc: 17, pc: 20] local: local index: 2 type: java.lang.Object\n" + 
-					"        [pc: 35, pc: 37] local: local index: 2 type: java.lang.Object\n" + 
-					"        [pc: 53, pc: 56] local: local index: 2 type: java.lang.Object\n" + 
-					"        [pc: 21, pc: 37] local: e index: 3 type: java.lang.RuntimeException\n" + 
-					"      Stack map table: number of frames 5\n" + 
-					"        [pc: 15, full, stack: {}, locals: {X, java.lang.Object, _, _, _, java.lang.Object}]\n" + 
-					"        [pc: 20, full, stack: {java.lang.RuntimeException}, locals: {X, java.lang.Object}]\n" + 
-					"        [pc: 33, full, stack: {}, locals: {X, java.lang.Object, _, java.lang.RuntimeException}]\n" + 
-					"        [pc: 37, full, stack: {java.lang.Throwable}, locals: {X, java.lang.Object}]\n" + 
-					"        [pc: 51, full, stack: {}, locals: {X, java.lang.Object, _, _, java.lang.Throwable}]\n" + 
+					"  // Stack: 2, Locals: 6\n" +
+					"  public java.lang.Object reproduce(java.lang.Object param) throws java.lang.RuntimeException;\n" +
+					"     0  aload_1 [param]\n" +
+					"     1  astore 5\n" +
+					"     3  aload_1 [param]\n" +
+					"     4  ifnull 15\n" +
+					"     7  getstatic java.lang.System.out : java.io.PrintStream [23]\n" +
+					"    10  ldc <String \"FINALLY\"> [43]\n" +
+					"    12  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" +
+					"    15  aconst_null\n" +
+					"    16  astore_2 [local]\n" +
+					"    17  aload 5\n" +
+					"    19  areturn\n" +
+					"    20  astore_3 [e]\n" +
+					"    21  aload_1 [param]\n" +
+					"    22  ifnull 33\n" +
+					"    25  getstatic java.lang.System.out : java.io.PrintStream [23]\n" +
+					"    28  ldc <String \"FINALLY\"> [43]\n" +
+					"    30  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" +
+					"    33  aconst_null\n" +
+					"    34  astore_2 [local]\n" +
+					"    35  aconst_null\n" +
+					"    36  areturn\n" +
+					"    37  astore 4\n" +
+					"    39  aload_1 [param]\n" +
+					"    40  ifnull 51\n" +
+					"    43  getstatic java.lang.System.out : java.io.PrintStream [23]\n" +
+					"    46  ldc <String \"FINALLY\"> [43]\n" +
+					"    48  invokevirtual java.io.PrintStream.println(java.lang.String) : void [31]\n" +
+					"    51  aconst_null\n" +
+					"    52  astore_2 [local]\n" +
+					"    53  aload 4\n" +
+					"    55  athrow\n" +
+					"      Exception Table:\n" +
+					"        [pc: 0, pc: 3] -> 20 when : java.lang.RuntimeException\n" +
+					"        [pc: 0, pc: 3] -> 37 when : any\n" +
+					"        [pc: 20, pc: 21] -> 37 when : any\n" +
+					"      Line numbers:\n" +
+					"        [pc: 0, line: 12]\n" +
+					"        [pc: 3, line: 18]\n" +
+					"        [pc: 7, line: 19]\n" +
+					"        [pc: 15, line: 21]\n" +
+					"        [pc: 17, line: 12]\n" +
+					"        [pc: 20, line: 14]\n" +
+					"        [pc: 21, line: 18]\n" +
+					"        [pc: 25, line: 19]\n" +
+					"        [pc: 33, line: 21]\n" +
+					"        [pc: 35, line: 15]\n" +
+					"        [pc: 37, line: 17]\n" +
+					"        [pc: 39, line: 18]\n" +
+					"        [pc: 43, line: 19]\n" +
+					"        [pc: 51, line: 21]\n" +
+					"        [pc: 53, line: 22]\n" +
+					"      Local variable table:\n" +
+					"        [pc: 0, pc: 56] local: this index: 0 type: X\n" +
+					"        [pc: 0, pc: 56] local: param index: 1 type: java.lang.Object\n" +
+					"        [pc: 17, pc: 20] local: local index: 2 type: java.lang.Object\n" +
+					"        [pc: 35, pc: 37] local: local index: 2 type: java.lang.Object\n" +
+					"        [pc: 53, pc: 56] local: local index: 2 type: java.lang.Object\n" +
+					"        [pc: 21, pc: 37] local: e index: 3 type: java.lang.RuntimeException\n" +
+					"      Stack map table: number of frames 5\n" +
+					"        [pc: 15, full, stack: {}, locals: {X, java.lang.Object, _, _, _, java.lang.Object}]\n" +
+					"        [pc: 20, full, stack: {java.lang.RuntimeException}, locals: {X, java.lang.Object}]\n" +
+					"        [pc: 33, full, stack: {}, locals: {X, java.lang.Object, _, java.lang.RuntimeException}]\n" +
+					"        [pc: 37, full, stack: {java.lang.Throwable}, locals: {X, java.lang.Object}]\n" +
+					"        [pc: 51, full, stack: {}, locals: {X, java.lang.Object, _, _, java.lang.Throwable}]\n" +
 					"}";
 
 			int index = actualOutput.indexOf(expectedOutput);
@@ -8727,44 +8727,44 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
             new String[] {
         		"X.java",
-        		"interface A {\n" + 
-        		"}\n" + 
-        		"class B implements A {\n" + 
-        		"	public C c;\n" + 
-        		"	\n" + 
-        		"	protected B original() {\n" + 
-        		"		return this;\n" + 
-        		"	}\n" + 
-        		"}\n" + 
-        		"class C {\n" + 
-        		"	C parent;\n" + 
-        		"	A context;\n" + 
-        		"}\n" + 
-        		"class F extends C {\n" + 
-        		"	\n" + 
-        		"}\n" + 
-        		"class G extends C {\n" + 
-        		"	\n" + 
-        		"}\n" + 
-        		"abstract class D implements A {\n" + 
-        		"	public F c;\n" + 
-        		"}\n" + 
-        		"class E implements A {\n" + 
-        		"	public G c;\n" + 
-        		"}\n" + 
-        		"public class X {\n" + 
-        		"	boolean foo(A a) {\n" + 
-        		"		if (a instanceof B && a != ((B) a).original())\n" + 
-        		"			return true;\n" + 
-        		"		C aC = a instanceof D ? ((D) a).c :\n" + 
-        		"			a instanceof E ? ((E) a).c : \n" + 
-        		"			a instanceof B ? ((B) a).c :\n" + 
-        		"				null;\n" + 
-        		"		return aC != null ? foo(aC.parent.context) : false;\n" + 
-        		"	}\n" + 
-        		"	public static void main(String[] args) {\n" + 
-        		"		System.out.println(\"SUCCESS\");\n" + 
-        		"	}\n" + 
+        		"interface A {\n" +
+        		"}\n" +
+        		"class B implements A {\n" +
+        		"	public C c;\n" +
+        		"	\n" +
+        		"	protected B original() {\n" +
+        		"		return this;\n" +
+        		"	}\n" +
+        		"}\n" +
+        		"class C {\n" +
+        		"	C parent;\n" +
+        		"	A context;\n" +
+        		"}\n" +
+        		"class F extends C {\n" +
+        		"	\n" +
+        		"}\n" +
+        		"class G extends C {\n" +
+        		"	\n" +
+        		"}\n" +
+        		"abstract class D implements A {\n" +
+        		"	public F c;\n" +
+        		"}\n" +
+        		"class E implements A {\n" +
+        		"	public G c;\n" +
+        		"}\n" +
+        		"public class X {\n" +
+        		"	boolean foo(A a) {\n" +
+        		"		if (a instanceof B && a != ((B) a).original())\n" +
+        		"			return true;\n" +
+        		"		C aC = a instanceof D ? ((D) a).c :\n" +
+        		"			a instanceof E ? ((E) a).c : \n" +
+        		"			a instanceof B ? ((B) a).c :\n" +
+        		"				null;\n" +
+        		"		return aC != null ? foo(aC.parent.context) : false;\n" +
+        		"	}\n" +
+        		"	public static void main(String[] args) {\n" +
+        		"		System.out.println(\"SUCCESS\");\n" +
+        		"	}\n" +
         		"}",
             },
 			"SUCCESS");
@@ -8773,26 +8773,26 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
             new String[] {
         		"X.java",
-        		"public class X {\n" + 
-        		"\n" + 
-        		"	int size;\n" + 
-        		"	char[][][] elements;\n" + 
-        		"\n" + 
-        		"	public X() {\n" + 
-        		"		this.size = 0;\n" + 
-        		"		this.elements = new char[10][][];\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	public void insertIntoArray(char[][][] target) {\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	public void add(char[][] newElement) {\n" + 
-        		"		insertIntoArray(this.size < this.elements.length ? this.elements : new char[this.elements.length * 2][][]);\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	public static void main(String[] args) {\n" + 
-        		"		System.out.println(\"SUCCESS\");\n" + 
-        		"	}\n" + 
+        		"public class X {\n" +
+        		"\n" +
+        		"	int size;\n" +
+        		"	char[][][] elements;\n" +
+        		"\n" +
+        		"	public X() {\n" +
+        		"		this.size = 0;\n" +
+        		"		this.elements = new char[10][][];\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	public void insertIntoArray(char[][][] target) {\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	public void add(char[][] newElement) {\n" +
+        		"		insertIntoArray(this.size < this.elements.length ? this.elements : new char[this.elements.length * 2][][]);\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	public static void main(String[] args) {\n" +
+        		"		System.out.println(\"SUCCESS\");\n" +
+        		"	}\n" +
         		"}",
             },
 			"SUCCESS");
@@ -8801,31 +8801,31 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
             new String[] {
         		"X.java",
-        		"class B {\n" + 
-        		"	public boolean bar() {\n" + 
-        		"		return false;\n" + 
-        		"	}\n" + 
-        		"	public void foo() {}\n" + 
-        		"}\n" + 
-        		"public class X {\n" + 
-        		"	\n" + 
-        		"	public B foo(boolean test) {\n" + 
-        		"		B b =\n" + 
-        		"			test ?\n" + 
-        		"				new B() {\n" + 
-        		"					@Override\n" + 
-        		"					public boolean bar() {\n" + 
-        		"						return true;\n" + 
-        		"					}\n" + 
-        		"				} :\n" + 
-        		"			new B();\n" + 
-        		"		b.foo();\n" + 
-        		"		return b;\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	public static void main(String[] args) {\n" + 
-        		"		System.out.println(\"SUCCESS\");\n" + 
-        		"	}\n" + 
+        		"class B {\n" +
+        		"	public boolean bar() {\n" +
+        		"		return false;\n" +
+        		"	}\n" +
+        		"	public void foo() {}\n" +
+        		"}\n" +
+        		"public class X {\n" +
+        		"	\n" +
+        		"	public B foo(boolean test) {\n" +
+        		"		B b =\n" +
+        		"			test ?\n" +
+        		"				new B() {\n" +
+        		"					@Override\n" +
+        		"					public boolean bar() {\n" +
+        		"						return true;\n" +
+        		"					}\n" +
+        		"				} :\n" +
+        		"			new B();\n" +
+        		"		b.foo();\n" +
+        		"		return b;\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	public static void main(String[] args) {\n" +
+        		"		System.out.println(\"SUCCESS\");\n" +
+        		"	}\n" +
         		"}",
             },
 			"SUCCESS");
@@ -8834,31 +8834,95 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 		this.runConformTest(
             new String[] {
         		"X.java",
-        		"public class X {\n" + 
-        		"	\n" + 
-        		"	public static void main( String[] args ) {\n" + 
-        		"		System.out.println(new X().getText());\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	public String getText() {\n" + 
-        		"		Long lValue1 = getValue1();\n" + 
-        		"		Long lValue2 = getValue2();\n" + 
-        		"		return ( isValue1() ? \"\" : ( lValue1 == null ? \"\" : lValue1.toString() ) + \"-\" ) + ( lValue2 == null ? \"\" : lValue2.toString() );\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	private Long getValue1() {\n" + 
-        		"		return Long.valueOf( 1 );\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	private Long getValue2() {\n" + 
-        		"		return Long.valueOf( 1 );\n" + 
-        		"	}\n" + 
-        		"\n" + 
-        		"	private boolean isValue1() {\n" + 
-        		"		return false;\n" + 
-        		"	}\n" + 
+        		"public class X {\n" +
+        		"	\n" +
+        		"	public static void main( String[] args ) {\n" +
+        		"		System.out.println(new X().getText());\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	public String getText() {\n" +
+        		"		Long lValue1 = getValue1();\n" +
+        		"		Long lValue2 = getValue2();\n" +
+        		"		return ( isValue1() ? \"\" : ( lValue1 == null ? \"\" : lValue1.toString() ) + \"-\" ) + ( lValue2 == null ? \"\" : lValue2.toString() );\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	private Long getValue1() {\n" +
+        		"		return Long.valueOf( 1 );\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	private Long getValue2() {\n" +
+        		"		return Long.valueOf( 1 );\n" +
+        		"	}\n" +
+        		"\n" +
+        		"	private boolean isValue1() {\n" +
+        		"		return false;\n" +
+        		"	}\n" +
         		"}",
             },
 			"1-1");
+	}
+	public void test562854() {
+		this.runConformTest(
+			new String[] {
+				"bug/Bug.java",
+				"package bug;\n" +
+				"public class Bug {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		F(args.length > 1 ? pkg.Base.derived1() : pkg.Base.derived2());\n" + "	}\n" + "\n" +
+				"	static void F(pkg.Base base) {\n" +
+				"		System.out.println(base.getClass().getCanonicalName());\n" +
+				"	}\n" +
+				"}",
+				"pkg/Base.java",
+				"package pkg;\n" +
+				"public abstract class Base {\n" +
+				"	public static Derived1 derived1() {\n" +
+				"		return new Derived1();\n" +
+				"	}\n" +
+				"\n" +
+				"	public static Derived2 derived2() {\n" +
+				"		return new Derived2();\n" +
+				"	}\n" +
+				"}",
+				"pkg/Derived1.java",
+				"package pkg;\n" +
+				"class Derived1 extends Base {}",
+				"pkg/Derived2.java",
+				"package pkg;\n" +
+				"class Derived2 extends Derived1 {}",
+			},
+			"pkg.Derived2");
+	}
+	public void test562854_2() {
+		this.runConformTest(
+			new String[] {
+				"bug/Bug.java",
+				"package bug;\n" +
+				"public class Bug {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		F(args.length > 1 ? pkg.Base.derived1() : pkg.Base.derived2());\n" + "	}\n" + "\n" +
+				"	static void F(pkg.Base base) {\n" +
+				"		System.out.println(base.getClass().getCanonicalName());\n" +
+				"	}\n" +
+				"}",
+				"pkg/Base.java",
+				"package pkg;\n" +
+				"public abstract class Base {\n" +
+				"	public static Derived1 derived1() {\n" +
+				"		return new Derived1();\n" +
+				"	}\n" +
+				"\n" +
+				"	public static Derived2 derived2() {\n" +
+				"		return new Derived2();\n" +
+				"	}\n" +
+				"}",
+				"pkg/Derived1.java",
+				"package pkg;\n" +
+				"public class Derived1 extends Base {}",
+				"pkg/Derived2.java",
+				"package pkg;\n" +
+				"public class Derived2 extends Derived1 {}",
+			},
+			"pkg.Derived2");
 	}
 }

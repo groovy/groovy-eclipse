@@ -15,6 +15,8 @@ package org.eclipse.jdt.core.tests.builder;
 
 import junit.framework.Test;
 
+import java.util.Map;
+
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.ReferenceCollection;
@@ -35,8 +37,8 @@ public class FriendDependencyTests extends BuilderTests {
 public void testIncludes() {
 	try {
 		State state = (State) JavaModelManager.getJavaModelManager().getLastBuiltState(null, null);
-		SimpleLookupTable references = state.getReferences();
-		ReferenceCollection r = (ReferenceCollection) references.valueTable[0];
+		Map<String, ReferenceCollection> references = state.getReferences();
+		ReferenceCollection r = references.values().iterator().next();
 		char[][][] qualifiedNames = null;
 		char[][] simpleNames = null;
 		char[][] rootNames = null;

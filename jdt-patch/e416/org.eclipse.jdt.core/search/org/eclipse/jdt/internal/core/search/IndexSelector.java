@@ -14,6 +14,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -42,12 +43,12 @@ import org.eclipse.jdt.internal.core.search.matching.ModulePattern;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class IndexSelector {
-	
+
 	//TODO: Bug 386113: "Search references" and "Type hierarchy" show inconsistent results with "External Plug-in Libraries" project
 	public static final int PROJECT_CAN_SEE_FOCUS= 0;
 	public static final int PROJECT_SOURCE_CAN_NOT_SEE_FOCUS= 1;
 	public static final int PROJECT_CAN_NOT_SEE_FOCUS= 2;
-	
+
 	IJavaSearchScope searchScope;
 	SearchPattern pattern;
 	IndexLocation[] indexLocations; // cache of the keys for looking index up
@@ -131,11 +132,9 @@ private static int canSeeFocus(IJavaElement focus, JavaProject javaProject, char
 				if (focusQualifiedNames != null) { // builder state is usable, hence use it to try to reduce project which can see the focus...
 					State projectState = (State) JavaModelManager.getJavaModelManager().getLastBuiltState(javaProject.getProject(), null);
 					if (projectState != null) {
-						Object[] values = projectState.getReferences().valueTable;
-						int vLength = values.length;
-						for (int j=0; j<vLength; j++)  {
-							if (values[j] == null) continue;
-							ReferenceCollection references = (ReferenceCollection) values[j];
+						Collection<ReferenceCollection> values = projectState.getReferences().values();
+						for (ReferenceCollection references : values) {
+							if (references == null) continue;
 							if (references.includes(focusQualifiedNames, null, null)) {
 								return PROJECT_CAN_SEE_FOCUS;
 							}
@@ -216,7 +215,7 @@ private void initializeIndexLocations() {
 	} else {
 		try {
 			// See whether the state builder might be used to reduce the number of index locations
-		
+
 			// find the projects from projectsAndJars that see the focus then walk those projects looking for the jars from projectsAndJars
 			int length = projectsAndJars.length;
 			JavaProject[] projectsCanSeeFocus = new JavaProject[length];
@@ -329,7 +328,7 @@ private char[][][] getQualifiedNames(ObjectVector types) {
 		if (primaryType != null) {
 			focusQualifiedNames = new char[size+1][][];
 			focusQualifiedNames[index++] = CharOperation.splitOn('.', primaryType.getFullyQualifiedName().toCharArray());
-		} 
+		}
 	}
 	if (focusQualifiedNames == null) {
 		focusQualifiedNames = new char[size][][];

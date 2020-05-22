@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2015 IBM Corporation and others.
+ * Copyright (c) 2008, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -40,11 +40,13 @@ public abstract class TypeConverter {
 
 	protected ProblemReporter problemReporter;
 	protected boolean has1_5Compliance;
+	protected boolean has14_Compliance;
 	private char memberTypeSeparator;
 
 	protected TypeConverter(ProblemReporter problemReporter, char memberTypeSeparator) {
 		this.problemReporter = problemReporter;
 		this.has1_5Compliance = problemReporter.options.originalComplianceLevel >= ClassFileConstants.JDK1_5;
+		this.has14_Compliance = problemReporter.options.originalComplianceLevel >= ClassFileConstants.JDK14;
 		this.memberTypeSeparator = memberTypeSeparator;
 	}
 
@@ -434,11 +436,11 @@ public abstract class TypeConverter {
 				case '<' :
 					/* We need to convert and preserve 1.5 specific constructs either if compliance is 1.5 or above,
 					   or the caller has explicitly requested generics to be included. The parameter includeGenericsAnyway
-					   should be used by the caller to signal that in the calling context generics information must be 
+					   should be used by the caller to signal that in the calling context generics information must be
 					   internalized even when the requesting project is 1.4. But in all cases, we must skip over them to
 					   see if there are any applicable type fragments after the type parameters: i.e we just aren't done
-					   having seen a '<' in 1.4 mode. 
-					   
+					   having seen a '<' in 1.4 mode.
+
 					   Because of the way type signatures are encoded, TypeConverter.decodeType(String, int, int, int) is immune
 					   to this problem. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=325633
 					 */
@@ -469,7 +471,7 @@ public abstract class TypeConverter {
 
 	/*
 	 * Method should be inlined.
-	 * 
+	 *
 	 * Only extracted to work around https://bugs.eclipse.org/471835 :
 	 * Random crashes in PhaseIdealLoop::build_loop_late_post when C2 JIT tries to compile TypeConverter::decodeType
 	 */

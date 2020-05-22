@@ -1088,6 +1088,13 @@ protected static class JavacTestOptions {
 								return compiler.compliance < ClassFileConstants.JDK9 ? null : this;
 							}
 					}: null;
+		public static JavacHasABug
+				NoWarningForMissingJavadocTag = RUN_JAVAC ?
+						new JavacHasABug(MismatchType.EclipseErrorsJavacNone)
+						: null,
+				NoWarningForDuplicateJavadocTag = RUN_JAVAC ?
+						new JavacHasABug(MismatchType.EclipseErrorsJavacNone)
+						: null;
 	}
 	public static class JavacBug8179483 extends JavacHasABug {
 		String extraJavacOptions;

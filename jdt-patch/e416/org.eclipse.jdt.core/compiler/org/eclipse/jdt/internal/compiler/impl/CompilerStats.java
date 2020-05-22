@@ -19,6 +19,7 @@ public class CompilerStats implements Comparable {
 	// overall
 	public long startTime;
 	public long endTime;
+	public long overallTime;
 	public long lineCount;
 
 	// compile phases
@@ -32,7 +33,7 @@ public class CompilerStats implements Comparable {
  * @return the time spent between start and end
  */
 public long elapsedTime() {
-	return this.endTime - this.startTime;
+	return this.overallTime;
 }
 
 @Override

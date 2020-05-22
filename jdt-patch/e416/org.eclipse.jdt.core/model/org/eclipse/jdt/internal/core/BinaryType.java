@@ -298,20 +298,50 @@ public int getElementType() {
 public IField getField(String fieldName) {
 	return new BinaryField(this, fieldName);
 }
-
 @Override
 public IField[] getFields() throws JavaModelException {
-	ArrayList list = getChildrenOfType(FIELD);
-	int size;
-	if ((size = list.size()) == 0) {
-		return NO_FIELDS;
-	} else {
-		IField[] array= new IField[size];
+	if (!isRecord()) {
+		ArrayList list = getChildrenOfType(FIELD);
+		if (list.size() == 0) {
+			return NO_FIELDS;
+		}
+		IField[] array= new IField[list.size()];
 		list.toArray(array);
 		return array;
 	}
+	return getFieldsOrComponents(false);
 }
-
+@Override
+public IField[] getRecordComponents() throws JavaModelException {
+	if (!isRecord())
+		return new IField[0];
+	return getFieldsOrComponents(true);
+}
+private IField[] getFieldsOrComponents(boolean component) throws JavaModelException {
+	ArrayList list = getChildrenOfType(FIELD);
+	if (list.size() == 0) {
+		return NO_FIELDS;
+	}
+	ArrayList<IField> fields = new ArrayList<>();
+	for (Object object : list) {
+		IField field = (IField) object;
+		if (field.isRecordComponent() == component)
+			fields.add(field);
+	}
+	IField[] array= new IField[fields.size()];
+	fields.toArray(array);
+	return array;
+}
+@Override
+public IField getRecordComponent(String compName) {
+	try {
+		if (isRecord())
+			return new BinaryField(this, compName);
+	} catch (JavaModelException e) {
+		//
+	}
+	return null;
+}
 @Override
 public int getFlags() throws JavaModelException {
 	IBinaryType info = (IBinaryType) getElementInfo();

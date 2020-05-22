@@ -523,6 +523,7 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Returns the fields declared by this type in the order in which they appear
 	 * in the source or class file. For binary types, this includes synthetic fields.
+	 * This does not include the implicit fields representing record components.
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
@@ -913,6 +914,28 @@ public interface IType extends IMember, IAnnotatable {
 	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
 	 */
 	boolean isRecord() throws JavaModelException;
+	/**
+	 * Returns the record components declared by this record class, or an empty
+	 * array if this is not a record.
+	 *
+	 * @exception JavaModelException if this element does not exist or if an
+	 *		exception occurs while accessing its corresponding resource.
+	 * @return record components declared by this record class
+	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 */
+	default IField[] getRecordComponents() throws JavaModelException {
+		return null;
+	}
+	/**
+	 * Returns the record component with the specified name
+	 * in this type (for example, <code>"bar"</code>).
+	 * This is a handle-only method. The record component may or may not exist.
+	 *
+	 * @param name the given name
+	 * @return the record component with the specified name in this record
+	 * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+	 */
+	IField getRecordComponent(String name);
 
 	/**
 	 * Returns whether this type represents an interface.

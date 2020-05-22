@@ -44,6 +44,7 @@ import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -126,6 +127,61 @@ public class ClassScope extends Scope {
 		buildFieldsAndMethods();
 		anonymousType.faultInTypesForFieldsAndMethods();
 		anonymousType.verifyMethods(environment().methodVerifier());
+	}
+
+	void buildComponents() {
+		SourceTypeBinding sourceType = this.referenceContext.binding;
+		if (!sourceType.isRecord()) return;
+		if (sourceType.areComponentsInitialized()) return;
+		if (this.referenceContext.recordComponents == null) {
+			sourceType.setComponents(Binding.NO_COMPONENTS);
+			return;
+		}
+		// count the number of fields vs. initializers
+		RecordComponent[] recComps = this.referenceContext.recordComponents;
+		int size = recComps.length;
+		int count = size;
+
+		// iterate the field declarations to create the bindings, lose all duplicates
+		RecordComponentBinding[] componentBindings = new RecordComponentBinding[count];
+		HashtableOfObject knownComponentNames = new HashtableOfObject(count);
+		count = 0;
+		for (int i = 0; i < size; i++) {
+			RecordComponent recComp = recComps[i];
+			RecordComponentBinding compBinding = new RecordComponentBinding(sourceType, recComp, null,
+					recComp.modifiers | ExtraCompilerModifiers.AccUnresolved);
+			compBinding.id = count;
+			checkAndSetModifiersForComponents(compBinding, recComp);
+
+			if (knownComponentNames.containsKey(recComp.name)) {
+				RecordComponentBinding previousBinding = (RecordComponentBinding) knownComponentNames.get(recComp.name);
+				if (previousBinding != null) {
+					for (int f = 0; f < i; f++) {
+						RecordComponent previousComponent = recComps[f];
+						if (previousComponent.binding == previousBinding) {
+							// flag the duplicate component name error here.
+							problemReporter().recordDuplicateComponent(previousComponent);
+							break;
+						}
+					}
+				}
+				knownComponentNames.put(recComp.name, null); // ensure that the duplicate field is found & removed
+				problemReporter().recordDuplicateComponent(recComp);
+				recComp.binding = null;
+			} else {
+				knownComponentNames.put(recComp.name, compBinding);
+				// remember that we have seen a component with this name
+				componentBindings[count++] = compBinding;
+			}
+		}
+		// remove duplicate components
+		if (count != componentBindings.length)
+			System.arraycopy(componentBindings, 0, componentBindings = new RecordComponentBinding[count], 0, count);
+		sourceType.setComponents(componentBindings);
+	}
+	private void checkAndSetModifiersForComponents(RecordComponentBinding compBinding, RecordComponent comp) {
+		// TODO Auto-generated method stub
+
 	}
 
 	void buildFields() {

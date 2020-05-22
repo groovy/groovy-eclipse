@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -55,7 +55,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class CompilationUnitStructureRequestor extends ReferenceInfoAdapter implements ISourceElementRequestor {
-	
+
 	/**
 	 * The handle to the compilation unit being parsed
 	 */
@@ -239,6 +239,16 @@ protected SourceField createField(JavaElement parent, FieldInfo fieldInfo) {
 	String fieldName = JavaModelManager.getJavaModelManager().intern(new String(fieldInfo.name));
 	return new SourceField(parent, fieldName);
 }
+protected SourceField createRecordComponent(JavaElement parent, RecordComponentInfo compInfo) {
+	String name = JavaModelManager.getJavaModelManager().intern(new String(compInfo.name));
+	SourceField field = new SourceField(parent, name) {
+		@Override
+		public boolean isRecordComponent() throws JavaModelException {
+			return true;
+		}
+	};
+	return field;
+}
 protected ImportContainer createImportContainer(ICompilationUnit parent) {
 	return (ImportContainer)parent.getImportContainer();
 }
@@ -375,7 +385,7 @@ public void enterInitializer(int declarationSourceStart, int modifiers) {
 		Assert.isTrue(false); // Should not happen
 	}
 	resolveDuplicates(handle);
-	
+
 	addToChildren(parentInfo, handle);
 
 	this.infoStack.push(new int[] {declarationSourceStart, modifiers});
@@ -412,7 +422,7 @@ public void enterMethod(MethodInfo methodInfo) {
 
 	this.infoStack.push(methodInfo);
 	this.handleStack.push(handle);
-	
+
 	addToChildren(parentInfo, handle);
 	parentInfo.childrenCategories.put(handle, methodInfo.categories);
 }
@@ -479,7 +489,7 @@ private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement
 		localVarInfo.setSourceRangeEnd(argument.declarationSourceStart);
 		localVarInfo.setNameSourceStart(argument.sourceStart);
 		localVarInfo.setNameSourceEnd(argument.sourceEnd);
-		
+
 		String paramTypeSig = JavaModelManager.getJavaModelManager().intern(Signature.createTypeSignature(methodInfo.parameterTypes[i], false));
 		result[i] = new LocalVariable(
 				methodHandle,
@@ -490,7 +500,7 @@ private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement
 				argument.sourceEnd,
 				paramTypeSig,
 				argument.annotations,
-				argument.modifiers, 
+				argument.modifiers,
 				true);
 		this.newElements.put(result[i], localVarInfo);
 		this.infoStack.push(localVarInfo);
@@ -513,7 +523,7 @@ public void enterModule(ModuleInfo info) {
 	Object parentInfo = this.infoStack.peek();
 	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
 	JavaElement handle = createModuleHandle(parentHandle, info);
-	
+
 	this.infoStack.push(info);
 	this.handleStack.push(handle);
 
@@ -601,7 +611,7 @@ private SourceTypeElementInfo createTypeInfo(TypeInfo typeInfo, SourceType handl
 			Map.Entry entry = (Map.Entry) iterator.next();
 			info.addCategories((IJavaElement) entry.getKey(), (char[][]) entry.getValue());
 		}
-		
+
 	}
 	if (typeInfo.typeAnnotated) {
 		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
@@ -691,7 +701,7 @@ public void exitField(int initializationStart, int declarationEnd, int declarati
 	info.setSourceRangeEnd(declarationSourceEnd);
 	this.handleStack.pop();
 	this.infoStack.pop();
-	
+
 	// remember initializer source if field is a constant
 	if (initializationStart != -1) {
 		int flags = info.flags;
@@ -715,18 +725,52 @@ public void exitField(int initializationStart, int declarationEnd, int declarati
  * @see ISourceElementRequestor
  */
 @Override
+public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
+	JavaElement handle = (JavaElement) this.handleStack.peek();
+	RecordComponentInfo compInfo = (RecordComponentInfo) this.infoStack.peek();
+	IJavaElement[] elements = getChildren(compInfo);
+	SourceFieldElementInfo info = elements.length == 0 ? new SourceFieldElementInfo() : new SourceFieldWithChildrenInfo(elements);
+	info.isRecordComponent = true;
+	info.setNameSourceStart(compInfo.nameSourceStart);
+	info.setNameSourceEnd(compInfo.nameSourceEnd);
+	info.setSourceRangeStart(compInfo.declarationStart);
+	info.setFlags(compInfo.modifiers);
+	char[] typeName = JavaModelManager.getJavaModelManager().intern(compInfo.type);
+	info.setTypeName(typeName);
+	this.newElements.put(handle, info);
+
+	if (compInfo.annotations != null) {
+		int length = compInfo.annotations.length;
+		this.unitInfo.annotationNumber += length;
+		for (int i = 0; i < length; i++) {
+			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = compInfo.annotations[i];
+			acceptAnnotation(annotation, info, handle);
+		}
+	}
+	info.setSourceRangeEnd(declarationSourceEnd);
+	this.handleStack.pop();
+	this.infoStack.pop();
+
+	if (compInfo.typeAnnotated) {
+		this.unitInfo.annotationNumber = CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE;
+	}
+}
+/**
+ * @see ISourceElementRequestor
+ */
+@Override
 public void exitInitializer(int declarationEnd) {
 	JavaElement handle = (JavaElement) this.handleStack.peek();
 	int[] initializerInfo = (int[]) this.infoStack.peek();
 	IJavaElement[] elements = getChildren(initializerInfo);
-	
+
 	InitializerElementInfo info = elements.length == 0 ? new InitializerElementInfo() : new InitializerWithChildrenInfo(elements);
 	info.setSourceRangeStart(initializerInfo[0]);
 	info.setFlags(initializerInfo[1]);
 	info.setSourceRangeEnd(declarationEnd);
 
 	this.newElements.put(handle, info);
-	
+
 	this.handleStack.pop();
 	this.infoStack.pop();
 }
@@ -737,10 +781,10 @@ public void exitInitializer(int declarationEnd) {
 public void exitMethod(int declarationEnd, Expression defaultValue) {
 	SourceMethod handle = (SourceMethod) this.handleStack.peek();
 	MethodInfo methodInfo = (MethodInfo) this.infoStack.peek();
-	
+
 	SourceMethodElementInfo info = createMethodInfo(methodInfo, handle);
 	info.setSourceRangeEnd(declarationEnd);
-	
+
 	// remember default value of annotation method
 	if (info.isAnnotationMethod() && defaultValue != null) {
 		SourceAnnotationMethodInfo annotationMethodInfo = (SourceAnnotationMethodInfo) info;
@@ -751,7 +795,7 @@ public void exitMethod(int declarationEnd, Expression defaultValue) {
 		defaultMemberValuePair.value = getMemberValue(defaultMemberValuePair, defaultValue);
 		annotationMethodInfo.defaultValue = defaultMemberValuePair;
 	}
-	
+
 	this.handleStack.pop();
 	this.infoStack.pop();
 }
@@ -899,5 +943,24 @@ protected Object getMemberValue(org.eclipse.jdt.internal.core.MemberValuePair me
 		memberValuePair.valueKind = IMemberValuePair.K_UNKNOWN;
 		return null;
 	}
+}
+@Override
+public void enterRecordComponent(RecordComponentInfo recordComponentInfo) {
+	TypeInfo parentInfo = (TypeInfo) this.infoStack.peek();
+	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
+	SourceField handle = null;
+	if (parentHandle.getElementType() == IJavaElement.TYPE) {
+		handle = createRecordComponent(parentHandle, recordComponentInfo);
+	}
+	else {
+		Assert.isTrue(false); // Should not happen
+	}
+	resolveDuplicates(handle);
+
+	addToChildren(parentInfo, handle);
+	parentInfo.childrenCategories.put(handle, recordComponentInfo.categories);
+
+	this.infoStack.push(recordComponentInfo);
+	this.handleStack.push(handle);
 }
 }

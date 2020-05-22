@@ -160,8 +160,8 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 			ClasspathEntry rawClasspathEntry = (ClasspathEntry) root.getRawClasspathEntry();
 			IJavaProject project = (IJavaProject) root.getParent();
 			String compliance = project.getOption(JavaCore.COMPILER_COMPLIANCE, true);
-			cp = (root instanceof JrtPackageFragmentRoot) ? 
-					ClasspathLocation.forJrtSystem(path.toOSString(), rawClasspathEntry.getAccessRuleSet(), 
+			cp = (root instanceof JrtPackageFragmentRoot) ?
+					ClasspathLocation.forJrtSystem(path.toOSString(), rawClasspathEntry.getAccessRuleSet(),
 							ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, project.getProject(), true), compliance) :
 									ClasspathLocation.forLibrary(manager.getZipFile(path), rawClasspathEntry.getAccessRuleSet(),
 												ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry,
@@ -205,7 +205,7 @@ private void addModuleClassPathInfo(PackageFragmentRoot root, IModuleDescription
 private String addModuleClassPathInfo(ClasspathLocation cp, IModuleDescription imd) {
 	IModule mod = NameLookup.getModuleDescriptionInfo(imd);
 	String moduleName = null;
-	if (mod != null) {
+	if (mod != null && cp != null) {
 		char[] name = mod.name();
 		if (name != null) {
 			moduleName = new String(name);

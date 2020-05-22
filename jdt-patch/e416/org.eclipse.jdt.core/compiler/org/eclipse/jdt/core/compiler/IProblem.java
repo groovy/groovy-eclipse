@@ -702,6 +702,10 @@ void setSourceStart(int sourceStart);
 	/** @since 3.5 */
 	int ComparingIdentical = Internal + 211;
 
+	/** @since 3.22
+	 * @noreference preview feature error */
+	int UnsafeCast = TypeRelated + 212;
+
 	int UnmatchedBracket = Syntax + Internal + 220;
 	int NoFieldOnBaseType = FieldRelated + 221;
 	int InvalidExpressionAsStatement = Syntax + Internal + 222;
@@ -1192,6 +1196,9 @@ void setSourceStart(int sourceStart);
 	int JavadocUnexpectedText = Javadoc + Internal + 518;
 	/** @since 3.1 */
 	int JavadocInvalidParamTagName = Javadoc + Internal + 519;
+
+	// see also JavadocNotAccessibleType below
+
 	/*
 	 * IDs for module errors in Javadoc
 	 */
@@ -2085,6 +2092,10 @@ void setSourceStart(int sourceStart);
 	/** @since  3.14 */
 	int UnstableAutoModuleName = ModuleRelated + 1461;
 
+	// doc variant of an above constant:
+	/** @since 3.22 */
+	int JavadocNotAccessibleType = Javadoc + NotAccessibleType;
+
 	/** @since 3.13 */
 	int RedundantNullDefaultAnnotationLocal = Internal + 1062;
 
@@ -2234,6 +2245,8 @@ void setSourceStart(int sourceStart);
 	int SwitchExpressionsBreakOutOfSwitchExpression  = Syntax + 1722;
 	/** @since 3.22 */
 	int SwitchExpressionsContinueOutOfSwitchExpression  = Syntax + 1723;
+	/** @since 3.22 */
+	int SwitchExpressionsReturnWithinSwitchExpression  = Syntax + 1724;
 	/* records - begin */
 
 	/** @since 3.22

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -33,7 +33,9 @@ public final class SourceType {
 	private SourceMethod[] methods;
 	private int numberOfMethods;
 	private SourceField[] fields;
+	private SourceField[] recordComponents;
 	private int numberOfFields;
+	private int numberOfComponents;
 	private char[] source;
 	SourceType parent;
 	char[][] typeParameterNames;
@@ -78,6 +80,20 @@ protected void addField(SourceField sourceField) {
 			this.numberOfFields);
 	}
 	this.fields[this.numberOfFields++] = sourceField;
+}
+protected void addRecordComponent(SourceField comp) {
+	if (this.recordComponents == null) {
+		this.recordComponents = new SourceField[4];
+	}
+	if (this.numberOfComponents == this.recordComponents.length) {
+		System.arraycopy(
+			this.recordComponents,
+			0,
+			this.recordComponents = new SourceField[this.numberOfComponents * 2],
+			0,
+			this.numberOfComponents);
+	}
+	this.recordComponents[this.numberOfComponents++] = comp;
 }
 protected void addMemberType(SourceType sourceMemberType) {
 	if(this.memberTypes == null) {

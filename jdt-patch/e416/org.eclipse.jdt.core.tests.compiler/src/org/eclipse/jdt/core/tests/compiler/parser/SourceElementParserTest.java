@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -37,6 +37,7 @@ public class SourceElementParserTest extends AbstractCompilerTest implements ISo
 	private SourceType currentType;
 	private SourceMethod currentMethod;
 	private SourceField currentField;
+	private SourceField currentRecordComp;
 	private SourceInitializer currentInitializer;
 	private char[] source;
 	private SourcePackage currentPackage;
@@ -257,6 +258,19 @@ public void enterField(FieldInfo fieldInfo) {
 				this.source));
 
 }
+public void enterRecordComponent(RecordComponentInfo compInfo) {
+	this.currentType.addRecordComponent(
+		this.currentRecordComp =
+			new SourceField(
+					compInfo.declarationStart,
+					compInfo.modifiers,
+					compInfo.type,
+					compInfo.name,
+					compInfo.nameSourceStart,
+					compInfo.nameSourceEnd,
+					this.source));
+
+}
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	this.currentType.addField(
 		this.currentInitializer = new SourceInitializer(
@@ -327,6 +341,9 @@ public void exitConstructor(int declarationEnd) {
 }
 public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 	this.currentField.setDeclarationSourceEnd(declarationEnd);
+}
+public void exitRecordComponent(int declarationEnd, int declarationSourceEnd) {
+	this.currentRecordComp.setDeclarationSourceEnd(declarationEnd);
 }
 public void exitMethod(int declarationEnd, Expression defaultValue) {
 	exitAbstractMethod(declarationEnd);
@@ -5308,68 +5325,68 @@ public void test81() {
 	options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
 	options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
 	options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-	
+
 	String s =
-		"import java.util.Collection;\n" + 
-		"\n" + 
-		"public class X {\n" + 
-		"	public abstract class AbstractData {}\n" + 
-		"	\n" + 
-		"	public interface IScalarData<T extends AbstractData> {}\n" + 
-		"\n" + 
-		"	private static interface ValueObjectPropertyIterator {\n" + 
-		"		public <T extends AbstractData> void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, final String name, final Class<?> scalarType) throws Exception;\n" + 
-		"	}\n" + 
-		"\n" + 
-		"	private static <T extends AbstractData> void iterateOnValueObjectProperties(IScalarData<T> scalarObject, T valueObject, ValueObjectPropertyIterator valueObjectPropertyIterator) {}\n" + 
-		"	\n" + 
-		"	public static <T extends AbstractData> void loadScalarFromValueObject(IScalarData<T> scalarObject, T valueObject) {\n" + 
-		"		iterateOnValueObjectProperties(scalarObject, valueObject, new ValueObjectPropertyIterator() {\n" + 
-		"			public <T extends AbstractData> void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, String name, Class<?> scalarType) throws Exception {\n" + 
-		"				if (true) {\n" + 
-		"					if (true) {\n" + 
-		"						if (true) {\n" + 
-		"							final Collection<IScalarData<AbstractData>> lazyCollection = createLazyCollection(\n" + 
-		"									name, scalarType, null, null,\n" + 
-		"									new CollectionProviderForTargetCollection<IScalarData<AbstractData>>() {\n" + 
-		"										@Override\n" + 
-		"										public Collection<IScalarData<AbstractData>> provideCollection(\n" + 
-		"												final Collection<IScalarData<AbstractData> targetCollection, final Class<IScalarData<AbstractData>> scalarCollectionType) {\n" + 
-		"											return null;\n" + 
-		"										}\n" + 
-		"									});\n" + 
-		"						}\n" + 
-		"					}\n" + 
-		"				}\n" + 
-		"			}\n" + 
-		"\n" + 
-		"			abstract class CollectionProviderForTargetCollection<S> {\n" + 
-		"				abstract public Collection<S> provideCollection(Collection<S> targetCollection, Class<S> scalarCollectionType);\n" + 
-		"			}\n" + 
-		"\n" + 
-		"			private <S> Collection<S> createLazyCollection(String name,\n" + 
-		"					Class<?> scalarType, final Collection<AbstractData> valueObjectCollection,\n" + 
-		"					final Class<S> scalarCollectionType, CollectionProviderForTargetCollection<S> collectionProvider) {\n" + 
-		"				return null;\n" + 
-		"			}\n" + 
-		"		});\n" + 
-		"	}\n" + 
+		"import java.util.Collection;\n" +
+		"\n" +
+		"public class X {\n" +
+		"	public abstract class AbstractData {}\n" +
+		"	\n" +
+		"	public interface IScalarData<T extends AbstractData> {}\n" +
+		"\n" +
+		"	private static interface ValueObjectPropertyIterator {\n" +
+		"		public <T extends AbstractData> void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, final String name, final Class<?> scalarType) throws Exception;\n" +
+		"	}\n" +
+		"\n" +
+		"	private static <T extends AbstractData> void iterateOnValueObjectProperties(IScalarData<T> scalarObject, T valueObject, ValueObjectPropertyIterator valueObjectPropertyIterator) {}\n" +
+		"	\n" +
+		"	public static <T extends AbstractData> void loadScalarFromValueObject(IScalarData<T> scalarObject, T valueObject) {\n" +
+		"		iterateOnValueObjectProperties(scalarObject, valueObject, new ValueObjectPropertyIterator() {\n" +
+		"			public <T extends AbstractData> void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, String name, Class<?> scalarType) throws Exception {\n" +
+		"				if (true) {\n" +
+		"					if (true) {\n" +
+		"						if (true) {\n" +
+		"							final Collection<IScalarData<AbstractData>> lazyCollection = createLazyCollection(\n" +
+		"									name, scalarType, null, null,\n" +
+		"									new CollectionProviderForTargetCollection<IScalarData<AbstractData>>() {\n" +
+		"										@Override\n" +
+		"										public Collection<IScalarData<AbstractData>> provideCollection(\n" +
+		"												final Collection<IScalarData<AbstractData> targetCollection, final Class<IScalarData<AbstractData>> scalarCollectionType) {\n" +
+		"											return null;\n" +
+		"										}\n" +
+		"									});\n" +
+		"						}\n" +
+		"					}\n" +
+		"				}\n" +
+		"			}\n" +
+		"\n" +
+		"			abstract class CollectionProviderForTargetCollection<S> {\n" +
+		"				abstract public Collection<S> provideCollection(Collection<S> targetCollection, Class<S> scalarCollectionType);\n" +
+		"			}\n" +
+		"\n" +
+		"			private <S> Collection<S> createLazyCollection(String name,\n" +
+		"					Class<?> scalarType, final Collection<AbstractData> valueObjectCollection,\n" +
+		"					final Class<S> scalarCollectionType, CollectionProviderForTargetCollection<S> collectionProvider) {\n" +
+		"				return null;\n" +
+		"			}\n" +
+		"		});\n" +
+		"	}\n" +
 		"}";
 
 	String expectedUnitToString =
-		"import java.util.Collection;\n" + 
-		"public class X {\n" + 
-		"	public abstract class AbstractData {\n" + 
-		"		java.lang.Object(0)\n" + 
-		"	}\n" + 
-		"	public interface IScalarData {\n" + 
-		"	}\n" + 
-		"	private static interface ValueObjectPropertyIterator {\n" + 
-		"		public void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, String name, Class<?> scalarType, ) throws Exception, {}\n" + 
-		"	}\n" + 
-		"	java.lang.Object(0)\n" + 
-		"	private static void iterateOnValueObjectProperties(IScalarData<T> scalarObject, T valueObject, ValueObjectPropertyIterator valueObjectPropertyIterator, ) {}\n" + 
-		"	public static void loadScalarFromValueObject(IScalarData<T> scalarObject, T valueObject, ) {}\n" + 
+		"import java.util.Collection;\n" +
+		"public class X {\n" +
+		"	public abstract class AbstractData {\n" +
+		"		java.lang.Object(0)\n" +
+		"	}\n" +
+		"	public interface IScalarData {\n" +
+		"	}\n" +
+		"	private static interface ValueObjectPropertyIterator {\n" +
+		"		public void iterateOnValueObjectProperty(IScalarData<T> scalarObject, T valueObject, Class<?> valueObjectType, String name, Class<?> scalarType, ) throws Exception, {}\n" +
+		"	}\n" +
+		"	java.lang.Object(0)\n" +
+		"	private static void iterateOnValueObjectProperties(IScalarData<T> scalarObject, T valueObject, ValueObjectPropertyIterator valueObjectPropertyIterator, ) {}\n" +
+		"	public static void loadScalarFromValueObject(IScalarData<T> scalarObject, T valueObject, ) {}\n" +
 		"}";
 
 	String testName = "test81: full parse";

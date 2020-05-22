@@ -66,6 +66,7 @@ import org.eclipse.jdt.internal.compiler.ast.NormalAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
@@ -102,6 +103,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PolymorphicMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -548,26 +550,18 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 	}
 
-	private int addComponentAttributes(FieldBinding fieldBinding, int fieldAttributeOffset) {
-		// almost mirrors with field_info
-		// TODO: watch out for spec changes once preview to standard of records
-		return addFieldAttributes(fieldBinding, fieldAttributeOffset, true);
-	}
 	private int addFieldAttributes(FieldBinding fieldBinding, int fieldAttributeOffset) {
-		return addFieldAttributes(fieldBinding, fieldAttributeOffset, false);
-	}
-	private int addFieldAttributes(FieldBinding fieldBinding, int fieldAttributeOffset, boolean isComponent) {
 		int attributesNumber = 0;
 		// 4.7.2 only static constant fields get a ConstantAttribute
 		// Generate the constantValueAttribute
 		Constant fieldConstant = fieldBinding.constant();
-		if (fieldConstant != Constant.NotAConstant && !isComponent){
+		if (fieldConstant != Constant.NotAConstant){
 			attributesNumber += generateConstantValueAttribute(fieldConstant, fieldBinding, fieldAttributeOffset);
 		}
-		if (this.targetJDK < ClassFileConstants.JDK1_5 && fieldBinding.isSynthetic() && !isComponent) {
+		if (this.targetJDK < ClassFileConstants.JDK1_5 && fieldBinding.isSynthetic()) {
 			attributesNumber += generateSyntheticAttribute();
 		}
-		if (fieldBinding.isDeprecated() && !isComponent) {
+		if (fieldBinding.isDeprecated()) {
 			attributesNumber += generateDeprecatedAttribute();
 		}
 		// add signature attribute
@@ -578,42 +572,50 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (this.targetJDK >= ClassFileConstants.JDK1_4) {
 			FieldDeclaration fieldDeclaration = fieldBinding.sourceField();
 			if (fieldDeclaration != null) {
-				Annotation[] annotations = fieldDeclaration.annotations;
-				if (annotations != null) {
-					long allowedTargets = TagBits.AnnotationForField | (fieldDeclaration.isARecordComponent ?
-							TagBits.AnnotationForRecordComponent : 0);
-					attributesNumber += generateRuntimeAnnotations(annotations, allowedTargets);
-				}
+				try {
+					if (fieldDeclaration.isARecordComponent) {
+						long rcMask = TagBits.AnnotationForField | TagBits.AnnotationForTypeUse;
+						fieldDeclaration.annotations = getAnnotationsFromAssociatedRecordComponent(fieldBinding.declaringClass, fieldBinding.name, rcMask);
+					}
+					Annotation[] annotations = fieldDeclaration.annotations;
+					if (annotations != null) {
+						attributesNumber += generateRuntimeAnnotations(annotations, TagBits.AnnotationForField);
+					}
 
-				if ((this.produceAttributes & ClassFileConstants.ATTR_TYPE_ANNOTATION) != 0) {
-					List allTypeAnnotationContexts = new ArrayList();
-					if (annotations != null && (fieldDeclaration.bits & ASTNode.HasTypeAnnotations) != 0) {
-						fieldDeclaration.getAllAnnotationContexts(AnnotationTargetTypeConstants.FIELD, allTypeAnnotationContexts);
-					}
-					int invisibleTypeAnnotationsCounter = 0;
-					int visibleTypeAnnotationsCounter = 0;
-					TypeReference fieldType = fieldDeclaration.type;
-					if (fieldType != null && ((fieldType.bits & ASTNode.HasTypeAnnotations) != 0)) {
-						fieldType.getAllAnnotationContexts(AnnotationTargetTypeConstants.FIELD, allTypeAnnotationContexts);
-					}
-					int size = allTypeAnnotationContexts.size();
-					if (size != 0) {
-						AnnotationContext[] allTypeAnnotationContextsArray = new AnnotationContext[size];
-						allTypeAnnotationContexts.toArray(allTypeAnnotationContextsArray);
-						for (int i = 0, max = allTypeAnnotationContextsArray.length; i < max; i++) {
-							AnnotationContext annotationContext = allTypeAnnotationContextsArray[i];
-							if ((annotationContext.visibility & AnnotationContext.INVISIBLE) != 0) {
-								invisibleTypeAnnotationsCounter++;
-								allTypeAnnotationContexts.add(annotationContext);
-							} else {
-								visibleTypeAnnotationsCounter++;
-								allTypeAnnotationContexts.add(annotationContext);
-							}
+					if ((this.produceAttributes & ClassFileConstants.ATTR_TYPE_ANNOTATION) != 0) {
+						List allTypeAnnotationContexts = new ArrayList();
+						if (annotations != null && (fieldDeclaration.bits & ASTNode.HasTypeAnnotations) != 0) {
+							fieldDeclaration.getAllAnnotationContexts(AnnotationTargetTypeConstants.FIELD, allTypeAnnotationContexts);
 						}
-						attributesNumber += generateRuntimeTypeAnnotations(
-								allTypeAnnotationContextsArray,
-								visibleTypeAnnotationsCounter,
-								invisibleTypeAnnotationsCounter);
+						int invisibleTypeAnnotationsCounter = 0;
+						int visibleTypeAnnotationsCounter = 0;
+						TypeReference fieldType = fieldDeclaration.type;
+						if (fieldType != null && ((fieldType.bits & ASTNode.HasTypeAnnotations) != 0)) {
+							fieldType.getAllAnnotationContexts(AnnotationTargetTypeConstants.FIELD, allTypeAnnotationContexts);
+						}
+						int size = allTypeAnnotationContexts.size();
+						if (size != 0) {
+							AnnotationContext[] allTypeAnnotationContextsArray = new AnnotationContext[size];
+							allTypeAnnotationContexts.toArray(allTypeAnnotationContextsArray);
+							for (int i = 0, max = allTypeAnnotationContextsArray.length; i < max; i++) {
+								AnnotationContext annotationContext = allTypeAnnotationContextsArray[i];
+								if ((annotationContext.visibility & AnnotationContext.INVISIBLE) != 0) {
+									invisibleTypeAnnotationsCounter++;
+									allTypeAnnotationContexts.add(annotationContext);
+								} else {
+									visibleTypeAnnotationsCounter++;
+									allTypeAnnotationContexts.add(annotationContext);
+								}
+							}
+							attributesNumber += generateRuntimeTypeAnnotations(
+									allTypeAnnotationContextsArray,
+									visibleTypeAnnotationsCounter,
+									invisibleTypeAnnotationsCounter);
+						}
+					}
+				} finally {
+					if (fieldDeclaration.isARecordComponent) {
+						fieldDeclaration.annotations = null;
 					}
 				}
 			}
@@ -623,16 +625,76 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		return attributesNumber;
 	}
+	private Annotation[] getAnnotationsFromAssociatedRecordComponent(ReferenceBinding declaringClass,
+			char[] name, long rcMask) {
+		if (declaringClass instanceof SourceTypeBinding) {
+			SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) declaringClass;
+			RecordComponentBinding rcb = sourceTypeBinding.getRecordComponent(name);
+			if (rcb != null) {
+				RecordComponent recordComponent  = rcb.sourceRecordComponent();
+				assert recordComponent != null;
+				return ASTNode.getRelevantAnnotations(recordComponent.annotations, rcMask, null);
+			}
+		}
+		return null;
+	}
+	private int addComponentAttributes(RecordComponentBinding recordComponentBinding, int componetAttributeOffset) {
+		// See JVMS 14 Table 4.7-C - Record Preview for allowed attributes
+		int attributesNumber = 0;
+		// add signature attribute
+		char[] genericSignature = recordComponentBinding.genericSignature();
+		if (genericSignature != null) {
+			attributesNumber += generateSignatureAttribute(genericSignature);
+		}
+		RecordComponent recordComponent = recordComponentBinding.sourceRecordComponent();
+		if (recordComponent != null) {
+			Annotation[] annotations = recordComponent.annotations;
+			if (annotations != null) {
+				attributesNumber += generateRuntimeAnnotations(annotations, TagBits.AnnotationForRecordComponent);
+			}
 
-	/**
-	 * INTERNAL USE-ONLY
-	 * This methods generates the bytes for the given record component given by field binding
-	 * @param fieldBinding the given field binding of the record component
-	 */
-	private void addComponentInfo(FieldBinding fieldBinding) {
+			if ((this.produceAttributes & ClassFileConstants.ATTR_TYPE_ANNOTATION) != 0) {
+				List allTypeAnnotationContexts = new ArrayList();
+				if (annotations != null && (recordComponent.bits & ASTNode.HasTypeAnnotations) != 0) {
+					recordComponent.getAllAnnotationContexts(AnnotationTargetTypeConstants.FIELD, allTypeAnnotationContexts);
+				}
+				int invisibleTypeAnnotationsCounter = 0;
+				int visibleTypeAnnotationsCounter = 0;
+				TypeReference recordComponentType = recordComponent.type;
+				if (recordComponentType != null && ((recordComponentType.bits & ASTNode.HasTypeAnnotations) != 0)) {
+					recordComponentType.getAllAnnotationContexts(AnnotationTargetTypeConstants.RECORD_COMPONENT, allTypeAnnotationContexts);
+				}
+				int size = allTypeAnnotationContexts.size();
+				if (size != 0) {
+					AnnotationContext[] allTypeAnnotationContextsArray = new AnnotationContext[size];
+					allTypeAnnotationContexts.toArray(allTypeAnnotationContextsArray);
+					for (int i = 0, max = allTypeAnnotationContextsArray.length; i < max; i++) {
+						AnnotationContext annotationContext = allTypeAnnotationContextsArray[i];
+						if ((annotationContext.visibility & AnnotationContext.INVISIBLE) != 0) {
+							invisibleTypeAnnotationsCounter++;
+							allTypeAnnotationContexts.add(annotationContext);
+						} else {
+							visibleTypeAnnotationsCounter++;
+							allTypeAnnotationContexts.add(annotationContext);
+						}
+					}
+					attributesNumber += generateRuntimeTypeAnnotations(
+							allTypeAnnotationContextsArray,
+							visibleTypeAnnotationsCounter,
+							invisibleTypeAnnotationsCounter);
+				}
+			}
+		}
+		if ((recordComponentBinding.tagBits & TagBits.HasMissingType) != 0) {
+			this.missingTypes = recordComponentBinding.type.collectMissingTypes(this.missingTypes);
+		}
+		return attributesNumber;
+	}
+
+	private void addComponentInfo(RecordComponentBinding recordComponentBinding) {
 		// check that there is enough space to write all the bytes for the field info corresponding
 		// to the @fieldBinding sans accessflags for component
-		/* component_info {
+		/* record_component_info {
     	 *	u2 name_index;
     	 *	u2 descriptor_index;
     	 *	u2 attributes_count;
@@ -642,24 +704,25 @@ public class ClassFile implements TypeConstants, TypeIds {
 			resizeContents(6);
 		}
 		// Now we can generate all entries into the byte array
-		int nameIndex = this.constantPool.literalIndex(fieldBinding.name);
+		int nameIndex = this.constantPool.literalIndex(recordComponentBinding.name);
 		this.contents[this.contentsOffset++] = (byte) (nameIndex >> 8);
 		this.contents[this.contentsOffset++] = (byte) nameIndex;
 		// Then the descriptorIndex
-		int descriptorIndex = this.constantPool.literalIndex(fieldBinding.type);
+		int descriptorIndex = this.constantPool.literalIndex(recordComponentBinding.type);
 		this.contents[this.contentsOffset++] = (byte) (descriptorIndex >> 8);
 		this.contents[this.contentsOffset++] = (byte) descriptorIndex;
 		int componentAttributeOffset = this.contentsOffset;
 		int attributeNumber = 0;
 		// leave some space for the number of attributes
 		this.contentsOffset += 2;
-		attributeNumber += addComponentAttributes(fieldBinding, componentAttributeOffset);
+		attributeNumber += addComponentAttributes(recordComponentBinding, componentAttributeOffset);
 		if (this.contentsOffset + 2 >= this.contents.length) {
 			resizeContents(2);
 		}
 		this.contents[componentAttributeOffset++] = (byte) (attributeNumber >> 8);
 		this.contents[componentAttributeOffset] = (byte) attributeNumber;
 	}
+
 	/**
 	 * INTERNAL USE-ONLY
 	 * This methods generates the bytes for the given field binding
@@ -2858,7 +2921,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (record == null || !record.isRecord())
 			return 0;
 		int localContentsOffset = this.contentsOffset;
-		FieldBinding[] recordComponents = this.referenceBinding.getRecordComponents();
+		RecordComponentBinding[] recordComponents = this.referenceBinding.components();
 		if (recordComponents == null)
 			return 0;
 		// could be an empty record also, account for zero components as well.
@@ -3724,7 +3787,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 			assert type instanceof SourceTypeBinding;
 			SourceTypeBinding sourceType = (SourceTypeBinding) type;
-			FieldBinding[] recordComponents = sourceType.getRecordComponents();
+			FieldBinding[] recordComponents = sourceType.getImplicitComponentFields();
 
 			int numArgs = 2 + recordComponents.length;
 			this.contents[numArgsLocation++] = (byte) (numArgs >> 8);
@@ -4061,6 +4124,17 @@ public class ClassFile implements TypeConstants, TypeIds {
 				SyntheticMethodBinding syntheticMethod = (SyntheticMethodBinding) methodBinding;
 				if (syntheticMethod.purpose == SyntheticMethodBinding.SuperMethodAccess && CharOperation.equals(syntheticMethod.selector, syntheticMethod.targetMethod.selector))
 					methodDeclaration = ((SyntheticMethodBinding)methodBinding).targetMethod.sourceMethod();
+				if (syntheticMethod.recordComponentBinding != null) {
+					assert methodDeclaration == null;
+					long rcMask = TagBits.AnnotationForMethod | TagBits.AnnotationForTypeUse;
+					// record component (field) accessor method
+					Annotation[] annotations = getAnnotationsFromAssociatedRecordComponent(methodBinding.declaringClass,
+							methodBinding.selector, rcMask);
+					if (annotations != null) {
+						assert !methodBinding.isConstructor();
+						attributesNumber += generateRuntimeAnnotations(annotations, rcMask);
+					}
+				}
 			}
 			if (methodDeclaration != null) {
 				Annotation[] annotations = methodDeclaration.annotations;
@@ -4070,6 +4144,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				if ((methodBinding.tagBits & TagBits.HasParameterAnnotations) != 0) {
 					Argument[] arguments = methodDeclaration.arguments;
 					if (arguments != null) {
+						propagateRecordComponentArguments(methodDeclaration);
 						attributesNumber += generateRuntimeAnnotationsForParameters(arguments);
 					}
 				}
@@ -4098,6 +4173,27 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		return attributesNumber;
 	}
+	private void propagateRecordComponentArguments(AbstractMethodDeclaration methodDeclaration) {
+		if ((methodDeclaration.bits & (ASTNode.IsCanonicalConstructor | ASTNode.IsImplicit)) == 0)
+			return;
+		ReferenceBinding declaringClass = methodDeclaration.binding.declaringClass;
+		if (declaringClass instanceof SourceTypeBinding) {
+			assert declaringClass.isRecord();
+			RecordComponentBinding[] rcbs = ((SourceTypeBinding) declaringClass).components();
+			Argument[] arguments = methodDeclaration.arguments;
+			for (int i = 0, length = rcbs.length; i < length; i++) {
+				RecordComponentBinding rcb = rcbs[i];
+				RecordComponent recordComponent = rcb.sourceRecordComponent();
+				if ((recordComponent.bits & ASTNode.HasTypeAnnotations) != 0) {
+					methodDeclaration.bits |= ASTNode.HasTypeAnnotations;
+					arguments[i].bits |= ASTNode.HasTypeAnnotations;
+				}
+				long rcMask = TagBits.AnnotationForParameter | TagBits.AnnotationForTypeUse;
+				arguments[i].annotations = ASTNode.getRelevantAnnotations(recordComponent.annotations, rcMask, null);
+			}
+		}
+	}
+
 	public int generateMethodInfoAttributes(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
 		int attributesNumber = generateMethodInfoAttributes(methodBinding);
 		int attributeOffset = this.contentsOffset;
@@ -5682,6 +5778,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 			if ((binding.tagBits & TagBits.HasMissingType) != 0) {
 				continue;
 			}
+			if (this.contentsOffset + 4 >= this.contents.length) {
+				resizeContents(4); // 2 bytes this iteration plus 2 bytes after the loop
+			}
 			interfaceCounter++;
 			int interfaceIndex = this.constantPool.literalIndexForType(binding);
 			this.contents[this.contentsOffset++] = (byte) (interfaceIndex >> 8);
@@ -6141,7 +6240,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				TypeBinding type = (TypeBinding) scope.getTypeOrPackage(CharOperation.splitOn('/', typeName));
 				if (!type.isValidBinding()) {
 					ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) type;
-					if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0) {
+					if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0
+							|| (problemReferenceBinding.problemId() & ProblemReasons.NotVisible) != 0) {
 						type = problemReferenceBinding.closestMatch();
 					} else if ((problemReferenceBinding.problemId() & ProblemReasons.NotFound) != 0 && this.innerClassesBindings != null) {
 						// check local inner types to see if this is a anonymous type
@@ -6161,7 +6261,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 			TypeBinding type = (TypeBinding) scope.getTypeOrPackage(CharOperation.splitOn('/', typeName));
 			if (!type.isValidBinding()) {
 				ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) type;
-				if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0) {
+				if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0
+					|| (problemReferenceBinding.problemId() & ProblemReasons.NotVisible) != 0) {
 					type = problemReferenceBinding.closestMatch();
 				} else if ((problemReferenceBinding.problemId() & ProblemReasons.NotFound) != 0 && this.innerClassesBindings != null) {
 					// check local inner types to see if this is a anonymous type
@@ -6191,7 +6292,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 		TypeBinding type = (TypeBinding) scope.getTypeOrPackage(CharOperation.splitOn('/', typeName));
 		if (!type.isValidBinding()) {
 			ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) type;
-			if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0) {
+			if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0
+					|| (problemReferenceBinding.problemId() & ProblemReasons.NotVisible) != 0) {
 				type = problemReferenceBinding.closestMatch();
 			}
 		}
@@ -6250,7 +6352,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 					CharOperation.splitOn('/', elementTypeClassName));
 				if (!type.isValidBinding()) {
 					ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) type;
-					if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0) {
+					if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0
+							|| (problemReferenceBinding.problemId() & ProblemReasons.NotVisible) != 0) {
 						type = problemReferenceBinding.closestMatch();
 					} else if ((problemReferenceBinding.problemId() & ProblemReasons.NotFound) != 0 && this.innerClassesBindings != null) {
 						// check local inner types to see if this is a anonymous type
@@ -6270,7 +6373,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 				CharOperation.splitOn('/', typeConstantPoolName));
 			if (!type.isValidBinding()) {
 				ProblemReferenceBinding problemReferenceBinding = (ProblemReferenceBinding) type;
-				if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0) {
+				if ((problemReferenceBinding.problemId() & ProblemReasons.InternalNameProvided) != 0
+						|| (problemReferenceBinding.problemId() & ProblemReasons.NotVisible) != 0) {
 					type = problemReferenceBinding.closestMatch();
 				} else if ((problemReferenceBinding.problemId() & ProblemReasons.NotFound) != 0 && this.innerClassesBindings != null) {
 					// check local inner types to see if this is a anonymous type

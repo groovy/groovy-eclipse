@@ -109,8 +109,19 @@ public void traverse(ASTVisitor visitor, 	BlockScope blockScope) {
 public boolean doesNotCompleteNormally() {
 	return true;
 }
+
 @Override
 public boolean completesByContinue() {
+	return true;
+}
+
+@Override
+public boolean canCompleteNormally() {
+	return false;
+}
+
+@Override
+public boolean continueCompletes() {
 	return true;
 }
 }

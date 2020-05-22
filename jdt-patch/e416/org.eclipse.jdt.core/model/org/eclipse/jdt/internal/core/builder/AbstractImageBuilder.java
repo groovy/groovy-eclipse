@@ -688,7 +688,7 @@ protected void recordParticipantResult(CompilationParticipantResult result) {
 
 	String[] dependencies = result.dependencies;
 	if (dependencies != null) {
-		ReferenceCollection refs = (ReferenceCollection) this.newState.references.get(result.sourceFile.typeLocator());
+		ReferenceCollection refs = this.newState.references.get(result.sourceFile.typeLocator());
 		if (refs != null)
 			refs.addDependencies(dependencies);
 	}

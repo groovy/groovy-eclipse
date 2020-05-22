@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -22,6 +22,7 @@ import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 /*
@@ -31,7 +32,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
  *
  * The structural investigation includes: - package statement - import
  * statements - top-level types: package member, member types (member types of
- * member types...) - fields - methods. From Java 9 onwards it includes the 
+ * member types...) - fields - methods. From Java 9 onwards it includes the
  * module name in a module declaration
  *
  * If reference information is requested, then all source constructs are
@@ -153,6 +154,18 @@ public interface ISourceElementRequestor {
 		public FieldDeclaration node;
 	}
 
+	public static class RecordComponentInfo {
+		public boolean typeAnnotated;
+		public int declarationStart;
+		public int modifiers;
+		public char[] type;
+		public char[] name;
+		public int nameSourceStart;
+		public int nameSourceEnd;
+		public char[][] categories;
+		public Annotation[] annotations;
+		public RecordComponent node;
+	}
 	void acceptAnnotationTypeReference(char[][] annotation, int sourceStart, int sourceEnd);
 
 	void acceptAnnotationTypeReference(char[] annotation, int sourcePosition);
@@ -216,6 +229,8 @@ public interface ISourceElementRequestor {
 
 	void enterMethod(MethodInfo methodInfo);
 
+	void enterRecordComponent(RecordComponentInfo recordComponentInfo);
+
 	void enterType(TypeInfo typeInfo);
 
 	void exitCompilationUnit(int declarationEnd);
@@ -228,12 +243,14 @@ public interface ISourceElementRequestor {
 	 */
 	void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd);
 
+	void exitRecordComponent(int declarationEnd, int declarationSourceEnd);
+
 	void exitInitializer(int declarationEnd);
 
 	void exitMethod(int declarationEnd, Expression defaultValue);
 
 	void exitType(int declarationEnd);
-	
+
 	default void enterModule(ModuleInfo info) {
 		// do nothing
 	}

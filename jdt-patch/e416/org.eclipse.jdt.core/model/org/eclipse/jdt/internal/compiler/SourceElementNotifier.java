@@ -44,6 +44,7 @@ import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.ThisReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
@@ -533,6 +534,8 @@ protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, T
 				fieldInfo.declarationStart = fieldDeclaration.declarationSourceStart;
 				fieldInfo.name = fieldDeclaration.name;
 				fieldInfo.modifiers = deprecated ? (currentModifiers & ExtraCompilerModifiers.AccJustFlag) | ClassFileConstants.AccDeprecated : currentModifiers & ExtraCompilerModifiers.AccJustFlag;
+				if (fieldDeclaration.isARecordComponent)
+					fieldInfo.modifiers |= ExtraCompilerModifiers.AccRecord;
 				fieldInfo.type = typeName;
 				fieldInfo.nameSourceStart = fieldDeclaration.sourceStart;
 				fieldInfo.nameSourceEnd = fieldDeclaration.sourceEnd;
@@ -616,6 +619,40 @@ protected void notifySourceElementRequestor(ModuleDeclaration moduleDeclaration)
 		this.requestor.exitModule(moduleDeclaration.declarationSourceEnd);
 	}
 }
+protected void notifySourceElementRequestor(RecordComponent recordComponent, TypeDeclaration declaringType) {
+	assert declaringType.isRecord();
+
+	// range check
+	boolean isInRange =
+				this.initialPosition <= recordComponent.declarationSourceStart
+				&& this.eofPosition >= recordComponent.declarationSourceEnd;
+	int recordComponentEndPosition = this.sourceEnds.get(recordComponent);
+	if (recordComponentEndPosition == -1) {
+		// use the declaration source end by default
+		recordComponentEndPosition = recordComponent.declarationSourceEnd;
+	}
+	if (isInRange) {
+		char[] typeName = CharOperation.concatWith(recordComponent.type.getParameterizedTypeName(), '.');
+		ISourceElementRequestor.RecordComponentInfo recordComponentInfo = new ISourceElementRequestor.RecordComponentInfo();
+		recordComponentInfo.typeAnnotated = ((recordComponent.bits & ASTNode.HasTypeAnnotations) != 0);
+		recordComponentInfo.declarationStart = recordComponent.declarationSourceStart;
+		recordComponentInfo.name = recordComponent.name;
+		recordComponentInfo.type = typeName;
+		recordComponentInfo.nameSourceStart = recordComponent.sourceStart;
+		recordComponentInfo.nameSourceEnd = recordComponent.sourceEnd;
+		recordComponentInfo.categories = this.nodesToCategories.get(recordComponent);
+		recordComponentInfo.annotations = recordComponent.annotations;
+		recordComponentInfo.node = recordComponent;
+		this.requestor.enterRecordComponent(recordComponentInfo);
+	}
+	this.visitIfNeeded(recordComponent, declaringType);
+	if (isInRange){
+		this.requestor.exitRecordComponent(
+			recordComponentEndPosition,
+			recordComponent.declarationSourceEnd);
+	}
+
+}
 protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 
 	if (CharOperation.equals(TypeConstants.PACKAGE_INFO_NAME, typeDeclaration.name)) return;
@@ -628,12 +665,15 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 	FieldDeclaration[] fields = typeDeclaration.fields;
 	AbstractMethodDeclaration[] methods = typeDeclaration.methods;
 	TypeDeclaration[] memberTypes = typeDeclaration.memberTypes;
+	RecordComponent[] recordComponents = typeDeclaration.recordComponents;
 	int fieldCounter = fields == null ? 0 : fields.length;
 	int methodCounter = methods == null ? 0 : methods.length;
 	int memberTypeCounter = memberTypes == null ? 0 : memberTypes.length;
+	int recordComponentCounter = recordComponents == null ? 0 : recordComponents.length;
 	int fieldIndex = 0;
 	int methodIndex = 0;
 	int memberTypeIndex = 0;
+	int recordComponentIndex = 0;
 
 	if (notifyTypePresence){
 		char[][] interfaceNames = getInterfaceNames(typeDeclaration);
@@ -706,10 +746,12 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 	}
 	while ((fieldIndex < fieldCounter)
 			|| (memberTypeIndex < memberTypeCounter)
-			|| (methodIndex < methodCounter)) {
+			|| (methodIndex < methodCounter)
+			|| (recordComponentIndex < recordComponentCounter)) {
 		FieldDeclaration nextFieldDeclaration = null;
 		AbstractMethodDeclaration nextMethodDeclaration = null;
 		TypeDeclaration nextMemberDeclaration = null;
+		RecordComponent nextRecordComponent = null;
 
 		int position = Integer.MAX_VALUE;
 		int nextDeclarationType = -1;
@@ -734,9 +776,18 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 				nextDeclarationType = 2; // MEMBER
 			}
 		}
+		if (recordComponentIndex < recordComponentCounter) {
+			nextRecordComponent = recordComponents[recordComponentIndex];
+			if (nextRecordComponent.declarationSourceStart < position) {
+				position = nextRecordComponent.declarationSourceStart;
+				nextDeclarationType = 3; // RECORD_COMPONENT
+			}
+		}
 		switch (nextDeclarationType) {
 			case 0 :
 				fieldIndex++;
+//				if (typeDeclaration.isRecord() && nextFieldDeclaration.isARecordComponent)
+//					break;
 				notifySourceElementRequestor(nextFieldDeclaration, typeDeclaration);
 				break;
 			case 1 :
@@ -746,6 +797,11 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 			case 2 :
 				memberTypeIndex++;
 				notifySourceElementRequestor(nextMemberDeclaration, true, null, currentPackage);
+				break;
+			case 3 :
+				recordComponentIndex++;
+				notifySourceElementRequestor(nextRecordComponent, typeDeclaration);
+				break;
 		}
 	}
 	if (notifyTypePresence){
@@ -893,6 +949,19 @@ private void visitIfNeeded(FieldDeclaration field, TypeDeclaration declaringType
 				try {
 					this.localDeclarationVisitor.pushDeclaringType(declaringType);
 					field.initialization.traverse(this.localDeclarationVisitor, (MethodScope) null);
+				} finally {
+					this.localDeclarationVisitor.popDeclaringType();
+				}
+			}
+	}
+}
+private void visitIfNeeded(RecordComponent component, TypeDeclaration declaringType) {
+	if (this.localDeclarationVisitor != null
+		&& (component.bits & ASTNode.HasLocalType) != 0) {
+			if (component.initialization != null) {
+				try {
+					this.localDeclarationVisitor.pushDeclaringType(declaringType);
+					component.initialization.traverse(this.localDeclarationVisitor, (MethodScope) null);
 				} finally {
 					this.localDeclarationVisitor.popDeclaringType();
 				}

@@ -102,12 +102,9 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 		if (this.switchLabeledRules // do this check for every block if '->' (Switch Labeled Rules)
 				&& stmt instanceof Block) {
 			Block block = (Block) stmt;
-			if (block.doesNotCompleteNormally()) {
+			if (!block.canCompleteNormally()) {
 				return BREAKING;
 			}
-			//JLS 12 15.28.1 Given a switch expression, if the switch block consists of switch labeled rules,
-			//then it is a compile-time error if any switch labeled block can complete normally.
-			blockScope.problemReporter().switchExpressionSwitchLabeledBlockCompletesNormally(block);
 		}
 		return FALLTHROUGH;
 	}
@@ -144,9 +141,20 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 
 	@Override
 	protected void completeNormallyCheck(BlockScope blockScope) {
-		if (this.switchLabeledRules) return; // already taken care in getFallThroughState()
 		int sz = this.statements != null ? this.statements.length : 0;
 		if (sz == 0) return;
+		/* JLS 12 15.28.1 Given a switch expression, if the switch block consists of switch labeled rules
+		 * then it is a compile-time error if any switch labeled block can complete normally.
+		 */
+		if (this.switchLabeledRules) {
+			for (Statement stmt : this.statements) {
+				if (!(stmt instanceof Block))
+					continue;
+				if (stmt.canCompleteNormally())
+					blockScope.problemReporter().switchExpressionLastStatementCompletesNormally(stmt);
+			}
+			return;
+		}
 		/* JLS 12 15.28.1
 		 * If, on the other hand, the switch block consists of switch labeled statement groups, then it is a
 		 * compile-time error if either the last statement in the switch block can complete normally, or the
@@ -164,7 +172,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 			}
 		}
 		if (lastNonCaseStmt != null) {
-			if (!lastNonCaseStmt.doesNotCompleteNormally())
+			if (lastNonCaseStmt.canCompleteNormally())
 				blockScope.problemReporter().switchExpressionLastStatementCompletesNormally(lastNonCaseStmt);
 			else if (lastNonCaseStmt instanceof ContinueStatement || lastNonCaseStmt instanceof ReturnStatement) {
 				blockScope.problemReporter().switchExpressionIllegalLastStatement(lastNonCaseStmt);
@@ -421,10 +429,19 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 			return true;
 		}
 		@Override
+		public boolean visit(LambdaExpression lambdaExpression, BlockScope blockScope) {
+			return false;
+		}
+		@Override
 		public boolean visit(LabeledStatement stmt, BlockScope blockScope) {
 			if (stmt.label != null && stmt.label.length != 0)
 				this.labelDecls.add(new String(stmt.label));
 			return true;
+		}
+		@Override
+		public boolean visit(ReturnStatement stmt, BlockScope blockScope) {
+			blockScope.problemReporter().switchExpressionsReturnWithinSwitchExpression(stmt);
+			return false;
 		}
 		@Override
 		public boolean visit(TypeDeclaration stmt, BlockScope blockScope) {

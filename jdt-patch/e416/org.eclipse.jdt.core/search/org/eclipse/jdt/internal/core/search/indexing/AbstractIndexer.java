@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -97,7 +97,7 @@ public abstract class AbstractIndexer implements IIndexConstants {
 						packageName,
 						typeModifiers,
 						extraFlags));
-		
+
 		if (parameterTypes != null) {
 			for (int i = 0; i < argCount; i++)
 				addTypeReference(parameterTypes[i]);
@@ -142,6 +142,9 @@ public abstract class AbstractIndexer implements IIndexConstants {
 	public void addFieldDeclaration(char[] typeName, char[] fieldName) {
 		addIndexEntry(FIELD_DECL, FieldPattern.createIndexKey(fieldName));
 		addTypeReference(typeName);
+	}
+	public void addRecordComponentDecl(char[] typeName, char[] fieldName) {
+		addFieldDeclaration(typeName, fieldName);
 	}
 	public void addFieldReference(char[] fieldName) {
 		addNameReference(fieldName);

@@ -179,4 +179,17 @@ public boolean completesByContinue() {
 	int length = this.statements == null ? 0 : this.statements.length;
 	return length > 0 && this.statements[length - 1].completesByContinue();
 }
+
+@Override
+public boolean canCompleteNormally() {
+	int length = this.statements == null ? 0 : this.statements.length;
+	return length == 0 || this.statements[length - 1].canCompleteNormally();
+}
+
+@Override
+public boolean continueCompletes() {
+	int length = this.statements == null ? 0 : this.statements.length;
+	return length > 0 && this.statements[length - 1].continueCompletes();
+}
+
 }

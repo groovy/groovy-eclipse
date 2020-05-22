@@ -33,6 +33,7 @@ package org.eclipse.jdt.internal.compiler.parser;
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ILocalVariable;
@@ -248,6 +249,30 @@ public class SourceTypeConverter extends TypeConverter {
 
 	/*
 	 * Convert a field source element into a parsed field declaration
+	 */
+	private RecordComponent convertRecordComponents(SourceField component,
+										TypeDeclaration type,
+										CompilationResult compilationResult) throws JavaModelException {
+
+		SourceFieldElementInfo compInfo = (SourceFieldElementInfo) component.getElementInfo();
+		RecordComponent comp = new RecordComponent(null, -1, -1);
+
+		int start = compInfo.getNameSourceStart();
+		int end = compInfo.getNameSourceEnd();
+
+		comp.name = component.getElementName().toCharArray();
+		comp.sourceStart = start;
+		comp.sourceEnd = end;
+		comp.declarationSourceStart = compInfo.getDeclarationSourceStart();
+		comp.declarationSourceEnd = compInfo.getDeclarationSourceEnd();
+		comp.type = createTypeReference(compInfo.getTypeName(), start, end);
+
+		/* convert annotations */
+		comp.annotations = convertAnnotations(component);
+		return comp;
+	}
+	/*
+	 * Convert a record component source element into a parsed record component declaration
 	 */
 	private FieldDeclaration convert(SourceField fieldHandle, TypeDeclaration type, CompilationResult compilationResult) throws JavaModelException {
 
@@ -488,6 +513,11 @@ public class SourceTypeConverter extends TypeConverter {
 			// The first choice constructor that takes CompilationResult as arg is not setting all the fields
 			// Hence, use the one that does
 			type.modifiers |= ExtraCompilerModifiers.AccRecord;
+			IField[] recordComponents = typeHandle.getRecordComponents();
+			type.recordComponents = new RecordComponent[recordComponents.length];
+			for(int i = 0; i < recordComponents.length; i++) {
+				type.recordComponents[i] = convertRecordComponents((SourceField)recordComponents[i], type, compilationResult);
+			}
 		}
 		if (typeInfo.getEnclosingType() == null) {
 			if (typeHandle.isAnonymous()) {

@@ -90,5 +90,13 @@ boolean isEnumConstant() throws JavaModelException;
  * @since 3.1
  */
 boolean isResolved();
+/**
+ * Returns whether this field represents a record component.
+ *
+ * @return whether this field represents a record component.
+ * @throws JavaModelException
+ * @noreference This method is not intended to be referenced by clients as it is a part of Java preview feature.
+ */
+boolean isRecordComponent() throws JavaModelException;
 
 }

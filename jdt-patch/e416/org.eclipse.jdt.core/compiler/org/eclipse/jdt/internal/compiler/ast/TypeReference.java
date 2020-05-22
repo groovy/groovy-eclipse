@@ -57,6 +57,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
@@ -100,6 +101,7 @@ static class AnnotationCollector extends ASTVisitor {
 	Annotation[][] annotationsOnDimensions;
 	int dimensions;
 	Wildcard currentWildcard;
+	RecordComponentBinding recordComponentBinding;
 
 	public AnnotationCollector(
 			TypeParameter typeParameter,
@@ -184,6 +186,13 @@ static class AnnotationCollector extends ASTVisitor {
 		this.dimensions = dimensions;
 	}
 
+	public AnnotationCollector(RecordComponent recordComponent, int targetType, List annotationContexts) {
+		this.annotationContexts = annotationContexts;
+		this.typeReference = recordComponent.type;
+		this.targetType = targetType;
+		this.recordComponentBinding = recordComponent.binding;
+	}
+
 	private boolean internalVisit(Annotation annotation) {
 		AnnotationContext annotationContext = null;
 		if (annotation.isRuntimeTypeInvisible()) {
@@ -221,6 +230,7 @@ static class AnnotationCollector extends ASTVisitor {
 					annotationContext.info = this.info;
 					break;
 				case AnnotationTargetTypeConstants.FIELD :
+// 				case AnnotationTargetTypeConstants.RECORD_COMPONENT : // value same as FIELD
 				case AnnotationTargetTypeConstants.METHOD_RETURN :
 				case AnnotationTargetTypeConstants.METHOD_RECEIVER :
 					break;

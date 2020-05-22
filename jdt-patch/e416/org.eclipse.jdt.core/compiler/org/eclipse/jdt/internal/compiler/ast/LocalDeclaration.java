@@ -125,6 +125,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// no need to inform enclosing try block since its locals won't get
 		// known by the finally block
 	}
+	if (this.duplicateCheckObligation != null) {
+		this.duplicateCheckObligation.accept(flowInfo);
+	}
 	return flowInfo;
 }
 
@@ -306,9 +309,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		Binding existingVariable = scope.getBinding(this.name, Binding.VARIABLE, this, false /*do not resolve hidden field*/);
 		if (existingVariable != null && existingVariable.isValidBinding()){
 			boolean localExists = existingVariable instanceof LocalVariableBinding;
-			if (localExists && isPatternVariable
-					&& (((LocalVariableBinding) existingVariable).modifiers & ExtraCompilerModifiers.AccPatternVariable) != 0)
+			if (localExists && (isPatternVariable
+					|| (((LocalVariableBinding) existingVariable).modifiers & ExtraCompilerModifiers.AccPatternVariable) != 0))
 			{
+				// Do this only if either one of them is a pattern variable.
 				this.duplicateCheckObligation = (flowInfo) -> {
 					if (flowInfo.isDefinitelyAssigned((LocalVariableBinding) existingVariable)) {
 						scope.problemReporter().redefineLocal(this);

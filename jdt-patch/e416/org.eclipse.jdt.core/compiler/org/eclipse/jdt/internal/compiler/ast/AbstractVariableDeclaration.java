@@ -55,6 +55,7 @@ public abstract class AbstractVariableDeclaration extends Statement implements I
 	public static final int LOCAL_VARIABLE = 4;
 	public static final int PARAMETER = 5;
 	public static final int TYPE_PARAMETER = 6;
+	public static final int RECORD_COMPONENT = 7; // record
 
 
 	/**

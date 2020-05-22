@@ -18,21 +18,39 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
-import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
-import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.*;
-import org.eclipse.jdt.internal.compiler.env.AccessRule;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.AddExports;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.AddReads;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-
-import java.io.*;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class State {
@@ -44,9 +62,9 @@ public ClasspathMultiDirectory[] testSourceLocations;
 ClasspathLocation[] binaryLocations;
 ClasspathLocation[] testBinaryLocations;
 // keyed by the project relative path of the type (i.e. "src1/p1/p2/A.java"), value is a ReferenceCollection or an AdditionalTypeCollection
-SimpleLookupTable references;
+Map<String, ReferenceCollection> references;
 // keyed by qualified type name "p1/p2/A", value is the project relative path which defines this type "src1/p1/p2/A.java"
-public SimpleLookupTable typeLocators;
+public Map<String, String> typeLocators;
 
 int buildNumber;
 long lastStructuralBuildTime;
@@ -78,8 +96,8 @@ protected State(JavaBuilder javaBuilder) {
 	this.binaryLocations = javaBuilder.nameEnvironment.binaryLocations;
 	this.testSourceLocations = javaBuilder.testNameEnvironment.sourceLocations;
 	this.testBinaryLocations = javaBuilder.testNameEnvironment.binaryLocations;
-	this.references = new SimpleLookupTable(7);
-	this.typeLocators = new SimpleLookupTable(7);
+	this.references = new LinkedHashMap<>(7);
+	this.typeLocators = new LinkedHashMap<>(7);
 
 	this.buildNumber = 0; // indicates a full build
 	this.lastStructuralBuildTime = computeStructuralBuildTime(javaBuilder.lastState == null ? 0 : javaBuilder.lastState.lastStructuralBuildTime);
@@ -101,24 +119,8 @@ void copyFrom(State lastState) {
 	this.lastStructuralBuildTime = lastState.lastStructuralBuildTime;
 	this.structuralBuildTimes = lastState.structuralBuildTimes;
 
-	try {
-		this.references = (SimpleLookupTable) lastState.references.clone();
-		this.typeLocators = (SimpleLookupTable) lastState.typeLocators.clone();
-	} catch (CloneNotSupportedException e) {
-		this.references = new SimpleLookupTable(lastState.references.elementSize);
-		Object[] keyTable = lastState.references.keyTable;
-		Object[] valueTable = lastState.references.valueTable;
-		for (int i = 0, l = keyTable.length; i < l; i++)
-			if (keyTable[i] != null)
-				this.references.put(keyTable[i], valueTable[i]);
-
-		this.typeLocators = new SimpleLookupTable(lastState.typeLocators.elementSize);
-		keyTable = lastState.typeLocators.keyTable;
-		valueTable = lastState.typeLocators.valueTable;
-		for (int i = 0, l = keyTable.length; i < l; i++)
-			if (keyTable[i] != null)
-				this.typeLocators.put(keyTable[i], valueTable[i]);
-	}
+	this.references = new LinkedHashMap<>(lastState.references);
+	this.typeLocators = new LinkedHashMap<>(lastState.typeLocators);
 }
 public char[][] getDefinedTypeNamesFor(String typeLocator) {
 	Object c = this.references.get(typeLocator);
@@ -127,7 +129,7 @@ public char[][] getDefinedTypeNamesFor(String typeLocator) {
 	return null; // means only one type is defined with the same name as the file... saves space
 }
 
-public SimpleLookupTable getReferences() {
+public Map<String, ReferenceCollection> getReferences() {
 	return this.references;
 }
 
@@ -142,33 +144,30 @@ StringSet getStructurallyChangedTypes(State prereqState) {
 }
 
 public boolean isDuplicateLocator(String qualifiedTypeName, String typeLocator) {
-	String existing = (String) this.typeLocators.get(qualifiedTypeName);
+	String existing = this.typeLocators.get(qualifiedTypeName);
 	return existing != null && !existing.equals(typeLocator);
 }
 
 public boolean isKnownPackage(String qualifiedPackageName) {
 	if (this.knownPackageNames == null) {
-		LinkedHashSet<String> names = new LinkedHashSet<>(this.typeLocators.elementSize);
-		Object[] keyTable = this.typeLocators.keyTable;
-		for (int i = 0, l = keyTable.length; i < l; i++) {
-			if (keyTable[i] != null) {
-				String packageName = (String) keyTable[i]; // is a type name of the form p1/p2/A
-				int last = packageName.lastIndexOf('/');
+		LinkedHashSet<String> names = new LinkedHashSet<>(this.typeLocators.size());
+		Set<Entry<String, String>> keyTable = this.typeLocators.entrySet();
+		for (Entry<String, String> entry : keyTable) {
+			String packageName = entry.getValue(); // is a type name of the form p1/p2/A
+			int last = packageName.lastIndexOf('/');
+			packageName = last == -1 ? null : packageName.substring(0, last);
+			while (packageName != null && !names.contains(packageName)) {
+				names.add(packageName);
+				last = packageName.lastIndexOf('/');
 				packageName = last == -1 ? null : packageName.substring(0, last);
-				while (packageName != null && !names.contains(packageName)) {
-					names.add(packageName);
-					last = packageName.lastIndexOf('/');
-					packageName = last == -1 ? null : packageName.substring(0, last);
-				}
 			}
 		}
 		this.knownPackageNames = new String[names.size()];
 		names.toArray(this.knownPackageNames);
+		Arrays.sort(this.knownPackageNames);
 	}
-	for (int i = 0, l = this.knownPackageNames.length; i < l; i++)
-		if (this.knownPackageNames[i].equals(qualifiedPackageName))
-			return true;
-	return false;
+	int result = Arrays.binarySearch(this.knownPackageNames, qualifiedPackageName);
+	return result >= 0;
 }
 
 public boolean isKnownType(String qualifiedTypeName) {
@@ -177,10 +176,11 @@ public boolean isKnownType(String qualifiedTypeName) {
 
 boolean isSourceFolderEmpty(IContainer sourceFolder) {
 	String sourceFolderName = sourceFolder.getProjectRelativePath().addTrailingSeparator().toString();
-	Object[] table = this.typeLocators.valueTable;
-	for (int i = 0, l = table.length; i < l; i++)
-		if (table[i] != null && ((String) table[i]).startsWith(sourceFolderName))
+	for (String value : this.typeLocators.values()) {
+		if (value.startsWith(sourceFolderName)) {
 			return false;
+		}
+	}
 	return true;
 }
 
@@ -211,9 +211,11 @@ void recordStructuralDependency(IProject prereqProject, State prereqState) {
 
 void removeLocator(String typeLocatorToRemove) {
 	this.knownPackageNames = null;
-	this.references.removeKey(typeLocatorToRemove);
-	this.typeLocators.removeValue(typeLocatorToRemove);
+	this.references.remove(typeLocatorToRemove);
+	this.typeLocators.values().removeIf(v -> typeLocatorToRemove.equals(v));
 }
+
+
 
 void removePackage(IResourceDelta sourceDelta) {
 	IResource resource = sourceDelta.getResource();
@@ -232,7 +234,7 @@ void removePackage(IResourceDelta sourceDelta) {
 
 void removeQualifiedTypeName(String qualifiedTypeNameToRemove) {
 	this.knownPackageNames = null;
-	this.typeLocators.removeKey(qualifiedTypeNameToRemove);
+	this.typeLocators.remove(qualifiedTypeNameToRemove);
 }
 
 static State read(IProject project, DataInputStream in) throws IOException, CoreException {
@@ -385,7 +387,8 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	for (int i = 0; i < length; i++)
 		internedTypeLocators[i] = in.readUTF();
 
-	newState.typeLocators = new SimpleLookupTable(length = in.readInt());
+	length = in.readInt();
+	newState.typeLocators = new LinkedHashMap<>((int) (length / 0.75 + 1));
 	for (int i = 0; i < length; i++)
 		newState.recordLocatorForType(in.readUTF(), internedTypeLocators[in.readInt()]);
 
@@ -404,7 +407,8 @@ static State read(IProject project, DataInputStream in) throws IOException, Core
 	}
 	internedQualifiedNames = ReferenceCollection.internQualifiedNames(internedQualifiedNames, false /* drop well known */, false /* do not sort */);
 
-	newState.references = new SimpleLookupTable(length = in.readInt());
+	length = in.readInt();
+	newState.references = new LinkedHashMap((int) (length / 0.75 + 1));
 	for (int i = 0; i < length; i++) {
 		String typeLocator = internedTypeLocators[in.readInt()];
 		ReferenceCollection collection = null;
@@ -724,14 +728,13 @@ void write(DataOutputStream out) throws IOException {
 /*
  * String[]	Interned type locators
  */
-	out.writeInt(length = this.references.elementSize);
+	out.writeInt(length = this.references.size());
 	SimpleLookupTable internedTypeLocators = new SimpleLookupTable(length);
 	if (length > 0) {
-		keyTable = this.references.keyTable;
-		for (int i = 0, l = keyTable.length; i < l; i++) {
-			if (keyTable[i] != null) {
+		Set<String> keys = this.references.keySet();
+		for (String key : keys) {
+			if (key != null) {
 				length--;
-				String key = (String) keyTable[i];
 				out.writeUTF(key);
 				internedTypeLocators.put(key, Integer.valueOf(internedTypeLocators.elementSize));
 			}
@@ -745,15 +748,16 @@ void write(DataOutputStream out) throws IOException {
  * String		type name
  * int			interned locator id
  */
-	out.writeInt(length = this.typeLocators.elementSize);
+	out.writeInt(length = this.typeLocators.size());
 	if (length > 0) {
-		keyTable = this.typeLocators.keyTable;
-		valueTable = this.typeLocators.valueTable;
-		for (int i = 0, l = keyTable.length; i < l; i++) {
-			if (keyTable[i] != null) {
+		Set<Entry<String, String>> entries = this.typeLocators.entrySet();
+		for (Entry<String, String> entry : entries) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			if (key != null) {
 				length--;
-				out.writeUTF((String) keyTable[i]);
-				Integer index = (Integer) internedTypeLocators.get(valueTable[i]);
+				out.writeUTF(value);
+				Integer index = (Integer) internedTypeLocators.get(value);
 				out.writeInt(index.intValue());
 			}
 		}
@@ -769,34 +773,30 @@ void write(DataOutputStream out) throws IOException {
 	SimpleLookupTable internedRootNames = new SimpleLookupTable(3);
 	SimpleLookupTable internedQualifiedNames = new SimpleLookupTable(31);
 	SimpleLookupTable internedSimpleNames = new SimpleLookupTable(31);
-	valueTable = this.references.valueTable;
-	for (int i = 0, l = valueTable.length; i < l; i++) {
-		if (valueTable[i] != null) {
-			ReferenceCollection collection = (ReferenceCollection) valueTable[i];
-			char[][] rNames = collection.rootReferences;
-			for (int j = 0, m = rNames.length; j < m; j++) {
-				char[] rName = rNames[j];
-				if (!internedRootNames.containsKey(rName)) // remember the names have been interned
-					internedRootNames.put(rName, Integer.valueOf(internedRootNames.elementSize));
-			}
-			char[][][] qNames = collection.qualifiedNameReferences;
-			for (int j = 0, m = qNames.length; j < m; j++) {
-				char[][] qName = qNames[j];
-				if (!internedQualifiedNames.containsKey(qName)) { // remember the names have been interned
-					internedQualifiedNames.put(qName, Integer.valueOf(internedQualifiedNames.elementSize));
-					for (int k = 0, n = qName.length; k < n; k++) {
-						char[] sName = qName[k];
-						if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
-							internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
-					}
+	for (ReferenceCollection collection : this.references.values()) {
+		char[][] rNames = collection.rootReferences;
+		for (int j = 0, m = rNames.length; j < m; j++) {
+			char[] rName = rNames[j];
+			if (!internedRootNames.containsKey(rName)) // remember the names have been interned
+				internedRootNames.put(rName, Integer.valueOf(internedRootNames.elementSize));
+		}
+		char[][][] qNames = collection.qualifiedNameReferences;
+		for (int j = 0, m = qNames.length; j < m; j++) {
+			char[][] qName = qNames[j];
+			if (!internedQualifiedNames.containsKey(qName)) { // remember the names have been interned
+				internedQualifiedNames.put(qName, Integer.valueOf(internedQualifiedNames.elementSize));
+				for (int k = 0, n = qName.length; k < n; k++) {
+					char[] sName = qName[k];
+					if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
+						internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
 				}
 			}
-			char[][] sNames = collection.simpleNameReferences;
-			for (int j = 0, m = sNames.length; j < m; j++) {
-				char[] sName = sNames[j];
-				if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
-					internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
-			}
+		}
+		char[][] sNames = collection.simpleNameReferences;
+		for (int j = 0, m = sNames.length; j < m; j++) {
+			char[] sName = sNames[j];
+			if (!internedSimpleNames.containsKey(sName)) // remember the names have been interned
+				internedSimpleNames.put(sName, Integer.valueOf(internedSimpleNames.elementSize));
 		}
 	}
 	char[][] internedArray = new char[internedRootNames.elementSize][];
@@ -846,43 +846,41 @@ void write(DataOutputStream out) throws IOException {
  * int		interned locator id
  * ReferenceCollection
 */
-	out.writeInt(length = this.references.elementSize);
+	out.writeInt(length = this.references.size());
 	if (length > 0) {
-		keyTable = this.references.keyTable;
-		for (int i = 0, l = keyTable.length; i < l; i++) {
-			if (keyTable[i] != null) {
-				length--;
-				Integer index = (Integer) internedTypeLocators.get(keyTable[i]);
+		for (Entry<String, ReferenceCollection> entry : this.references.entrySet()) {
+			String key = entry.getKey();
+			length--;
+			Integer index = (Integer) internedTypeLocators.get(key);
+			out.writeInt(index.intValue());
+			ReferenceCollection collection = entry.getValue();
+			if (collection instanceof AdditionalTypeCollection) {
+				out.writeByte(1);
+				AdditionalTypeCollection atc = (AdditionalTypeCollection) collection;
+				writeNames(atc.definedTypeNames, out);
+			} else {
+				out.writeByte(2);
+			}
+			char[][][] qNames = collection.qualifiedNameReferences;
+			int qLength = qNames.length;
+			out.writeInt(qLength);
+			for (int j = 0; j < qLength; j++) {
+				index = (Integer) internedQualifiedNames.get(qNames[j]);
 				out.writeInt(index.intValue());
-				ReferenceCollection collection = (ReferenceCollection) valueTable[i];
-				if (collection instanceof AdditionalTypeCollection) {
-					out.writeByte(1);
-					AdditionalTypeCollection atc = (AdditionalTypeCollection) collection;
-					writeNames(atc.definedTypeNames, out);
-				} else {
-					out.writeByte(2);
-				}
-				char[][][] qNames = collection.qualifiedNameReferences;
-				int qLength = qNames.length;
-				out.writeInt(qLength);
-				for (int j = 0; j < qLength; j++) {
-					index = (Integer) internedQualifiedNames.get(qNames[j]);
-					out.writeInt(index.intValue());
-				}
-				char[][] sNames = collection.simpleNameReferences;
-				int sLength = sNames.length;
-				out.writeInt(sLength);
-				for (int j = 0; j < sLength; j++) {
-					index = (Integer) internedSimpleNames.get(sNames[j]);
-					out.writeInt(index.intValue());
-				}
-				char[][] rNames = collection.rootReferences;
-				int rLength = rNames.length;
-				out.writeInt(rLength);
-				for (int j = 0; j < rLength; j++) {
-					index = (Integer) internedRootNames.get(rNames[j]);
-					out.writeInt(index.intValue());
-				}
+			}
+			char[][] sNames = collection.simpleNameReferences;
+			int sLength = sNames.length;
+			out.writeInt(sLength);
+			for (int j = 0; j < sLength; j++) {
+				index = (Integer) internedSimpleNames.get(sNames[j]);
+				out.writeInt(index.intValue());
+			}
+			char[][] rNames = collection.rootReferences;
+			int rLength = rNames.length;
+			out.writeInt(rLength);
+			for (int j = 0; j < rLength; j++) {
+				index = (Integer) internedRootNames.get(rNames[j]);
+				out.writeInt(index.intValue());
 			}
 		}
 		if (JavaBuilder.DEBUG && length != 0)

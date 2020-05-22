@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * The incremental image builder
@@ -242,25 +243,21 @@ protected void addAffectedSourceFiles(Set<String> qualifiedSet, Set<String> simp
 		internedSimpleNames = null;
 	char[][] internedRootNames = ReferenceCollection.internSimpleNames(rootSet, false);
 
-	Object[] keyTable = this.newState.references.keyTable;
-	Object[] valueTable = this.newState.references.valueTable;
-	next : for (int i = 0, l = valueTable.length; i < l; i++) {
-		String typeLocator = (String) keyTable[i];
-		if (typeLocator != null) {
-			if (affectedTypes != null && !affectedTypes.contains(typeLocator)) continue next;
-			ReferenceCollection refs = (ReferenceCollection) valueTable[i];
-			if (refs.includes(internedQualifiedNames, internedSimpleNames, internedRootNames)) {
-				IFile file = this.javaBuilder.currentProject.getFile(typeLocator);
-				SourceFile sourceFile = findSourceFile(file, true);
-				if (sourceFile == null) continue next;
-				if (this.sourceFiles.contains(sourceFile)) continue next;
-				if (this.compiledAllAtOnce && this.previousSourceFiles != null && this.previousSourceFiles.contains(sourceFile))
-					continue next; // can skip previously compiled files since already saw hierarchy related problems
+	next: for (Entry<String, ReferenceCollection> entry : this.newState.references.entrySet()) {
+		String typeLocator = entry.getKey();
+		if (affectedTypes != null && !affectedTypes.contains(typeLocator)) continue next;
+		ReferenceCollection refs = entry.getValue();
+		if (refs.includes(internedQualifiedNames, internedSimpleNames, internedRootNames)) {
+			IFile file = this.javaBuilder.currentProject.getFile(typeLocator);
+			SourceFile sourceFile = findSourceFile(file, true);
+			if (sourceFile == null) continue next;
+			if (this.sourceFiles.contains(sourceFile)) continue next;
+			if (this.compiledAllAtOnce && this.previousSourceFiles != null && this.previousSourceFiles.contains(sourceFile))
+				continue next; // can skip previously compiled files since already saw hierarchy related problems
 
-				if (JavaBuilder.DEBUG)
-					System.out.println("  adding affected source file " + typeLocator); //$NON-NLS-1$
-				this.sourceFiles.add(sourceFile);
-			}
+			if (JavaBuilder.DEBUG)
+				System.out.println("  adding affected source file " + typeLocator); //$NON-NLS-1$
+			this.sourceFiles.add(sourceFile);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -13,6 +13,12 @@
  *******************************************************************************/
 package org.eclipse.jdt.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -45,6 +51,37 @@ public final class JavaConventions {
     private static final Pattern DOT_DOT = Pattern.compile("(\\.)(\\1)+"); //$NON-NLS-1$
     private static final Pattern PREFIX_JAVA = Pattern.compile("java$"); //$NON-NLS-1$
 	private static final Scanner SCANNER = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
+	private static Map<String, Set<String>> restrictedIdentifiersMap, restrictedIdentifierPreviewMap;
+	private static List<String> javaVersions;
+	private static String VAR_ID = "var"; //$NON-NLS-1$
+	private static String YIELD_ID = "yield"; //$NON-NLS-1$
+	private static String RECORD_ID = "record"; //$NON-NLS-1$
+
+	static {
+		javaVersions= new ArrayList<String>();
+		javaVersions.add(0, CompilerOptions.VERSION_10);
+		javaVersions.add(1, CompilerOptions.VERSION_11);
+		javaVersions.add(2, CompilerOptions.VERSION_12);
+		javaVersions.add(3, CompilerOptions.VERSION_13);
+		javaVersions.add(4, CompilerOptions.VERSION_14);
+
+		restrictedIdentifiersMap= new HashMap<>();
+		//restricted identifier for Java10 and above
+		Set<String> set= new HashSet<String>();
+		set.add(new String(VAR_ID));
+		restrictedIdentifiersMap.put(CompilerOptions.VERSION_10, set);
+		//restricted identifier for Java14 and above
+		set= new HashSet<String>();
+		set.add(new String(YIELD_ID));
+		restrictedIdentifiersMap.put(CompilerOptions.VERSION_14, set);
+
+		restrictedIdentifierPreviewMap= new HashMap<>();
+		//restricted identifier for Java10 and above
+		set= new HashSet<String>();
+		set.add(new String(RECORD_ID));
+		restrictedIdentifierPreviewMap.put(CompilerOptions.VERSION_14, set);
+
+	}
 
 	private JavaConventions() {
 		// Not instantiable
@@ -71,16 +108,25 @@ public final class JavaConventions {
 
 	/*
 	 * Returns the current identifier extracted by the scanner (without unicode
-	 * escapes) from the given id and for the given source and compliance levels.
+	 * escapes) from the given id and for the given source and compliance levels and preview enabled flag.
 	 * Returns <code>null</code> if the id was not valid
 	 */
 	private static synchronized char[] scannedIdentifier(String id, String sourceLevel, String complianceLevel) {
+		return  scannedIdentifier( id, sourceLevel, complianceLevel, null, true);
+	}
+	/*
+	 * Returns the current identifier extracted by the scanner (without unicode
+	 * escapes) from the given id and for the given source and compliance levels and preview enabled flag.
+	 * Returns <code>null</code> if the id was not valid
+	 */
+	private static synchronized char[] scannedIdentifier(String id, String sourceLevel, String complianceLevel, String previewEnabled, boolean allowRestrictedKeyWords) {
 		if (id == null) {
 			return null;
 		}
 		// Set scanner for given source and compliance levels
 		SCANNER.sourceLevel = sourceLevel == null ? ClassFileConstants.JDK1_3 : CompilerOptions.versionToJdkLevel(sourceLevel);
 		SCANNER.complianceLevel = complianceLevel == null ? ClassFileConstants.JDK1_3 : CompilerOptions.versionToJdkLevel(complianceLevel);
+		SCANNER.previewEnabled = previewEnabled == null ? false : JavaCore.ENABLED.equals(previewEnabled);
 
 		try {
 			SCANNER.setSource(id.toCharArray());
@@ -88,7 +134,9 @@ public final class JavaConventions {
 			if (token != TerminalTokens.TokenNameIdentifier) return null;
 			if (SCANNER.currentPosition == SCANNER.eofPosition) { // to handle case where we had an ArrayIndexOutOfBoundsException
 				try {
-					return SCANNER.getCurrentIdentifierSource();
+					char[] src= SCANNER.getCurrentIdentifierSource();
+					src= scanForRestrictedKeyWords(src, sourceLevel, complianceLevel, SCANNER.previewEnabled, allowRestrictedKeyWords);
+					return src;
 				} catch (ArrayIndexOutOfBoundsException e) {
 					return null;
 				}
@@ -99,6 +147,30 @@ public final class JavaConventions {
 		catch (InvalidInputException e) {
 			return null;
 		}
+	}
+
+	private static char[] scanForRestrictedKeyWords(char[] id,  String sourceLevel, String complianceLevel, boolean previewEnabled, boolean allowRestrictedKeyWords) {
+		if (allowRestrictedKeyWords) {
+			return id;
+		}
+		int index= javaVersions.indexOf(sourceLevel);
+		String searchId= new String(id);
+		for (int i=index; i>=0; i--) {
+			String level= javaVersions.get(i);
+			if (level != null) {
+				Set<String> rIds= restrictedIdentifiersMap.get(level);
+				if (rIds != null && rIds.contains(searchId)) {
+					return null;
+				}
+				if (previewEnabled) {
+					Set<String> prIds= restrictedIdentifierPreviewMap.get(level);
+					if (prIds != null && prIds.contains(searchId)) {
+						return null;
+					}
+				}
+			}
+		}
+		return id;
 	}
 
 	/**
@@ -385,9 +457,9 @@ public final class JavaConventions {
 
 	/**
 	 * Validate the given Java type name, either simple or qualified, for the given source and compliance levels.
-	 * 
+	 *
 	 * <p>For example, <code>"java.lang.Object"</code>, or <code>"Object"</code>.</p>
-	 * 
+	 *
 	 * <p>The source level and compliance level values should be taken from the constant defined inside
 	 * {@link JavaCore} class. The constants are named <code>JavaCore#VERSION_1_x</code>, x being set
 	 * between '1' and '8'.
@@ -412,8 +484,57 @@ public final class JavaConventions {
 	 * @see JavaCore#VERSION_1_7
 	 * @see JavaCore#VERSION_1_8
 	 * @see JavaCore#VERSION_9
+	 * @deprecated
 	 */
 	public static IStatus validateJavaTypeName(String name, String sourceLevel, String complianceLevel) {
+		return internalValidateJavaTypeName(name, sourceLevel, complianceLevel, null);
+	}
+
+	/**
+	 * Validate the given Java type name, either simple or qualified, for the given source level, compliance levels
+	 * and the preview flag.
+	 *
+	 * <p>For example, <code>"java.lang.Object"</code>, or <code>"Object"</code>.</p>
+	 *
+	 * <p>The source level and compliance level values should be taken from the constant defined inside
+	 * {@link JavaCore} class. The constants are named <code>JavaCore#VERSION_1_x</code>, x being set
+	 * between '1' and '8'.
+	 * </p>
+	 * <p>The preview flag should be one of <code>JavaCore.ENABLED</code>, <code>JavaCore#DISABLED</code> or null.
+	 *  When null is passed, the preview is considered to be disabled.
+	 * </p>
+	 *
+	 * @param name the name of a type
+	 * @param sourceLevel the source level
+	 * @param complianceLevel the compliance level
+	 * @param previewEnabled preview flag
+	 * @return a status object with code <code>IStatus.OK</code> if
+	 *		the given name is valid as a Java type name,
+	 *      a status with code <code>IStatus.WARNING</code>
+	 *		indicating why the given name is discouraged,
+	 *      otherwise a status object indicating what is wrong with
+	 *      the name
+	 * @since 3.22
+	 * @see JavaCore#VERSION_1_1
+	 * @see JavaCore#VERSION_1_2
+	 * @see JavaCore#VERSION_1_3
+	 * @see JavaCore#VERSION_1_4
+	 * @see JavaCore#VERSION_1_5
+	 * @see JavaCore#VERSION_1_6
+	 * @see JavaCore#VERSION_1_7
+	 * @see JavaCore#VERSION_1_8
+	 * @see JavaCore#VERSION_9
+	 * @see JavaCore#VERSION_10
+	 * @see JavaCore#VERSION_11
+	 * @see JavaCore#VERSION_12
+	 * @see JavaCore#VERSION_13
+	 * @see JavaCore#VERSION_14
+	 */
+	public static IStatus validateJavaTypeName(String name, String sourceLevel, String complianceLevel, String previewEnabled) {
+		return internalValidateJavaTypeName(name, sourceLevel, complianceLevel, previewEnabled);
+	}
+
+	private static IStatus internalValidateJavaTypeName(String name, String sourceLevel, String complianceLevel, String previewEnabled) {
 		if (name == null) {
 			return new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, -1, Messages.convention_type_nullName, null);
 		}
@@ -425,7 +546,7 @@ public final class JavaConventions {
 		char[] scannedID;
 		if (index == -1) {
 			// simple name
-			scannedID = scannedIdentifier(name, sourceLevel, complianceLevel);
+			scannedID = scannedIdentifier(name, sourceLevel, complianceLevel, previewEnabled, false);
 		} else {
 			// qualified name
 			String pkg = name.substring(0, index).trim();
@@ -434,7 +555,7 @@ public final class JavaConventions {
 				return status;
 			}
 			String type = name.substring(index + 1).trim();
-			scannedID = scannedIdentifier(type, sourceLevel, complianceLevel);
+			scannedID = scannedIdentifier(type, sourceLevel, complianceLevel, previewEnabled, false);
 		}
 
 		if (scannedID != null) {

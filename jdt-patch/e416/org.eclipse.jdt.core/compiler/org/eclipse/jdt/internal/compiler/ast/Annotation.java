@@ -1040,6 +1040,33 @@ public abstract class Annotation extends Expression {
 						}
 						sourceMethod.defaultNullness |= defaultNullness;
 						break;
+					case Binding.RECORD_COMPONENT :
+						RecordComponentBinding sourceRecordComponent = (RecordComponentBinding) this.recipient;
+						sourceRecordComponent.tagBits |= tagBits;
+						if ((tagBits & TagBits.AnnotationSuppressWarnings) != 0) {
+							RecordComponent recordComponent = sourceRecordComponent.sourceRecordComponent();
+							recordSuppressWarnings(scope, recordComponent.declarationSourceStart, recordComponent.declarationSourceEnd, compilerOptions.suppressWarnings);
+						}
+//						TODO: BUG 562478 Consideration - to uncomment/modify the following:
+//						if (defaultNullness != 0) {
+//							RecordComponent recordComponent = sourceRecordComponent.sourceRecordComponent();
+//							// test merged value of defaultNullness contributed by this annotation and previous annotations on same target is redundant w.r.t. containing value
+//							// (for targets other than fields the resulting value is tested only once after processing all annotations, but this is hard to do for fields)
+//							Binding target = scope.parent.checkRedundantDefaultNullness(
+//									defaultNullness | scope.localNonNullByDefaultValue(recordComponent.sourceStart),
+//									recordComponent.sourceStart);
+//							scope.recordNonNullByDefault(recordComponent.binding, defaultNullness, this, recordComponent.declarationSourceStart, recordComponent.declarationSourceEnd);
+//							if (target != null) {
+//								scope.problemReporter().nullDefaultAnnotationIsRedundant(recordComponent, new Annotation[]{this}, target);
+//							}
+//						}
+//						// fields don't yet have their type resolved, in 1.8 null annotations
+//						// will be transfered from the field to its type during STB.resolveTypeFor().
+//						if ((sourceRecordComponent.tagBits & TagBits.AnnotationNullMASK) == TagBits.AnnotationNullMASK) {
+//							scope.problemReporter().contradictoryNullAnnotations(this);
+//							sourceRecordComponent.tagBits &= ~TagBits.AnnotationNullMASK; // avoid secondary problems
+//						}
+						break;
 					case Binding.FIELD :
 						FieldBinding sourceField = (FieldBinding) this.recipient;
 						sourceField.tagBits |= tagBits;
@@ -1213,6 +1240,20 @@ public abstract class Annotation extends Expression {
 					}
 				}
 				break;
+			case Binding.RECORD_COMPONENT :
+				/* JLS 14 9.7.4 Record Preview
+				 * It is a compile-time error if an annotation of type T is syntactically a modifier for:
+				 * ...
+				 * a record component but T is not applicable to record component declarations, field declarations,
+				 * method declarations, or type contexts.
+				 */
+				long recordComponentMask = TagBits.AnnotationForRecordComponent |
+				TagBits.AnnotationForField |
+				TagBits.AnnotationForMethod |
+				TagBits.AnnotationForParameter | // See JLS 14 8.10.4 Records Preview - TODO revisit in J15
+				TagBits.AnnotationForTypeUse;
+				return (metaTagBits & recordComponentMask) != 0 ? AnnotationTargetAllowed.YES :
+					AnnotationTargetAllowed.NO;
 			case Binding.LOCAL :
 				LocalVariableBinding localVariableBinding = (LocalVariableBinding) recipient;
 				if ((localVariableBinding.tagBits & TagBits.IsArgument) != 0) {
@@ -1279,6 +1320,7 @@ public abstract class Annotation extends Expression {
 					case Binding.METHOD :
 					case Binding.FIELD :
 					case Binding.LOCAL :
+					case Binding.RECORD_COMPONENT :
 						scope.problemReporter().invalidUsageOfTypeAnnotations(annotation);
 				}
 			}

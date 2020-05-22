@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 IBM Corporation and others.
+ * Copyright (c) 2012, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -28,6 +28,7 @@ public interface AnnotationTargetTypeConstants {
 	int CLASS_TYPE_PARAMETER_BOUND           = 0x11;
 	int METHOD_TYPE_PARAMETER_BOUND          = 0x12;
 	int FIELD                                = 0x13;
+	int RECORD_COMPONENT                     = 0x13; // same as field
 	int METHOD_RETURN                        = 0x14;
 	int METHOD_RECEIVER                      = 0x15;
 	int METHOD_FORMAL_PARAMETER              = 0x16;

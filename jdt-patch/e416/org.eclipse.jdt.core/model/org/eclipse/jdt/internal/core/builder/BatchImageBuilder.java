@@ -306,8 +306,8 @@ private void printStats() {
 	long time = compilerStats.elapsedTime();
 	long lineCount = compilerStats.lineCount;
 	double speed = ((int) (lineCount * 10000.0 / time)) / 10.0;
-	System.out.println(">FULL BUILD STATS for: "+this.javaBuilder.javaProject.getElementName()); //$NON-NLS-1$
-	System.out.println(">   compiled " + lineCount + " lines in " + time + "ms:" + speed + " lines/s"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	System.out.println("\n>FULL BUILD STATS for: "+this.javaBuilder.javaProject.getElementName()); //$NON-NLS-1$
+	System.out.println(">   compiled " + lineCount + " lines in " + time + " ms: " + speed + " lines/s"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	System.out.print(">   parse: " + compilerStats.parseTime + " ms (" + ((int) (compilerStats.parseTime * 1000.0 / time)) / 10.0 + "%)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	System.out.print(", resolve: " + compilerStats.resolveTime + " ms (" + ((int) (compilerStats.resolveTime * 1000.0 / time)) / 10.0 + "%)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	System.out.print(", analyze: " + compilerStats.analyzeTime + " ms (" + ((int) (compilerStats.analyzeTime * 1000.0 / time)) / 10.0 + "%)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

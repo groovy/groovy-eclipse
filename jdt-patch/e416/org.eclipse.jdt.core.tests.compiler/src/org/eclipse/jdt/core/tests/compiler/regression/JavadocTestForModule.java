@@ -306,6 +306,10 @@ public class JavadocTestForModule extends AbstractBatchCompilerTest {
 				skipNext = true;
 				continue;
 			}
+			if (tokens[i].trim().equals("-enableJavadoc")) {
+				buf.append(" -Xdoclint:all ");
+				continue;
+			}
 			buf.append(tokens[i]).append(' ');
 		}
 		if (versionOptions != null) {
@@ -418,7 +422,9 @@ public class JavadocTestForModule extends AbstractBatchCompilerTest {
 				"----------\n" +
 				"2 problems (2 errors)\n",
 				false,
-				"missing tags");
+				"missing tags",
+				OUTPUT_DIR,
+				JavacTestOptions.JavacHasABug.NoWarningForMissingJavadocTag);
 	}
 
 	public void testBug549855b() {

@@ -239,6 +239,7 @@ class DefaultBindingResolver extends BindingResolver {
 				return getModuleBinding((org.eclipse.jdt.internal.compiler.lookup.ModuleBinding) binding);
 			case Binding.FIELD:
 			case Binding.LOCAL:
+			case Binding.RECORD_COMPONENT:
 				return getVariableBinding((org.eclipse.jdt.internal.compiler.lookup.VariableBinding) binding);
 		}
 		return null;
@@ -1885,6 +1886,9 @@ class DefaultBindingResolver extends BindingResolver {
 			if (abstractVariableDeclaration instanceof org.eclipse.jdt.internal.compiler.ast.FieldDeclaration) {
 				org.eclipse.jdt.internal.compiler.ast.FieldDeclaration fieldDeclaration = (org.eclipse.jdt.internal.compiler.ast.FieldDeclaration) abstractVariableDeclaration;
 				variableBinding = this.getVariableBinding(fieldDeclaration.binding, variable);
+			} else if (abstractVariableDeclaration instanceof org.eclipse.jdt.internal.compiler.ast.RecordComponent) {
+				org.eclipse.jdt.internal.compiler.ast.RecordComponent recordComponent = (org.eclipse.jdt.internal.compiler.ast.RecordComponent) abstractVariableDeclaration;
+				variableBinding = this.getVariableBinding(recordComponent.binding, variable);
 			} else {
 				variableBinding = this.getVariableBinding(((LocalDeclaration) abstractVariableDeclaration).binding, variable);
 			}

@@ -54,6 +54,20 @@ public ReferenceBinding closestReferenceMatch() {
 }
 
 @Override
+public ReferenceBinding superclass() {
+	if (this.closestMatch != null)
+		return this.closestMatch.superclass();
+	return super.superclass();
+}
+
+@Override
+public ReferenceBinding[] superInterfaces() {
+	if (this.closestMatch != null)
+		return this.closestMatch.superInterfaces();
+	return super.superInterfaces();
+}
+
+@Override
 public boolean hasTypeBit(int bit) {
 	if (this.closestMatch != null)
 		return this.closestMatch.hasTypeBit(bit);

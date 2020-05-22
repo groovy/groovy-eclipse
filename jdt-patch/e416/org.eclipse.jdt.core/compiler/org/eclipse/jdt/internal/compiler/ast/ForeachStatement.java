@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -430,7 +430,7 @@ public class ForeachStatement extends Statement {
 
 	public static TypeBinding getCollectionElementType(BlockScope scope, TypeBinding collectionType) {
 		if (collectionType == null) return null;
-		
+
 		boolean isTargetJsr14 = scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
 		if (collectionType.isCapture()) {
 			TypeBinding upperBound = ((CaptureBinding)collectionType).firstBound;
@@ -677,4 +677,10 @@ public class ForeachStatement extends Statement {
 	public boolean doesNotCompleteNormally() {
 		return false; // may not be entered at all.
 	}
+
+	@Override
+	public boolean canCompleteNormally() {
+		return true;
+	}
+
 }

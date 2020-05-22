@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -178,5 +178,10 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 			buffer.append("<JavaModelException in toString of " + getElementName()); //$NON-NLS-1$
 		}
 	}
+}
+@Override
+public boolean isRecordComponent() throws JavaModelException {
+	SourceFieldElementInfo info = (SourceFieldElementInfo) getElementInfo();
+	return info.isRecordComponent;
 }
 }

@@ -150,6 +150,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedSuperReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Receiver;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
@@ -591,6 +592,7 @@ public static int getIrritant(int problemID) {
 		case IProblem.JavadocIncorrectArityForParameterizedConstructor:
 		case IProblem.JavadocParameterizedConstructorArgumentTypeMismatch:
 		case IProblem.JavadocTypeArgumentsForRawGenericConstructor:
+		case IProblem.JavadocNotAccessibleType:
 		case IProblem.JavadocNotVisibleField:
 		case IProblem.JavadocNotVisibleConstructor:
 		case IProblem.JavadocNotVisibleMethod:
@@ -2805,13 +2807,13 @@ public void illegalExtendedDimensions(AnnotationMethodDeclaration annotationType
 		annotationTypeMemberDeclaration.sourceStart,
 		annotationTypeMemberDeclaration.sourceEnd);
 }
-public void illegalExtendedDimensions(Argument argument) {
+public void illegalExtendedDimensions(AbstractVariableDeclaration aVarDecl) {
 	this.handle(
 		IProblem.IllegalExtendedDimensionsForVarArgs,
 		NoArgument,
 		NoArgument,
-		argument.sourceStart,
-		argument.sourceEnd);
+		aVarDecl.sourceStart,
+		aVarDecl.sourceEnd);
 }
 public void illegalGenericArray(TypeBinding leafComponentType, ASTNode location) {
 	this.handle(
@@ -5032,13 +5034,13 @@ public void invalidUsageOfTypeParametersForEnumDeclaration(TypeDeclaration annot
 			parameters[0].declarationSourceStart,
 			parameters[length - 1].declarationSourceEnd);
 }
-public void invalidUsageOfVarargs(Argument argument) {
+public void invalidUsageOfVarargs(AbstractVariableDeclaration aVarDecl) {
 	this.handle(
 		IProblem.InvalidUsageOfVarargs,
 		NoArgument,
 		NoArgument,
-		argument.type.sourceStart,
-		argument.sourceEnd);
+		aVarDecl.type.sourceStart,
+		aVarDecl.sourceEnd);
 }
 
 public void invalidUsageOfTypeAnnotations(Annotation annotation) {
@@ -5819,6 +5821,9 @@ public void javadocInvalidType(ASTNode location, TypeBinding type, int modifiers
 				break;
 			case ProblemReasons.NotVisible :
 				id = IProblem.JavadocNotVisibleType;
+				break;
+			case ProblemReasons.NotAccessible:
+				id = IProblem.JavadocNotAccessibleType;
 				break;
 			case ProblemReasons.Ambiguous :
 				id = IProblem.JavadocAmbiguousType;
@@ -8449,6 +8454,22 @@ public void typeCastError(CastExpression expression, TypeBinding leftType, TypeB
 	}
 	this.handle(
 		IProblem.IllegalCast,
+		new String[] { rightName, leftName },
+		new String[] { rightShortName, leftShortName },
+		expression.sourceStart,
+		expression.sourceEnd);
+}
+public void unsafeCastInInstanceof(Expression expression, TypeBinding leftType, TypeBinding rightType) {
+	String leftName = new String(leftType.readableName());
+	String rightName = new String(rightType.readableName());
+	String leftShortName = new String(leftType.shortReadableName());
+	String rightShortName = new String(rightType.shortReadableName());
+	if (leftShortName.equals(rightShortName)){
+		leftShortName = leftName;
+		rightShortName = rightName;
+	}
+	this.handle(
+		IProblem.UnsafeCast,
 		new String[] { rightName, leftName },
 		new String[] { rightShortName, leftShortName },
 		expression.sourceStart,
@@ -11415,7 +11436,7 @@ public void switchExpressionSwitchLabeledBlockCompletesNormally(Block block) {
 		IProblem.SwitchExpressionaYieldSwitchLabeledBlockCompletesNormally,
 		NoArgument,
 		NoArgument,
-		block.sourceStart,
+		block.sourceEnd - 1,
 		block.sourceEnd);
 }
 public void switchExpressionLastStatementCompletesNormally(Statement stmt) {
@@ -11423,7 +11444,7 @@ public void switchExpressionLastStatementCompletesNormally(Statement stmt) {
 		IProblem.SwitchExpressionaYieldSwitchLabeledBlockCompletesNormally,
 		NoArgument,
 		NoArgument,
-		stmt.sourceStart,
+		stmt.sourceEnd - 1,
 		stmt.sourceEnd);
 }
 public void switchExpressionIllegalLastStatement(Statement stmt) {
@@ -11554,6 +11575,14 @@ public void switchExpressionsContinueOutOfSwitchExpression(ASTNode statement) {
 		statement.sourceStart,
 		statement.sourceEnd);
 }
+public void switchExpressionsReturnWithinSwitchExpression(ASTNode statement) {
+	this.handle(
+		IProblem.SwitchExpressionsReturnWithinSwitchExpression,
+		NoArgument,
+		NoArgument,
+		statement.sourceStart,
+		statement.sourceEnd);
+}
 public void illegalModifierForInnerRecord(SourceTypeBinding type) {
 	if (!this.options.enablePreviewFeatures)
 		return;
@@ -11620,29 +11649,29 @@ public void recordCompactConstructorHasReturnStatement(ReturnStatement stmt) {
 		stmt.sourceStart,
 		stmt.sourceEnd);
 }
-public void recordIllegalComponentNameInRecord(Argument arg, TypeDeclaration typeDecl) {
+public void recordIllegalComponentNameInRecord(RecordComponent recComp, TypeDeclaration typeDecl) {
 	if (!this.options.enablePreviewFeatures)
 		return;
 	this.handle(
 		IProblem.RecordIllegalComponentNameInRecord,
 		new String[] {
-				new String(arg.name), new String(typeDecl.name)
+				new String(recComp.name), new String(typeDecl.name)
 			},
 			new String[] {
-					new String(arg.name), new String(typeDecl.name)
+					new String(recComp.name), new String(typeDecl.name)
 			},
-		arg.sourceStart,
-		arg.sourceEnd);
+		recComp.sourceStart,
+		recComp.sourceEnd);
 }
-public void recordDuplicateComponent(Argument arg) {
+public void recordDuplicateComponent(RecordComponent recordComponent) {
 	if (!this.options.enablePreviewFeatures)
 		return;
 	this.handle(
 		IProblem.RecordDuplicateComponent,
-		new String[] { new String(arg.name)},
-		new String[] { new String(arg.name)},
-		arg.sourceStart,
-		arg.sourceEnd);
+		new String[] { new String(recordComponent.name)},
+		new String[] { new String(recordComponent.name)},
+		recordComponent.sourceStart,
+		recordComponent.sourceEnd);
 }
 public void recordIllegalNativeModifierInRecord(AbstractMethodDeclaration method) {
 	if (!this.options.enablePreviewFeatures)
@@ -11798,7 +11827,7 @@ public void recordCannotExtendRecord(SourceTypeBinding type, TypeReference super
 		superclass.sourceStart,
 		superclass.sourceEnd);
 }
-public void recordComponentCannotBeVoid(ASTNode recordDecl, Argument arg) {
+public void recordComponentCannotBeVoid(RecordComponent arg) {
 	if (!this.options.enablePreviewFeatures)
 		return;
 	String[] arguments = new String[] { new String(arg.name) };
@@ -11806,10 +11835,10 @@ public void recordComponentCannotBeVoid(ASTNode recordDecl, Argument arg) {
 		IProblem.RecordComponentCannotBeVoid,
 		arguments,
 		arguments,
-		recordDecl.sourceStart,
-		recordDecl.sourceEnd);
+		arg.sourceStart,
+		arg.sourceEnd);
 }
-public void recordIllegalVararg(Argument argType, TypeDeclaration typeDecl) {
+public void recordIllegalVararg(RecordComponent argType, TypeDeclaration typeDecl) {
 	String[] arguments = new String[] {CharOperation.toString(argType.type.getTypeName()), new String(typeDecl.name)};
 	this.handle(
 		IProblem.RecordIllegalVararg,

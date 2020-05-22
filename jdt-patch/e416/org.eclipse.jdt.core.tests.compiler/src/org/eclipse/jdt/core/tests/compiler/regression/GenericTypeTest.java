@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -5400,10 +5400,12 @@ public class GenericTypeTest extends AbstractComparableTest {
 			true,
 			customOptions);
 	}
-	public void _test0178a() {
+	public void test0178a() {
 		if (this.complianceLevel < ClassFileConstants.JDK14)
 			return;
 		Map customOptions = getCompilerOptions();
+		customOptions.put(CompilerOptions.OPTION_EnablePreviews, CompilerOptions.ENABLED);
+		customOptions.put(CompilerOptions.OPTION_ReportPreviewFeatures, CompilerOptions.WARNING);
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
@@ -5419,7 +5421,7 @@ public class GenericTypeTest extends AbstractComparableTest {
 				"			return t;\n" +
 				"		} else 	if (t instanceof T) {\n" +
 				"			return t;\n" +
-				"		} else if (t instanceof X) {\n" +
+				"		} else if (t instanceof X) { // this is allowed since Java 14 as preview feature\n" +
 				"			return t;\n" +
 				"		}\n" +
 				"		return null;\n" +
@@ -5429,13 +5431,33 @@ public class GenericTypeTest extends AbstractComparableTest {
 			"----------\n" +
 			"1. ERROR in X.java (at line 5)\n" +
 			"	if (t instanceof X<T>) {\n" +
-			"	    ^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from T to X<T>\n" +
+			"	    ^\n" +
+			"Type T cannot be safely cast to X<T>\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 7)\n" +
+			"2. WARNING in X.java (at line 5)\n" +
+			"	if (t instanceof X<T>) {\n" +
+			"	                 ^\n" +
+			"You are using a preview language feature that may or may not be supported in a future release\n" +
+			"----------\n" +
+			"3. ERROR in X.java (at line 7)\n" +
 			"	} else if (t instanceof X<String>) {\n" +
-			"	           ^^^^^^^^^^^^^^\n" +
-			"Type mismatch: cannot convert from T to X<String>\n" +
+			"	           ^\n" +
+			"Type T cannot be safely cast to X<String>\n" +
+			"----------\n" +
+			"4. WARNING in X.java (at line 7)\n" +
+			"	} else if (t instanceof X<String>) {\n" +
+			"	                        ^\n" +
+			"You are using a preview language feature that may or may not be supported in a future release\n" +
+			"----------\n" +
+			"5. WARNING in X.java (at line 11)\n" +
+			"	} else 	if (t instanceof T) {\n" +
+			"	       	    ^^^^^^^^^^^^^^\n" +
+			"The expression of type T is already an instance of type T\n" +
+			"----------\n" +
+			"6. WARNING in X.java (at line 11)\n" +
+			"	} else 	if (t instanceof T) {\n" +
+			"	       	                 ^\n" +
+			"You are using a preview language feature that may or may not be supported in a future release\n" +
 			"----------\n",
 			null,
 			true,

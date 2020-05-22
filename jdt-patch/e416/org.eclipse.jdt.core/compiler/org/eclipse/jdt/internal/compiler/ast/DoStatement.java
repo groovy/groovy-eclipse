@@ -107,7 +107,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			(this.action == null
 				? actionInfo
 				: (actionInfo.mergedWith(loopingContext.initsOnContinue))).copy());
-	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023, we reach the condition at the bottom via two arcs, 
+	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023, we reach the condition at the bottom via two arcs,
 	   one by free fall and another by continuing... Merge initializations propagated through the two pathways,
 	   cf, while and for loops.
 	*/
@@ -136,7 +136,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		loopingContext.simulateThrowAfterLoopBack(loopbackFlowInfo);
 	}
 	// end of loop
-	FlowInfo mergedInfo = 
+	FlowInfo mergedInfo =
 		FlowInfo.mergedOptimizedBranches(
 						(loopingContext.initsOnBreak.tagBits & FlowInfo.UNREACHABLE) != 0
 								? loopingContext.initsOnBreak
@@ -250,7 +250,7 @@ public boolean doesNotCompleteNormally() {
 	boolean isConditionTrue = cst == null || cst != Constant.NotAConstant && cst.booleanValue() == true;
 	cst = this.condition.optimizedBooleanConstant();
 	boolean isConditionOptimizedTrue = cst == null ? true : cst != Constant.NotAConstant && cst.booleanValue() == true;
-	
+
 	if (isConditionTrue || isConditionOptimizedTrue)
 		return this.action == null || !this.action.breaksOut(null);
 	if (this.action == null || this.action.breaksOut(null))
@@ -262,4 +262,28 @@ public boolean doesNotCompleteNormally() {
 public boolean completesByContinue() {
 	return this.action.continuesAtOuterLabel();
 }
+
+@Override
+public boolean canCompleteNormally() {
+	Constant cst = this.condition.constant;
+	boolean isConditionTrue = cst == null || cst != Constant.NotAConstant && cst.booleanValue() == true;
+	cst = this.condition.optimizedBooleanConstant();
+	boolean isConditionOptimizedTrue = cst == null ? true : cst != Constant.NotAConstant && cst.booleanValue() == true;
+
+	if (!(isConditionTrue || isConditionOptimizedTrue)) {
+		if (this.action == null || this.action.canCompleteNormally())
+			return true;
+		if (this.action != null && this.action.continueCompletes())
+			return true;
+	}
+	if (this.action != null && this.action.breaksOut(null))
+		return true;
+
+	return false;
+}
+@Override
+public boolean continueCompletes() {
+	return this.action.continuesAtOuterLabel();
+}
+
 }

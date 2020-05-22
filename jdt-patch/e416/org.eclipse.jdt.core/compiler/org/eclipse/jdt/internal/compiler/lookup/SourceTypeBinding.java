@@ -77,6 +77,7 @@ import org.eclipse.jdt.internal.compiler.ast.ExplicitConstructorCall;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.RecordComponent;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 import org.eclipse.jdt.internal.compiler.ast.SwitchStatement;
@@ -132,7 +133,8 @@ public class SourceTypeBinding extends ReferenceBinding {
 	public HashSet<SourceTypeBinding> nestMembers;
 
 	private boolean isRecordDeclaration = false;
-	private FieldBinding[] recordComponents; // cache
+	private RecordComponentBinding[] components; // for Java 14 record declaration - preview
+	private FieldBinding[] implicitComponentFields; // cache
 	private MethodBinding[] recordComponentAccessors = null; // hash maybe an overkill
 
 public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassScope scope) {
@@ -147,6 +149,7 @@ public SourceTypeBinding(char[][] compoundName, PackageBinding fPackage, ClassSc
 	// expect the fields & methods to be initialized correctly later
 	this.fields = Binding.UNINITIALIZED_FIELDS;
 	this.methods = Binding.UNINITIALIZED_METHODS;
+	this.components = Binding.UNINITIALIZED_COMPONENTS;
 	this.prototype = this;
 	this.isRecordDeclaration = scope.referenceContext.isRecord();
 	computeId();
@@ -930,7 +933,11 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 	 * unless a public method with the same signature is explicitly declared in the body of the declaration of R.
 	 */
 
-	List<String> componentNames = Arrays.stream(this.fields) // initialize with all the record components
+	// Note: filteredComponents implies that only those components which are successful in having field - for eg
+	// if the component name is not correct (say one of finalize, clone etc) then the compilation not successful
+	// and no accessor should be created (essentially in a recovered code if there are errors) - if there are no
+	// errors then filteredComponents equals components.
+	List<String> filteredComponents = Arrays.stream(this.fields) // initialize with all the record components
 			.filter(f -> f.isRecordComponent())
 			.map(f -> new String(f.name))
 			.collect(Collectors.toList());
@@ -939,18 +946,20 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 	if (this.methods != null) {
 		accessors = Arrays.stream(methodBindings)
 				.filter(m -> m.selector != null && m.selector.length > 0)
-				.filter(m -> componentNames.contains(new String(m.selector)))
+				.filter(m -> filteredComponents.contains(new String(m.selector)))
 				.filter(m -> m.parameters == null || m.parameters.length == 0)
 				.collect(Collectors.toList());
 
 		List<String> candidates = accessors.stream()
 			.map(m -> new String(m.selector))
 			.collect(Collectors.toList());
-		componentNames.removeAll(candidates);
+		filteredComponents.removeAll(candidates);
 	}
-	int missingCount = componentNames.size();
+	int missingCount = filteredComponents.size();
 	for (int i = 0; i < missingCount; ++i) {
-		implicitMethods.add(addSyntheticRecordComponentAccessor(componentNames.get(i).toCharArray(), i));
+		RecordComponentBinding rcb = this.getRecordComponent(filteredComponents.get(i).toCharArray());
+		assert rcb != null;
+		implicitMethods.add(addSyntheticRecordComponentAccessor(rcb, i));
 	}
 	accessors.addAll(implicitMethods);
 	this.recordComponentAccessors = accessors.toArray(new MethodBinding[0]);
@@ -959,38 +968,37 @@ public List<MethodBinding> checkAndAddSyntheticRecordComponentAccessors(MethodBi
 
 /**
  * Adds a new synthetic component accessor for the recordtype. Selector should be identical to component name.
- *
- * @param selector component name of the record
 */
-public SyntheticMethodBinding addSyntheticRecordComponentAccessor(char[] selector, int index) {
+public SyntheticMethodBinding addSyntheticRecordComponentAccessor(RecordComponentBinding rcb, int index) {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (this.synthetics == null)
 		this.synthetics = new HashMap[MAX_SYNTHETICS];
 	if (this.synthetics[SourceTypeBinding.METHOD_EMUL] == null)
 		this.synthetics[SourceTypeBinding.METHOD_EMUL] = new HashMap(5);
 
-	SyntheticMethodBinding accessMethod = null;
-	SyntheticMethodBinding[] accessors = (SyntheticMethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(selector);
-	FieldBinding field = getField(selector, true);
-	accessMethod = new SyntheticMethodBinding(this, field, index);
-	AnnotationBinding[] annotations = field.getAnnotations();
-	if (annotations.length > 0) {
-		List<AnnotationBinding> list = new ArrayList<>();
-		for (AnnotationBinding binding : annotations) {
-			long bits = binding.getAnnotationType().getAnnotationTagBits();
-			if ((bits & TagBits.AnnotationForMethod) != 0
-					|| (bits & TagBits.AnnotationTargetMASK) == 0) {
-				list.add(binding);
-			}
-		}
-		if (list.size() > 0) {
-			AnnotationBinding[] annots = new AnnotationBinding[list.size()];
-			annotations = list.toArray(annots);
-			accessMethod.setAnnotations(annotations, true);
-		}
-	}
+	SyntheticMethodBinding accessMethod = new SyntheticMethodBinding(this, rcb, index);
+	SyntheticMethodBinding[] accessors = (SyntheticMethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(rcb.name);
+//	TODO: Annotation propagation to be done later.
+//	FieldBinding field = getField(selector, true);
+//	accessMethod = new SyntheticMethodBinding(this, field, index);
+//	AnnotationBinding[] annotations = field.getAnnotations();
+//	if (annotations.length > 0) {
+//		List<AnnotationBinding> list = new ArrayList<>();
+//		for (AnnotationBinding binding : annotations) {
+//			long bits = binding.getAnnotationType().getAnnotationTagBits();
+//			if ((bits & TagBits.AnnotationForMethod) != 0
+//					|| (bits & TagBits.AnnotationTargetMASK) == 0) {
+//				list.add(binding);
+//			}
+//		}
+//		if (list.size() > 0) {
+//			AnnotationBinding[] annots = new AnnotationBinding[list.size()];
+//			annotations = list.toArray(annots);
+//			accessMethod.setAnnotations(annotations, true);
+//		}
+//	}
 	if (accessors == null) {
-		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(selector, accessors = new SyntheticMethodBinding[2]);
+		this.synthetics[SourceTypeBinding.METHOD_EMUL].put(rcb.name, accessors = new SyntheticMethodBinding[2]);
 		accessors[0] = accessMethod;
 	} else {
 		if ((accessMethod = accessors[0]) == null) {
@@ -1018,6 +1026,12 @@ public SyntheticMethodBinding addSyntheticRecordOverrideMethod(char[] selector, 
 		}
 	}
 	return accessMethod;
+}
+
+boolean areComponentsInitialized() {
+	if (!isPrototype())
+		return this.prototype.areComponentsInitialized();
+	return this.components != Binding.UNINITIALIZED_COMPONENTS;
 }
 /* JLS 14 Record - Preview - end */
 
@@ -1110,6 +1124,156 @@ void faultInTypesForFieldsAndMethods() {
 	internalFaultInTypeForFieldsAndMethods();
 }
 
+public RecordComponentBinding[] components() {
+
+	if (!this.isRecordDeclaration)
+		return null;
+	if (!isPrototype()) {
+		if ((this.extendedTagBits & ExtendedTagBits.AreRecordComponentsComplete) != 0)
+			return this.components;
+		this.extendedTagBits |= ExtendedTagBits.AreRecordComponentsComplete;
+		return this.components = this.prototype.components();
+	}
+
+	if ((this.extendedTagBits & ExtendedTagBits.AreRecordComponentsComplete) != 0)
+		return this.components;
+
+	if (!areComponentsInitialized()) {
+		this.scope.buildComponents();
+	}
+	int failed = 0;
+	RecordComponentBinding[] resolvedComponents = this.components;
+	try {
+		// Note: do not sort the components
+		RecordComponentBinding[] componentsSnapshot = this.components;
+		for (int i = 0, length = componentsSnapshot.length; i < length; i++) {
+			if (resolveTypeFor(componentsSnapshot[i]) == null) {
+				// do not alter original component array until resolution is over, due to reentrance (143259)
+				// TODO: to check for relevance
+				if (resolvedComponents == componentsSnapshot) {
+					System.arraycopy(componentsSnapshot, 0, resolvedComponents = new RecordComponentBinding[length], 0, length);
+				}
+				resolvedComponents[i] = null;
+				failed++;
+			} else {
+				// we need to complete some unfinished work here - find the synthetic accessor method
+				// and fill in the blanks
+				RecordComponentBinding rcb = resolvedComponents[i];
+				MethodBinding accessor = getRecordComponentAccessor(rcb.name);
+				if (accessor instanceof SyntheticMethodBinding) { // double checking
+					SyntheticMethodBinding smb = (SyntheticMethodBinding) accessor;
+					if (rcb.type instanceof TypeVariableBinding ||
+					rcb.type instanceof ParameterizedTypeBinding)
+						smb.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
+					smb.returnType = rcb.type;
+					// add code for implicit canonical constructor argument annotations also
+					for (FieldBinding f : this.fields) {
+						if (f.isRecordComponent() && CharOperation.equals(f.name, rcb.name)) {
+							smb.targetReadField = f;
+							ASTNode.copyRecordComponentAnnotations(this.scope, smb,
+									rcb.sourceRecordComponent().annotations);
+							// Note: a) type use bit set above and b) reusing rcb type, so
+							// copySE8Annot already done for rcb.type, hence not
+							// required here (tricky on an SMB without ast)
+							break;
+						}
+					}
+				}
+			}
+		}
+	} finally {
+		if (failed > 0) {
+			int newSize = resolvedComponents.length - failed;
+			if (newSize == 0)
+				return setComponents(Binding.NO_COMPONENTS);
+
+			RecordComponentBinding[] newComponents = new RecordComponentBinding[newSize];
+			for (int i = 0, j = 0, length = resolvedComponents.length; i < length; i++) {
+				if (resolvedComponents[i] != null)
+					newComponents[j++] = resolvedComponents[i];
+			}
+			setComponents(newComponents);
+		}
+	}
+	this.extendedTagBits |= ExtendedTagBits.AreRecordComponentsComplete;
+	return this.components;
+}
+
+public RecordComponentBinding resolveTypeFor(RecordComponentBinding component) {
+	if (!isPrototype())
+		return this.prototype.resolveTypeFor(component);
+
+	if ((component.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0)
+		return component;
+
+	component.getAnnotationTagBits();
+	if ((component.getAnnotationTagBits() & TagBits.AnnotationDeprecated) != 0)  // TODO: Watch out the spec changes
+		component.modifiers |= ClassFileConstants.AccDeprecated;  // expected to be available soon.
+
+	if (isViewedAsDeprecated() && !component.isDeprecated()) {
+		component.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
+		component.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
+	}
+	if (hasRestrictedAccess())
+		component.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
+	RecordComponent[] componentDecls = this.scope.referenceContext.recordComponents;
+	int length = componentDecls == null ? 0 : componentDecls.length;
+	for (int f = 0; f < length; f++) {
+		if (componentDecls[f].binding != component)
+			continue;
+
+		// component cannot be static, hence no static initializer scope
+		MethodScope initializationScope = this.scope.referenceContext.initializerScope;
+		RecordComponent componentDecl = componentDecls[f];
+		TypeBinding componentType = componentDecl.type.resolveType(initializationScope, true /* check bounds*/);
+		component.type = componentType;
+		component.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
+		if (componentType == null) {
+			componentDecl.binding = null;
+			return null;
+		}
+		if (componentType == TypeBinding.VOID) {
+			this.scope.problemReporter().recordComponentCannotBeVoid(componentDecl);
+			componentDecl.binding = null;
+			return null;
+		}
+		if (componentType.isArrayType() && ((ArrayBinding) componentType).leafComponentType == TypeBinding.VOID) {
+			this.scope.problemReporter().variableTypeCannotBeVoidArray(componentDecl);
+			componentDecl.binding = null;
+			return null;
+		}
+		if ((componentType.tagBits & TagBits.HasMissingType) != 0) {
+			component.tagBits |= TagBits.HasMissingType;
+		}
+		TypeBinding leafType = componentType.leafComponentType();
+		if (leafType instanceof ReferenceBinding && (((ReferenceBinding)leafType).modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0) {
+			component.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
+		}
+		Annotation [] annotations = componentDecl.annotations;
+		ASTNode.copyRecordComponentAnnotations(initializationScope, component, annotations);
+
+		long sourceLevel = this.scope.compilerOptions().sourceLevel;
+		if (sourceLevel >= ClassFileConstants.JDK1_8) {
+			if (annotations != null && annotations.length != 0) {
+				// piggybacking on an existing method to move type_use annotations to type in record component
+				ASTNode.copySE8AnnotationsToType(initializationScope, component, annotations, false);
+			}
+			Annotation.isTypeUseCompatible(componentDecl.type, this.scope, annotations);
+		}
+		// TODO Bug 562478: apply null default: - to check anything to be done? - SH
+//		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {}
+
+		if (initializationScope.shouldCheckAPILeaks(this, component.isPublic()) && componentDecl.type != null) // fieldDecl.type is null for enum constants
+			initializationScope.detectAPILeaks(componentDecl.type, componentType);
+
+		if (this.externalAnnotationProvider != null) {
+			ExternalAnnotationSuperimposer.annotateComponentBinding(component, this.externalAnnotationProvider, this.environment);
+		}
+		return component;
+	}
+	return null; // should never reach this point
+}
+
 private void internalFaultInTypeForFieldsAndMethods() {
 	fields();
 	methods();
@@ -1121,6 +1285,8 @@ private void internalFaultInTypeForFieldsAndMethods() {
 // NOTE: the type of each field of a source type is resolved when needed
 @Override
 public FieldBinding[] fields() {
+	components(); // In a record declaration, the components should be complete prior to fields and probably for methods
+
 	if (!isPrototype()) {
 		if ((this.tagBits & TagBits.AreFieldsComplete) != 0)
 			return this.fields;
@@ -1784,7 +1950,7 @@ private MethodBinding[] checkAndGetExplicitCanonicalConstructors() {
 	if (!this.isRecordDeclaration)
 		return ec.toArray(new MethodBinding[0]);
 
-	FieldBinding[] recComps = this.getRecordComponents();
+	RecordComponentBinding[] recComps = this.components;
 	int nRecordComponents = recComps.length;
 	if (this.methods != null && this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK14) {
 		for (MethodBinding method : this.methods) {
@@ -1823,6 +1989,8 @@ private int getImplicitMethod(char[] name) {
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
 @Override
 public MethodBinding[] methods() {
+	components(); // In a record declaration, the components should be complete prior to fields and probably for methods
+
 	if (!isPrototype()) {
 		if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
 			return this.methods;
@@ -2200,8 +2368,21 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 				field.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 			}
 
+			Annotation[] relevantRecordComponentAnnotations = null;
+			if (sourceLevel >= ClassFileConstants.JDK14) {
+				// copy annotations from record component if applicable
+				if (field.isRecordComponent()) {
+					RecordComponentBinding rcb = getRecordComponent(field.name);
+					assert rcb != null;
+					relevantRecordComponentAnnotations = ASTNode.copyRecordComponentAnnotations(initializationScope,
+							field, rcb.sourceRecordComponent().annotations);
+				}
+			}
 			if (sourceLevel >= ClassFileConstants.JDK1_8) {
 				Annotation [] annotations = fieldDecl.annotations;
+				if (annotations == null && relevantRecordComponentAnnotations != null) // field represents a record component.
+					annotations = relevantRecordComponentAnnotations;
+
 				if (annotations != null && annotations.length != 0) {
 					ASTNode.copySE8AnnotationsToType(initializationScope, field, annotations,
 							fieldDecl.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT); // type annotation is illegal on enum constant
@@ -2667,6 +2848,23 @@ public void tagAsHavingDefectiveContainerType() {
 /**
  * Propagates writes to all annotated variants so the clones evolve along.
  */
+public RecordComponentBinding[] setComponents(RecordComponentBinding[] comps) {
+	if (!isPrototype())
+		return this.prototype.setComponents(comps);
+
+	if ((this.tagBits & TagBits.HasAnnotatedVariants) != 0) {
+		TypeBinding [] annotatedTypes = this.scope.environment().getAnnotatedTypes(this);
+		for (int i = 0, length = annotatedTypes == null ? 0 : annotatedTypes.length; i < length; i++) {
+			SourceTypeBinding annotatedType = (SourceTypeBinding) annotatedTypes[i];
+			annotatedType.components = comps;
+		}
+	}
+	return this.components = comps;
+}
+
+/**
+ * Propagates writes to all annotated variants so the clones evolve along.
+ */
 public FieldBinding [] setFields(FieldBinding[] fields) {
 	if (!isPrototype())
 		return this.prototype.setFields(fields);
@@ -3081,8 +3279,18 @@ public List<String> getNestMembers() {
  * <p>
  * Should be called only after a called to fields()
  */
-public FieldBinding[] getRecordComponents() {
-	return this.recordComponents;
+public FieldBinding[] getImplicitComponentFields() {
+	return this.implicitComponentFields;
+}
+
+public RecordComponentBinding getRecordComponent(char[] name) {
+	if (this.isRecordDeclaration && this.components != null) {
+		for (RecordComponentBinding rcb : this.components) {
+			if (CharOperation.equals(name, rcb.name))
+				return rcb;
+		}
+	}
+	return null;
 }
 
 /**
@@ -3105,9 +3313,9 @@ public MethodBinding getRecordComponentAccessor(char[] name) {
 }
 
 public void computeRecordComponents() {
-	if (!this.isRecordDeclaration || this.recordComponents != null)
+	if (!this.isRecordDeclaration || this.implicitComponentFields != null)
 		return;
-	Argument[] recComps = this.scope.referenceContext.args;
+	RecordComponent[] recComps = this.scope.referenceContext.recordComponents;
 	List<FieldBinding> list = new ArrayList<>();
 	if (recComps != null && recComps.length > 0 && this.fields != null) {
 		List<String> recordComponentNames = new ArrayList<>(0);
@@ -3122,7 +3330,7 @@ public void computeRecordComponents() {
 			}
 		}
 	}
-	this.recordComponents = list.toArray(new FieldBinding[0]);
+	this.implicitComponentFields = list.toArray(new FieldBinding[0]);
 }
 
 public void cleanUp() {
