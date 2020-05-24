@@ -732,6 +732,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testScriptVariable1() {
+        String contents = '''\
+            |abc = null
+            |def xyz = abc
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('abc'), 3, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1117
+    void testScriptVariable2() {
+        String contents = '''\
+            |block = { -> }
+            |block()
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('block'), 5, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('block'), 5, VARIABLE))
+    }
+
+    @Test
     void testParamsAndLocals() {
         String contents = '''\
             |class X {

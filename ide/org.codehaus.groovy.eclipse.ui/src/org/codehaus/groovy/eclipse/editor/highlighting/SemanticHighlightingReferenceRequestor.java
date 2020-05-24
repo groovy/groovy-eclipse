@@ -185,7 +185,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             }
         } else if (node instanceof ConstantExpression) {
             if (result.declaration instanceof MethodNode) {
-                pos = handleMethodReference((Expression) node, result, (enclosingElement instanceof ImportDeclaration));
+                boolean isStaticImport = enclosingElement instanceof ImportDeclaration;
+                pos = handleMethodReference((Expression) node, result, isStaticImport);
+            } else if (result.declaration instanceof VariableExpression) {
+                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.VARIABLE);
             } else {
                 pos = handleConstantExpression((ConstantExpression) node);
                 try { // check for regular expression with inline comments
