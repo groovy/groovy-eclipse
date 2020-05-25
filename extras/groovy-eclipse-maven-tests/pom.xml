@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
@@ -26,16 +27,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>log4j</groupId>
+			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<version>2.13.3</version>
 			<scope>runtime</scope>
+			<type>pom</type>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
-			<version>3.0.4</version>
-			<type>pom</type>
+			<version>2.4.19</version>
 		</dependency>
 	</dependencies>
 
@@ -65,87 +66,16 @@
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-compiler</artifactId>
-						<version>3.8.0-SNAPSHOT</version>
+						<version>3.6.0-03</version>
 					</dependency>
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>3.0.4-SNAPSHOT</version>
+						<version>2.4.19-02</version>
 					</dependency>
 				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
-
-
-	<pluginRepositories>
-		<!--pluginRepository>
-			<id>codehaus-staging</id>
-			<name>codehaus-staging</name>
-			<url>https://nexus.codehaus.org/content/groups/staging/</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<layout>default</layout>
-		</pluginRepository>
-		<pluginRepository>
-			<id>codehaus-snapshots</id>
-			<name>codehaus-snapshots</name>
-			<url>https://nexus.codehaus.org/content/repositories/snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<layout>default</layout>
-		</pluginRepository-->
-	</pluginRepositories>
-
-	<repositories>
-		<!--repository>
-			<id>codehaus-staging</id>
-			<name>codehaus-staging</name>
-			<url>https://nexus.codehaus.org/content/groups/staging/</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<layout>default</layout>
-		</repository>
-		<repository>
-			<id>codehaus-snapshots</id>
-			<name>codehaus-snapshots</name>
-			<url>https://nexus.codehaus.org/content/repositories/snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<layout>default</layout>
-		</repository-->
-	</repositories>
 
 </project>

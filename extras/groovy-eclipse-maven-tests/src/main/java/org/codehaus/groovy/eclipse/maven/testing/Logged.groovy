@@ -15,6 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.maven.testing
 
-@groovy.util.logging.Log4j
+@groovy.util.logging.Log4j2
 class Logged {
 }

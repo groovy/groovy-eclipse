@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.maven.testing;
+package org.codehaus.groovy.eclipse.maven.testing
 
-import junit.framework.TestCase;
+import org.junit.Test
 
 /**
- * Tests for the {@link Helper} class.
+ * Tests for the {@link Example} class.
  */
-public class HelperTest extends TestCase {
-    public void testHelper() {
-        new Helper().help(new Example());
+class ExampleTests {
+
+    private final Example example = new Example()
+
+    @Test
+    void testShow() {
+        example.show()
     }
 }
