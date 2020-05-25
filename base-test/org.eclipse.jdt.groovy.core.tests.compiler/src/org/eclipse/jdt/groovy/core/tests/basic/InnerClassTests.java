@@ -1806,7 +1806,7 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "ok");
     }
 
-    @Test
+    @Test // https://issues.apache.org/jira/browse/GROOVY-5259
     public void testAccessOuterClassMemberFromInnerClassConstructor3() {
         //@formatter:off
         String[] sources = {
@@ -1893,6 +1893,48 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "        thread.join()\n" +
             "    }\n" +
             "\n" +
+            "    private static class Inner extends Thread {\n" +
+            "        @Override\n" +
+            "        void run() {\n" +
+            "            try {\n" +
+            "                if (!flag) {\n" +
+            "                    print 'works'\n" +
+            "                }\n" +
+            "            } catch (e) {\n" +
+            "                error = e\n" +
+            "            }\n" +
+            "        }\n" +
+            "        public static error\n" +
+            "    }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9569
+    public void testAccessOuterClassMemberFromInnerClassMethod3() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main extends Outer {\n" +
+            "    static main(args) {\n" +
+            "        newInstance().newThread()\n" +
+            "        assert Outer.Inner.error == null\n" +
+            "    }\n" +
+            "}\n" +
+            "\n" +
+            "abstract class Outer {\n" +
+            "    private static volatile boolean flag\n" +
+            "\n" +
+            "    void newThread() {\n" +
+            "        Thread thread = new Inner()\n" +
+            "        thread.start()\n" +
+            "        thread.join()\n" +
+            "    }\n" +
+            "\n" +
+            "    @groovy.transform.CompileStatic\n" +
             "    private static class Inner extends Thread {\n" +
             "        @Override\n" +
             "        void run() {\n" +

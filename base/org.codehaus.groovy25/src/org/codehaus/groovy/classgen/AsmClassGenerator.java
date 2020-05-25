@@ -122,10 +122,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.attrX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PROPERTY_OWNER;
 
 /**
  * Generates Java class versions of Groovy classes using ASM.
- *
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -951,17 +958,47 @@ public class AsmClassGenerator extends ClassGenerator {
         return null;
     }
 
+    // GRECLIPSE add
+    private boolean checkStaticOuterField(final PropertyExpression pexp, final String name) {
+        for (final ClassNode outer : controller.getClassNode().getOuterClasses()) {
+            FieldNode field = outer.getDeclaredField(name);
+            if (field != null) {
+                if (!field.isStatic()) break;
+
+                Expression outerClass = classX(outer);
+                outerClass.setNodeMetaData(PROPERTY_OWNER, outer);
+                outerClass.setSourcePosition(pexp.getObjectExpression());
+
+                Expression outerField = attrX(outerClass, pexp.getProperty());
+                outerField.setSourcePosition(pexp);
+                outerField.visit(this);
+                return true;
+            } else {
+                field = outer.getField(name); // checks supers
+                if (field != null && !field.isPrivate() && (field.isPublic() || field.isProtected()
+                        || Objects.equals(field.getDeclaringClass().getPackageName(), outer.getPackageName()))) {
+                    if (!field.isStatic()) break;
+
+                    Expression upperClass = classX(field.getDeclaringClass());
+                    upperClass.setNodeMetaData(PROPERTY_OWNER, field.getDeclaringClass());
+                    upperClass.setSourcePosition(pexp.getObjectExpression());
+
+                    Expression upperField = propX(upperClass, pexp.getProperty());
+                    upperField.setSourcePosition(pexp);
+                    upperField.visit(this);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    // GRECLIPSE end
+
     private void visitAttributeOrProperty(PropertyExpression expression, MethodCallerMultiAdapter adapter) {
-        MethodVisitor mv = controller.getMethodVisitor();
-
-        Expression objectExpression = expression.getObjectExpression();
         ClassNode classNode = controller.getClassNode();
+        MethodVisitor mv = controller.getMethodVisitor();
+        Expression objectExpression = expression.getObjectExpression();
 
-        //TODO (blackdrag): this if branch needs a rework. There should be no direct method calls be produced, the
-        // handling of this/super could be much simplified (see visitAttributeExpression), the field accessibility check
-        // could be moved directly into the search, which would also no longer require the GroovyBugError then
-        // the outer class field access seems to be without any tests (if there are tests for that, then the code
-        // here is dead code)
         if (isThisOrSuper(objectExpression)) {
             // let's use the field expression if it's available
             String name = expression.getPropertyAsString();
@@ -970,10 +1007,11 @@ public class AsmClassGenerator extends ClassGenerator {
                 boolean privateSuperField = false;
                 if (isSuperExpression(objectExpression)) {
                     field = classNode.getSuperClass().getDeclaredField(name);
-                    if (field != null && ((field.getModifiers() & ACC_PRIVATE) != 0)) {
+                    if (field != null && field.isPrivate()) {
                         privateSuperField = true;
                     }
                 } else {
+                    /* GRECLIPSE edit
                 	if (controller.isNotExplicitThisInClosure(expression.isImplicitThis())) {
                         field = classNode.getDeclaredField(name);
                         if (field==null && classNode instanceof InnerClassNode) {
@@ -1012,32 +1050,46 @@ public class AsmClassGenerator extends ClassGenerator {
                             }
                         }
                 	}
+                    */
+                    if (controller.isInClosure()) {
+                        if (expression.isImplicitThis())
+                            field = classNode.getDeclaredField(name); // params are stored as fields
+                    } else {
+                        field = classNode.getDeclaredField(name);
+                        if (field == null) {
+                            if (expression instanceof AttributeExpression) {
+                                // GROOVY-6183
+                                if (controller.isStaticContext()) {
+                                    field = classNode.getField(name); // checks supers
+                                    if (!field.isPublic() && !field.isProtected()) {
+                                        field = null;
+                                    }
+                                }
+                            } else if (!isValidFieldNodeForByteCodeAccess(classNode.getField(name), classNode)) {
+                                // GROOVY-5259, GROOVY-9501, GROOVY-9569
+                                if (checkStaticOuterField(expression, name)) return;
+                            }
+                        }
+                    }
+                    // GRECLIPSE end
                 }
-                if (field != null && !privateSuperField) {//GROOVY-4497: don't visit super field if it is private
-                    visitFieldExpression(new FieldExpression(field));
+                if (field != null && !privateSuperField) { // GROOVY-4497: don't visit super field if it is private
+                    fieldX(field).visit(this);
                     return;
                 }
                 if (isSuperExpression(objectExpression)) {
-                    String prefix;
                     if (controller.getCompileStack().isLHS()) {
                         setPropertyOfSuperClass(classNode, expression, mv);
-
-                        return;
                     } else {
-                        prefix = "get";
+                        callX(objectExpression, "get" + MetaClassHelper.capitalize(name)).visit(this);
                     }
-                    String propName = prefix + MetaClassHelper.capitalize(name);
-                    visitMethodCallExpression(new MethodCallExpression(objectExpression, propName, MethodCallExpression.NO_ARGUMENTS));
                     return;
                 }
             }
         }
 
         final String propName = expression.getPropertyAsString();
-        //TODO: add support for super here too
-        if (expression.getObjectExpression() instanceof ClassExpression &&
-            propName!=null && propName.equals("this"))
-        {
+        if (objectExpression instanceof ClassExpression && "this".equals(propName)) {
             // we have something like A.B.this, and need to make it
             // into this.this$0.this$0, where this.this$0 returns
             // A.B and this.this$0.this$0 return A.
@@ -1084,7 +1136,7 @@ public class AsmClassGenerator extends ClassGenerator {
             return;
         }
 
-        if (propName!=null) {
+        if (propName != null) {
             // TODO: spread safe should be handled inside
             if (adapter == getProperty && !expression.isSpreadSafe()) {
                 controller.getCallSiteWriter().makeGetPropertySite(objectExpression, propName, expression.isSafe(), expression.isImplicitThis());

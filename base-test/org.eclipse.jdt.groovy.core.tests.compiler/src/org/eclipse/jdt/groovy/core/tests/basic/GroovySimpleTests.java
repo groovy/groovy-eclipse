@@ -115,6 +115,48 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "0f1f2f3f4f");
     }
 
+    @Test // GROOVY-4235
+    public void testClosureScope3() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  static prop = 'p'\n" +
+            "  static test() {\n" +
+            "    return { ->\n" +
+            "      this.prop\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print C.test().call()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "p");
+    }
+
+    @Test
+    public void testClosureScope4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "abstract class A {\n" +
+            "  static prop = 'p'\n" +
+            "}\n" +
+            "class C extends A {\n" +
+            "  static test() {\n" +
+            "    return { ->\n" +
+            "      super.prop\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print C.test().call()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "p");
+    }
+
     @Test
     public void testClosureSyntax() {
         //@formatter:off
@@ -360,7 +402,77 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testStaticProperty() {
+    public void testStaticProperty1() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {\n" +
+            "  static protected int x\n" +
+            "  static void reset() { this.@x = 42 }\n" +
+            "}\n" +
+            "A.reset()\n" +
+            "print A.x\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // GROOVY-6183
+    public void testStaticProperty2() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {\n" +
+            "  static boolean setterCalled = false\n" +
+            "  \n" +
+            "  static protected int x\n" +
+            "  \n" +
+            "  public static void setX(int a) {\n" +
+            "    setterCalled = true\n" +
+            "    x = a\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "class B extends A {\n" +
+            "  static void directAccess() {\n" +
+            "    this.@x = 2\n" +
+            "  }\n" +
+            "}\n" +
+            "B.directAccess()\n" +
+            "assert B.isSetterCalled() == false\n" +
+            "assert B.x == 2\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // GROOVY-8385
+    public void testStaticProperty3() {
+        //@formatter:off
+        String[] sources = {
+            "X.groovy",
+            "class A {\n" +
+            "  static protected p\n" +
+            "  static getP() { -1 }\n" +
+            "  static setP(value) { p = 2 }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def m() { this.@p = 1 }\n" +
+            "}\n" +
+            "def x = new B()\n" +
+            "assert A.@p == null\n" +
+            "x.m()\n" +
+            "assert A.@p == 1\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testStaticProperty4() {
         //@formatter:off
         String[] sources = {
             "Super.groovy",
@@ -378,8 +490,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
-    public void testStaticProperty_GRE364() {
+    @Test // GRECLIPSE-364
+    public void testStaticProperty5() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -395,8 +507,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
-    public void testStaticProperty_GRE364_2() {
+    @Test // GRECLIPSE-364
+    public void testStaticProperty6() {
         //@formatter:off
         String[] sources = {
             "Bar.java",
