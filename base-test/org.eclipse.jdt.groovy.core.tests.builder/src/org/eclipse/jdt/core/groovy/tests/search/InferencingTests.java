@@ -460,20 +460,117 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testLocalVar26() {
+        String contents = "def m(n) {\n" +
+            "  def x\n" +
+            "  switch (n) {\n" +
+            "   case 0:\n" +
+            "    x = 42\n" +
+            "    break\n" +
+            "   case 1:\n" +
+            "    x = 3.14\n" +
+            "    break\n" +
+            "  }\n" +
+            "  x\n" +
+            "}";
+
+        // line 2
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        // line 5
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        // line 8
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        // line 11
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Number or java.lang.Comparable<? extends java.lang.Number or java.lang.Comparable<java.lang.Integer>>");
+    }
+
+    @Test
+    public void testLocalVar27() {
+        String contents = "def m(n) {\n" +
+            "  def x = null\n" +
+            "  switch (n) {\n" +
+            "   case 0:\n" +
+            "    x = 42\n" +
+            "    break\n" +
+            "   case 1:\n" +
+            "    x = 3.14\n" +
+            "    break\n" +
+            "   default:\n" +
+            "  }\n" +
+            "  x\n" +
+            "}";
+
+        // line 2
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        // line 5
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        // line 8
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        // line 12
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1086
+    public void testLocalVar28() {
+        String contents = "File findFile(param) {\n" +
+            "  def file\n" +
+            "  switch (param) {\n" +
+            "   case String:\n" +
+            "    file = new File(System.getProperty('x'), '.ext')\n" +
+            "    break\n" +
+            "   case Number:\n" +
+            "    file = new File(System.getProperty('y'))\n" +
+            "    break\n" +
+            "  }\n" +
+            "  file.canonicalFile\n" +
+            "}";
+
+        // line 2
+        int offset = contents.indexOf("file");
+        assertType(contents, offset, offset + 4, "java.lang.Object");
+
+        // line 5
+        offset = contents.indexOf("file", offset + 4);
+        assertType(contents, offset, offset + 4, "java.io.File");
+
+        // line 8
+        offset = contents.indexOf("file", offset + 4);
+        assertType(contents, offset, offset + 4, "java.io.File");
+
+        // line 11
+        offset = contents.indexOf("file", offset + 4);
+        assertType(contents, offset, offset + 4, "java.io.File");
+    }
+
+    @Test
+    public void testLocalVar29() {
         String contents = "String x\n" +
             "x";
         assertType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar27() {
+    public void testLocalVar30() {
         String contents = "String x = 7\n" +
             "x";
         assertType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar28() {
+    public void testLocalVar31() {
         String contents = "String x\n" +
             "x = 7\n" + // GroovyCastException at runtime
             "x";
@@ -481,7 +578,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1105
-    public void testLocalVar29() {
+    public void testLocalVar32() {
         String contents = "void test(a) {\n" +
             "  def x = a.b\n" +
             "}";
@@ -1028,7 +1125,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod7() throws Exception {
+    public void testStaticMethod7() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -1042,7 +1139,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod8() throws Exception {
+    public void testStaticMethod8() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -1056,7 +1153,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod9() throws Exception {
+    public void testStaticMethod9() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "class Bar {\n" +
@@ -1073,7 +1170,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod10() throws Exception {
+    public void testStaticMethod10() {
         createUnit("foo", "Bar", "package foo\n" +
             "import java.util.regex.*\n" +
             "abstract class Bar {\n" +
@@ -1090,7 +1187,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod11() throws Exception {
+    public void testStaticMethod11() {
         String contents =
             "import static java.util.regex.Pattern.*\n" +
             "import java.util.regex.*\n" +
@@ -1106,7 +1203,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticMethod12() throws Exception {
+    public void testStaticMethod12() {
         String contents =
             "import static java.util.regex.Pattern.*\n" +
             "import java.util.regex.*\n" +
@@ -2432,7 +2529,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInterfaceMethodsAsProperty() throws Exception {
+    public void testInterfaceMethodAsProperty1() {
         createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
         createUnit("foo", "Baz", "package foo; interface Baz extends Bar {\n def getTwo()\n}\n");
 
@@ -2445,7 +2542,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInterfaceMethodAsProperty2() throws Exception {
+    public void testInterfaceMethodAsProperty2() {
         createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
@@ -2458,7 +2555,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testInterfaceMethodAsProperty3() throws Exception {
+    public void testInterfaceMethodAsProperty3() {
         createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
@@ -2471,7 +2568,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testIndirectInterfaceMethod() throws Exception {
+    public void testIndirectInterfaceMethod() {
         createUnit("foo", "Bar", "package foo; interface Bar {\n def getOne()\n}\n");
         createUnit("foo", "Baz", "package foo; abstract class Baz implements Bar {\n abstract def getTwo()\n}\n");
 
@@ -2484,7 +2581,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testIndirectInterfaceConstant() throws Exception {
+    public void testIndirectInterfaceConstant() {
         createUnit("I", "interface I {\n Number ONE = 1\n}\n");
         createUnit("A", "abstract class A implements I {\n Number TWO = 2\n}\n");
 

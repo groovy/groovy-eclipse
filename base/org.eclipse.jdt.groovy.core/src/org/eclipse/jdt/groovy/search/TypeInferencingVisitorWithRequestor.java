@@ -1664,43 +1664,67 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         switchStatement.getExpression().visit(this);
 
-        VariableScope caseScope = null;
-        List<VariableScope> caseScopes = new ArrayList<>();
-        for (final CaseStatement caseStatement : switchStatement.getCaseStatements()) {
-
-            caseStatement.getExpression().visit(this);
+        scopes.add(new VariableScope(scopes.getLast(), switchStatement, false));
+        try {
+            VariableScope[] caseScopes = switchStatement.getCaseStatements().stream().map(CaseStatement::getCode)
+                .map(statement -> new VariableScope(scopes.getLast(), statement, false)).toArray(VariableScope[]::new);
+            VariableScope defaultScope = new VariableScope(scopes.getLast(), switchStatement.getDefaultStatement(), false);
 
             // when the case tests for a type, apply instanceof-like flow-typing
-            if (switchStatement.getExpression() instanceof VariableExpression && caseStatement.getExpression() instanceof ClassExpression) {
+            if (switchStatement.getExpression() instanceof VariableExpression) {
                 String name = switchStatement.getExpression().getText();
-                ClassNode type = caseStatement.getExpression().getType();
-                if (caseScope == null) {
-                    scopes.add(caseScope = new VariableScope(scopes.getLast(), caseStatement.getCode(), false));
-                } else {
-                    type = WideningCategories.lowestUpperBound(type, caseScope.lookupNameInCurrentScope(name).type);
-                }
-                caseScope.updateVariableSoft(name, type);
-            }
-            // TODO: Should "case T:" fall through "case <expr>:" fall through "case U:" be LUB(T,U) or LUB(T,U,?) or something?
+                ClassNode type = null;
 
-            caseStatement.getCode().visit(this);
+                for (int i = 0, n = caseScopes.length; i < n; i += 1) {
+                    CaseStatement caseStatement = switchStatement.getCaseStatements().get(i);
 
-            if (caseScope != null) {
-                Statement lastStmt = (caseStatement.getCode() instanceof BlockStatement && !((BlockStatement) caseStatement.getCode()).isEmpty()
+                    if (caseStatement.getExpression() instanceof ClassExpression) {
+                        if (type != null) {
+                            type = WideningCategories.lowestUpperBound(type, caseStatement.getExpression().getType());
+                        } else {
+                            type = caseStatement.getExpression().getType();
+                        }
+                        caseScopes[i].updateVariableSoft(name, type);
+                    }
+
+                    Statement lastStmt = (caseStatement.getCode() instanceof BlockStatement && !((BlockStatement) caseStatement.getCode()).isEmpty()
                                         ? DefaultGroovyMethods.last(((BlockStatement) caseStatement.getCode()).getStatements()) : caseStatement.getCode());
-                if (lastStmt instanceof BreakStatement || lastStmt instanceof ContinueStatement || lastStmt instanceof ReturnStatement || lastStmt instanceof ThrowStatement) {
-                    caseScopes.add(scopes.removeLast());
-                    caseScope = null;
+                    if (lastStmt instanceof BreakStatement || lastStmt instanceof ContinueStatement || lastStmt instanceof ReturnStatement || lastStmt instanceof ThrowStatement) {
+                        type = null;
+                    }
+                }
+                if (type != null) {
+                    type = WideningCategories.lowestUpperBound(scopes.getLast().lookupName(name).type, type);
+                    defaultScope.updateVariableSoft(name, type);
                 }
             }
-        }
-        if (caseScope != null) {
-            caseScopes.add(scopes.removeLast());
-        }
 
-        switchStatement.getDefaultStatement().visit(this);
+            //
 
-        caseScopes.forEach(VariableScope::bubbleUpdates);
+            for (int i = 0, n = caseScopes.length; i < n; i += 1) {
+                CaseStatement caseStatement = switchStatement.getCaseStatements().get(i);
+
+                caseStatement.getExpression().visit(this);
+
+                scopes.add(caseScopes[i]);
+                try {
+                    caseStatement.getCode().visit(this);
+                } finally {
+                    scopes.removeLast();
+                }
+            }
+
+            scopes.add(defaultScope);
+            try {
+                switchStatement.getDefaultStatement().visit(this);
+            } finally {
+                scopes.removeLast();
+            }
+
+            scopes.getLast().bubbleUpdates(defaultScope, caseScopes);
+        } finally {
+            scopes.removeLast();
+        }
     }
 
     @Override

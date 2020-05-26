@@ -88,9 +88,15 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) throws CoreException {
+    protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) {
         IFolder folder = project.getFolder("src").getFolder(new Path(pkg));
-        if (!folder.exists()) folder.create(true, true, null);
+        if (!folder.exists()) {
+            try {
+                folder.create(true, true, null);
+            } catch (CoreException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         IPath path = env.addGroovyClassExtension(folder.getFullPath(), name, contents, null);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));

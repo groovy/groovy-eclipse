@@ -40,7 +40,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testBasics() throws Exception {
+    public void testBasics() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
         String source =
@@ -67,7 +67,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testEqualsCheck() throws Exception {
+    public void testEqualsCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
         String source =
@@ -89,7 +89,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testGetterCheck() throws Exception {
+    public void testGetterCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
         String source =
@@ -111,7 +111,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testPropertyCheck() throws Exception {
+    public void testPropertyCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
         String source =

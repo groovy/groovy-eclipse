@@ -381,7 +381,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     //
 
     @Test
-    public void testStaticImport1() throws Exception {
+    public void testStaticImport1() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO";
@@ -389,7 +389,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport2() throws Exception {
+    public void testStaticImport2() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR";
@@ -397,7 +397,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport3() throws Exception {
+    public void testStaticImport3() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO\nFOO";
@@ -405,7 +405,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport4() throws Exception {
+    public void testStaticImport4() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR\nFOO";
@@ -413,7 +413,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport5() throws Exception {
+    public void testStaticImport5() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FO";
@@ -421,7 +421,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport6() throws Exception {
+    public void testStaticImport6() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.BAR\nBAR";
@@ -432,7 +432,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport7() throws Exception {
+    public void testStaticImport7() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO\nFOO";
@@ -440,7 +440,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport8() throws Exception {
+    public void testStaticImport8() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.FOO as BAR\nFOO";
@@ -448,7 +448,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticImport9() throws Exception {
+    public void testStaticImport9() {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() {}}");
 
         String contents = "import static p.Other.*\nFOO";
@@ -456,7 +456,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/539
-    public void testStaticImport10() throws Exception {
+    public void testStaticImport10() {
         createUnit("p", "Other", "package p\nclass Other { static void dump(Object o) {}}");
 
         String contents = "import static p.Other.dump\n";
@@ -464,7 +464,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1371
-    public void testStaticImport11() throws Exception {
+    public void testStaticImport11() {
         String contents =
             "import static Boolean.TRUE\n" +
             "class StaticImportStaticField {\n" +
@@ -475,7 +475,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1363
-    public void testStaticImport12() throws Exception {
+    public void testStaticImport12() {
         createUnit("p", "Other",
             "package p\n" +
             "class Other {\n" +
@@ -488,7 +488,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
-    public void testStaticImport13() throws Exception {
+    public void testStaticImport13() {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 
@@ -512,7 +512,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
-    public void testStaticImport14() throws Exception {
+    public void testStaticImport14() {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 
@@ -536,7 +536,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
-    public void testStaticImport15() throws Exception {
+    public void testStaticImport15() {
         createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
         createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
 

@@ -303,7 +303,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3() throws Exception {
+    public void testDelegatesToTypeName3() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +
@@ -327,7 +327,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3a() throws Exception {
+    public void testDelegatesToTypeName3a() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +
@@ -351,7 +351,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/966
-    public void testDelegatesToTypeName3b() throws Exception {
+    public void testDelegatesToTypeName3b() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +

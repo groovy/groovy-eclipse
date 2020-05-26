@@ -1032,7 +1032,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1751
-    public void testWithAndClosure1() throws Exception {
+    public void testWithAndClosure1() {
         createUnit("p", "D",
             //@formatter:off
             "package p\n" +
@@ -1075,7 +1075,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testWithAndClosure2() throws Exception {
+    public void testWithAndClosure2() {
         createUnit("p", "D",
             //@formatter:off
             "package p\n" +
@@ -1119,7 +1119,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testWithAndClosure3() throws Exception {
+    public void testWithAndClosure3() {
         createUnit("p", "D",
             //@formatter:off
             "package p\n" +
@@ -1163,7 +1163,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testWithAndClosure4() throws Exception {
+    public void testWithAndClosure4() {
         createUnit("p", "D",
             //@formatter:off
             "package p\n" +
@@ -1202,7 +1202,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testWithAndClosure5() throws Exception {
+    public void testWithAndClosure5() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +
@@ -1230,7 +1230,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testWithAndClosure6() throws Exception {
+    public void testWithAndClosure6() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +
@@ -1258,7 +1258,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/927
-    public void testWithAndClosure7() throws Exception {
+    public void testWithAndClosure7() {
         createUnit("p", "A",
             //@formatter:off
             "package p\n" +
