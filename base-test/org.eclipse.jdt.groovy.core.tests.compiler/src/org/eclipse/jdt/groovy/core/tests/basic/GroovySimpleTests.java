@@ -157,6 +157,38 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "p");
     }
 
+    @Test // GROOVY-2849
+    public void testClosureScope5() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    newInstance().test()\n" +
+            "  }\n" +
+            "  void test() {\n" +
+            "    print c1()\n" +
+            "    print ' '\n" +
+            "    print p\n" +
+            "  }\n" +
+            "  def p = 1\n" +
+            "  def c1 = {\n" +
+            "    def p = 2\n" +
+            "    def c2 = {\n" +
+            "      this.p += 10\n" +
+            "      p = 3\n" +
+            "      assert p == 3\n" +
+            "      return this.p\n" +
+            "    }\n" +
+            "    return c2()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "11 11");
+    }
+
     @Test
     public void testClosureSyntax() {
         //@formatter:off
