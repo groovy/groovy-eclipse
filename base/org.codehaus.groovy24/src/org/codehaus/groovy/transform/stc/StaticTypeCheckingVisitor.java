@@ -466,30 +466,53 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    // GRECLIPSE add
+    private static ClassNode getOutermost(ClassNode cn) {
+        while (cn.getOuterClass() != null) {
+            cn = cn.getOuterClass();
+        }
+        return cn;
+    }
+    // GRECLIPSE end
+
     private static void addPrivateFieldOrMethodAccess(Expression source, ClassNode cn, StaticTypesMarker type, ASTNode accessedMember) {
+        /* GRECLIPSE edit
         Set<ASTNode> set = (Set<ASTNode>) cn.getNodeMetaData(type);
         if (set==null) {
             set = new LinkedHashSet<ASTNode>();
             cn.putNodeMetaData(type, set);
         }
         set.add(accessedMember);
+        */
         source.putNodeMetaData(type, accessedMember);
+        // GRECLIPSE add
+        cn.getNodeMetaData(type, x -> new LinkedHashSet<>()).add(accessedMember);
+        // GRECLIPSE end
     }
 
     /**
-     * Given a field node, checks if we are accessing or setting a private field from an inner class.
+     * Checks for private field access from inner or outer class.
      */
     private void checkOrMarkPrivateAccess(Expression source, FieldNode fn, boolean lhsOfAssignment) {
+        /* GRECLIPSE edit -- GROOVY-9562
         if (fn!=null && Modifier.isPrivate(fn.getModifiers()) &&
             (fn.getDeclaringClass() != typeCheckingContext.getEnclosingClassNode() || typeCheckingContext.getEnclosingClosure()!=null) &&
             fn.getDeclaringClass().getModule() == typeCheckingContext.getEnclosingClassNode().getModule()) {
+        */
+        if (fn == null || !fn.isPrivate()) return;
+        ClassNode declaringClass = fn.getDeclaringClass();
+        ClassNode enclosingClass = typeCheckingContext.getEnclosingClassNode();
+        if (declaringClass == enclosingClass && typeCheckingContext.getEnclosingClosure() == null) return;
+
+        if (declaringClass == enclosingClass || getOutermost(declaringClass) == getOutermost(enclosingClass)) {
+        // GRECLIPSE end
             StaticTypesMarker marker = lhsOfAssignment ? StaticTypesMarker.PV_FIELDS_MUTATION : StaticTypesMarker.PV_FIELDS_ACCESS;
-            addPrivateFieldOrMethodAccess(source, fn.getDeclaringClass(), marker, fn);
+            addPrivateFieldOrMethodAccess(source, declaringClass, marker, fn);
         }
     }
 
     /**
-     * Given a method node, checks if we are calling a private method from an inner class.
+     * Checks for private method call from inner or outer class.
      */
     private void checkOrMarkPrivateAccess(Expression source, MethodNode mn) {
         if (mn==null) {

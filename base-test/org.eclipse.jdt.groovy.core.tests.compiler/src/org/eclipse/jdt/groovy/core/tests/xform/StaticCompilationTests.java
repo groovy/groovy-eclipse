@@ -378,6 +378,84 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic15() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class One {\n" +
+            "    private static int foo = 333\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print One.foo\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "333");
+    }
+
+    @Test
+    public void testCompileStatic16() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static class One {\n" +
+            "    private static int foo = 333\n" +
+            "  }\n" +
+            "  static class Two {\n" +
+            "    private static int bar = One.foo\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    print One.foo + Two.bar\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "666");
+    }
+
+    @Test
+    public void testCompileStatic17() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    print One.foo + Two.bar\n" +
+            "  }\n" +
+            "}\n" +
+            "class One {\n" +
+            "  private static int foo = 333\n" +
+            "}\n" +
+            "@groovy.transform.PackageScope\n" +
+            "class Two {\n" +
+            "  private static int bar = One.foo\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Main.groovy (at line 4)\n" +
+            "\tprint One.foo + Two.bar\n" +
+            "\t      ^^^\n" +
+            "Groovy:Access to One#foo is forbidden\n" +
+            "----------\n" +
+            "2. ERROR in Main.groovy (at line 4)\n" +
+            "\tprint One.foo + Two.bar\n" +
+            "\t                ^^^\n" +
+            "Groovy:Access to Two#bar is forbidden\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -3889,5 +3967,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9562() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "abstract class One {\n" +
+            "  int prop = 1\n" +
+            "}\n" +
+            "abstract class Two {\n" +
+            "  int prop = 2\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo extends One {\n" +
+            "  def bar() {\n" +
+            "    new Two() {\n" +
+            "      def baz() {\n" +
+            "        prop\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print new Foo().bar().baz()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "2");
     }
 }
