@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2017 IBM Corporation.
+ * Copyright (c) 2015, 2020 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -127,8 +127,23 @@ public class JRTUtil {
 		return system.orElse(null);
 	}
 
-	public static CtSym getCtSym(Path jdkHome) {
-		return ctSymFiles.computeIfAbsent(jdkHome, x -> new CtSym(x));
+	public static CtSym getCtSym(Path jdkHome) throws IOException {
+		CtSym ctSym;
+		try {
+			ctSym = ctSymFiles.compute(jdkHome, (Path x, CtSym current) -> {
+				if (current == null || !current.getFs().isOpen()) {
+					try {
+						return new CtSym(x);
+					} catch (IOException e) {
+						throw new RuntimeIOException(e);
+					}
+				}
+				return current;
+			});
+		} catch (RuntimeIOException rio) {
+			throw rio.getCause();
+		}
+		return ctSym;
 	}
 
 	/** TEST ONLY (use when changing the "modules.to.load" property). */
@@ -246,10 +261,6 @@ class JrtFileSystemWithOlderRelease extends JrtFileSystem {
 		this.fs = null;// reset and proceed, TODO: this is crude and need to be removed.
 		this.releaseInHex = Integer.toHexString(Integer.parseInt(this.release)).toUpperCase();
 		this.ctSym = JRTUtil.getCtSym(Paths.get(this.jdkHome));
-
-		if (!this.ctSym.exists()) {
-			return;
-		}
 		this.fs = this.ctSym.getFs();
 		if (!Files.exists(this.fs.getPath(this.releaseInHex))
 				|| Files.exists(this.fs.getPath(this.releaseInHex, "system-modules"))) { //$NON-NLS-1$
@@ -302,6 +313,19 @@ class JrtFileSystemWithOlderRelease extends JrtFileSystem {
 		}
 	}
 
+}
+
+final class RuntimeIOException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
+
+	public RuntimeIOException(IOException cause) {
+		super(cause);
+	}
+
+	@Override
+	public synchronized IOException getCause() {
+		return (IOException) super.getCause();
+	}
 }
 
 class JrtFileSystem {
@@ -499,19 +523,6 @@ class JrtFileSystem {
 			} catch (RuntimeIOException rio) {
 				throw rio.getCause();
 			}
-		}
-	}
-
-	static final class RuntimeIOException extends RuntimeException {
-		private static final long serialVersionUID = 1L;
-
-		public RuntimeIOException(IOException cause) {
-			super(cause);
-		}
-
-		@Override
-		public synchronized IOException getCause() {
-			return (IOException) super.getCause();
 		}
 	}
 

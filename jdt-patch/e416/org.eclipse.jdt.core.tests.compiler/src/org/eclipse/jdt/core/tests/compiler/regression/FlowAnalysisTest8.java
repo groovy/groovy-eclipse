@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2018 GK Software AG and others.
+ * Copyright (c) 2013, 2020 GK Software AG and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -58,18 +58,18 @@ public void testLambda_01() {
 			"		ISAM printer = (p,o) -> p.concat(o.toString());\n" +
 			"	}\n" +
 			"}\n"
-		}, 
+		},
 		customOptions,
-		"----------\n" + 
-		"1. WARNING in X.java (at line 3)\n" + 
-		"	ISAM printer = (p,o) -> p.concat(o.toString());\n" + 
-		"	                        ^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Null type safety (type annotations): The expression of type 'String' needs unchecked conversion to conform to \'@NonNull String\'\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 3)\n" + 
-		"	ISAM printer = (p,o) -> p.concat(o.toString());\n" + 
-		"	                                 ^\n" + 
-		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 3)\n" +
+		"	ISAM printer = (p,o) -> p.concat(o.toString());\n" +
+		"	                        ^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Null type safety (type annotations): The expression of type 'String' needs unchecked conversion to conform to \'@NonNull String\'\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 3)\n" +
+		"	ISAM printer = (p,o) -> p.concat(o.toString());\n" +
+		"	                                 ^\n" +
+		"Potential null pointer access: this expression has a '@Nullable' type\n" +
 		"----------\n");
 }
 
@@ -91,18 +91,18 @@ public void testLambda_02() {
 			"		ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" +
 			"	}\n" +
 			"}\n"
-		}, 
+		},
 		customOptions,
-		"----------\n" + 
-		"1. ERROR in X.java (at line 4)\n" + 
-		"	ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" + 
-		"	                                     ^^^^^^^^^^^^^^^^\n" + 
-		"Illegal redefinition of parameter o2, inherited method from ISAM declares this parameter as @Nullable\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 4)\n" + 
-		"	ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" + 
-		"	                                              	           ^^^^^^^^^^^^^^^^\n" + 
-		"Illegal redefinition of parameter o3, inherited method from ISAM does not constrain this parameter\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" +
+		"	                                     ^^^^^^^^^^^^^^^^\n" +
+		"Illegal redefinition of parameter o2, inherited method from ISAM declares this parameter as @Nullable\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" +
+		"	                                              	           ^^^^^^^^^^^^^^^^\n" +
+		"Illegal redefinition of parameter o3, inherited method from ISAM does not constrain this parameter\n" +
 		"----------\n");
 }
 
@@ -128,28 +128,28 @@ public void testLambda_03() {
 			"							-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" +
 			"	}\n" +
 			"}\n"
-		}, 
+		},
 		customOptions,
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" + 
-		"	                                    ^^\n" + 
-		"Potential null pointer access: The variable o2 may be null at this location\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 7)\n" + 
-		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" + 
-		"	                      ^^\n" + 
-		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 7)\n" + 
-		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" + 
-		"	                                    ^^\n" + 
-		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 7)\n" + 
-		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" + 
-		"	                                                  ^^\n" + 
-		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" +
+		"	                                    ^^\n" +
+		"Potential null pointer access: The variable o2 may be null at this location\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" +
+		"	                      ^^\n" +
+		"Potential null pointer access: this expression has a '@Nullable' type\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 7)\n" +
+		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" +
+		"	                                    ^^\n" +
+		"Potential null pointer access: this expression has a '@Nullable' type\n" +
+		"----------\n" +
+		"4. ERROR in X.java (at line 7)\n" +
+		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" +
+		"	                                                  ^^\n" +
+		"Potential null pointer access: this expression has a '@Nullable' type\n" +
 		"----------\n");
 }
 
@@ -170,17 +170,17 @@ public void testLambda_04() {
 			"							-> System.out.println(i);\n" +
 			"	}\n" +
 			"}\n"
-		}, 
+		},
 		customOptions,
-		"----------\n" + 
-		"1. ERROR in X.java (at line 4)\n" + 
-		"	ISAM printer1 = (@NonNull int i) \n" + 
-		"	                 ^^^^^^^^\n" + 
-		"The nullness annotation @NonNull is not applicable for the primitive type int\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	ISAM printer1 = (@NonNull int i) \n" +
+		"	                 ^^^^^^^^\n" +
+		"The nullness annotation @NonNull is not applicable for the primitive type int\n" +
 		"----------\n");
 }
 
-// Lambda inherits null contract and has block with return statement 
+// Lambda inherits null contract and has block with return statement
 public void testLambda_05() {
 	Map customOptions = getCompilerOptions();
 	runNegativeTestWithLibs(
@@ -199,13 +199,13 @@ public void testLambda_05() {
 			"		};\n" +
 			"	}\n" +
 			"}\n"
-		}, 
+		},
 		customOptions,
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	return null; // error\n" + 
-		"	       ^^^^\n" + 
-		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	return null; // error\n" +
+		"	       ^^^^\n" +
+		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" +
 		"----------\n");
 }
 // Lambda has no descriptor (overriding method from Object), don't bail out with NPE during analysis
@@ -238,7 +238,7 @@ public void testLambda_05a() {
 		true /*flush*/,
 		customOptions);
 }
-// Test flows with ReferenceExpression regarding: 
+// Test flows with ReferenceExpression regarding:
 // - definite assignment
 // - unused local
 public void testReferenceExpression1() {
@@ -271,21 +271,21 @@ public void testReferenceExpression1() {
 			 "	}\n" +
 			 "}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	I i = x::moo; // x is unassigned\n" + 
-		"	      ^\n" + 
-		"The local variable x may not have been initialized\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 12)\n" + 
-		"	I is = xs::soo;\n" + 
-		"	       ^^^^^^^\n" + 
-		"The method soo() from the type X should be accessed in a static way \n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 15)\n" + 
-		"	X x1 = this, x2 = this; // x2 is not used, only x is\n" + 
-		"	             ^^\n" + 
-		"The value of the local variable x2 is not used\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	I i = x::moo; // x is unassigned\n" +
+		"	      ^\n" +
+		"The local variable x may not have been initialized\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 12)\n" +
+		"	I is = xs::soo;\n" +
+		"	       ^^^^^^^\n" +
+		"The method soo() from the type X should be accessed in a static way \n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 15)\n" +
+		"	X x1 = this, x2 = this; // x2 is not used, only x is\n" +
+		"	             ^^\n" +
+		"The value of the local variable x2 is not used\n" +
 		"----------\n",
 		null/*libs*/, true/*flush*/, options);
 }
@@ -310,11 +310,11 @@ public void testReferenceExpression_null_1() {
 			 "	}\n" +
 			 "}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	I i = x::bar;\n" + 
-		"	      ^\n" + 
-		"Null pointer access: The variable x can only be null at this location\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	I i = x::bar;\n" +
+		"	      ^\n" +
+		"Null pointer access: The variable x can only be null at this location\n" +
 		"----------\n",
 		null/*libs*/, true/*flush*/, options);
 }
@@ -336,16 +336,16 @@ public void testReferenceExpression_nullAnnotation_1() {
 			 "	}\n" +
 			 "}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	I i = this::bar;\n" + 
-		"	      ^^^^^^^^^\n" + 
-		"Null type mismatch at parameter 1: required '@NonNull Object' but provided '@Nullable Object' via method descriptor I.foo(Object)\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 5)\n" + 
-		"	I i = this::bar;\n" + 
-		"	      ^^^^^^^^^\n" + 
-		"Null type mismatch at method return type: Method descriptor I.foo(Object) promises '@NonNull String' but referenced method provides '@Nullable String'\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	I i = this::bar;\n" +
+		"	      ^^^^^^^^^\n" +
+		"Null type mismatch at parameter 1: required '@NonNull Object' but provided '@Nullable Object' via method descriptor I.foo(Object)\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 5)\n" +
+		"	I i = this::bar;\n" +
+		"	      ^^^^^^^^^\n" +
+		"Null type mismatch at method return type: Method descriptor I.foo(Object) promises '@NonNull String' but referenced method provides '@Nullable String'\n" +
 		"----------\n");
 }
 public void testReferenceExpression_nullAnnotation_2() {
@@ -367,11 +367,11 @@ public void testReferenceExpression_nullAnnotation_2() {
 			 "}\n"
 		},
 		getCompilerOptions(),
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	I i = this::bar;\n" + 
-		"	      ^^^^^^^^^\n" + 
-		"Null type safety at method return type: Method descriptor I.foo(Object) promises \'@NonNull String\' but referenced method provides \'String\'\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	I i = this::bar;\n" +
+		"	      ^^^^^^^^^\n" +
+		"Null type safety at method return type: Method descriptor I.foo(Object) promises \'@NonNull String\' but referenced method provides \'String\'\n" +
 		"----------\n");
 }
 public void testReferenceExpression_nullAnnotation_3() {
@@ -393,16 +393,16 @@ public void testReferenceExpression_nullAnnotation_3() {
 			 "	Zork zork;\n" + // make warning visible by forcing an error
 			 "}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 5)\n" + 
-		"	I i = this::bar;\n" + 
-		"	      ^^^^^^^^^\n" + 
-		"Null type safety: parameter 1 provided via method descriptor I.foo(Object) needs unchecked conversion to conform to '@NonNull Object'\n" + 
 		"----------\n" +
-		"2. ERROR in X.java (at line 8)\n" + 
-		"	Zork zork;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		"1. WARNING in X.java (at line 5)\n" +
+		"	I i = this::bar;\n" +
+		"	      ^^^^^^^^^\n" +
+		"Null type safety: parameter 1 provided via method descriptor I.foo(Object) needs unchecked conversion to conform to '@NonNull Object'\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 8)\n" +
+		"	Zork zork;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n",
 		this.LIBS,
 		true /*flush*/,
@@ -415,26 +415,26 @@ public void testBug535308a() {
 	runner.testFiles =
 			new String[] {
 				 "X.java",
-				 "public class X {\n" + 
+				 "public class X {\n" +
 				 "	public int someTest() {\n" +
-				 "		boolean unused = false;\n" + 
-				 "		final boolean thisIsFalse = false;\n" + 
-				 "		if (getSomeValue() == thisIsFalse) {\n" + 
-				 "			return 0;\n" + 
-				 "		}\n" + 
-				 "		return 1;\n" + 
-				 "	}\n" + 
-				 "	private boolean getSomeValue() {\n" + 
-				 "		return true;\n" + 
-				 "	}\n" + 
+				 "		boolean unused = false;\n" +
+				 "		final boolean thisIsFalse = false;\n" +
+				 "		if (getSomeValue() == thisIsFalse) {\n" +
+				 "			return 0;\n" +
+				 "		}\n" +
+				 "		return 1;\n" +
+				 "	}\n" +
+				 "	private boolean getSomeValue() {\n" +
+				 "		return true;\n" +
+				 "	}\n" +
 				 "}"
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	boolean unused = false;\n" + 
-			"	        ^^^^^^\n" + 
-			"The value of the local variable unused is not used\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	boolean unused = false;\n" +
+			"	        ^^^^^^\n" +
+			"The value of the local variable unused is not used\n" +
 			"----------\n";
 	runner.classLibraries =
 			this.LIBS;
@@ -448,27 +448,27 @@ public void testBug535308b() {
 	runner.testFiles =
 			new String[] {
 				 "X.java",
-				 "public class X {\n" + 
+				 "public class X {\n" +
 				 "	public int someTest() {\n" +
-				 "		boolean unused = false;\n" + 
-				 "		final boolean thisIsFalse = false;\n" + 
-				 "		if (getSomeValue() != thisIsFalse) {\n" + 
-				 "			return 0;\n" + 
-				 "		}\n" + 
-				 "		return 1;\n" + 
-				 "	}\n" + 
-				 "\n" + 
-				 "	private boolean getSomeValue() {\n" + 
-				 "		return true;\n" + 
-				 "	}\n" + 
+				 "		boolean unused = false;\n" +
+				 "		final boolean thisIsFalse = false;\n" +
+				 "		if (getSomeValue() != thisIsFalse) {\n" +
+				 "			return 0;\n" +
+				 "		}\n" +
+				 "		return 1;\n" +
+				 "	}\n" +
+				 "\n" +
+				 "	private boolean getSomeValue() {\n" +
+				 "		return true;\n" +
+				 "	}\n" +
 				 "}"
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	boolean unused = false;\n" + 
-			"	        ^^^^^^\n" + 
-			"The value of the local variable unused is not used\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	boolean unused = false;\n" +
+			"	        ^^^^^^\n" +
+			"The value of the local variable unused is not used\n" +
 			"----------\n";
 	runner.classLibraries =
 			this.LIBS;
@@ -482,27 +482,27 @@ public void testBug535308c() {
 	runner.testFiles =
 			new String[] {
 				 "X.java",
-				 "public class X {\n" + 
+				 "public class X {\n" +
 				 "	public int someTest() {\n" +
-				 "		boolean unused = false;\n" + 
-				 "		final boolean thisIsFalse = false;\n" + 
-				 "		if (thisIsFalse != getSomeValue()) {\n" + 
-				 "			return 0;\n" + 
-				 "		}\n" + 
-				 "		return 1;\n" + 
-				 "	}\n" + 
-				 "\n" + 
-				 "	private boolean getSomeValue() {\n" + 
-				 "		return true;\n" + 
-				 "	}\n" + 
+				 "		boolean unused = false;\n" +
+				 "		final boolean thisIsFalse = false;\n" +
+				 "		if (thisIsFalse != getSomeValue()) {\n" +
+				 "			return 0;\n" +
+				 "		}\n" +
+				 "		return 1;\n" +
+				 "	}\n" +
+				 "\n" +
+				 "	private boolean getSomeValue() {\n" +
+				 "		return true;\n" +
+				 "	}\n" +
 				 "}"
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	boolean unused = false;\n" + 
-			"	        ^^^^^^\n" + 
-			"The value of the local variable unused is not used\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	boolean unused = false;\n" +
+			"	        ^^^^^^\n" +
+			"The value of the local variable unused is not used\n" +
 			"----------\n";
 	runner.classLibraries =
 			this.LIBS;
@@ -516,27 +516,27 @@ public void testBug535308d() {
 	runner.testFiles =
 			new String[] {
 				 "X.java",
-				 "public class X {\n" + 
+				 "public class X {\n" +
 				 "	public int someTest() {\n" +
-				 "		boolean unused = false;\n" + 
-				 "		final boolean thisIsFalse = false;\n" + 
-				 "		if (thisIsFalse == getSomeValue()) {\n" + 
-				 "			return 0;\n" + 
-				 "		}\n" + 
-				 "		return 1;\n" + 
-				 "	}\n" + 
-				 "\n" + 
-				 "	private boolean getSomeValue() {\n" + 
-				 "		return true;\n" + 
-				 "	}\n" + 
+				 "		boolean unused = false;\n" +
+				 "		final boolean thisIsFalse = false;\n" +
+				 "		if (thisIsFalse == getSomeValue()) {\n" +
+				 "			return 0;\n" +
+				 "		}\n" +
+				 "		return 1;\n" +
+				 "	}\n" +
+				 "\n" +
+				 "	private boolean getSomeValue() {\n" +
+				 "		return true;\n" +
+				 "	}\n" +
 				 "}"
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	boolean unused = false;\n" + 
-			"	        ^^^^^^\n" + 
-			"The value of the local variable unused is not used\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	boolean unused = false;\n" +
+			"	        ^^^^^^\n" +
+			"The value of the local variable unused is not used\n" +
 			"----------\n";
 	runner.classLibraries =
 			this.LIBS;
@@ -550,31 +550,83 @@ public void testBug535308e() {
 	runner.testFiles =
 			new String[] {
 				 "X.java",
-				 "public class X {\n" + 
+				 "public class X {\n" +
 				 "	public int someTest() {\n" +
-				 "		boolean used = false;\n" + 
-				 "		final boolean thisIsFalse = false;\n" + 
-				 "		if (used == getSomeValue()) {\n" + 
-				 "			return 0;\n" + 
-				 "		}\n" + 
-				 "		return 1;\n" + 
-				 "	}\n" + 
-				 "\n" + 
-				 "	private boolean getSomeValue() {\n" + 
-				 "		return true;\n" + 
-				 "	}\n" + 
+				 "		boolean used = false;\n" +
+				 "		final boolean thisIsFalse = false;\n" +
+				 "		if (used == getSomeValue()) {\n" +
+				 "			return 0;\n" +
+				 "		}\n" +
+				 "		return 1;\n" +
+				 "	}\n" +
+				 "\n" +
+				 "	private boolean getSomeValue() {\n" +
+				 "		return true;\n" +
+				 "	}\n" +
 				 "}"
 			};
 	runner.expectedCompilerLog =
-			"----------\n" + 
-			"1. ERROR in X.java (at line 4)\n" + 
-			"	final boolean thisIsFalse = false;\n" + 
-			"	              ^^^^^^^^^^^\n" + 
-			"The value of the local variable thisIsFalse is not used\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 4)\n" +
+			"	final boolean thisIsFalse = false;\n" +
+			"	              ^^^^^^^^^^^\n" +
+			"The value of the local variable thisIsFalse is not used\n" +
 			"----------\n";
 			runner.classLibraries =
 			this.LIBS;
 	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 	runner.runNegativeTest();
+}
+public void testBug474080() {
+	runNegativeTest(
+		new String[] {
+			"Test.java",
+			"import java.io.IOException;\n" +
+			"interface Config {\n" +
+			"	double getTime(long l);\n" +
+			"}\n" +
+			"class MarketMaker {\n" +
+			"	static double closeTime;\n" +
+			"}\n" +
+			"public class Test {\n" +
+			"	 boolean stopped;\n" +
+			"    Config config;\n" +
+			"    long tick() { return 0L; }\n" +
+			"    void doStuff() {}\n" +
+			"    public void start() {\n" +
+			"        new Thread(() -> {\n" +
+			"            while (eventSequence.running) {\n" + // unresolved
+			"                try\n" +
+			"                    {\n" +
+			"                    double t = config.getTime(tick());\n" +
+			"                    if ((t >= MarketMaker.closeTime)) {\n" +
+			"                        if ((! stopped)) {\n" +
+			"                            try {\n" +
+			"                                System.out.println(\"Stopping...\");\n" +
+			"                                doStuff();\n" +
+			"                                Thread.sleep(250);\n" +
+			"                                System.out.println(\"Simulation finished\");\n" +
+			"                            } catch (InterruptedException e) {\n" +
+			"                                e.printStackTrace();\n" +
+			"                            }\n" +
+//			"                            mainFrame.simulator.stop();\n" +
+			"                            stopped = true;\n" +
+			"                        }\n" +
+			"                    }\n" +
+			"                }\n" +
+			"                catch (IOException e) {\n" +
+			"                    e.printStackTrace();\n" +
+			"                }\n" +
+			"            }\n" +
+			"        }).start();\n" +
+			"    }\n" +
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in Test.java (at line 15)\n" +
+		"	while (eventSequence.running) {\n" +
+		"	       ^^^^^^^^^^^^^\n" +
+		"eventSequence cannot be resolved to a variable\n" +
+		"----------\n");
 }
 }

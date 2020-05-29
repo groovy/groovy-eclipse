@@ -89,6 +89,25 @@ public class StateTest extends BuilderTests {
 		writeReadAndCompareReferences(implementationProjectPath);
 	}
 
+
+	public void testBug563546() throws JavaModelException, Exception {
+		IPath project = env.addProject("Bug563546"); //$NON-NLS-1$
+		env.addExternalJars(project, Util.getJavaClassLibs());
+
+		env.addClass(project, "a", "WithOther", //$NON-NLS-1$ //$NON-NLS-2$
+			"package a;\n" +
+			"class Other {\n" +
+			"}\n" +
+			"public class WithOther {\n" +
+			"}" //$NON-NLS-1$
+		);
+		fullBuild();
+		env.removePackage(project, "a");
+		incrementalBuild();
+
+		writeReadAndCompareReferences(project);
+	}
+
 	private void writeReadAndCompareReferences(IPath projectPath)
 			throws JavaModelException, IOException, CoreException {
 		JavaModelManager javaModelManager = JavaModelManager.getJavaModelManager();

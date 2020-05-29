@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -68,6 +68,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ProblemFieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemPackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticArgumentBinding;
@@ -861,6 +862,9 @@ class DefaultBindingResolver extends BindingResolver {
 							} else if (binding instanceof org.eclipse.jdt.internal.compiler.lookup.MethodBinding) {
 								// it is a type
 								return getMethodBinding((org.eclipse.jdt.internal.compiler.lookup.MethodBinding)binding);
+							} else if (binding instanceof RecordComponentBinding) {
+								IVariableBinding variableBinding = this.getVariableBinding((RecordComponentBinding) binding);
+								return variableBinding == null ? null : variableBinding;
 							}
 						} else {
 							if (binding instanceof org.eclipse.jdt.internal.compiler.lookup.TypeBinding) {
@@ -1081,6 +1085,9 @@ class DefaultBindingResolver extends BindingResolver {
 							case Binding.LOCAL:
 								type = ((LocalVariableBinding) qualifiedNameReference.binding).type;
 								break;
+							case Binding.RECORD_COMPONENT:
+								type = ((RecordComponentBinding) qualifiedNameReference.binding).type;
+								break;
 						}
 					}
 					return this.getTypeBinding(type);
@@ -1184,7 +1191,7 @@ class DefaultBindingResolver extends BindingResolver {
 			}
 		} if (node instanceof JavadocSingleNameReference) {
 			JavadocSingleNameReference singleNameReference = (JavadocSingleNameReference) node;
-			LocalVariableBinding localVariable = (LocalVariableBinding)singleNameReference.binding;
+			org.eclipse.jdt.internal.compiler.lookup.VariableBinding localVariable = (org.eclipse.jdt.internal.compiler.lookup.VariableBinding)singleNameReference.binding;
 			if (localVariable != null) {
 				return this.getTypeBinding(localVariable.type);
 			}
@@ -1390,6 +1397,9 @@ class DefaultBindingResolver extends BindingResolver {
 					} else if (binding instanceof org.eclipse.jdt.internal.compiler.lookup.MethodBinding) {
 						// it is a type
 						return getMethodBinding((org.eclipse.jdt.internal.compiler.lookup.MethodBinding)binding);
+					} else if (binding instanceof org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding) {
+						// it is a type
+						return this.getVariableBinding((org.eclipse.jdt.internal.compiler.lookup.RecordComponentBinding)binding);
 					} else {
 						return null;
 					}

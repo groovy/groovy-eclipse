@@ -928,17 +928,19 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBindi
 
 @Override
 public Constant optimizedBooleanConstant() {
-	switch (this.resolvedType.id) {
-		case T_boolean :
-		case T_JavaLangBoolean :
-			if (this.constant != Constant.NotAConstant) return this.constant;
-			switch (this.bits & ASTNode.RestrictiveFlagMASK) {
-				case Binding.FIELD : // reading a field
-					if (this.otherBindings == null)
-						return ((FieldBinding)this.binding).constant();
-					//$FALL-THROUGH$
-				case Binding.LOCAL : // reading a local variable
-					return this.otherBindings[this.otherBindings.length-1].constant();
+	if (this.binding.isValidBinding()) {
+		switch (this.resolvedType.id) {
+			case T_boolean :
+			case T_JavaLangBoolean :
+				if (this.constant != Constant.NotAConstant) return this.constant;
+				switch (this.bits & ASTNode.RestrictiveFlagMASK) {
+					case Binding.FIELD : // reading a field
+						if (this.otherBindings == null)
+							return ((FieldBinding)this.binding).constant();
+						//$FALL-THROUGH$
+					case Binding.LOCAL : // reading a local variable
+						return this.otherBindings[this.otherBindings.length-1].constant();
+			}
 		}
 	}
 	return Constant.NotAConstant;

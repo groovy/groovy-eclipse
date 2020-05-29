@@ -57,7 +57,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 	protected Path releasePath;
 	protected Path modulePath;
 	private String modPathString;
-	final CtSym ctSym;
+	private CtSym ctSym;
 
 
 
@@ -73,7 +73,12 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 			this.externalAnnotationPath = externalAnnotationPath.toString();
 		}
 		this.release = getReleaseOptionFromCompliance(release);
-		this.ctSym = JRTUtil.getCtSym(Paths.get(this.zipFilename).getParent().getParent());
+		try {
+			this.ctSym = JRTUtil.getCtSym(Paths.get(this.zipFilename).getParent().getParent());
+		} catch (IOException e) {
+			throw new CoreException(new Status(IStatus.ERROR, ClasspathJrtWithReleaseOption.class,
+					"Failed to init ct.sym for " + this.zipFilename, e)); //$NON-NLS-1$
+		}
 		initialize();
 		loadModules();
 	}
@@ -102,9 +107,6 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 	 */
 	protected void initialize() throws CoreException {
 		this.releaseInHex = Integer.toHexString(Integer.parseInt(this.release)).toUpperCase();
-		if (!this.ctSym.exists()) {
-			return;
-		}
 		this.fs = this.ctSym.getFs();
 		this.releasePath = this.ctSym.getRoot();
 		Path modPath = this.fs.getPath(this.releaseInHex + (this.ctSym.isJRE12Plus() ? "" : "-modules")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -282,6 +284,7 @@ public class ClasspathJrtWithReleaseOption extends ClasspathJrt {
 		} finally {
 			// The same file system is also used in JRTUtil, so don't close it here.
 			this.fs = null;
+			this.ctSym = null;
 		}
 	}
 
