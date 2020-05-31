@@ -4125,4 +4125,23 @@ public final class InferencingTests extends InferencingTestSuite {
             assertUnknown(contents, "toArray");
         }
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1121
+    public void testMethodOverloadsArgumentMatching13() {
+        String contents =
+            "import org.codehaus.groovy.ast.ClassNode\n" +
+            "import static java.lang.reflect.Modifier.*\n" +
+            "import static org.codehaus.groovy.ast.ClassHelper.make\n" +
+            "import static org.codehaus.groovy.ast.tools.GeneralUtils.*\n" +
+
+            "void test(ClassNode node, String prefix) {\n" +
+            "  def field = node.addField(prefix + 'suffix',\n" +
+            "    FINAL | PRIVATE,\n" +
+            "    make(Date),\n" +
+            "    ctorX(make(Date))\n" +
+            "  )\n" +
+            "}\n";
+
+        assertDeclaringType(contents, "ctorX", "org.codehaus.groovy.ast.tools.GeneralUtils");
+    }
 }

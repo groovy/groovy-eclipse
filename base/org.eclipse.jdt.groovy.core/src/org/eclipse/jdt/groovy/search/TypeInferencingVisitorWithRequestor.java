@@ -2266,6 +2266,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(call));
                             tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(tlr.type), scope);
 
+                        } else if (expression instanceof StaticMethodCallExpression) {
+                            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
+                            tlr = lookupExpressionType(expression, null, true, scope);
+
                         } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
                             tlr = lookupExpressionType(((BinaryExpression) expression).getLeftExpression(), null, false, scope);
                             scope.setMethodCallArgumentTypes(Collections.singletonList(
