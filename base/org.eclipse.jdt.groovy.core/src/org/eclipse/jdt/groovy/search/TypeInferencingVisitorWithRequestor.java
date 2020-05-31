@@ -765,7 +765,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             } else if (node.getOperation().isA(Types.LOGICAL_AND)) { // check for instanceof guard
                 Map<String, ClassNode[]> types = inferInstanceOfType(toVisitPrimary, scopes.getLast());
                 if (!types.isEmpty()) {
-                    trueScope = new VariableScope(scopes.getLast(), toVisitPrimary, false);
+                    trueScope = new VariableScope(scopes.getLast(), GeneralUtils.stmt(toVisitPrimary), false);
                     for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
                         if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
                             trueScope.updateVariableSoft(entry.getKey(), entry.getValue()[0]);
@@ -1738,7 +1738,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             node.getBooleanExpression().visit(this);
 
             Map<String, ClassNode[]> types = inferInstanceOfType(node.getBooleanExpression(), scopes.getLast());
-            scopes.add(new VariableScope(scopes.getLast(), node.getTrueExpression(), false));
+            scopes.add(new VariableScope(scopes.getLast(), GeneralUtils.stmt(node.getTrueExpression()), false));
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
                     if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
@@ -1753,7 +1753,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 scopes.removeLast().bubbleUpdates();
             }
 
-            scopes.add(new VariableScope(scopes.getLast(), node.getFalseExpression(), false));
+            scopes.add(new VariableScope(scopes.getLast(), GeneralUtils.stmt(node.getFalseExpression()), false));
             try {
                 for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
                     if (entry.getValue().length > 1 && entry.getValue()[1] != null) {

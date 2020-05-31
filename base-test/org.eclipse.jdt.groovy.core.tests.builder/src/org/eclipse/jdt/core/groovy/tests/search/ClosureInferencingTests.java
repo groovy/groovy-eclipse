@@ -622,6 +622,18 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertDeclaration(contents, offset, offset + "bar".length(), "Foo", "setBar", DeclarationKind.METHOD);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1120
+    public void testClosure30() {
+        String contents =
+            //@formatter:off
+            "def value = flag ? { -> optionValue(cli, name) } : { -> cli.defaultValue(name) }";
+            //@formatter:on
+
+        int offset = contents.indexOf("optionValue");
+        assertUnknownConfidence(contents, offset, offset + "optionValue".length());
+    }
+
+
     @Test // closure within closure
     public void testNestedClosure1() {
         String contents =
