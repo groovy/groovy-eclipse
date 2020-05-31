@@ -4656,14 +4656,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         curNode = curNode.getSuperClass();
                     }
                     if (property != null) {
-                        MethodNode node = new MethodNode(name, Opcodes.ACC_PUBLIC, property.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
-                        if (property.isStatic()) {
-                            node.setModifiers(Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC);
-                        }
-                        node.setDeclaringClass(receiver);
-                        return Collections.singletonList(
-                                node);
-
+                        // GRECLIPSE edit -- GROOVY-9580
+                        int mods = Opcodes.ACC_PUBLIC | (property.isStatic() ? Opcodes.ACC_STATIC : 0);
+                        MethodNode node = new MethodNode(name, mods, property.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
+                        node.setDeclaringClass(property.getDeclaringClass());
+                        return Collections.singletonList(node);
                     }
                 }
             } else if (methods.isEmpty() && args != null && args.length == 1) {
@@ -4679,13 +4676,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (property != null) {
                         ClassNode type = property.getOriginType();
                         if (implementsInterfaceOrIsSubclassOf(wrapTypeIfNecessary(args[0]), wrapTypeIfNecessary(type))) {
-                            MethodNode node = new MethodNode(name, Opcodes.ACC_PUBLIC, VOID_TYPE, new Parameter[]{
-                                    new Parameter(type, "arg")
-                            }, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
-                            if (property.isStatic()) {
-                                node.setModifiers(Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC);
-                            }
-                            node.setDeclaringClass(receiver);
+                            // GRECLIPSE edit -- GROOVY-9580
+                            int mods = Opcodes.ACC_PUBLIC | (property.isStatic() ? Opcodes.ACC_STATIC : 0);
+                            MethodNode node = new MethodNode(name, mods, VOID_TYPE, new Parameter[]{new Parameter(type, name)}, ClassNode.EMPTY_ARRAY, GENERATED_EMPTY_STATEMENT);
+                            node.setDeclaringClass(property.getDeclaringClass());
                             return Collections.singletonList(node);
                         }
                     }

@@ -456,6 +456,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic18() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Main<T extends List<X>, X extends Number> {\n" +
+            "  X getFirstElement(T t) {\n" +
+            "    X x = t.get(0)\n" +
+            "    return x\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    def f = new Main<ArrayList<Integer>, Integer>()\n" +
+            "    def list = new ArrayList<Integer>()\n" +
+            "    list.add(123)\n" +
+            "    print f.getFirstElement(list)\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "123");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
@@ -790,24 +816,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
-            "  protected final S number;\n" +
-            "  \n" +
-            "  AbstractNumberWrapper(S number) {\n" +
+            "abstract class A<N extends Number> {\n" +
+            "  protected final N number\n" +
+            "  A(N number) {\n" +
             "    this.number = number\n" +
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
-            "  LongWrapper(S longNumber) {\n" +
+            "class C<L extends Long> extends A<L> {\n" +
+            "  C(L longNumber) {\n" +
             "    super(longNumber)\n" +
             "  }\n" +
-            "  \n" +
-            "  S getValue() {\n" +
-            "    return number\n" + // field of type S
+            "  L getValue() {\n" +
+            "    return number\n" + // field of type L
             "  }\n" +
             "}\n" +
-            "print new LongWrapper<Long>(42L).value\n",
+            "print new C<Long>(42L).value\n",
         };
         //@formatter:on
 
@@ -822,26 +846,24 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
-            "  protected final S number;\n" +
-            "  \n" +
-            "  AbstractNumberWrapper(S number) {\n" +
+            "abstract class A<N extends Number> {\n" +
+            "  protected final N number\n" +
+            "  A(N number) {\n" +
             "    this.number = number\n" +
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
-            "  LongWrapper(S longNumber) {\n" +
+            "class C<L extends Long> extends A<L> {\n" +
+            "  C(L longNumber) {\n" +
             "    super(longNumber)\n" +
             "  }\n" +
-            "  \n" +
-            "  S getValue() {\n" +
+            "  L getValue() {\n" +
             "    return { ->" +
-            "      return number\n" + // field of type S from closure
+            "      return number\n" + // field of type L from closure
             "    }()" +
             "  }\n" +
             "}\n" +
-            "print new LongWrapper<Long>(42L).value\n",
+            "print new C<Long>(42L).value\n",
         };
         //@formatter:on
 
@@ -856,24 +878,52 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "abstract class AbstractNumberWrapper<S extends Number> {\n" +
-            "  final S number;\n" +
-            "  \n" +
-            "  AbstractNumberWrapper(S number) {\n" +
+            "abstract class A<N extends Number> {\n" +
+            "  final N number\n" +
+            "  A(N number) {\n" +
             "    this.number = number\n" +
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class LongWrapper<S extends Long> extends AbstractNumberWrapper<S> {\n" +
-            "  LongWrapper(S longNumber) {\n" +
+            "class C<L extends Long> extends A<L> {\n" +
+            "  C(L longNumber) {\n" +
             "    super(longNumber)\n" +
             "  }\n" +
-            "  \n" +
-            "  S getValue() {\n" +
-            "    return number\n" + // property of type S
+            "  L getValue() {\n" +
+            "    return number\n" + // property of type L
             "  }\n" +
             "}\n" +
-            "print new LongWrapper<Long>(42L).value\n",
+            "print new C<Long>(42L).value\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test // GROOVY-9580
+    public void testCompileStatic7691c() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "abstract class A<N extends Number> {\n" +
+            "  final N number\n" +
+            "  A(N number) {\n" +
+            "    this.number = number\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C<L extends Long> extends A<L> {\n" +
+            "  C(L longNumber) {\n" +
+            "    super(longNumber)\n" +
+            "  }\n" +
+            "  L getValue() {\n" +
+            "    return getNumber()\n" + // method call of type L
+            "  }\n" +
+            "}\n" +
+            "print new C<Long>(42L).value\n",
         };
         //@formatter:on
 
@@ -1081,6 +1131,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic8176() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "static <M extends Map> M merge(M to, Map from) {\n" +
+            "  !from ? to : to.with {\n" +
+            "    one = from['one']\n" +
+            "    two = from['two']\n" +
+            "    return it\n" +
+            "  }\n" +
+            "}\n" +
+            "def map = [:]\n" +
+            "def result = merge(map, [one: 1, two: 2.0])\n" +
+            "assert result == [one: 1, two: 2.0]\n" +
+            "assert result.is(map)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 
     @Test
