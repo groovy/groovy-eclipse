@@ -32,10 +32,11 @@
          id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"
          name="Groovy Code Completions">
       <javaCompletionProposalComputer
-            activate="true"
-            categoryId="org.codehaus.groovy.eclipse.codeassist.category"
             class="org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer"
-            needsSortingAfterFiltering="true">
+            categoryId="org.codehaus.groovy.eclipse.codeassist.category"
+            needsSortingAfterFiltering="true"
+            requiresUIThread="false"
+            activate="true">
          <partition
                type="__dftl_partition_content_type">
          </partition>

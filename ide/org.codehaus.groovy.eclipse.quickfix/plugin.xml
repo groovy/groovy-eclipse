@@ -86,6 +86,7 @@
             class="org.codehaus.groovy.eclipse.quickfix.templates.TemplateProposalComputer"
             categoryId="org.codehaus.groovy.eclipse.codeassist.templates.category"
             needsSortingAfterFiltering="false"
+            requiresUIThread="false"
             activate="true">
       </javaCompletionProposalComputer>
    </extension>
