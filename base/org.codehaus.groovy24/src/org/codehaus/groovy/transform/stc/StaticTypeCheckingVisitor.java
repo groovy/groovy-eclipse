@@ -167,7 +167,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
-import static org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigIntCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isDouble;
@@ -2370,7 +2369,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // perform visit
         typeCheckingContext.pushEnclosingClosureExpression(expression);
         DelegationMetadata dmd = getDelegationMetadata(expression);
-        if (dmd ==null) {
+        if (dmd == null) {
             typeCheckingContext.delegationMetadata = new DelegationMetadata(
                     typeCheckingContext.getEnclosingClassNode(), Closure.OWNER_FIRST, typeCheckingContext.delegationMetadata
             );
@@ -2439,6 +2438,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // GROOVY-6921: We must force a call to getType in order to update closure shared variable whose
             // types are inferred thanks to closure parameter type inference
             getType(ve);
+            // GRECLIPSE add -- GROOVY-9344
+            Variable v;
+            while ((v = ve.getAccessedVariable()) != ve && v instanceof VariableExpression) {
+                ve = (VariableExpression) v;
+            }
+            // GRECLIPSE end
             ListHashMap<StaticTypesMarker, Object> metadata = new ListHashMap<StaticTypesMarker, Object>();
             for (StaticTypesMarker marker : StaticTypesMarker.values()) {
                 Object value = ve.getNodeMetaData(marker);
@@ -2447,10 +2452,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             typesBeforeVisit.put(ve, metadata);
+            /* GRECLIPSE edit
             Variable accessedVariable = ve.getAccessedVariable();
             if (accessedVariable != ve && accessedVariable instanceof VariableExpression) {
                 saveVariableExpressionMetadata(Collections.singleton((VariableExpression) accessedVariable), typesBeforeVisit);
             }
+            */
         }
     }
 
@@ -2630,8 +2637,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     /**
      * @deprecated this method is unused, replaced with {@link DelegatesTo} inference.
-     * @param callArguments
-     * @param receiver
      */
     @Deprecated
     protected void checkClosureParameters(final Expression callArguments, final ClassNode receiver) {
@@ -3514,7 +3519,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         nodes.add(arg);
                     }
                 }
-                return new LowestUpperBoundClassNode(returnType.getName()+"Composed", OBJECT_TYPE, nodes.toArray(new ClassNode[nodes.size()]));
+                return new WideningCategories.LowestUpperBoundClassNode(returnType.getName()+"Composed", OBJECT_TYPE, nodes.toArray(new ClassNode[nodes.size()]));
             }
         }
         return returnType;

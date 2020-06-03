@@ -93,9 +93,7 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
-import org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
 import org.codehaus.groovy.classgen.ReturnAdder;
-import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.classgen.asm.InvocationWriter;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -2511,6 +2509,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // GROOVY-6921: We must force a call to getType in order to update closure shared variable whose
             // types are inferred thanks to closure parameter type inference
             getType(ve);
+            // GRECLIPSE add -- GROOVY-9344
+            Variable v;
+            while ((v = ve.getAccessedVariable()) != ve && v instanceof VariableExpression) {
+                ve = (VariableExpression) v;
+            }
+            // GRECLIPSE end
             ListHashMap<StaticTypesMarker, Object> metadata = new ListHashMap<StaticTypesMarker, Object>();
             for (StaticTypesMarker marker : StaticTypesMarker.values()) {
                 Object value = ve.getNodeMetaData(marker);
@@ -2519,10 +2523,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
             }
             typesBeforeVisit.put(ve, metadata);
+            /* GRECLIPSE edit
             Variable accessedVariable = ve.getAccessedVariable();
             if (accessedVariable != ve && accessedVariable instanceof VariableExpression) {
                 saveVariableExpressionMetadata(Collections.singleton((VariableExpression) accessedVariable), typesBeforeVisit);
             }
+            */
         }
     }
 
@@ -2703,8 +2709,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     /**
-     * @param callArguments
-     * @param receiver
      * @deprecated this method is unused, replaced with {@link DelegatesTo} inference.
      */
     @Deprecated
@@ -3653,7 +3657,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         nodes.add(arg);
                     }
                 }
-                return new LowestUpperBoundClassNode(returnType.getName() + "Composed", OBJECT_TYPE, nodes.toArray(ClassNode.EMPTY_ARRAY));
+                return new WideningCategories.LowestUpperBoundClassNode(returnType.getName() + "Composed", OBJECT_TYPE, nodes.toArray(ClassNode.EMPTY_ARRAY));
             }
         }
         return returnType;

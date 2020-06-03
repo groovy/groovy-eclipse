@@ -50,6 +50,7 @@
         <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesCallSiteWriter.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesTypeChooser.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />

@@ -74,8 +74,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     /**
-     * Testing the code in the StaticTypeCheckingSupport.checkCompatibleAssignmentTypes.
-     *
+     * Test case for {@link org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport#checkCompatibleAssignmentTypes(ClassNode,ClassNode,Expression,boolean) checkCompatibleAssignmentTypes}.
+     * <p>
      * That method does a lot of == testing against ClassNode constants, which may not work so well for us.
      */
     @Test
@@ -481,6 +481,34 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "123");
     }
 
+    /**
+     * Test case for {@link org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#performSecondPass() performSecondPass}.
+     */
+    @Test
+    public void testCompileStatic19() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def x = 'xyz';\n" +
+            "  { -> x = 1 }\n" +
+            "  x.charAt(0)\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 5)\n" +
+            "\tx.charAt(0)\n" +
+            "\t^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - A closure shared variable [x] has been assigned with various types" +
+            " and the method [charAt(int)] does not exist in the lowest upper bound of those types: [java.io.Serializable <? extends java.lang.Object>]." +
+            " In general, this is a bad practice (variable reuse) because the compiler cannot determine safely what is the type of the variable at the moment of the call in a multithreaded context.\n" +
+            "----------\n");
+    }
+
     @Test
     public void testCompileStatic1505() {
         //@formatter:off
@@ -596,6 +624,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "123.0");
+    }
+
+    @Test
+    public void testCompileStatic6921() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test(List<List<?>> list) {\n" +
+            "  list.collectMany { pair ->\n" +
+            "    (1..pair[1]).collect {\n" +
+            "      \"${pair[0]} supports $it\".toString()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "print test([\n" +
+            "  ['x', 1],\n" +
+            "  ['y', 2],\n" +
+            "])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[x supports 1, y supports 1, y supports 2]");
     }
 
     @Test
@@ -3795,6 +3846,54 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "6");
+    }
+
+    @Test
+    public void testCompileStatic9344() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {}\n" +
+            "class B {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def var\n" +
+            "  var = new A()\n" +
+            "  def c = { ->\n" +
+            "    var = new B()\n" + // Cannot cast object 'B@4e234c52' with class 'B' to class 'A'
+            "    print var.class.simpleName\n" +
+            "  }\n" +
+            "  c.call()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "B");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9344")
+    public void testCompileStatic9344a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class A {}\n" +
+            "class B {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def var\n" +
+            "  var = new A()\n" +
+            "  def c = { ->\n" +
+            "    var = new B()\n" + // Cannot cast object 'B@4e234c52' with class 'B' to class 'A'
+            "  }\n" +
+            "  c.call()\n" +
+            "  print var.class.simpleName\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "B");
     }
 
     @Test
