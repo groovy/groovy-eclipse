@@ -2425,6 +2425,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 VariableExpression ve = entry.getKey();
                 ListHashMap metadata = entry.getValue();
                 for (StaticTypesMarker marker : StaticTypesMarker.values()) {
+                    // GRECLIPSE add -- GROOVY-9344, GROOVY-9516
+                    if (marker == StaticTypesMarker.INFERRED_TYPE) continue;
+                    // GRECLIPSE end
                     ve.removeNodeMetaData(marker);
                     Object value = metadata.get(marker);
                     if (value != null) ve.setNodeMetaData(marker, value);

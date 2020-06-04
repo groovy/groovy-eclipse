@@ -817,11 +817,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             // GROOVY-5874: if left expression is a closure shared variable, a second pass should be done
-            if (leftExpression instanceof VariableExpression) {
-                VariableExpression leftVar = (VariableExpression) leftExpression;
-                if (leftVar.isClosureSharedVariable()) {
-                    typeCheckingContext.secondPassExpressions.add(new SecondPassExpression<>(expression));
-                }
+            if (leftExpression instanceof VariableExpression && ((VariableExpression) leftExpression).isClosureSharedVariable()) {
+                typeCheckingContext.secondPassExpressions.add(new SecondPassExpression<>(expression));
             }
 
             boolean isAssignment = isAssignment(expression.getOperation().getType());
@@ -1951,13 +1948,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected boolean isSecondPassNeededForControlStructure(final Map<VariableExpression, ClassNode> varOrigType, final Map<VariableExpression, List<ClassNode>> oldTracker) {
-        Map<VariableExpression, ClassNode> assignedVars = popAssignmentTracking(oldTracker);
-        for (Map.Entry<VariableExpression, ClassNode> entry : assignedVars.entrySet()) {
+        for (Map.Entry<VariableExpression, ClassNode> entry : popAssignmentTracking(oldTracker).entrySet()) {
             Variable key = findTargetVariable(entry.getKey());
-            if (key instanceof VariableExpression) {
+            if (key instanceof VariableExpression && varOrigType.containsKey(key)) {
                 ClassNode origType = varOrigType.get(key);
                 ClassNode newType = entry.getValue();
-                if (varOrigType.containsKey(key) && (!newType.equals(origType))) {
+                if (!newType.equals(origType)) {
                     return true;
                 }
             }
@@ -2408,6 +2404,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 VariableExpression ve = entry.getKey();
                 Map<StaticTypesMarker, Object> metadata = entry.getValue();
                 for (StaticTypesMarker marker : StaticTypesMarker.values()) {
+                    // GRECLIPSE add -- GROOVY-9344, GROOVY-9516
+                    if (marker == INFERRED_TYPE) continue;
+                    // GRECLIPSE end
                     ve.removeNodeMetaData(marker);
                     Object value = metadata.get(marker);
                     if (value != null) ve.setNodeMetaData(marker, value);
@@ -3415,7 +3414,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
                 if (mn.isEmpty() && typeCheckingContext.getEnclosingClosure() != null && args.length == 0) {
-                    // add special handling of getDelegate() and getOwner()
+                    // add special handling of "delegate", "owner", and "this" in a closure
                     switch (name) {
                         case "getDelegate":
                             mn = Collections.singletonList(GET_DELEGATE);
@@ -3477,6 +3476,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 // so we store the information so that the static compiler may reuse it
                                 call.putNodeMetaData(IMPLICIT_RECEIVER, data);
                             }
+                            /* GRECLIPE edit
                             // if the object expression is a closure shared variable, we will have to perform a second pass
                             if (objectExpression instanceof VariableExpression) {
                                 VariableExpression var = (VariableExpression) objectExpression;
@@ -3485,6 +3485,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                     typeCheckingContext.secondPassExpressions.add(wrapper);
                                 }
                             }
+                            */
                         }
                     } else {
                         addAmbiguousErrorMessage(mn, name, args, call);
@@ -5525,6 +5526,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                 }
+            /* GRECLIPSE edit
             } else if (expression instanceof MethodCallExpression) {
                 MethodCallExpression call = (MethodCallExpression) expression;
                 Expression objectExpression = call.getObjectExpression();
@@ -5552,6 +5554,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
                     }
                 }
+            */
             }
         }
         // give a chance to type checker extensions to throw errors based on information gathered afterwards

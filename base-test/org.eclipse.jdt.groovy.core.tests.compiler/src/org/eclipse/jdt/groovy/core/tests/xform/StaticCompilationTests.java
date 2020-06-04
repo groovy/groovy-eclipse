@@ -503,9 +503,8 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "1. ERROR in Script.groovy (at line 5)\n" +
             "\tx.charAt(0)\n" +
             "\t^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - A closure shared variable [x] has been assigned with various types" +
-            " and the method [charAt(int)] does not exist in the lowest upper bound of those types: [java.io.Serializable <? extends java.lang.Object>]." +
-            " In general, this is a bad practice (variable reuse) because the compiler cannot determine safely what is the type of the variable at the moment of the call in a multithreaded context.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.io.Serializable or java.lang.Comparable#charAt(int)." +
+            " Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -3872,7 +3871,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "B");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-9344")
+    @Test
     public void testCompileStatic9344a() {
         //@formatter:off
         String[] sources = {
@@ -4167,5 +4166,29 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "2");
+    }
+
+    @Test
+    public void testCompileStatic9581() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class One {\n" +
+            "  static boolean foo = true\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Two extends One {\n" +
+            "  def bar() {\n" +
+            "    def baz = { ->\n" +
+            "      foo\n" +
+            "    }\n" +
+            "    baz()\n" +
+            "  }\n" +
+            "}\n" +
+            "print new Two().bar()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
     }
 }
