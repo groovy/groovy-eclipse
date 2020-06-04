@@ -694,6 +694,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             vexp.removeNodeMetaData(INFERRED_TYPE);
             ClassNode type = pexp.getNodeMetaData(INFERRED_TYPE);
             storeType(vexp, Optional.ofNullable(type).orElseGet(pexp::getType));
+            // GRECLIPSE add -- GROOVY-7701: correct false assumption made by VariableScopeVisitor
+            String receiver = vexp.getNodeMetaData(IMPLICIT_RECEIVER);
+            if (receiver != null && !receiver.endsWith("owner") && !(vexp.getAccessedVariable() instanceof DynamicVariable)) {
+                vexp.setAccessedVariable(new DynamicVariable(dynName, false));
+            }
+            // GRECLIPSE end
             return true;
         }
         return false;
@@ -1026,6 +1032,12 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     protected ClassNode getOriginalDeclarationType(final Expression lhs) {
+        // GRECLIPSE add
+//        ClassNode type = lhs.getNodeMetaData(DECLARATION_INFERRED_TYPE);
+//        if (type != null) {
+//            return type;
+//        }
+        // GRECLIPSE end
         if (lhs instanceof VariableExpression) {
             Variable var = findTargetVariable((VariableExpression) lhs);
             if (var instanceof PropertyNode) {

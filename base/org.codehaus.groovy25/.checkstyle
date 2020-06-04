@@ -45,6 +45,7 @@
         <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitorHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/asm/BinaryExpressionHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/BytecodeHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />

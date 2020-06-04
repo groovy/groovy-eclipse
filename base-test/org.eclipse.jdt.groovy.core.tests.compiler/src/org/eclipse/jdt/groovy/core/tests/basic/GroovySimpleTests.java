@@ -189,6 +189,37 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "11 11");
     }
 
+    @Test // GROOVY-7701
+    public void testClosureScope6() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  List type\n" +
+            "}\n" +
+            "class Bar {\n" +
+            "  int type = 10\n" +
+            "  @Lazy List<Foo> something = { ->\n" +
+            "    List<Foo> tmp = []\n" +
+            "    def foo = new Foo()\n" +
+            "    foo.with {\n" +
+            "      type = ['String']\n" +
+            //     ^^^^ should be Foo.type, not Bar.type
+            "    }\n" +
+            "    tmp.add(foo)\n" +
+            "    tmp\n" +
+            "  }()\n" +
+            "}\n" +
+            "def bar = new Bar()\n" +
+            "assert bar.type == 10\n" +
+            "assert bar.something*.type == [['String']]\n" +
+            "assert bar.type == 10\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
     @Test
     public void testClosureSyntax() {
         //@formatter:off

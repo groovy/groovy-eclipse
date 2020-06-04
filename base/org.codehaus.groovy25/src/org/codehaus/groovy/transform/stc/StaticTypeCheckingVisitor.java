@@ -772,6 +772,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             val = pe.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
             if (val != null) vexp.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, val);
             // GRECLIPSE add
+            if (val instanceof String && !((String) val).endsWith("owner") && !(vexp.getAccessedVariable() instanceof DynamicVariable)) {
+                // GROOVY-7701: correct false assumption made by VariableScopeVisitor
+                vexp.setAccessedVariable(new DynamicVariable(dynName, false));
+            }
             val = pe.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (val != null) vexp.putNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET, val);
             // GRECLIPSE end
