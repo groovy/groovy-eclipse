@@ -232,6 +232,7 @@ public class WrapExecutor {
 		private ArrayDeque<Token> stack = new ArrayDeque<>();
 		private int initialIndent;
 		private int currentIndent;
+		private int fixedIndentDelta;
 		private WrapInfo nextWrap;
 
 		public WrapsApplier() {
@@ -297,13 +298,34 @@ public class WrapExecutor {
 				setIndent(token, getWrapIndent(token));
 				this.stack.push(token);
 			} else if (this.stack.isEmpty()) {
-				this.initialIndent = token.getIndent();
+				if (isFixedLineStart(token, index)) {
+					int fixedIndent = this.tm2.findSourcePositionInLine(token.originalStart);
+					this.initialIndent = fixedIndent;
+					this.fixedIndentDelta = fixedIndent - token.getIndent();
+				} else {
+					this.initialIndent = Math.max(0, token.getIndent() + this.fixedIndentDelta);
+				}
 				WrapExecutor.this.wrapSearchResults.clear();
 			}
 
 			this.currentIndent = this.stack.isEmpty() ? this.initialIndent : this.stack.peek().getIndent();
 			setIndent(token, this.currentIndent);
 			this.nextWrap = findWrapsCached(index, this.currentIndent).nextWrap;
+		}
+
+		private boolean isFixedLineStart(Token token, int index) {
+			if (WrapExecutor.this.options.initial_indentation_level > 0)
+				return false; // must be handling ast rewrite
+			if (index > 0 && this.tm2.countLineBreaksBetween(getPrevious(), token) == 0)
+				return false;
+			if (isWrapInsideFormatRegion(index))
+				return false;
+			int start = token.originalStart;
+			boolean inDisableFormat = this.tm2.getDisableFormatTokenPairs().stream()
+					.anyMatch(p -> p[0].originalStart <= start && p[1].originalStart >= start);
+			if (inDisableFormat)
+				return false;
+			return true;
 		}
 	}
 
@@ -679,7 +701,7 @@ public class WrapExecutor {
 	}
 
 	boolean isWrapInsideFormatRegion(int tokenIndex) {
-		int pos1 = this.tm.get(tokenIndex - 1).originalEnd;
+		int pos1 = tokenIndex == 0 ? 0 : this.tm.get(tokenIndex - 1).originalEnd;
 		int pos2 = this.tm.get(tokenIndex).originalStart;
 		return this.regions.stream().anyMatch(r -> (pos1 >= r.getOffset() && pos1 < r.getOffset() + r.getLength())
 				|| (pos2 >= r.getOffset() && pos2 < r.getOffset() + r.getLength()));

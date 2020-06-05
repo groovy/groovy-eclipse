@@ -1251,6 +1251,10 @@ class DefaultBindingResolver extends BindingResolver {
 			IMethodBinding method = getMethodBinding(referenceExpression.getMethodBinding());
 			if (method == null) return null;
 			return method.getReturnType();
+		} else if (node instanceof org.eclipse.jdt.internal.compiler.ast.RecordComponent) {
+			org.eclipse.jdt.internal.compiler.ast.RecordComponent recordComponent = (org.eclipse.jdt.internal.compiler.ast.RecordComponent) node;
+			org.eclipse.jdt.internal.compiler.lookup.TypeBinding recordComponentType = recordComponent.type.resolvedType;
+			return this.getTypeBinding(recordComponentType);
 		}
 		return null;
 	}
@@ -1530,6 +1534,9 @@ class DefaultBindingResolver extends BindingResolver {
 		} else if (node instanceof org.eclipse.jdt.internal.compiler.ast.ReferenceExpression) {
 			org.eclipse.jdt.internal.compiler.ast.ReferenceExpression referenceExpression = (org.eclipse.jdt.internal.compiler.ast.ReferenceExpression) node;
 			return getMethodBinding(referenceExpression.getMethodBinding());
+		} else if (node instanceof org.eclipse.jdt.internal.compiler.ast.RecordComponent) {
+			org.eclipse.jdt.internal.compiler.ast.RecordComponent recordComponent = (org.eclipse.jdt.internal.compiler.ast.RecordComponent) node;
+			return this.getVariableBinding(recordComponent.binding);
 		}
 		return null;
 	}

@@ -435,6 +435,7 @@ public class SpacePreparator extends ASTVisitor {
 		return true;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean visit(SwitchCase node) {
 		if (node.getAST().apiLevel() > AST.JLS13 && node.isSwitchLabeledRule()) {

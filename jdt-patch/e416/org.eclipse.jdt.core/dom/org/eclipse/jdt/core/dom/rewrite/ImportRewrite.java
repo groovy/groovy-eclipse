@@ -107,7 +107,7 @@ import org.eclipse.text.edits.TextEdit;
 public final class ImportRewrite {
 	/**
 	 * Used to determine how a type will be used, so that unwanted annotations can be filtered,
-	 * which is in particular relevant for avoiding redundant null annotations in the scope of {@code @NonNullByDefault}. 
+	 * which is in particular relevant for avoiding redundant null annotations in the scope of {@code @NonNullByDefault}.
 	 * This enum is a superset of org.eclipse.jdt.annotation.DefaultLocation, and roughly corresponds
 	 * to the classification of type locations as introduced by JSR 308.
 	 *
@@ -116,49 +116,49 @@ public final class ImportRewrite {
 	public enum TypeLocation {
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.PARAMETER
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		PARAMETER,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.RETURN_TYPE
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		RETURN_TYPE,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.FIELD
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		FIELD,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_PARAMETER
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		TYPE_PARAMETER,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_BOUND
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		TYPE_BOUND,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.TYPE_ARGUMENT
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		TYPE_ARGUMENT,
 
 		/**
 		 * see org.eclipse.jdt.annotation.DefaultLocation.ARRAY_CONTENTS
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		ARRAY_CONTENTS,
@@ -167,7 +167,7 @@ public final class ImportRewrite {
 		 * The special value {@link #LOCAL_VARIABLE} is used for local variables: their nullness is determines by flow analysis,
 		 * so top level nullness annotations are usually not needed for local variables (unless their type is a free
 		 * type variable). Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		LOCAL_VARIABLE,
@@ -176,25 +176,25 @@ public final class ImportRewrite {
 		 * The special value {@link #CAST} is used for casts.
 		 * Casts are never affected by {@code @NonNullByDefault}
 		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		CAST,
-		
+
 		/**
 		 * The special value {@link #INSTANCEOF} is used for {@code instanceof} expressions.
 		 * Null annotations are not supported in this location.
 		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		INSTANCEOF,
 
 		/**
-		 * The special value {@link #NEW} is used for {@code new} expressions (object allocations). 
+		 * The special value {@link #NEW} is used for {@code new} expressions (object allocations).
 		 * Null annotations are not supported in this location.
 		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		NEW,
@@ -203,7 +203,7 @@ public final class ImportRewrite {
 		 * The special value {@link #RECEIVER} is used for the receiver type in a method declaration or method reference.
 		 * Null annotations are not supported in this location.
 		 * Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		RECEIVER,
@@ -211,7 +211,7 @@ public final class ImportRewrite {
 		/**
 		 * The special value {@link #EXCEPTION} is used for exception types in catch and throws declarations, which are
 		 * implicitly non-null. Does not correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		EXCEPTION,
@@ -220,7 +220,7 @@ public final class ImportRewrite {
 		 * The special value {@link #OTHER} is used for locations where type annotations are illegal, like type literals
 		 * (X.class), annotations, or as scope for static field accesses. Does not correspond to a value in
 		 * org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		OTHER,
@@ -228,7 +228,7 @@ public final class ImportRewrite {
 		/**
 		 * The special value {@link #UNKNOWN} is used for invocations that don't specify the intended type usage. Does not
 		 * correspond to a value in org.eclipse.jdt.annotation.DefaultLocation.
-		 * 
+		 *
 		 * @since 3.13
 		 */
 		UNKNOWN,
@@ -454,7 +454,7 @@ public final class ImportRewrite {
 		this.importOrder= CharOperation.NO_STRINGS;
 		this.importOnDemandThreshold= 99;
 		this.staticImportOnDemandThreshold= 99;
-		
+
 		this.importsKindMap = new HashMap();
 	}
 
@@ -532,10 +532,10 @@ public final class ImportRewrite {
 	 * Note: {@link #setUseContextToFilterImplicitImports(boolean)} can be used to filter implicit imports
 	 * when a context is used.
 	 * </p>
-	 * 
+	 *
 	 * @param filterImplicitImports
 	 *            if <code>true</code>, implicit imports will be filtered
-	 * 
+	 *
 	 * @see #setUseContextToFilterImplicitImports(boolean)
 	 */
 	public void setFilterImplicitImports(boolean filterImplicitImports) {
@@ -552,16 +552,16 @@ public final class ImportRewrite {
 	* whether an import can be filtered because the type is implicitly visible. Note that too many imports
 	* may be kept if this option is set and <code>addImport*(...)</code> methods are called without a context.
 	* </p>
-	* 
+	*
 	* @param useContextToFilterImplicitImports the given setting
-	* 
+	*
 	* @see #setFilterImplicitImports(boolean)
 	* @since 3.6
 	*/
 	public void setUseContextToFilterImplicitImports(boolean useContextToFilterImplicitImports) {
 		this.useContextToFilterImplicitImports = useContextToFilterImplicitImports;
 	}
-	
+
 	private static int compareImport(char prefix, String qualifier, String name, String curr) {
 		if (curr.charAt(0) != prefix || !curr.endsWith(name)) {
 			return ImportRewriteContext.RES_NAME_UNKNOWN;
@@ -620,14 +620,14 @@ public final class ImportRewrite {
 						|| mainTypeName.equals(Util.concatenateName(qualifier, name, '.'))) {
 					return ImportRewriteContext.RES_NAME_FOUND;
 				}
-				
+
 				if (this.astRoot != null) {
 					List<AbstractTypeDeclaration> types = this.astRoot.types();
 					int nTypes = types.size();
 					for (int i = 0; i < nTypes; i++) {
 						AbstractTypeDeclaration type = types.get(i);
 						SimpleName simpleName = type.getName();
-						if (simpleName.getIdentifier().equals(name)) { 
+						if (simpleName.getIdentifier().equals(name)) {
 							return qualifier.equals(packageName)
 									? ImportRewriteContext.RES_NAME_FOUND
 									: ImportRewriteContext.RES_NAME_CONFLICT;
@@ -672,7 +672,7 @@ public final class ImportRewrite {
 	 * to use the default context (only using the available imports)
 	 * @return an annotation node. The returned annotation contains unqualified type names where
 	 * an import could be added or was already known. Type names are fully qualified if an import conflict prevented an import.
-	 * 
+	 *
 	 * @since 3.10
 	 */
 	public Annotation addAnnotation(IAnnotationBinding annotation, AST ast, ImportRewriteContext context) {
@@ -959,7 +959,7 @@ public final class ImportRewrite {
 	 * in the code. The type binding can be an array binding, type variable or wildcard.
 	 * If the binding is a generic type, the type parameters are ignored. For parameterized types, also the type
 	 * arguments are processed and imports added if necessary. Anonymous types inside type arguments are normalized to their base type, wildcard
-	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and 
+	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and
 	 * the type is retained from that point with type annotations and type arguments.
 	 * 	<p>
  	 * No imports are added for types that are already known. If a import for a type is recorded to be removed, this record is discarded instead.
@@ -982,7 +982,7 @@ public final class ImportRewrite {
 	 * in the code. The type binding can be an array binding, type variable or wildcard.
 	 * If the binding is a generic type, the type parameters are ignored. For parameterized types, also the type
 	 * arguments are processed and imports added if necessary. Anonymous types inside type arguments are normalized to their base type, wildcard
-	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and 
+	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and
 	 * the type is retained from that point with type annotations and type arguments
 	 * 	<p>
  	 * No imports are added for types that are already known. If a import for a type is recorded to be removed, this record is discarded instead.
@@ -1007,7 +1007,7 @@ public final class ImportRewrite {
 	 * in the code. The type binding can be an array binding, type variable or wildcard.
 	 * If the binding is a generic type, the type parameters are ignored. For parameterized types, also the type
 	 * arguments are processed and imports added if necessary. Anonymous types inside type arguments are normalized to their base type, wildcard
-	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and 
+	 * of wildcards are ignored. If type annotations or type arguments are present at any point, the import is added up to that point and
 	 * the type is retained from that point with type annotations and type arguments
 	 * 	<p>
  	 * No imports are added for types that are already known. If a import for a type is recorded to be removed, this record is discarded instead.
@@ -1025,7 +1025,7 @@ public final class ImportRewrite {
 	 * or else qualified names if an import conflict prevented an import.
 	 * @since 3.13
 	 */
-	public Type addImport(ITypeBinding binding, AST ast, ImportRewriteContext context, TypeLocation location) {	
+	public Type addImport(ITypeBinding binding, AST ast, ImportRewriteContext context, TypeLocation location) {
 		ITypeBinding bindingPoint = checkAnnotationAndGenerics(binding);
 		Type type = internalAddImport(bindingPoint == null ? binding : bindingPoint, ast, context, null, /* getBase */ true, bindingPoint != null && !bindingPoint.equals(binding) ? TypeLocation.OTHER : location);
 		if (bindingPoint != null && !bindingPoint.equals(binding)) {
@@ -1315,7 +1315,7 @@ public final class ImportRewrite {
 
 		CompilationUnit usedAstRoot= this.astRoot;
 		if (usedAstRoot == null) {
-			ASTParser parser= ASTParser.newParser(AST.JLS13);
+			ASTParser parser= ASTParser.newParser(AST.JLS14);
 			parser.setSource(this.compilationUnit);
 			parser.setFocalPosition(0); // reduced AST
 			parser.setResolveBindings(false);
@@ -1332,7 +1332,7 @@ public final class ImportRewrite {
 			String qualifiedName = addedImport.substring(1);
 			computer.addImport(isStatic, qualifiedName);
 		}
-	
+
 		for (String removedImport : this.removedImports) {
 			boolean isStatic = STATIC_PREFIX == removedImport.charAt(0);
 			String qualifiedName = removedImport.substring(1);
@@ -1519,7 +1519,7 @@ public final class ImportRewrite {
 
 		String qualifiedName= getRawQualifiedName(normalizedBinding);
 		String res = qualifiedName.length() > 0 ? internalAddImport(qualifiedName, context) : getRawName(normalizedBinding);
-	
+
 		if (annotsPresent) {
 			int dotIndex = res != null ? res.lastIndexOf('.') : -1;
 			if (dotIndex > 0) {
@@ -1556,7 +1556,7 @@ public final class ImportRewrite {
 	private Type internalAddImport(ITypeBinding binding, AST ast, ImportRewriteContext context, Type currentType, boolean getBase, TypeLocation location) {
 		Type type = null;
 		ITypeBinding normalizedBinding = null;
-		
+
 		if (binding.isPrimitive()) {
 			type = ast.newPrimitiveType(PrimitiveType.toCode(binding.getName()));
 			normalizedBinding= binding;
@@ -1588,7 +1588,7 @@ public final class ImportRewrite {
 		if (getBase) {
 			type = createBaseType(ast, context, normalizedBinding, location);
 		} else  {
-			type = currentType != null ? (Type) ast.newQualifiedType(currentType, ast.newSimpleName(getRawName(normalizedBinding))) : 
+			type = currentType != null ? (Type) ast.newQualifiedType(currentType, ast.newSimpleName(getRawName(normalizedBinding))) :
 				ast.newSimpleType(ast.newName(getRawName(normalizedBinding)));
 			type = annotateType(normalizedBinding, ast, context, type, location);
 		}

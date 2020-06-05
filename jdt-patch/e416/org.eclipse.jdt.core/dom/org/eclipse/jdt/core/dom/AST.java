@@ -311,6 +311,7 @@ public final class AST {
 	 * </p>
 	 *
 	 * @since 3.20
+	 * @deprecated Clients should use the {@link #JLS_Latest} AST API instead.
 	 */
 	public static final int JLS13 = 13;
 
