@@ -3426,6 +3426,37 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset + 5, offset + 8, "java.lang.Number");
     }
 
+    @Test
+    public void testInstanceOf14() {
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "def test(value) {\n" +
+            "  def out = new StringBuilder()\n" +
+            "  if (value instanceof Number || value instanceof String || value instanceof Map) {\n" +
+            "    value\n" +
+            "  }\n" +
+            "  out\n" +
+            "}\n";
+
+        assertType(contents, "value", "java.lang.Object");
+    }
+
+    @Test // GROOVY-7971
+    public void testInstanceOf15() {
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "def test(value) {\n" +
+            "  def out = new StringBuilder()\n" +
+            "  def isString = value.class == String\n" +
+            "  if (isString || value instanceof Map) {\n" +
+            "    value\n" +
+            "  }\n" +
+            "  out\n" +
+            "}\n";
+
+        assertType(contents, "value", "java.lang.Object");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
     public void testEqualsClassTest1() {
         String contents =

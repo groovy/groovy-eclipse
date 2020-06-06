@@ -193,6 +193,7 @@ import static org.codehaus.groovy.syntax.Types.INTDIV_EQUAL;
 import static org.codehaus.groovy.syntax.Types.KEYWORD_IN;
 import static org.codehaus.groovy.syntax.Types.KEYWORD_INSTANCEOF;
 import static org.codehaus.groovy.syntax.Types.LEFT_SQUARE_BRACKET;
+import static org.codehaus.groovy.syntax.Types.LOGICAL_OR;
 import static org.codehaus.groovy.syntax.Types.MINUS_MINUS;
 import static org.codehaus.groovy.syntax.Types.MOD;
 import static org.codehaus.groovy.syntax.Types.MOD_EQUAL;
@@ -755,6 +756,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (op == COMPARE_IDENTICAL || op == COMPARE_NOT_IDENTICAL) {
             return; // we'll report those as errors later
         }
+        // GRELCIPSE add -- GROOVY-7971
+        if (op == LOGICAL_OR) {
+            typeCheckingContext.pushTemporaryTypeInfo();
+        }
+        // GRECLIPSE end
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
         typeCheckingContext.pushEnclosingBinaryExpression(expression);
         try {
@@ -764,6 +770,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             SetterInfo setterInfo = removeSetterInfo(leftExpression);
             if (setterInfo != null) {
                 if (ensureValidSetter(expression, leftExpression, rightExpression, setterInfo)) {
+                    // GRECLIPSE add
+                    if (op == LOGICAL_OR) typeCheckingContext.popTemporaryTypeInfo();
+                    // GRECLIPSE end
                     return;
                 }
 
@@ -789,6 +798,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     && leftExpression.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE)==null) {
                 storeType(leftExpression, lType);
             }
+            // GRECLIPSE add
+            else if (op == LOGICAL_OR) {
+                typeCheckingContext.popTemporaryTypeInfo();
+            }
+            // GRECLIPSE end
             if (resultType == null) {
                 resultType = lType;
             }

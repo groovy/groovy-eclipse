@@ -283,9 +283,9 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             return "null";
         }
         String arraySuffix = "";
-        while (type.getComponentType() != null) {
-            type = type.getComponentType();
+        while (type.isArray()) {
             arraySuffix += "[]";
+            type = type.getComponentType();
         }
         if (type.isGenericsPlaceHolder()) {
             return type.getUnresolvedName() + arraySuffix;
