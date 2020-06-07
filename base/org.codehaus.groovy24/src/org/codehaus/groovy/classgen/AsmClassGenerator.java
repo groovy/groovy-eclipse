@@ -1069,10 +1069,7 @@ public class AsmClassGenerator extends ClassGenerator {
         }
 
         final String propName = expression.getPropertyAsString();
-        //TODO: add support for super here too
-        if (expression.getObjectExpression() instanceof ClassExpression &&
-            propName!=null && propName.equals("this"))
-        {
+        if (objectExpression instanceof ClassExpression && "this".equals(propName)) {
             // we have something like A.B.this, and need to make it
             // into this.this$0.this$0, where this.this$0 returns
             // A.B and this.this$0.this$0 return A.
@@ -1097,6 +1094,11 @@ public class AsmClassGenerator extends ClassGenerator {
                 iterType = iterType.getOuterClass();
                 if (thisField == null) {
                     // closure within inner class
+                    // GRECLIPSE add -- GROOVY-8881: cater for closures within closures - getThisObject is already outer class of all closures
+                    while (iterType.isDerivedFrom(ClassHelper.CLOSURE_TYPE)) {
+                        iterType = iterType.getOuterClass();
+                    }
+                    // GRECLIPSE end
                     mv.visitMethodInsn(INVOKEVIRTUAL, BytecodeHelper.getClassInternalName(ClassHelper.CLOSURE_TYPE), "getThisObject", "()Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, BytecodeHelper.getClassInternalName(iterType));
                 } else {

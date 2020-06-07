@@ -220,6 +220,40 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test // GROOVY-8881
+    public void testClosureScope7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Outer implements Runnable {\n" +
+            "  class Inner {\n" +
+            "    String foo() {\n" +
+            "      Closure bar = { ->\n" +
+            "        Closure baz = { ->\n" +
+            "          return Outer.this\n" +
+            "        }\n" +
+            "        return baz()\n" +
+            "      }\n" +
+            "      bar()\n" +
+            "    }\n" +
+            "    String toString() {\n" +
+            "      return 'Inner'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  String toString() {\n" +
+            "    return 'Outer'\n" +
+            "  }\n" +
+            "  void run() {\n" +
+            "    print new Inner().foo()\n" +
+            "  }\n" +
+            "}\n" +
+            "new Outer().run()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "Outer");
+    }
+
     @Test
     public void testClosureSyntax() {
         //@formatter:off
