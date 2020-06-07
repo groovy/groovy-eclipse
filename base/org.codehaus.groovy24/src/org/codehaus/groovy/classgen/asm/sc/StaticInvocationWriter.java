@@ -21,6 +21,7 @@ package org.codehaus.groovy.classgen.asm.sc;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -160,7 +161,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                     Map<MethodNode, MethodNode> bridgeMethods = declaringClass.getNodeMetaData(StaticCompilationMetadataKeys.PRIVATE_BRIDGE_METHODS);
                     bridge = bridgeMethods != null ? bridgeMethods.get(cn) : null;
                 }
-                if (bridge != null && bridge instanceof ConstructorNode) {
+                if (bridge instanceof ConstructorNode) {
                     ArgumentListExpression newArgs = new ArgumentListExpression(new ConstantExpression(null));
                     for (Expression arg: args) {
                         newArgs.addExpression(arg);
@@ -312,6 +313,10 @@ public class StaticInvocationWriter extends InvocationWriter {
                 }
                 return true;
             }
+            // GRECLIPSE add
+            Expression fixedReceiver = null;
+            boolean fixedImplicitThis = implicitThis;
+            // GRECLIPSE end
             if (target.isPrivate()) {
                 ClassNode declaringClass = target.getDeclaringClass();
                 if ((isPrivateBridgeMethodsCallAllowed(declaringClass, classNode) || isPrivateBridgeMethodsCallAllowed(classNode, declaringClass))
@@ -329,12 +334,29 @@ public class StaticInvocationWriter extends InvocationWriter {
                                                         declaringClass.toString(false) + "#" + target.getName() + " from class " + classNode.toString(false), receiver.getLineNumber(), receiver.getColumnNumber(), receiver.getLastLineNumber(), receiver.getLastColumnNumber()));
                 }
             }
+            // GRECLIPSE add -- GROOVY-8051
+            else if (target.isPublic() && receiver != null && implicitThis
+                    && !classNode.isDerivedFrom(target.getDeclaringClass())
+                    && !classNode.implementsInterface(target.getDeclaringClass())
+                    && classNode instanceof InnerClassNode && controller.isInClosure()) {
+                ClassNode outer = classNode.getOuterClass();
+                fixedReceiver = new VariableExpression("thisObject", outer);
+                // adjust for multiple levels of nesting if needed
+                while (outer.getOuterClass() != null && !target.getDeclaringClass().equals(outer)) {
+                    FieldNode thisField = outer.getField("this$0");
+                    outer = outer.getOuterClass();
+                    if (thisField != null) {
+                        fixedReceiver = new PropertyExpression(fixedReceiver, "this$0");
+                        fixedReceiver.setType(outer);
+                        fixedImplicitThis = false;
+                    }
+                }
+            }
+            // GRECLIPSE end
             if (receiver != null) {
                 if (!(receiver instanceof VariableExpression) || !((VariableExpression) receiver).isSuperExpression()) {
-                    // in order to avoid calls to castToType, which is the dynamic behaviour, we make sure that we call CHECKCAST instead
-                    // then replace the top operand type
-                    Expression checkCastReceiver = new CheckcastReceiverExpression(receiver, target);
-                    return super.writeDirectMethodCall(target, implicitThis, checkCastReceiver, args);
+                    // in order to avoid calls to castToType, which is the dynamic behaviour, we make sure that we call CHECKCAST instead then replace the top operand type
+                    return super.writeDirectMethodCall(target, fixedImplicitThis, new CheckcastReceiverExpression(fixedReceiver != null ? fixedReceiver : receiver, target), args);
                 }
             }
             return super.writeDirectMethodCall(target, implicitThis, receiver, args);

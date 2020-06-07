@@ -1015,6 +1015,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7970() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  String renderTemplate(String arg) { print \":$arg\" }\n" +
+            "  def bar() {\n" +
+            "    'A'.with { renderTemplate(it) }\n" +
+            "    new Object() {\n" +
+            "      String toString() {\n" +
+            "       renderTemplate('B')\n" +
+            "       'C'.with { renderTemplate(it) }\n" + // ERROR
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Foo().bar().toString()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, ":A:B:C");
+    }
+
+    @Test
     public void testCompileStatic7985() {
         //@formatter:off
         String[] sources = {
@@ -1215,6 +1239,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testCompileStatic8051() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Outer {\n" +
+            "  def foo = 1\n" +
+            "  Inner createInner() { new Inner() }\n" +
+            "  class Inner {\n" +
+            "    Closure createClosure() {\n" +
+            "      return { foo }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "def i = new Outer().createInner()\n" +
+            "def c = i.createClosure()\n" +
+            "print c()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
     }
 
     @Test
