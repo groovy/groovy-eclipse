@@ -4223,6 +4223,48 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9558() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def config = new org.codehaus.groovy.control.CompilerConfiguration()\n" +
+            "  config.tap {\n" +
+            "    optimizationOptions['indy'] = true\n" + // Cannot cast object '...' with class 'CompilerConfiguration' to class 'Map'
+            "    optimizationOptions.indy = true\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9558a() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  def config = new org.codehaus.groovy.control.CompilerConfiguration()\n" +
+            "  config.with {\n" +
+            "    optimizationOptions['indy'] = true\n" + // Cannot cast object '...' with class 'CompilerConfiguration' to class 'Map'
+            "    optimizationOptions.indy = true\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic9562() {
         //@formatter:off
         String[] sources = {
