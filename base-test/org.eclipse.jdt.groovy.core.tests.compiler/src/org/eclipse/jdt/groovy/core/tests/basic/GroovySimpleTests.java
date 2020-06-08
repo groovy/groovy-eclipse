@@ -220,8 +220,45 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test // GROOVY-8881
+    @Test // GROOVY-7973
     public void testClosureScope7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Test {\n" +
+            "  def op1() { this }\n" +
+            "  def op2() { ''.with{ this } }\n" +
+            "  def op3() { new Object() { def inner() { this } } }\n" +
+            "  def op4() { new Object() { def inner() { ''.with{ this } } } }\n" +
+            "  def op5() { new Object() { def inner() { Test.this } } }\n" +
+            "  def op6() { new Object() { def inner() { ''.with{ Test.this } } } }\n" +
+            "  class Inner {\n" +
+            "    def inner1() { this }\n" +
+            "    def inner2() { ''.with { this } }\n" +
+            "    def inner3() { Test.this }\n" +
+            "    def inner4() { ''.with { Test.this } }\n" +
+            "  }\n" +
+            "}\n" +
+            "def outer = new Test()\n" +
+            "assert outer.op1().class.name == 'Test'\n" +
+            "assert outer.op2().class.name == 'Test'\n" +
+            "assert outer.op3().inner().class.name == 'Test$1'\n" +
+            "assert outer.op4().inner().class.name == 'Test$2'\n" +
+            "assert outer.op5().inner().class.name == 'Test'\n" +
+            "assert outer.op6().inner().class.name == 'Test'\n" +
+            "def inner = new Test.Inner(outer)\n" +
+            "assert inner.inner1().class.name == 'Test$Inner'\n" +
+            "assert inner.inner2().class.name == 'Test$Inner'\n" +
+            "assert inner.inner3().class.name == 'Test'\n" +
+            "assert inner.inner4().class.name == 'Test'\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test // GROOVY-8881
+    public void testClosureScope8() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
