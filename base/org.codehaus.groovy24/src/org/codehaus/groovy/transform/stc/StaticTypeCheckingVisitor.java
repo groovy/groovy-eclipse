@@ -1599,13 +1599,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
                 if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
 
-                // if the property expression is an attribute expression (o.@attr), then
-                // we stop now, otherwise we must check the parent class
-                if (/*!isAttributeExpression && */current.getSuperClass() != null) {
+                if (current.getSuperClass() != null) {
                     queue.add(current.getUnresolvedSuperClass());
                 }
             }
-            // GROOVY-5568, the property may be defined by DGM
+            // GROOVY-5568: the property may be defined by DGM
             List<ClassNode> dgmReceivers = new ArrayList<ClassNode>(2);
             dgmReceivers.add(testClass);
             if (isPrimitiveType(testClass)) dgmReceivers.add(getWrapper(testClass));
@@ -1679,7 +1677,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (field.isProtected()) {
             return accessor.isDerivedFrom(field.getDeclaringClass());
         } else {
-            return !Modifier.isPrivate(field.getModifiers()) && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
+            return !field.isPrivate() && Objects.equals(accessor.getPackageName(), field.getDeclaringClass().getPackageName());
         }
     }
     // GRECLIPSE end
@@ -2748,7 +2746,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-
     private void inferSAMType(Parameter param, ClassNode receiver, MethodNode methodWithSAMParameter, ArgumentListExpression originalMethodCallArguments, ClosureExpression openBlock) {
         // In a method call with SAM coercion the inference is to be
         // understood as a two phase process. We have the normal method call
@@ -3357,7 +3354,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                     // if the receiver is "this" or "implicit this", then we must make sure that the compatible
                     // methods are only static if we are in a static context
-                    // if we are not in a static context but the the current receiver is a static class, we must
+                    // if we are not in a static context but the current receiver is a static class, we must
                     // ensure that all methods are either static or declared by the current receiver or a superclass
                     if (!mn.isEmpty()
                             && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)
@@ -3587,6 +3584,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     /**
      * Given an object expression (a receiver expression), generate the list of potential receiver types.
+     *
      * @param objectExpression the receiver expression
      * @return the list of types the receiver may be
      */
@@ -3596,7 +3594,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         owners.add(Receiver.<String>make(receiver));
         if (isClassClassNodeWrappingConcreteType(receiver)) {
             GenericsType clazzGT = receiver.getGenericsTypes()[0];
-            owners.add(0,Receiver.<String>make(clazzGT.getType()));
+            owners.add(0, Receiver.<String>make(clazzGT.getType()));
         }
         if (receiver.isInterface()) {
             owners.add(Receiver.<String>make(OBJECT_TYPE));
@@ -3622,7 +3620,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 && /*isNested:*/typeCheckingContext.delegationMetadata.getParent() != null) {
             owners.clear();
             List<Receiver<String>> enclosingClass = Collections.singletonList(
-                Receiver.<String>make(typeCheckingContext.getEnclosingClassNode()));
+                    Receiver.<String>make(typeCheckingContext.getEnclosingClassNode()));
             addReceivers(owners, enclosingClass, typeCheckingContext.delegationMetadata.getParent(), "owner.");
         }
         // GRECLIPSE end
@@ -3883,7 +3881,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     /// it seems attractive to want to do this for more cases but perhaps not all cases
     private ClassNode checkForTargetType(final Expression expr, final ClassNode type) {
         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
-        if (enclosingBinaryExpression != null && enclosingBinaryExpression instanceof DeclarationExpression
+        if (enclosingBinaryExpression instanceof DeclarationExpression
                 && isEmptyCollection(expr) && isAssignment(enclosingBinaryExpression.getOperation().getType())) {
             VariableExpression target = (VariableExpression) enclosingBinaryExpression.getLeftExpression();
             return adjustForTargetType(target.getType(), type);
@@ -3910,8 +3908,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private static boolean isEmptyCollection(Expression expr) {
-        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().size() == 0) ||
-        (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().size() == 0);
+        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().isEmpty())
+                || (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().isEmpty());
     }
 
     private static boolean hasInferredReturnType(Expression expression) {
@@ -3982,8 +3980,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (exp instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) exp;
             final Variable accessedVariable = var.getAccessedVariable();
-            if (accessedVariable != null && accessedVariable != exp && accessedVariable instanceof VariableExpression) {
-                storeType((Expression) accessedVariable, cn);
+            if (accessedVariable != exp && accessedVariable instanceof VariableExpression) {
+                storeType((VariableExpression) accessedVariable, cn);
             }
             if (accessedVariable instanceof Parameter) {
                 ((Parameter) accessedVariable).putNodeMetaData(StaticTypesMarker.INFERRED_TYPE, cn);
@@ -4016,7 +4014,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (op == ASSIGN || op == ASSIGNMENT_OPERATOR) {
             if (leftRedirect.isArray() && implementsInterfaceOrIsSubclassOf(rightRedirect, Collection_TYPE)) return leftRedirect;
             if (leftRedirect.implementsInterface(Collection_TYPE) && rightRedirect.implementsInterface(Collection_TYPE)) {
-                // because of type inferrence, we must perform an additional check if the right expression
+                // because of type inference, we must perform an additional check if the right expression
                 // is an empty list expression ([]). In that case and only in that case, the inferred type
                 // will be wrong, so we will prefer the left type
                 if (rightExpression instanceof ListExpression) {
@@ -4550,7 +4548,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 checkOrMarkPrivateAccess(vexp, (FieldNode) variable, isLHSOfEnclosingAssignment(vexp));
                 return getType((FieldNode) variable);
             }
-            if (variable != null && variable != vexp && variable instanceof VariableExpression) {
+            if (variable != vexp && variable instanceof VariableExpression) {
                 return getType((Expression) variable);
             }
             if (variable instanceof Parameter) {

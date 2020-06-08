@@ -1713,8 +1713,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         for (Receiver<String> receiver : receivers) {
             ClassNode testClass = receiver.getType();
             ClassNode propertyType = getTypeForMapPropertyExpression(testClass, objectExpressionType, pexp);
-            if (propertyType == null)
-                propertyType = getTypeForListPropertyExpression(testClass, objectExpressionType, pexp);
+            if (propertyType == null) propertyType = getTypeForListPropertyExpression(testClass, objectExpressionType, pexp);
             if (propertyType == null) propertyType = getTypeForSpreadExpression(testClass, objectExpressionType, pexp);
             if (propertyType == null) continue;
             if (visitor != null) {
@@ -4146,8 +4145,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private static boolean isEmptyCollection(Expression expr) {
-        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().size() == 0) ||
-                (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().size() == 0);
+        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().isEmpty())
+                || (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().isEmpty());
     }
 
     private static boolean hasInferredReturnType(Expression expression) {

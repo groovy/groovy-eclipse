@@ -4164,8 +4164,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private static boolean isEmptyCollection(final Expression expr) {
-        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().size() == 0)
-                || (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().size() == 0);
+        return (expr instanceof ListExpression && ((ListExpression) expr).getExpressions().isEmpty())
+                || (expr instanceof MapExpression && ((MapExpression) expr).getMapEntryExpressions().isEmpty());
     }
 
     private static boolean hasInferredReturnType(final Expression expression) {
