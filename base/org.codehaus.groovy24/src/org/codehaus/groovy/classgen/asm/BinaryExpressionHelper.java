@@ -724,6 +724,11 @@ public class BinaryExpressionHelper {
                 Expression subscript = be.getRightExpression();
                 subscript.visit(controller.getAcg());
                 ClassNode subscriptType = operandStack.getTopOperand();
+                // GRECLIPSE add -- GROOVY-8840
+                if (subscriptType.isGenericsPlaceHolder()) {
+                    subscriptType = controller.getTypeChooser().resolveType(be, controller.getClassNode());
+                }
+                // GRECLIPSE end
                 int id = controller.getCompileStack().defineTemporaryVariable("$subscript", subscriptType, true);
                 VariableSlotLoader subscriptExpression = new VariableSlotLoader(subscriptType, id, operandStack);
                 // do modified visit

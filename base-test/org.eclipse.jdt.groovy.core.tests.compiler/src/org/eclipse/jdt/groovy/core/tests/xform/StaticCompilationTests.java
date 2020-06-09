@@ -1698,6 +1698,85 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8840() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def list = [0, 1, 2, 3]\n" +
+            "  for (int i in 1..2) {\n" +
+            "    list[i - 1]++\n" +
+            "  }\n" +
+            "  list\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[1, 2, 2, 3]");
+    }
+
+    @Test
+    public void testCompileStatic8840a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def list = [0, 1, 2, 3]\n" +
+            "  List<Integer> other = [1]\n" +
+            "  list[other[0]]++\n" +
+            // ^^^^^^^^^^^^^^^^ works with casting to int/Integer: list[(int)other[0]]++
+            // and up to 2.4.12 works if part of an expression like list[other[0] - 0]++
+            "  return list\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[0, 2, 2, 3]");
+    }
+
+    @Test
+    public void testCompileStatic8840b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def list = [0, 1, 2, 3]\n" +
+            "  List<Integer> other = [1]\n" +
+            "  list[(int)other[0]]++\n" +
+            "  return list\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[0, 2, 2, 3]");
+    }
+
+    @Test
+    public void testCompileStatic8840c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def list = [0, 1, 2, 3]\n" +
+            "  List<Integer> other = [1]\n" +
+            "  list[other.first()]++\n" +
+            "  return list\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[0, 2, 2, 3]");
+    }
+
+    @Test
     public void testCompileStatic8873() {
         //@formatter:off
         String[] sources = {
