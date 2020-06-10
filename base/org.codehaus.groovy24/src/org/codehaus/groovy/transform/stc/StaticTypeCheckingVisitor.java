@@ -865,6 +865,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     // for example, LHS is List<ConcreteClass> and RHS is List<T> where T is a placeholder
                     resultType = lType;
                 }
+                // GRECLIPSE add -- GROOVY-7549: RHS type may not be accessible to enclosing class
+                else {
+                    int modifiers = resultType.getModifiers();
+                    ClassNode enclosingType = typeCheckingContext.getEnclosingClassNode();
+                    if (!Modifier.isPublic(modifiers) && !enclosingType.equals(resultType)
+                            && !getOutermost(enclosingType).equals(getOutermost(resultType))
+                            && (Modifier.isPrivate(modifiers) || !Objects.equals(enclosingType.getPackageName(), resultType.getPackageName()))) {
+                        resultType = originType; // TODO: Find accesible type in hierarchy of resultType?
+                    }
+                }
+                // GRECLIPSE end
 
                 // make sure we keep primitive types
                 if (isPrimitiveType(originType) && resultType.equals(getWrapper(originType))) {

@@ -751,6 +751,53 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7549() {
+        //@formatter:off
+        String[] sources = {
+            "a/Main.groovy",
+            "package a\n" +
+            "import b.Maker\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  static main(args) {\n" +
+            "    Face f = Maker.make()\n" +
+            // the following only fails when CompileStatic is enabled with the following error:
+            // Exception in thread "main" java.lang.IllegalAccessError: tried to access class b.Impl from class a.Main
+            "    f.meth()\n" +
+            "  }\n" +
+            "}\n",
+
+            "a/Face.groovy",
+            "package a\n" +
+            "interface Face {\n" +
+            "  void meth()\n" +
+            "}\n",
+
+            "b/Impl.groovy",
+            "package b\n" +
+            "import a.Face\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "@groovy.transform.PackageScope\n" +
+            "class Impl implements Face {\n" +
+            "  void meth() {\n" +
+            "    println 'did stuff'\n" +
+            "  }\n" +
+            "}\n",
+
+            "b/Maker.groovy",
+            "package b\n" +
+            "class Maker {\n" +
+            "  static Impl make() {\n" + // probably should return a.Face
+            "    new Impl()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "did stuff");
+    }
+
+    @Test
     public void testCompileStatic7687() {
         assumeTrue(isAtLeastGroovy(25));
 
