@@ -3350,10 +3350,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private static void addDelegateReceiver(final List<Receiver<String>> receivers, final ClassNode delegate, final String path) {
+        /* GRECLIPSE edit -- GROOVY-9586
         receivers.add(new Receiver<String>(delegate, path));
         if (Traits.isTrait(delegate.getOuterClass())) {
             receivers.add(new Receiver<String>(delegate.getOuterClass(), path));
         }
+        */
+        if (receivers.stream().map(Receiver::getType).noneMatch(delegate::equals)) {
+            receivers.add(new Receiver<>(delegate, path));
+        }
+        // GRECLIPSE end
     }
 
     @Override
@@ -3746,6 +3752,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      */
     protected List<Receiver<String>> makeOwnerList(final Expression objectExpression) {
         final ClassNode receiver = getType(objectExpression);
+        /* GRECLIPSE edit -- GROOVY-9586
         List<Receiver<String>> owners = new LinkedList<Receiver<String>>();
         owners.add(Receiver.<String>make(receiver));
         if (isClassClassNodeWrappingConcreteType(receiver)) {
@@ -3756,6 +3763,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             owners.add(Receiver.<String>make(OBJECT_TYPE));
         }
         addSelfTypes(receiver, owners);
+        */
+        List<Receiver<String>> owners = new ArrayList<>();
+        if (isClassClassNodeWrappingConcreteType(receiver)) {
+            ClassNode staticType = receiver.getGenericsTypes()[0].getType();
+            owners.add(Receiver.make(staticType)); // Type from Class<Type>
+            addTraitType(staticType, owners); // T in Class<T$Trait$Helper>
+            owners.add(Receiver.make(receiver)); // Class<Type>
+        } else {
+            owners.add(Receiver.make(receiver));
+            if (receiver.isInterface()) {
+                owners.add(Receiver.make(OBJECT_TYPE));
+            }
+            addSelfTypes(receiver, owners);
+            addTraitType(receiver, owners);
+        }
+        // GRECLIPSE end
         if (!typeCheckingContext.temporaryIfBranchTypeInformation.empty()) {
             List<ClassNode> potentialReceiverType = getTemporaryTypesForExpression(objectExpression);
             if (potentialReceiverType != null) {
@@ -3787,6 +3810,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             owners.add(Receiver.<String>make(selfType));
         }
     }
+
+    // GRECLIPSE add
+    private static void addTraitType(final ClassNode receiver, final List<Receiver<String>> owners) {
+        if (Traits.isTrait(receiver.getOuterClass()) && receiver.getName().endsWith("$Helper")) {
+            ClassNode traitType = receiver.getOuterClass();
+            owners.add(Receiver.make(traitType));
+            addSelfTypes(traitType, owners);
+        }
+    }
+    // GRECLIPSE end
 
     protected void checkForbiddenSpreadArgument(ArgumentListExpression argumentList) {
         for (Expression arg : argumentList.getExpressions()) {

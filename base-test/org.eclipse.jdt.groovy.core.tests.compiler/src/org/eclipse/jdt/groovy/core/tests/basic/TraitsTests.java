@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1275,8 +1275,109 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "c");
     }
 
-    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-8854
-    public void testTraits51() {
+    @Test
+    public void testTraits7242() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def f() {\n" +
+            "    ['a'].collect { String s -> g(s) }\n" +
+            "  }\n" +
+            "  String g(String s) {\n" +
+            "    s.toUpperCase()\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "assert c.f() == ['A']\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTraits7242a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def f() {\n" +
+            "    ['a'].collect { g(it) }\n" +
+            "  }\n" +
+            "  String g(String s) {\n" +
+            "    s.toUpperCase()\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "assert c.f() == ['A']\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTraits7456() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def f() {\n" +
+            "    ['a'].collect { String s -> g(s) }\n" +
+            "  }\n" +
+            "  private String g(String s) {\n" +
+            "    s.toUpperCase()\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "def c = new C()\n" +
+            "assert c.f() == ['A']\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTraits7909() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            // defining Three before One and Two
+            "trait Three implements One, Two {\n" +
+            "  def postMake() {\n" +
+            "    One.super.postMake()\n" +
+            "    Two.super.postMake()\n" +
+            "    print 'Three'\n" +
+            "  }\n" +
+            "}\n" +
+            "trait One {\n" +
+            "  def postMake() { print 'One'}\n" +
+            "}\n" +
+            "trait Two {\n" +
+            "  def postMake() { print 'Two'}\n" +
+            "}\n" +
+            "class Four implements Three {\n" +
+            "  def make() {\n" +
+            "    Three.super.postMake()\n" +
+            "    print 'Four'\n" +
+            "  }\n" +
+            "}\n" +
+            "new Four().make()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "OneTwoThreeFour");
+    }
+
+    @Test @Ignore
+    public void testTraits8854() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1309,8 +1410,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "checked audited");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-8856
-    public void testTraits52() {
+    @Test
+    public void testTraits8856() {
         assumeTrue(isAtLeastGroovy(25));
 
         //@formatter:off
@@ -1333,8 +1434,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-9031
-    public void testTraits53() {
+    @Test
+    public void testTraits9031() {
         //@formatter:off
         String[] sources = {
             "Trait9031.groovy",
@@ -1365,35 +1466,59 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  public void setValue(java.lang.String " + (isAtLeastGroovy(25) ? "value" : "arg1") + ");\n");
     }
 
-    @Test // https://issues.apache.org/jira/browse/GROOVY-7909
-    public void testTraits54() {
+    @Test
+    public void testTraits9586() {
         //@formatter:off
         String[] sources = {
-            "Main.groovy",
-            // defining Three before One and Two
-            "trait Three implements One, Two {\n" +
-            "  def postMake() {\n" +
-            "    One.super.postMake()\n" +
-            "    Two.super.postMake()\n" +
-            "    print 'Three'\n" +
+            "Script.groovy",
+            "class C {\n" +
+            "  def m(@DelegatesTo(strategy=Closure.OWNER_ONLY, type='Void') Closure<?> x) {\n" +
+            "    x.setResolveStrategy(Closure.OWNER_ONLY)\n" +
+            "    x.setDelegate(null)\n" +
+            "    return x.call()\n" +
             "  }\n" +
+            "  void p() { print 'C' }\n" +
             "}\n" +
-            "trait One {\n" +
-            "  def postMake() { print 'One'}\n" +
-            "}\n" +
-            "trait Two {\n" +
-            "  def postMake() { print 'Two'}\n" +
-            "}\n" +
-            "class Four implements Three {\n" +
-            "  def make() {\n" +
-            "    Three.super.postMake()\n" +
-            "    print 'Four'\n" +
+            "trait T {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    new C().m { -> p() }\n" + // "p" must come from owner
             "  }\n" +
+            "  void p() { print 'T' }\n" +
             "}\n" +
-            "new Four().make()\n",
+            "class U implements T {}\n" +
+            "new U().test()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "OneTwoThreeFour");
+        runConformTest(sources, "T");
+    }
+
+    @Test
+    public void testTraits9586a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def m(@DelegatesTo(strategy=Closure.DELEGATE_ONLY, value=C) Closure<?> x) {\n" +
+            "    x.setResolveStrategy(Closure.OWNER_ONLY)\n" +
+            "    x.setDelegate(this)\n" +
+            "    return x.call()\n" +
+            "  }\n" +
+            "  void p() { print 'C' }\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  void test() {\n" +
+            "    new C().m { -> p() }\n" + // "p" must come from delegate
+            "  }\n" +
+            "  void p() { print 'T' }\n" +
+            "}\n" +
+            "class U implements T {}\n" +
+            "new U().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "C");
     }
 }
