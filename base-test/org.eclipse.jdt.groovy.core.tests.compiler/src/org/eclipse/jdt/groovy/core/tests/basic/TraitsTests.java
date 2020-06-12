@@ -1345,6 +1345,62 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits7512() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  Closure<Void> bar\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  Foo getFoo() {\n" +
+            "    new Foo(bar: { ->\n" +
+            "      baz 'zzz'\n" + // ClassCastException: java.lang.Class cannot be cast to T
+            "    })\n" +
+            "  }\n" +
+            "  void baz(text) {\n" +
+            "    println text\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().foo.bar()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "zzz");
+    }
+
+    @Test
+    public void testTraits7512a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Foo {\n" +
+            "  Closure<Void> bar\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  @groovy.transform.CompileStatic\n" +
+            "  Foo getFoo() {\n" +
+            "    Foo foo = new Foo()\n" +
+            "    foo.bar = { -> baz 'zzz' }\n" +
+            "    foo\n" +
+            "  }\n" +
+            "  void baz(text) {\n" +
+            "    println text\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().foo.bar()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "zzz");
+    }
+
+    @Test
     public void testTraits7909() {
         //@formatter:off
         String[] sources = {
