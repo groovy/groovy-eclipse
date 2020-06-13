@@ -712,6 +712,68 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
+    @Test // GROOVY-9591: "b" is not static...this variation of "8" should also work
+    public void testStaticProperty8a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.ToString\n" +
+            "class A {\n" +
+            "  A(a) {}\n" +
+            "  def b\n" +
+            "}\n" +
+            "class C {\n" +
+            "  C() {\n" +
+            "    this(new A(null).tap { b = 42 })\n" + // A has no default constructor, so properties are initialized in tap
+            "  }\n" +
+            "  C(x) {\n" +
+            "    print x\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "A(42)");
+    }
+
+    @Test // GROOVY-9591: "b" is not static...this variation of "8" should also work
+    public void testStaticProperty8b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.ToString\n" +
+            "class A {\n" +
+            "  A(a) {}\n" +
+            "  def b\n" +
+            "}\n" +
+            "class C {\n" +
+            "  C() {\n" +
+            "    this(new A(null).with { b = 42; return it })\n" + // A has no default constructor, so properties are initialized in tap
+            "  }\n" +
+            "  C(x) {\n" +
+            "    print x\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(25)) {
+            runConformTest(sources, "A(42)");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 8)\r\n" +
+                "\tthis(new A(null).with { b = 42; return it })\r\n" +
+                "\t                        ^\n" +
+                "Groovy:Apparent variable 'b' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+                "----------\n");
+        }
+    }
+
     @Test
     public void testClash_GRE1076() {
         //@formatter:off

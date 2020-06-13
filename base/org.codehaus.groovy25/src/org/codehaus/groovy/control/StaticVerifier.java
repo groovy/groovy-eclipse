@@ -214,8 +214,12 @@ public class StaticVerifier extends ClassCodeVisitorSupport {
 
     @Override
     public void visitVariableExpression(VariableExpression ve) {
+        /* GRECLIPSE edit -- GROOVY-9591
         if (ve.getAccessedVariable() instanceof DynamicVariable
                 && (inSpecialConstructorCall || (!inClosure && ve.isInStaticContext()))) {
+        */
+        if (ve.getAccessedVariable() instanceof DynamicVariable && (ve.isInStaticContext() || inSpecialConstructorCall) && !inClosure) {
+        // GRECLIPSE end
             if (methodNode != null && methodNode.isStatic()) {
                 FieldNode fieldNode = getDeclaredOrInheritedField(methodNode.getDeclaringClass(), ve.getName());
                 if (fieldNode != null && fieldNode.isStatic()) return;
