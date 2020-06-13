@@ -1373,6 +1373,74 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
+    @Test
+    public void testCompileStatic8389() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static Foo.bar\n" +
+            "class Foo {\n" +
+            "  static bar = 'property'\n" +
+            "}\n" +
+            "def bar() {\n" +
+            "  'method'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  bar()\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(25)) {
+            runConformTest(sources, "method");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 10)\r\n" +
+                "\tbar()\r\n" +
+                "\t^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method Foo#bar(). Please check if the declared type is correct and if the method exists.\n" +
+                "----------\n");
+        }
+    }
+
+    @Test
+    public void testCompileStatic8389a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import static Foo.bar\n" +
+            "import static Foo.baz\n" +
+            "class Foo {\n" +
+            "  static Closure<String> bar = { -> 'property' }\n" +
+            "  static Closure<String> baz = { -> 'property' }\n" +
+            "}\n" +
+            "String bar() {\n" +
+            "  'method'\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  bar() + ':' + baz.call()\n" + // TODO: Should this work without ".call"?
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(25)) {
+            runConformTest(sources, "method:property");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 10)\r\n" +
+                "\tbar() + ':' + baz.call()\r\n" +
+                "\t^^^^^\n" +
+                "Groovy:[Static type checking] - Cannot find matching method Foo#bar(). Please check if the declared type is correct and if the method exists.\n" +
+                "----------\n");
+        }
+    }
+
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8409")
     public void testCompileStatic8409() {
         for (char t : new char[] {'R', 'S', 'T', 'U'}) { // BiFunction uses R, T and U

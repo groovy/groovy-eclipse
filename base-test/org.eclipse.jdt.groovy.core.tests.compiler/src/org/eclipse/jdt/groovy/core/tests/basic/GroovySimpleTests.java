@@ -659,6 +659,60 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testStaticProperty7() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  static String f = '123'\n" +
+            "  static String g() { 'abc' }\n" +
+            "  C() {\n" +
+            "    this(g() + getF())\n" +
+            "  }\n" +
+            "  C(String s) {\n" +
+            "    print s\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "abc123");
+    }
+
+    @Test // GROOVY-8327
+    public void testStaticProperty8() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  static String f = '123'\n" +
+            "  static String g() { 'abc' }\n" +
+            "  C() {\n" +
+            "    this({ -> g() + getF()})\n" +
+            "  }\n" +
+            "  C(x) {\n" +
+            "    print x()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        if (isAtLeastGroovy(25)) {
+            runConformTest(sources, "abc123");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Script.groovy (at line 5)\r\n" +
+                "\tthis({ -> g() + getF()})\r\n" +
+                "\t          ^\n" +
+                "Groovy:Cannot reference 'g' before supertype constructor has been called.\n" +
+                "----------\n");
+        }
+    }
+
+    @Test
     public void testClash_GRE1076() {
         //@formatter:off
         String[] sources = {
@@ -3300,7 +3354,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(sources);
     }
 
-    @Test
+    @Test // GROOVY-5687
     public void testImplementingInterface7() {
         //@formatter:off
         String[] sources = {
