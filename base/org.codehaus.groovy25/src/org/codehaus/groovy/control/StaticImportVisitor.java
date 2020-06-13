@@ -297,6 +297,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                             foundInstanceMethod = true;
                         }
                     }
+                    /* GRECLIPSE edit -- GROOVY-8327, GROOVY-9587
                     boolean lookForPossibleStaticMethod = !methodName.equals("call");
                     lookForPossibleStaticMethod &= !foundInstanceMethod;
                     lookForPossibleStaticMethod |= inSpecialConstructorCall;
@@ -304,6 +305,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                     if (!inClosure && lookForPossibleStaticMethod &&
                             (hasPossibleStaticMethod(currentClass, methodName, args, true))
                             || hasPossibleStaticProperty(currentClass, methodName)) {
+                    */
+                    if (!inInnerClass && (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call")))
+                            && (hasPossibleStaticMethod(currentClass, methodName, args, true) || (args instanceof TupleExpression
+                                && ((TupleExpression) args).getExpressions().isEmpty() && hasPossibleStaticProperty(currentClass, methodName)))) {
+                    // GRECLIPSE end
                         StaticMethodCallExpression smce = new StaticMethodCallExpression(currentClass, methodName, args);
                         setSourcePosition(smce, mce);
                         return smce;
@@ -318,12 +324,13 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                             return smce;
                         }
                     }
-
+                    /* GRECLIPSE edit
                     if (mce.isImplicitThis() && lookForPossibleStaticMethod && hasPossibleStaticMethod(currentClass, methodName, args, true)) {
                         StaticMethodCallExpression result = new StaticMethodCallExpression(currentClass, methodName, args);
                         result.setSourcePosition(mce);
                         return result;
                     }
+                    */
                 }
             }
         }

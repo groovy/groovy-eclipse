@@ -774,6 +774,33 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         }
     }
 
+    @Test // GROOVY-9587
+    public void testStaticProperty9() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static foo\n" +
+            "  def getFoo() {\n" +
+            "    if (foo == null) {\n" +
+            "      getFoo(true)\n" +
+            "    } else {\n" +
+            "      foo\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def getFoo(flag) {\n" +
+            "    return 'foo'\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    println newInstance().getFoo()\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "foo");
+    }
+
     @Test
     public void testClash_GRE1076() {
         //@formatter:off
