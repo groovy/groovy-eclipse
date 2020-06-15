@@ -20,6 +20,7 @@ import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.runtime.MetaClassHelper
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSetterName
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
 
 @Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
@@ -168,6 +169,14 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
 //@groovy.transform.Canonical, et al.
 
 //@groovy.transform.Field
+contribute(isScript() & currentType(fields: fields(not(isFinal())))) {
+    provider = '{@link groovy.transform.Field Field} AST transform'
+    for (FieldNode field : fields) {
+        if (field.getEnd() > 0) {
+            method name: getSetterName(field.name), type: void, params: [(field.name): field.type], isStatic: field.isStatic()
+        }
+    }
+}
 
 //@groovy.transform.IndexedProperty
 contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {

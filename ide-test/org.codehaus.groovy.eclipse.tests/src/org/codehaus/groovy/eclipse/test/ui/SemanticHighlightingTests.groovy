@@ -161,6 +161,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testScriptFields2() {
         String contents = '''\
             |import groovy.transform.Field
+            |
             |@Field String one
             |@Field Integer two = 1234
             |@Field private Object three // four
@@ -174,6 +175,34 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('1234'), 4, NUMBER),
             new HighlightedTypedPosition(contents.indexOf('Object'), 6, CLASS),
             new HighlightedTypedPosition(contents.indexOf('three'), 5, FIELD))
+    }
+
+    @Test
+    void testScriptFields3() {
+        String contents = '''\
+            |import groovy.transform.Field
+            |
+            |@Field Number one
+            |@Field static Double TWO
+            |
+            |one + TWO;
+            |{ -> one + TWO }
+            |{ -> one = 1; TWO = 2.0d }
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Number'), 6, ABSTRACT_CLASS),
+            new HighlightedTypedPosition(contents.indexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('Double'), 6, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('TWO'), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one '), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO;'), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.indexOf('one', contents.indexOf('->')), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('TWO', contents.indexOf('->')), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('one'), 3, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.lastIndexOf('TWO'), 3, STATIC_FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('2'), 4, NUMBER))
     }
 
     @Test

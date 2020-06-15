@@ -124,9 +124,19 @@ public class FieldASTTransformation extends ClassCodeExpressionTransformer imple
                 }
             } else {
                 String setterName = "set" + MetaClassHelper.capitalize(variableName);
+                // GRECLIPSE add
+                MethodNode setter =
+                // GRECLIPSE end
                 cNode.addMethod(setterName, ACC_PUBLIC | ACC_SYNTHETIC, ClassHelper.VOID_TYPE, params(param(ve.getType(), variableName)), ClassNode.EMPTY_ARRAY, block(
                         stmt(assignX(propX(varX("this"), variableName), varX(variableName)))
                 ));
+                // GRECLIPSE add
+                if (setter.getEnd() < 1) {
+                    setter.setSynthetic(true);
+                    setter.setNameStart(ve.getStart());
+                    setter.setNameEnd(ve.getEnd() - 1);
+                }
+                // GRECLIPSE end
             }
 
             // GROOVY-4833 : annotations that are not Groovy transforms should be transferred to the generated field

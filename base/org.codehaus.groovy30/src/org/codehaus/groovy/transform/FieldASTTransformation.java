@@ -124,31 +124,37 @@ public class FieldASTTransformation extends ClassCodeExpressionTransformer imple
                 }
             } else {
                 String setterName = "set" + capitalize(variableName);
+                // GRECLIPSE add
+                MethodNode setter =
+                // GRECLIPSE end
                 cNode.addMethod(setterName, ACC_PUBLIC | ACC_SYNTHETIC, ClassHelper.VOID_TYPE, params(param(ve.getType(), variableName)), ClassNode.EMPTY_ARRAY, block(
                         stmt(assignX(propX(varX("this"), variableName), varX(variableName)))
                 ));
+                // GRECLIPSE add
+                if (setter.getEnd() < 1) {
+                    setter.setSynthetic(true);
+                    setter.setNameStart(ve.getStart());
+                    setter.setNameEnd(ve.getEnd() - 1);
+                }
+                // GRECLIPSE end
             }
 
-            // GROOVY-4833 : annotations that are not Groovy transforms should be transferred to the generated field
-            // GROOVY-6112 : also copy acceptable Groovy transforms
-            final List<AnnotationNode> annotations = de.getAnnotations();
-            for (AnnotationNode annotation : annotations) {
-                // GROOVY-6337 HACK: in case newly created field is @Lazy
+            for (AnnotationNode annotation : de.getAnnotations()) {
+                // GROOVY-6337: in case newly created field is @Lazy
                 if (annotation.getClassNode().equals(LAZY_TYPE)) {
                     LazyASTTransformation.visitField(this, annotation, fieldNode);
                 }
-                final ClassNode annotationClassNode = annotation.getClassNode();
-                if (notTransform(annotationClassNode) || acceptableTransform(annotation)) {
+                // GROOVY-4833: copy annotations that are not Groovy transforms; GROOVY-6112: also copy acceptable Groovy transforms
+                if (notTransform(annotation.getClassNode()) || acceptableTransform(annotation)) {
                     fieldNode.addAnnotation(annotation);
                 }
             }
 
             super.visitClass(cNode);
-            // GROOVY-5207 So that Closures can see newly added fields
+            // GROOVY-5207: So that Closures can see newly added fields
             // (not super efficient for a very large class with many @Fields but we chose simplicity
-            // and understandability of this solution over more complex but efficient alternatives)
-            VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
-            scopeVisitor.visitClass(cNode);
+            //  and understandability of this solution over more complex but efficient alternatives)
+            new VariableScopeVisitor(source).visitClass(cNode);
         }
     }
 
