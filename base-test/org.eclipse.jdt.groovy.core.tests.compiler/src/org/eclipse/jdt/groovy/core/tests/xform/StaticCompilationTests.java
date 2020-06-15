@@ -1433,9 +1433,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. ERROR in Script.groovy (at line 10)\r\n" +
+                "1. ERROR in Script.groovy (at line 12)\r\n" +
                 "\tbar() + ':' + baz.call()\r\n" +
-                "\t^^^^^\n" +
+                "\t^^^^^^\n" +
                 "Groovy:[Static type checking] - Cannot find matching method Foo#bar(). Please check if the declared type is correct and if the method exists.\n" +
                 "----------\n");
         }
