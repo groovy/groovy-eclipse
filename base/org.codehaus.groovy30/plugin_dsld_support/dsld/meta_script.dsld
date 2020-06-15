@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,6 +125,7 @@ contribute(dsldFile & insideContribution() & isThisType()) {
                 declaringType: Object,
                 isDeprecated: Boolean,
                 isStatic: Boolean,
+                readOnly: Boolean,
                 provider: String,
                 doc: String
             ],
@@ -138,6 +139,7 @@ contribute(dsldFile & insideContribution() & isThisType()) {
                 @param declaringType property source (as Class, String or AST Node); source is {@code currentType} if unset
                 @param isDeprecated
                 @param isStatic
+                @param readOnly
                 @param provider content assist label
                 @param doc javadoc content
                 '''.stripIndent()

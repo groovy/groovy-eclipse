@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package dsld
 import groovy.transform.*
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
-import org.codehaus.groovy.runtime.MetaClassHelper
 
+import static org.apache.groovy.util.BeanUtils.capitalize
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
 
 @Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
@@ -135,10 +135,9 @@ contribute(currentType(annos: annotatedBy(Singleton))) {
     provider = '{@link groovy.lang.Singleton Singleton} AST transform'
     AnnotationNode node = annos[0]
     String propertyName = node.getMember('property')?.text ?: 'instance'
-    String accessorName = 'get' + MetaClassHelper.capitalize(propertyName)
 
-    method name: accessorName, type: currentType, isStatic: true
-    property name: propertyName, type: currentType, isStatic: true
+    property name: propertyName, type: currentType, isStatic: true, readOnly: true
+    method name: 'get' + capitalize(propertyName), type: currentType, isStatic: true
 }
 
 //------------------------------------------------------------------------------
@@ -173,7 +172,7 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
 contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
     provider = '{@link groovy.transform.IndexedProperty IndexedProperty} AST transform'
     for (FieldNode field : fields) {
-        String propertyName = MetaClassHelper.capitalize(field.name)
+        String propertyName = capitalize(field.name)
 
         // field must be an array or collection; get its component type
         ClassNode type

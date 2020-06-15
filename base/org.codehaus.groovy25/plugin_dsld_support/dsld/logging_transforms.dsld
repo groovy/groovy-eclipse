@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ package dsld
         provider = 'Logging AST transform'
         for (annotationNode in annotations) {
             def loggerName = annotationNode.getMember('value') ?: 'log'
-            property name: loggerName, type: data.loggerType, isStatic: true // also final, private, transient
+            property name: loggerName, type: data.loggerType, isStatic: true, readOnly: true // also private, transient
         }
     }
 }

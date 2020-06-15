@@ -37,6 +37,7 @@
         <file-match-pattern match-pattern="groovy/ast/expr/MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/StaticMethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/ClassNodeUtils.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/tools/GeneralUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/GenericsUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />

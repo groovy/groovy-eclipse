@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ import java.beans.PropertyChangeListener
 import java.beans.VetoableChangeListener
 
 import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.runtime.MetaClassHelper
+
+import static org.apache.groovy.util.BeanUtils.capitalize
 
 /**
  * Hackergarten contribution
@@ -201,7 +202,6 @@ contribute(currentType(fields : fields(annotatedBy(groovy.beans.ListenerList))))
     for (FieldNode field : fields) {
         def type = findElementType(field)
         def shortType = getShortName(type.name)
-        def propertyName = MetaClassHelper.capitalize(field.name)
 
         method name: 'add' + shortType, type: void, params: [listener: type], doc: "Add $shortType listener"
         method name: 'remove' + shortType, type: void, params: [listener: type], doc: "Remove $shortType listener"
@@ -210,7 +210,7 @@ contribute(currentType(fields : fields(annotatedBy(groovy.beans.ListenerList))))
         method name: 'get' + shortType + 's', type: type.name + '[]', doc: "Get $shortType listeners"
 
         type.methods.each { MethodNode m ->
-            method name: 'fire' + MetaClassHelper.capitalize(m.name), type: void, params: params(m), doc: "fire the $m.name event"
+            method name: 'fire' + capitalize(m.name), type: void, params: params(m), doc: "fire the $m.name event"
         }
     }
 }

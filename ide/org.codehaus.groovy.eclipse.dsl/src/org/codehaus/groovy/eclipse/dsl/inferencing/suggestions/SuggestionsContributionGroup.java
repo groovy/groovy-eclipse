@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,17 +26,18 @@ import org.codehaus.groovy.eclipse.dsl.contributions.PropertyContributionElement
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.Flags;
 
 public class SuggestionsContributionGroup extends ContributionGroup {
 
-    private IFile file;
+    private final IFile file;
 
-    public SuggestionsContributionGroup(IFile file) {
+    public SuggestionsContributionGroup(final IFile file) {
         this.file = file;
     }
 
     @Override
-    public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
+    public List<IContributionElement> getContributions(final GroovyDSLDContext pattern, final BindingSet matches) {
 
         // only need to match on current type.
         List<IContributionElement> currentContributions = new ArrayList<>();
@@ -55,11 +56,9 @@ public class SuggestionsContributionGroup extends ContributionGroup {
         // at the end of the AST walk. An AST walk happens every time a
         // change is made to a Groovy file.
 
-        List<GroovySuggestionDeclaringType> superTypes =
-            new DeclaringTypeSuperTypeMatcher(file.getProject()).getAllSuperTypes(pattern);
+        List<GroovySuggestionDeclaringType> superTypes = new DeclaringTypeSuperTypeMatcher(file.getProject()).getAllSuperTypes(pattern);
         if (superTypes != null) {
             for (GroovySuggestionDeclaringType declaringType : superTypes) {
-
                 List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
                 if (suggestions != null) {
                     for (IGroovySuggestion suggestion : suggestions) {
@@ -68,16 +67,14 @@ public class SuggestionsContributionGroup extends ContributionGroup {
                                 GroovyPropertySuggestion prop = (GroovyPropertySuggestion) suggestion;
 
                                 currentContributions.add(new PropertyContributionElement(prop.getName(), prop.getType(),
-                                    prop.getDeclaringType().getName(), prop.isStatic(), DEFAULT_PROVIDER,
-                                    prop.getJavaDoc(), false, DEFAULT_RELEVANCE_MULTIPLIER));
-
+                                    prop.getDeclaringType().getName(), prop.isStatic() ? Flags.AccStatic : 0,
+                                    DEFAULT_PROVIDER, prop.getJavaDoc(), false, DEFAULT_RELEVANCE_MULTIPLIER)
+                                );
                             } else if (suggestion instanceof GroovyMethodSuggestion) {
-
                                 GroovyMethodSuggestion method = (GroovyMethodSuggestion) suggestion;
+
                                 ParameterContribution[] paramContribution = null;
-
                                 List<MethodParameter> parameters = method.getParameters();
-
                                 if (parameters != null) {
                                     paramContribution = new ParameterContribution[method.getParameters().size()];
                                     int i = 0;
@@ -91,7 +88,8 @@ public class SuggestionsContributionGroup extends ContributionGroup {
                                 currentContributions.add(new MethodContributionElement(method.getName(),
                                     paramContribution, method.getType(), method.getDeclaringType().getName(),
                                     method.isStatic(), DEFAULT_PROVIDER, method.getJavaDoc(),
-                                    method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER));
+                                    method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER)
+                                );
                             }
                         }
                     }

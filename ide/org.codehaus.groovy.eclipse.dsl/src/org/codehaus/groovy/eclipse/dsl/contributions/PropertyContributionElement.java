@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,9 @@ public class PropertyContributionElement implements IContributionElement {
     private final String propName;
     private final String propType;
     private final String declaringType;
-    private final boolean isStatic;
+
+    private final int modifiers;
+    private final int relevanceMultiplier;
 
     private ClassNode cachedDeclaringType;
     private ClassNode cachedType;
@@ -44,23 +46,20 @@ public class PropertyContributionElement implements IContributionElement {
     private final String provider;
     private final String doc;
 
-    private final int relevanceMultiplier;
-
-    private final boolean isDeprecated;
-
-    public PropertyContributionElement(String propName, String propType, String declaringType, boolean isStatic, String provider, String doc, boolean isDeprecated, int relevanceMultiplier) {
+    public PropertyContributionElement(final String propName, final String propType, final String declaringType, final int modifiers,
+                                        final String provider, final String doc, final boolean isDeprecated, final int relevanceMultiplier) {
         this.propName = propName;
         this.propType = propType;
-        this.isStatic = isStatic;
-        this.isDeprecated = isDeprecated;
         this.declaringType = declaringType;
+        this.modifiers = (modifiers & 0xF8) | (isDeprecated ? Flags.AccDeprecated : 0);
+
         this.relevanceMultiplier = relevanceMultiplier;
         this.provider = (provider != null ? removeJavadocMarkup(provider) : GROOVY_DSL_PROVIDER);
         this.doc = (doc != null ? doc : NO_DOC + (provider != null ? provider : GROOVY_DSL_PROVIDER));
     }
 
     @Override
-    public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
+    public TypeAndDeclaration lookupType(final String name, final ClassNode declaringType, final ResolverCache resolver) {
         if (name.equals(propName)) {
             return new TypeAndDeclaration(returnType(resolver), toProperty(declaringType, resolver), declaringType(declaringType, resolver), doc);
         }
@@ -68,42 +67,36 @@ public class PropertyContributionElement implements IContributionElement {
     }
 
     @Override
-    public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
+    public IGroovyProposal toProposal(final ClassNode declaringType, final ResolverCache resolver) {
         GroovyPropertyProposal proposal = new GroovyPropertyProposal(toProperty(declaringType, resolver), provider);
         proposal.setRelevanceMultiplier(relevanceMultiplier);
         return proposal;
     }
 
     @Override
-    public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression enclosingExpression) {
+    public List<IGroovyProposal> extraProposals(final ClassNode declaringType, final ResolverCache resolver, final Expression enclosingExpression) {
         return ProposalUtils.NO_PROPOSALS;
     }
 
-    private PropertyNode toProperty(ClassNode declaringType, ResolverCache resolver) {
+    private PropertyNode toProperty(final ClassNode declaringType, final ResolverCache resolver) {
         ClassNode resolvedDeclaringType = declaringType(declaringType, resolver);
 
-        PropertyNode prop = new PropertyNode(new FieldNode(propName, modifiers(), returnType(resolver), resolvedDeclaringType, null), modifiers(), null, null);
-        prop.getField().setDeclaringClass(resolvedDeclaringType);
-        prop.setDeclaringClass(resolvedDeclaringType);
-        return prop;
+        FieldNode backingField = new FieldNode(propName, Flags.AccPrivate | modifiers, returnType(resolver), resolvedDeclaringType, null);
+        backingField.setDeclaringClass(resolvedDeclaringType);
+
+        PropertyNode property = new PropertyNode(backingField, Flags.AccPublic | modifiers, null, null);
+        property.setDeclaringClass(resolvedDeclaringType);
+        return property;
     }
 
-    protected int modifiers() {
-        int modifiers = Flags.AccPublic;
-        if (isStatic) modifiers |= Flags.AccStatic;
-        if (isDeprecated) modifiers |= Flags.AccDeprecated;
-
-        return modifiers;
-    }
-
-    protected ClassNode returnType(ResolverCache resolver) {
+    protected ClassNode returnType(final ResolverCache resolver) {
         if (cachedType == null) {
             cachedType = resolver.resolve(propType);
         }
         return cachedType == null ? ClassHelper.DYNAMIC_TYPE : cachedType;
     }
 
-    protected ClassNode declaringType(ClassNode lexicalDeclaringType, ResolverCache resolver) {
+    protected ClassNode declaringType(final ClassNode lexicalDeclaringType, final ResolverCache resolver) {
         if (declaringType != null && cachedDeclaringType == null) {
             cachedDeclaringType = resolver.resolve(declaringType);
         }
@@ -127,6 +120,18 @@ public class PropertyContributionElement implements IContributionElement {
 
     @Override
     public String toString() {
-        return "public " + (isStatic ? "static " : "") + (isDeprecated ? "deprecated " : "") + propType + " " + declaringType + "." + propName + " (" + provider + ")";
+        StringBuilder sb = new StringBuilder("public ");
+        if ((modifiers & Flags.AccStatic) != 0) sb.append("static ");
+        if ((modifiers & Flags.AccFinal) != 0) sb.append("final ");
+        sb.append(propType);
+        sb.append(' ');
+        sb.append(declaringType);
+        sb.append('.');
+        sb.append(propName);
+        sb.append(" (");
+        sb.append(provider);
+        sb.append(')');
+
+        return sb.toString();
     }
 }

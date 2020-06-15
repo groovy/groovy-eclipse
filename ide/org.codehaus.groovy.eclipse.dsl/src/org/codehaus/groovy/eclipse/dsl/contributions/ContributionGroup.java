@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
+
+import static java.util.stream.Collectors.toList;
+import static org.eclipse.jdt.core.Flags.AccStatic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,25 +34,24 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
 
     protected List<IContributionElement> contributions = new ArrayList<>();
 
-    // alternative way to add a method contribution
-    public void addMethodContribution(String name, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, boolean useNamedArgs) {
+    /**
+     * Alternative way to add a method contribution.
+     */
+    public void addMethodContribution(final String name, final ParameterContribution[] params, final String returnType, final String declaringType, final boolean isStatic, final boolean useNamedArgs) {
         contributions.add(new MethodContributionElement(name, params, returnType, declaringType, isStatic, DEFAULT_PROVIDER, null, useNamedArgs, false, DEFAULT_RELEVANCE_MULTIPLIER));
     }
 
-    // alternative way to add a property contribution
-    public void addPropertyContribution(String name, String type, String declaringType, boolean isStatic) {
-        contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic, DEFAULT_PROVIDER, null, false, DEFAULT_RELEVANCE_MULTIPLIER));
+    /**
+     * Alternative way to add a property contribution.
+     */
+    public void addPropertyContribution(final String name, final String type, final String declaringType, final boolean isStatic) {
+        contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic ? AccStatic : 0, DEFAULT_PROVIDER, null, false, DEFAULT_RELEVANCE_MULTIPLIER));
     }
 
     @Override
-    public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
-        // only need to match on current type.
-        List<IContributionElement> currentContributions = new ArrayList<>();
-        for (IContributionElement element : contributions) {
-            if (pattern.matchesType(element.getDeclaringTypeName())) {
-                currentContributions.add(element);
-            }
-        }
-        return currentContributions;
+    public List<IContributionElement> getContributions(final GroovyDSLDContext pattern, final BindingSet matches) {
+        return contributions.stream().filter(element -> {
+            return pattern.matchesType(element.getDeclaringTypeName()); // only need to match on current type
+        }).collect(toList());
     }
 }

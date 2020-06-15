@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeFalse
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IResource
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
@@ -229,6 +230,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
         inferType(contents, 'instance').with {
             assert result.extraDoc.replace('}', '') =~ 'Singleton AST transform'
+            assert Flags.isFinal(result.declaration.modifiers)
             assert declaringTypeName == 'A'
             assert typeName == 'A'
         }
