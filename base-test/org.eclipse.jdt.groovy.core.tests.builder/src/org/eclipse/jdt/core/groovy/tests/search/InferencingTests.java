@@ -3426,8 +3426,25 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset + 5, offset + 8, "java.lang.Number");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1122
     public void testInstanceOf14() {
+        String contents =
+            "void test(flag, x) {\n" +
+            "  if (flag && x instanceof java.util.regex.Matcher) {\n" +
+            "    x.find()\n" +
+            "  }\n" +
+            "  x\n" +
+            "}\n";
+
+        int offset = contents.indexOf("x.find");
+        assertType(contents, offset, offset + 1, "java.util.regex.Matcher");
+
+        offset = contents.lastIndexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+    }
+
+    @Test
+    public void testInstanceOf15() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def test(value) {\n" +
@@ -3442,7 +3459,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // GROOVY-7971
-    public void testInstanceOf15() {
+    public void testInstanceOf16() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "def test(value) {\n" +
