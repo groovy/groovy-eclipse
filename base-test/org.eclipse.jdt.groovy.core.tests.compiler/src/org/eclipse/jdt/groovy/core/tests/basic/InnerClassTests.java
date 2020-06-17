@@ -302,9 +302,9 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
             "public class A extends groovy.lang.Script {\n" +
             "  public A() {\n" +
             "  }\n" +
-            "  public A(groovy.lang.Binding context) {\n" +
+            "  public A(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    java.lang.Object foo;\n" +

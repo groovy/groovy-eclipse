@@ -5689,6 +5689,13 @@ class ASTConverter {
 					}
 				} catch(InvalidInputException e) {
 					// ignore
+				// GROOVY add
+				} finally {
+					if (Modifier.isFinal(argument.modifiers) && variableDecl.modifiers().stream().noneMatch(it -> it instanceof Modifier && ((Modifier) it).isFinal())) {
+						Modifier modifier = new Modifier(this.ast); modifier.setKeyword(Modifier.ModifierKeyword.FINAL_KEYWORD);
+						variableDecl.modifiers().add(modifier);
+					}
+				// GROOVY end
 				}
 		}
 	}

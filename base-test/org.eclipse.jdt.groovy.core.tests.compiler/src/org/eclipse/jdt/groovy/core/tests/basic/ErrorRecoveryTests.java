@@ -97,9 +97,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
@@ -129,9 +129,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
@@ -161,9 +161,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
@@ -193,9 +193,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    int err;\n" +
@@ -394,9 +394,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
@@ -426,9 +426,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
@@ -458,9 +458,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
@@ -490,9 +490,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
@@ -1175,9 +1175,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    java.lang.Object a;\n" +
@@ -1359,9 +1359,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(groovy.lang.Binding context) {\n" +
+            "  public X(final groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
+            "  public static void main(final java.lang.String... args) {\n" +
             "  }\n" +
             "  public @java.lang.Override java.lang.Object run() {\n" +
             "    HTML h;\n" +

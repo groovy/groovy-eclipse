@@ -1673,24 +1673,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (parameters == null || parameters.length == 0) {
                 return null;
             }
-            Argument[] arguments = new Argument[parameters.length];
-            for (int i = 0, n = parameters.length; i < n; i += 1) {
+            int n = parameters.length;
+            Argument[] arguments = new Argument[n];
+            for (int i = 0; i < n; i += 1) {
                 Parameter parameter = parameters[i];
-                TypeReference parameterTypeReference = createTypeReferenceForClassNode(parameter.getType());
-                long pos;
-                int pstart = parameter.getStart();
-                if (parameter.getStart() == 0 && parameter.getEnd() == 0) {
-                    pos = toPos(-1, -2);
-                    pstart = -1;
-                } else {
-                    pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
-                }
-                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccDefault);
+
+                arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1), createTypeReferenceForClassNode(parameter.getType()), parameter.getModifiers());
                 arguments[i].annotations = createAnnotations(parameter.getAnnotations());
-                arguments[i].declarationSourceStart = pstart;
+                arguments[i].declarationSourceStart = arguments[i].sourceStart;
             }
             if (isVargs(parameters)) {
-                arguments[parameters.length - 1].type.bits |= ASTNode.IsVarArgs;
+                arguments[n - 1].type.bits |= ASTNode.IsVarArgs;
             }
             return arguments;
         }

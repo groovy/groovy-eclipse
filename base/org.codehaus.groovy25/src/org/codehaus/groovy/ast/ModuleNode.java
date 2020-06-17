@@ -159,7 +159,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public void addImport(String alias, ClassNode type) {
-        addImport(alias, type, new ArrayList<AnnotationNode>());
+        addImport(alias, type, Collections.<AnnotationNode>emptyList());
     }
 
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
@@ -321,6 +321,13 @@ public class ModuleNode extends ASTNode implements Opcodes {
         }
     }
 
+    // GRECLIPSE add
+    private static Parameter makeFinal(Parameter parameter) {
+        parameter.setModifiers(ACC_FINAL);
+        return parameter;
+    }
+    // GRECLIPSE end
+
     protected ClassNode createStatementsClass() {
         ClassNode classNode = getScriptClassDummy();
         if (classNode.getName().endsWith("package-info")) {
@@ -329,13 +336,12 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
         handleMainMethodIfPresent(methods);
 
-        // return new Foo(new ShellContext(args)).run()
         classNode.addMethod(
             new MethodNode(
                 "main",
                 ACC_PUBLIC | ACC_STATIC,
                 ClassHelper.VOID_TYPE,
-                new Parameter[] { new Parameter(ClassHelper.STRING_TYPE.makeArray(), "args")},
+                new Parameter[] {makeFinal(new Parameter(ClassHelper.STRING_TYPE.makeArray(), "args"))},
                 ClassNode.EMPTY_ARRAY,
                 new ExpressionStatement(
                     new MethodCallExpression(
@@ -372,27 +378,21 @@ public class ModuleNode extends ASTNode implements Opcodes {
 
         classNode.addConstructor(
             ACC_PUBLIC,
-            new Parameter[] { new Parameter(ClassHelper.make(Binding.class), "context")},
+            new Parameter[] {makeFinal(new Parameter(ClassHelper.make(Binding.class), "context"))},
             ClassNode.EMPTY_ARRAY,
             stmt);
 
         for (MethodNode node : methods) {
-            int modifiers = node.getModifiers();
-            if ((modifiers & ACC_ABSTRACT) != 0) {
-                throw new RuntimeException(
-                    "Cannot use abstract methods in a script, they are only available inside classes. Method: "
-                        + node.getName());
+            if (node.isAbstract()) {
+                throw new RuntimeException("Cannot use abstract methods in a script, they are only available inside classes. Method: " + node.getName());
             }
-            // br: the old logic seems to add static to all def f().... in a script, which makes enclosing
-            // inner classes (including closures) in a def function difficult. Comment it out.
-            node.setModifiers(modifiers /*| ACC_STATIC*/);
-
             classNode.addMethod(node);
         }
+
         return classNode;
     }
 
-    /*
+    /**
      * If a main method is provided by user, account for it under run() as scripts generate their own 'main' so they can run.
      */
     private void handleMainMethodIfPresent(List methods) {
