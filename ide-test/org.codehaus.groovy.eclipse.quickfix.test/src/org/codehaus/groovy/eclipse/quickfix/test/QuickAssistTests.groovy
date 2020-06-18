@@ -1700,8 +1700,14 @@ final class QuickAssistTests extends QuickFixTestSuite {
 
     @Test
     void testAssignStatementToNewLocalVariable14() {
-        def source = 'package p\n\nimport groovy.lang.GroovyObject'
+        def source = 'package p\n\nimport groovy.lang.GroovyObject\n'
         assertProposalNotOffered(source, source.indexOf('import'), 0, new AssignStatementToNewLocalProposal())
+    }
+
+    @Test
+    void testAssignStatementToNewLocalVariable15() {
+        def source = 'package p\n\n@groovy.transform.Field Object o\n'
+        assertProposalNotOffered(source, source.indexOf('@'), 0, new AssignStatementToNewLocalProposal())
     }
 
     @Test

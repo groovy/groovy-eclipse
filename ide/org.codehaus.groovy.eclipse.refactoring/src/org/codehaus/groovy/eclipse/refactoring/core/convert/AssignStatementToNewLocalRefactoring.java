@@ -91,7 +91,7 @@ public class AssignStatementToNewLocalRefactoring {
 
             @Override
             public void visitReturnStatement(final ReturnStatement statement) {
-                if (region.regionIsCoveredByNode(statement)) {
+                if (region.regionIsCoveredByNode(statement) && region.regionIsCoveredByNode(statement.getExpression())) {
                     char[] contents = unit.getContents();
                     if (statement.getStart() >= 0 && statement.getStart() + statement.getLength() < contents.length) {
                         String source = String.valueOf(contents, statement.getStart(), statement.getLength());
