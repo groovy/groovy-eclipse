@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,30 +150,32 @@ public class ModuleNodeMapper {
         public final JDTResolver resolver;
         public final CompilationResult result;
 
-        public ModuleNodeInfo(ModuleNode module, JDTResolver resolver) {
+        public ModuleNodeInfo(final ModuleNode module, final JDTResolver resolver) {
             this(module, resolver, null);
         }
 
-        public ModuleNodeInfo(ModuleNode module, JDTResolver resolver, CompilationResult result) {
+        public ModuleNodeInfo(final ModuleNode module, final JDTResolver resolver, final CompilationResult result) {
             this.module = module;
             this.resolver = resolver;
             this.result = result;
         }
 
         public final boolean isEmpty() {
-            if (module == null || module.getClasses() == null || (module.getClasses().isEmpty() && module.getImports().isEmpty())) {
-                return true;
+            if (module.getClasses().size() > 1 || !module.getMethods().isEmpty() ||
+                    !module.getImports().isEmpty() || !module.getStaticImports().isEmpty() ||
+                    !module.getStarImports().isEmpty() || !module.getStaticStarImports().isEmpty() ||
+                    (module.getPackage() != null && !module.getPackage().getAnnotations().isEmpty())) {
+                return false;
             }
-            if (module.getClasses().size() == 1 && module.getImports().isEmpty() && module.getClasses().get(0).isScript()) {
-                if ((module.getStatementBlock() == null || module.getStatementBlock().isEmpty() || isNullReturn(module.getStatementBlock())) &&
-                        (module.getMethods() == null || module.getMethods().isEmpty())) {
-                    return true;
-                }
+            if (module.getClasses().isEmpty() || (module.getClasses().get(0).isScript() &&
+                    module.getClasses().get(0).getFields().stream().noneMatch(f -> f.getEnd() > 0) &&
+                    (module.getStatementBlock().isEmpty() || isNullReturn(module.getStatementBlock())))) {
+                return true;
             }
             return false;
         }
 
-        private static boolean isNullReturn(BlockStatement blockStatement) {
+        private static boolean isNullReturn(final BlockStatement blockStatement) {
             List<Statement> statements = blockStatement.getStatements();
             if (statements.size() == 1 && statements.get(0) instanceof ReturnStatement) {
                 ReturnStatement returnStatement = (ReturnStatement) statements.get(0);

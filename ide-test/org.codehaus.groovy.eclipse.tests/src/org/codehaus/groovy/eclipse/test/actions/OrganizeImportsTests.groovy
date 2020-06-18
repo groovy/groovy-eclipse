@@ -880,7 +880,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass5a() {
+    void testInnerClass6() {
         //@formatter:off
         createGroovyType 'foo', 'Bar', '''
             class Bar {
@@ -902,7 +902,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass6() {
+    void testInnerClass7() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -914,7 +914,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass6a() {
+    void testInnerClass8() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -926,7 +926,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass6b() {
+    void testInnerClass9() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -938,7 +938,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testInnerClass6c() {
+    void testInnerClass10() {
         createGroovyType 'a.b.c.d', 'E', '''
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -949,16 +949,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test // not organized
-    void testStaticImport0() {
+    @Test
+    void testStaticImport1() {
         String contents = '''\
             import static java.lang.String.format
             '''
-        doContentsCompareTest(contents)
+        doContentsCompareTest(contents, '')
     }
 
     @Test
-    void testStaticImport1() {
+    void testStaticImport2() {
         String contents = '''\
             import static java.lang.String.format
             format
@@ -967,7 +967,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport1a() {
+    void testStaticImport3() {
         String originalContents = '''\
             import static java.lang.String.format
             formage
@@ -979,7 +979,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport2() {
+    void testStaticImport4() {
         String contents = '''\
             import static java.lang.String.format
             format('Some %d', 1)
@@ -988,7 +988,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport3() {
+    void testStaticImport5() {
         String contents = '''\
             import static java.lang.String.format
             def formatter = { format 'blah', 42 }
@@ -997,7 +997,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport4() {
+    void testStaticImport6() {
         String contents = '''\
             import static java.lang.Math.PI
             def area = n * PI
@@ -1006,7 +1006,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport4a() {
+    void testStaticImport7() {
         String contents = '''\
             import static java.lang.Math.PI
             def nan = PI.isNaN()
@@ -1015,7 +1015,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport5() {
+    void testStaticImport8() {
         String contents = '''\
             import static java.lang.Math.PI
             def area = compute(n, PI)
@@ -1024,7 +1024,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport5a() {
+    void testStaticImport9() {
         String originalContents = '''\
             import static java.lang.Math.PI
             def area = compute(n, Math.PI)
@@ -1036,7 +1036,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport6() {
+    void testStaticImport10() {
         String contents = '''\
             import static org.apache.commons.lang.ArrayUtils.EMPTY_STRING_ARRAY
             @SuppressWarnings(value=EMPTY_STRING_ARRAY)
@@ -1046,7 +1046,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport7() {
+    void testStaticImport11() {
         String contents = '''\
             import static java.util.Collections.emptyList
             class C {
@@ -1059,7 +1059,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport7a() {
+    void testStaticImport12() {
         String contents = '''\
             import static java.util.Collections.emptyList
             @groovy.transform.CompileStatic
@@ -1073,7 +1073,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport7b() {
+    void testStaticImport13() {
         String contents = '''\
             import static java.util.Collections.emptyList
             @groovy.transform.TypeChecked
@@ -1087,7 +1087,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport8() {
+    void testStaticImport14() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { String F = 'G.H' }
             '''
@@ -1133,16 +1133,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test // not organized
-    void testStarImport0() {
+    @Test
+    void testStarImport1() {
         String contents = '''\
             import javax.swing.text.html.*
             '''
-        doContentsCompareTest(contents)
+        doContentsCompareTest(contents, '')
     }
 
     @Test
-    void testStarImport1() {
+    void testStarImport2() {
         String contents = '''\
             import javax.swing.text.html.*
             HTML
@@ -1151,7 +1151,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStarImport2() {
+    void testStarImport3() {
         String originalContents = '''\
             import javax.swing.text.html.*
             println 'trace'
@@ -1163,7 +1163,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStarImport3() {
+    void testStarImport4() {
         String originalContents = '''\
             import java.util.regex.Pattern
             import java.util.regex.*
@@ -1177,7 +1177,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStarImport4() {
+    void testStarImport5() {
         String originalContents = '''\
             import java.util.regex.*
             import java.util.regex.Pattern
@@ -1192,16 +1192,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test // not organized
-    void testStaticStarImport0() {
+    @Test
+    void testStaticStarImport1() {
         String contents = '''\
             import static java.lang.String.*
             '''
-        doContentsCompareTest(contents)
+        doContentsCompareTest(contents, '')
     }
 
     @Test // GRECLIPSE-929
-    void testStaticStarImport1() {
+    void testStaticStarImport2() {
         String contents = '''\
             import static java.lang.String.*
             format('fmt str', 'arg str', 929)
@@ -1210,7 +1210,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-929
-    void testStaticStarImport1a() {
+    void testStaticStarImport3() {
         String contents = '''\
             import static java.lang.String.*
             @groovy.transform.CompileStatic
@@ -1222,7 +1222,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticStarImport2() {
+    void testStaticStarImport4() {
         String originalContents = '''\
             import static java.lang.String.*
             println 'trace'
@@ -1234,7 +1234,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticStarImport3() {
+    void testStaticStarImport5() {
         String originalContents = '''\
             import static java.util.Collections.emptyList
             import static java.util.Collections.*
@@ -1248,7 +1248,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/840
-    void testStaticStarImport4() {
+    void testStaticStarImport6() {
         addGroovySource '''\
             class Bar {
               static boolean isThing() {}
@@ -1272,7 +1272,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/840
-    void testStaticStarImport5() {
+    void testStaticStarImport7() {
         addGroovySource '''\
             class Bar {
               static boolean isThing() {}
@@ -1294,7 +1294,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/840
-    void testStaticStarImport6() {
+    void testStaticStarImport8() {
         addGroovySource '''\
             class Bar {
               static boolean isThing() {}
@@ -1321,17 +1321,16 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             @Deprecated
             import javax.swing.text.html.*
             '''
-        doContentsCompareTest(contents)
+        doContentsCompareTest(contents, '')
     }
 
     @Test // GRECLIPSE-1219
     void testAnnotationsOnImports2() {
-        String originalContents = '''\
+        String contents = '''\
             @Deprecated
             import javax.swing.text.html.HTML
             '''
-        String expectedContents = ''
-        doContentsCompareTest(originalContents, expectedContents)
+        doContentsCompareTest(contents, '')
     }
 
     @Test // GRECLIPSE-1219

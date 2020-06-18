@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2018 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.test.actions
-
-import static org.junit.Assert.*
 
 import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestSuite
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -717,9 +715,17 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testAddImportOnPackageAnnotation() {
-        addImportOnSelection "@javax.annotation.G${CARET}enerated package a.b.c\ndef x"
-        assertEditorContents "@Generated package a.b.c\n\nimport javax.annotation.Generated\n\ndef x"
+    void testAddImportOnPackageAnnotation1() {
+        addImportOnSelection "@javax.annotation.G${CARET}enerated package a.b.c\n"
+        assertEditorContents "@Generated package a.b.c\n\nimport javax.annotation.Generated\n"
+    }
+
+    @Test
+    void testAddImportOnPackageAnnotation2() {
+        addGroovySource 'abstract class ScriptType extends Script { def m() {} }'
+
+        addImportOnSelection "@groovy.transform.B${CARET}aseScript(ScriptType) package a.b.c\n"
+        assertEditorContents "@BaseScript(ScriptType) package a.b.c\n\nimport groovy.transform.BaseScript\n"
     }
 
     @Test
@@ -729,7 +735,19 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testAddImportOnFieldAnnotation() {
+    void testAddImportOnFieldAnnotation1() {
+        addImportOnSelection """\
+            @groovy.transform.F${CARET}ield Object o
+            """
+        assertEditorContents """\
+            import groovy.transform.Field
+
+            @Field Object o
+            """.stripIndent()
+    }
+
+    @Test
+    void testAddImportOnFieldAnnotation2() {
         addImportOnSelection """\
             class C {
               @javax.annotation.G${CARET}enerated Object o
