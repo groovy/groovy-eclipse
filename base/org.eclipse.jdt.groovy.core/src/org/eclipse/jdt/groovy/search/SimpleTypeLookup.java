@@ -807,7 +807,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (last != null) {
             long d1 = CategoryTypeLookup.calculateParameterDistance(args, last.getParameters());
             long d2 = CategoryTypeLookup.calculateParameterDistance(args, next.getParameters());
-            if (d1 < d2)
+            if (d1 <= d2)
                 return last;
         }
         return next;
