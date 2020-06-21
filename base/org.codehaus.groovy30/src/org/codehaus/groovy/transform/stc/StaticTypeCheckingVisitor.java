@@ -581,6 +581,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         String name = vexp.getName();
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+        /* GRECLIPSE edit -- GROOVY-9604
         if (enclosingClosure != null) {
             switch (name) {
                 case "delegate":
@@ -600,12 +601,43 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     storeType(vexp, typeCheckingContext.getEnclosingClassNode());
                     return;
             }
-        }
+        }*/
 
         Variable accessedVariable = vexp.getAccessedVariable();
         VariableExpression localVariableExpression = null;
         if (accessedVariable instanceof DynamicVariable) {
-            // a dynamic variable is either a class member used in a 'with' or an undeclared variable
+            // a dynamic variable is either a closure property, a class member referenced from a closure, or an undeclared variable
+
+            // GRECLIPSE add -- GROOVY-9604
+            if (enclosingClosure != null) {
+                switch (name) {
+                    case "delegate":
+                        DelegationMetadata dm = getDelegationMetadata(enclosingClosure.getClosureExpression());
+                        if (dm != null) {
+                            storeType(vexp, dm.getType());
+                            return;
+                        }
+                        // falls through
+                    case "owner":
+                        if (typeCheckingContext.getEnclosingClosureStack().size() > 1) {
+                            storeType(vexp, CLOSURE_TYPE);
+                            return;
+                        }
+                        // falls through
+                    case "thisObject":
+                        storeType(vexp, typeCheckingContext.getEnclosingClassNode());
+                        return;
+                    case "parameterTypes":
+                        storeType(vexp, CLASS_Type.makeArray());
+                        return;
+                    case "maximumNumberOfParameters":
+                    case "resolveStrategy":
+                    case "directive":
+                        storeType(vexp, int_TYPE);
+                        return;
+                }
+            }
+            // GRECLIPSE end
 
             if (tryVariableExpressionAsProperty(vexp, name)) return;
 
@@ -3456,6 +3488,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         break;
                     }
                 }
+                /* GRECLIPSE edit -- GROOVY-9604
                 if (mn.isEmpty() && typeCheckingContext.getEnclosingClosure() != null && args.length == 0) {
                     // add special handling of "delegate", "owner", and "this" in a closure
                     switch (name) {
@@ -3470,6 +3503,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             break;
                     }
                 }
+                */
+                if (mn.isEmpty() && call.isImplicitThis() && isThisExpression(objectExpression) && typeCheckingContext.getEnclosingClosure() != null) {
+                    mn = CLOSURE_TYPE.getDeclaredMethods(name);
+                    if (!mn.isEmpty()) {
+                        chosenReceiver = Receiver.make(CLOSURE_TYPE);
+                        objectExpression.removeNodeMetaData(INFERRED_TYPE);
+                    }
+                }
+                // GRECLIPSE end
                 if (mn.isEmpty()) {
                     mn = extension.handleMissingMethod(receiver, name, argumentList, args, call);
                 }
@@ -3483,9 +3525,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
                     if (mn.size() == 1) {
                         MethodNode directMethodCallCandidate = mn.get(0);
-                        if (call.getNodeMetaData(DYNAMIC_RESOLUTION) == null &&
-                                !directMethodCallCandidate.isStatic() && objectExpression instanceof ClassExpression &&
-                                !"java.lang.Class".equals(directMethodCallCandidate.getDeclaringClass().getName())) {
+                        if (call.getNodeMetaData(DYNAMIC_RESOLUTION) == null
+                                && !directMethodCallCandidate.isStatic() && objectExpression instanceof ClassExpression
+                                && !"java.lang.Class".equals(directMethodCallCandidate.getDeclaringClass().getName())) {
                             ClassNode owner = directMethodCallCandidate.getDeclaringClass();
                             addStaticTypeError("Non static method " + owner.getName() + "#" + directMethodCallCandidate.getName() + " cannot be called from static context", call);
                         }
@@ -3500,11 +3542,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                             returnType = (irtg != null && implementsInterfaceOrIsSubclassOf(irtg, returnType) ? irtg : returnType);
                             callArgsVisited = true;
                         }
+                        // GROOVY-6091: use of "delegate" does not make use of @DelegatesTo metadata
                         if (directMethodCallCandidate == GET_DELEGATE && typeCheckingContext.getEnclosingClosure() != null) {
                             DelegationMetadata md = getDelegationMetadata(typeCheckingContext.getEnclosingClosure().getClosureExpression());
-                            returnType = typeCheckingContext.getEnclosingClassNode();
                             if (md != null) {
                                 returnType = md.getType();
+                            } else {
+                                returnType = typeCheckingContext.getEnclosingClassNode();
                             }
                         }
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, mn.get(0), call)) {

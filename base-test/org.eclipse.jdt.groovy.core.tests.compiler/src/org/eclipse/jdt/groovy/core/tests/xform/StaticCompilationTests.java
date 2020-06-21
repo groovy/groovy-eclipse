@@ -4509,4 +4509,25 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "true");
     }
+
+    @Test
+    public void testCompileStatic9604() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  void m() {\n" +
+            "    { ->\n" +
+            "      print resolveStrategy\n" +
+            "      print getResolveStrategy()\n" +
+            "    }();\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "00");
+    }
 }

@@ -609,8 +609,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+        /* GRECLIPSE edit -- GROOVY-9089, GROOVY-9604
         if (enclosingClosure != null) {
-            /* GRECLIPSE edit -- GROOVY-9089
             String name = vexp.getName();
             if (name.equals("owner") || name.equals("thisObject")) {
                 storeType(vexp, typeCheckingContext.getEnclosingClassNode());
@@ -622,27 +622,8 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeType(vexp, type);
                 return;
             }
-            */
-            switch (vexp.getName()) {
-            case "delegate":
-                DelegationMetadata md = getDelegationMetadata(enclosingClosure.getClosureExpression());
-                if (md != null) {
-                    storeType(vexp, md.getType());
-                    return;
-                }
-                // falls through
-            case "owner":
-                if (typeCheckingContext.getEnclosingClosureStack().size() > 1) {
-                    storeType(vexp, CLOSURE_TYPE);
-                    return;
-                }
-                // falls through
-            case "thisObject":
-                storeType(vexp, typeCheckingContext.getEnclosingClassNode());
-                return;
-            }
-            // GRECLIPSE end
         }
+        */
 
         if (!(vexp.getAccessedVariable() instanceof DynamicVariable)) {
             if (typeCheckingContext.getEnclosingClosure() == null) {
@@ -663,12 +644,40 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             return;
         }
 
-        // a dynamic variable is either an undeclared variable
-        // or a member of a class used in a 'with'
-        DynamicVariable dyn = (DynamicVariable) vexp.getAccessedVariable();
-        // first, we must check the 'with' context
-        String dynName = dyn.getName();
-        if (tryVariableExpressionAsProperty(vexp, dynName)) return;
+        // a dynamic variable is either a closure property, a class member referenced from a closure, or an undeclared variable
+
+        // GRECLIPSE add -- GROOVY-9089, GROOVY-9604
+        if (enclosingClosure != null) {
+            switch (vexp.getName()) {
+                case "delegate":
+                    DelegationMetadata dm = getDelegationMetadata(enclosingClosure.getClosureExpression());
+                    if (dm != null) {
+                        storeType(vexp, dm.getType());
+                        return;
+                    }
+                    // falls through
+                case "owner":
+                    if (typeCheckingContext.getEnclosingClosureStack().size() > 1) {
+                        storeType(vexp, CLOSURE_TYPE);
+                        return;
+                    }
+                    // falls through
+                case "thisObject":
+                    storeType(vexp, typeCheckingContext.getEnclosingClassNode());
+                    return;
+                case "parameterTypes":
+                    storeType(vexp, CLASS_Type.makeArray());
+                    return;
+                case "maximumNumberOfParameters":
+                case "resolveStrategy":
+                case "directive":
+                    storeType(vexp, int_TYPE);
+                    return;
+            }
+        }
+        // GRECLIPSE end
+
+        if (tryVariableExpressionAsProperty(vexp, vexp.getName())) return;
 
         if (!extension.handleUnresolvedVariableExpression(vexp)) {
             addStaticTypeError("The variable [" + vexp.getName() + "] is undeclared.", vexp);
@@ -3230,7 +3239,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         // GRECLIPSE end
     }
-    // GRECLIPSE end
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
@@ -3404,6 +3412,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         break;
                     }
                 }
+                /* GRECLIPSE edit -- GROOVY-9604
                 if (mn.isEmpty() && typeCheckingContext.getEnclosingClosure() != null && args.length == 0) {
                     // add special handling of getDelegate() and getOwner()
                     if ("getDelegate".equals(name)) {
@@ -3414,6 +3423,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         mn = Collections.singletonList(GET_THISOBJECT);
                     }
                 }
+                */
+                if (mn.isEmpty() && call.isImplicitThis() && (objectExpression instanceof VariableExpression
+                        && ((VariableExpression) objectExpression).isThisExpression()) && typeCheckingContext.getEnclosingClosure() != null) {
+                    mn = CLOSURE_TYPE.getDeclaredMethods(name);
+                    if (!mn.isEmpty()) {
+                        chosenReceiver = Receiver.make(CLOSURE_TYPE);
+                        objectExpression.removeNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
+                    }
+                }
+                // GRECLIPSE end
                 if (mn.isEmpty()) {
                     mn = extension.handleMissingMethod(receiver, name, argumentList, args, call);
                 }
