@@ -509,6 +509,38 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic20() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@CompileStatic\n" +
+            "class C {\n" +
+            "  void m() {\n" +
+            "    C that = this;\n" +
+            "    { ->\n" +
+            "      def ref = getThisObject()\n" +
+            "      assert ref == that\n" +
+            "    }();\n" +
+            "    { ->\n" +
+            "      def ref = getDelegate()\n" +
+            "      assert ref == that\n" +
+            "    }();\n" +
+            "    { ->\n" +
+            "      def ref = getOwner()\n" +
+            "      assert ref == that\n" +
+            "    }();\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic1505() {
         //@formatter:off
         String[] sources = {
