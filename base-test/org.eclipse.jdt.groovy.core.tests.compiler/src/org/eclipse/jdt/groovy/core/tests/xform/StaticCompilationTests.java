@@ -4511,6 +4511,27 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9603() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Map<String, Object> map) {\n" +
+            "  map.put('proper', [key: 'abc'])\n" +
+            "  assert map.proper['key'] == 'abc'\n" +
+            "  map['proper'] = [key: 'def']\n" +
+            "  assert map.proper['key'] == 'def'\n" +
+            "  map.proper = [key: 'ghi']\n" +
+            "  assert map.proper['key'] == 'ghi'" +
+            "}\n" +
+            "test([:])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic9604() {
         //@formatter:off
         String[] sources = {

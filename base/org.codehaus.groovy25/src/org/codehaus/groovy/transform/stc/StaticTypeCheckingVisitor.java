@@ -1303,6 +1303,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void addMapAssignmentConstructorErrors(ClassNode leftRedirect, Expression leftExpression, Expression rightExpression) {
+        // GRECLIPSE add -- GROOVY-9603
+        if (leftRedirect.equals(OBJECT_TYPE)) return;
+        // GRECLIPSE end
         // if left type is not a list but right type is a map, then we're in the case of a groovy
         // constructor type : A a = [x:2, y:3]
         // In this case, more checks can be performed
