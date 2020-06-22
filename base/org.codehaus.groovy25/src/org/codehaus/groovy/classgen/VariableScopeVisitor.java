@@ -53,9 +53,9 @@ import org.codehaus.groovy.syntax.Types;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import static java.beans.Introspector.decapitalize;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 
 /**
  * Goes through an AST and initializes the scopes.
@@ -63,19 +63,19 @@ import static java.lang.reflect.Modifier.isStatic;
 public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     private VariableScope currentScope = null;
-    private VariableScope headScope = new VariableScope();
+    private final VariableScope headScope = new VariableScope();
     private ClassNode currentClass = null;
-    private SourceUnit source;
+    private final SourceUnit source;
     private boolean isSpecialConstructorCall = false;
     private boolean inConstructor = false;
     private final boolean recurseInnerClasses;
 
-    private LinkedList stateStack = new LinkedList();
+    private final LinkedList stateStack = new LinkedList();
 
     private class StateStackElement {
-        VariableScope scope;
-        ClassNode clazz;
-        boolean inConstructor;
+        final VariableScope scope;
+        final ClassNode clazz;
+        final boolean inConstructor;
 
         StateStackElement() {
             scope = VariableScopeVisitor.this.currentScope;
@@ -157,10 +157,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // if we are in a class and no variable is declared until
             // now, then we can break the loop, because we are allowed
             // to declare a variable of the same name as a class member
-            // GRECLIPSE edit -- GROOVY-5961
-            //if (scope.getClassScope() != null) break;
             if (scope.getClassScope() != null && !isAnonymous(scope.getClassScope())) break;
-            // GRECLIPSE end
 
             if (scope.getDeclaredVariable(var.getName()) != null) {
                 // variable already declared
@@ -188,17 +185,14 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         for (MethodNode mn : cn.getMethods()) {
             String pName = getPropertyName(mn);
-            // GRECLIPSE edit
-            //if (pName != null && pName.equals(name))
-            //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
             if (name.equals(pName)) {
-                PropertyNode property = new PropertyNode(name, mn.getModifiers(), ClassHelper.DYNAMIC_TYPE, cn, null, null, null);
-                property.getField().setHasNoRealSourcePosition(true); property.getField().setSynthetic(true);
+                PropertyNode property = new PropertyNode(name, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
+                property.getField().setHasNoRealSourcePosition(true);
+                property.getField().setSynthetic(true);
                 property.getField().setDeclaringClass(cn);
                 property.setDeclaringClass(cn);
                 return property;
             }
-            // GRECLIPSE end
         }
 
         for (PropertyNode pn : cn.getProperties()) {
@@ -208,6 +202,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         /* GRECLIPSE edit -- GROOVY-9598
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
+        if (isAnonymous(cn)) return null;
         return findClassMember(cn.getOuterClass(), name);
         */
         for (ClassNode face : cn.getInterfaces()) {
@@ -218,46 +213,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE end
     }
 
-    private static String getPropertyName(MethodNode m) {
-        String name = m.getName();
-        /* GRECLIPSE edit
-        if (!(name.startsWith("set") || name.startsWith("get"))) return null;
-        String pname = name.substring(3);
-        if (pname.length() == 0) return null;
-        pname = java.beans.Introspector.decapitalize(pname);
-
-        if (name.startsWith("get") && (m.getReturnType() == ClassHelper.VOID_TYPE || m.getParameters().length != 0)) {
-            return null;
-        }
-        if (name.startsWith("set") && m.getParameters().length != 1) {
-            return null;
-        }
-        return pname;
-        */
-        if (name.startsWith("set") || name.startsWith("get") || name.startsWith("is")) {
-            String pname = decapitalize(name.substring(name.startsWith("is") ? 2 : 3));
-            if (!pname.isEmpty()) {
-                Parameter[] parameters = m.getParameters();
-                if (name.startsWith("set")) {
-                    if (parameters.length == 1) {
-                        return pname;
-                    }
-                } else if (parameters.length == 0 && !m.isVoidMethod()) {
-                    if (name.startsWith("get") || ClassHelper.boolean_TYPE.equals(m.getReturnType())) {
-                        return pname;
-                    }
-                }
-            }
-        }
-        return null;
-        // GRECLIPSE end
-    }
-
-    // GRECLIPSE add
     private static boolean isAnonymous(ClassNode node) {
         return (!node.isEnum() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
     }
-    // GRECLIPSE end
 
     // -------------------------------
     // different Variable based checks
@@ -309,10 +267,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     if (!(staticScope && !staticMember))
                         var = member;
                 }
-                // GRECLIPSE add -- GROOVY-5961
+                // GROOVY-5961
                 if (!isAnonymous(scope.getClassScope()))
-                // GRECLIPSE end
-                break;
+                    break;
             }
             scope = scope.getParent();
         }
@@ -320,19 +277,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             var = new DynamicVariable(var.getName(), true);
         }
 
+        boolean isClassVariable = (scope.isClassScope() && !scope.isReferencedLocalVariable(name))
+                || (scope.isReferencedClassVariable(name) && scope.getDeclaredVariable(name) == null);
         VariableScope end = scope;
-        // GRECLIPSE add -- GROOVY-9120
-        boolean isClassVariable = (end.isClassScope() && !end.isReferencedLocalVariable(name))
-            || (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null);
-        // GRECLIPSE end
+
         scope = currentScope;
         while (scope != end) {
-            /* GRECLIPSE edit
-            if (end.isClassScope() ||
-                    (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null)) {
-            */
             if (isClassVariable) {
-            // GRECLIPSE end
                 scope.putReferencedClassVariable(var);
             } else {
                 scope.putReferencedLocalVariable(var);
@@ -541,14 +492,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     public void visitClass(ClassNode node) {
         // AIC are already done, doing them here again will lead to wrong scopes
-        /* GRECLIPSE edit
-        if (node instanceof InnerClassNode) {
-            InnerClassNode in = (InnerClassNode) node;
-            if (in.isAnonymous() && !in.isEnum()) return;
-        }
-        */
         if (isAnonymous(node)) return;
-        // GRECLIPSE end
 
         pushState();
 
@@ -628,31 +572,25 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState();
         InnerClassNode innerClass = (InnerClassNode) call.getType();
         innerClass.setVariableScope(currentScope);
-        // GRECLIPSE add -- GROOVY-5961
         currentScope.setClassScope(innerClass);
         currentScope.setInStaticContext(false);
-        // GRECLIPSE end
         for (MethodNode method : innerClass.getMethods()) {
             Parameter[] parameters = method.getParameters();
-            if (parameters.length == 0) parameters = null; // null means no implicit "it"
+            if (parameters.length == 0)
+                parameters = null; // null means no implicit "it"
             ClosureExpression cl = new ClosureExpression(parameters, method.getCode());
             visitClosureExpression(cl);
         }
 
         for (FieldNode field : innerClass.getFields()) {
-            final Expression expression = field.getInitialExpression();
+            Expression expression = field.getInitialExpression();
             pushState(field.isStatic());
             if (expression != null) {
-                // GRECLIPSE add -- GROOVY-6996
-                if (expression.isSynthetic())
-                // GRECLIPSE end
-                if (expression instanceof VariableExpression) {
-                    VariableExpression vexp = (VariableExpression) expression;
-                    if (vexp.getAccessedVariable() instanceof Parameter) {
-                        // workaround for GROOVY-6834: accessing a parameter which is not yet seen in scope
-                        popState();
-                        continue;
-                    }
+                if (expression.isSynthetic() && expression instanceof VariableExpression &&
+                        ((VariableExpression) expression).getAccessedVariable() instanceof Parameter) {
+                    // GROOVY-6834: accessing a parameter which is not yet seen in scope
+                    popState();
+                    continue;
                 }
                 expression.visit(this);
             }

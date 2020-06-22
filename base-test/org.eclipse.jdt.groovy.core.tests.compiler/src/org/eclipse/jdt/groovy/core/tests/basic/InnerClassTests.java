@@ -1954,4 +1954,26 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testAccessOuterClassMemberFromInnerClassMethod4() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "interface I {\n" +
+            "  String CONST = 'value'\n" +
+            "}\n" +
+            "class C implements I {\n" +
+            "  static class D {\n" +
+            "    void test() {\n" +
+            "      print CONST\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new C.D().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
 }
