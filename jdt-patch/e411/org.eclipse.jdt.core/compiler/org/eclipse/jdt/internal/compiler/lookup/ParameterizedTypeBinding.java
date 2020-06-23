@@ -659,9 +659,13 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 		return this.genericTypeSignature;
 	}
 
-	/**
-	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#getAnnotationTagBits()
-	 */
+	// GROOVY add
+	@Override
+	public AnnotationBinding[] getAnnotations() {
+		return this.type.getAnnotations();
+	}
+	// GROOVY end
+
 	@Override
 	public long getAnnotationTagBits() {
 		return this.type.getAnnotationTagBits();

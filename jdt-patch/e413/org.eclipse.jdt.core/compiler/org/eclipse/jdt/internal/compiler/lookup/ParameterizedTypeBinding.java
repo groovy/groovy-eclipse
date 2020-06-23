@@ -43,7 +43,7 @@
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 456508 - Unexpected RHS PolyTypeBinding for: <code-snippet>
  *								Bug 390064 - [compiler][resource] Resource leak warning missing when extending parameterized class
- *     Jesper S Mï¿½ller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *     Jesper S Møller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
  *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
@@ -662,9 +662,13 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 		return this.genericTypeSignature;
 	}
 
-	/**
-	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#getAnnotationTagBits()
-	 */
+	// GROOVY add
+	@Override
+	public AnnotationBinding[] getAnnotations() {
+		return this.type.getAnnotations();
+	}
+	// GROOVY end
+
 	@Override
 	public long getAnnotationTagBits() {
 		return this.type.getAnnotationTagBits();

@@ -151,7 +151,6 @@ public class ClassScope extends Scope {
 			RecordComponentBinding compBinding = new RecordComponentBinding(sourceType, recComp, null,
 					recComp.modifiers | ExtraCompilerModifiers.AccUnresolved);
 			compBinding.id = count;
-			checkAndSetModifiersForComponents(compBinding, recComp);
 
 			if (knownComponentNames.containsKey(recComp.name)) {
 				RecordComponentBinding previousBinding = (RecordComponentBinding) knownComponentNames.get(recComp.name);
@@ -178,10 +177,6 @@ public class ClassScope extends Scope {
 		if (count != componentBindings.length)
 			System.arraycopy(componentBindings, 0, componentBindings = new RecordComponentBinding[count], 0, count);
 		sourceType.setComponents(componentBindings);
-	}
-	private void checkAndSetModifiersForComponents(RecordComponentBinding compBinding, RecordComponent comp) {
-		// TODO Auto-generated method stub
-
 	}
 
 	void buildFields() {
