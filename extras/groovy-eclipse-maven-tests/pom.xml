@@ -8,7 +8,7 @@
 
 	<artifactId>groovy-eclipse-maven-tests</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>3.8.0-SNAPSHOT</version>
+	<version>3.8.1-SNAPSHOT</version>
 
 	<properties>
 		<!--

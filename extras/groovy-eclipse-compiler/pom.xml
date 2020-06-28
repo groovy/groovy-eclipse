@@ -3,7 +3,7 @@
 
 	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler</artifactId>
-	<version>3.8.0-SNAPSHOT</version>
+	<version>3.8.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>Groovy-Eclipse Compiler Plugin</name>

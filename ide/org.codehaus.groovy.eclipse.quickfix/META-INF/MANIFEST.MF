@@ -3,17 +3,17 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.quickfix;singleton:=true
 Bundle-Name: Groovy Quick Fix
 Bundle-Vendor: Pivotal Software, Inc.
-Bundle-Version: 3.8.0.qualifier
+Bundle-Version: 3.8.1.qualifier
 Export-Package: org.codehaus.groovy.eclipse.quickassist,
  org.codehaus.groovy.eclipse.quickassist.proposals;x-friends:="org.codehaus.groovy.eclipse.quickfix.test",
  org.codehaus.groovy.eclipse.quickfix,
  org.codehaus.groovy.eclipse.quickfix.proposals;x-friends:="org.codehaus.groovy.eclipse.quickfix.test",
  org.codehaus.groovy.eclipse.quickfix.templates;x-friends:="org.codehaus.groovy.eclipse.quickfix.test"
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="3.8.0",
- org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.8.0",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="3.8.0",
- org.codehaus.groovy.eclipse.dsl;bundle-version="3.8.0",
- org.codehaus.groovy.eclipse.ui;bundle-version="3.8.0",
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist;bundle-version="[3.8.0,3.9.0)",
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="[3.8.0,3.9.0)",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="[3.8.0,3.9.0)",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="[3.8.0,3.9.0)",
+ org.codehaus.groovy.eclipse.ui;bundle-version="[3.8.0,3.9.0)",
  org.eclipse.ui.editors
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin
