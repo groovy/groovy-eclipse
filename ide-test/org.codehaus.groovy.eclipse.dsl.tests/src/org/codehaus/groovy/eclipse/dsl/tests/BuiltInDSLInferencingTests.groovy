@@ -105,6 +105,48 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
+    void testField1() {
+        String contents = '''\
+            |@groovy.transform.Field def foo
+            |setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            if (isAtLeastGroovy(25)) {
+                assert result.extraDoc.replace('}', '') =~ 'Field AST transform'
+                assert declaringTypeName =~ '^TestUnit_'
+                assert typeName == 'java.lang.Void'
+            } else {
+                assert result.confidence.name() == 'UNKNOWN'
+            }
+        }
+    }
+
+    @Test
+    void testField2() {
+        String contents = '''\
+            |def foo
+            |setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
+    void testField3() {
+        String contents = '''\
+            |class Bar { public foo }
+            |new Bar().setFoo(null)
+            |'''.stripMargin()
+
+        inferType(contents, 'setFoo').with {
+            assert result.confidence.name() == 'UNKNOWN'
+        }
+    }
+
+    @Test
     void testMixin1() {
         addGroovySource '''\
             |class FlyingAbility {

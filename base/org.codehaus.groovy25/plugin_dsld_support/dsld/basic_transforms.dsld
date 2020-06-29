@@ -169,7 +169,7 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
 //@groovy.transform.Canonical, et al.
 
 //@groovy.transform.Field
-contribute(isScript() & currentType(fields: fields(not(isFinal())))) {
+contribute(isScript() & currentType(subType(Script) & bind(fields: fields(not(isFinal()))))) {
     provider = '{@link groovy.transform.Field Field} AST transform'
     for (FieldNode field : fields) {
         if (field.getEnd() > 0) {
