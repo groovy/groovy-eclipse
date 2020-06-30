@@ -1052,6 +1052,9 @@ public class AsmClassGenerator extends ClassGenerator {
                     visitFieldExpression(new FieldExpression(field));
                     return;
                 }
+                // GRECLIPSE add -- GROOVY-8167, GROOVY-8999
+                if (!(expression instanceof AttributeExpression))
+                // GRECLIPSE end
                 if (isSuperExpression(objectExpression)) {
                     String prefix;
                     if (controller.getCompileStack().isLHS()) {

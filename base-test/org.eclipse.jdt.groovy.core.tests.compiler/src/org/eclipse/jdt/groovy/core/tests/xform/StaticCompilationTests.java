@@ -720,7 +720,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  @Override\n" +
             "  String getField() {\n" +
             "    super.field = 'reset'\n" +
-            "    return super.field\n" +
+            "    return super.getField()\n" +
             "  }\n" +
             "}\n" +
             "print new B().field\n",
@@ -746,14 +746,20 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  @Override\n" +
             "  String getField() {\n" +
             "    super.@field = 'reset'\n" +
-            "    return super.field\n" +
+            "    return super.getField()\n" +
             "  }\n" +
             "}\n" +
             "print new B().field\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "reset");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 11)\n" +
+            "\tsuper.@field = 'reset'\n" +
+            "\t       ^^^^^\n" +
+            "Groovy:[Static type checking] - The field A.field is not accessible\n" +
+            "----------\n");
     }
 
     @Test

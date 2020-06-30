@@ -220,10 +220,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
                     if (isCompatible(field, isStaticObjectExpression)) {
                         return new TypeLookupResult(field.getType(), field.getDeclaringClass(), field, confidence, scope);
-                    } else if (!isSuperObjectExpression(scope)) {
+                    } else {
                         return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, TypeConfidence.UNKNOWN, scope);
                     }
-                    // "super.@value" prefers fields but supports general Groovy property access; see AsmClassGenerator#visitAttributeExpression
                 }
 
                 if ("new".equals(node.getText()) && isStaticObjectExpression && isStaticReferenceToInstanceMethod(scope)) {

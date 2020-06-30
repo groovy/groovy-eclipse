@@ -4032,15 +4032,15 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
-                "print new D().@field\n",
+                "print new C().@field\n",
 
-                "C.groovy",
-                "class C {\n" +
+                "A.groovy",
+                "abstract class A {\n" +
                 "  " + modifier + " String field = 'value'\n" +
                 "}\n",
 
-                "D.groovy",
-                "class D extends C {\n" +
+                "C.groovy",
+                "class C extends A {\n" +
                 "}\n",
             };
             //@formatter:on
@@ -4055,26 +4055,134 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
-                "print new D().@field\n",
+                "print new C().@field\n",
 
-                "C.groovy",
-                "class C {\n" +
-                "  " + modifier + " String field = 'C'\n" +
+                "A.groovy",
+                "abstract class A {\n" +
+                "  " + modifier + " String field = 'A'\n" +
                 "}\n",
 
-                "D.groovy",
-                "class D extends C {\n" +
-                "  " + modifier + " String field = 'D'\n" +
+                "C.groovy",
+                "class C extends A {\n" +
+                "  " + modifier + " String field = 'C'\n" +
                 "}\n",
             };
             //@formatter:on
 
-            runConformTest(sources, "D");
+            runConformTest(sources, "C");
+        }
+    }
+
+    @Test
+    public void testReferencingFields_DirectAccess4() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", /*GROOVY-8167: "private"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "new C().test()\n",
+
+                "A.groovy",
+                "abstract class A {\n" +
+                "  " + modifier + " String field = 'A'\n" +
+                "}\n",
+
+                "C.groovy",
+                "class C extends A {\n" +
+                "  void test() {\n" +
+                "    print this.@field\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "A");
+        }
+    }
+
+    @Test
+    public void testReferencingFields_DirectAccess5() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", /*GROOVY-8167: "private"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "new C().test()\n",
+
+                "A.groovy",
+                "abstract class A {\n" +
+                "  " + modifier + " String field = 'A'\n" +
+                "}\n",
+
+                "C.groovy",
+                "class C extends A {\n" +
+                "  " + modifier + " String field = 'C'\n" +
+                "  void test() {\n" +
+                "    print this.@field\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "C");
+        }
+    }
+
+    @Test
+    public void testReferencingFields_DirectAccess6() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", "private"}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "new C().test()\n",
+
+                "A.groovy",
+                "abstract class A {\n" +
+                "  " + modifier + " String field = 'A'\n" +
+                "}\n",
+
+                "C.groovy",
+                "class C extends A {\n" +
+                "  public String field = 'C'\n" +
+                "  void test() {\n" +
+                "    print super.@field\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "private".equals(modifier) ? "C" : "A"); // TODO: MetaClassImpl.getAttribute(Class,Object,String,boolean) drops super
+        }
+    }
+
+    @Test
+    public void testReferencingFields_DirectAccess7() {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", /*GROOVY-8999: "private"*/}) {
+            //@formatter:off
+            String[] sources = {
+                "Main.groovy",
+                "new C().with { test(); print result }\n",
+
+                "A.groovy",
+                "abstract class A {\n" +
+                "  " + modifier + " String field = 'A'\n" +
+                "  String getResult() { return field }\n" +
+                "}\n",
+
+                "C.groovy",
+                "class C extends A {\n" +
+                "  public String field = 'C'\n" +
+                "  void test() {\n" +
+                "    super.@field = 'x'\n" +
+                "  }\n" +
+                "}\n",
+            };
+            //@formatter:on
+
+            runConformTest(sources, "x");
         }
     }
 
     @Test // GROOVY-8648
-    public void testReferencingFields_DirectAccess4() {
+    public void testReferencingFields_DirectAccess8() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -4101,16 +4209,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-6183
-    public void testReferencingFields_DirectAccess5() {
+    public void testReferencingFields_DirectAccess9() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
-            "B.directAccess()\n" +
-            "assert B.x == 2\n" +
-            "assert !B.isSetterCalled()\n",
+            "C.directAccess()\n" +
+            "assert C.x == 2\n" +
+            "assert !C.isSetterCalled()\n",
 
             "A.groovy",
-            "public class A {\n" +
+            "abstract class A {\n" +
             "  static boolean setterCalled\n" +
             "  static protected int x\n" +
             "  static void setX(int a) {\n" +
@@ -4119,8 +4227,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
 
-            "B.groovy",
-            "class B extends A {\n" +
+            "C.groovy",
+            "class C extends A {\n" +
             "  static void directAccess() {\n" +
             "    this.@x = 2\n" +
             "  }\n" +

@@ -842,11 +842,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitAttributeExpression(final AttributeExpression expression) {
+        /* GRECLIPSE edit
         super.visitAttributeExpression(expression);
+        */
         if (!existsProperty(expression, true) && !extension.handleUnresolvedAttribute(expression)) {
             Expression objectExpression = expression.getObjectExpression();
-            addStaticTypeError("No such property: " + expression.getPropertyAsString() +
-                    " for class: " + findCurrentInstanceOfClass(objectExpression, objectExpression.getType()), expression);
+            addStaticTypeError("No such attribute: " + expression.getPropertyAsString() +
+                    " for class: " + findCurrentInstanceOfClass(objectExpression, getType(objectExpression)).toString(false), expression);
         }
     }
 
@@ -1588,13 +1590,26 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             while (!queue.isEmpty()) {
                 ClassNode current = queue.removeFirst();
+                /* GRECLIPSE edit -- GROOVY-8999
                 if (handledNodes.contains(current)) continue;
                 handledNodes.add(current);
                 Set<ClassNode> allInterfaces = current.getAllInterfaces();
                 for (ClassNode intf : allInterfaces) {
-                    //TODO: apply right generics here!
                     queue.add(GenericsUtils.parameterizeType(current, intf));
                 }
+                */
+                if (!handledNodes.add(current)) continue;
+
+                FieldNode field = current.getDeclaredField(propertyName);
+                if (field == null) {
+                    if (current.getSuperClass() != null) {
+                        queue.addFirst(current.getUnresolvedSuperClass());
+                    }
+                    for (ClassNode face : current.getAllInterfaces()) {
+                        queue.add(GenericsUtils.parameterizeType(current, face));
+                    }
+                }
+                // GRECLIPSE end
 
                 // in case of a lookup on Class we look for instance methods on Class
                 // as well, since in case of a static property access we have the class
@@ -1605,8 +1620,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 } else {
                     staticOnly = staticOnlyAccess;
                 }
-
+                /* GRECLIPSE edit -- GROOVY-8999
                 FieldNode field = current.getDeclaredField(propertyName);
+                */
                 field = allowStaticAccessToMember(field, staticOnly);
                 /* GRECLIPSE edit -- GROOVY-9127
                 if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode))
@@ -1620,13 +1636,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     return true;
                 */
                 // skip property/accessor checks for "x.@field"
-                if (storeField(field, isAttributeExpression, pexp, current, visitor, receiver.getData(), !readMode)) {
+                if (storeField(field, isAttributeExpression, pexp, testClass, visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
+                } else if (isAttributeExpression) {
+                    continue;
                 }
 
                 // skip property/accessor checks for "field", "this.field", "this.with { field }", etc. in declaring class of field
-                if (storeField(field, enclosingTypes.contains(current), pexp, receiver.getType(), visitor, receiver.getData(), !readMode)) {
+                if (storeField(field, enclosingTypes.contains(current), pexp, testClass, visitor, receiver.getData(), !readMode)) {
                     pexp.removeNodeMetaData(StaticTypesMarker.READONLY_PROPERTY);
                     return true;
                 }
@@ -1675,8 +1693,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 }
                             }
                         }
-                        //TODO: apply generics on parameter[0]?
-//                                storeType(pexp, setter.getParameters()[0].getType());
                         SetterInfo info = new SetterInfo(current, setterName, setters);
                         BinaryExpression enclosingBinaryExpression = typeCheckingContext.getEnclosingBinaryExpression();
                         if (enclosingBinaryExpression != null) {
@@ -1702,12 +1718,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 foundGetterOrSetter = foundGetterOrSetter || !setters.isEmpty() || getter != null;
 
-                if (storeProperty(propertyNode, pexp, current, visitor, receiver.getData())) return true;
-                if (storeField(field, true, pexp, current, visitor, receiver.getData(), !readMode)) return true;
-
+                if (storeProperty(propertyNode, pexp, testClass, visitor, receiver.getData())) return true;
+                if (storeField(field, true, pexp, testClass, visitor, receiver.getData(), !readMode)) return true;
+                /* GRECLIPSE edit -- GROOVY-8999
                 if (current.getSuperClass() != null) {
                     queue.add(current.getUnresolvedSuperClass());
                 }
+                */
             }
 
             // GROOVY-5568: the property may be defined by DGM
@@ -1908,6 +1925,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (field == null || !returnTrueIfFieldExists) return false;
         if (visitor != null) visitor.visitField(field);
         checkOrMarkPrivateAccess(expressionToStoreOn, field, lhsOfAssignment);
+        // GRECLIPSE add
+        if (expressionToStoreOn instanceof AttributeExpression) {
+            Expression objectExpression = expressionToStoreOn.getObjectExpression();
+            if (!hasAccessToField(objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isSuperExpression() ? typeCheckingContext.getEnclosingClassNode() : receiver, field)) {
+                addStaticTypeError("The field " + field.getDeclaringClass().getNameWithoutPackage() + "." + field.getName() + " is not accessible", expressionToStoreOn.getProperty());
+            }
+        }
+        // GRECLIPSE end
         storeWithResolve(field.getOriginType(), receiver, field.getDeclaringClass(), field.isStatic(), expressionToStoreOn);
         if (delegationData != null) {
             expressionToStoreOn.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, delegationData);

@@ -140,8 +140,8 @@ public class AsmClassGenerator extends ClassGenerator {
     // fields
     public  static final MethodCallerMultiAdapter setField = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "setField", false, false);
     public  static final MethodCallerMultiAdapter getField = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "getField", false, false);
-  //private static final MethodCallerMultiAdapter setFieldOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "setFieldOnSuper", false, false);
-  //private static final MethodCallerMultiAdapter getFieldOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "getFieldOnSuper", false, false);
+    private static final MethodCallerMultiAdapter setFieldOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "setFieldOnSuper", false, false);
+    private static final MethodCallerMultiAdapter getFieldOnSuper = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "getFieldOnSuper", false, false);
     public  static final MethodCallerMultiAdapter setGroovyObjectField = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "setGroovyObjectField", false, false);
     public  static final MethodCallerMultiAdapter getGroovyObjectField = MethodCallerMultiAdapter.newStatic(ScriptBytecodeAdapter.class, "getGroovyObjectField", false, false);
 
@@ -1134,6 +1134,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 if (field != null) {
                     visitFieldExpression(new FieldExpression(field));
                     visited = true;
+                /* GRECLIPSE edit -- GROOVY-8999
                 } else if (isSuperExpression(objectExpression)) {
                     if (controller.getCompileStack().isLHS()) {
                         setPropertyOfSuperClass(classNode, expression, controller.getMethodVisitor());
@@ -1141,6 +1142,7 @@ public class AsmClassGenerator extends ClassGenerator {
                         visitMethodCallExpression(new MethodCallExpression(objectExpression, "get" + capitalize(name), MethodCallExpression.NO_ARGUMENTS));
                     }
                     visited = true;
+                */
                 }
             }
         }
@@ -1149,8 +1151,14 @@ public class AsmClassGenerator extends ClassGenerator {
             MethodCallerMultiAdapter adapter;
             if (controller.getCompileStack().isLHS()) {
                 adapter = isGroovyObject(objectExpression) ? setGroovyObjectField : setField;
+                // GRECLIPSE add -- GROOVY-8999
+                if (isSuperExpression(objectExpression)) adapter = setFieldOnSuper;
+                // GRECLIPSE end
             } else {
                 adapter = isGroovyObject(objectExpression) ? getGroovyObjectField : getField;
+                // GRECLIPSE add -- GROOVY-8999
+                if (isSuperExpression(objectExpression)) adapter = getFieldOnSuper;
+                // GRECLIPSE end
             }
             visitAttributeOrProperty(expression, adapter);
         }

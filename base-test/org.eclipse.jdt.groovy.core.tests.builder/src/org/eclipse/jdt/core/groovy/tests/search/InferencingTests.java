@@ -1587,7 +1587,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "value", "java.lang.Number");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/996
+    @Test // https://github.com/groovy/groovy-eclipse/issues/996 and GROOVY-8999
     public void testSuperPropertyReference5() {
         String contents =
             "class A {\n" +
@@ -1595,10 +1595,10 @@ public final class InferencingTests extends InferencingTestSuite {
             "}\n" +
             "class B extends A {\n" +
             "  def method() {\n" +
-            "    super.@value\n" + // special case access
+            "    super.@value\n" +
             "  }\n" +
             "}";
-        assertType(contents, "value", "java.lang.Number");
+        assertUnknown(contents, "value");
     }
 
     @Test

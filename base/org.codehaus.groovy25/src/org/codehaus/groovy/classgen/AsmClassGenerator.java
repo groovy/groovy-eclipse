@@ -1077,6 +1077,9 @@ public class AsmClassGenerator extends ClassGenerator {
                     fieldX(field).visit(this);
                     return;
                 }
+                // GRECLIPSE add -- GROOVY-8167, GROOVY-8999
+                if (!(expression instanceof AttributeExpression))
+                // GRECLIPSE end
                 if (isSuperExpression(objectExpression)) {
                     if (controller.getCompileStack().isLHS()) {
                         setPropertyOfSuperClass(classNode, expression, mv);
