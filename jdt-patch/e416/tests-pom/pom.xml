@@ -15,7 +15,7 @@
     <relativePath>../../../pom.xml</relativePath>
     <groupId>org.codehaus.groovy.eclipse</groupId>
     <artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-    <version>3.8.0-SNAPSHOT</version>
+    <version>3.9.0-SNAPSHOT</version>
   </parent>
   <groupId>eclipse.jdt.core</groupId>
   <artifactId>tests-pom</artifactId>
