@@ -498,7 +498,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (decl instanceof MethodNode || !((Variable) decl).isDynamicTyped()) variableInfo = null;
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
             ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, isAssignTarget, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
@@ -671,7 +670,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (getBaseDeclaringType(declaringType).getOuterClass() != null) {
             // search only for static declarations if inner class is static
             boolean isStatic = (isStaticExpression || Flags.isStatic(declaringType.getModifiers()));
-            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStatic, directFieldAccess, methodCallArgumentTypes);
+            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStatic, 0, methodCallArgumentTypes);
             if (declaration != null) {
                 return declaration;
             }

@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import static org.junit.Assert.assertEquals;
 
 import org.codehaus.groovy.ast.MethodNode;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -749,6 +750,182 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "      super.d\n" +
             "      super.e\n" +
             "    }\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        int offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1132
+    public void testGetterAndField17() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "  class Bar {\n" +
+            "    void meth() {\n" +
+            "      a\n" +
+            "      b\n" +
+            "      c\n" +
+            "      d\n" +
+            "      e\n" +
+            "      this.a\n" +
+            "      this.b\n" +
+            "      this.c\n" +
+            "      this.d\n" +
+            "      this.e\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        int offset = contents.indexOf("a", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("b", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("c", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("d", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("e", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+    }
+
+    @Test @Ignore
+    public void testGetterAndField17b() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  class Bar {}\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n" +
+            "class Baz extends Foo.Bar {\n" +
+            "  Baz() { super(new Foo()) }\n" + // seems odd, but does work
+            "  void meth() {\n" +
+            "    a\n" +
+            "    b\n" +
+            "    c\n" +
+            "    d\n" +
+            "    e\n" +
+            "    this.a\n" +
+            "    this.b\n" +
+            "    this.c\n" +
+            "    this.d\n" +
+            "    this.e\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        int offset = contents.indexOf("a", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("b", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("c", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("d", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("e", offset);
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField17c() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  class Bar {}\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n" +
+            "class Baz extends Foo.Bar {\n" +
+            "  Baz() { super(new Foo()) }\n" + // seems odd, but does work
+            "  void meth() {\n" +
+            "    super.a\n" +
+            "    super.b\n" +
+            "    super.c\n" +
+            "    super.d\n" +
+            "    super.e\n" +
             "  }\n" +
             "}\n";
             //@formatter:on
