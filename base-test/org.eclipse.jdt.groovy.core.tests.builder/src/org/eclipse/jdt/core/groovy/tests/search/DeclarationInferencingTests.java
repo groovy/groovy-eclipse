@@ -679,6 +679,96 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1131
+    public void testGetterAndField16() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n" +
+            "class Bar extends Foo {\n" +
+            "  void meth() {\n" +
+            "    super.a\n" +
+            "    super.b\n" +
+            "    super.c\n" +
+            "    super.d\n" +
+            "    super.e\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        int offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "c", DeclarationKind.FIELD);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "d", DeclarationKind.FIELD);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "e", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndField16a() {
+        String contents =
+            //@formatter:off
+            "import groovy.transform.PackageScope\n" +
+            "class Foo {\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "  public  c\n" +
+            "  protected d\n" +
+            "  @PackageScope e\n" +
+            "  def getA() { 'A' }\n" +
+            "  def getB() { 'B' }\n" +
+            "  def getC() { 'C' }\n" +
+            "  def getD() { 'D' }\n" +
+            "  def getE() { 'E' }\n" +
+            "}\n" +
+            "class Bar extends Foo {\n" +
+            "  void meth() {\n" +
+            "    { ->\n" +
+            "      super.a\n" +
+            "      super.b\n" +
+            "      super.c\n" +
+            "      super.d\n" +
+            "      super.e\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+            //@formatter:on
+
+        int offset = contents.lastIndexOf("a");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getA", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("b");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getB", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("c");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getC", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("d");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getD", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("e");
+        assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
+    }
+
     @Test
     public void testSetterAndField1() {
         String contents =

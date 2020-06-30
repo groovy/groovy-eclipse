@@ -354,8 +354,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected TypeLookupResult findTypeForNameWithKnownObjectExpression(final String name, final ClassNode type, final ClassNode declaringType, final VariableScope scope, final boolean isLhsExpression, final boolean isStaticObjectExpression) {
 
         TypeConfidence confidence = TypeConfidence.EXACT;
-        boolean isFieldAccessDirect = (isThisObjectExpression(scope) ? scope.isFieldAccessDirect() : false);
-        ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, isFieldAccessDirect, scope.getMethodCallArgumentTypes());
+        int fieldAccessPolicy = (!scope.isFieldAccessDirect() || !(isThisObjectExpression(scope) || isSuperObjectExpression(scope)) ? 0 : isThisObjectExpression(scope) ? 1 : 2);
+        ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, fieldAccessPolicy, scope.getMethodCallArgumentTypes());
         if (declaration instanceof MethodNode && scope.getEnclosingNode() instanceof PropertyExpression && !scope.isMethodCall() &&
                 (!AccessorSupport.isGetter((MethodNode) declaration) || name.equals(((MethodNode) declaration).getName()))) {
             declaration = null; // property expression "foo.bar" does not resolve to "bar(...)" or "setBar(x)" w/o call args
@@ -428,7 +428,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (declaration instanceof MethodNode) {
                         confidence = TypeConfidence.LOOSELY_INFERRED; // setter for write; field or property or accessor for read
                     } else if (findPropertyAccessorMethod(name, declaringType, false, isStaticObjectExpression, null).filter(getter ->
-                        !isSynthetic(getter) && !(isFieldAccessDirect && declaringType.equals(getter.getDeclaringClass()))
+                        !isSynthetic(getter) && !(fieldAccessPolicy != 0 && declaringType.equals(getter.getDeclaringClass()))
                     ).isPresent()) {
                         confidence = TypeConfidence.LOOSELY_INFERRED; // field or property for write; accessor for read
                     }
@@ -555,7 +555,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
             // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
-            candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, false, callArgs);
+            candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             VariableScope outer = owner.getNodeMetaData("outer.scope");
@@ -567,10 +567,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     outer.setMethodCallArgumentTypes(null);
                 }
             } else {
-                candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
+                candidate = findDeclaration(var.getName(), owner, isAssignTarget, scope.isOwnerStatic(), scope.isFieldAccessDirect() ? 1 : 0, callArgs);
             }
             if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
-                candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, false, callArgs);
+                candidate = findDeclaration(var.getName(), scope.getDelegate(), isAssignTarget, false, 0, callArgs);
             }
             if (candidate == null && scope.getEnclosingClosure() == null && scope.getEnclosingMethodDeclaration() != null) {
                 for (Parameter parameter : scope.getEnclosingMethodDeclaration().getParameters()) {
@@ -582,7 +582,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         if (candidate == null && resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
-            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isAssignTarget, false, false, callArgs);
+            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isAssignTarget, false, 0, callArgs);
         }
 
         return candidate;
@@ -596,18 +596,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @param declaringType the type in which the named member's declaration resides
      * @param isLhsExpression {@code true} if named member is being assigned a value
      * @param isStaticExpression {@code true} if member is being accessed statically
-     * @param directFieldAccess {@code false} if accessor methods may take precedence
-     * @param methodCallArgumentTypes types of arguments to the associated method call
-     *        (or {@code null} if not a method call)
+     * @param directFieldAccess {@code 1}: access fields from {@code declaringType} directly;
+     *                          {@code 2}: access non-private fields from {@code declaringType} directly;
+     *                          {@code 0}: prefer accessor methods over fields/properties of {@code declaringType}
+     * @param methodCallArgumentTypes types of arguments to the associated method call (or {@code null} if not a method call)
      */
-    protected ASTNode findDeclaration(final String name, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final boolean directFieldAccess, final List<ClassNode> methodCallArgumentTypes) {
+    protected ASTNode findDeclaration(final String name, final ClassNode declaringType, final boolean isLhsExpression, final boolean isStaticExpression, final int directFieldAccess, final List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
             // only length exists on arrays
             if ("length".equals(name)) {
                 return createLengthField(declaringType);
             }
             // otherwise search on object
-            return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+            return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, isLhsExpression, isStaticExpression, 0, methodCallArgumentTypes);
         }
 
         if (!isLhsExpression && methodCallArgumentTypes != null) {
@@ -620,7 +621,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for canonical accessor method
         Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(it -> !isSynthetic(it));
-        if (accessor.isPresent() && !directFieldAccess) {
+        if (accessor.isPresent() && directFieldAccess == 0) {
             return accessor.get();
         }
 
@@ -635,7 +636,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
             }
             if (isCompatible(property, isStaticExpression) && (!accessor.isPresent() ||
-                    directFieldAccess && declaringType.equals(property.getDeclaringClass()))) {
+                    directFieldAccess == 1 && declaringType.equals(property.getDeclaringClass()))) {
                 return property;
             }
             if (property != null) break;
@@ -644,7 +645,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for field
         FieldNode field = declaringType.getField(name);
         if (isCompatible(field, isStaticExpression) && (!accessor.isPresent() ||
-                directFieldAccess && declaringType.equals(field.getDeclaringClass()))) {
+                directFieldAccess >= 1 && declaringType.equals(field.getDeclaringClass()) && (directFieldAccess == 1 || !field.isPrivate()))) {
             return field;
         }
 
