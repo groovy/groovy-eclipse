@@ -178,42 +178,8 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "}\n");
     }
 
-    @Test
-    public void testFieldReferencesInClass5() {
-        createUnit("other", "Other",
-            "class Third {\n" +
-            "  private String xxx\n" +
-            "  String getXxx() {\n" +
-            "    xxx\n" +
-            "  }\n" +
-            "  void setXxx(String xxx) {\n" +
-            "    this.xxx = xxx\n" +
-            "  }\n" +
-            "}\n" +
-            "\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "class Other {" +
-            "  Other() {\n" +
-            "    def t = new Third(xxx: 'abc')\n" +
-            "    def m = t.&setXxx\n" +
-            "    m('xyz')\n" +
-            "  }\n" +
-            "}\n");
-
-        doTestForTwoFieldReferencesInClass(
-            "class Second extends First {\n" +
-            "  int getXxx() {\n" +
-            "    return this.xxx\n" +
-            "  }\n" +
-            "  def whatever\n" +
-            "  void setXxx(int value) {\n" +
-            "    this.xxx = value\n" +
-            "  }\n" +
-            "}\n");
-    }
-
     @Test // https://github.com/groovy/groovy-eclipse/issues/891
-    public void testFieldReferencesInClass6() {
+    public void testFieldReferencesInClass5() {
         String contents =
             "@groovy.transform.CompileStatic\n" +
             "class Pogo {\n" +
@@ -241,7 +207,7 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/935
-    public void testFieldReferencesInClass7() {
+    public void testFieldReferencesInClass6() {
         GroovyCompilationUnit pogo = createUnit("Pogo",
             "class Pogo {\n" +
             "  boolean flag\n" +

@@ -16,10 +16,12 @@
 package org.eclipse.jdt.groovy.search;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -618,8 +620,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for canonical accessor method
-        Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes);
-        if (accessor.filter(it -> !isSynthetic(it) && !(directFieldAccess && declaringType.equals(it.getDeclaringClass()))).isPresent()) {
+        Optional<MethodNode> accessor = findPropertyAccessorMethod(name, declaringType, isLhsExpression, isStaticExpression, methodCallArgumentTypes).filter(it -> !isSynthetic(it));
+        if (accessor.isPresent() && !directFieldAccess) {
             return accessor.get();
         }
 
@@ -633,15 +635,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 property = Optional.ofNullable(type.redirect().<List<PropertyNode>>getNodeMetaData("trait.properties"))
                     .flatMap(list -> list.stream().filter(prop -> prop.getName().equals(name)).findFirst()).orElse(null);
             }
-            if (isCompatible(property, isStaticExpression)) {
+            if (isCompatible(property, isStaticExpression) && (!accessor.isPresent() ||
+                    directFieldAccess && declaringType.equals(property.getDeclaringClass()))) {
                 return property;
             }
+            if (property != null) break;
         }
 
         // look for field
         FieldNode field = declaringType.getField(name);
-        if (isCompatible(field, isStaticExpression)) {
+        if (isCompatible(field, isStaticExpression) && (!accessor.isPresent() ||
+                directFieldAccess && declaringType.equals(field.getDeclaringClass()))) {
             return field;
+        }
+
+        if (accessor.isPresent()) {
+            return accessor.get();
         }
 
         typeHierarchy.clear();
@@ -656,11 +665,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (field != null && field.isFinal() && field.isStatic()) {
                 return field;
             }
-        }
-
-        // look for static or synthetic accessor
-        if (accessor.isPresent()) {
-            return accessor.get();
         }
 
         // look for member in outer classes
@@ -837,8 +841,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected static List<MethodNode> getMethods(final String name, final ClassNode type) {
         List<MethodNode> methods = type.getMethods(name);
-        List<MethodNode> traitMethods =
-            type.redirect().getNodeMetaData("trait.methods");
+        List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
         if (traitMethods != null) {
             methods = new ArrayList<>(methods);
             for (MethodNode method : traitMethods) {
@@ -847,7 +850,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             }
         }
-        return methods;
+        return methods.size() <= 1 ? methods : unique(methods, Comparator.comparing(m -> {
+            StringBuilder sb = new StringBuilder();
+            for (Parameter p : m.getParameters()) {
+                sb.append(p.getType().getName());
+                sb.append(',');
+            }
+            return sb.toString();
+        }));
     }
 
     /**

@@ -106,7 +106,7 @@ public enum AccessorSupport {
                 String methodName = kind.prefix + suffix;
                 methods = Stream.concat(methods, findAccessorMethodsForMethodName(methodName, declaringType, isCategory, kind));
 
-                // abstract types do not track undeclared abstract methods
+                // abstract types do not track undeclared abstract methods; concrete types do not track interface default methods
                 if (declaringType.isAbstract() || declaringType.isInterface() || GroovyUtils.implementsTrait(declaringType)) {
                     Set<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);

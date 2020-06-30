@@ -565,6 +565,120 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertUnknown(contents, "xxx");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1130
+    public void testGetterAndField14() {
+        createUnit("Foo",
+            //@formatter:off
+            "class Foo {\n" +
+            "  String getXxx() {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar extends Foo {\n" +
+            "  private String xxx\n" +
+            "  void meth() {\n" +
+            "    xxx\n" +
+            "    this.xxx\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndField14a() {
+        createJavaUnit("Foo",
+            //@formatter:off
+            "interface Foo {\n" +
+            "  default String getXxx() {\n" +
+            "    return \"string\";\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar implements Foo {\n" +
+            "  private String xxx\n" +
+            "  void meth() {\n" +
+            "    xxx\n" +
+            "    this.xxx\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1130
+    public void testGetterAndField15() {
+        createUnit("Foo",
+            //@formatter:off
+            "class Foo {\n" +
+            "  boolean isXxx() {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar extends Foo {\n" +
+            "  private boolean xxx\n" +
+            "  void meth() {\n" +
+            "    xxx\n" +
+            "    this.xxx\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndField15a() {
+        createJavaUnit("Foo",
+            //@formatter:off
+            "interface Foo {\n" +
+            "  default boolean isXxx() {\n" +
+            "    return false;" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar implements Foo {\n" +
+            "  private boolean xxx\n" +
+            "  void meth() {\n" +
+            "    xxx\n" +
+            "    this.xxx\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
     @Test
     public void testSetterAndField1() {
         String contents =
@@ -615,6 +729,118 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         offset = contents.lastIndexOf("yyy");
         assertDeclaration(contents, offset, offset + 3, "Bar", "yyy", DeclarationKind.PROPERTY);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1130
+    public void testSetterAndField3() {
+        createUnit("Foo",
+            //@formatter:off
+            "class Foo {\n" +
+            "  void setXxx(String xxx) {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar extends Foo {\n" +
+            "  private String xxx\n" +
+            "  void meth() {\n" +
+            "    xxx = 'varX'\n" +
+            "    this.xxx = 'propX'\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testSetterAndField3a() {
+        createJavaUnit("Foo",
+            //@formatter:off
+            "interface Foo {\n" +
+            "  default void setXxx(String xxx) {\n" +
+            "  }\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar implements Foo {\n" +
+            "  private String xxx\n" +
+            "  void meth() {\n" +
+            "    xxx = 'varX'\n" +
+            "    this.xxx = 'propX'\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx", contents.indexOf("meth"));
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndSetterOverloads1() {
+        createUnit("Foo",
+            //@formatter:off
+            "class Foo {\n" +
+            "  def xxx\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar extends Foo {\n" +
+            "  def getXxx() {\n" +
+            "    this.xxx\n" + // recursive!
+            "  }\n" +
+            "  void setXxx(value) {\n" +
+            "    this.xxx = value\n" + // recursive!
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "getXxx", DeclarationKind.METHOD);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Bar", "setXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndSetterOverloads2() {
+        createUnit("Foo",
+            //@formatter:off
+            "class Foo {\n" +
+            "  def xxx\n" +
+            "}");
+            //@formatter:on
+
+        String contents =
+            //@formatter:off
+            "class Bar extends Foo {\n" +
+            "  def getXxx() {\n" +
+            "    super.xxx\n" +
+            "  }\n" +
+            "  void setXxx(value) {\n" +
+            "    super.xxx = value\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        int offset = contents.indexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Foo", "xxx", DeclarationKind.PROPERTY);
+
+        offset = contents.lastIndexOf("xxx");
+        assertDeclaration(contents, offset, offset + 3, "Foo", "xxx", DeclarationKind.PROPERTY);
     }
 
     @Test
