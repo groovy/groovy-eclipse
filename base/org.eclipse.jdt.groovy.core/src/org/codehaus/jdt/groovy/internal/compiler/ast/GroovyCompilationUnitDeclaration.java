@@ -2334,12 +2334,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
-                if (isInner && ((InnerClassNode) node).isAnonymous()) {
-                    modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
-                }
             }
             if (!isInner) {
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
+            } else if (((InnerClassNode) node).isAnonymous()) {
+                modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
             }
             if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {
                 modifiers &= ~Flags.AccPublic;
