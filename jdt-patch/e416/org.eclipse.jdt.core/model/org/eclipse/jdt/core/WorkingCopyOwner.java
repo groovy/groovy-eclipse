@@ -215,8 +215,9 @@ public abstract class WorkingCopyOwner {
 	public final ICompilationUnit newWorkingCopy(String name, IClasspathEntry[] classpath, IProblemRequestor problemRequestor, IProgressMonitor monitor) throws JavaModelException {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
-		// GROOVY edit
-		//CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
+		/* GROOVY edit
+		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
+		*/
 		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
 		// GROOVY end
 		result.becomeWorkingCopy(problemRequestor, monitor);
@@ -265,9 +266,12 @@ public abstract class WorkingCopyOwner {
 	public final ICompilationUnit newWorkingCopy(String name, IClasspathEntry[] classpath, IProgressMonitor monitor) throws JavaModelException {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
+		/* GROOVY edit
 		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
+		*/
+		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
+		// GROOVY end
 		result.becomeWorkingCopy(getProblemRequestor(result), monitor);
 		return result;
 	}
-
 }

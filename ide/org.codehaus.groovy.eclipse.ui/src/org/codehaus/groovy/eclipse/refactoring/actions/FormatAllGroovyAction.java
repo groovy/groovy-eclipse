@@ -19,7 +19,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -63,7 +62,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
-                GroovyCompilationUnit unit = Adapters.adapt(part, GroovyCompilationUnit.class);
+                GroovyCompilationUnit unit = ((GroovyEditor) part).getGroovyCompilationUnit();
                 if (unit != null) {
                     super.run(new StructuredSelection(unit));
                 }
