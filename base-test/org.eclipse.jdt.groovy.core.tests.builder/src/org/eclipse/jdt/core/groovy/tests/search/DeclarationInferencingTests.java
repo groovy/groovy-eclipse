@@ -18,7 +18,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import static org.junit.Assert.assertEquals;
 
 import org.codehaus.groovy.ast.MethodNode;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -834,7 +833,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         assertDeclaration(contents, offset, offset + 1, "Foo", "getE", DeclarationKind.METHOD);
     }
 
-    @Test @Ignore
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1133
     public void testGetterAndField17b() {
         String contents =
             //@formatter:off

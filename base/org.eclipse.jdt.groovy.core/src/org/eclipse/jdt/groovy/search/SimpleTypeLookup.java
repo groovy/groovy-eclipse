@@ -652,27 +652,25 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor.get();
         }
 
-        typeHierarchy.clear();
-        VariableScope.findAllInterfaces(declaringType, typeHierarchy, true);
-
         // look for constant in interfaces
         for (ClassNode type : typeHierarchy) {
-            if (type == declaringType) {
-                continue;
-            }
-            field = type.getField(name);
-            if (field != null && field.isFinal() && field.isStatic()) {
-                return field;
+            if (type.isInterface() && type != declaringType) {
+                field = type.getDeclaredField(name);
+                if (field != null && field.isFinal() && field.isStatic()) {
+                    return field;
+                }
             }
         }
 
         // look for member in outer classes
-        if (getBaseDeclaringType(declaringType).getOuterClass() != null) {
-            // search only for static declarations if inner class is static
-            boolean isStatic = (isStaticExpression || Flags.isStatic(declaringType.getModifiers()));
-            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStatic, 0, methodCallArgumentTypes);
-            if (declaration != null) {
-                return declaration;
+        for (ClassNode type = getBaseDeclaringType(declaringType); type != null; type = type.getSuperClass()) {
+            if (type.getOuterClass() != null) {
+                // search only for static declarations if inner class is static
+                boolean isStatic = (isStaticExpression || Flags.isStatic(type.getModifiers()));
+                ASTNode declaration = findDeclaration(name, type.getOuterClass(), isLhsExpression, isStatic, 0, methodCallArgumentTypes);
+                if (declaration != null) {
+                    return declaration;
+                }
             }
         }
 
