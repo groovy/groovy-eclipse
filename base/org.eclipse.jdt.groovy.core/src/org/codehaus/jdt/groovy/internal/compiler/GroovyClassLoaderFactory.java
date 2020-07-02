@@ -15,6 +15,8 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler;
 
+import static org.eclipse.jdt.internal.core.ClasspathEntry.NO_ENTRIES;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +57,7 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.core.ExternalJavaProject;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -143,8 +146,9 @@ public final class GroovyClassLoaderFactory {
         String projectName = compilerOptions.groovyProjectName;
         IProject project = findProject(projectName);
         try {
-            IJavaProject javaProject = JavaCore.create(project);
-            IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : new IClasspathEntry[0];
+            IJavaProject javaProject = ExternalJavaProject.EXTERNAL_PROJECT_NAME.equals(projectName)
+                ? new ExternalJavaProject(JavaCore.create(project).getRawClasspath()) : JavaCore.create(project);
+            IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : NO_ENTRIES;
 
             Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
                 Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
