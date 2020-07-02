@@ -3473,7 +3473,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // for arguments, we need to visit closures *after* the method has been chosen
 
 
-        final ClassNode receiver = getType(objectExpression);
+        ClassNode receiver = getType(objectExpression);
         visitMethodCallArguments(receiver, argumentList, false, null);
 
         ClassNode[] args = getArgumentTypes(argumentList);
@@ -3669,6 +3669,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 // so we store the information so that the static compiler may reuse it
                                 call.putNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER, data);
                             }
+                            // GRECLIPSE add -- GROOVY-9597
+                            receiver = chosenReceiver.getType();
+                            // GRECLIPSE end
                             // if the object expression is a closure shared variable, we will have to perform a second pass
                             if (objectExpression instanceof VariableExpression) {
                                 VariableExpression var = (VariableExpression) objectExpression;

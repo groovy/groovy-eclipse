@@ -4551,6 +4551,34 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9597() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.stc.*\n" +
+            "class A {\n" +
+            "  def <T> void proc(Collection<T> values, @ClosureParams(FirstParam.FirstGenericType) Closure<String> block) {\n" +
+            "    print block(values.first())\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class B {\n" +
+            "  List<Integer> list = [1,2,3]\n" +
+            "  void test(A a) {\n" +
+            "    a.proc(this.list) { it.toBigDecimal().toString() }\n" + // works
+            "    a.with {\n" +
+            "      proc(this.list) { it.toBigDecimal().toString() }\n" + // error
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new B().test(new A())\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "11");
+    }
+
+    @Test
     public void testCompileStatic9603() {
         //@formatter:off
         String[] sources = {
