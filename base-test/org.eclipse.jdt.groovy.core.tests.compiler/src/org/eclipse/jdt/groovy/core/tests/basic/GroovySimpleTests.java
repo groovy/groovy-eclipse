@@ -5289,6 +5289,36 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             options);
     }
 
+    @Test
+    public void testConfigScriptPrecedence() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "configuration.optimizationOptions.indy = false\n"
+        ).getAbsolutePath());
+        options.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(CompilerOptions.InvokeDynamic));
+
+        //@formatter:off
+        String[] sources = {
+            "A.groovy",
+            "class A {\n" +
+            "  def x\n" +
+            "}\n",
+
+            "B.groovy",
+            "class B extends A {\n" +
+            "  void test() {\n" +
+            "    x" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", options);
+
+        checkDisassemblyFor("B.class",
+            "  invokeinterface org.codehaus.groovy.runtime.callsite.CallSite.callGroovyObjectGetProperty");
+    }
+
     @Test // Variable arguments
     public void testInvokingVarargs01_JtoG() {
         //@formatter:off
