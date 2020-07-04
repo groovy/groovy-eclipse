@@ -4619,4 +4619,50 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "00");
     }
+
+    @Test
+    public void testCompileStatic9607() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void helper(Runnable runner) {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(item, MetaProperty prop) {\n" +
+            "  def name = prop.name\n" +
+            "  helper(new Runnable() {\n" +
+            "    void run() {\n" +
+            "      if (item[name] != null) {\n" +
+            //       ...
+            "      }\n" +
+            "    }\n" +
+            "  })\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9607a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void helper(Runnable runner) {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(item, name, MetaProperty prop) {\n" +
+            "  name = prop.name\n" +
+            "  helper(new Runnable() {\n" +
+            "    void run() {\n" +
+            "      if (item[name] != null) {\n" +
+            //       ...
+            "      }\n" +
+            "    }\n" +
+            "  })\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }

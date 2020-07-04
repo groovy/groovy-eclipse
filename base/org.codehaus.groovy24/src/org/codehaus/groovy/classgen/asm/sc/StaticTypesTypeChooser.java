@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -32,15 +33,15 @@ import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 public class StaticTypesTypeChooser extends StatementMetaTypeChooser {
     @Override
     public ClassNode resolveType(final Expression exp, final ClassNode current) {
-        /* GRECLIPSE edit
+        /* GRECLIPSE edit -- GROOVY-9344, GROOVY-9607
         ASTNode target = exp instanceof VariableExpression ? getTarget((VariableExpression) exp) : exp;
         */
-        Expression target = exp instanceof VariableExpression && !((VariableExpression) exp).isClosureSharedVariable() ? getTarget((VariableExpression) exp) : exp;
+        ASTNode target = getTarget(exp);
         // GRECLIPSE end
         ClassNode inferredType = target.getNodeMetaData(StaticTypesMarker.DECLARATION_INFERRED_TYPE);
         if (inferredType == null) {
             inferredType = target.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-            /* GRECLIPSE edit
+            /* GRECLIPSE edit -- GROOVY-9344
             if (inferredType == null && target instanceof VariableExpression && ((VariableExpression) target).getAccessedVariable() instanceof Parameter) {
                 target = (Parameter) ((VariableExpression) target).getAccessedVariable();
                 inferredType = ((Parameter) target).getOriginType();
@@ -69,9 +70,24 @@ public class StaticTypesTypeChooser extends StatementMetaTypeChooser {
      * @param ve the variable expression for which to return the target expression
      * @return the target variable expression
      */
+    /* GRECLIPSE edit
     private static VariableExpression getTarget(VariableExpression ve) {
         if (ve.getAccessedVariable() == null || ve.getAccessedVariable() == ve || (!(ve.getAccessedVariable() instanceof VariableExpression)))
             return ve;
         return getTarget((VariableExpression) ve.getAccessedVariable());
     }
+    */
+    private static ASTNode getTarget(final Expression exp) {
+        ASTNode target = exp;
+        while (target instanceof VariableExpression) {
+            Object var = ((VariableExpression) target).getAccessedVariable();
+            if (var instanceof ASTNode && var != target) {
+                target = (ASTNode) var;
+            } else {
+                break;
+            }
+        }
+        return target;
+    }
+    // GRECLIPSE end
 }
