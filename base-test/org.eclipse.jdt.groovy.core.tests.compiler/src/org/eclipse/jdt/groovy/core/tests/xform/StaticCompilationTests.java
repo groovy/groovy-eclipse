@@ -789,6 +789,81 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7304() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private int i = 1\n" +
+            "  int m() {\n" +
+            "    \"\".with {\n" +
+            "      i++\n" + // should use private access bridge method
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "print new B().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
+    public void testCompileStatic7304a() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private int i = 1\n" +
+            "  int m() {\n" +
+            "    \"\".with {\n" +
+            "      ++i\n" + // should use private access bridge method
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "print new B().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "2");
+    }
+
+    @Test
+    public void testCompileStatic7304b() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private int i = 1\n" +
+            "  int m() {\n" +
+            "    \"\".with {\n" +
+            "      i--\n" + // should use private access bridge method
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "print new B().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "1");
+    }
+
+    @Test
     public void testCompileStatic7549() {
         //@formatter:off
         String[] sources = {
