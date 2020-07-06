@@ -230,9 +230,13 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
         int pCount = 0;
         if (!isStatic) {
             // need to pass "this" to access unknown methods/properties
+            /* GRECLIPSE edit -- GROOVY-9422
             expressions.add(pCount, VariableExpression.THIS_EXPRESSION);
-
+            */
             ClassNode enclosingType = (inClosure ? ClassHelper.CLOSURE_TYPE : outerClass).getPlainNodeReference();
+            // GRECLIPSE add
+            expressions.add(pCount, new VariableExpression("this", enclosingType));
+            // GRECLIPSE end
             Parameter thisParameter = new Parameter(enclosingType, "p" + pCount);
             parameters.add(pCount, thisParameter);
 

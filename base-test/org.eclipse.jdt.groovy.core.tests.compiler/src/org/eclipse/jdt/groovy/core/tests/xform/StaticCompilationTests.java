@@ -658,6 +658,35 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic6904() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "interface I {\n" +
+            "  def m()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  def foo() {\n" +
+            "    bar { ->\n" +
+            "      return new I() {\n" +
+            "        def m() { baz }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def bar(Closure<? extends I> x) {\n" +
+            "    x().m()\n" +
+            "  }\n" +
+            "  def baz = 'works'\n" +
+            "}\n" +
+            "print new C().foo()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic6921() {
         //@formatter:off
         String[] sources = {
@@ -4479,6 +4508,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "\t      ^^^^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot assign value of type java.lang.Integer to variable of type java.lang.Character\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic9422() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  List<String> test() {\n" +
+            "    ['x'].collect { String s ->\n" +
+            "      new B(s).prop\n" +
+            "    }\n" +
+            "  }\n" +
+            "  class B {\n" +
+            "    B(param) {}\n" +
+            "    String prop = 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "print new A().test()[0]\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 
     @Test

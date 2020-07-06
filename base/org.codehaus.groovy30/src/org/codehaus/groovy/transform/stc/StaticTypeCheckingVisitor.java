@@ -703,16 +703,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private boolean storeTypeForSuper(final VariableExpression vexp) {
         if (vexp == VariableExpression.SUPER_EXPRESSION) return true;
         if (!vexp.isSuperExpression()) return false;
+        /* GRECLIPSE edit
         ClassNode superClassNode = typeCheckingContext.getEnclosingClassNode().getSuperClass();
         storeType(vexp, makeType(superClassNode, typeCheckingContext.isInStaticContext));
+        */
+        storeType(vexp, makeSuper());
+        // GRECLIPSE end
         return true;
     }
 
     private boolean storeTypeForThis(final VariableExpression vexp) {
         if (vexp == VariableExpression.THIS_EXPRESSION) return true;
         if (!vexp.isThisExpression()) return false;
+        /* GRECLIPSE edit -- GROOVY-6904, GROOVY-9422
         ClassNode enclosingClassNode = typeCheckingContext.getEnclosingClassNode();
         storeType(vexp, makeType(enclosingClassNode, typeCheckingContext.isInStaticContext));
+        */
+        storeType(vexp, !OBJECT_TYPE.equals(vexp.getType()) ? vexp.getType() : makeThis());
+        // GRECLIPSE end
         return true;
     }
 
@@ -2321,6 +2329,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         visitMethodCallArguments(receiver, argumentList, false, null);
 
         ClassNode[] args = getArgumentTypes(argumentList);
+        /* GRECLIPSE edit -- GROOVY-9422
         if (args.length > 0 &&
                 typeCheckingContext.getEnclosingClosure() != null &&
                 isThisExpression(argumentList.getExpression(0)) &&
@@ -2328,7 +2337,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 !call.getType().isStaticClass()) {
             args[0] = CLOSURE_TYPE;
         }
-
+        */
         MethodNode node;
         if (looksLikeNamedArgConstructor(receiver, args)
                 && findMethod(receiver, "<init>", DefaultGroovyMethods.init(args)).size() == 1

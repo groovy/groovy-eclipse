@@ -569,16 +569,24 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     private boolean storeTypeForThis(VariableExpression vexp) {
         if (vexp == VariableExpression.THIS_EXPRESSION) return true;
         if (!vexp.isThisExpression()) return false;
+        /* GRECLIPSE edit -- GROOVY-6904, GROOVY-9422
         ClassNode enclosingClassNode = typeCheckingContext.getEnclosingClassNode();
         storeType(vexp, makeType(enclosingClassNode, typeCheckingContext.isInStaticContext));
+        */
+        storeType(vexp, !OBJECT_TYPE.equals(vexp.getType()) ? vexp.getType() : makeThis());
+        // GRECLIPSE end
         return true;
     }
 
     private boolean storeTypeForSuper(VariableExpression vexp) {
         if (vexp == VariableExpression.SUPER_EXPRESSION) return true;
         if (!vexp.isSuperExpression()) return false;
+        /* GRECLIPSE edit
         ClassNode superClassNode = typeCheckingContext.getEnclosingClassNode().getSuperClass();
         storeType(vexp, makeType(superClassNode, typeCheckingContext.isInStaticContext));
+        */
+        storeType(vexp, makeSuper());
+        // GRECLIPSE end
         return true;
     }
 
@@ -2278,6 +2286,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         // GRECLIPSE end
 
         ClassNode[] args = getArgumentTypes(argumentList);
+        /* GRECLIPSE edit -- GROOVY-9422
         if (args.length > 0 &&
                 typeCheckingContext.getEnclosingClosure()!=null &&
                 argumentList.getExpression(0) instanceof VariableExpression &&
@@ -2287,7 +2296,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 !call.getType().isStaticClass()) {
             args[0] = CLOSURE_TYPE;
         }
-
+        */
         MethodNode node;
         if (looksLikeNamedArgConstructor(receiver, args)
                 && findMethod(receiver, "<init>", DefaultGroovyMethods.init(args)).size() == 1
@@ -4635,8 +4644,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             final VariableExpression vexp = (VariableExpression) exp;
             ClassNode selfTrait = isTraitSelf(vexp);
             if (selfTrait != null) return makeSelf(selfTrait);
+            /* GRECLIPSE edit
             if (vexp == VariableExpression.THIS_EXPRESSION) return makeThis();
             if (vexp == VariableExpression.SUPER_EXPRESSION) return makeSuper();
+            */
+            if (vexp.isThisExpression()) return makeThis();
+            if (vexp.isSuperExpression()) return makeSuper();
+            // GRECLIPSE end
             final Variable variable = vexp.getAccessedVariable();
             if (variable instanceof FieldNode) {
                 checkOrMarkPrivateAccess(vexp, (FieldNode) variable, isLHSOfEnclosingAssignment(vexp));
@@ -4775,6 +4789,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private ClassNode makeSuper() {
+        /* GRECLIPSE edit
         ClassNode ret = typeCheckingContext.getEnclosingClassNode().getSuperClass();
         if (typeCheckingContext.isInStaticContext) {
             ClassNode staticRet = CLASS_Type.getPlainNodeReference();
@@ -4783,9 +4798,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ret = staticRet;
         }
         return ret;
+        */
+        return makeType(typeCheckingContext.getEnclosingClassNode().getSuperClass(), typeCheckingContext.isInStaticContext);
+        // GRECLIPSE end
     }
 
     private ClassNode makeThis() {
+        /* GRECLIPSE edit
         ClassNode ret = typeCheckingContext.getEnclosingClassNode();
         if (typeCheckingContext.isInStaticContext) {
             ClassNode staticRet = CLASS_Type.getPlainNodeReference();
@@ -4794,6 +4813,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ret = staticRet;
         }
         return ret;
+        */
+        return makeType(typeCheckingContext.getEnclosingClassNode(), typeCheckingContext.isInStaticContext);
+        // GRECLIPSE end
     }
 
     private static ClassNode makeSelf(ClassNode trait) {
