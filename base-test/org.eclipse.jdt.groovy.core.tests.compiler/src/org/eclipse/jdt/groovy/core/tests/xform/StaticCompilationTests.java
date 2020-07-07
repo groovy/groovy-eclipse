@@ -824,9 +824,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
             "class A {\n" +
             "  private int i = 1\n" +
+            "  @groovy.transform.CompileStatic\n" +
             "  int m() {\n" +
             "    \"\".with {\n" +
             "      i++\n" + // should use private access bridge method

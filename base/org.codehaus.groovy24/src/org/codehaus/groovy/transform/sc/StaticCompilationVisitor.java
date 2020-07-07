@@ -23,7 +23,6 @@ import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -280,25 +279,38 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 acc++;
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
                 Expression receiver = fieldNode.isStatic() ? new ClassExpression(node) : new VariableExpression(param);
+                /* GRECLIPSE edit -- GROOVY-7304
                 Statement stmt = new ExpressionStatement(new PropertyExpression(
                         receiver,
                         fieldNode.getName()
                 ));
+                */
+                Statement stmt = GeneralUtils.returnS(GeneralUtils.attrX(receiver, GeneralUtils.constX(fieldNode.getName())));
+                // GRECLIPSE end
                 MethodNode accessor = node.addMethod("pfaccess$" + acc, access, fieldNode.getOriginType(), new Parameter[]{param}, ClassNode.EMPTY_ARRAY, stmt);
+                // GRECLIPSE add
+                accessor.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
+                // GRECLIPSE end
                 privateFieldAccessors.put(fieldNode.getName(), accessor);
             }
-
             if (generateMutator) {
-                //increment acc if it hasn't been incremented in the current iteration
+                // increment acc if it hasn't been incremented in the current iteration
                 if (!generateAccessor) acc++;
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
                 Expression receiver = fieldNode.isStatic() ? new ClassExpression(node) : new VariableExpression(param);
                 Parameter value = new Parameter(fieldNode.getOriginType(), "$value");
+                /* GRECLIPSE edit -- GROOVY-7304
                 Statement stmt = GeneralUtils.assignS(
                         new PropertyExpression(receiver, fieldNode.getName()),
                         new VariableExpression(value)
                 );
+                */
+                Statement stmt = GeneralUtils.assignS(GeneralUtils.attrX(receiver, GeneralUtils.constX(fieldNode.getName())), GeneralUtils.varX(value));
+                // GRECLIPSE end
                 MethodNode mutator = node.addMethod("pfaccess$0" + acc, access, fieldNode.getOriginType(), new Parameter[]{param, value}, ClassNode.EMPTY_ARRAY, stmt);
+                // GRECLIPSE add
+                mutator.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
+                // GRECLIPSE end
                 privateFieldMutators.put(fieldNode.getName(), mutator);
             }
         }
@@ -387,8 +399,13 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 if (origGenericsTypes !=null) {
                     bridge.setGenericsTypes(applyGenericsContextToPlaceHolders(genericsSpec,origGenericsTypes));
                 }
+                // GRECLIPSE add
+                bridge.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
+                // GRECLIPSE end
                 privateBridgeMethods.put(method, bridge);
+                /* GRECLIPSE edit
                 bridge.addAnnotation(new AnnotationNode(COMPILESTATIC_CLASSNODE));
+                */
             }
         }
         if (!privateBridgeMethods.isEmpty()) {
@@ -476,9 +493,9 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
             final ClassNode collectionType = getType(forLoop.getCollectionExpression());
             ClassNode componentType = inferLoopElementType(collectionType);
             forLoop.getVariable().setType(componentType);
-            // GRECLIPSE edit -- preserve origin type for code select
-            //forLoop.getVariable().setOriginType(componentType);
-            // GRECLIPSE end
+            /* GRECLIPSE edit -- preserve origin type for code select
+            forLoop.getVariable().setOriginType(componentType);
+            */
         }
     }
 
