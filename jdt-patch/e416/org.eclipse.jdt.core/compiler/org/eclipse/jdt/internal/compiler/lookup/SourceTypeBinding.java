@@ -159,13 +159,15 @@ public SourceTypeBinding(SourceTypeBinding prototype) {
 	super(prototype);
 
 	this.prototype = prototype.prototype;
-	this.prototype.tagBits |= TagBits.HasAnnotatedVariants;
 	this.tagBits &= ~TagBits.HasAnnotatedVariants;
+	this.prototype.tagBits |= TagBits.HasAnnotatedVariants;
+	this.tagBits |= TagBits.HasUnresolvedMemberTypes; // see memberTypes()
 
 	this.superclass = prototype.superclass;
 	this.superInterfaces = prototype.superInterfaces;
 	this.fields = prototype.fields;
 	this.methods = prototype.methods;
+	this.components = prototype.components;
 	this.memberTypes = prototype.memberTypes;
 	this.typeVariables = prototype.typeVariables;
 	this.environment = prototype.environment;
@@ -178,7 +180,6 @@ public SourceTypeBinding(SourceTypeBinding prototype) {
 	this.defaultNullness = prototype.defaultNullness;
 	this.nullnessDefaultInitialized= prototype.nullnessDefaultInitialized;
 	this.containerAnnotationType = prototype.containerAnnotationType;
-	this.tagBits |= TagBits.HasUnresolvedMemberTypes; // see memberTypes()
 	this.isRecordDeclaration = this.prototype.isRecordDeclaration;
 }
 
@@ -2476,9 +2477,10 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 	TypeParameter[] typeParameters = methodDecl.typeParameters();
 	if (typeParameters != null) {
 		methodDecl.scope.connectTypeVariables(typeParameters, true);
-		// Perform deferred bound checks for type variables (only done after type variable hierarchy is connected)
-		for (TypeParameter typeParameter : typeParameters)
+		// perform deferred bound checks for type variables (only done after type variable hierarchy is connected)
+		for (TypeParameter typeParameter : typeParameters) {
 			typeParameter.checkBounds(methodDecl.scope);
+		}
 	}
 	TypeReference[] exceptionTypes = methodDecl.thrownExceptions;
 	if (exceptionTypes != null) {

@@ -66,7 +66,7 @@ public class GroovyClassScope extends ClassScope {
 
     private final TraitHelper traitHelper = new TraitHelper();
 
-    public GroovyClassScope(Scope parent, TypeDeclaration typeDecl) {
+    public GroovyClassScope(final Scope parent, final TypeDeclaration typeDecl) {
         super(parent, typeDecl);
     }
 
@@ -80,7 +80,7 @@ public class GroovyClassScope extends ClassScope {
      * Adds any Groovy-specific method bindings to the set determined by the compiler.
      */
     @Override
-    protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
+    protected MethodBinding[] augmentMethodBindings(final MethodBinding[] methodBindings) {
         SourceTypeBinding typeBinding = referenceContext.binding;
         if (typeBinding == null || typeBinding.isInterface() || typeBinding.isAnnotationType()) {
             return methodBindings;
@@ -113,7 +113,7 @@ public class GroovyClassScope extends ClassScope {
             //   MetaClass getMetaClass();
             //   void setMetaClass(MetaClass metaClass);
 
-            // Note on synthetic: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
+            // Note: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
 
             createMethod("invokeMethod", false, new TypeBinding[] {bindingJLS, bindingJLO}, bindingJLO, methodBindings)
                 .ifPresent(groovyMethods::add);
@@ -199,7 +199,7 @@ public class GroovyClassScope extends ClassScope {
         return Stream.concat(Stream.of(methodBindings), groovyMethods.stream()).toArray(MethodBinding[]::new);
     }
 
-    private int getModifiers(PropertyNode property) {
+    private int getModifiers(final PropertyNode property) {
         int modifiers = (property.getModifiers() & 0xF);
 
         if (property.getType().isUsingGenerics()) {
@@ -225,22 +225,22 @@ public class GroovyClassScope extends ClassScope {
         return modifiers;
     }
 
-    private String getMethodAsString(MethodBinding method) {
-        StringBuilder key = new StringBuilder(new String(method.selector));
-        key.append(" ");
+    private String getMethodAsString(final MethodBinding method) {
+        StringBuilder key = new StringBuilder();
+        key.append(method.selector).append(' ');
         for (TypeBinding param : method.parameters) {
             char[] type = param.readableName();
             if (type != null) {
                 key.append(type);
-                key.append(" ");
             } else {
-                key.append("null ");
+                key.append("null");
             }
+            key.append(' ');
         }
         return key.toString();
     }
 
-    private boolean isNotActuallyAbstract(MethodBinding methodBinding, ReferenceBinding helperBinding) {
+    private boolean isNotActuallyAbstract(final MethodBinding methodBinding, final ReferenceBinding helperBinding) {
         if (methodBinding.declaringClass instanceof SourceTypeBinding) {
             AbstractMethodDeclaration methodDeclaration =
                 ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
@@ -275,8 +275,7 @@ public class GroovyClassScope extends ClassScope {
         return true;
     }
 
-    private Optional<MethodBinding> createMethod(String name, boolean isStatic, TypeBinding[] parameterTypes, TypeBinding returnType,
-            MethodBinding[] existingMethods) {
+    private Optional<MethodBinding> createMethod(final String name, final boolean isStatic, final TypeBinding[] parameterTypes, final TypeBinding returnType, final MethodBinding[] existingMethods) {
         boolean found = false;
         char[] nameAsCharArray = name.toCharArray();
         for (MethodBinding existingMethod : existingMethods) {
@@ -313,8 +312,7 @@ public class GroovyClassScope extends ClassScope {
         return Optional.empty();
     }
 
-    private Optional<MethodBinding> createGetterMethod(String propertyName, String name, int modifiers,
-            MethodBinding[] existingMethods) {
+    private Optional<MethodBinding> createGetterMethod(final String propertyName, final String name, final int modifiers, final MethodBinding[] existingMethods) {
         boolean found = false;
         char[] nameAsCharArray = name.toCharArray();
         for (MethodBinding existingMethod : existingMethods) {
@@ -336,16 +334,12 @@ public class GroovyClassScope extends ClassScope {
         }
 
         if (!found) {
-            if (referenceContext.binding.isInterface()) {
-                modifiers |= Flags.AccAbstract;
-            }
-            return Optional.of(new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
+            return Optional.of(new LazilyResolvedMethodBinding(true, propertyName, modifiers | (referenceContext.binding.isInterface() ? Flags.AccAbstract : 0), nameAsCharArray, null, referenceContext.binding));
         }
         return Optional.empty();
     }
 
-    private Optional<MethodBinding> createSetterMethod(String propertyName, String name, int modifiers, String propertyType,
-            MethodBinding[] existingMethods) {
+    private Optional<MethodBinding> createSetterMethod(final String propertyName, final String name, final int modifiers, final String propertyType, final MethodBinding[] existingMethods) {
         boolean found = false;
         char[] nameAsCharArray = name.toCharArray();
         for (MethodBinding existingMethod : existingMethods) {
@@ -369,10 +363,7 @@ public class GroovyClassScope extends ClassScope {
         }
 
         if (!found) {
-            if (referenceContext.binding.isInterface()) {
-                modifiers |= Flags.AccAbstract;
-            }
-            return Optional.of(new LazilyResolvedMethodBinding(false, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding));
+            return Optional.of(new LazilyResolvedMethodBinding(false, propertyName, modifiers | (referenceContext.binding.isInterface() ? Flags.AccAbstract : 0), nameAsCharArray, null, referenceContext.binding));
         }
         return Optional.empty();
     }
@@ -431,7 +422,7 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    public boolean shouldReport(int problem) {
+    public boolean shouldReport(final int problem) {
         switch (problem) {
         case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
@@ -479,7 +470,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        private boolean isTrait(ReferenceBinding referenceBinding) {
+        private boolean isTrait(final ReferenceBinding referenceBinding) {
             if (referenceBinding != null) {
                 if (toBeInitialized) {
                     initialize();
@@ -503,7 +494,7 @@ public class GroovyClassScope extends ClassScope {
             return false;
         }
 
-        private ReferenceBinding getHelperBinding(ReferenceBinding interfaceBinding) {
+        private ReferenceBinding getHelperBinding(final ReferenceBinding interfaceBinding) {
             if (interfaceBinding instanceof BinaryTypeBinding) {
                 StringBuilder nameBuilder = new StringBuilder();
                 nameBuilder.append(interfaceBinding.sourceName);

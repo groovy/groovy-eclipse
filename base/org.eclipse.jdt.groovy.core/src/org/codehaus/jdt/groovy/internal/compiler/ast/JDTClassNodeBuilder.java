@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -296,6 +296,16 @@ class JDTClassNodeBuilder {
             return ClassHelper.OBJECT_TYPE;
         case TypeIds.T_JavaLangString:
             return ClassHelper.STRING_TYPE;
+        /* TODO:
+        case TypeIds.T_JavaLangNumber:
+            return ClassHelper.Number_TYPE;
+        case TypeIds.T_JavaMathBigDecimal:
+            return ClassHelper.BigDecimal_TYPE;
+        case TypeIds.T_JavaMathBigInteger:
+            return ClassHelper.BigInteger_TYPE;
+        case TypeIds.T_JavaIoSerializable:
+            return ClassHelper.SERIALIZABLE_TYPE;
+        */
 
         default:
             return new JDTClassNode(tb, resolver);

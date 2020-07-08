@@ -50,7 +50,7 @@ public class VariableExpressionTransformer {
         // processClassVariable before it reaches any makeCall, that could handle it
         Object val = expr.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
         if (val == null) return null;
-        /* GRECLIPSE edit -- GROOVY-9558
+        /* GRECLIPSE edit -- GROOVY-7996, GROOVY-9558
         VariableExpression implicitThis = new VariableExpression("this");
         */
         Expression implicitThis = new VariableExpression("owner".equals(val) ? "owner" : "delegate".equals(val) ? "delegate" : "this");
