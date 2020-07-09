@@ -176,7 +176,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         return source;
     }
 
-    private Variable findClassMember(ClassNode cn, String name) {
+    private Variable findClassMember(final ClassNode node, final String name) {
+        /* GRECLIPSE edit -- GROOVY-9598, GROOVY-9601
         if (cn == null) return null;
         if (cn.isScript()) {
             return new DynamicVariable(name, false);
@@ -205,16 +206,43 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             if (pn.getName().equals(name)) return pn;
         }
 
-        /* GRECLIPSE edit -- GROOVY-9598
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
         return findClassMember(cn.getOuterClass(), name);
         */
-        for (ClassNode face : cn.getInterfaces()) {
-            FieldNode fn = face.getDeclaredField(name);
-            if (fn != null) return fn;
+        for (ClassNode cn = node; cn != null && !cn.equals(ClassHelper.OBJECT_TYPE); cn = cn.getSuperClass()) {
+            if (cn.isScript()) {
+                return new DynamicVariable(name, false);
+            }
+
+            for (FieldNode fn : cn.getFields()) {
+                if (name.equals(fn.getName())) return fn;
+            }
+
+            for (PropertyNode pn : cn.getProperties()) {
+                if (name.equals(pn.getName())) return pn;
+            }
+
+            for (MethodNode mn : cn.getMethods()) {
+                if ((!mn.isAbstract() || node.isAbstract()) && name.equals(getPropertyName(mn))) {
+                    FieldNode fn = new FieldNode(name, mn.getModifiers() & 0xF, ClassHelper.OBJECT_TYPE, cn, null);
+                    fn.setHasNoRealSourcePosition(true);
+                    fn.setDeclaringClass(cn);
+                    fn.setSynthetic(true);
+
+                    PropertyNode pn = new PropertyNode(fn, fn.getModifiers(), null, null);
+                    pn.setDeclaringClass(cn);
+                    return pn;
+                }
+            }
+
+            for (ClassNode face : cn.getInterfaces()) {
+                FieldNode fn = face.getDeclaredField(name);
+                if (fn != null) return fn;
+            }
         }
-        return findClassMember(cn.getSuperClass(), name);
+
+        return null;
         // GRECLIPSE end
     }
 
