@@ -3788,6 +3788,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
 
             // now that a method has been chosen, we are allowed to visit the closures
+            /* GRECLIPSE edit
             if (!callArgsVisited) {
                 MethodNode mn = (MethodNode) call.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                 visitMethodCallArguments(receiver, argumentList, true, mn);
@@ -3808,11 +3809,55 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+            */
+            MethodNode target = call.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (!callArgsVisited) {
+                visitMethodCallArguments(receiver, argumentList, true, target);
+            }
+            if (target != null) {
+                List<Expression> arguments = argumentList.getExpressions(); Parameter[] parameters = target.getParameters();
+                for (int i = 0, n = Math.min(arguments.size(), parameters.length); i < n; i += 1) {
+                    Expression argument = arguments.get(i); ClassNode aType = getType(argument), pType = parameters[i].getType();
+                    if (CLOSURE_TYPE.equals(pType) && CLOSURE_TYPE.equals(aType)) {
+                        // GROOVY-8310
+                        if (!name.equals("collectMany") && pType.isUsingGenerics() && !GenericsUtils.buildWildcardType(pType).isCompatibleWith(aType)) {
+                            addNoMatchingMethodError(receiver, name, getArgumentTypes(argumentList), call);
+                            call.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                            break;
+                        }
+                        // GROOVY-7996
+                        if (argument instanceof VariableExpression && ((VariableExpression) argument).getAccessedVariable() instanceof Parameter) {
+                            int incomingStrategy = getResolveStrategy((Parameter) ((VariableExpression) argument).getAccessedVariable()), outgoingStrategy = getResolveStrategy(parameters[i]);
+                            if (incomingStrategy != outgoingStrategy) {
+                                //addStaticTypeError("Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy, argument);
+                                if (argument.getLineNumber() > 0 && typeCheckingContext.reportedErrors.add(((long) argument.getLineNumber()) << 16 + argument.getColumnNumber())) {
+                                    String warning = StaticTypesTransformation.STATIC_ERROR_PREFIX + "Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy;
+                                    typeCheckingContext.getErrorCollector().addWarning(0, warning, new org.codehaus.groovy.syntax.Token(0, argument.getText(), argument.getLineNumber(), argument.getColumnNumber()), getSourceUnit());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // GRECLIPE end
         } finally {
             typeCheckingContext.popEnclosingMethodCall();
             extension.afterMethodCall(call);
         }
     }
+
+    // GRECLIPSE add
+    private int getResolveStrategy(final Parameter parameter) {
+        List<AnnotationNode> annotations = parameter.getAnnotations(DELEGATES_TO);
+        if (annotations != null && !annotations.isEmpty()) {
+            Expression strategy = annotations.get(0).getMember("strategy");
+            if (strategy != null) {
+                return (Integer) evaluateExpression(castX(Integer_TYPE, strategy), getSourceUnit().getConfiguration());
+            }
+        }
+        return Closure.OWNER_FIRST;
+    }
+    // GRECLIPSE end
 
     /**
      * e.g. c(b(a())),      a() and b() are nested method call, but c() is not

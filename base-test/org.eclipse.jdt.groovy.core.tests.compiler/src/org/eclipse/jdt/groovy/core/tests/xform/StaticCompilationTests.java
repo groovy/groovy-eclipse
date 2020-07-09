@@ -1264,7 +1264,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7996")
+    @Test
     public void testCompileStatic7996() {
         //@formatter:off
         String[] sources = {
@@ -1272,6 +1272,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "print new Bar().doStuff()\n",
 
             "Foo.groovy",
+            "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  def build(Closure<?> block) {\n" +
             "    return this.with(block)\n" +
@@ -1287,14 +1288,20 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  protected List<?> bars = []\n" +
             "  def doStuff() {\n" +
             "    new Foo().build {\n" +
-            "      return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
+            "      //return bars.isEmpty()\n" + // ClassCastException: java.lang.String cannot be cast to java.util.List
             "    }\n" +
             "  }\n" +
             "}\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "true");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. WARNING in Foo.groovy (at line 4)\n" +
+            "\treturn this.with(block)\n" +
+            "\t                 ^^^^^\n" +
+            "Groovy:[Static type checking] - Closure parameter with resolve strategy 0 passed to method with resolve strategy 1\n" +
+            "----------\n");
     }
 
     @Test
@@ -1475,6 +1482,32 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic8310() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "def bar(Closure<Collection<Integer>> block) {\n" +
+            "  block()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "def use() {\n" +
+            "  bar {\n" +
+            "    [1]\n" + // List<Integer> is not compatible with Collection<Integer>; "? extends Collection<Integer>" works
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 6)\n" +
+            "\tbar {\n" +
+            "\t^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method Script#bar(groovy.lang.Closure <java.util.List>). Please check if the declared type is correct and if the method exists.\n" +
+            "----------\n");
     }
 
     @Test

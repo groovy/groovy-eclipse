@@ -3654,7 +3654,20 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     if (CLOSURE_TYPE.equals(aType) && CLOSURE_TYPE.equals(pType) && !isAssignableTo(aType, pType)) {
                         addNoMatchingMethodError(receiver, name, getArgumentTypes(argumentList), call);
                         call.removeNodeMetaData(DIRECT_METHOD_CALL_TARGET);
+                        break;
                     }
+                    // GRECLIPSE add -- GROOVY-7996
+                    if (CLOSURE_TYPE.equals(aType) && CLOSURE_TYPE.equals(pType) && arg instanceof VariableExpression && ((VariableExpression) arg).getAccessedVariable() instanceof Parameter) {
+                        int incomingStrategy = getResolveStrategy((Parameter) ((VariableExpression) arg).getAccessedVariable()), outgoingStrategy = getResolveStrategy(parameters[i]);
+                        if (incomingStrategy != outgoingStrategy) {
+                            //addStaticTypeError("Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy, argument);
+                            if (arg.getLineNumber() > 0 && typeCheckingContext.reportedErrors.add(((long) arg.getLineNumber()) << 16 + arg.getColumnNumber())) {
+                                String warning = StaticTypesTransformation.STATIC_ERROR_PREFIX + "Closure parameter with resolve strategy " + incomingStrategy + " passed to method with resolve strategy " + outgoingStrategy;
+                                typeCheckingContext.getErrorCollector().addWarning(0, warning, new org.codehaus.groovy.syntax.Token(0, arg.getText(), arg.getLineNumber(), arg.getColumnNumber()), getSourceUnit());
+                            }
+                        }
+                    }
+                    // GRECLIPSE end
                 }
             }
 
@@ -3664,6 +3677,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             extension.afterMethodCall(call);
         }
     }
+
+    // GRECLIPSE add
+    private int getResolveStrategy(final Parameter parameter) {
+        List<AnnotationNode> annotations = parameter.getAnnotations(DELEGATES_TO);
+        if (annotations != null && !annotations.isEmpty()) {
+            Expression strategy = annotations.get(0).getMember("strategy");
+            if (strategy != null) {
+                return (Integer) evaluateExpression(castX(Integer_TYPE, strategy), getSourceUnit().getConfiguration());
+            }
+        }
+        return Closure.OWNER_FIRST;
+    }
+    // GRECLIPSE end
 
     private void inferMethodReferenceType(final MethodCallExpression call, final ClassNode receiver, final ArgumentListExpression argumentList) {
         if (call == null) return;
