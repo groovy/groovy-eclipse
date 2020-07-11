@@ -930,9 +930,26 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
             //@formatter:on
 
-        int offset = contents.lastIndexOf("meth");
-        assertType(contents, offset, offset + "info".length(), "java.lang.Boolean");
-        assertDeclaringType(contents, offset, offset + "info".length(), "B"); // outer delegate
+        assertDeclaringType(contents, "meth", "B");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1141
+    public void testNestedClosure17() {
+        String contents =
+            //@formatter:off
+            "private void process(artifacts, String rev, File jardir) {\n" +
+            "}\n" +
+            "void meth(org.w3c.dom.Element element, String rev, File dir) {\n" +
+            "  dir.eachDir { dir2 ->\n" +
+            "    dir2.eachDir { dir3 ->\n" +
+            "      def artifacts = element.getElementsByTagName('artifact')\n" +
+            "      process(artifacts, rev, dir3)\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        assertDeclaringType(contents, "process", "Search");
     }
 
     @Test

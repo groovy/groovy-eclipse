@@ -470,7 +470,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         int resolveStrategy = scope.getEnclosingClosureResolveStrategy();
         boolean isAssignTarget = (scope.getWormhole().get("lhs") == var);
         boolean isDirectAccess = (accessedVar instanceof AnnotatedNode &&
-            resolvedDeclaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
+            declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass()));
 
         if ((accessedVar instanceof FieldNode && !(isDirectAccess && scope.isFieldAccessDirect())) ||
                 (isDirectAccess && resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY)) {
@@ -488,7 +488,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     PropertyNode prop = (PropertyNode) decl; // check for pseudo-property
                     if (prop.isDynamicTyped() && prop.getField().hasNoRealSourcePosition()) {
                         Optional<MethodNode> accessor = findPropertyAccessorMethod(prop.getName(),
-                            resolvedDeclaringType, isAssignTarget, prop.isStatic(), scope.getMethodCallArgumentTypes());
+                            declaringType, isAssignTarget, prop.isStatic(), scope.getMethodCallArgumentTypes());
                         decl = accessor.map(meth -> (ASTNode) meth).orElse(decl);
                     }
                 }
@@ -498,15 +498,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 if (decl instanceof MethodNode || !((Variable) decl).isDynamicTyped()) variableInfo = null;
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            ASTNode candidate = findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, isAssignTarget, resolveStrategy);
+            ASTNode candidate = findDeclarationForDynamicVariable(var, declaringType, scope, isAssignTarget, resolveStrategy);
             if (candidate != null && (!(candidate instanceof MethodNode) || scope.isMethodCall() ||
                     ((AccessorSupport.isGetter((MethodNode) candidate) || AccessorSupport.isSetter((MethodNode) candidate)) && !var.getName().equals(((MethodNode) candidate).getName())))) {
+                ClassNode implicitThisType = VariableScope.CLOSURE_CLASS_NODE.equals(declaringType) ? scope.getEnclosingTypeDeclaration() : declaringType;
                 if (candidate instanceof FieldNode) {
                     FieldNode field = (FieldNode) candidate;
                     ClassNode owner = field.getDeclaringClass();
                     if (field.getName().contains("__") && implementsTrait(owner)) {
                         candidate = findTraitField(field.getName(), owner).orElse(field);
-                    } else if (field.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, field.getDeclaringClass())) {
+                    } else if (field.isPrivate() && isNotThisOrOuterClass(implicitThisType, owner)) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private field of super class yields MissingPropertyException
                     }
                 } else if (candidate instanceof MethodNode) {
@@ -516,19 +517,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     if (argumentTypes != null && isLooseMatch(argumentTypes, method.getParameters())) {
                         confidence = TypeConfidence.LOOSELY_INFERRED;
                     }
-                    if (method.isPrivate() && isNotThisOrOuterClass(resolvedDeclaringType, method.getDeclaringClass())) {
+                    if (method.isPrivate() && isNotThisOrOuterClass(implicitThisType, method.getDeclaringClass())) {
                         confidence = TypeConfidence.UNKNOWN; // reference to private method of super class yields MissingMethodException
                     }
                 }
                 // compound assignment (i.e., +=, &=, ?=, etc.) may involve separate declarations for read and write
                 if (confidence.isAtLeast(TypeConfidence.INFERRED) && isAssignTarget && isCompoundAssignment(scope) &&
-                        (candidate instanceof MethodNode || !candidate.equals(findDeclarationForDynamicVariable(var, resolvedDeclaringType, scope, false, resolveStrategy)))) {
+                        (candidate instanceof MethodNode || !candidate.equals(findDeclarationForDynamicVariable(var, declaringType, scope, false, resolveStrategy)))) {
                     confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
 
                 decl = candidate;
                 type = getTypeFromDeclaration(decl);
-                resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, resolvedDeclaringType);
+                resolvedDeclaringType = getDeclaringTypeFromDeclaration(decl, declaringType);
                 if (!VariableScope.CLOSURE_CLASS_NODE.equals(resolvedDeclaringType)) variableInfo = null;
             } else {
                 type = VariableScope.OBJECT_CLASS_NODE;
@@ -540,7 +541,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (variableInfo != null) {
             type = variableInfo.type != null ? variableInfo.type : VariableScope.OBJECT_CLASS_NODE;
-            resolvedDeclaringType = getMorePreciseType(resolvedDeclaringType, variableInfo);
+            resolvedDeclaringType = getMorePreciseType(declaringType, variableInfo);
             if (VariableScope.isThisOrSuper(var)) decl = type;
             confidence = TypeConfidence.INFERRED;
         }
