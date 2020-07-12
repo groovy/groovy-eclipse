@@ -1098,13 +1098,19 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGSMDeclaring4() {
+        String contents = "void test(flag) {\n  sleep(flag ? 42 : 1000)\n}";
+        assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring5() {
         String contents = "Date.getLastMatcher()";
         int start = contents.lastIndexOf("getLastMatcher"), until = start + "getLastMatcher".length();
         assertUnknownConfidence(contents, start, until);
     }
 
     @Test
-    public void testDGSMDeclaring5() {
+    public void testDGSMDeclaring6() {
         String contents = "java.util.regex.Matcher.getLastMatcher()";
         assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }

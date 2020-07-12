@@ -34,8 +34,8 @@
         <file-match-pattern match-pattern="groovy/ast/expr/ConstantExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/ConstructorCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/expr/EmptyExpression.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/expr/MethodCallExpression.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/ast/expr/StaticMethodCallExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/RangeExpression.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/expr/(Static)?MethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/ClassNodeUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/GeneralUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/GenericsUtils.java" include-pattern="false" />

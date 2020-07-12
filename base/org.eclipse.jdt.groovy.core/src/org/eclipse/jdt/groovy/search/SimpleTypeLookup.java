@@ -47,6 +47,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -255,7 +256,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof EmptyExpression) {
             return new TypeLookupResult(null, null, null, confidence, scope);
 
-        } else if (node instanceof CastExpression) {
+        } else if (node instanceof ArrayExpression || node instanceof CastExpression) {
             return new TypeLookupResult(nodeType, null, null, confidence, scope);
 
         } else if (node instanceof ClassExpression) {

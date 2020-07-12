@@ -2200,6 +2200,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         return classNode.getDeclaredMethod("get" + MetaClassHelper.capitalize(fieldName), NO_PARAMETERS);
     }
 
+    private Expression findLeafNode(final Expression expression) {
+        if (expression instanceof BinaryExpression) {
+            Token operator = ((BinaryExpression) expression).getOperation();
+            if (operator.isA(Types.MATH_OPERATOR) && !operator.isA(Types.LOGICAL_OPERATOR))
+                return findLeafNode(((BinaryExpression) expression).getLeftExpression());
+        } else if (expression instanceof TernaryExpression) {
+            return findLeafNode(((TernaryExpression) expression).getTrueExpression());
+        } else if (expression instanceof UnaryMinusExpression) {
+            return findLeafNode(((UnaryMinusExpression) expression).getExpression());
+        } else if (expression instanceof UnaryPlusExpression) {
+            return findLeafNode(((UnaryPlusExpression) expression).getExpression());
+        } else if (expression instanceof PostfixExpression) {
+            return findLeafNode(((PostfixExpression) expression).getExpression());
+        } else if (expression instanceof PrefixExpression) {
+            return findLeafNode(((PrefixExpression) expression).getExpression());
+        }
+        return expression;
+    }
+
     private List<ClassNode> getMethodCallArgumentTypes(ASTNode node) {
         if (node instanceof MethodCall) {
             Expression arguments = ((MethodCall) node).getArguments();
@@ -2219,17 +2238,30 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
                 List<ClassNode> types = new ArrayList<>(expressions.size());
                 for (Expression expression : expressions) {
+                    expression = findLeafNode(expression);
                     ClassNode exprType = expression.getType();
+
                     /*if (expression instanceof MapExpression) {
-                        types.add(VariableScope.MAP_CLASS_NODE);
+                        types.add(createParameterizedMap(_));
                     } else if (expression instanceof ListExpression) {
-                        types.add(VariableScope.LIST_CLASS_NODE);
+                        types.add(createParameterizedList(_));
+                    } else if (expression instanceof RangeExpression) {
+                        types.add(createParameterizedRange(_));
+                    } else if (expression instanceof SpreadExpression) {
+                        types.add(createSpreadResult(_, _));???
                     } else if (expression instanceof ClosureExpression ||
                             expression instanceof MethodPointerExpression) {
-                        types.add(VariableScope.CLOSURE_CLASS_NODE);
+                        types.add(createParameterizedClosure(_));
                     } else*/ if (expression instanceof ClassExpression) {
                         types.add(VariableScope.newClassClassNode(exprType));
-                    } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
+                    } else if (expression instanceof ConstructorCallExpression) {
+                        if (((ConstructorCallExpression) expression).isUsingAnonymousInnerClass()) {
+                            exprType = exprType.getUnresolvedSuperClass(false);
+                            if (exprType == VariableScope.OBJECT_CLASS_NODE)
+                                exprType = expression.getType().getInterfaces()[0];
+                        }
+                        types.add(exprType);
+                    } else if (expression instanceof CastExpression || expression instanceof ArrayExpression) {
                         types.add(exprType);
                     } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
                         types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
@@ -2248,9 +2280,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     } else if (expression instanceof BinaryExpression && ((BinaryExpression) expression).getOperation().isOneOf(new int[] {Types.COMPARISON_OPERATOR, Types.LOGICAL_OPERATOR, Types.MATCH_REGEX, Types.KEYWORD_IN, Types.KEYWORD_INSTANCEOF, 129, 130})) {
                         types.add(VariableScope.BOOLEAN_CLASS_NODE);
                     } else {
-                        while (expression instanceof BinaryExpression && !((BinaryExpression) expression).getOperation().isA(Types.LEFT_SQUARE_BRACKET)) {
-                            expression = ((BinaryExpression) expression).getLeftExpression();
-                        }
                         VariableScope scope = scopes.getLast();
                         scope.setMethodCallArgumentTypes(null);
 
