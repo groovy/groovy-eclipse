@@ -5204,10 +5204,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // every element was the null constant
                 return listType;
             }
-            ClassNode superType = getWrapper(lowestUpperBound(nodes)); // to be used in generics, type must be boxed
-            ClassNode inferred = listType.getPlainNodeReference();
-            inferred.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(superType))});
-            return inferred;
+            // GROOVY-7848
+            ClassNode subType = lowestUpperBound(nodes);
+            listType = listType.getPlainNodeReference();
+            listType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(subType))});
         }
         return listType;
     }
@@ -5238,12 +5238,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 keyTypes.add(getType(entryExpression.getKeyExpression()));
                 valueTypes.add(getType(entryExpression.getValueExpression()));
             }
-            ClassNode keyType = getWrapper(lowestUpperBound(keyTypes));  // to be used in generics, type must be boxed
-            ClassNode valueType = getWrapper(lowestUpperBound(valueTypes));  // to be used in generics, type must be boxed
+            ClassNode keyType = lowestUpperBound(keyTypes);
+            ClassNode valueType = lowestUpperBound(valueTypes);
             if (!OBJECT_TYPE.equals(keyType) || !OBJECT_TYPE.equals(valueType)) {
-                ClassNode inferred = mapType.getPlainNodeReference();
-                inferred.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(keyType)), new GenericsType(wrapTypeIfNecessary(valueType))});
-                return inferred;
+                mapType = mapType.getPlainNodeReference();
+                mapType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(keyType)), new GenericsType(wrapTypeIfNecessary(valueType))});
             }
         }
         return mapType;

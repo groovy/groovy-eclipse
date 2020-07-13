@@ -1204,11 +1204,46 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7848() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  def pairs = [[1,2], [3,4]]\n" +
+            "  pairs.collect { pair -> pair[0] + pair[1] }\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[3, 7]");
+    }
+
+    @Test
+    public void testCompileStatic7848a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  List<List<Integer>> pairs = [[1,3], [1,2]].transpose()\n" +
+            "  pairs.inject(true) { flag, pair -> flag && pair[0] == pair[1] }\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "false");
+    }
+
+    @Test
     public void testCompileStatic7970() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
             "class Foo {\n" +
+            "  @groovy.transform.CompileStatic\n" +
             "  String renderTemplate(String arg) { print \":$arg\" }\n" +
             "  def bar() {\n" +
             "    'A'.with { renderTemplate(it) }\n" +
