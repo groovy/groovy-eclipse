@@ -1412,6 +1412,32 @@ public final class InnerClassTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "4242");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9642
+    public void testAnonymousInnerClass28() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  interface I {}\n" +
+            "  static class T {}\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  static I one() {\n" +
+            "    new I() {}\n" +
+            "  }\n" +
+            "  static T two() {\n" +
+            "    new T() {}\n" +
+            "  }\n" +
+            "}\n" +
+            "print D.one().getClass()\n" +
+            "print ';'\n" +
+            "print D.two().getClass()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "class D$1;class D$2");
+    }
+
     @Test
     public void testMixedModeInnerProperties_GRE597() {
         //@formatter:off

@@ -1294,10 +1294,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     protected Expression transformConstructorCallExpression(ConstructorCallExpression cce) {
         ClassNode type = cce.getType();
+        /* GRECLIPSE edit -- GROOVY-9642
         resolveOrFail(type, cce);
         if (Modifier.isAbstract(type.getModifiers())) {
             addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
         }
+        */
+        if (cce.isUsingAnonymousInnerClass()) {
+            resolveOrFail(type.getUnresolvedSuperClass(false), type);
+        } else {
+            resolveOrFail(type, cce);
+            if (type.isAbstract()) {
+                addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
+            }
+        }
+        // GRECLIPSE end
 
         Expression ret = cce.transformExpression(this);
         return ret;
