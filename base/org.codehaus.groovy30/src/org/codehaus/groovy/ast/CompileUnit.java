@@ -19,7 +19,6 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.GroovyClassLoader;
-import groovy.transform.Internal;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -32,7 +31,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * Represents the entire contents of a compilation step which consists of one or more
@@ -57,7 +55,6 @@ public class CompileUnit implements NodeMetaDataHandler {
     private final Map<String, ClassNode> classesToCompile = new LinkedHashMap<>();
     private final Map<String, SourceUnit> classNameToSource = new LinkedHashMap<>();
     private final Map<String, InnerClassNode> generatedInnerClasses = new LinkedHashMap<>();
-    private final Map<String, ConstructedOuterNestedClassNode> classesToResolve = new LinkedHashMap<>();
     private Map metaDataMap;
 
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
@@ -206,19 +203,6 @@ public class CompileUnit implements NodeMetaDataHandler {
         return classesToCompile;
     }
 
-    public Map<String, ConstructedOuterNestedClassNode> getClassesToResolve() {
-        return classesToResolve;
-    }
-
-    /**
-     * Add a constructed class node as a placeholder to resolve outer nested class further.
-     *
-     * @param cn the constructed class node
-     */
-    public void addClassNodeToResolve(ConstructedOuterNestedClassNode cn) {
-        classesToResolve.put(cn.getUnresolvedName(), cn);
-    }
-
     @Override
     public Map getMetaDataMap() {
         return metaDataMap;
@@ -227,38 +211,5 @@ public class CompileUnit implements NodeMetaDataHandler {
     @Override
     public void setMetaDataMap(Map metaDataMap) {
         this.metaDataMap = metaDataMap;
-    }
-
-    /**
-     * Represents a resolved type as a placeholder.
-     *
-     * @see <a href="https://issues.apache.org/jira/browse/GROOVY-7812">GROOVY-7812</a>
-     */
-    @Internal
-    public static class ConstructedOuterNestedClassNode extends ClassNode {
-        private final ClassNode enclosingClassNode;
-        private final List<BiConsumer<ConstructedOuterNestedClassNode, ClassNode>> setRedirectListenerList = new ArrayList<>();
-
-        public ConstructedOuterNestedClassNode(ClassNode outer, String innerClassName) {
-            super(innerClassName, ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
-            this.enclosingClassNode = outer;
-            this.isPrimaryNode = false;
-        }
-
-        public ClassNode getEnclosingClassNode() {
-            return enclosingClassNode;
-        }
-
-        @Override
-        public void setRedirect(ClassNode cn) {
-            for (BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener : setRedirectListenerList) {
-                setRedirectListener.accept(this, cn);
-            }
-            super.setRedirect(cn);
-        }
-
-        public void addSetRedirectListener(BiConsumer<ConstructedOuterNestedClassNode, ClassNode> setRedirectListener) {
-            setRedirectListenerList.add(setRedirectListener);
-        }
     }
 }

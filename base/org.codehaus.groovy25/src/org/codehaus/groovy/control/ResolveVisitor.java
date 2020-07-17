@@ -28,7 +28,6 @@ import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.CompileUnit.ConstructedOuterNestedClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -361,82 +360,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private void resolveOrFail(ClassNode type, String msg, ASTNode node) {
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
-        if (resolveToOuterNested(type)) return;
         /* GRECLIPSE edit
         addError("unable to resolve class " + type.getName() + " " + msg, node);
         */
         addError("unable to resolve class " + type.toString(false) + msg, type.getEnd() > 0 ? type : node);
         // GRECLIPSE end
-    }
-
-    // GROOVY-7812(#1): Static inner classes cannot be accessed from other files when running by 'groovy' command
-    // if the type to resolve is an inner class and it is in an outer class which is not resolved,
-    // we set the resolved type to a placeholder class node, i.e. a ConstructedOuterNestedClass instance
-    // when resolving the outer class later, we set the resolved type of ConstructedOuterNestedClass instance to the actual inner class node(SEE GROOVY-7812(#2))
-    private boolean resolveToOuterNested(ClassNode type) {
-        CompileUnit compileUnit = currentClass.getCompileUnit();
-        // GRECLIPSE add -- fix for NPE in config script
-        if (compileUnit == null) return false;
-        // GRECLIPSE end
-        String typeName = type.getName();
-
-        ModuleNode module = currentClass.getModule();
-        for (ImportNode importNode : module.getStaticImports().values()) {
-            String importFieldName = importNode.getFieldName();
-            String importAlias = importNode.getAlias();
-
-            if (!typeName.equals(importAlias)) continue;
-
-            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNodeViaStaticImport(compileUnit, importNode, importFieldName);
-            if (null != constructedOuterNestedClassNode) {
-                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
-                return true;
-            }
-        }
-
-        for (Map.Entry<String, ClassNode> entry : compileUnit.getClassesToCompile().entrySet()) {
-            ClassNode outerClassNode = entry.getValue();
-            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNode(type, outerClassNode);
-            if (null != constructedOuterNestedClassNode) {
-                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
-                return true;
-            }
-        }
-
-        boolean toResolveFurther = false;
-        for (ImportNode importNode : module.getStaticStarImports().values()) {
-            ConstructedOuterNestedClassNode constructedOuterNestedClassNode = tryToConstructOuterNestedClassNodeViaStaticImport(compileUnit, importNode, typeName);
-            if (null != constructedOuterNestedClassNode) {
-                compileUnit.addClassNodeToResolve(constructedOuterNestedClassNode);
-                toResolveFurther = true; // do not return here and try all static star imports because currently we do not know which outer class the class to resolve is declared in
-            }
-        }
-
-        return toResolveFurther;
-    }
-
-    private ConstructedOuterNestedClassNode tryToConstructOuterNestedClassNodeViaStaticImport(CompileUnit compileUnit, ImportNode importNode, String typeName) {
-        String importClassName = importNode.getClassName();
-        ClassNode outerClassNode = compileUnit.getClass(importClassName);
-
-        if (null == outerClassNode) return null;
-
-        String outerNestedClassName = importClassName + "$" + typeName.replace(".", "$");
-        return new ConstructedOuterNestedClassNode(outerClassNode, outerNestedClassName);
-    }
-
-    private ConstructedOuterNestedClassNode tryToConstructOuterNestedClassNode(ClassNode type, ClassNode outerClassNode) {
-        String outerClassName = outerClassNode.getName();
-
-        for (String typeName = type.getName(), ident = typeName; ident.contains("."); ) {
-            ident = ident.substring(0, ident.lastIndexOf("."));
-            if (outerClassName.endsWith(ident)) {
-                String outerNestedClassName = outerClassName + typeName.substring(ident.length()).replace(".", "$");
-                return new ConstructedOuterNestedClassNode(outerClassNode, outerNestedClassName);
-            }
-        }
-
-        return null;
     }
 
     private void resolveOrFail(ClassNode type, ASTNode node, boolean prefereImports) {
@@ -1662,8 +1590,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         super.visitClass(node);
 
-        resolveOuterNestedClassFurther(node);
-
         // GRECLIPSE add
         finishedResolution();
         } finally {
@@ -1688,37 +1614,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // template method
     }
     // GRECLIPSE end
-
-    // GROOVY-7812(#2): Static inner classes cannot be accessed from other files when running by 'groovy' command
-    private void resolveOuterNestedClassFurther(ClassNode node) {
-        CompileUnit compileUnit = currentClass.getCompileUnit();
-
-        if (null == compileUnit) return;
-
-        Map<String, ConstructedOuterNestedClassNode> classesToResolve = compileUnit.getClassesToResolve();
-        List<String> resolvedInnerClassNameList = new LinkedList<>();
-
-        for (Map.Entry<String, ConstructedOuterNestedClassNode> entry : classesToResolve.entrySet()) {
-            String innerClassName = entry.getKey();
-            ConstructedOuterNestedClassNode constructedOuterNestedClass = entry.getValue();
-
-            // When the outer class is resolved, all inner classes are resolved too
-            if (node.getName().equals(constructedOuterNestedClass.getEnclosingClassNode().getName())) {
-                ClassNode innerClassNode = compileUnit.getClass(innerClassName); // find the resolved inner class
-
-                if (null == innerClassNode) {
-                    return; // "unable to resolve class" error can be thrown already, no need to `addError`, so just return
-                }
-
-                constructedOuterNestedClass.setRedirect(innerClassNode);
-                resolvedInnerClassNameList.add(innerClassName);
-            }
-        }
-
-        for (String innerClassName : resolvedInnerClassNameList) {
-            classesToResolve.remove(innerClassName);
-        }
-    }
 
     private void checkCyclicInheritance(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
         if(!originalNode.isInterface()) {
