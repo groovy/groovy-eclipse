@@ -463,15 +463,10 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "dump", "p.Other", "java.lang.Void");
     }
 
-    @Test // GRECLIPSE-1371
+    @Test
     public void testStaticImport11() {
-        String contents =
-            "import static Boolean.TRUE\n" +
-            "class StaticImportStaticField {\n" +
-            "  static boolean FLAG = TRUE\n" +
-            "}\n";
-        int offset = contents.lastIndexOf("TRUE");
-        assertType(contents, offset, offset + 4, "java.lang.Boolean");
+        String contents = "import static java.util.Map.Entry\n";
+        assertType(contents, "Entry", "java.lang.Class<java.util.Map$Entry>");
     }
 
     @Test // GRECLIPSE-1363

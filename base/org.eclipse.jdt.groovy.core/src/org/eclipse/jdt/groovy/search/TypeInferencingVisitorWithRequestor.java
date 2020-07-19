@@ -551,7 +551,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                 try {
                                     scope.setCurrentNode(imp);
                                     primaryTypeStack.add(type);
-                                    visitConstantExpression(imp.getFieldNameExpr());
+                                    imp.getFieldNameExpr().visit(this);
 
                                     scope.forgetCurrentNode();
                                     dependentTypeStack.removeLast();

@@ -18,7 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import groovyjarjarasm.asm.Opcodes;
 
 /**
@@ -147,22 +147,22 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     // GRECLIPSE add
-    private ConstantExpression aliasExpr;
-    private ConstantExpression fieldNameExpr;
+    private Expression aliasExpr;
+    private Expression fieldNameExpr;
 
-    public ConstantExpression getAliasExpr() {
+    public Expression getAliasExpr() {
         return aliasExpr;
     }
 
-    public void setAliasExpr(ConstantExpression aliasExpr) {
+    public void setAliasExpr(Expression aliasExpr) {
         this.aliasExpr = aliasExpr;
     }
 
-    public ConstantExpression getFieldNameExpr() {
+    public Expression getFieldNameExpr() {
         return fieldNameExpr;
     }
 
-    public void setFieldNameExpr(ConstantExpression fieldNameExpr) {
+    public void setFieldNameExpr(Expression fieldNameExpr) {
         this.fieldNameExpr = fieldNameExpr;
     }
 

@@ -475,8 +475,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
                 // GRECLIPSE add
+                    resolutionFailedCache.add(maybeNested.getName());
                 }
-                resolutionFailedCache.add(maybeNested.getName());
                 // GRECLIPSE end
             }
             return false;
@@ -581,7 +581,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             //          inner class in DEFAULT_IMPORTS
             ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, typeName);
             // GRECLIPSE add
-            if (resolutionFailedCache.contains(tmp.getName())) continue;
+            if (!resolutionFailedCache.contains(tmp.getName())) {
             // GRECLIPSE end
             if (resolve(tmp, false, false, false)) {
                 type.setRedirect(tmp.redirect());
@@ -594,7 +594,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 return true;
             }
             // GRECLIPSE add
-            resolutionFailedCache.add(tmp.getName());
+                resolutionFailedCache.add(tmp.getName());
+            }
             // GRECLIPSE end
         }
 
@@ -747,7 +748,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
                 // GRECLIPSE add
-                resolutionFailedCache.add(tmp.getName());
+                    resolutionFailedCache.add(tmp.getName());
                 }
                 // GRECLIPSE end
             }
@@ -757,7 +758,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (importNode.getFieldName().equals(name)) {
                     ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                     // GRECLIPSE add
-                    if (resolutionFailedCache.contains(tmp.getName())) continue;
+                    if (!resolutionFailedCache.contains(tmp.getName())) {
                     // GRECLIPSE end
                     if (resolve(tmp, false, false, true)) {
                         if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
@@ -766,7 +767,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         }
                     }
                     // GRECLIPSE add
-                    resolutionFailedCache.add(tmp.getName());
+                        resolutionFailedCache.add(tmp.getName());
+                    }
                     // GRECLIPSE end
                 }
             }
@@ -780,7 +782,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // packagePrefix is really a class is handled elsewhere.
                 ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, name);
                 // GRECLIPSE add
-                if (resolutionFailedCache.contains(tmp.getName())) continue;
+                if (!resolutionFailedCache.contains(tmp.getName())) {
                 // GRECLIPSE end
                 if (resolve(tmp, false, false, true)) {
                     ambiguousClass(type, tmp, name);
@@ -788,7 +790,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return true;
                 }
                 // GRECLIPSE add
-                resolutionFailedCache.add(tmp.getName());
+                    resolutionFailedCache.add(tmp.getName());
+                }
                 // GRECLIPSE end
             }
 
@@ -796,7 +799,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode tmp = new ConstructedNestedClass(importNode.getType(), name);
                 // GRECLIPSE add
-                if (resolutionFailedCache.contains(tmp.getName())) continue;
+                if (!resolutionFailedCache.contains(tmp.getName())) {
                 // GRECLIPSE end
                 if (resolve(tmp, false, false, true)) {
                     if ((tmp.getModifiers() & Opcodes.ACC_STATIC) != 0) {
@@ -806,7 +809,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     }
                 }
                 // GRECLIPSE add
-                resolutionFailedCache.add(tmp.getName());
+                    resolutionFailedCache.add(tmp.getName());
+                }
                 // GRECLIPSE end
             }
         }
@@ -1468,13 +1472,24 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // GRECLIPSE end
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
-                if (resolve(type, true, true, true)) continue;
-                addError("unable to resolve class " + type.getName(), type);
+                if (!resolve(type, false, false, true))
+                    addError("unable to resolve class " + type.getName(), type);
+                // GRECLIPSE add
+                else {
+                    type = ClassHelper.makeWithoutCaching(
+                        type.getName() + "$" + importNode.getFieldName());
+                    if (resolve(type, false, false, true)) {
+                        Expression nameExpr = importNode.getFieldNameExpr();
+                        importNode.setFieldNameExpr(new ClassExpression(type));
+                        importNode.getFieldNameExpr().setSourcePosition(nameExpr);
+                    }
+                }
+                // GRECLIPSE end
             }
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
-                if (resolve(type, true, true, true)) continue;
-                addError("unable to resolve class " + type.getName(), type);
+                if (!resolve(type, false, false, true))
+                    addError("unable to resolve class " + type.getName(), type);
             }
             module.setImportsResolved(true);
         }
