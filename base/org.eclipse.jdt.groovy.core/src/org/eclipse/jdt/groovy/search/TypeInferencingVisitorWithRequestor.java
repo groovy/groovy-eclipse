@@ -1947,19 +1947,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VariableScope scope = scopes.getLast();
         if (!isDependentExpression(node)) {
             primaryType = null;
-            isStatic = false;
+            isStatic = node instanceof StaticMethodCallExpression;
             scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
             scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
         } else {
             primaryType = primaryTypeStack.removeLast();
-            // implicit this (no obj expr) method calls do not have a primary type
-            if (completeExpressionStack.getLast() instanceof MethodCallExpression &&
-                    ((MethodCallExpression) completeExpressionStack.getLast()).isImplicitThis()) {
-                primaryType = null;
+            ASTNode enclosingNode = completeExpressionStack.getLast();
+            if (enclosingNode instanceof MethodCallExpression) {
+                MethodCallExpression mce = (MethodCallExpression) enclosingNode;
+                if (mce.isImplicitThis() && mce.getObjectExpression() instanceof VariableExpression && ((VariableExpression) mce.getObjectExpression()).isThisExpression()) {
+                    primaryType = null; // implicit-this calls are handled like free variables
+                    isStatic = scope.isStatic();
+                } else {
+                    isStatic = mce.getObjectExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+                }
+            } else if (enclosingNode instanceof PropertyExpression) {
+                PropertyExpression pe = (PropertyExpression) enclosingNode;
+                isStatic = pe.getObjectExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+            } else if (enclosingNode instanceof MethodPointerExpression) {
+                MethodPointerExpression mpe = (MethodPointerExpression) enclosingNode;
+                isStatic = mpe.getExpression() instanceof ClassExpression || primaryType.equals(VariableScope.CLASS_CLASS_NODE);
+            } else /*if (enclosingNode instanceof ImportNode)*/ {
+                isStatic = true;
             }
-            isStatic = hasStaticObjectExpression(node, primaryType);
-            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(completeExpressionStack.getLast()));
-            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(completeExpressionStack.getLast()));
+
+            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(enclosingNode));
+            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(enclosingNode));
         }
         scope.setPrimaryNode(primaryType == null);
         scope.getWormhole().put("enclosingAssignment", enclosingAssignment);
@@ -2655,43 +2668,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
         return false;
-    }
-
-    /**
-     * @return true iff the object expression associated with node is a static reference to a class declaration
-     */
-    private boolean hasStaticObjectExpression(final Expression node, final ClassNode primaryType) {
-        boolean staticObjectExpression = false;
-        if (!completeExpressionStack.isEmpty()) {
-            ASTNode complete = completeExpressionStack.getLast();
-            if (complete instanceof PropertyExpression || complete instanceof MethodCallExpression || complete instanceof MethodPointerExpression) {
-                // call getObjectExpression and isImplicitThis w/o common interface
-                Expression objectExpression = null;
-                boolean isImplicitThis = false;
-
-                if (complete instanceof PropertyExpression) {
-                    PropertyExpression prop = (PropertyExpression) complete;
-                    objectExpression = prop.getObjectExpression();
-                    isImplicitThis = prop.isImplicitThis();
-                } else if (complete instanceof MethodCallExpression) {
-                    MethodCallExpression call = (MethodCallExpression) complete;
-                    objectExpression = call.getObjectExpression();
-                    isImplicitThis = call.isImplicitThis();
-                } else if (complete instanceof MethodPointerExpression) {
-                    MethodPointerExpression expr = (MethodPointerExpression) complete;
-                    objectExpression = expr.getExpression();
-                }
-
-                if (objectExpression == null && isImplicitThis) {
-                    staticObjectExpression = scopes.getLast().isStatic();
-                } else if (objectExpression instanceof ClassExpression || VariableScope.CLASS_CLASS_NODE.equals(primaryType)) {
-                    staticObjectExpression = true; // separate lookup exists for non-static members of Class, Object, or GroovyObject
-                }
-            } else if (complete instanceof ImportNode) {
-                staticObjectExpression = true;
-            }
-        }
-        return staticObjectExpression;
     }
 
     private TypeLookupResult lookupExpressionType(final Expression node, final ClassNode objExprType, final boolean isStatic, final VariableScope scope) {
