@@ -155,7 +155,7 @@ public class AssignmentStorer {
             }
             scope.getWormhole().put("lhs", lhs);
 
-        } else if (lhs instanceof ConstantExpression) {
+        } else if (lhs instanceof ConstantExpression || lhs instanceof BinaryExpression) {
             // in "a.b.c = x", lhs is "c" and rhsType is "typeof(x)"
 
             // save ref to help find an accessor

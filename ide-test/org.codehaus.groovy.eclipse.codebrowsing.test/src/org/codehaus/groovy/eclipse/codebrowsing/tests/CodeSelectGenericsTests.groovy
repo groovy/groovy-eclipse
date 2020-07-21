@@ -138,11 +138,11 @@ final class CodeSelectGenericsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectGenericCategoryMethod3() {
-        String contents = '[a: Number].getAt("a")'
-        IJavaElement elem = assertCodeSelect([contents], 'getAt')
+    void testCodeSelectGenericCategoryMethod() {
+        String contents = '[a: Number].collect { k,v -> "" }'
+        IJavaElement elem = assertCodeSelect([contents], 'collect')
         MethodNode method = ((GroovyResolvedBinaryMethod) elem).inferredElement
-        assert method.returnType.toString(false) == 'java.lang.Class <java.lang.Number>'
+        assert method.returnType.toString(false) == 'java.util.List <java.lang.Object>'
     }
 
     @Test

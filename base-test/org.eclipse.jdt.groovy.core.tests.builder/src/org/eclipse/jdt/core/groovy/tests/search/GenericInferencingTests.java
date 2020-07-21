@@ -448,8 +448,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test
     public void testMapOfList6() {
         String contents =
-            "Map<String, Map<Integer, List<Date>>> m\n" +
-            "def xxx = m.get('foo').get(5).get(2)\n";
+            "Map<Integer, Map<Integer, List<Date>>> m\n" +
+            "def xxx = m.get(1).get(2).get(3)\n";
 
         assertType(contents, "xxx", "java.util.Date");
     }
@@ -457,8 +457,17 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-941
     public void testMapOfList7() {
         String contents =
-            "Map<String, Map<Integer, List<Date>>> m\n" +
-            "def xxx = m['foo'][5][2]\n";
+            "Map<Integer, Map<Integer, List<Date>>> m\n" +
+            "def xxx = m[1][2][3]\n";
+
+        assertType(contents, "xxx", "java.util.Date");
+    }
+
+    @Test // GROOVY-9420
+    public void testMapOfList8() {
+        String contents =
+            "Map<String, List<Date>> m\n" +
+            "def xxx = m['a'][1]\n";
 
         assertType(contents, "xxx", "java.util.Date");
     }

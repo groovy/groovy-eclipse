@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.unique;
 import static org.eclipse.jdt.groovy.core.util.GroovyUtils.implementsTrait;
@@ -42,6 +43,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -66,6 +68,8 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
+import org.codehaus.groovy.reflection.ParameterTypes;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -371,9 +375,24 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = VariableScope.CLOSURE_CLASS_NODE;
             declaration = resolvedDeclaringType.getMethods("call").get(0);
-        } else if ("this".equals(name) && VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
+        } else if ("this".equals(name) && declaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
             // "Type.this" (aka ClassExpression.ConstantExpression) within inner class
             declaration = resolvedType = resolvedDeclaringType = declaringType.getGenericsTypes()[0].getType();
+        } else if (("getAt".equals(name) || isLhsExpression || !scope.isMethodCall()) && type.equals(VariableScope.STRING_CLASS_NODE) && isOrImplements(declaringType, VariableScope.MAP_CLASS_NODE)) {
+            if (isLhsExpression) {
+                resolvedType = VariableScope.VOID_CLASS_NODE;
+            } else {
+                resolvedType = VariableScope.OBJECT_CLASS_NODE;
+                for (ClassNode face : declaringType.getAllInterfaces()) {
+                    if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
+                        GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
+                        if (generics.length == 2) resolvedType = generics[1].getType();
+                        break;
+                    }
+                }
+            }
+            resolvedDeclaringType = declaringType;
+            confidence = TypeConfidence.INFERRED;
         } else {
             resolvedType = VariableScope.OBJECT_CLASS_NODE;
             resolvedDeclaringType = declaringType;
@@ -808,12 +827,33 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected static MethodNode closer(final MethodNode next, final MethodNode last, final List<ClassNode> args) {
         if (last != null) {
-            long d1 = CategoryTypeLookup.calculateParameterDistance(args, last.getParameters());
-            long d2 = CategoryTypeLookup.calculateParameterDistance(args, next.getParameters());
+            long d1 = calculateParameterDistance(args, last.getParameters());
+            long d2 = calculateParameterDistance(args, next.getParameters());
             if (d1 <= d2)
                 return last;
         }
         return next;
+    }
+
+    protected static long calculateParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
+        try {
+            int n = arguments.size();
+            Class<?>[] args = new Class[n];
+            for (int i = 0; i < n; i += 1) {
+                args[i] = arguments.get(i).getTypeClass();
+            }
+
+            n = parameters.length;
+            Class<?>[] prms = new Class[n];
+            for (int i = 0; i < n; i += 1) {
+                prms[i] = parameters[i].getType().getTypeClass();
+            }
+
+            // TODO: This can fail in a lot of cases; is there a better way to call it?
+            return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
+        } catch (Throwable t) {
+            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+        }
     }
 
     protected static FieldNode createLengthField(final ClassNode declaringType) {

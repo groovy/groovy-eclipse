@@ -15,8 +15,11 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.tail;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -93,7 +96,7 @@ public class CategoryTypeLookup implements ITypeLookup {
         return null;
     }
 
-    protected static boolean isCompatibleConstantExpression(final Expression node, final VariableScope scope, final ClassNode selfType) {
+    private static boolean isCompatibleConstantExpression(final Expression node, final VariableScope scope, final ClassNode selfType) {
         if (node instanceof ConstantExpression && !scope.isTopLevel() && !VariableScope.VOID_CLASS_NODE.equals(selfType)) {
             org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
             if (!(enclosingNode instanceof AttributeExpression || (enclosingNode instanceof MethodPointerExpression &&
@@ -104,7 +107,7 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isCompatibleCategoryMethod(final MethodNode method, final ClassNode firstArgumentType, final VariableScope scope) {
+    private static boolean isCompatibleCategoryMethod(final MethodNode method, final ClassNode firstArgumentType, final VariableScope scope) {
         if (method.isStatic()) {
             Parameter[] paramters = method.getParameters();
             if (paramters != null && paramters.length > 0) {
@@ -120,7 +123,7 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isSelfTypeCompatible(final ClassNode source, final ClassNode target) {
+    private static boolean isSelfTypeCompatible(final ClassNode source, final ClassNode target) {
         if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
             if (!(VariableScope.CLASS_CLASS_NODE.equals(source) && source.isUsingGenerics()) ||
                     VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
@@ -136,15 +139,15 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isDefaultGroovyMethod(final MethodNode method, final VariableScope scope) {
+    private static boolean isDefaultGroovyMethod(final MethodNode method, final VariableScope scope) {
         return (VariableScope.DGM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultCategory(method.getDeclaringClass()));
     }
 
-    protected static boolean isDefaultGroovyStaticMethod(final MethodNode method, final VariableScope scope) {
+    private static boolean isDefaultGroovyStaticMethod(final MethodNode method, final VariableScope scope) {
         return (VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultStaticCategory(method.getDeclaringClass()));
     }
 
-    protected static MethodNode selectBestMatch(final List<MethodNode> candidates, final List<ClassNode> argumentTypes, final VariableScope scope) {
+    private static MethodNode selectBestMatch(final List<MethodNode> candidates, final List<ClassNode> argumentTypes, final VariableScope scope) {
         java.util.function.Function<MethodNode, List<ClassNode>> argsWithSelfTypeFix;
         if (!VariableScope.CLASS_CLASS_NODE.equals(argumentTypes.get(0))) {
             argsWithSelfTypeFix = x -> argumentTypes;
@@ -159,17 +162,35 @@ public class CategoryTypeLookup implements ITypeLookup {
             };
         }
 
-        MethodNode method = null;
+        // Phase 1: find best self-type match for each set of parameters
+        Map<String, MethodNode> m = new java.util.LinkedHashMap<>();
         for (MethodNode candidate : candidates) {
+            StringBuilder signature = new StringBuilder();
+            Parameter[] parameters = candidate.getParameters();
+            for (int i = 1, n = parameters.length; i < n; i += 1) {
+                signature.append(parameters[i].getType().getName()).append(',');
+            }
+            MethodNode previous = m.put(signature.toString(), candidate);
+            if (previous != null) {
+                long d1 = selfParameterDistance(argsWithSelfTypeFix.apply(previous), previous.getParameters());
+                long d2 = selfParameterDistance(argsWithSelfTypeFix.apply(candidate), candidate.getParameters());
+
+                if (d1 <= d2) m.put(signature.toString(), previous);
+            }
+        }
+
+        // Phase 2: find best set of parameters for given call arguments
+        MethodNode method = null;
+        for (MethodNode candidate : m.values()) {
             if (argumentTypes.size() == candidate.getParameters().length) {
-                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argsWithSelfTypeFix.apply(candidate), candidate.getParameters());
+                Boolean compatible = SimpleTypeLookup.isTypeCompatible(argumentTypes.subList(1, argumentTypes.size()), tail(candidate.getParameters()));
                 if (compatible == Boolean.TRUE) { // exact match
                     method = candidate;
                     break;
                 } else if (compatible != Boolean.FALSE) { // fuzzy match
                     if (method != null) {
-                        long d1 = calculateParameterDistance(argsWithSelfTypeFix.apply(method), method.getParameters());
-                        long d2 = calculateParameterDistance(argsWithSelfTypeFix.apply(candidate), candidate.getParameters());
+                        long d1 = tailParameterDistance(argumentTypes, method.getParameters());
+                        long d2 = tailParameterDistance(argumentTypes, candidate.getParameters());
 
                         if (d1 <= d2) continue; // stick with current selection
                     }
@@ -177,38 +198,39 @@ public class CategoryTypeLookup implements ITypeLookup {
                 }
             }
         }
+
         return method;
     }
 
-    protected static long calculateParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
+    private static long selfParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
         try {
-            if (arguments.size() == 1 && parameters.length == 1) {
-                Class<?>[] args = {arguments.get(0).getTypeClass()};
-                Class<?>[] prms = {parameters[0].getType().getTypeClass()};
-                return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
-            }
+            Class<?>[] a = {arguments.get(0).getTypeClass()};
+            Class<?>[] p = {parameters[0].getType().getTypeClass()};
+            // TODO: This can fail in a lot of cases; is there a better way to call it?
+            return MetaClassHelper.calculateParameterDistance(a, new ParameterTypes(p));
+        } catch (Throwable t) {
+            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+        }
+    }
 
-            // weight self type higher to prevent considering getAt(Map, Object)
-            // and getAt(Object, String) equally for the arguments (Map, String)
-
-            int n = 1 + arguments.size();
+    private static long tailParameterDistance(final List<ClassNode> arguments, final Parameter[] parameters) {
+        try {
+            int n = arguments.size() - 1;
             Class<?>[] args = new Class[n];
-            for (int i = 1; i < n; i += 1) {
-                args[i] = arguments.get(i - 1).getTypeClass();
+            for (int i = 0; i < n; i += 1) {
+                args[i] = arguments.get(i + 1).getTypeClass();
             }
-            args[0] = args[1]; // repeat the self type for effect
 
-            n = 1 + parameters.length;
+            n = parameters.length - 1;
             Class<?>[] prms = new Class[n];
-            for (int i = 1; i < n; i += 1) {
-                prms[i] = parameters[i - 1].getType().getTypeClass();
+            for (int i = 0; i < n; i += 1) {
+                prms[i] = parameters[i + 1].getType().getTypeClass();
             }
-            prms[0] = prms[1]; // repeat the self type for effect
 
             // TODO: This can fail in a lot of cases; is there a better way to call it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
         } catch (Throwable t) {
-            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+            return Long.MAX_VALUE;
         }
     }
 }

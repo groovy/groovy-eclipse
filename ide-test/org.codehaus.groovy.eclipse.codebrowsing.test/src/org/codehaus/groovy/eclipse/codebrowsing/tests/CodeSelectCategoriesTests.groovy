@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-
 import org.junit.Test
 
 final class CodeSelectCategoriesTests extends BrowsingTestSuite {
@@ -24,7 +22,7 @@ final class CodeSelectCategoriesTests extends BrowsingTestSuite {
     @Test
     void testDGM1() {
         def sources = [
-            'this.each { }'
+            '[1, 2, 3].each { i -> ; }'
         ]
         assertCodeSelect(sources, 'each')
     }
@@ -32,19 +30,24 @@ final class CodeSelectCategoriesTests extends BrowsingTestSuite {
     @Test
     void testDGM2() {
         def sources = [
-            '[str: String.class].getAt(String.class)'
+            '[key: String].each { e -> ; }'
         ]
-        def elem = assertCodeSelect(sources, 'getAt')
-        assert elem.parameterTypes.length == 2
-        assert elem.parameterTypes[0] == 'Ljava.util.Map<TK;TV;>;'
-        assert elem.parameterTypes[1] == isAtLeastGroovy(30) ? 'java.lang.Object' : 'TK;'
+        assertCodeSelect(sources, 'each')
+    }
+
+    @Test
+    void testDGM3() {
+        def sources = [
+            '[key: String].each { k,v -> ; }'
+        ]
+        assertCodeSelect(sources, 'each')
     }
 
     @Test
     void testGroovyCategory() {
         def sources = [
-            'class MyCategory { static doNothing(Object o) { } }',
-            'use(MyCategory) { doNothing() }'
+            'class Cat { static doNothing(Object o) { } }',
+            'use(Cat) { doNothing() }'
         ]
         assertCodeSelect(sources, 'doNothing')
     }
