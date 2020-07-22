@@ -4149,13 +4149,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "private".equals(modifier) ? "C" : "A"); // TODO: MetaClassImpl.getAttribute(Class,Object,String,boolean) drops super
+            if (!"private".equals(modifier)) {
+                runConformTest(sources, "A");
+            } else if (isAtLeastGroovy(25)) {
+                runConformTest(sources, "C"); // MetaClassImpl.getAttribute(Class,Object,String,boolean) drops super
+            } else {
+                runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: A");
+            }
         }
     }
 
     @Test
     public void testReferencingFields_DirectAccess7() {
-        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", /*GROOVY-8999: "private"*/}) {
+        for (String modifier : new String[] {"public", "protected", "@groovy.transform.PackageScope", "private"}) {
             //@formatter:off
             String[] sources = {
                 "Main.groovy",
@@ -4177,7 +4183,15 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             };
             //@formatter:on
 
-            runConformTest(sources, "x");
+            if (!"private".equals(modifier)) {
+                runConformTest(sources, "x");
+            } else if (isAtLeastGroovy(30)) {
+                runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: C"); // GROOVY-8999
+            } else if (isAtLeastGroovy(25)) {
+                runConformTest(sources, "A"); // GROOVY-8999
+            } else {
+                runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: A");
+            }
         }
     }
 

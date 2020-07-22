@@ -9,9 +9,9 @@
             <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy24/lib/ivy-2.4.0-javadoc.jar!/" />
         </attributes>
     </classpathentry>
-    <classpathentry kind="lib" path="lib/groovy-all-2.4.19.jar" sourcepath="lib/groovy-all-2.4.19-sources.jar" exported="true">
+    <classpathentry kind="lib" path="lib/groovy-all-2.4.20.jar" sourcepath="lib/groovy-all-2.4.20-sources.jar" exported="true">
         <attributes>
-            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy24/lib/groovy-all-2.4.19-javadoc.jar!/" />
+            <attribute name="javadoc_location" value="jar:platform:/resource/org.codehaus.groovy24/lib/groovy-all-2.4.20-javadoc.jar!/" />
         </attributes>
     </classpathentry>
 

@@ -189,17 +189,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         for (MethodNode mn : cn.getMethods()) {
             String pName = getPropertyName(mn);
-            // GRECLIPSE edit
-            //if (pName != null && pName.equals(name))
-            //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
-            if (name.equals(pName)) {
-                PropertyNode property = new PropertyNode(name, mn.getModifiers(), ClassHelper.DYNAMIC_TYPE, cn, null, null, null);
-                property.getField().setHasNoRealSourcePosition(true); property.getField().setSynthetic(true);
-                property.getField().setDeclaringClass(cn);
-                property.setDeclaringClass(cn);
-                return property;
-            }
-            // GRECLIPSE end
+            if (pName != null && pName.equals(name))
+                return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
         }
 
         for (PropertyNode pn : cn.getProperties()) {

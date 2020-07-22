@@ -2274,7 +2274,7 @@ public class AsmClassGenerator extends ClassGenerator {
         return false;
     }
 
-    private static boolean isSuperExpression(Expression expression) {
+    public static boolean isSuperExpression(Expression expression) {
         if (expression instanceof VariableExpression) {
             VariableExpression varExp = (VariableExpression) expression;
             return varExp.getName().equals("super");
