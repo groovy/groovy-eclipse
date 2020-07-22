@@ -48,7 +48,7 @@ import static org.codehaus.groovy.syntax.Types.POWER;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 
-public class ExpressionUtils {
+public final class ExpressionUtils {
     private static ArrayList<Integer> handledTypes = new ArrayList<Integer>();
     static {
         handledTypes.add(PLUS);
@@ -380,4 +380,29 @@ public class ExpressionUtils {
         }
         return null;
     }
+
+    public static boolean isThisExpression(Expression expression) {
+        if (expression instanceof VariableExpression) {
+            VariableExpression varExp = (VariableExpression) expression;
+            return varExp.getName().equals("this");
+        }
+        return false;
+    }
+
+    public static boolean isSuperExpression(Expression expression) {
+        if (expression instanceof VariableExpression) {
+            VariableExpression varExp = (VariableExpression) expression;
+            return varExp.getName().equals("super");
+        }
+        return false;
+    }
+
+    public static boolean isThisOrSuper(Expression expression) {
+        return isThisExpression(expression) || isSuperExpression(expression);
+    }
+
+    public static boolean isNullConstant(Expression expr) {
+        return expr instanceof ConstantExpression && ((ConstantExpression) expr).isNullExpression();
+    }
+
 }

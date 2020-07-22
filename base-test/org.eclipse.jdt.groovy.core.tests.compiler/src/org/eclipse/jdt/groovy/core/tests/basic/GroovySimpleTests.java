@@ -4151,7 +4151,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             if (!"private".equals(modifier)) {
                 runConformTest(sources, "A");
-            } else if (isAtLeastGroovy(25)) {
+            } else if (isAtLeastGroovy(30)) {
                 runConformTest(sources, "C"); // MetaClassImpl.getAttribute(Class,Object,String,boolean) drops super
             } else {
                 runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: A");
@@ -4187,8 +4187,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
                 runConformTest(sources, "x");
             } else if (isAtLeastGroovy(30)) {
                 runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: C"); // GROOVY-8999
-            } else if (isAtLeastGroovy(25)) {
-                runConformTest(sources, "A"); // GROOVY-8999
             } else {
                 runConformTest(sources, "", "groovy.lang.MissingFieldException: No such field: field for class: A");
             }

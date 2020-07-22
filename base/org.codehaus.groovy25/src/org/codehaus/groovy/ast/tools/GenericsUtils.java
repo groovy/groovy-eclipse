@@ -322,10 +322,8 @@ public class GenericsUtils {
     }
 
     public static MethodNode correctToGenericsSpec(Map<String, ClassNode> genericsSpec, MethodNode mn) {
-        // GRECLIPSE add -- GROOVY-9059
-        if (mn.getGenericsTypes() != null)
-            genericsSpec = addMethodGenerics(mn, genericsSpec);
-        // GRECLIPSE end
+        if (genericsSpec == null) return mn;
+        if (mn.getGenericsTypes() != null) genericsSpec = addMethodGenerics(mn, genericsSpec);
         ClassNode correctedType = correctToGenericsSpecRecurse(genericsSpec, mn.getReturnType());
         Parameter[] origParameters = mn.getParameters();
         Parameter[] newParameters = new Parameter[origParameters.length];

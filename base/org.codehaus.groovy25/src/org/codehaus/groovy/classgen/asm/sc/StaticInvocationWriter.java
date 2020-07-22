@@ -665,7 +665,7 @@ public class StaticInvocationWriter extends InvocationWriter {
                 if (pname!=null && callSiteWriter instanceof StaticTypesCallSiteWriter) {
                     StaticTypesCallSiteWriter stcsw = (StaticTypesCallSiteWriter) callSiteWriter;
                     TypeChooser typeChooser = controller.getTypeChooser();
-                    if (stcsw.makeGetField(receiver, typeChooser.resolveType(receiver, controller.getClassNode()), pname, safe, false, true)) {
+                    if (stcsw.makeGetField(receiver, typeChooser.resolveType(receiver, controller.getClassNode()), pname, safe, false)) {
                         return;
                     }
                 }
@@ -679,7 +679,7 @@ public class StaticInvocationWriter extends InvocationWriter {
         if (implicitThis && implicitReceiver==null && origin instanceof MethodCallExpression) {
             implicitReceiver = ((MethodCallExpression) origin).getObjectExpression().getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER);
         }
-        if (implicitReceiver !=null && implicitThis) {
+        if (implicitThis && implicitReceiver != null) {
             String[] propertyPath = ((String) implicitReceiver).split("\\.");
             // GROOVY-6021
             PropertyExpression pexp = new PropertyExpression(new VariableExpression("this", CLOSURE_TYPE), propertyPath[0]);

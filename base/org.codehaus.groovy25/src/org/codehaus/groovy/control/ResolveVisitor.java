@@ -1327,13 +1327,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     protected Expression transformConstructorCallExpression(ConstructorCallExpression cce) {
         ClassNode type = cce.getType();
-        /* GRECLIPSE edit -- GROOVY-9642
-        resolveOrFail(type, cce);
-        if (Modifier.isAbstract(type.getModifiers())) {
-            addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
-        }
-        */
-        if (cce.isUsingAnonymousInnerClass()) {
+        if (cce.isUsingAnonymousInnerClass()) { // GROOVY-9642
             resolveOrFail(type.getUnresolvedSuperClass(false), type);
         } else {
             resolveOrFail(type, cce);
@@ -1341,7 +1335,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 addError("You cannot create an instance from the abstract " + getDescription(type) + ".", cce);
             }
         }
-        // GRECLIPSE end
 
         return cce.transformExpression(this);
     }

@@ -19,6 +19,7 @@
 package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyRuntimeException;
+import org.apache.groovy.ast.tools.ExpressionUtils;
 import org.apache.groovy.io.StringBuilderWriter;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
@@ -124,6 +125,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.apache.groovy.ast.tools.ExpressionUtils.isSuperExpression;
+import static org.apache.groovy.ast.tools.ExpressionUtils.isThisOrSuper;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.attrX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -183,7 +186,7 @@ public class AsmClassGenerator extends ClassGenerator {
     private final Map genericParameterNames;
     private final SourceUnit source;
     private WriterController controller;
-    
+
     public AsmClassGenerator(
             SourceUnit source, GeneratorContext context,
             ClassVisitor classVisitor, String sourceFile
@@ -805,7 +808,7 @@ public class AsmClassGenerator extends ClassGenerator {
         if (castExpression.isCoerce()) {
             controller.getOperandStack().doAsType(type);
         } else {
-            if (isNullConstant(subExpression) && !ClassHelper.isPrimitiveType(type)) {
+            if (ExpressionUtils.isNullConstant(subExpression) && !ClassHelper.isPrimitiveType(type)) {
                 controller.getOperandStack().replace(type);
             } else {
                 ClassNode subExprType = controller.getTypeChooser().resolveType(subExpression, controller.getClassNode());
@@ -880,8 +883,9 @@ public class AsmClassGenerator extends ClassGenerator {
         controller.getAssertionWriter().record(call);
     }
 
+    @Deprecated
     public static boolean isNullConstant(Expression expr) {
-        return expr instanceof ConstantExpression && ((ConstantExpression) expr).getValue()==null;
+        return ExpressionUtils.isNullConstant(expr);
     }
 
     public void visitConstructorCallExpression(ConstructorCallExpression call) {
@@ -958,7 +962,6 @@ public class AsmClassGenerator extends ClassGenerator {
         return null;
     }
 
-    // GRECLIPSE add
     private boolean checkStaticOuterField(final PropertyExpression pexp, final String name) {
         for (final ClassNode outer : controller.getClassNode().getOuterClasses()) {
             FieldNode field = outer.getDeclaredField(name);
@@ -992,7 +995,6 @@ public class AsmClassGenerator extends ClassGenerator {
         }
         return false;
     }
-    // GRECLIPSE end
 
     private void visitAttributeOrProperty(PropertyExpression expression, MethodCallerMultiAdapter adapter) {
         ClassNode classNode = controller.getClassNode();
@@ -1011,46 +1013,6 @@ public class AsmClassGenerator extends ClassGenerator {
                         privateSuperField = true;
                     }
                 } else {
-                    /* GRECLIPSE edit
-                	if (controller.isNotExplicitThisInClosure(expression.isImplicitThis())) {
-                        field = classNode.getDeclaredField(name);
-                        if (field==null && classNode instanceof InnerClassNode) {
-                            ClassNode outer = classNode.getOuterClass();
-                            FieldNode outerClassField;
-                            while (outer != null) {
-                                outerClassField = outer.getDeclaredField(name);
-                                if (outerClassField != null && outerClassField.isStatic()) {
-                                    if (outer != classNode.getOuterClass() && outerClassField.isPrivate()) {
-                                        throw new GroovyBugError("Trying to access private field [" + outerClassField.getDeclaringClass() + "#" + outerClassField.getName() + "] from inner class");
-                                    }
-                                    PropertyExpression pexp = new PropertyExpression(
-                                            new ClassExpression(outer),
-                                            expression.getProperty()
-                                    );
-                                    pexp.getObjectExpression().setSourcePosition(objectExpression);
-                                    pexp.visit(controller.getAcg());
-                                    return;
-                                }
-                                outer = outer.getSuperClass();
-                            }
-                        }
-                        if (field==null
-                                && expression instanceof AttributeExpression
-                                && isThisExpression(objectExpression)
-                                && controller.isStaticContext()) {
-                            // GROOVY-6183
-                            ClassNode current = classNode.getSuperClass();
-                            while (field==null && current!=null) {
-                                field = current.getDeclaredField(name);
-                                current = current.getSuperClass();
-                            }
-                            if (field!=null && (field.isProtected() || field.isPublic())) {
-                                visitFieldExpression(new FieldExpression(field));
-                                return;
-                            }
-                        }
-                	}
-                    */
                     if (controller.isInClosure()) {
                         if (expression.isImplicitThis())
                             field = classNode.getDeclaredField(name); // params are stored as fields
@@ -1071,16 +1033,12 @@ public class AsmClassGenerator extends ClassGenerator {
                             }
                         }
                     }
-                    // GRECLIPSE end
                 }
                 if (field != null && !privateSuperField) { // GROOVY-4497: don't visit super field if it is private
                     fieldX(field).visit(this);
                     return;
                 }
-                // GRECLIPSE add -- GROOVY-8167, GROOVY-8999
-                if (!(expression instanceof AttributeExpression))
-                // GRECLIPSE end
-                if (isSuperExpression(objectExpression)) {
+                if (isSuperExpression(objectExpression) && !(expression instanceof AttributeExpression)) {
                     if (controller.getCompileStack().isLHS()) {
                         setPropertyOfSuperClass(classNode, expression, mv);
                     } else {
@@ -1236,38 +1194,6 @@ public class AsmClassGenerator extends ClassGenerator {
 
     public void visitAttributeExpression(AttributeExpression expression) {
         Expression objectExpression = expression.getObjectExpression();
-        /* GRECLIPSE edit -- GROOVY-8648
-        ClassNode classNode = controller.getClassNode();
-        // TODO: checking for isThisOrSuper is enough for AttributeExpression, but if this is moved into
-        // visitAttributeOrProperty to handle attributes and properties equally, then the extended check should be done
-        if (isThisOrSuper(objectExpression)) {
-            // let's use the field expression if it's available
-            String name = expression.getPropertyAsString();
-            if (name != null) {
-                FieldNode field = getDeclaredFieldOfCurrentClassOrAccessibleFieldOfSuper(classNode, classNode, name, isSuperExpression(objectExpression));
-                if (field != null) {
-                    FieldExpression exp = new FieldExpression(field);
-                    exp.setSourcePosition(expression);
-                    visitFieldExpression(exp);
-                    return;
-                }
-            }
-        }
-
-        MethodCallerMultiAdapter adapter;
-        OperandStack operandStack = controller.getOperandStack();
-        int mark = operandStack.getStackLength()-1;
-        if (controller.getCompileStack().isLHS()) {
-            adapter = setField;
-            if (isGroovyObject(objectExpression)) adapter = setGroovyObjectField;
-            if (usesSuper(expression)) adapter = setFieldOnSuper;
-        } else {
-            adapter = getField;
-            if (isGroovyObject(objectExpression)) adapter = getGroovyObjectField;
-            if (usesSuper(expression)) adapter = getFieldOnSuper;
-        }
-        visitAttributeOrProperty(expression, adapter);
-        */
         OperandStack operandStack = controller.getOperandStack();
         int mark = operandStack.getStackLength() - 1;
         boolean visited = false;
@@ -1300,7 +1226,7 @@ public class AsmClassGenerator extends ClassGenerator {
             }
             visitAttributeOrProperty(expression, adapter);
         }
-        // GRECLIPSE end
+
         if (!controller.getCompileStack().isLHS()) {
             controller.getAssertionWriter().record(expression.getProperty());
         } else {
@@ -1347,9 +1273,6 @@ public class AsmClassGenerator extends ClassGenerator {
                 loadInstanceField(expression);
             }
         }
-        /* GRECLIPSE edit -- GROOVY-8648
-        if (controller.getCompileStack().isLHS()) controller.getAssertionWriter().record(expression);
-        */
     }
 
     /**
@@ -2285,24 +2208,9 @@ public class AsmClassGenerator extends ClassGenerator {
         controller.getOperandStack().push(cle.getType());
     }
 
+    @Deprecated
     public static boolean isThisExpression(Expression expression) {
-        if (expression instanceof VariableExpression) {
-            VariableExpression varExp = (VariableExpression) expression;
-            return varExp.getName().equals("this");
-        }
-        return false;
-    }
-
-    private static boolean isSuperExpression(Expression expression) {
-        if (expression instanceof VariableExpression) {
-            VariableExpression varExp = (VariableExpression) expression;
-            return varExp.getName().equals("super");
-        }
-        return false;
-    }
-
-    private static boolean isThisOrSuper(Expression expression) {
-        return isThisExpression(expression) || isSuperExpression(expression);
+        return ExpressionUtils.isThisExpression(expression);
     }
 
     public void onLineNumber(ASTNode statement, String message) {

@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -344,12 +345,17 @@ public class ModuleNode extends ASTNode implements Opcodes {
                 new Parameter[] {makeFinal(new Parameter(ClassHelper.STRING_TYPE.makeArray(), "args"))},
                 ClassNode.EMPTY_ARRAY,
                 new ExpressionStatement(
+                    /* GRECLIPSE edit
                     new MethodCallExpression(
                         new ClassExpression(ClassHelper.make(InvokerHelper.class)),
+                    */
+                    new StaticMethodCallExpression(
+                        ClassHelper.make(InvokerHelper.class),
+                    // GRECLIPSE end
                         "runScript",
                         new ArgumentListExpression(
-                                new ClassExpression(classNode),
-                                new VariableExpression("args"))))));
+                            new ClassExpression(classNode),
+                            new VariableExpression("args"))))));
 
         MethodNode methodNode = new MethodNode("run", ACC_PUBLIC, ClassHelper.OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, statementBlock);
         methodNode.setIsScriptBody();

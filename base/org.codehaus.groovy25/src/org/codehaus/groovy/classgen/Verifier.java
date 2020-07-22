@@ -1293,28 +1293,29 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         });
     }
 
-    protected void addConstructor(Parameter[] newParams, ConstructorNode ctor, Statement code, ClassNode node) {
-        ConstructorNode genConstructor = node.addConstructor(ctor.getModifiers(), newParams, ctor.getExceptions(), code);
-        markAsGenerated(node, genConstructor);
+    protected void addConstructor(Parameter[] newParams, ConstructorNode ctor, Statement code, ClassNode type) {
+        final ConstructorNode newConstructor = type.addConstructor(ctor.getModifiers(), newParams, ctor.getExceptions(), code);
         // GRECLIPSE add
-        genConstructor.setOriginal(ctor);
-        genConstructor.setNameEnd(ctor.getNameEnd());
-        genConstructor.setNameStart(ctor.getNameStart());
+        newConstructor.setOriginal(ctor);
+        newConstructor.setNameEnd(ctor.getNameEnd());
+        newConstructor.setNameStart(ctor.getNameStart());
         Integer value = ctor.getNodeMetaData("rparen.offset");
-        if (value != null) genConstructor.putNodeMetaData("rparen.offset", value);
-        genConstructor.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
+        if (value != null) newConstructor.putNodeMetaData("rparen.offset", value);
+        // GRECLIPSE end
+        newConstructor.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, Boolean.TRUE);
+        markAsGenerated(type, newConstructor);
+        // TODO: Copy annotations, etc.?
 
         // set anon. inner enclosing method reference
         code.visit(new CodeVisitorSupport() {
             @Override
             public void visitConstructorCallExpression(ConstructorCallExpression call) {
                 if (call.isUsingAnonymousInnerClass()) {
-                    call.getType().setEnclosingMethod(genConstructor);
+                    call.getType().setEnclosingMethod(newConstructor);
                 }
                 super.visitConstructorCallExpression(call);
             }
         });
-        // GRECLIPSE end
     }
 
     /**

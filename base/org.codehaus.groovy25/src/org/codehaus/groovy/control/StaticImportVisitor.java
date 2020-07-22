@@ -218,10 +218,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 ClassNode declaringClass = fn.getDeclaringClass();
                 if (fn.isStatic() && currentClass.isDerivedFrom(declaringClass)) {
                     Expression result = new PropertyExpression(new ClassExpression(declaringClass), v.getName());
-                    // GRECLIPSE edit
-                    //result.setSourcePosition(ve);
                     setSourcePosition(result, ve);
-                    // GRECLIPSE end
                     return result;
                 }
             }
@@ -302,13 +299,14 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                     lookForPossibleStaticMethod &= !foundInstanceMethod;
                     lookForPossibleStaticMethod |= inSpecialConstructorCall;
                     lookForPossibleStaticMethod &= !inInnerClass;
+                    boolean emptyArgs = args instanceof TupleExpression && ((TupleExpression) args).getExpressions().isEmpty();
                     if (!inClosure && lookForPossibleStaticMethod &&
-                            (hasPossibleStaticMethod(currentClass, methodName, args, true))
-                            || hasPossibleStaticProperty(currentClass, methodName)) {
+                            hasPossibleStaticMethod(currentClass, methodName, args, true)
+                            || (hasPossibleStaticProperty(currentClass, methodName) && emptyArgs)) {
                     */
+                    boolean emptyArgs = args instanceof TupleExpression && ((TupleExpression) args).getExpressions().isEmpty();
                     if (!inInnerClass && (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call")))
-                            && (hasPossibleStaticMethod(currentClass, methodName, args, true) || (args instanceof TupleExpression
-                                && ((TupleExpression) args).getExpressions().isEmpty() && hasPossibleStaticProperty(currentClass, methodName)))) {
+                            && (hasPossibleStaticMethod(currentClass, methodName, args, true) || (emptyArgs && hasPossibleStaticProperty(currentClass, methodName)))) {
                     // GRECLIPSE end
                         StaticMethodCallExpression smce = new StaticMethodCallExpression(currentClass, methodName, args);
                         setSourcePosition(smce, mce);
@@ -318,7 +316,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                         if (currentClass.getOuterClass().hasPossibleMethod(methodName, args)) {
                             object = new PropertyExpression(new ClassExpression(currentClass.getOuterClass()), new ConstantExpression("this"));
                         } else if (hasPossibleStaticMethod(currentClass.getOuterClass(), methodName, args, true)
-                                || hasPossibleStaticProperty(currentClass.getOuterClass(), methodName)) {
+                                || (hasPossibleStaticProperty(currentClass.getOuterClass(), methodName) && emptyArgs)) {
                             StaticMethodCallExpression smce = new StaticMethodCallExpression(currentClass.getOuterClass(), methodName, args);
                             setSourcePosition(smce, mce);
                             return smce;

@@ -565,7 +565,7 @@ public class GeneralUtils {
         return sameX(getterThisX(cNode, pNode), getterX(cNode, other, pNode));
     }
 
-    public static Statement ifElseS(final Expression cond, final Statement thenStmt, final Statement elseStmt) {
+    public static IfStatement ifElseS(final Expression cond, final Statement thenStmt, final Statement elseStmt) {
         return new IfStatement(
                 cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
                 thenStmt,
@@ -573,11 +573,11 @@ public class GeneralUtils {
         );
     }
 
-    public static Statement ifS(final Expression cond, final Expression trueExpr) {
+    public static IfStatement ifS(final Expression cond, final Expression trueExpr) {
         return ifS(cond, new ExpressionStatement(trueExpr));
     }
 
-    public static Statement ifS(final Expression cond, final Statement trueStmt) {
+    public static IfStatement ifS(final Expression cond, final Statement trueStmt) {
         return new IfStatement(
                 cond instanceof BooleanExpression ? (BooleanExpression) cond : new BooleanExpression(cond),
                 trueStmt,
