@@ -251,9 +251,22 @@ public class SourceUnit extends ProcessingUnit {
             throw new GroovyBugError("SourceUnit not ready for convert()");
         }
 
-        //
-        // Build the AST
+        buildAST();
 
+        /* GRECLIPSE edit
+        String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
+
+        if ("xml".equals(property)) {
+            XStreamUtils.serialize(name, ast);
+        }
+        */
+    }
+
+    /**
+     * Builds the AST.
+     */
+    public ModuleNode buildAST() {
+        if (this.ast == null)
         try {
             this.ast = parserPlugin.buildAST(this, this.classLoader, this.cst);
             this.ast.setDescription(this.name);
@@ -276,13 +289,7 @@ public class SourceUnit extends ProcessingUnit {
         }
         // GRECLIPSE end
 
-        /* GRECLIPSE edit
-        String property = (String) AccessController.doPrivileged((PrivilegedAction) () -> System.getProperty("groovy.ast"));
-
-        if ("xml".equals(property)) {
-            XStreamUtils.serialize(name, ast);
-        }
-        */
+        return this.ast;
     }
 
     //---------------------------------------------------------------------------

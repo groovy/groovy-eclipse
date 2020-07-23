@@ -351,6 +351,7 @@ public class GroovyLexer extends AbstractLexer {
 
 	        return Integer.MIN_VALUE;
 	    }
+
 	    // GRECLIPSE add
 	    private void addComment(int type) {
 	        String text = _input.getText(Interval.of(_tokenStartCharIndex, getCharIndex() - 1));
@@ -365,6 +366,14 @@ public class GroovyLexer extends AbstractLexer {
 	    public List<Comment> getComments() { return comments; }
 	    private final List<Comment> comments = new ArrayList<>();
 	    // GRECLIPSE end
+
+	    private static boolean isJavaIdentifierStartAndNotIdentifierIgnorable(int codePoint) {
+	        return Character.isJavaIdentifierStart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
+	    }
+
+	    private static boolean isJavaIdentifierPartAndNotIdentifierIgnorable(int codePoint) {
+	        return Character.isJavaIdentifierPart(codePoint) && !Character.isIdentifierIgnorable(codePoint);
+	    }
 
 
 	public GroovyLexer(CharStream input) {
@@ -700,7 +709,7 @@ public class GroovyLexer extends AbstractLexer {
 	private boolean JavaLetter_sempred(RuleContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 13:
-			return  Character.isJavaIdentifierStart(_input.LA(-1)) && !Character.isIdentifierIgnorable(_input.LA(-1)) ;
+			return  isJavaIdentifierStartAndNotIdentifierIgnorable(_input.LA(-1)) ;
 
 		case 14:
 			return  Character.isJavaIdentifierStart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) ;
@@ -717,7 +726,7 @@ public class GroovyLexer extends AbstractLexer {
 	private boolean JavaLetterOrDigit_sempred(RuleContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 16:
-			return  Character.isJavaIdentifierPart(_input.LA(-1)) && !Character.isIdentifierIgnorable(_input.LA(-1)) ;
+			return  isJavaIdentifierPartAndNotIdentifierIgnorable(_input.LA(-1)) ;
 
 		case 17:
 			return  Character.isJavaIdentifierPart(Character.toCodePoint((char) _input.LA(-2), (char) _input.LA(-1))) ;

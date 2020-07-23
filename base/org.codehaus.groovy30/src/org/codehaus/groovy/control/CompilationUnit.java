@@ -629,11 +629,24 @@ public class CompilationUnit extends ProcessingUnit {
         throughPhase = Math.min(throughPhase, Phases.ALL);
 
         while (throughPhase >= phase && phase <= Phases.ALL) {
-
+            // GRECLIPSE add
+            if (phase == Phases.CONVERSION) {
+                if (sources.size() > 1 && Boolean.TRUE.equals(configuration.getOptimizationOptions().get(CompilerConfiguration.PARALLEL_PARSE))) {
+                    sources.values().parallelStream().forEach(SourceUnit::buildAST);
+                } else {
+                    sources.values().forEach(SourceUnit::buildAST);
+                }
+            } else
+            // GRECLIPSE end
             if (phase == Phases.SEMANTIC_ANALYSIS) {
                 resolve.doPhaseOperation(this);
                 if (dequeued()) continue;
             }
+            /* GRECLIPSE edit
+            if (phase == Phases.CONVERSION) {
+                buildASTs();
+            }
+            */
 
             processPhaseOperations(phase);
             // Grab processing may have brought in new AST transforms into various phases, process them as well
@@ -655,6 +668,21 @@ public class CompilationUnit extends ProcessingUnit {
 
         getErrorCollector().failIfErrors();
     }
+
+    /* GRECLIPSE edit
+    private void buildASTs() {
+        Boolean bpe = configuration.getOptimizationOptions().get(CompilerConfiguration.PARALLEL_PARSE);
+        boolean parallelParseEnabled = null != bpe && bpe;
+
+        Collection<SourceUnit> sourceUnits = sources.values();
+        Stream<SourceUnit> sourceUnitStream =
+                (!parallelParseEnabled || sourceUnits.size() < 2)
+                        ? sourceUnits.stream() // no need to build AST with parallel stream when we just have one/no source unit
+                        : sourceUnits.parallelStream();
+
+        sourceUnitStream.forEach(SourceUnit::buildAST);
+    }
+    */
 
     private void processPhaseOperations(final int phase) {
         for (PhaseOperation op : phaseOperations[phase]) {

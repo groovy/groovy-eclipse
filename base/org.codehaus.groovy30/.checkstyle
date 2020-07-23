@@ -41,17 +41,12 @@
         <file-match-pattern match-pattern="groovy/ast/tools/ExpressionUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/tools/GenericsUtils.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/InnerClassVisitor.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/VariableScopeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/Verifier.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/BinaryExpressionHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesCallSiteWriter.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticTypesTypeChooser.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilerConfiguration.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />
@@ -65,13 +60,10 @@
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationCollectorCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/LazyASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/LogASTTransformation.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/StaticCompilationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/BinaryExpressionTransformer.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/transformers/ConstructorCallTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/sc/transformers/MethodCallExpressionTransformer.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/transform/sc/transformers/VariableExpressionTransformer.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/AbstractExtensionMethodCache.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/stc/StaticTypeCheckingVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/trait/SuperCallTraitTransformer.java" include-pattern="false" />

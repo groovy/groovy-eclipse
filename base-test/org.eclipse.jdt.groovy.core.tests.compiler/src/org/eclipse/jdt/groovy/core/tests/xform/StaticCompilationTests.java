@@ -1330,12 +1330,16 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
+        String strategyOne = isAtLeastGroovy(30) ? "OWNER_FIRST" : "0";
+        String strategyTwo = isAtLeastGroovy(30) ? "DELEGATE_FIRST" : "1";
+
         runNegativeTest(sources,
             "----------\n" +
             "1. WARNING in Foo.groovy (at line 4)\n" +
             "\treturn this.with(block)\n" +
             "\t                 ^^^^^\n" +
-            "Groovy:[Static type checking] - Closure parameter with resolve strategy 0 passed to method with resolve strategy 1\n" +
+            "Groovy:[Static type checking] - Closure parameter with resolve strategy " +
+                strategyOne + " passed to method with resolve strategy " + strategyTwo + "\n" +
             "----------\n");
     }
 

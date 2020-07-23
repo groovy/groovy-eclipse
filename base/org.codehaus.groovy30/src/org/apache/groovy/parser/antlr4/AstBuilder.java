@@ -117,6 +117,7 @@ import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
+import org.codehaus.groovy.ast.tools.ClosureUtils;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -506,31 +507,35 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public ModuleNode visitCompilationUnit(CompilationUnitContext ctx) {
         this.visit(ctx.packageDeclaration());
 
-        this.visitScriptStatements(ctx.scriptStatements())
-                .forEach(e -> {
-                    if (e instanceof DeclarationListStatement) { // local variable declaration
-                        ((DeclarationListStatement) e).getDeclarationStatements().forEach(moduleNode::addStatement);
-                    } else if (e instanceof Statement) {
-                        moduleNode.addStatement((Statement) e);
-                    } else if (e instanceof MethodNode) { // script method
-                        moduleNode.addMethod((MethodNode) e);
-                    }
-                });
+        for (ASTNode node : this.visitScriptStatements(ctx.scriptStatements())) {
+            if (node instanceof DeclarationListStatement) { // local variable declaration(s)
+                for (Statement stmt: ((DeclarationListStatement) node).getDeclarationStatements()) {
+                    this.moduleNode.addStatement(stmt);
+                }
+            } else if (node instanceof Statement) {
+                this.moduleNode.addStatement((Statement) node);
+            } else if (node instanceof MethodNode) {
+                this.moduleNode.addMethod((MethodNode) node);
+            }
+        }
 
-        this.classNodeList.forEach(moduleNode::addClass);
+        for (ClassNode node : this.classNodeList) {
+            this.moduleNode.addClass(node);
+        }
 
         if (this.isPackageInfoDeclaration()) {
-            this.addPackageInfoClassNode();
-        } else {
-            // if groovy source file only contains blank(including EOF), add "return null" to the AST
-            if (this.isBlankScript()) {
-                this.addEmptyReturnStatement();
+            ClassNode packageInfo = ClassHelper.make(this.moduleNode.getPackageName() + PACKAGE_INFO);
+            if (!this.moduleNode.getClasses().contains(packageInfo)) {
+                this.moduleNode.addClass(packageInfo);
             }
+        } else if (this.isBlankScript()) {
+            // add "return null" if script has no statements/methods/classes
+            this.moduleNode.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
         }
 
         this.configureScriptClassNode();
 
-        if (null != this.numberFormatError) {
+        if (this.numberFormatError != null) {
             throw createParsingFailedException(this.numberFormatError.getV2().getMessage(), this.numberFormatError.getV1());
         }
 
@@ -615,7 +620,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             target = moduleNode.getPackage();
         }
         if (target != null) {
-            // import/package nodes do not include trailing semicolon, so use end of line instead of end of node
+            // package/import statements may not include trailing semicolon, so use end of line instead of end of node
             int off = Math.min(locationSupport.findOffset(target.getLastLineNumber() + 1, 1), locationSupport.getEnd() - 1);
             int[] row_col = locationSupport.getRowCol(off);
 
@@ -1850,7 +1855,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             methodNode.setLastColumnNumber(last(ctx.nls()).getStart().getCharPositionInLine() + 1);
             methodNode.setEnd(locationSupport.findOffset(methodNode.getLastLineNumber(), methodNode.getLastColumnNumber()));
         }
-        Token rparen = Optional.ofNullable(ctx.formalParameters()).map(params -> params.rparen()).orElse(ctx.rparen()).getStart();
+        Token rparen = ctx.formalParameters().rparen().getStart();
         methodNode.putNodeMetaData("rparen.offset", locationSupport.findOffset(rparen.getLine(), rparen.getCharPositionInLine() + 1));
         // GRECLIPSE end
 
@@ -1881,7 +1886,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         boolean isAbstractMethod = methodNode.isAbstract();
-        boolean hasMethodBody = asBoolean(methodNode.getCode());
+        boolean hasMethodBody =
+                asBoolean(methodNode.getCode())
+                        && !(methodNode.getCode() instanceof ExpressionStatement);
 
         if (9 == ctx.ct) { // script
             if (isAbstractMethod || !hasMethodBody) { // method should not be declared abstract in the script
@@ -1891,6 +1898,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (4 == ctx.ct) { // trait
                 if (isAbstractMethod && hasMethodBody) {
                     throw createParsingFailedException("Abstract method should not have method body", ctx);
+                }
+            }
+
+            if (3 == ctx.ct) { // annotation
+                if (hasMethodBody) {
+                    throw createParsingFailedException("Annotation type element should not have body", ctx);
                 }
             }
 
@@ -2423,6 +2436,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             || baseExpr instanceof GStringExpression /* e.g. "$m" 1, 2 */
                             || (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_STRING)) /* e.g. "m" 1, 2 */)
             ) {
+                validateInvalidMethodDefinition(baseExpr, arguments);
+
                 methodCallExpression =
                         configureAST(
                                 this.createMethodCallExpression(baseExpr, arguments),
@@ -2465,6 +2480,47 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 }
                         ),
                 ctx);
+    }
+
+    /* Validate the following invalid cases:
+     *  1) void m() {}
+     *  2) String m() {}
+     *  Note: if the text of `VariableExpression` does not start with upper case character, e.g. task m() {}
+     *        ,it may be a command expression
+     */
+    private void validateInvalidMethodDefinition(Expression baseExpr, Expression arguments) {
+        if (baseExpr instanceof VariableExpression) {
+            if (isBuiltInType(baseExpr) || Character.isUpperCase(baseExpr.getText().codePointAt(0))) {
+                if (arguments instanceof ArgumentListExpression) {
+                    List<Expression> expressionList = ((ArgumentListExpression) arguments).getExpressions();
+                    if (1 == expressionList.size()) {
+                        final Expression expression = expressionList.get(0);
+                        if (expression instanceof MethodCallExpression) {
+                            MethodCallExpression mce = (MethodCallExpression) expression;
+                            final Expression methodCallArguments = mce.getArguments();
+
+                            // check the method call tails with a closure
+                            if (methodCallArguments instanceof ArgumentListExpression) {
+                                List<Expression> methodCallArgumentExpressionList = ((ArgumentListExpression) methodCallArguments).getExpressions();
+                                final int argumentCnt = methodCallArgumentExpressionList.size();
+                                if (argumentCnt > 0) {
+                                    final Expression lastArgumentExpression = methodCallArgumentExpressionList.get(argumentCnt - 1);
+                                    if (lastArgumentExpression instanceof ClosureExpression) {
+                                        if (ClosureUtils.hasImplicitParameter(((ClosureExpression) lastArgumentExpression))) {
+                                            throw createParsingFailedException(
+                                                    "Method definition not expected here",
+                                                    tuple(baseExpr.getLineNumber(), baseExpr.getColumnNumber()),
+                                                    tuple(expression.getLastLineNumber(), expression.getLastColumnNumber())
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -2561,7 +2617,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Expression visitPathExpression(PathExpressionContext ctx) {
-        return this.createPathExpression((Expression) this.visit(ctx.primary()), ctx.pathElement());
+        final TerminalNode staticTerminalNode = ctx.STATIC();
+        Expression primaryExpr;
+        if (asBoolean(staticTerminalNode)) {
+            primaryExpr = configureAST(new VariableExpression(staticTerminalNode.getText()), staticTerminalNode);
+        } else {
+            primaryExpr = (Expression) this.visit(ctx.primary());
+        }
+
+        return this.createPathExpression(primaryExpr, ctx.pathElement());
     }
 
     @Override
@@ -2809,26 +2873,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             // e.g.  m { return 1; }
             MethodCallExpression methodCallExpression =
-                    new MethodCallExpression(
-                            /* GRECLIPSE edit
-                            VariableExpression.THIS_EXPRESSION,
-                            */
-                            new VariableExpression("this"),
-                            // GRECLIPSE end
-
-                            (baseExpr instanceof VariableExpression)
-                                    ? this.createConstantExpression(baseExpr)
-                                    : baseExpr,
-
+                    createMethodCallExpression(
+                            baseExpr,
                             configureAST(
                                     new ArgumentListExpression(closureExpression),
-                                    closureExpression)
+                                    closureExpression
+                            )
                     );
-
-            // GRECLIPSE add
-            methodCallExpression.getObjectExpression().setLineNumber(baseExpr.getLineNumber());
-            methodCallExpression.getObjectExpression().setColumnNumber(baseExpr.getColumnNumber());
-            // GRECLIPSE end
 
             return configureAST(methodCallExpression, ctx);
         }
@@ -3773,7 +3824,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             throw createParsingFailedException("Unsupported built-in type: " + ctx, ctx);
         }
 
-        return configureAST(new VariableExpression(text), ctx);
+        final VariableExpression variableExpression = new VariableExpression(text);
+        variableExpression.setNodeMetaData(IS_BUILT_IN_TYPE, Boolean.TRUE);
+        return configureAST(variableExpression, ctx);
     }
 
     @Override
@@ -4722,9 +4775,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     // e.g. m(1, 2) or m 1, 2
     private MethodCallExpression createMethodCallExpression(Expression baseExpr, Expression arguments) {
+        Expression thisExpr = new VariableExpression("this");
         /* GRECLIPSE edit
+        configureAST(thisExpr, baseExpr);
+        */
+        thisExpr.setLineNumber(baseExpr.getLineNumber());
+        thisExpr.setColumnNumber(baseExpr.getColumnNumber());
+        // GRECLIPSE end
+
         return new MethodCallExpression(
-                VariableExpression.THIS_EXPRESSION,
+                thisExpr,
 
                 (baseExpr instanceof VariableExpression)
                         ? this.createConstantExpression(baseExpr)
@@ -4732,18 +4792,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
                 arguments
         );
-        */
-        MethodCallExpression callExpr = new MethodCallExpression(
-                new VariableExpression("this"),
-                (baseExpr instanceof VariableExpression
-                        ? this.createConstantExpression(baseExpr)
-                        : baseExpr),
-                arguments
-        );
-        callExpr.getObjectExpression().setLineNumber(baseExpr.getLineNumber());
-        callExpr.getObjectExpression().setColumnNumber(baseExpr.getColumnNumber());
-        return callExpr;
-        // GRECLIPSE end
     }
 
     private Parameter processFormalParameter(GroovyParserRuleContext ctx,
@@ -4936,9 +4984,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private boolean isPackageInfoDeclaration() {
         String name = this.sourceUnit.getName();
-
-        return null != name && name.endsWith(PACKAGE_INFO_FILE_NAME);
-
+        return name != null && name.endsWith(PACKAGE_INFO_FILE_NAME);
     }
 
     private boolean isBlankScript() {
@@ -4947,29 +4993,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private boolean isInsideParentheses(NodeMetaDataHandler nodeMetaDataHandler) {
         Integer insideParenLevel = nodeMetaDataHandler.getNodeMetaData(INSIDE_PARENTHESES_LEVEL);
-
-        return null != insideParenLevel && insideParenLevel > 0;
-
+        return insideParenLevel != null && insideParenLevel > 0;
     }
 
-    private void addEmptyReturnStatement() {
-        moduleNode.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
-    }
-
-    private void addPackageInfoClassNode() {
-        List<ClassNode> classNodeList = moduleNode.getClasses();
-        ClassNode packageInfoClassNode = ClassHelper.make(moduleNode.getPackageName() + PACKAGE_INFO);
-
-        if (!classNodeList.contains(packageInfoClassNode)) {
-            moduleNode.addClass(packageInfoClassNode);
-        }
+    private boolean isBuiltInType(Expression expression) {
+        return (expression instanceof VariableExpression && isTrue(expression, IS_BUILT_IN_TYPE));
     }
 
     private org.codehaus.groovy.syntax.Token createGroovyTokenByType(Token token, int type) {
-        if (null == token) {
+        if (token == null) {
             throw new IllegalArgumentException("token should not be null");
         }
-
         return new org.codehaus.groovy.syntax.Token(type, token.getText(), token.getLine(), token.getCharPositionInLine());
     }
 
@@ -4990,7 +5024,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     /**
-     * set the script source position
+     * Sets the script source position.
      */
     private void configureScriptClassNode() {
         ClassNode scriptClassNode = moduleNode.getScriptClassDummy();
@@ -5008,13 +5042,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             scriptClassNode.setLastColumnNumber(lastStatement.getLastColumnNumber());
             scriptClassNode.setLastLineNumber(lastStatement.getLastLineNumber());
         }
-
     }
 
     private String getOriginalText(ParserRuleContext context) {
-        CharStream charStream = lexer.getInputStream();
-        return charStream.getText(Interval.of(context.getStart().getStartIndex(), context.getStop().getStopIndex()));
-
+        return lexer.getInputStream().getText(Interval.of(context.getStart().getStartIndex(), context.getStop().getStopIndex()));
     }
 
     private boolean isTrue(NodeMetaDataHandler nodeMetaDataHandler, String key) {
@@ -5038,6 +5069,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         ctx.start.getCharPositionInLine() + 1,
                         ctx.stop.getLine(),
                         ctx.stop.getCharPositionInLine() + 1 + ctx.stop.getText().length()));
+    }
+
+    CompilationFailedException createParsingFailedException(String msg, Tuple2<Integer, Integer> start, Tuple2<Integer, Integer> end) {
+        return createParsingFailedException(
+                new SyntaxException(msg,
+                        start.getV1(),
+                        start.getV2(),
+                        end.getV1(),
+                        end.getV2()));
     }
 
     CompilationFailedException createParsingFailedException(String msg, ASTNode node) {
@@ -5219,6 +5259,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String IS_INTERFACE_WITH_DEFAULT_METHODS = "_IS_INTERFACE_WITH_DEFAULT_METHODS";
     private static final String IS_INSIDE_CONDITIONAL_EXPRESSION = "_IS_INSIDE_CONDITIONAL_EXPRESSION";
     private static final String IS_COMMAND_EXPRESSION = "_IS_COMMAND_EXPRESSION";
+    private static final String IS_BUILT_IN_TYPE = "_IS_BUILT_IN_TYPE";
     private static final String PATH_EXPRESSION_BASE_EXPR = "_PATH_EXPRESSION_BASE_EXPR";
     private static final String PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES = "_PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES";
     private static final String PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN = "_PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN";

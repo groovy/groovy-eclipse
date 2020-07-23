@@ -3,7 +3,6 @@ package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
     import org.codehaus.groovy.ast.NodeMetaDataHandler;
-    import org.apache.groovy.parser.antlr4.SemanticPredicates;
 
 import groovyjarjarantlr4.v4.runtime.Token;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
@@ -392,14 +391,6 @@ public interface GroovyParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	Result visitLocalVariableDeclarationStmtAlt(@NotNull GroovyParser.LocalVariableDeclarationStmtAltContext ctx);
-
-	/**
-	 * Visit a parse tree produced by the {@code methodDeclarationStmtAlt}
-	 * labeled alternative in {@link GroovyParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	Result visitMethodDeclarationStmtAlt(@NotNull GroovyParser.MethodDeclarationStmtAltContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code expressionStmtAlt}

@@ -1057,8 +1057,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring5() {
         String contents = "new StringBuilder().size()";
-        String vmplugin = isAtLeastGroovy(30) ? "8" : "5";
-        assertDeclType(contents, "size", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
+        assertDeclType(contents, "size", isAtLeastGroovy(30) ? "org.codehaus.groovy.runtime.StringGroovyMethods" : "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002

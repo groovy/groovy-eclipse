@@ -18,7 +18,6 @@
  */
 package org.apache.groovy.ast.tools;
 
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -48,7 +47,7 @@ import static org.codehaus.groovy.syntax.Types.POWER;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT;
 import static org.codehaus.groovy.syntax.Types.RIGHT_SHIFT_UNSIGNED;
 
-public class ExpressionUtils {
+public final class ExpressionUtils {
 
     // NOTE: values are sorted in ascending order
     private static final int[] HANDLED_TYPES = {
@@ -171,7 +170,7 @@ public class ExpressionUtils {
 
     private static ConstantExpression configure(final Expression origX, final ConstantExpression newX) {
         // GRECLIPSE edit
-        newX.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
+        newX.setNodeMetaData(org.codehaus.groovy.ast.ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, origX);
         //newX.setSourcePosition(origX);
         // GRECLIPSE end
         return newX;
@@ -367,4 +366,21 @@ public class ExpressionUtils {
         }
         return null;
     }
+
+    public static boolean isThisExpression(final Expression expression) {
+        return expression instanceof VariableExpression && ((VariableExpression) expression).isThisExpression();
+    }
+
+    public static boolean isSuperExpression(final Expression expression) {
+        return expression instanceof VariableExpression && ((VariableExpression) expression).isSuperExpression();
+    }
+
+    public static boolean isThisOrSuper(final Expression expression) {
+        return isThisExpression(expression) || isSuperExpression(expression);
+    }
+
+    public static boolean isNullConstant(final Expression expr) {
+        return expr instanceof ConstantExpression && ((ConstantExpression) expr).isNullExpression();
+    }
+
 }

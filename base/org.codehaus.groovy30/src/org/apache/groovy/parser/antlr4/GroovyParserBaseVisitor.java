@@ -3,7 +3,6 @@ package org.apache.groovy.parser.antlr4;
 
     import java.util.Map;
     import org.codehaus.groovy.ast.NodeMetaDataHandler;
-    import org.apache.groovy.parser.antlr4.SemanticPredicates;
 
 import groovyjarjarantlr4.v4.runtime.Token;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
@@ -393,14 +392,6 @@ public class GroovyParserBaseVisitor<Result> extends AbstractParseTreeVisitor<Re
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
 	@Override public Result visitLocalVariableDeclarationStmtAlt(@NotNull GroovyParser.LocalVariableDeclarationStmtAltContext ctx) { return visitChildren(ctx); }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public Result visitMethodDeclarationStmtAlt(@NotNull GroovyParser.MethodDeclarationStmtAltContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

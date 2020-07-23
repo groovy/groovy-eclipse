@@ -42,7 +42,6 @@ options {
 @header {
     import java.util.Map;
     import org.codehaus.groovy.ast.NodeMetaDataHandler;
-    import org.apache.groovy.parser.antlr4.SemanticPredicates;
 }
 
 @members {
@@ -107,6 +106,9 @@ scriptStatements
 scriptStatement
     :   importDeclaration // Import statement.  Can be used in any scope.  Has "import x as y" also.
     |   typeDeclaration
+    // validate the method in the AstBuilder#visitMethodDeclaration, e.g. method without method body is not allowed
+    |   { !SemanticPredicates.isInvalidMethodDeclaration(_input) }?
+        methodDeclaration[3, 9]
     |   statement
     ;
 
@@ -265,14 +267,14 @@ memberDeclaration[int t]
  *  ct  9: script, other see the comment of classDeclaration
  */
 methodDeclaration[int t, int ct]
-    :   modifiersOpt
-        (   { 3 == $ct }?
-            returnType[$ct] methodName LPAREN rparen (DEFAULT nls elementValue)?
+    :   modifiersOpt typeParameters? returnType[$ct]?
+        methodName formalParameters
+        (
+            DEFAULT nls elementValue
         |
-            typeParameters? returnType[$ct]?
-            methodName formalParameters (nls THROWS nls qualifiedClassNameList)?
+            (nls THROWS nls qualifiedClassNameList)?
             (nls methodBody)?
-        )
+        )?
     ;
 
 methodName
@@ -635,11 +637,6 @@ statement
     |   identifier COLON nls statement                                                                      #labeledStmtAlt
     |   assertStatement                                                                                     #assertStmtAlt
     |   localVariableDeclaration                                                                            #localVariableDeclarationStmtAlt
-
-    // validate the method in the AstBuilder#visitMethodDeclaration, e.g. method without method body is not allowed
-    |   { !SemanticPredicates.isInvalidMethodDeclaration(_input) }?
-        methodDeclaration[3, 9]                                                                             #methodDeclarationStmtAlt
-
     |   statementExpression                                                                                 #expressionStmtAlt
     |   SEMI                                                                                                #emptyStmtAlt
     ;
@@ -895,7 +892,13 @@ commandArgument
  *      6: non-static inner class creator
  */
 pathExpression returns [int t]
-    :   primary (pathElement { $t = $pathElement.t; })*
+    :   (
+            primary
+        |
+            // if 'static' followed by DOT, we can treat them as identifiers, e.g. static.unused = { -> }
+            { DOT == _input.LT(2).getType() }?
+            STATIC
+        ) (pathElement { $t = $pathElement.t; })*
     ;
 
 pathElement returns [int t]
@@ -1186,10 +1189,6 @@ identifier
 //    |   DEF
     |   TRAIT
     |   AS
-    |
-        // if 'static' followed by DOT, we can treat them as identifiers, e.g. static.unused = { -> }
-        { DOT == _input.LT(2).getType() }?
-        STATIC
     ;
 
 builtInType
@@ -1256,9 +1255,6 @@ keywords
 
 rparen
     :   RPAREN
-    |
-        // !!!Error Alternative, impact the performance of parsing
-        { require(false, "Missing ')'"); }
     ;
 
 nls
