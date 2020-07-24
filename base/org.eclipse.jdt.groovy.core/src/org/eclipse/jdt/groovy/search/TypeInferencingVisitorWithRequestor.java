@@ -1800,6 +1800,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
             }
+        } catch (RuntimeException e) {
+            // dump partial type inference metadata
+            node.removeNodeMetaData("tuple.types");
+            throw e;
         } finally {
             completeExpressionStack.removeLast();
         }

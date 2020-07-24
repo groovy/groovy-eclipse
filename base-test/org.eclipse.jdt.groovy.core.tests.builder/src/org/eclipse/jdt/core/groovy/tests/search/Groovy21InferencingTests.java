@@ -100,8 +100,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDelegatesToTarget1() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -109,7 +109,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -124,8 +124,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDelegatesToTarget2() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -133,7 +133,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -148,11 +148,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test // uses constant instead of literal for target
     public void testDelegatesToTarget2a() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target\n" +
+        createUnit("C",
             "class C {\n" +
             "  private static final String SELF = 'self'\n" +
             "  static def cat(\n" +
-            "    @Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
+            "    @DelegatesTo.Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
             "    @DelegatesTo(target=SELF, strategy=Closure.DELEGATE_FIRST) Closure code\n" +
             "   ) {}\n" +
             "}");
@@ -163,7 +163,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -178,8 +178,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDelegatesToTarget3() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -187,7 +187,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -203,8 +203,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDelegatesToTarget4() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -212,7 +212,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "        z\n" +
@@ -229,8 +229,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDelegatesToTarget5() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -238,7 +238,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -253,8 +253,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
     @Test // seemingly invalid combination
     public void testDelegatesToTarget6() {
-        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
-            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
+        createUnit("C", "class C { static def cat(\n" +
+            "@DelegatesTo.Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) {}\n}");
 
         String contents =
             //@formatter:off
@@ -262,7 +262,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "class B { def x, y\n" +
             "  def m(A a) {\n" +
             "    use (C) {\n" +
-            "      a.cat {" + // delegate is A, owner is B
+            "      a.cat {\n" + // delegate is A, owner is B
             "        x\n" +
             "        y\n" +
             "      }\n" +
@@ -275,6 +275,33 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, offset, offset + 1);
         offset = contents.lastIndexOf('y');
         assertUnknownConfidence(contents, offset, offset + 1);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1147
+    public void testDelegatesToTarget7() {
+        String contents =
+            //@formatter:off
+            "abstract class A {\n" +
+            "  def x\n" +
+            "  public <T> void with(\n" +
+            "    @DelegatesTo.Target T self,\n" +
+            "    @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) {\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "  def x, y\n" +
+            "  def m() {\n" +
+            "    def a = new A() {}\n" +
+            "    with(a) { ->\n" + // delegate is A, owner is B
+            "      x\n" +
+            "      y\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+            //@formatter:on
+
+        assertDeclaringType(contents, "x", "A");
+        assertDeclaringType(contents, "y", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
