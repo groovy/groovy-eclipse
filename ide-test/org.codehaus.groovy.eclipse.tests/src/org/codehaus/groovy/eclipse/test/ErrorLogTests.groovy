@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,16 @@ import org.eclipse.core.runtime.IStatus
 import org.junit.Test
 
 /**
- * Verifies that there are no spurious errors or warnings in the log on startup.
+ * Verifies there are no unexpected errors or warnings in the log after startup.
  */
-final class ErrorLogTest {
+final class ErrorLogTests {
 
     private static final List<String> KNOWN_MSGS = [
         'Monitor UI start failed',
         'Unable to run embedded server',
         'Could not locate the running profile instance',
+        'The Proxy Auto-configuration URL was not found',
+        'An internal error occurred during: "AutoRegisterSchemeHandlersJob"',
         'The content type with id ".+" specified in the extension point does not exist'
     ].asImmutable()
 

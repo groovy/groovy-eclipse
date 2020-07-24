@@ -22,7 +22,7 @@ import org.junit.runners.Suite
 
 @RunWith(Suite) @Suite.SuiteClasses([
     org.codehaus.groovy.alltests.SanityTests,
-    org.codehaus.groovy.eclipse.test.ErrorLogTest,
+    org.codehaus.groovy.eclipse.test.ErrorLogTests,
 
     // org.codehaus.groovy.eclipse.codeassist.tests
     org.codehaus.groovy.eclipse.codeassist.tests.AnnotationCompletionTests,
