@@ -1176,11 +1176,11 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, "java.lang.Void");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
+        assertType(contents, start, end, "java.lang.Void");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();
@@ -1219,7 +1219,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, "java.lang.Void");
 
         start = contents.indexOf("bar", end);
         end = start + "bar".length();

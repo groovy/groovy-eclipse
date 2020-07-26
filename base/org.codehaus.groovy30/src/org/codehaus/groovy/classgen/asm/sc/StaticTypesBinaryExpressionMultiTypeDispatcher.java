@@ -173,42 +173,32 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
     public void evaluateEqual(final BinaryExpression expression, final boolean defineVariable) {
         Expression leftExpression = expression.getLeftExpression();
         Expression rightExpression = expression.getRightExpression();
-        if (!defineVariable) {
-            if (leftExpression instanceof PropertyExpression) {
-                PropertyExpression pexp = (PropertyExpression) leftExpression;
-                // GRECLIPSE add -- GROOVY-9653
-                MethodNode methodTarget = leftExpression.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
-                if (methodTarget != null) {
-                    MethodCallExpression call = callX(pexp.getObjectExpression(), methodTarget.getName(), rightExpression);
-                    call.setMethodTarget(methodTarget); // force
-                    call.setImplicitThis(pexp.isImplicitThis());
-                    call.setSpreadSafe(pexp.isSpreadSafe());
-                    call.setSafe(pexp.isSafe());
-                    call.visit(getController().getAcg());
-                    return;
-                }
-                // GRECLIPSE end
-                if (makeSetProperty(
-                        pexp.getObjectExpression(),
-                        pexp.getProperty(),
-                        expression.getRightExpression(),
-                        pexp.isSafe(),
-                        pexp.isSpreadSafe(),
-                        pexp.isImplicitThis(),
-                        pexp instanceof AttributeExpression)) {
-                    return;
-                }
+
+        if (leftExpression instanceof PropertyExpression) {
+            PropertyExpression pexp = (PropertyExpression) leftExpression;
+
+            if (!defineVariable && makeSetProperty(
+                    pexp.getObjectExpression(),
+                    pexp.getProperty(),
+                    rightExpression,
+                    pexp.isSafe(),
+                    pexp.isSpreadSafe(),
+                    pexp.isImplicitThis(),
+                    pexp instanceof AttributeExpression)) {
+                return;
             }
-        } else if (rightExpression instanceof LambdaExpression || rightExpression instanceof MethodReferenceExpression) {
+            // GROOVY-5620: spread-safe operator on LHS is not supported
+            if (pexp.isSpreadSafe()) {
+                // rewrite it so that it can be statically compiled
+                transformSpreadOnLHS(expression);
+                return;
+            }
+        }
+
+        if (defineVariable && (rightExpression instanceof LambdaExpression || rightExpression instanceof MethodReferenceExpression)) {
             rightExpression.putNodeMetaData(INFERRED_FUNCTIONAL_INTERFACE_TYPE, leftExpression.getNodeMetaData(INFERRED_TYPE));
         }
-        // GROOVY-5620: spread-safe operator on LHS is not supported
-        if (leftExpression instanceof PropertyExpression
-                && ((PropertyExpression) leftExpression).isSpreadSafe()) {
-            // rewrite it so that it can be statically compiled
-            transformSpreadOnLHS(expression);
-            return;
-        }
+
         super.evaluateEqual(expression, defineVariable);
     }
 

@@ -242,7 +242,7 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
             "}";
 
         int offset = contents.indexOf("writeOnly");
-        assertType(contents, offset, offset + "writeOnly".length(), "java.lang.Integer");
+        assertType(contents, offset, offset + "writeOnly".length(), "java.lang.Void");
             offset = contents.lastIndexOf("writeOnly");
         assertUnknownConfidence(contents, offset, offset + "writeOnly".length());
     }

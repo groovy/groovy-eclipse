@@ -100,12 +100,24 @@ public class BinaryExpressionTransformer {
                 }
             }
         }
+        /* GRECLIPSE edit -- GROOVY-9653
         if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
                 return transformPropertyAssignmentToSetterCall((PropertyExpression) leftExpression, rightExpression, directMCT);
             }
         }
+        */
+        if (operationType == Types.ASSIGN) {
+            MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (directMCT != null) {
+                Expression left = staticCompilationTransformer.transform(leftExpression);
+                if (left instanceof PropertyExpression) {
+                    return transformPropertyAssignmentToSetterCall((PropertyExpression) left, rightExpression, directMCT);
+                }
+            }
+        } else
+        // GRECLIPSE end
         if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
             CompareToNullExpression compareToNullExpression = null;

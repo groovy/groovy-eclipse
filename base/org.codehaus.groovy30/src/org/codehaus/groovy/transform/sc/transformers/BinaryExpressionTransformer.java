@@ -99,6 +99,7 @@ public class BinaryExpressionTransformer {
                 }
             }
         }
+        /* GRECLIPSE edit -- GROOVY-9653
         if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
@@ -107,6 +108,19 @@ public class BinaryExpressionTransformer {
                 return transformPropertyAssignmentToSetterCall(left, right, directMCT);
             }
         }
+        */
+        if (operationType == Types.ASSIGN) {
+            MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (directMCT != null) {
+                Expression left = staticCompilationTransformer.transform(leftExpression);
+                if (left instanceof PropertyExpression) {
+                    Expression right = staticCompilationTransformer.transform(rightExpression);
+                    return transformPropertyAssignmentToSetterCall((PropertyExpression) left, right, directMCT);
+                }
+                // TODO: Handle left instanceof VariableExpression and has DIRECT_METHOD_CALL_TARGET?
+            }
+        } else
+        // GRECLIPSE end
         if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
             CompareToNullExpression compareToNullExpression = null;

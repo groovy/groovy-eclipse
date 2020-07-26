@@ -78,8 +78,7 @@ import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIS
 public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpressionMultiTypeDispatcher implements Opcodes {
 
     private final AtomicInteger labelCounter = new AtomicInteger();
-    private static final MethodNode CLOSURE_GETTHISOBJECT_METHOD = CLOSURE_TYPE.getMethod("getThisObject", new Parameter[0]);
-
+    private static final MethodNode CLOSURE_GETTHISOBJECT_METHOD = CLOSURE_TYPE.getMethod("getThisObject", Parameter.EMPTY_ARRAY);
 
     public StaticTypesBinaryExpressionMultiTypeDispatcher(WriterController wc) {
         super(wc);
@@ -143,37 +142,25 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
     @Override
     public void evaluateEqual(final BinaryExpression expression, final boolean defineVariable) {
         Expression leftExpression = expression.getLeftExpression();
-        if (!defineVariable) {
-            if (leftExpression instanceof PropertyExpression) {
-                PropertyExpression pexp = (PropertyExpression) leftExpression;
-                // GRECLIPSE add -- GROOVY-9653
-                MethodNode methodTarget = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-                if (methodTarget != null) {
-                    MethodCallExpression call = new MethodCallExpression(pexp.getObjectExpression(), methodTarget.getName(), expression.getRightExpression());
-                    call.setMethodTarget(methodTarget); // force
-                    call.setImplicitThis(pexp.isImplicitThis());
-                    call.setSpreadSafe(pexp.isSpreadSafe());
-                    call.setSafe(pexp.isSafe());
-                    call.visit(getController().getAcg());
-                    return;
-                }
-                // GRECLIPSE end
-                if (makeSetProperty(
-                        pexp.getObjectExpression(),
-                        pexp.getProperty(),
-                        expression.getRightExpression(),
-                        pexp.isSafe(),
-                        pexp.isSpreadSafe(),
-                        pexp.isImplicitThis(),
-                        pexp instanceof AttributeExpression)) return;
+        if (leftExpression instanceof PropertyExpression) {
+            PropertyExpression pexp = (PropertyExpression) leftExpression;
+
+            if (!defineVariable && makeSetProperty(
+                    pexp.getObjectExpression(),
+                    pexp.getProperty(),
+                    expression.getRightExpression(),
+                    pexp.isSafe(),
+                    pexp.isSpreadSafe(),
+                    pexp.isImplicitThis(),
+                    pexp instanceof AttributeExpression)) {
+                return;
             }
-        }
-        // GROOVY-5620: spread-safe/null-safe operator on LHS is not supported
-        if (leftExpression instanceof PropertyExpression
-                && ((PropertyExpression) leftExpression).isSpreadSafe()) {
-            // rewrite it so that it can be statically compiled
-            transformSpreadOnLHS(expression);
-            return;
+            // GROOVY-5620: spread-safe/null-safe operator on LHS is not supported
+            if (pexp.isSpreadSafe()) {
+                // rewrite it so that it can be statically compiled
+                transformSpreadOnLHS(expression);
+                return;
+            }
         }
         super.evaluateEqual(expression, defineVariable);
     }
@@ -425,5 +412,4 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             rhsValueLoader.visit(controller.getAcg());
         }
     }
-
 }
