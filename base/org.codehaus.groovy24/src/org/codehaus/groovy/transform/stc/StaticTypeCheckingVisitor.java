@@ -1612,8 +1612,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 visitor.visitField(field);
                             } else {
                                 for (MethodNode setter : setters) {
-                                    ClassNode setterType = setter.getParameters()[0].getOriginType();
-                                    FieldNode virtual = new FieldNode(propertyName, 0, setterType, current, EmptyExpression.INSTANCE);
+                                    // visiting setter will not infer the property type since return type is void, so visit a dummy field instead
+                                    FieldNode virtual = new FieldNode(propertyName, 0, setter.getParameters()[0].getOriginType(), current, null);
+                                    // GRECLIPSE add -- GROOVY-9653
+                                    virtual.setDeclaringClass(setter.getDeclaringClass());
+                                    // GRECLIPSE end
                                     visitor.visitField(virtual);
                                 }
                             }

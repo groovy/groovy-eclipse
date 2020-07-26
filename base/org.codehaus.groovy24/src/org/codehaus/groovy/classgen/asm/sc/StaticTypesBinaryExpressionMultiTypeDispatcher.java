@@ -50,7 +50,6 @@ import org.codehaus.groovy.classgen.asm.VariableSlotLoader;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.syntax.TokenUtil;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.sc.StaticCompilationVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
@@ -61,7 +60,6 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
@@ -80,7 +78,8 @@ import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIS
 public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpressionMultiTypeDispatcher implements Opcodes {
 
     private final AtomicInteger labelCounter = new AtomicInteger();
-    private static final MethodNode CLOSURE_GETTHISOBJECT_METHOD = CLOSURE_TYPE.getMethod("getThisObject", Parameter.EMPTY_ARRAY);
+    private static final MethodNode CLOSURE_GETTHISOBJECT_METHOD = CLOSURE_TYPE.getMethod("getThisObject", new Parameter[0]);
+
 
     public StaticTypesBinaryExpressionMultiTypeDispatcher(WriterController wc) {
         super(wc);
@@ -106,62 +105,40 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
         ClassNode top = operandStack.getTopOperand();
         if (ClassHelper.isPrimitiveType(top) && (ClassHelper.isNumberType(top)||char_TYPE.equals(top))) {
             MethodVisitor mv = controller.getMethodVisitor();
-            visitInsnByType(top, mv, ICONST_1, LCONST_1, FCONST_1, DCONST_1);
+            if (WideningCategories.isIntCategory(top) || char_TYPE.equals(top)) {
+                mv.visitInsn(ICONST_1);
+            } else if (long_TYPE.equals(top)) {
+                mv.visitInsn(LCONST_1);
+            } else if (float_TYPE.equals(top)) {
+                mv.visitInsn(FCONST_1);
+            } else if (double_TYPE.equals(top)) {
+                mv.visitInsn(DCONST_1);
+            }
             if ("next".equals(method)) {
-                visitInsnByType(top, mv, IADD, LADD, FADD, DADD);
+                if (WideningCategories.isIntCategory(top) || char_TYPE.equals(top)) {
+                    mv.visitInsn(IADD);
+                } else if (long_TYPE.equals(top)) {
+                    mv.visitInsn(LADD);
+                } else if (float_TYPE.equals(top)) {
+                    mv.visitInsn(FADD);
+                } else if (double_TYPE.equals(top)) {
+                    mv.visitInsn(DADD);
+                }
             } else {
-                visitInsnByType(top, mv, ISUB, LSUB, FSUB, DSUB);
+                if (WideningCategories.isIntCategory(top) || char_TYPE.equals(top)) {
+                    mv.visitInsn(ISUB);
+                } else if (long_TYPE.equals(top)) {
+                    mv.visitInsn(LSUB);
+                } else if (float_TYPE.equals(top)) {
+                    mv.visitInsn(FSUB);
+                } else if (double_TYPE.equals(top)) {
+                    mv.visitInsn(DSUB);
+                }
             }
             return;
         }
         super.writePostOrPrefixMethod(op, method, expression, orig);
     }
-
-    private static void visitInsnByType(ClassNode top, MethodVisitor mv, int iInsn, int lInsn, int fInsn, int dInsn) {
-        if (WideningCategories.isIntCategory(top) || char_TYPE.equals(top)) {
-            mv.visitInsn(iInsn);
-        } else if (long_TYPE.equals(top)) {
-            mv.visitInsn(lInsn);
-        } else if (float_TYPE.equals(top)) {
-            mv.visitInsn(fInsn);
-        } else if (double_TYPE.equals(top)) {
-            mv.visitInsn(dInsn);
-        }
-    }
-
-    // GRECLIPSE add
-    @Override
-    protected void evaluateBinaryExpressionWithAssignment(final String method, final BinaryExpression expression) {
-        Expression leftExpression = expression.getLeftExpression();
-        if (leftExpression instanceof PropertyExpression) {
-            PropertyExpression pexp = (PropertyExpression) leftExpression;
-
-            BinaryExpression expressionWithoutAssignment = new BinaryExpression(
-                    leftExpression,
-                    Token.newSymbol(
-                            TokenUtil.removeAssignment(expression.getOperation().getType()),
-                            expression.getOperation().getStartLine(),
-                            expression.getOperation().getStartColumn()
-                    ),
-                    expression.getRightExpression()
-            );
-            expressionWithoutAssignment.copyNodeMetaData(expression);
-            expressionWithoutAssignment.setSourcePosition(expression);
-
-            if (makeSetProperty(
-                    pexp.getObjectExpression(),
-                    pexp.getProperty(),
-                    expressionWithoutAssignment,
-                    pexp.isSafe(),
-                    pexp.isSpreadSafe(),
-                    pexp.isImplicitThis(),
-                    pexp instanceof AttributeExpression)) {
-                return;
-            }
-        }
-        super.evaluateBinaryExpressionWithAssignment(method, expression);
-    }
-    // GRECLIPSE end
 
     @Override
     public void evaluateEqual(final BinaryExpression expression, final boolean defineVariable) {
@@ -290,7 +267,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
                 if (!fn.isProtected()) {
                     return false;
                 }
-                if (!Objects.equals(receiverType.getPackageName(), current.getPackageName())) {
+                String pkg1 = receiverType.getPackageName();
+                String pkg2 = current.getPackageName();
+                if (pkg1!=pkg2 && !pkg1.equals(pkg2)) {
                     return false;
                 }
                 OperandStack operandStack = controller.getOperandStack();
@@ -446,4 +425,5 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             rhsValueLoader.visit(controller.getAcg());
         }
     }
+
 }

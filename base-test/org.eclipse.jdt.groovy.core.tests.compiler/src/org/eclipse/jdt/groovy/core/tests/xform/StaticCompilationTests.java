@@ -513,9 +513,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "import groovy.transform.*\n" +
-            "\n" +
-            "@CompileStatic\n" +
+            "@groovy.transform.CompileStatic\n" +
             "class C {\n" +
             "  void m() {\n" +
             "    C that = this;\n" +
@@ -538,6 +536,46 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic21() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  int which\n" +
+            "  C() {\n" +
+            "    contentView = 42L\n" +
+            "    print which\n" +
+            "  }\n" +
+            "  void setContentView(Date value) { which = 1 }\n" +
+            "  void setContentView(Long value) { which = 2 }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class D extends C {\n" +
+            "  D() {\n" +
+            "    contentView = 42L\n" +
+            "    print which\n" +
+            "    contentView = new Date()\n" +
+            "    print which\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  new D().with {\n" +
+            "    contentView = 42L\n" +
+            "    print which\n" +
+            "    contentView = new Date()\n" +
+            "    print which\n" +
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "22121");
     }
 
     @Test
@@ -4864,5 +4902,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9653() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  C() {\n" +
+            "    print new D().with {\n" +
+            "      something = 'value'\n" + // ClassCastException: D cannot be cast to C
+            "      return object\n" +
+            "    }\n" +
+            "  }\n" +
+            "  void setSomething(value) { }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  void setSomething(value) { }\n" +
+            "  Object getObject() { 'works' }\n" +
+            "}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
     }
 }
