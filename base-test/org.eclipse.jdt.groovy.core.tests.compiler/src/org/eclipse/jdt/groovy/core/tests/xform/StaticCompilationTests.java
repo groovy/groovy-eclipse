@@ -4905,25 +4905,62 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9652() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Node {\n" +
+            "  String name, text\n" +
+            "}\n" +
+            "class Root implements Iterable<Node> {\n" +
+            "  @Override\n" +
+            "  Iterator<Node> iterator() {\n" +
+            "    return [\n" +
+            "      new Node(name: 'term', text: 'foo'),\n" +
+            "      new Node(name: 'dash', text: '-'  ),\n" +
+            "      new Node(name: 'term', text: 'bar') \n" +
+            "    ].iterator()\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  Root root = new Root()\n" +
+            "  root[0].with {\n" +
+            "    assert name == 'term'\n" +
+            "    assert text == 'foo'\n" +
+            "  }\n" +
+            "  root[1].with {\n" +
+            "    assert name == 'dash'\n" +
+            "    assert text == '-'\n" + // GroovyCastException: Cannot cast object 'Script@b91d8c4' with class 'Script' to class 'Node'
+            "  }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic9653() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class C {\n" +
-            "  C() {\n" +
-            "    print new D().with {\n" +
-            "      something = 'value'\n" + // ClassCastException: D cannot be cast to C
-            "      return object\n" +
-            "    }\n" +
-            "  }\n" +
-            "  void setSomething(value) { }\n" +
-            "}\n" +
-            "class D {\n" +
-            "  void setSomething(value) { }\n" +
-            "  Object getObject() { 'works' }\n" +
-            "}\n" +
-            "new C()\n",
+                "class C {\n" +
+                "  C() {\n" +
+                "    print new D().with {\n" +
+                "      something = 'value'\n" + // ClassCastException: D cannot be cast to C
+                "      return object\n" +
+                "    }\n" +
+                "  }\n" +
+                "  void setSomething(value) { }\n" +
+                "}\n" +
+                "class D {\n" +
+                "  void setSomething(value) { }\n" +
+                "  Object getObject() { 'works' }\n" +
+                "}\n" +
+                "new C()\n",
         };
         //@formatter:on
 

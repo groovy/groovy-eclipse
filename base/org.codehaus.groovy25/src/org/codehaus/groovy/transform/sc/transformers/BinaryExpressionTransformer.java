@@ -181,9 +181,14 @@ public class BinaryExpressionTransformer {
             Expression left = staticCompilationTransformer.transform(leftExpression);
             Expression right = staticCompilationTransformer.transform(rightExpression);
             BinaryExpression optimized = tryOptimizeCharComparison(left, right, bin);
-            if (optimized!=null) {
+            if (optimized != null) {
                 optimized.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
+                /* GRECLIPSE edit -- GROOVY-9652
                 return transformBinaryExpression(optimized);
+                */
+                optimized.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                return optimized;
+                // GRECLIPSE end
             }
             /* GRECLIPSE edit
             call = new MethodCallExpression(
