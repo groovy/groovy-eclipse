@@ -15,9 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -144,7 +146,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             completionType = getCompletionType(completionNode, context, requestor);
 
             VariableScope currentScope = requestor.currentScope;
-            List<IProposalCreator> creators = chooseProposalCreators(context);
+            List<IProposalCreator> creators = chooseProposalCreators(context, completionType);
             proposalCreatorOuterLoop(groovyProposals, creators, requestor, context, options, completionType, isStatic, isPrimary);
 
             requestor.currentScope = currentScope;
@@ -246,19 +248,17 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return createJavaProposals(groovyProposals, options.checkDeprecation, monitor);
     }
 
-    private List<IProposalCreator> chooseProposalCreators(final ContentAssistContext context) {
-        String fullCompletionExpression = context.fullCompletionExpression;
+    private List<IProposalCreator> chooseProposalCreators(final ContentAssistContext context, final ClassNode completionType) {
 
-        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
-            return Collections.singletonList(new FieldProposalCreator());
-        }
-        if (METHOD_POINTER_COMPLETION.matcher(fullCompletionExpression).matches()) {
-            return Collections.singletonList(new MethodProposalCreator());
+        if (FIELD_ACCESS_COMPLETION.matcher(context.fullCompletionExpression).matches() || context.containingCodeBlock instanceof AnnotationNode) {
+            return Arrays.asList(new FieldProposalCreator());
         }
 
-        List<IProposalCreator> creators = new ArrayList<>(4);
-        Collections.addAll(creators, getProposalCreators());
-        return creators;
+        if (METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches() || isOrImplements(completionType, VariableScope.MAP_CLASS_NODE)) {
+            return Arrays.asList(new MethodProposalCreator(), new CategoryProposalCreator());
+        }
+
+        return Arrays.asList(getProposalCreators());
     }
 
     private void proposalCreatorOuterLoop(final Collection<IGroovyProposal> groovyProposals, final Collection<IProposalCreator> creators,

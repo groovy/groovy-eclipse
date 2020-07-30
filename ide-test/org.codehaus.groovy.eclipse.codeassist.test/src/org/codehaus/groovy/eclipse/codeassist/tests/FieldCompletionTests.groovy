@@ -1061,6 +1061,30 @@ final class FieldCompletionTests extends CompletionTestSuite {
         checkUniqueProposal(contents, 'BL', 'BLACK')
     }
 
+    @Test
+    void testMapReceiver1() {
+        String contents = '''\
+            |HashMap map = [:]
+            |map.e
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'DEFAULT_LOAD_FACTOR', 0) // static
+        proposalExists(proposals, 'threshold', 0) // non-static
+        proposalExists(proposals, 'table', 0) // non-static
+    }
+
+    @Test
+    void testMapReceiver1a() {
+        String contents = '''\
+            |HashMap map = [:]
+            |map.@e
+            |'''.stripMargin()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+            proposalExists(proposals, 'DEFAULT_LOAD_FACTOR', 1) // static
+            proposalExists(proposals, 'threshold', 1) // non-static
+            proposalExists(proposals, 'table', 1) // non-static
+    }
+
     @Test // GRECLIPSE-1175
     void testInitializer() {
         String contents = '''\

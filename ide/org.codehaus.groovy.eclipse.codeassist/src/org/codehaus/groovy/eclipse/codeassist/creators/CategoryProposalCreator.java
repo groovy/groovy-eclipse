@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
@@ -82,6 +83,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
                     if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
                             hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType()) &&
+                            (isStatic || !GeneralUtils.isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) &&
                             (isDefaultCategory || !methodName.startsWith("is"))) { // GROOVY-5245
                         // add property variant of accessor method
                         proposals.add(new CategoryPropertyProposal(method));

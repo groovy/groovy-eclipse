@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.first;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.tail;
 
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -86,7 +89,25 @@ public class CategoryTypeLookup implements ITypeLookup {
 
                 MethodNode method = selectBestMatch(candidates, argumentTypes, scope);
                 if (method != null) {
-                    TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
+                    ClassNode resolvedType = method.getReturnType();
+                    // getAt(Object,String):Object supersedes getAt(Map<K,V>,Object):V when first param is String or GString; restore return type V for user experience
+                    if ("getAt".equals(simpleName) && VariableScope.OBJECT_CLASS_NODE.equals(resolvedType) && isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) {
+                        for (ClassNode face : selfType.getAllInterfaces()) {
+                            if (face.equals(VariableScope.MAP_CLASS_NODE)) { // Map<K,V>
+                                GenericsType[] generics = GroovyUtils.getGenericsTypes(face);
+                                if (generics.length == 2) resolvedType = generics[1].getType();
+                                break;
+                            }
+                        }
+                    }
+
+                    // must resolve generics here because TypeLookupResult uses declaring class (instead of self type)
+                    if (org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.missesGenericsTypes(resolvedType)) {
+                        GenericsMapper mapper = GenericsMapper.gatherGenerics(selfType, selfType.redirect());
+                        resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(resolvedType));
+                    }
+
+                    TypeLookupResult result = new TypeLookupResult(resolvedType, method.getDeclaringClass(), method,
                         isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
                     result.isGroovy = true; // enable semantic highlighting as Groovy method
                     return result;
@@ -177,6 +198,10 @@ public class CategoryTypeLookup implements ITypeLookup {
 
                 if (d1 <= d2) m.put(signature.toString(), previous);
             }
+        }
+
+        if (scope.getEnclosingNode() instanceof MethodPointerExpression) {
+            return first(m.values());
         }
 
         // Phase 2: find best set of parameters for given call arguments

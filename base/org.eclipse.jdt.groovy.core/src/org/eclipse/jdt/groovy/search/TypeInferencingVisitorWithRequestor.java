@@ -807,21 +807,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     if (primaryExprType.getName().equals("java.util.BitSet")) {
                         completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
                     } else {
-                        GenericsType[] lhsGenericsTypes = primaryExprType.getGenericsTypes();
                         ClassNode elementType;
-                        if (VariableScope.MAP_CLASS_NODE.equals(primaryExprType) && lhsGenericsTypes != null && lhsGenericsTypes.length == 2) {
-                            // for maps use the value type
-                            elementType = lhsGenericsTypes[1].getType();
+                        if (GeneralUtils.isOrImplements(primaryExprType, VariableScope.MAP_CLASS_NODE)) {
+                            elementType = result.type; // for maps use the value type
                         } else {
                             elementType = VariableScope.extractElementType(primaryExprType);
                         }
-                        if (dependentExprType.isArray() ||
-                                dependentExprType.implementsInterface(VariableScope.LIST_CLASS_NODE) ||
-                                dependentExprType.getName().equals(VariableScope.LIST_CLASS_NODE.getName())) {
-                            // if rhs is a range or list type, then result is a list of elements
+                        if (dependentExprType.isArray() || GeneralUtils.isOrImplements(dependentExprType, VariableScope.LIST_CLASS_NODE)) {
+                            // if RHS is a range or list type, then result is a list of elements
                             completeExprType = createParameterizedList(elementType);
                         } else if (ClassHelper.isNumberType(dependentExprType)) {
-                            // if rhs is a number type, then result is a single element
+                            // if RHS is a number type, then result is a single element
                             completeExprType = elementType;
                         }
                     }

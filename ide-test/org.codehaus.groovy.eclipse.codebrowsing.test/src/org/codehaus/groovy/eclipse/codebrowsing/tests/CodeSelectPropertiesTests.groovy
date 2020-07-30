@@ -110,6 +110,56 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testCodeSelectMap1() {
+        String contents = 'def map = [foo:"bar"]'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap1a() {
+        String contents = 'def map = ["foo":"bar"]'
+        assertCodeSelect([contents], 'foo', null)
+        assertCodeSelect([contents], '"foo"', null)
+    }
+
+    @Test
+    void testCodeSelectMap2() {
+        String contents = 'def map = [foo:"bar"]; map.foo'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap3() {
+        String contents = 'def map = [foo:"bar"]; map["foo"]'
+        assertCodeSelect([contents], 'foo', null)
+        assertCodeSelect([contents], '"foo"', null)
+    }
+
+    @Test
+    void testCodeSelectMap4() {
+        String contents = '[foo:"bar"].with { foo }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap4a() {
+        String contents = '[foo:"bar"].with { it.foo }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap5() {
+        String contents = '[foo:"bar"].with { foo = "baz" }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
+    void testCodeSelectMap5a() {
+        String contents = '[foo:"bar"].with { it.foo = "baz" }'
+        assertCodeSelect([contents], 'foo', null)
+    }
+
+    @Test
     void testCodeSelectGetProperty1() {
         String contents = '''\
             |class C {
@@ -494,5 +544,23 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'log', 'getLog')
     }
 
-    // TODO: map properties, unknown properties
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1113
+    void testCodeSelectTraitProperty() {
+        addGroovySource('''\
+            |trait T {
+            |  String p
+            |}
+            |'''.stripMargin())
+        def elem = assertCodeSelect(['''\
+            |class C implements T {
+            |  def m() {
+            |    p
+            |  }
+            |}
+            |'''.stripMargin()], 'p')
+        assert elem.declaringType.fullyQualifiedName == 'T'
+        assert elem.elementInfo.nameSourceStart == 19
+    }
+
+    // TODO: unknown properties
 }

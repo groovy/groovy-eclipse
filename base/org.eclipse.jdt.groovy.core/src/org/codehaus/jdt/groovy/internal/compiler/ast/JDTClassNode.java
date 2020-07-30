@@ -581,8 +581,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
                         for (PropertyNode node : groovyTypeDecl.getClassNode().getProperties()) {
                             FieldNode field = getField(node.getName());
-                            boolean synth = (field == null);
-                            if (synth) {
+                            if (field == null) {
                                 field = new FieldNode(node.getName(), Flags.AccPrivate | (node.getModifiers() & Flags.AccStatic), resolver.resolve(node.getType().getName()), this, null);
                                 field.setDeclaringClass(this);
                                 field.setSourcePosition(node.getField());
@@ -592,7 +591,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                             PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);
                             clone.setDeclaringClass(this);
                             clone.setSourcePosition(node);
-                            clone.setSynthetic(synth);
 
                             nodes.add(clone);
                         }

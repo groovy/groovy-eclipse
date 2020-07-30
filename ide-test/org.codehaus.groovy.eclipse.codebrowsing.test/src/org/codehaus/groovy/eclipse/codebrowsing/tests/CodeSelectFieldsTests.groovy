@@ -220,22 +220,4 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
             |'''.stripMargin()], 'T__f', 'f')
         assert elem.declaringType.fullyQualifiedName == 'T'
     }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/1113
-    void testCodeSelectFieldFromTrait4() {
-        addGroovySource('''\
-            |trait T {
-            |  String f
-            |}
-            |'''.stripMargin())
-        def elem = assertCodeSelect(['''\
-            |class C implements T {
-            |  def m() {
-            |    f
-            |  }
-            |}
-            |'''.stripMargin()], 'f')
-        assert elem.declaringType.fullyQualifiedName == 'T'
-        assert elem.elementInfo.nameSourceStart == 19
-    }
 }

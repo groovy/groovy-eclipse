@@ -383,6 +383,192 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testMap17() {
+        String contents =
+            "def map = [key:'val']\n" +
+            "map.getAt('key').toUpperCase()\n" +
+            "map.get('key').toUpperCase()\n" +
+            "map['key'].toUpperCase()\n" +
+            "map['key'] = 'value'\n" +
+            "map.key.toUpperCase()\n" +
+            "map.key = 'value'\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("toUpperCase");
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("map['key'] = 'value'", offset + 1);
+        assertType(contents, offset, offset + "map['key'] = 'value'".length(), "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("map.key = 'value'", offset + 1);
+        assertType(contents, offset, offset + "map.key = 'value'".length(), "java.lang.String");
+    }
+
+    @Test
+    public void testMap18() {
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "def map = [key:'val']\n" +
+            "with(map) {\n" +
+            "  it.getAt('key').toUpperCase()\n" +
+            "  getAt('key').toUpperCase()\n" +
+            "  it.get('key').toUpperCase()\n" +
+            "  get('key').toUpperCase()\n" +
+            "  it['key'].toUpperCase()\n" +
+            "  it['key'] = 'value'\n" +
+            "  it.key.toUpperCase()\n" +
+            "  key.toUpperCase()\n" +
+            "  it.key = 'value'\n" +
+            "  key = 'value'\n" +
+            "}\n" +
+            "private <T> void with(@DelegatesTo.Target T map, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) @ClosureParams(FirstParam) Closure block) {\n" +
+            "  map.with(block)\n" +
+            "}\n";
+
+        int offset = contents.indexOf("it."); // line 4
+        assertType(contents, offset, offset + 2, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("toUpperCase");
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("it['key'] = 'value'", offset + 1);
+        assertType(contents, offset, offset + "it['key'] = 'value'".length(), "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("toUpperCase", offset + 1);
+        assertDeclaringType(contents, offset, offset + 11, "java.lang.String");
+
+            offset = contents.indexOf("it.key = 'value'", offset + 1);
+        assertType(contents, offset, offset + "it.key = 'value'".length(), "java.lang.String");
+
+            offset = contents.lastIndexOf("key = 'value'");
+        assertType(contents, offset, offset + "key = 'value'".length(), "java.lang.String");
+    }
+
+    @Test // methods and property resolution differs
+    public void testMap19() {
+        String contents =
+            "def map = [foo:'bar']\n" +
+            "map.getMetaClass()\n" +
+            "map.metaClass\n" +
+            "map.getClass()\n" +
+            "map.class\n" +
+            "map.with {\n" +
+            "  getMetaClass()\n" +
+            "  metaClass\n" +
+            "  isEmpty()\n" +
+            "  empty\n" +
+            "}\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.Map<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf("getMetaClass");
+        assertType(contents, offset, offset + "getMetaClass".length(), "groovy.lang.MetaClass");
+
+            offset = contents.indexOf("metaClass");
+        assertType(contents, offset, offset + "metaClass".length(), "java.lang.String");
+
+            offset = contents.indexOf("getClass");
+        assertType(contents, offset, offset + "getClass".length(), "java.lang.Class<? extends java.util.Map<java.lang.String,java.lang.String>>");
+
+            offset = contents.indexOf("class");
+        assertType(contents, offset, offset + "class".length(), "java.lang.String");
+
+        //
+
+            offset = contents.lastIndexOf("getMetaClass");
+        assertType(contents, offset, offset + "getMetaClass".length(), "groovy.lang.MetaClass");
+
+            offset = contents.lastIndexOf("metaClass");
+        assertType(contents, offset, offset + "metaClass".length(), "java.lang.String");
+
+            offset = contents.indexOf("isEmpty");
+        assertType(contents, offset, offset + "isEmpty".length(), "java.lang.Boolean");
+
+            offset = contents.indexOf("empty");
+        assertType(contents, offset, offset + "empty".length(), "java.lang.String");
+    }
+
+    @Test
+    public void testMap20() {
+        String contents =
+            "LinkedHashMap<String,String> map = [foo:'bar']\n" +
+            "def put = map.&put\n" +
+            "put('key', 'val')\n" +
+            "map.@accessOrder\n" +
+            "map.@class\n" +
+            "map.&getAt\n" +
+            "map.with {\n" +
+            "  put = it.&put\n" +
+            "  put('key', 'val')\n" +
+            "  it.@accessOrder\n" +
+            "  it.@class\n" +
+            "  it.&getAt\n" +
+            "}\n";
+
+        int offset = contents.indexOf("map");
+        assertType(contents, offset, offset + 3, "java.util.LinkedHashMap<java.lang.String,java.lang.String>");
+
+            offset = contents.indexOf(".&put") + 2;
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap<java.lang.String,java.lang.String>", "put", DeclarationKind.METHOD);
+
+            offset = contents.indexOf("put(");
+        assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
+
+            offset = contents.indexOf("accessOrder");
+        assertType(contents, offset, offset + "accessOrder".length(), "java.lang.Boolean");
+
+            offset = contents.indexOf("class");
+        assertUnknownConfidence(contents, offset, offset + "class".length());
+
+            offset = contents.indexOf("getAt");
+        assertDeclaringType(contents, offset, offset + "getAt".length(), "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+
+        //
+
+            offset = contents.lastIndexOf(".&put") + 2;
+        assertDeclaration(contents, offset, offset + 3, "java.util.HashMap<java.lang.String,java.lang.String>", "put", DeclarationKind.METHOD);
+
+            offset = contents.lastIndexOf("put(");
+        assertType(contents, offset, offset + 3, "groovy.lang.Closure<java.lang.String>");
+
+            offset = contents.lastIndexOf("accessOrder");
+        assertType(contents, offset, offset + "accessOrder".length(), "java.lang.Boolean");
+
+            offset = contents.lastIndexOf("class");
+        assertUnknownConfidence(contents, offset, offset + "class".length());
+
+            offset = contents.lastIndexOf("getAt");
+        assertDeclaringType(contents, offset, offset + "getAt".length(), "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test
     public void testListOfMap1() {
         String contents =
             "def x = 9\n" +
@@ -663,10 +849,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
             "m.get('')";
-        String toFind = "get";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Class");
+        assertType(contents, "get", "java.lang.Class");
     }
 
     @Test // GRECLIPSE-997
@@ -675,10 +858,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap extends HashMap<String,Class> {\n}\n" +
             "MyMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
     }
 
     @Test // GRECLIPSE-997
@@ -688,10 +868,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
             "MyMap<String,Class> m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -702,10 +879,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -713,15 +887,12 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents =
             "import java.lang.ref.WeakReference\n" +
             "class MyMap<K,V> extends HashMap<K,WeakReference<V>>{\n}\n" +
-            "class MySubMap<L> extends MyMap<String,Class>{ \n" +
+            "class MySubMap<L> extends MyMap<String,Class>{\n" +
             "  Map<L,Class> val\n" +
             "}\n" +
             "MySubMap<Integer> m\n" +
-            "m.val";
-        String toFind = "val";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Class>");
+            "m.@val";
+        assertType(contents, "val", "java.util.Map<java.lang.Integer,java.lang.Class>");
     }
 
     @Test // GRECLIPSE-997
@@ -732,10 +903,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MySubMap extends MyMap<String,Class>{\n}\n" +
             "MySubMap m\n" +
             "m.entrySet()";
-        String toFind = "entrySet";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
+        assertType(contents, "entrySet", "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
     }
 
     @Test // GRECLIPSE-997
@@ -744,23 +912,18 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "class MyMap<K,V> extends HashMap<V,K>{\n}\n" +
             "MyMap<Integer,Class> m\n" +
             "m.get(Object)";
-        String toFind = "get";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, "get", "java.lang.Integer");
     }
 
     @Test // GRECLIPSE-997
     public void testNestedGenerics8() {
         String contents =
             "class MyMap<K,V> extends HashMap<K,V>{\n" +
-            "Map<V,Class<K>> val}\n" +
+            "  Map<V,Class<K>> val\n" +
+            "}\n" +
             "MyMap<Integer,Class> m\n" +
-            "m.val";
-        String toFind = "val";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
+            "m.@val";
+        assertType(contents, "val", "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
 
     @Test

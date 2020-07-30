@@ -61,6 +61,18 @@ final class CodeSelectMiscellaneousTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testSelectColonInMapEntry() {
+        String contents = 'def map = [foo:"bar"]'
+        assertCodeSelect([contents], ':', null)
+    }
+
+    @Test
+    void testSelectSplatInMapEntry() {
+        String contents = 'def map = [foo:"bar"]; map = [*: map]'
+        assertCodeSelect([contents], '*', null)
+    }
+
+    @Test
     void testSelectDotsInRange1() {
         String contents = 'def range = 1..9'
         assertCodeSelect([contents], '..', null)

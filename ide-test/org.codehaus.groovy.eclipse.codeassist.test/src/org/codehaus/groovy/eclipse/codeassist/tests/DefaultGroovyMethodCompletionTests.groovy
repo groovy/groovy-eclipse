@@ -160,11 +160,19 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testDGMParameters() {
-        String contents = '[].collect', target = 'collect'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, target))
+        String contents = '[].collect'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'collect'))
         proposalExists(proposals, 'collect(Collection<T> collector, Closure<? extends T> transform)', 1)
         proposalExists(proposals, 'collect(Closure<T> transform)', 1)
         proposalExists(proposals, 'collect()', 1)
+    }
+
+    @Test
+    void testDGMReference() {
+        String contents = '[:].&every'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'every'))
+        proposalExists(proposals, 'every(Closure)', 1)
+        proposalExists(proposals, 'every()', 1)
     }
 
     @Test

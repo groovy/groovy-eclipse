@@ -146,9 +146,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             if (!((PropertyNode) result.declaration).getField().hasNoRealSourcePosition()) {
                 pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
             } else {
-                HighlightKind kind = ((PropertyNode) result.declaration).isStatic()
-                            ? HighlightKind.STATIC_CALL : HighlightKind.METHOD_CALL;
-                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), kind);
+                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), ((PropertyNode) result.declaration).isSynthetic()
+                    ? HighlightKind.MAP_KEY : ((PropertyNode) result.declaration).isStatic() ? HighlightKind.STATIC_CALL : HighlightKind.METHOD_CALL);
             }
 
         } else if (node instanceof MethodNode) {

@@ -213,6 +213,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
             } else {
                 requestedNode = ((ConstructorNode) requestedNode).getDeclaringClass();
             }
+        } else if (requestedNode instanceof PropertyNode) {
+            if (((PropertyNode) requestedNode).isSynthetic()) {
+                requestedNode = null; // ignore synthetic properties
+            }
         } else if (requestedNode instanceof ImportNode) {
             ImportNode importNode = (ImportNode) requestedNode;
             if (importNode.getType() != null) {

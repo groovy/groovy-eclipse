@@ -689,13 +689,23 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testAttributeExpression0() {
+        String contents = 'HashMap map = [:]\nmap.@e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 0)
+        proposalExists(proposals, 'empty', 0)
+    }
+
+    @Test
     void testMethodPointer0() {
         String contents = 'class Foo { public static Foo instance }\nFoo.&in'
         proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
     }
 
     @Test
-    void testMethodPointer0a() {
+    void testMethodReference0() {
+        assumeTrue(isParrotParser())
         String contents = 'class Foo { public static Foo instance }\nFoo::in'
         proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
     }
@@ -707,7 +717,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer1a() {
+    void testMethodReference1() {
         assumeTrue(isParrotParser())
         String contents = 'String::isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
@@ -720,7 +730,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer2a() {
+    void testMethodReference2() {
         assumeTrue(isParrotParser())
         String contents = 'String::  isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
@@ -733,7 +743,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer3a() {
+    void testMethodReference3() {
         assumeTrue(isParrotParser())
         String contents = 'String::isEmpty.mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
@@ -746,10 +756,29 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testMethodPointer4a() {
+    void testMethodReference4() {
         assumeTrue(isParrotParser())
         String contents = '(String::isEmpty).mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
+    void testMethodPointer5() {
+        String contents = 'def map = [:]\nmap.&e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 1)
+        proposalExists(proposals, 'empty', 0)
+    }
+
+    @Test
+    void testMethodReference5() {
+        assumeTrue(isParrotParser())
+        String contents = 'def map = [:]\nmap::e'
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'e'))
+        proposalExists(proposals, 'isEmpty', 1)
+        proposalExists(proposals, 'empty', 0)
     }
 
     @Test

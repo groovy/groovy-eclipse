@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,6 +27,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -51,15 +51,12 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
         Set<String> alreadySeenFields = new HashSet<>();
         if (isStatic) {
-            // "class" is added by FieldProposalCreator
-            alreadySeenFields.add("class");
+            alreadySeenFields.add("class"); // "class" is added by FieldProposalCreator
         }
         boolean firstTime = alreadySeen.isEmpty();
-        Collection<MethodNode> allMethods = getAllMethods(type, alreadySeen);
-
-        for (MethodNode method : allMethods) {
-            String methodName = method.getName();
-            if ((!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE))) {
+        boolean isMapType = GeneralUtils.isOrImplements(type, VariableScope.MAP_CLASS_NODE);
+        for (MethodNode method : getAllMethods(type, alreadySeen)) { String methodName = method.getName();
+            if (!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                     setRelevanceMultiplier(proposal, isStatic);
@@ -67,7 +64,8 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 }
 
                 // if method is an accessor, then add a proposal for the property name
-                if (!"getClass".equals(methodName) && findLooselyMatchedAccessorKind(prefix, methodName, false).isAccessorKind(method, false)) {
+                if (!"getClass".equals(methodName) && (!isMapType || isStatic) &&
+                        findLooselyMatchedAccessorKind(prefix, methodName, false).isAccessorKind(method, false)) {
                     FieldNode mockField = createMockField(method);
                     if (alreadySeenFields.add(mockField.getName())) {
                         ClassNode declaringClass = method.getDeclaringClass();
