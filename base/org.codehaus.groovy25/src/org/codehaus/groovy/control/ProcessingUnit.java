@@ -97,8 +97,12 @@ public abstract class ProcessingUnit {
         // this method is invoked by code that does not have security permissions.
         this.classLoader = loader != null ? loader : AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
             public GroovyClassLoader run() {
+                /* GRECLIPSE edit -- async content assist cannot process DelegatesTo/ClosureParams
                 ClassLoader parent = Thread.currentThread().getContextClassLoader();
                 if (parent == null) parent = ProcessingUnit.class.getClassLoader();
+                */
+                ClassLoader parent = this.getClass().getClassLoader();
+                // GRECLIPSE end
                 return new GroovyClassLoader(parent, getConfiguration());
             }
         });
