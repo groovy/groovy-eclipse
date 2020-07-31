@@ -148,7 +148,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                     propertyExpression.getProperty().setSourcePosition(exp);
                     return propertyExpression;
                 }
-            } else if (accessedVariable instanceof DynamicVariable) {
+            } else if (accessedVariable instanceof DynamicVariable && !inClosure) { // GRECLIPSE add -- GROOVY-9386
                 PropertyExpression propertyExpression = new PropertyExpression(
                         new VariableExpression(weaved), accessedVariable.getName());
                 propertyExpression.getProperty().setSourcePosition(exp);

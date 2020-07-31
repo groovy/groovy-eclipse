@@ -1523,6 +1523,29 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTrait9386() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class P {\n" +
+            "  int prop\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  P pogo = new P().with {\n" +
+            "    prop = 42\n" + // MissingPropertyException: No such property: prop for class: C
+            "    return it\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "print new C().pogo.prop\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTraits9586() {
         //@formatter:off
         String[] sources = {
