@@ -2702,21 +2702,20 @@ pathElement[AST prefix] {Token operator = LT(1);}
     :
         { #pathElement = prefix; }
         ( nls!
-            ( SPREAD_DOT!     // Spread operator:  x*.y  ===  x?.collect{it.y}
+            ( SPREAD_DOT!     // Spread operator: x*.y === x?.collect{it.y}
             |
-              OPTIONAL_DOT!   // Optional-null operator:  x?.y  === (x==null)?null:x.y
+              OPTIONAL_DOT!   // Null-safe operator: x?.y === (x==null)?null:x.y
             |
-              MEMBER_POINTER! // Member pointer operator: foo.&y == foo.metaClass.getMethodPointer(foo, "y")
+              MEMBER_POINTER! // Reference operator: x.&y === x.metaClass.getMethodPointer(x,"y")
             |
-              DOT!            // The all-powerful dot.
+              DOT!            // The all-powerful dot
             )
         ) nls!
         (ta:typeArguments!)?
         /* GRECLIPSE edit -- missing identifier recovery
         np:namePart!
-        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np); }
         */
-        (np:namePart!)?
+        ( (declarationStart) => nls! | (np:namePart!)? )
         {
             if (#np == null) {
                 GroovySourceToken ident = new GroovySourceToken(IDENT);
@@ -2726,23 +2725,24 @@ pathElement[AST prefix] {Token operator = LT(1);}
                 ident.setColumnLast(((SourceInfo) LT(0)).getColumnLast());
                 #np = #(create(ident.getType(),ident.getText(),ident,null));
                 reportError(new NoViableAltException(LT(1), getFilename()));
+                while (LA(0) == NLS) rewind(mark() - 1); // give back spaces
             }
-            #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np);
         }
         // GRECLIPSE end
+        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)), prefix, ta, np); }
     |
         mca:methodCallArgs[prefix]!
-        {   #pathElement = #mca;  }
+        { #pathElement = #mca; }
     |
         // Can always append a block, as foo{bar}
         apb:appendedBlock[prefix]!
-        {   #pathElement = #apb;  }
+        { #pathElement = #apb; }
     |
         // Element selection is always an option, too.
         // In Groovy, the stuff between brackets is a general argument list,
         // since the bracket operator is transformed into a method call.
         ipa:indexPropertyArgs[prefix]!
-        {   #pathElement = #ipa;  }
+        { #pathElement = #ipa; }
     ;
 
 pathElementStart!
@@ -2758,7 +2758,7 @@ pathElementStart!
 /** This is the grammar for what can follow a dot:  x.a, x.@a, x.&a, x.'a', etc.
  *  Note: <code>typeArguments</code> is handled by the caller of <code>namePart</code>.
  */
-namePart  {Token first = LT(1);}
+namePart
     :
         (   ats:AT^     {#ats.setType(SELECT_SLOT);}  )?
         // foo.@bar selects the field (or attribute), not property

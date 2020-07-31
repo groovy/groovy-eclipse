@@ -2586,29 +2586,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInvalidScripts_GRE323_1() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "def foo(closure) {\n" +
-            "  closure()\n" +
-            "}\n" +
-            "\n" +
-            "foo {\n" +
-            "  final session2 = null\n" +
-            "  \n" +
-            "  // Define scenarios\n" +
-            "  def secBoardRep = session2\n" +
-            "  def x\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testInvalidScripts_GRE323_1b() {
+    public void testSloppyScript_GRE323_1() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2630,7 +2608,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInvalidScripts_GRE323_2() {
+    public void testSloppyScript_GRE323_2() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2648,27 +2626,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: Foo");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 10)\n" +
+            "\tdef x\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: def\n" +
+            "----------\n");
     }
 
     @Test // removed surrounding method
-    public void testInvalidScripts_GRE323_3() {
-        //@formatter:off
-        String[] sources = {
-            "Foo.groovy",
-            "final session2 = null\n" +
-            "\n" +
-            "// Define scenarios\n" +
-            "def secBoardRep = session2\n" +
-            "def x\n",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources, "");
-    }
-
-    @Test
-    public void testInvalidScripts_GRE323_3b() {
+    public void testSloppyScript_GRE323_3() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2684,7 +2652,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInvalidScripts_GRE323_4() {
+    public void testSloppyScript_GRE323_4() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2702,18 +2670,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: x for class: Foo");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 10)\n" +
+            "\tdef x\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: def\n" +
+            "----------\n");
     }
 
     @Test
-    public void testInvalidScripts_GRE323_4b() {
+    public void testSloppyScript_GRE323_4b() {
         //@formatter:off
         String[] sources = {
             "Run.java",
             "public class Run {\n" +
             "  public static void main(String[]argv) {\n" +
             "    try {\n" +
-            "      Foo.main(null);\n" +
+            "      Foo.main();\n" +
             "    } catch (Throwable t) {\n" +
             "      System.out.println(t.getMessage());\n" +
             "    }\n" +
@@ -2735,11 +2709,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "No such property: x for class: Foo");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 10)\n" +
+            "\tdef x\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: def\n" +
+            "----------\n");
     }
 
     @Test
-    public void testInvalidScripts_GRE323_5() {
+    public void testSloppyScript_GRE323_5() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2758,11 +2738,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 11)\n" +
+            "\tdef x\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: def\n" +
+            "----------\n" +
+            "2. ERROR in Foo.groovy (at line 11)\n" +
+            "\tdef x\n" +
+            "\t    ^\n" +
+            "Groovy:The current scope already contains a variable of the name x\n" +
+            "----------\n");
     }
 
     @Test
-    public void testInvalidScripts_GRE323_5b() {
+    public void testSloppyScript_GRE323_5b() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",
@@ -2781,11 +2772,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources, "DEF");
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Foo.groovy (at line 11)\n" +
+            "\tdef x\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: def\n" +
+            "----------\n" +
+            "2. ERROR in Foo.groovy (at line 11)\n" +
+            "\tdef x\n" +
+            "\t    ^\n" +
+            "Groovy:The current scope already contains a variable of the name x\n" +
+            "----------\n");
     }
 
     @Test
-    public void testInvalidScripts_GRE323_6() {
+    public void testSloppyScript_GRE323_6() {
         //@formatter:off
         String[] sources = {
             "Foo.groovy",

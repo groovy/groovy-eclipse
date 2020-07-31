@@ -1679,8 +1679,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "import java.text.NumberFormat\n" +
             "\n" +
             "class X {\n" +
+            "  @SuppressWarnings('rawtypes')\n" +
             "  static void main(args) {\n" +
-            "    NumberFormat.\n" + // added after next line
+            "    NumberFormat.\n" + // caret
             "    Set s = []\n" +
             "  }\n" +
             "}\n",
@@ -1689,10 +1690,10 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. ERROR in X.groovy (at line 8)\n" +
+            "1. ERROR in X.groovy (at line 9)\n" +
             "\tSet s = []\n" +
-            "\t    ^\n" +
-            "Groovy:Apparent variable 's' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: Set\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -1713,7 +1714,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "\n" +
             "class X {\n" +
             "  static void main(args) {\n" +
-            "    NumberFormat.\n" + // added after next line
+            "    NumberFormat.\n" + // caret
             "    Set<Integer> s = []\n" +
             "  }\n" +
             "}\n",
@@ -1724,8 +1725,8 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in X.groovy (at line 8)\n" +
             "\tSet<Integer> s = []\n" +
-            "\t           ^\n" +
-            "Groovy:unexpected token: >\n" +
+            "\t^\n" +
+            "Groovy:unexpected token: Set\n" +
             "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");

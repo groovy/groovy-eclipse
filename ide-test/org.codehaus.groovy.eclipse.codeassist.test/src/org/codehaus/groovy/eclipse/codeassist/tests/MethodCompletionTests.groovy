@@ -214,6 +214,51 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'time', 1)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr9() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    n.
+            |    def x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr9a() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    println n.
+            |    def x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1129
+    void testObjectExpr9b() {
+        String contents = '''\
+            |class C {
+            |  void meth(Number n) {
+            |    println n.
+            |    Number x = 1
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'byteValue()', 1)
+        proposalExists(proposals, 'intValue()', 1)
+    }
+
     @Test // GRECLIPSE-1374
     void testParensExpr1() {
         String contents = '''\
