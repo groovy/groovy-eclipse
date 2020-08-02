@@ -237,7 +237,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'x')
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1152
     void testCodeSelectStaticMethodFromTrait1() {
         String contents = '''\
             |trait Trait {
@@ -247,7 +247,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             |  }
             |}
             |'''.stripMargin()
-        assertCodeSelect([contents], 'x')
+        assertCodeSelect([contents], 'x', null)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/755

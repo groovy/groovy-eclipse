@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
 import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
+import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -276,7 +277,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
         if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
                 !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
-                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
+                !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE) &&
+                (!(context.completionNode instanceof ClassExpression) || !isTrait(completionType.getGenericsTypes()[0].getType()))) {
             // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
             boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
             proposalCreatorInnerLoop(groovyProposals, creators, requestor, context, options, completionType.getGenericsTypes()[0].getType(), isStatic2, isPrimary);

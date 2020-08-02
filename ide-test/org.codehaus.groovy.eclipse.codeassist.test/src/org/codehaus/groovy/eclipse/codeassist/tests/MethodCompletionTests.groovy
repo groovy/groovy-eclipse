@@ -1143,6 +1143,66 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testTraitMethods7() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |  static m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 1)
+    }
+
+    @Test
+    void testTraitMethods8() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |  static m() {
+            |    T.x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 0)
+    }
+
+    @Test
+    void testTraitMethods9() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |}
+            |class C implements T {
+            |  static m() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 1)
+    }
+
+    @Test
+    void testTraitMethods10() {
+        String contents = '''\
+            |trait T {
+            |  static m1() {}
+            |}
+            |class C implements T {
+            |  static m() {
+            |    T.x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 0)
+    }
+
+    @Test
     void testTraitSyntheticMethods1() {
         String contents = '''\
             |trait T {

@@ -213,17 +213,17 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     public void testProperty13() {
         String source =
             "trait T {\n" +
-            "  Number thing\n" +
+            "  Number number = 42\n" +
             "}\n" +
             "class C implements T {\n" +
             "  void meth() {\n" +
-            "    println T.super.thing\n" +
+            "    println T.super.number\n" +
             "  }\n" +
             "}\n";
 
-        // TODO: assertDeclType(source, "thing", "T");
-        // TODO: assertExprType(source, "thing", "java.lang.Number");
-        assertUnknownConfidence(source, source.lastIndexOf("thing"), source.lastIndexOf("thing") + "thing".length());
+        // TODO: assertDeclType(source, "number", "T");
+        // TODO: assertExprType(source, "number", "java.lang.Number");
+        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length());
     }
 
     @Test
@@ -347,7 +347,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -366,7 +366,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    A.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -385,10 +385,70 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  void something() {\n" +
             "    B.super.method()\n" +
             "  }\n" +
-            "}";
+            "}\n";
 
         assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
+    }
+
+    @Test
+    public void testPublicStaticMethod1() {
+        String contents =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+            offset = contents.lastIndexOf("m()");
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod2() {
+        String contents =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void x() {\n" +
+            "    T.m()\n" +
+            "    C.m()\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+            offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
+
+            offset = contents.lastIndexOf("m()");
+        assertDeclaringType(contents, offset, offset + 1, "T");
+    }
+
+    @Test
+    public void testPublicStaticMethod3() {
+        String contents =
+            "trait T {\n" +
+            "  static m() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "T.m()\n" +
+            "C.m()\n";
+
+        int offset = contents.indexOf("T.m()") + 2;
+        assertUnknownConfidence(contents, offset, offset + 1);
+
+            offset = contents.indexOf("C.m()") + 2;
+        assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
