@@ -1434,7 +1434,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (isEnum && methodNode.isSynthetic()) {
                         continue;
                     }
-                    if (isTrait && (!methodNode.isPublic() || methodNode.isStatic())) {
+                    if (isTrait && (!methodNode.isPublic() || methodNode.isStatic() || methodNode.isDefault())) {
                         continue;
                     }
 
@@ -2355,13 +2355,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         private int getModifiers(MethodNode node) {
-            int modifiers = node.getModifiers();
-            modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
+            int modifiers = node.getModifiers() & ~(Flags.AccSynthetic | Flags.AccTransient);
             if (node.isDefault()) {
                 modifiers |= Flags.AccDefaultMethod;
             }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
+            }
+            if (node.isFinal() && isTrait(node.getDeclaringClass())) {
+                modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
             }
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;

@@ -160,8 +160,10 @@ public class GroovyClassScope extends ClassScope {
             if (traitHelper.isTrait(face)) {
                 ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
                 for (MethodBinding method : face.availableMethods()) {
-                    if (!method.isPrivate() && !method.isStatic() &&
-                            isNotActuallyAbstract(method, helperBinding)) {
+                    if (!method.isPrivate() && !method.isStatic() && isNotActuallyAbstract(method, helperBinding)) {
+                        if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // restore finality
+                            method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+                        }
                         traitMethods.put(getMethodAsString(method), method);
                     }
                 }
@@ -173,13 +175,15 @@ public class GroovyClassScope extends ClassScope {
             ReferenceBinding superclass = typeBinding;
             while ((superclass = superclass.superclass()) != null) {
                 for (MethodBinding method : superclass.availableMethods()) {
-                    if (!method.isPrivate() && !method.isPublic() && !method.isStatic()) {
+                    if (!method.isConstructor() && !method.isPrivate() && !method.isStatic() && !method.isFinal()) {
                         canBeOverridden.add(getMethodAsString(method));
                     }
                 }
             }
             for (MethodBinding method : methodBindings) {
-                canBeOverridden.remove(getMethodAsString(method));
+                if (!method.isConstructor()) {
+                    canBeOverridden.remove(getMethodAsString(method));
+                }
             }
 
             for (String key : canBeOverridden) {
@@ -225,18 +229,22 @@ public class GroovyClassScope extends ClassScope {
         return modifiers;
     }
 
+    /**
+     * @see MethodBinding#readableName()
+     */
     private String getMethodAsString(final MethodBinding method) {
         StringBuilder key = new StringBuilder();
-        key.append(method.selector).append(' ');
-        for (TypeBinding param : method.parameters) {
-            char[] type = param.readableName();
-            if (type != null) {
-                key.append(type);
-            } else {
-                key.append("null");
+        key.append(method.selector).append('(');
+        for (TypeBinding tb : method.parameters) {
+            if (tb instanceof ReferenceBinding) {
+                key.append(((ReferenceBinding) tb).readableName(false));
+            } else if (tb != null) {
+                key.append(tb.readableName());
             }
-            key.append(' ');
+            key.append(';');
         }
+        key.append(')');
+
         return key.toString();
     }
 
