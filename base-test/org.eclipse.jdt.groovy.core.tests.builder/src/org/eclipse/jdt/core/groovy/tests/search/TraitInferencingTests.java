@@ -31,6 +31,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty1() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -38,6 +39,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -45,6 +47,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty2() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -52,6 +55,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -59,6 +63,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty3() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -66,6 +71,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println this.number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -73,6 +79,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty4() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -80,6 +87,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    this.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -87,6 +95,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty5() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -94,6 +103,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println getNumber()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "getNumber", "T");
         assertExprType(source, "getNumber", "java.lang.Number");
@@ -101,6 +111,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty6() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -108,6 +119,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    setNumber(42)\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "setNumber", "T");
         assertExprType(source, "setNumber", "java.lang.Void");
@@ -115,6 +127,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty7() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -124,6 +137,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -131,6 +145,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty8() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -140,6 +155,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -147,6 +163,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty9() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -156,6 +173,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println this.number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -163,6 +181,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty10() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -172,6 +191,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    this.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -179,6 +199,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty11() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -188,6 +209,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println getNumber()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "getNumber", "T");
         assertExprType(source, "getNumber", "java.lang.Number");
@@ -195,6 +217,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty12() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -204,6 +227,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    setNumber(42)\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "setNumber", "T");
         assertExprType(source, "setNumber", "java.lang.Void");
@@ -211,6 +235,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty13() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number = 42\n" +
@@ -220,6 +245,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    println T.super.number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         // TODO: assertDeclType(source, "number", "T");
         // TODO: assertExprType(source, "number", "java.lang.Number");
@@ -228,6 +254,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testProperty14() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  Number number\n" +
@@ -237,6 +264,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    T.super.number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Void");
@@ -249,12 +277,14 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  Number number\n" +
             "}\n");
 
+        //@formatter:off
         String source =
             "class C implements T {\n" +
             "  void meth() {\n" +
             "    def n = number\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -267,12 +297,14 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  Number number\n" +
             "}\n");
 
+        //@formatter:off
         String source =
             "class C implements T {\n" +
             "  void meth() {\n" +
             "    number = 42\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "number", "T");
         assertExprType(source, "number", "java.lang.Number");
@@ -285,12 +317,14 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  Number number\n" +
             "}\n");
 
+        //@formatter:off
         String source =
             "class C implements T {\n" +
             "  void meth() {\n" +
             "    def n = getNumber()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "getNumber", "T");
         assertExprType(source, "getNumber", "java.lang.Number");
@@ -303,12 +337,14 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "  Number number\n" +
             "}\n");
 
+        //@formatter:off
         String source =
             "class C implements T {\n" +
             "  void meth() {\n" +
             "    setNumber(42)\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "setNumber", "T");
         assertExprType(source, "setNumber", "java.lang.Void");
@@ -318,6 +354,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicMethod1() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  boolean check() {\n" +
@@ -329,6 +366,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -336,6 +374,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicMethod2() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  void method() {}\n" +
@@ -348,6 +387,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    method()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -355,6 +395,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicMethod3() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  void method() {}\n" +
@@ -367,6 +408,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    A.super.method()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -374,6 +416,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicMethod4() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  void method() {}\n" +
@@ -386,6 +429,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    B.super.method()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
@@ -393,6 +437,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticMethod1() {
+        //@formatter:off
         String contents =
             "trait T {\n" +
             "  static m() {}\n" +
@@ -401,6 +446,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    m()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
@@ -411,6 +457,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticMethod2() {
+        //@formatter:off
         String contents =
             "trait T {\n" +
             "  static m() {}\n" +
@@ -422,6 +469,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    m()\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
@@ -435,6 +483,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticMethod3() {
+        //@formatter:off
         String contents =
             "trait T {\n" +
             "  static m() {}\n" +
@@ -443,6 +492,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n" +
             "T.m()\n" +
             "C.m()\n";
+        //@formatter:on
 
         int offset = contents.indexOf("T.m()") + 2;
         assertUnknownConfidence(contents, offset, offset + 1);
@@ -451,8 +501,27 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + 1, "T");
     }
 
+    @Test
+    public void testPublicStaticMethod4() {
+        //@formatter:off
+        String contents =
+            "trait T {\n" +
+            "  static m() { 'T' }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  def m() { 'C' }\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "}\n" +
+            "print new D().m()\n";
+        //@formatter:on
+
+        assertDeclType(contents, "m", "T");
+    }
+
     @Test // https://issues.apache.org/jira/browse/GROOVY-8272
     public void testPublicStaticSuperMethod1() {
+        //@formatter:off
         String source =
             "trait Checkable {\n" +
             "  static boolean check() {\n" +
@@ -466,6 +535,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Checkable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -473,6 +543,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticSuperMethod2() {
+        //@formatter:off
         String source =
             "trait Checkable {\n" +
             "  static boolean check() {\n" +
@@ -486,6 +557,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Checkable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -493,6 +565,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicField1() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  public String field\n" +
@@ -500,6 +573,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");
@@ -507,6 +581,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicField2() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  public String field\n" +
@@ -516,6 +591,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    T__field\n" +
             "  }\n" +
             "}";
+        //@formatter:on
 
         assertDeclType(source, "T__field", "T");
         assertExprType(source, "T__field", "java.lang.String");
@@ -523,6 +599,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticField() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  public static String field\n" +
@@ -530,6 +607,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");
@@ -537,6 +615,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPublicStaticFinalField() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  public static final String field = 'value'\n" +
@@ -544,6 +623,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");
@@ -553,6 +633,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateMethod1() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  private boolean check() {\n" +
@@ -564,6 +645,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -571,6 +653,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateMethod2() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  private void method() {}\n" +
@@ -583,6 +666,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    method()\n" +
             "  }\n" +
             "}";
+        //@formatter:on
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -590,6 +674,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateMethod3() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  private void method() {}\n" +
@@ -602,6 +687,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    A.super.method()\n" +
             "  }\n" +
             "}";
+        //@formatter:on
 
         assertDeclType(contents, "method", "A");
         assertExprType(contents, "method", "java.lang.Void");
@@ -609,6 +695,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateMethod4() {
+        //@formatter:off
         String contents =
             "trait A {\n" +
             "  private void method() {}\n" +
@@ -621,6 +708,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    B.super.method()\n" +
             "  }\n" +
             "}";
+        //@formatter:on
 
         assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
@@ -628,6 +716,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8854
     public void testPrivateStaticMethod() {
+        //@formatter:off
         String source =
             "trait Auditable {\n" +
             "  private static boolean check() {\n" +
@@ -639,6 +728,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "check", "Auditable");
         assertExprType(source, "check", "java.lang.Boolean");
@@ -646,6 +736,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateField1() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  private String field\n" +
@@ -653,6 +744,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");
@@ -660,6 +752,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateField2() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  private String field\n" +
@@ -669,6 +762,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    T__field\n" +
             "  }\n" +
             "}";
+        //@formatter:on
 
         assertDeclType(source, "T__field", "T");
         assertExprType(source, "T__field", "java.lang.String");
@@ -676,6 +770,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateStaticField() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  private static String field\n" +
@@ -683,6 +778,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");
@@ -690,6 +786,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testPrivateStaticFinalField() {
+        //@formatter:off
         String source =
             "trait T {\n" +
             "  private static final String field = 'value'\n" +
@@ -697,6 +794,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "    field\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
 
         assertDeclType(source, "field", "T");
         assertExprType(source, "field", "java.lang.String");

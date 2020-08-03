@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -86,7 +85,8 @@ public class GroovyClassScope extends ClassScope {
             return methodBindings;
         }
 
-        ReferenceBinding[] superInterfaces = Optional.ofNullable(typeBinding.superInterfaces).orElse(Binding.NO_SUPERINTERFACES);
+        ReferenceBinding[] superInterfaces = typeBinding.superInterfaces;
+        if (superInterfaces == null) superInterfaces = Binding.NO_SUPERINTERFACES;
 
         boolean implementsGroovyLangObject = false;
         for (ReferenceBinding face : superInterfaces) {
@@ -130,9 +130,7 @@ public class GroovyClassScope extends ClassScope {
         // create property accessors without resolving the types
         if (referenceContext instanceof GroovyTypeDeclaration) {
             for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
-                int modifiers = getModifiers(property);
-                if (Flags.isPackageDefault(modifiers)) continue;
-
+                int modifiers = getModifiers(property); if (Flags.isPackageDefault(modifiers)) continue;
                 String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
 
                 if (ClassHelper.boolean_TYPE.equals(property.getType())) {
@@ -160,11 +158,16 @@ public class GroovyClassScope extends ClassScope {
             if (traitHelper.isTrait(face)) {
                 ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
                 for (MethodBinding method : face.availableMethods()) {
-                    if (!method.isPrivate() && !method.isStatic() && isNotActuallyAbstract(method, helperBinding)) {
-                        if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // restore finality
+                    if (!method.isSynthetic() && isNotActuallyAbstract(method, helperBinding)) {
+                        if ((method.modifiers & ExtraCompilerModifiers.AccModifierProblem) != 0) { // Java 7: +static, -abstract
+                            method.modifiers ^= Flags.AccStatic | Flags.AccAbstract | ExtraCompilerModifiers.AccModifierProblem;
+                        }
+                        if ((method.modifiers & ExtraCompilerModifiers.AccBlankFinal) != 0) { // +final
                             method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
                         }
-                        traitMethods.put(getMethodAsString(method), method);
+                        if (method.isPublic() || method.isStatic()) {
+                            traitMethods.put(getMethodAsString(method), method);
+                        }
                     }
                 }
             }
@@ -182,25 +185,40 @@ public class GroovyClassScope extends ClassScope {
             }
             for (MethodBinding method : methodBindings) {
                 if (!method.isConstructor()) {
-                    canBeOverridden.remove(getMethodAsString(method));
+                    String signature = getMethodAsString(method);
+                    canBeOverridden.remove(signature);
+                    traitMethods.remove(signature);
                 }
             }
 
             for (String key : canBeOverridden) {
                 MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
+                    // the trait method overrides a superclass method
                     method = new MethodBinding(method, typeBinding);
                     method.modifiers &= ~Flags.AccAbstract;
+                    method.modifiers &= ~Flags.AccPrivate;
                     groovyMethods.add(method);
                 }
             }
 
             for (MethodBinding method : traitMethods.values()) {
-                method.modifiers &= ~Flags.AccAbstract;
+                if (!method.isStatic()) {
+                    method.modifiers &= ~Flags.AccAbstract;
+                } else {
+                    method = new MethodBinding(method, typeBinding);
+                    method.modifiers &= ~Flags.AccPrivate;
+                    groovyMethods.add(method);
+                }
             }
         }
 
-        return Stream.concat(Stream.of(methodBindings), groovyMethods.stream()).toArray(MethodBinding[]::new);
+        int m = methodBindings.length, n = m + groovyMethods.size();
+        MethodBinding[] methods = Arrays.copyOf(methodBindings, n);
+        for (int i = m, j = 0; i < n; i += 1, j += 1) {
+            methods[i] = groovyMethods.get(j);
+        }
+        return methods;
     }
 
     private int getModifiers(final PropertyNode property) {
@@ -432,6 +450,8 @@ public class GroovyClassScope extends ClassScope {
     @Override
     public boolean shouldReport(final int problem) {
         switch (problem) {
+        case IProblem.CannotOverrideAStaticMethodWithAnInstanceMethod:
+        case IProblem.CannotHideAnInstanceMethodWithAStaticMethod:
         case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.MissingValueForAnnotationMember:

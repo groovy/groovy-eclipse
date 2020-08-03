@@ -1304,11 +1304,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 });
                             }
                         }
-                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
 
-                        if (fieldDeclarations.add(fieldDeclaration)) {
-                            unitDeclaration.sourceEnds.put(fieldDeclaration, fieldDeclaration.sourceEnd);
-                        }
+                        fieldDeclarations.add(fieldDeclaration);
+                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
+                        unitDeclaration.sourceEnds.put(fieldDeclaration, fieldDeclaration.sourceEnd);
                     }
                 }
             }
@@ -1434,11 +1433,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (isEnum && methodNode.isSynthetic()) {
                         continue;
                     }
-                    if (isTrait && (!methodNode.isPublic() || methodNode.isStatic() || methodNode.isDefault())) {
+                    if (isTrait && (!methodNode.isPublic() || methodNode.isDefault())) {
                         continue;
                     }
 
-                    AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                    AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, methodNode);
                     if (methodDeclarations.add(methodDecl)) {
                         unitDeclaration.sourceEnds.put(methodDecl, methodNode.getNameEnd());
                     }
@@ -1450,9 +1449,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         methodNode.getCode().visit(new LocalVariableFinder(variables));
                         if (!variables.isEmpty()) methodDecl.statements = createStatements(variables.values());
                     }
+
+                    if (isTrait && methodNode.isFinal()) {
+                        methodDecl.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
+                    } else if (isTrait && methodNode.isStatic()) {
+                        if (unitDeclaration.compilerOptions.targetJDK >= ClassFileConstants.JDK9) {
+                            methodDecl.modifiers ^= Flags.AccPublic | Flags.AccPrivate; // hide from JDT
+                        } else if (unitDeclaration.compilerOptions.targetJDK < ClassFileConstants.JDK1_8) {
+                            methodDecl.modifiers ^= Flags.AccStatic | ExtraCompilerModifiers.AccModifierProblem;
+                        }
+                    }
+
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
-                            AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                            AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, methodNode);
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;
@@ -1478,7 +1488,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Create a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
-        private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum, MethodNode methodNode) {
+        private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, MethodNode methodNode) {
             if (classNode.isAnnotationDefinition()) {
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
@@ -2361,9 +2371,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             if (node.getCode() == null) {
                 modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
-            }
-            if (node.isFinal() && isTrait(node.getDeclaringClass())) {
-                modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
             }
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;

@@ -7975,6 +7975,15 @@ public void signalNoImplicitStringConversionForCharArrayExpression(Expression ex
 		expression.sourceEnd);
 }
 public void staticAndInstanceConflict(MethodBinding currentMethod, MethodBinding inheritedMethod) {
+	// GROOVY add
+	if (currentMethod.declaringClass instanceof SourceTypeBinding) {
+		SourceTypeBinding stb = (SourceTypeBinding) currentMethod.declaringClass;
+		if (stb.scope != null && !stb.scope.shouldReport(currentMethod.isStatic()
+				? IProblem.CannotHideAnInstanceMethodWithAStaticMethod : IProblem.CannotOverrideAStaticMethodWithAnInstanceMethod)) {
+			return;
+		}
+	}
+	// GROOVY end
 	if (currentMethod.isStatic())
 		this.handle(
 			// This static method cannot hide the instance method from %1

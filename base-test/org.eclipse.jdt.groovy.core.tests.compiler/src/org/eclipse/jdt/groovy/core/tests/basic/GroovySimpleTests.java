@@ -704,8 +704,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. ERROR in Script.groovy (at line 5)\r\n" +
-                "\tthis({ -> g() + getF()})\r\n" +
+                "1. ERROR in Script.groovy (at line 5)\n" +
+                "\tthis({ -> g() + getF()})\n" +
                 "\t          ^\n" +
                 "Groovy:Cannot reference 'g' before supertype constructor has been called.\n" +
                 "----------\n");
@@ -766,8 +766,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         } else {
             runNegativeTest(sources,
                 "----------\n" +
-                "1. ERROR in Script.groovy (at line 8)\r\n" +
-                "\tthis(new A(null).with { b = 42; return it })\r\n" +
+                "1. ERROR in Script.groovy (at line 8)\n" +
+                "\tthis(new A(null).with { b = 42; return it " + "})\n" +
                 "\t                        ^\n" +
                 "Groovy:Apparent variable 'b' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
                 "----------\n");
@@ -1964,6 +1964,42 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "The method iterator() of type new Iterable(){} should be tagged with @Override since it actually overrides a superinterface method\n" +
             "----------\n",
             options);
+    }
+
+    @Test
+    public void testOverriding_StaticMethodHidesInstanceMethod() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  def m() { 'C' }\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  static m() { 'D' }\n" +
+            "}\n" +
+            "print new D().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "D");
+    }
+
+    @Test
+    public void testOverriding_InstanceMethodCoversStaticMethod() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class C {\n" +
+            "  static m() { 'C' }\n" +
+            "}\n" +
+            "class D extends C {\n" +
+            "  def m() { 'D' }\n" +
+            "}\n" +
+            "print new D().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "D");
     }
 
     @Test

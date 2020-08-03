@@ -1116,7 +1116,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // public method of superclass overridden by static trait method
-    public void testTraits44a() {
+    public void testTraits45() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1127,23 +1127,17 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  def m() { 'C' }\n" +
             "}\n" +
             "class D extends C implements T {\n" +
+            // T.m overrides C.m
             "}\n" +
             "print new D().m()\n",
         };
         //@formatter:on
 
         runConformTest(sources, "T");
-//        runNegativeTest(sources,
-//            "----------\n" +
-//            "1. ERROR in Script.groovy (at line 7)\n" +
-//            "\tclass D extends C implements T {\n" +
-//            "\t      ^\n" +
-//            "This static method cannot hide the instance method from C\n" +
-//            "----------\n");
     }
 
     @Test // protected method of superclass overridden by trait method
-    public void testTraits45() {
+    public void testTraits46() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1154,6 +1148,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  protected def m() { 'C' }\n" +
             "}\n" +
             "class D extends C implements T {\n" +
+            // T.m overrides C.m
             "}\n" +
             "print new D().m()\n",
         };
@@ -1163,7 +1158,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // package-private method of superclass overridden by trait method
-    public void testTraits46() {
+    public void testTraits47() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1175,6 +1170,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  def m() { 'C' }\n" +
             "}\n" +
             "class D extends C implements T {\n" +
+            // T.m overrides C.m
             "}\n" +
             "print new D().m()\n",
         };
@@ -1183,30 +1179,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "T");
     }
 
-    @Test // Test protected method of superclass overriding by trait method - the same package
-    public void testTraits47() {
-        //@formatter:off
-        String[] sources = {
-            "Script.groovy",
-            "def myClass = new a.MyClass()\n" +
-            "print myClass.m()\n",
-
-            "Stuff.groovy",
-            "package a\n" +
-            "trait MyTrait {\n" +
-            "  def m() { 'a' }\n" +
-            "}\n" +
-            "class MySuperClass {\n" +
-            "  protected def m() { 'b' }\n" +
-            "}\n" +
-            "class MyClass extends MySuperClass implements MyTrait {}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "a");
-    }
-
-    @Test // Test protected method of superclass overriding by trait method - different packages
+    @Test // method of superclass overridden by (different package) trait method
     public void testTraits48() {
         //@formatter:off
         String[] sources = {
@@ -1607,8 +1580,26 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "T");
     }
 
-    @Test @Ignore
+    @Test
     public void testTraits65() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static m() { 'T' }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  static m() { 'C' }\n" +
+            "}\n" +
+            "print C.m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "C");
+    }
+
+    @Test
+    public void testTraits66() {
         //@formatter:off
         String[] sources = {
             "Main.java",
@@ -1631,7 +1622,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTraits66() {
+    public void testTraits67() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1646,13 +1637,13 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTraits67() {
+    public void testTraits68() {
         //@formatter:off
         String[] sources = {
             "Main.java",
             "public class Main {\n" +
             "  public static void main(String[] args) {\n" +
-            "    System.out.prin(T.m());\n" +
+            "    System.out.print(T.m());\n" +
             "  }\n" +
             "}\n",
 
@@ -1663,13 +1654,48 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in Main.java (at line 3)\n" +
-            "\tSystem.out.prin(T.m());\n" +
-            "\t                  ^\n" +
-            "The method m() is undefined for the type T\n" +
-            "----------\n");
+        if (isAtLeastJava(JDK9)) {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.java (at line 3)\n" +
+                "\tSystem.out.print(T.m());\n" +
+                "\t                   ^\n" +
+                "The method m() from the type T is not visible\n" +
+                "----------\n");
+        } else if (isAtLeastJava(JDK8)) { // TODO: This is not ideal:
+            runConformTest(sources, "", "java.lang.NoSuchMethodError: T.m()Ljava/lang/Object;");
+        } else {
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Main.java (at line 3)\n" +
+                "\tSystem.out.print(T.m());\n" +
+                "\t                 ^^^^^\n" +
+                "Cannot make a static reference to the non-static method m() from the type T\n" +
+                "----------\n");
+        }
+    }
+
+    @Test
+    public void testTraits69() {
+        //@formatter:off
+        String[] sources = {
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.print(C.m());\n" +
+            "  }\n" +
+            "}\n",
+
+            "C.groovy",
+            "trait T {\n" +
+            "  static m() { 'T' }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "T");
     }
 
     @Test
