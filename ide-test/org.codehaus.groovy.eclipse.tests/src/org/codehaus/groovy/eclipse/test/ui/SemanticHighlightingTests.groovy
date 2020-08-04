@@ -499,6 +499,40 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('b)'), 1, PARAMETER))
     }
 
+    @Test // GROOVY-7363
+    void testSyntheticBridgeMethod() {
+        addJavaSource '''\
+            |public interface Face<T> {
+            |  T getItem();
+            |}
+            |'''.stripMargin(), 'Face'
+        addGroovySource '''\
+            |class Impl implements Face<Pogo> {
+            |  Pogo item = new Pogo()
+            |}
+            |'''.stripMargin(), 'Impl'
+        addGroovySource '''\
+            |class Pogo {
+            |  def prop
+            |}
+            |'''.stripMargin(), 'Pogo'
+
+        String contents = '''\
+            |@groovy.transform.TypeChecked
+            |void test(Impl impl) {
+            |  assert impl.item.prop != null
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('Impl'), 4, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('impl'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('impl'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('prop'), 4, FIELD))
+    }
+
     @Test
     void testMethodsAsProperties1() {
         String contents = '''\

@@ -213,4 +213,34 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test // GROOVY-7363: don't match bridge method
+    public void testTypeChecked10() {
+        //@formatter:off
+        String[] sources = {
+            "Face.java",
+            "public interface Face<T> {\n" +
+            "  T getItem();\n" +
+            "}\n",
+
+            "Impl.groovy",
+            "class Impl implements Face<Pogo> {\n" +
+            "  Pogo getItem() { new Pogo() }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "class Pogo {\n" +
+            "  def prop\n" +
+            "}\n",
+
+            "Test.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Impl impl) {\n" +
+            "  impl.item.prop\n" + // typeof(impl.item) is Pogo not T
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }
