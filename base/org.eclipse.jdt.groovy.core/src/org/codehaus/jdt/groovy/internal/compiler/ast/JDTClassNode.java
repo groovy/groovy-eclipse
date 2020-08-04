@@ -161,6 +161,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             synchronized (lazyInitLock) {
                 if (lazyInitDone || lazyInitStarted) return; lazyInitStarted = true;
 
+                if (jdtBinding instanceof SourceTypeBinding) {
+                    SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
+                    if (sourceTypeBinding.scope != null) {
+                        TypeDeclaration typeDecl = sourceTypeBinding.scope.referenceContext;
+                        if (typeDecl instanceof GroovyTypeDeclaration) {
+                            groovyTypeDecl = (GroovyTypeDeclaration) typeDecl;
+                        }
+                    }
+                }
+
                 // defer most type resolution, but some items are worth getting correct up front: super class, super interfaces
 
                 if (!jdtBinding.isInterface()) {
@@ -173,7 +183,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
                 if (superInterfaceBindings == null)
                     superInterfaceBindings = Binding.NO_SUPERINTERFACES;
-                int n = superInterfaceBindings.length;
+                final int n = superInterfaceBindings.length;
                 ClassNode[] interfaces = new ClassNode[n];
                 for (int i = 0; i < n; i += 1) {
                     interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
@@ -187,26 +197,12 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     private void initializeMembers() {
-        if (jdtBinding instanceof SourceTypeBinding) {
-            SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
-            if (sourceTypeBinding.scope != null) {
-                TypeDeclaration typeDecl = sourceTypeBinding.scope.referenceContext;
-                if (typeDecl instanceof GroovyTypeDeclaration) {
-                    groovyTypeDecl = (GroovyTypeDeclaration) typeDecl;
-                }
-            }
-        }
-
-        // We do this here rather than at the start of the method because
-        // the preceding code sets 'groovyDecl', later used to 'initializeProperties'.
-
-        // From this point onward... the code is only about initializing fields, constructors and methods.
         if (isRedirectNode()) {
-            // The code in ClassNode seems set up to get field information *always* from the end of the 'redirect' chain.
-            // So, the redirect target should be responsible for its own members initialisation.
+            // ClassNode is set up to get member information from the end of the "redirect" chain.
+            // So the redirect target should be responsible for initialization of its own members.
 
-            // If we initialize members here again, when redirect target is already
-            // initialised then we will be adding duplicated methods to the redirect target.
+            // If we initialize members here again, when redirect target is already initialized,
+            // then we will be adding duplicated methods to the redirect target.
 
             return;
         }
