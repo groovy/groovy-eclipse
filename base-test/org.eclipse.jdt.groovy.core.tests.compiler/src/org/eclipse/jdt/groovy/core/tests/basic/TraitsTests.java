@@ -2048,4 +2048,26 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "BAB");
     }
+
+    @Test
+    public void testTraits9673() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  void setProp(Number n) { print 'Number' }\n" +
+            "  void setProp(String s) { print 'String' }\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  void setProp(Object o) { print 'Object' }\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  void test() { A.super.prop = 'x' }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "String");
+    }
 }

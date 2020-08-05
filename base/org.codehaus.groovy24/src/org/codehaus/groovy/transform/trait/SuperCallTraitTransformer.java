@@ -110,7 +110,9 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                             setterCall.getMethod().setSourcePosition(leftPropertyExpression.getProperty());
                             setterCall.getObjectExpression().setSourcePosition(traitReceiver);
                             // GRECLIPSE end
+                            /* GRECLIPSE edit -- GROOVY-9673
                             setterCall.setMethodTarget(method);
+                            */
                             setterCall.setImplicitThis(false);
                             return setterCall;
                         }
