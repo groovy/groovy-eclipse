@@ -563,8 +563,11 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
 
         boolean exists = super.existsProperty(pexp, checkForReadOnly, receiverMemoizer);
         if (exists) {
+            // GRECLIPSE add
+            objectExpressionType = rType.get();
+            // GRECLIPSE end
             if (objectExpression.getNodeMetaData(PROPERTY_OWNER) == null) {
-                objectExpression.putNodeMetaData(PROPERTY_OWNER, rType.get());
+                objectExpression.putNodeMetaData(PROPERTY_OWNER, objectExpressionType);
             }
             if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(objectExpressionType, LIST_TYPE)) {
                 objectExpression.putNodeMetaData(COMPONENT_TYPE, inferComponentType(objectExpressionType, int_TYPE));
