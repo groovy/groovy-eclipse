@@ -63,11 +63,11 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
 
     @Override
     public Expression transform(final Expression exp) {
-        if (exp instanceof MethodCallExpression) {
-            return transformMethodCallExpression((MethodCallExpression)exp);
-        }
         if (exp instanceof BinaryExpression) {
             return transformBinaryExpression((BinaryExpression) exp);
+        }
+        if (exp instanceof MethodCallExpression) {
+            return transformMethodCallExpression((MethodCallExpression) exp);
         }
         return super.transform(exp);
     }
@@ -137,6 +137,10 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 // GRECLIPSE end
                 ArgumentListExpression newArgs = new ArgumentListExpression();
                 Expression arguments = exp.getArguments();
+                // GRECLIPSE add -- GROOVY-9672: no extra "this" argument for static method call
+                List<MethodNode> targets = receiver.getType().getMethods(exp.getMethodAsString());
+                if (targets.isEmpty() || !targets.stream().allMatch(m -> m.getOriginal().isStatic()))
+                // GRECLIPSE end
                 newArgs.addExpression(new VariableExpression("this"));
                 if (arguments instanceof TupleExpression) {
                     List<Expression> expressions = ((TupleExpression) arguments).getExpressions();

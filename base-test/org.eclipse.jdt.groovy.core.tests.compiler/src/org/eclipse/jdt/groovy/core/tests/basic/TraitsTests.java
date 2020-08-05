@@ -2023,4 +2023,29 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "C");
     }
+
+    @Test
+    public void testTraits9672() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  static m() { 'A' }\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  static m() { 'B' }\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  void test() {\n" +
+            "    print m()\n" +
+            "    print A.super.m()\n" +
+            "    print B.super.m()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "BAB");
+    }
 }
