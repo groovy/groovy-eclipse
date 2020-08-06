@@ -2008,6 +2008,50 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits9256() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  int proper = 42\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    { ->\n" +
+            "      print T.super.getProper()\n" +
+            "    }()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
+    public void testTraits9256a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  int proper = 42\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    { p = T.super.getProper() ->\n" +
+            "      print p\n" +
+            "    }()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test
     public void testTraits9386() {
         //@formatter:off
         String[] sources = {

@@ -28,11 +28,13 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.tools.ClosureUtils;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
 
@@ -66,6 +68,10 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
     public Expression transform(final Expression exp) {
         if (exp instanceof BinaryExpression) {
             return transformBinaryExpression((BinaryExpression) exp);
+        }
+        // GRECLIPSE add -- GROOVY-9256
+        if (exp instanceof ClosureExpression) {
+            return transformClosureExpression((ClosureExpression) exp);
         }
         // GRECLIPSE add -- GROOVY-9255
         if (exp instanceof PropertyExpression) {
@@ -132,6 +138,15 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
             }
         }
         return trn;
+    }
+
+    private Expression transformClosureExpression(final ClosureExpression exp) {
+        for (Parameter prm : ClosureUtils.getParametersSafe(exp)) {
+            Expression ini = transform(prm.getInitialExpression());
+            prm.setInitialExpression(ini);
+        }
+        visitClassCodeContainer(exp.getCode());
+        return super.transform(exp);
     }
 
     private Expression transformPropertyExpression(final PropertyExpression exp) {
