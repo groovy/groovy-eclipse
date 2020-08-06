@@ -233,7 +233,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "setNumber", "java.lang.Void");
     }
 
-    @Test
+    @Test // GROOVY-9255
     public void testProperty13() {
         //@formatter:off
         String source =
@@ -247,9 +247,8 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
 
-        // TODO: assertDeclType(source, "number", "T");
-        // TODO: assertExprType(source, "number", "java.lang.Number");
-        assertUnknownConfidence(source, source.lastIndexOf("number"), source.lastIndexOf("number") + "number".length());
+        assertDeclType(source, "number", "T");
+        assertExprType(source, "number", "java.lang.Number");
     }
 
     @Test

@@ -37,6 +37,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
@@ -68,6 +69,11 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
         if (exp instanceof BinaryExpression) {
             return transformBinaryExpression((BinaryExpression) exp);
         }
+        // GRECLIPSE add -- GROOVY-9255
+        if (exp instanceof PropertyExpression) {
+            return transformPropertyExpression((PropertyExpression) exp);
+        }
+        // GRECLIPSE end
         if (exp instanceof MethodCallExpression) {
             return transformMethodCallExpression((MethodCallExpression) exp);
         }
@@ -75,6 +81,10 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
     }
 
     private Expression transformBinaryExpression(final BinaryExpression exp) {
+        // GRECLIPSE add -- GROOVY-9255
+        if (Types.isAssignment(exp.getOperation().getType()))
+            exp.getLeftExpression().putNodeMetaData("assign.target", exp.getOperation());
+        // GRECLIPSE end
         Expression trn = super.transform(exp);
         if (trn instanceof BinaryExpression) {
             BinaryExpression bin = (BinaryExpression) trn;
@@ -99,7 +109,6 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                             );
                             setterCall.getObjectExpression().setSourcePosition(leftExpression.getObjectExpression());
                             setterCall.getMethod().setSourcePosition(leftExpression.getProperty());
-                            setterCall.setSpreadSafe(leftExpression.isSpreadSafe());
                             setterCall.setImplicitThis(false);
                             return setterCall;
                         }
@@ -108,6 +117,51 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
             }
         }
         return trn;
+    }
+
+    private Expression transformPropertyExpression(final PropertyExpression exp) {
+        if (exp.getNodeMetaData("assign.target") == null) {
+            ClassNode traitType = getTraitSuperTarget(exp.getObjectExpression());
+            if (traitType != null) {
+                ClassNode helperType = getHelper(traitType);
+                // TraitType.super.foo -> TraitType$Helper.getFoo(this)
+
+                Function<MethodNode, MethodCallExpression> makeCall = (methodNode) -> {
+                    MethodCallExpression methodCall = new MethodCallExpression(
+                            new ClassExpression(helperType),
+                            methodNode.getName(),
+                            new ArgumentListExpression(
+                                    new VariableExpression("this")
+                            )
+                    );
+                    methodCall.getObjectExpression().setSourcePosition(((PropertyExpression) exp.getObjectExpression()).getObjectExpression());
+                    methodCall.getMethod().setSourcePosition(exp.getProperty());
+                    methodCall.setMethodTarget(methodNode);
+                    methodCall.setImplicitThis(false);
+                    return methodCall;
+                };
+
+                String getterName = MetaProperty.getGetterName(exp.getPropertyAsString(), null);
+                for (MethodNode method : helperType.getMethods(getterName)) {
+                    if (method.isStatic() && method.getParameters().length == 1
+                            && method.getParameters()[0].getType().equals(traitType)
+                            && !method.getReturnType().equals(ClassHelper.VOID_TYPE)) {
+                        return makeCall.apply(method);
+                    }
+                }
+
+                String isserName = "is" + getterName.substring(3);
+                for (MethodNode method : helperType.getMethods(isserName)) {
+                    if (method.isStatic() && method.getParameters().length == 1
+                            && method.getParameters()[0].getType().equals(traitType)
+                            && method.getReturnType().equals(ClassHelper.boolean_TYPE)) {
+                        return makeCall.apply(method);
+                    }
+                }
+            }
+        }
+        exp.removeNodeMetaData("assign.target");
+        return super.transform(exp);
     }
 
     private Expression transformMethodCallExpression(final MethodCallExpression exp) {

@@ -1946,7 +1946,69 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTrait9386() {
+    public void testTraits9255() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def proper = 'value'\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testTraits9255a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  boolean isProper() {}\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "false");
+    }
+
+    @Test
+    public void testTraits9255b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def proper = 'value'\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    T.super.proper += 's'\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        // TODO: runConformTest(sources, "values");
+        runConformTest(sources, "", "groovy.lang.MissingPropertyException: No such property: super for class: T");
+    }
+
+    @Test
+    public void testTraits9386() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
