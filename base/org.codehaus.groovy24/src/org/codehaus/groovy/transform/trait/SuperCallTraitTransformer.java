@@ -33,7 +33,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
 
@@ -41,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
 import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
 import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
@@ -106,16 +106,25 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                     TraitHelpersTuple helpers = Traits.findHelpers(traitReceiver);
                     ClassNode helper = helpers.getHelper();
                     */
-                    ClassNode helper = Traits.findHelper(traitReceiver).getPlainNodeReference();
+                    ClassNode helper = getHelper(traitReceiver);
                     // GRECLIPSE end
                     String setterName = MetaProperty.getSetterName(leftPropertyExpression.getPropertyAsString());
                     List<MethodNode> methods = helper.getMethods(setterName);
                     for (MethodNode method : methods) {
                         Parameter[] parameters = method.getParameters();
-                        if (parameters.length==2 && parameters[0].getType().equals(traitReceiver)) {
+                        // GRECLIPSE edit -- GROOVY-9672
+                        //if (parameters.length==2 && parameters[0].getType().equals(traitReceiver)) {
+                        if (parameters.length == 2 && isSelfType(parameters[0], traitReceiver)) {
+                        // GRECLIPSE end
                             ArgumentListExpression args = new ArgumentListExpression(
+                                    /* GRECLIPSE edit -- GROOVY-9672
                                     new VariableExpression("this"),
                                     transform(exp.getRightExpression())
+                                    */
+                                    parameters[0].getType().equals(ClassHelper.CLASS_Type)
+                                        ? thisPropX(false, "class") : varX("this"),
+                                    bin.getRightExpression()
+                                    // GRECLIPSE end
                             );
                             MethodCallExpression setterCall = new MethodCallExpression(
                                     new ClassExpression(helper),
@@ -155,14 +164,15 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
             ClassNode traitType = classExpression.getType();
             if (traitType != null) {
                 ClassNode helperType = getHelper(traitType);
-                // TraitType.super.foo -> TraitType$Helper.getFoo(this)
+                // TraitType.super.foo -> TraitType$Trait$Helper.getFoo(this)
 
                 Function<MethodNode, MethodCallExpression> makeCall = (methodNode) -> {
                     MethodCallExpression methodCall = new MethodCallExpression(
                             new ClassExpression(helperType),
                             methodNode.getName(),
                             new ArgumentListExpression(
-                                    new VariableExpression("this")
+                                    methodNode.getParameters()[0].getType().equals(ClassHelper.CLASS_Type)
+                                        ? thisPropX(false, "class") : varX("this")
                             )
                     );
                     methodCall.getObjectExpression().setSourcePosition(classExpression);
@@ -175,7 +185,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 String getterName = MetaProperty.getGetterName(exp.getPropertyAsString(), null);
                 for (MethodNode method : helperType.getMethods(getterName)) {
                     if (method.isStatic() && method.getParameters().length == 1
-                            && method.getParameters()[0].getType().equals(traitType)
+                            && isSelfType(method.getParameters()[0], traitType)
                             && !method.getReturnType().equals(ClassHelper.VOID_TYPE)) {
                         return makeCall.apply(method);
                     }
@@ -184,7 +194,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 String isserName = "is" + getterName.substring(3);
                 for (MethodNode method : helperType.getMethods(isserName)) {
                     if (method.isStatic() && method.getParameters().length == 1
-                            && method.getParameters()[0].getType().equals(traitType)
+                            && isSelfType(method.getParameters()[0], traitType)
                             && method.getReturnType().equals(ClassHelper.boolean_TYPE)) {
                         return makeCall.apply(method);
                     }
@@ -208,13 +218,17 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                 // GRECLIPSE add
                 receiver.setSourcePosition(traitReceiver);
                 // GRECLIPSE end
+                /* GRECLIPSE edit -- GROOVY-9672
                 ArgumentListExpression newArgs = new ArgumentListExpression();
-                Expression arguments = exp.getArguments();
-                // GRECLIPSE add -- GROOVY-9672: no extra "this" argument for static method call
-                List<MethodNode> targets = receiver.getType().getMethods(exp.getMethodAsString());
-                if (targets.isEmpty() || !targets.stream().allMatch(m -> m.getOriginal().isStatic()))
-                // GRECLIPSE end
                 newArgs.addExpression(new VariableExpression("this"));
+                */
+                List<MethodNode> targets = receiver.getType().getMethods(exp.getMethodAsString());
+                boolean isStatic = !targets.isEmpty() && targets.stream().map(MethodNode::getParameters)
+                    .allMatch(params -> params.length > 0 && params[0].getType().equals(ClassHelper.CLASS_Type));
+                ArgumentListExpression newArgs = new ArgumentListExpression(
+                        isStatic ? thisPropX(false, "class") : varX("this"));
+                // GRECLIPSE end
+                Expression arguments = exp.getArguments();
                 if (arguments instanceof TupleExpression) {
                     List<Expression> expressions = ((TupleExpression) arguments).getExpressions();
                     for (Expression expression : expressions) {
@@ -284,4 +298,20 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
         }
         return false;
     }
+
+    // GRECLIPSE add
+    private static boolean isSelfType(final Parameter parameter, final ClassNode traitType) {
+        ClassNode paramType = parameter.getType();
+        if (paramType.equals(traitType)) return true;
+        return paramType.equals(ClassHelper.CLASS_Type)
+                && paramType.getGenericsTypes() != null
+                && paramType.getGenericsTypes()[0].getType().equals(traitType);
+    }
+
+    private static PropertyExpression thisPropX(final boolean implicitThis, final String propertyName) {
+        PropertyExpression pexp = new PropertyExpression(varX("this"), propertyName);
+        pexp.setImplicitThis(implicitThis);
+        return pexp;
+    }
+    // GRECLIPSE end
 }

@@ -1744,6 +1744,111 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "");
     }
 
+    @Test @Ignore
+    public void testTraits7288() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  String STATIC = 'const'\n" +
+            "  def so() {\n" +
+            "    print \"STATIC=${STATIC}\"\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  def m() {\n" +
+            "    print 'works'\n" +
+            "  }\n" +
+            "}\n" +
+            "class D {\n" + // The class 'D' must be declared abstract or the method 'java.lang.String T__STATIC$get()' must be implemented
+            "  @Delegate C delegates = new C()\n" +
+            "}\n" +
+            "new D().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test @Ignore
+    public void testTraits7293() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  long traitLongComputation(int seed) {\n" +
+            "    System.nanoTime()\n" +
+            "  }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  @groovy.transform.Memoized\n" +
+            "  long classLongComputation(int seed) {\n" +
+            "    System.nanoTime()\n" +
+            "  }\n" +
+            "}\n" +
+            "def ct = new C() as T\n" +
+            "assert ct.classLongComputation(1) == ct.classLongComputation(1)\n"+
+            "assert ct.traitLongComputation(1) == ct.traitLongComputation(1)\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTraits7399() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "class Bar implements FooTrait {\n" +
+            "  def whoAmI() { \"It's Bar\" }\n" +
+            "}\n" +
+            "class Foo {\n" +
+            "  def whoAmI() { \"It's Foo\" }\n" +
+            "}\n" +
+            "trait FooTrait {\n" +
+            "  Foo f = new Foo()\n" +
+            "  def hiFoo() {\n" +
+            "    f.with {\n" +
+            "      whoAmI()\n" + // Is it Foo or Bar?
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "def b = new Bar()\n" +
+            "assert b.hiFoo() == b.f.whoAmI()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test @Ignore
+    public void testTraits7439() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@Grab('org.slf4j:slf4j-simple:1.7.30')\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "import groovy.util.logging.Slf4j\n" +
+            "\n" +
+            "@CompileStatic @Slf4j('LOG')\n" +
+            "trait T {\n" +
+//            "  static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(this)\n" +
+//            "  static org.slf4j.Logger getLOG() { ??? }\n" +
+            "  void m() {\n" +
+            "    LOG.debug('works')\n" + // Cannot find matching method java.lang.Object#debug(java.lang.String)
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
     @Test
     public void testTraits7456() {
         //@formatter:off
@@ -1759,8 +1864,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}\n" +
             "class C implements T {\n" +
             "}\n" +
-            "def c = new C()\n" +
-            "assert c.f() == ['A']\n",
+            "assert new C().f() == ['A']\n",
         };
         //@formatter:on
 
@@ -1824,6 +1928,55 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits7759() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  @Lazy String x = { -> 'works' }()\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "print new C().getX()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testTraits7843() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "trait T {\n" +
+            "  void m(Closure block) {\n" +
+            "    block.call()\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "trait U extends T {\n" +
+            "  void threeDeep() {\n" +
+            "    m {\n" +
+            "      m {\n" +
+            "        m {\n" +
+            "          print 'works'\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements U {\n" +
+            "}\n" +
+            "new C().threeDeep()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testTraits7909() {
         //@formatter:off
         String[] sources = {
@@ -1853,6 +2006,102 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "OneTwoThreeFour");
+    }
+
+    @Test
+    public void testTraits8049() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "interface Foo {\n" +
+            "  String getBar()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "trait T {\n" +
+            "  abstract Foo getFoo()\n" +
+            "  def m() {\n" +
+            "    foo.with {\n" +
+            "      bar.toUpperCase()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C implements T {\n" +
+            "  Foo foo = { -> 'works' } as Foo\n" +
+            "}\n" +
+            "print new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "WORKS");
+    }
+
+    @Test @Ignore // see also GROOVY-7950
+    public void testTraits8219() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def x = 42\n" +
+            "}\n" +
+            "@groovy.transform.TupleConstructor(includeFields=true)\n" +
+            "class A implements T {\n" +
+            "  def a\n" +
+            "  private b\n" +
+            "}\n" +
+            "print new A().x\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "42");
+    }
+
+    @Test @Ignore
+    public void testTraits8587() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  def m() {\n" +
+            "    'A'\n" +
+            "  }\n" +
+            "}\n" +
+            "trait B extends A {\n" +
+            "}\n" +
+            "class C implements B {\n" +
+            "  @Override\n" +
+            "  def m() {\n" +
+            "    B.super.m()\n" + // MissingMethodException: No signature of method: static B.m() is applicable for argument types: (C) values: [C@8bd6f15]
+            "  }\n" +
+            "}\n" +
+            "print new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
+    public void testTraits8820() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  def m() {\n" +
+            "    String[] strings = []\n" +
+            "    strings.with {\n" +
+            "      length\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "}\n" +
+            "print new C().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "0");
     }
 
     @Test @Ignore
@@ -2153,6 +2402,150 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "BAB");
+    }
+
+    @Test
+    public void testTraits9672a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static getProper() { 'value' }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testTraits9672b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static proper = 'value'\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testTraits9672c() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static boolean isProper() { true }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testTraits9672d() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static boolean proper = true\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    print T.super.proper\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "true");
+    }
+
+    @Test
+    public void testTraits9672e() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static setProper(value) { print value }\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    T.super.proper = 'value'\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testTraits9672f() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait T {\n" +
+            "  static proper\n" +
+            "}\n" +
+            "class C implements T {\n" +
+            "  void test() {\n" +
+            "    T.super.proper = 'value'\n" +
+            "    print getProper()\n" +
+            "  }\n" +
+            "}\n" +
+            "new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "value");
+    }
+
+    @Test
+    public void testTraits9672g() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  static setProper(value) { 'A' }\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  static setProper(value) { 'B' }\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  def test() {\n" +
+            "    A.super.proper = 'value'\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C().test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "A");
     }
 
     @Test
