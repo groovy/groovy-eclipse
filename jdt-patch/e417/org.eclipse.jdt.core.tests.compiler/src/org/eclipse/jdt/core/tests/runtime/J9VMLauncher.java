@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,7 +15,8 @@ package org.eclipse.jdt.core.tests.runtime;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jdt.core.tests.util.Util;
 
@@ -29,7 +30,6 @@ import org.eclipse.jdt.core.tests.util.Util;
  * must also be specified. This port is used for the communication between the
  * Proxy and the VM.
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class J9VMLauncher extends LocalVMLauncher {
 	int internalDebugPort = -1;
 	String proxyOutFile;
@@ -93,10 +93,10 @@ protected Process execCommandLine() throws TargetException {
  */
 @Override
 public String[] getCommandLine() {
-	Vector commandLine = new Vector();
+	List<String> commandLine = new ArrayList<>();
 
 	// VM binary
-	commandLine.addElement(
+	commandLine.add(
 		this.vmPath +
 		(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
 		"bin" +
@@ -106,53 +106,53 @@ public String[] getCommandLine() {
 	// VM arguments
 	if (this.vmArguments != null) {
 		for (int i = 0; i < this.vmArguments.length; i++) {
-			commandLine.addElement(this.vmArguments[i]);
+			commandLine.add(this.vmArguments[i]);
 		}
 	}
 
 	// debug mode
 	if (this.debugPort != -1 && this.internalDebugPort != -1) {
-		commandLine.addElement("-debug:" + this.internalDebugPort);
+		commandLine.add("-debug:" + this.internalDebugPort);
 	}
 
 	// boot class path
-	commandLine.addElement("-Xbootclasspath:" + buildBootClassPath());
+	commandLine.add("-Xbootclasspath:" + buildBootClassPath());
 
 	// regular class path
-	commandLine.addElement("-classpath");
-	commandLine.addElement(buildClassPath());
+	commandLine.add("-classpath");
+	commandLine.add(buildClassPath());
 
 	// code snippet runner class
 	if (this.evalPort != -1) {
-		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
+		commandLine.add(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
 
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
-		commandLine.addElement(EVALPORT_ARG);
-		commandLine.addElement(Integer.toString(this.evalPort));
+		commandLine.add(EVALPORT_ARG);
+		commandLine.add(Integer.toString(this.evalPort));
 		if (TARGET_HAS_FILE_SYSTEM) {
-			commandLine.addElement(CODESNIPPET_CLASSPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
-			commandLine.addElement(CODESNIPPET_BOOTPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_CLASSPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_BOOTPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
 		}
 	}
 
 	// program class
 	if (this.programClass != null) {
-		commandLine.addElement(this.programClass);
+		commandLine.add(this.programClass);
 	}
 
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
-			commandLine.addElement(this.programArguments[i]);
+			commandLine.add(this.programArguments[i]);
 		}
 	}
 
 	String[] result= new String[commandLine.size()];
-	commandLine.copyInto(result);
+	commandLine.toArray(result);
 
 	// check for spaces in result
 	for (int i = 0; i < result.length; i++) {
@@ -177,10 +177,10 @@ public int getInternalDebugPort() {
  * Returns the command line which will be used to launch the Proxy.
  */
 public String[] getProxyCommandLine() {
-	Vector commandLine = new Vector();
+	List<String> commandLine = new ArrayList<>();
 
 	// Proxy binary
-	commandLine.addElement(
+	commandLine.add(
 		this.vmPath +
 		(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
 		"bin" +
@@ -188,14 +188,14 @@ public String[] getProxyCommandLine() {
 		"j9proxy");
 
 	// Arguments
-	commandLine.addElement(getTargetAddress() + ":" + this.internalDebugPort);
-	commandLine.addElement(Integer.toString(this.debugPort));
+	commandLine.add(getTargetAddress() + ":" + this.internalDebugPort);
+	commandLine.add(Integer.toString(this.debugPort));
 	if (this.symbolPath != null && this.symbolPath != "") {
-		commandLine.addElement(this.symbolPath);
+		commandLine.add(this.symbolPath);
 	}
 
 	String[] result= new String[commandLine.size()];
-	commandLine.copyInto(result);
+	commandLine.toArray(result);
 	return result;
 }
 /**
@@ -246,9 +246,9 @@ public LocalVirtualMachine launch() throws TargetException {
 
 	// Transform launched VM into J9 VM
 	Process vmProcess = localVM.process;
-	this.runningVMs.removeElement(localVM);
+	this.runningVMs.remove(localVM);
 	J9VirtualMachine vm= new J9VirtualMachine(vmProcess, this.debugPort, this.evalTargetPath, proxyProcess, this.proxyOutFile);
-	this.runningVMs.addElement(vm);
+	this.runningVMs.add(vm);
 	return vm;
 }
 /* (non-Javadoc)

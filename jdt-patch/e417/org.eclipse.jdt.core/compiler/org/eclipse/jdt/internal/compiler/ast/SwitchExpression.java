@@ -302,6 +302,7 @@ public class SwitchExpression extends SwitchStatement implements IPolyExpression
 	public void loadStoredTypesAndKeep(CodeStream codeStream) {
 		List<LocalVariableBinding> tos = this.typesOnStack;
 		int sz = tos != null ? tos.size() : 0;
+		codeStream.clearTypeBindingStack();
 		int index = sz - 1;
 		while (index >= 0) {
 			LocalVariableBinding lvb = tos.get(index--);

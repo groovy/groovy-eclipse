@@ -785,7 +785,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 		throw new ShouldNotImplement(Messages.ast_missingCode);
 	}
 }
-public void initializePatternVariables(BlockScope scope, CodeStream codeStream) {
+public void addPatternVariables(BlockScope scope, CodeStream codeStream) {
 	// Nothing by default
 }
 public boolean containsPatternVariable() {

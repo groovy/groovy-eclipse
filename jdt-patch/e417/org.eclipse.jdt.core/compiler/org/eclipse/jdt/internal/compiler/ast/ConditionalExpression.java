@@ -448,10 +448,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	}
 
 	@Override
-	public void initializePatternVariables(BlockScope scope, CodeStream codeStream) {
-		this.condition.initializePatternVariables(scope, codeStream);
-		this.valueIfTrue.initializePatternVariables(scope, codeStream);
-		this.valueIfFalse.initializePatternVariables(scope, codeStream);
+	public void addPatternVariables(BlockScope scope, CodeStream codeStream) {
+		this.condition.addPatternVariables(scope, codeStream);
+		this.valueIfTrue.addPatternVariables(scope, codeStream);
+		this.valueIfFalse.addPatternVariables(scope, codeStream);
 	}
 
 	@Override

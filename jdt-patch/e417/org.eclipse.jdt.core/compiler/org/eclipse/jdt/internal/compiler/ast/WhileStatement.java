@@ -193,7 +193,7 @@ public class WhileStatement extends Statement {
 			return;
 		}
 		if (this.condition != null && this.condition.containsPatternVariable()) {
-			this.condition.initializePatternVariables(currentScope, codeStream);
+			this.condition.addPatternVariables(currentScope, codeStream);
 		}
 		int pc = codeStream.position;
 		Constant cst = this.condition.optimizedBooleanConstant();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -1515,7 +1515,7 @@ private boolean checkClassLiteralAccess() {
 	}
 	return false;
 }
-private boolean checkKeyword() {
+private boolean checkKeywordAndRestrictedIdentifiers() {
 	if (this.currentElement instanceof RecoveredUnit) {
 		RecoveredUnit unit = (RecoveredUnit) this.currentElement;
 		if (unit.unitDeclaration.isModuleInfo()) return false;
@@ -1526,18 +1526,18 @@ private boolean checkKeyword() {
 			char[] ident = this.identifierStack[ptr];
 			long pos = this.identifierPositionStack[ptr];
 
-			char[][] keywords = new char[Keywords.COUNT][];
+			char[][] keywordsAndRestrictedIndentifiers = new char[Keywords.COUNT+RestrictedIdentifiers.COUNT][];
 			int count = 0;
 			if(unit.typeCount == 0
 				&& (!this.compilationUnit.isPackageInfo() || this.compilationUnit.currentPackage != null)
 				&& this.lastModifiers == ClassFileConstants.AccDefault) {
-				keywords[count++] = Keywords.IMPORT;
+				keywordsAndRestrictedIndentifiers[count++] = Keywords.IMPORT;
 			}
 			if(unit.typeCount == 0
 				&& unit.importCount == 0
 				&& this.lastModifiers == ClassFileConstants.AccDefault
 				&& this.compilationUnit.currentPackage == null) {
-				keywords[count++] = Keywords.PACKAGE;
+				keywordsAndRestrictedIndentifiers[count++] = Keywords.PACKAGE;
 			}
 			if (!this.compilationUnit.isPackageInfo()) {
 				if((this.lastModifiers & ClassFileConstants.AccPublic) == 0) {
@@ -1548,31 +1548,34 @@ private boolean checkKeyword() {
 						}
 					}
 					if(hasNoPublicType) {
-						keywords[count++] = Keywords.PUBLIC;
+						keywordsAndRestrictedIndentifiers[count++] = Keywords.PUBLIC;
 					}
 				}
 				if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
 					&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-					keywords[count++] = Keywords.ABSTRACT;
+					keywordsAndRestrictedIndentifiers[count++] = Keywords.ABSTRACT;
 				}
 				if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
 					&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-					keywords[count++] = Keywords.FINAL;
+					keywordsAndRestrictedIndentifiers[count++] = Keywords.FINAL;
 				}
 
-				keywords[count++] = Keywords.CLASS;
+				keywordsAndRestrictedIndentifiers[count++] = Keywords.CLASS;
 				if (this.options.complianceLevel >= ClassFileConstants.JDK1_5) {
-					keywords[count++] = Keywords.ENUM;
+					keywordsAndRestrictedIndentifiers[count++] = Keywords.ENUM;
+				}
+				if((this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
+					keywordsAndRestrictedIndentifiers[count++] = Keywords.INTERFACE;
+				}
+				if (this.options.complianceLevel >= ClassFileConstants.JDK14 && this.options.enablePreviewFeatures == true) {
+					keywordsAndRestrictedIndentifiers[count++] = RestrictedIdentifiers.RECORD;
 				}
 
-				if((this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-					keywords[count++] = Keywords.INTERFACE;
-				}
 			}
 			if(count != 0) {
-				System.arraycopy(keywords, 0, keywords = new char[count][], 0, count);
+				System.arraycopy(keywordsAndRestrictedIndentifiers, 0, keywordsAndRestrictedIndentifiers = new char[count][], 0, count);
 
-				this.assistNode = new CompletionOnKeyword2(ident, pos, keywords);
+				this.assistNode = new CompletionOnKeyword2(ident, pos, keywordsAndRestrictedIndentifiers);
 				this.lastCheckPoint = this.assistNode.sourceEnd + 1;
 				this.isOrphanCompletionNode = true;
 				return true;
@@ -2182,7 +2185,8 @@ public void completionIdentifierCheck(){
 	//if (assistNode != null) return;
 
 	if (checkMemberValueName()) return;
-	if (checkKeyword()) return;
+
+	if(checkKeywordAndRestrictedIdentifiers()) return;
 	if (checkModuleInfoConstructs()) return;
 	if (checkRecoveredType()) return;
 	if (checkRecoveredMethod()) return;
@@ -2712,7 +2716,7 @@ protected void consumeEnterVariable() {
 
 		// recovery
 		if (this.currentElement != null) {
-			if(!checkKeyword() && !(this.currentElement instanceof RecoveredUnit && ((RecoveredUnit)this.currentElement).typeCount == 0)) {
+			if(!checkKeywordAndRestrictedIdentifiers() && !(this.currentElement instanceof RecoveredUnit && ((RecoveredUnit)this.currentElement).typeCount == 0)) {
 				int nameSourceStart = (int)(this.identifierPositionStack[this.identifierPtr] >>> 32);
 				this.intPtr--;
 				TypeReference type = getTypeReference(this.intStack[this.intPtr--]);

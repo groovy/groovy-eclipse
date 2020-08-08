@@ -1465,9 +1465,9 @@ public class WrapPreparator extends ASTVisitor {
 				if (isEmpty)
 					break;
 				this.tm.get(openingParenIndex + 1).setWrapPolicy(new WrapPolicy(WrapMode.TOP_PRIORITY,
-						openingParenIndex, closingParenIndex, this.options.indentation_size, 1, 1, true, false));
+						openingParenIndex, closingParenIndex, this.options.indentation_size, this.currentDepth, 1, true, false));
 				this.tm.get(closingParenIndex).setWrapPolicy(new WrapPolicy(WrapMode.TOP_PRIORITY,
-						openingParenIndex, closingParenIndex, 0, 1, 1, false, false));
+						openingParenIndex, closingParenIndex, 0, this.currentDepth, 1, false, false));
 				break;
 			case DefaultCodeFormatterConstants.SEPARATE_LINES_IF_NOT_EMPTY:
 				if (isEmpty)

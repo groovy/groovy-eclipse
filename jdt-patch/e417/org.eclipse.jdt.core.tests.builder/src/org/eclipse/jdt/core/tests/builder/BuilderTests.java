@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Vector;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -75,25 +74,25 @@ public class BuilderTests extends TestCase {
 		String expectingOutput,
 		String expectedError) {
 		TestVerifier verifier = new TestVerifier(false);
-		Vector classpath = new Vector(5);
+		ArrayList<String> classpath = new ArrayList<>(5);
 
 		IPath workspacePath = env.getWorkspaceRootPath();
 
-		classpath.addElement(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
+		classpath.add(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
 		IClasspathEntry[] cp = env.getClasspath(projectPath);
 		for (int i = 0; i < cp.length; i++) {
 			IPath c = cp[i].getPath();
 			String ext = c.getFileExtension();
 			if (ext != null && (ext.equals("zip") || ext.equals("jar"))) { //$NON-NLS-1$ //$NON-NLS-2$
 				if (c.getDevice() == null) {
-					classpath.addElement(workspacePath.append(c).toOSString());
+					classpath.add(workspacePath.append(c).toOSString());
 				} else {
-					classpath.addElement(c.toOSString());
+					classpath.add(c.toOSString());
 				}
 			}
 		}
 
-		verifier.execute(className, (String[]) classpath.toArray(new String[0]));
+		verifier.execute(className, classpath.toArray(new String[0]));
 
 		if (DEBUG) {
 			System.out.println("ERRORS\n"); //$NON-NLS-1$

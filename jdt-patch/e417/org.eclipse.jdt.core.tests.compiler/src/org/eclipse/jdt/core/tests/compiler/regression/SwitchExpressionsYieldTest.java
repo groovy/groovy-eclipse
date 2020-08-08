@@ -26,7 +26,7 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int [] { 40 };
 //		TESTS_RANGE = new int[] { 1, -1 };
-//		TESTS_NAMES = new String[] { "testBug561766" };
+//		TESTS_NAMES = new String[] { "testBug545567_14" };
 	}
 
 	public static Class<?> testClass() {
@@ -5191,5 +5191,248 @@ public class SwitchExpressionsYieldTest extends AbstractRegressionTest {
 			"	             ^^^^^\n" +
 			"The target type of this expression must be a functional interface\n" +
 			"----------\n");
+	}
+	public void testBug565156_001() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public int test() {\n"+
+				"    return switch (0) {\n"+
+				"      default -> {\n"+
+				"        try {\n"+
+				"          yield 0;\n"+
+				"        }\n"+
+				"        catch (RuntimeException e) {\n"+
+				"          throw e;\n"+
+				"        }\n"+
+				"      }\n"+
+				"    };\n"+
+				"  }    \n"+
+				"  public static void main(String[] args) {\n"+
+				"       int i = new X().test();\n"+
+				"       System.out.println(i);\n"+
+				" }\n"+
+				"}\n"
+			},
+			"0");
+	}
+	public void testBug565156_002() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public int test() {\n"+
+				"    return switch (0) {\n"+
+				"      default -> {\n"+
+				"        try {\n"+
+				"          yield 0;\n"+
+				"        }\n"+
+				"        finally {\n"+
+				"          //do nothing\n"+
+				"        }\n"+
+				"      }\n"+
+				"    };\n"+
+				"  }    \n"+
+				"  public static void main(String[] args) {\n"+
+				"       int i = new X().test();\n"+
+				"       System.out.println(i);\n"+
+				" }\n"+
+				"}\n"
+			},
+			"0");
+	}
+	public void testBug565156_003() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public int test() {\n"+
+				"    return switch (0) {\n"+
+				"      default -> {\n"+
+				"        try {\n"+
+				"          yield 0;\n"+
+				"        }\n"+
+				"        finally {\n"+
+				"          int i = 20;"+
+				"          yield 20;"+
+				"        }\n"+
+				"      }\n"+
+				"    };\n"+
+				"  }    \n"+
+				"  public static void main(String[] args) {\n"+
+				"       int i = new X().test();\n"+
+				"       System.out.println(i);\n"+
+				" }\n"+
+				"}\n"
+			},
+			"20");
+	}
+	public void testBug565156_004() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public int test()  {\n"+
+				"    return switch (0) {\n"+
+				"      default -> {\n"+
+				"        try {\n"+
+				"          yield switch (0) {\n"+
+				"          default -> {\n"+
+				"              try {\n"+
+				"                yield 100;\n"+
+				"              }\n"+
+				"              finally {\n"+
+				"                   yield 200;       \n"+
+				"               }\n"+
+				"            }\n"+
+				"          };\n"+
+				"        }\n"+
+				"        finally {\n"+
+				"             yield 20;\n"+
+				"         }\n"+
+				"      }\n"+
+				"    };\n"+
+				"  }\n"+
+				"  public static void main(String[] args){\n"+
+				"       int i = new X().test();\n"+
+				"       System.out.println(i);\n"+
+				"  }\n"+
+				"}"
+			},
+			"20");
+	}
+	public void testBug565156_005() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public int test()  {\n"+
+				"    return switch (0) {\n"+
+				"      default -> {\n"+
+				"        try {\n"+
+				"          yield switch (0) {\n"+
+				"          default -> {\n"+
+				"              try {\n"+
+				"                yield 100;\n"+
+				"              }\n"+
+				"              finally {\n"+
+				"                   // do nothing\n"+
+				"               }\n"+
+				"            }\n"+
+				"          };\n"+
+				"        }\n"+
+				"        finally {\n"+
+				"           // do nothing\n"+
+				"         }\n"+
+				"      }\n"+
+				"    };\n"+
+				"  }\n"+
+				"  public static void main(String[] args){\n"+
+				"       int i = new X().test();\n"+
+				"       System.out.println(i);\n"+
+				"  }\n"+
+				"}"
+			},
+			"100");
+	}
+	public void testBug565156_006() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"    public static void main(String[] args) {\n"+
+				"            new X().foo(args);\n"+
+				"    }\n"+
+				"\n"+
+				"  @SuppressWarnings({ \"finally\" })\n"+
+				"  public void foo(String[] args) {\n"+
+				"     int t = switch (0) {\n"+
+				"     default -> {\n"+
+				"        try {\n"+
+				"            if (args == null)\n"+
+				"            yield 1;\n"+
+				"            else if (args.length ==2)\n"+
+				"                    yield 2; \n"+
+				"            else if (args.length == 4)\n"+
+				"                    yield 4;\n"+
+				"            else yield 5; \n"+
+				"        } finally {\n"+
+				"                yield 3; \n"+
+				"        }\n"+
+				"     }\n"+
+				"     }; \n"+
+				"     t = switch (100) {\n"+
+				"     default -> {\n"+
+				"             try {\n"+
+				"                     yield 10;\n"+
+				"             } finally {\n"+
+				"             }\n"+
+				"     }  \n"+
+				"     };      \n"+
+				"     System.out.println(t);\n"+
+				"  }\n"+
+				"}"
+			},
+			"10");
+	}
+	public void testBug565156_007() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"    public static void main(String[] args) {\n"+
+				"            new X().foo(args);\n"+
+				"    }\n"+
+				"\n"+
+				"  @SuppressWarnings({ \"finally\" })\n"+
+				"  public void foo(String[] args) {\n"+
+				"     int t = switch (0) {\n"+
+				"     case 101 -> {yield 101;}\n"+
+				"     default -> {\n"+
+				"        try {\n"+
+				"            if (args == null)\n"+
+				"            yield 1;\n"+
+				"            else if (args.length ==2)\n"+
+				"                    yield 2; \n"+
+				"            else if (args.length == 4)\n"+
+				"                    yield 4;\n"+
+				"            else yield 5; \n"+
+				"        } finally {\n"+
+				"                yield 3; \n"+
+				"        }\n"+
+				"     }\n"+
+				"     }; \n"+
+				"     t = switch (100) {\n"+
+				"     default -> {\n"+
+				"             try {\n"+
+				"                     yield 10;\n"+
+				"             } finally {\n"+
+				"             }\n"+
+				"     }  \n"+
+				"     };      \n"+
+				"     System.out.println(t);\n"+
+				"  }\n"+
+				"}"
+			},
+			"10");
+	}
+	public void testBug547193_001() {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n"+
+				"  public static void main(String[] args) {\n"+
+				"    System.out.println(switch (0) {default -> {\n"+
+				"      try {\n"+
+				"        yield 1;\n"+
+				"      } catch (Exception ex) {\n"+
+				"        yield 2;\n"+
+				"      }\n"+
+				"    }});\n"+
+				"  }\n"+
+				"}"
+			},
+			"1");
 	}
 }

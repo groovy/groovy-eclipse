@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2014 IBM Corporation and others.
+ * Copyright (c) 2004, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -15,13 +15,14 @@ package org.eclipse.jdt.core.tests.junit.extension;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-@SuppressWarnings({ "unchecked", "rawtypes" })
+@SuppressWarnings({ "rawtypes" })
 public class PerformanceTestSuite extends TestSuite {
 
 	/**
@@ -43,7 +44,7 @@ public class PerformanceTestSuite extends TestSuite {
 		}
 
 		Class superClass= theClass;
-		Vector names= new Vector();
+		List<String> names= new ArrayList<>();
 		while (Test.class.isAssignableFrom(superClass)) {
 			Method[] methods= superClass.getDeclaredMethods();
 			for (int i= 0; i < methods.length; i++) {
@@ -59,7 +60,7 @@ public class PerformanceTestSuite extends TestSuite {
 		setName(name);
 	}
 
-	private void addTestMethod(Method m, Vector names, Class theClass) {
+	private void addTestMethod(Method m, List<String> names, Class theClass) {
 		String name= m.getName();
 		if (names.contains(name))
 			return;
@@ -68,7 +69,7 @@ public class PerformanceTestSuite extends TestSuite {
 				addTest(addWarningTest("Test method isn't public: "+m.getName()));
 			return;
 		}
-		names.addElement(name);
+		names.add(name);
 		addTest(createTest(theClass, name));
 	}
 

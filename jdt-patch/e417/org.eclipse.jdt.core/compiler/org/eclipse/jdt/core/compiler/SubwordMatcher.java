@@ -7,7 +7,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     Julian Honnen - initial API and implementation
  *******************************************************************************/
@@ -29,14 +29,40 @@ class SubwordMatcher {
 		this.name = name.toCharArray();
 		this.wordBoundaries = new BitSet(name.length());
 
-		BoundaryState state = BoundaryState.SEPARATOR;
 		for (int i = 0; i < this.name.length; i++) {
-			char c = this.name[i];
-			if (state.isWordBoundary(c)) {
+			if (isWordBoundary(caseAt(i - 1), caseAt(i), caseAt(i + 1))) {
 				this.wordBoundaries.set(i);
 			}
-			state = state.next(c);
 		}
+	}
+
+	private Case caseAt(int index) {
+		if (index < 0 || index >= this.name.length)
+			return Case.SEPARATOR;
+
+		char c = this.name[index];
+		if (c == '_')
+			return Case.SEPARATOR;
+		if (ScannerHelper.isUpperCase(c))
+			return Case.UPPER;
+		return Case.LOWER;
+	}
+
+	private static boolean isWordBoundary(Case p, Case c, Case n) {
+		if (p == c && c == n)
+			return false; // a boundary needs some kind of gradient
+
+		if (p == Case.SEPARATOR)
+			return true; // boundary after every separator
+
+		// the remaining cases are boundaries for capitalization changes:
+		// lowerUpper, UPPERLower, lowerUPPER
+		//      ^           ^           ^
+		return (c == Case.UPPER) && (p == Case.LOWER || n == Case.LOWER);
+	}
+
+	private enum Case {
+		SEPARATOR, LOWER, UPPER
 	}
 
 	public int[] getMatchingRegions(String pattern) {
@@ -130,53 +156,5 @@ class SubwordMatcher {
 
 	private boolean isWordBoundary(int iName) {
 		return this.wordBoundaries.get(iName);
-	}
-
-	private enum BoundaryState {
-		SEPARATOR() {
-			@Override
-			public BoundaryState next(char c) {
-				if (c == '_')
-					return SEPARATOR;
-
-				return ScannerHelper.isUpperCase(c) ? CAPS_WORD : WORD;
-			}
-			@Override
-			public boolean isWordBoundary(char c) {
-				return true;
-			}
-		},
-		WORD() {
-			@Override
-			public BoundaryState next(char c) {
-				if (c == '_')
-					return SEPARATOR;
-
-				return WORD;
-			}
-
-			@Override
-			public boolean isWordBoundary(char c) {
-				return ScannerHelper.isUpperCase(c);
-			}
-		},
-		CAPS_WORD() {
-			@Override
-			public BoundaryState next(char c) {
-				if (c == '_')
-					return SEPARATOR;
-
-				return ScannerHelper.isUpperCase(c) ? CAPS_WORD : WORD;
-			}
-
-			@Override
-			public boolean isWordBoundary(char c) {
-				return next(c) == SEPARATOR;
-			}
-		};
-
-		public abstract boolean isWordBoundary(char c);
-
-		public abstract BoundaryState next(char c);
 	}
 }

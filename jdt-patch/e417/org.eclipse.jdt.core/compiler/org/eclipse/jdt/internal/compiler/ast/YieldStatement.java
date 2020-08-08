@@ -127,44 +127,96 @@ protected void addSecretYieldResultValue(BlockScope scope1) {
 protected void restartExceptionLabels(CodeStream codeStream) {
 	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
 }
-@Override
-protected void generateExpressionResultCode(BlockScope currentScope, CodeStream codeStream) {
+protected void generateExpressionResultCodeExpanded(BlockScope currentScope, CodeStream codeStream) {
 	SwitchExpression se = this.switchExpression;
-	if (se != null && se.containsTry && se.resolvedType != null ) {
-		addSecretYieldResultValue(this.scope);
-		assert this.secretYieldResultValue != null;
-		codeStream.record(this.secretYieldResultValue);
-		SingleNameReference lhs = new SingleNameReference(this.secretYieldResultValue.name, 0);
-		lhs.binding = this.secretYieldResultValue;
-		lhs.bits &= ~ASTNode.RestrictiveFlagMASK;  // clear bits
-		lhs.bits |= Binding.LOCAL;
-		lhs.bits |= ASTNode.IsSecretYieldValueUsage;
-		((LocalVariableBinding) lhs.binding).markReferenced(); // TODO : Can be skipped?
-		Assignment assignment = new Assignment(lhs, this.expression, 0);
-		assignment.generateCode(this.scope, codeStream);
-		int l = this.subroutines == null ? 0 : this.subroutines.length;
-		boolean foundFinally = false;
-		if (l > 0) {
-			for (int i = 0; i < l; ++i) {
-				SubRoutineStatement srs = this.subroutines[i];
-				srs.exitAnyExceptionHandler();
-				srs.exitDeclaredExceptionHandlers(codeStream);
-				if (srs instanceof TryStatement) {
-					TryStatement ts = (TryStatement) srs;
-					if (ts.finallyBlock != null) {
-						foundFinally = true;
+	addSecretYieldResultValue(this.scope);
+	assert this.secretYieldResultValue != null;
+	codeStream.record(this.secretYieldResultValue);
+	SingleNameReference lhs = new SingleNameReference(this.secretYieldResultValue.name, 0);
+	lhs.binding = this.secretYieldResultValue;
+	lhs.bits &= ~ASTNode.RestrictiveFlagMASK; // clear bits
+	lhs.bits |= Binding.LOCAL;
+	lhs.bits |= ASTNode.IsSecretYieldValueUsage;
+	((LocalVariableBinding) lhs.binding).markReferenced(); // TODO : Can be skipped?
+	Assignment assignment = new Assignment(lhs, this.expression, 0);
+	assignment.generateCode(this.scope, codeStream);
+
+	int pc = codeStream.position;
+	// generation of code responsible for invoking the finally
+	// blocks in sequence
+	if (this.subroutines != null){
+		for (int i = 0, max = this.subroutines.length; i < max; i++){
+			SubRoutineStatement sub = this.subroutines[i];
+			sub.exitAnyExceptionHandler();
+			sub.exitDeclaredExceptionHandlers(codeStream);
+			SwitchExpression se1 = sub.getSwitchExpression();
+			setSubroutineSwitchExpression(sub);
+			boolean didEscape = sub.generateSubRoutineInvocation(currentScope, codeStream, this.targetLabel, this.initStateIndex, null);
+			sub.setSwitchExpression(se1);
+			if (didEscape) {
+				codeStream.removeVariable(this.secretYieldResultValue);
+					codeStream.recordPositionsFrom(pc, this.sourceStart);
+					SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, i, codeStream);
+					if (this.initStateIndex != -1) {
+						codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+						codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 					}
-				}
+					restartExceptionLabels(codeStream);
+					return;
 			}
 		}
-		if (!foundFinally) {
-			 // no finally - TODO: Check for SynSta?
-			se.loadStoredTypesAndKeep(codeStream);
-			codeStream.load(this.secretYieldResultValue);
+	}
+	se.loadStoredTypesAndKeep(codeStream);
+	codeStream.load(this.secretYieldResultValue);
+	codeStream.removeVariable(this.secretYieldResultValue);
+
+	codeStream.goto_(this.targetLabel);
+	codeStream.recordPositionsFrom(pc, this.sourceStart);
+	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
+	if (this.initStateIndex != -1) {
+		codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+		codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+	}
+}
+@Override
+public void generateCode(BlockScope currentScope, CodeStream codeStream) {
+	if ((this.bits & ASTNode.IsReachable) == 0) {
+		return;
+	}
+	if (this.switchExpression != null && this.switchExpression.containsTry && this.switchExpression.resolvedType != null ) {
+		generateExpressionResultCodeExpanded(currentScope, codeStream);
+		return;
+	}
+	this.expression.generateCode(this.scope, codeStream, this.switchExpression != null);
+	int pc = codeStream.position;
+
+	// generation of code responsible for invoking the finally
+	// blocks in sequence
+	if (this.subroutines != null){
+		for (int i = 0, max = this.subroutines.length; i < max; i++){
+			SubRoutineStatement sub = this.subroutines[i];
+			SwitchExpression se = sub.getSwitchExpression();
+			setSubroutineSwitchExpression(sub);
+			boolean didEscape = sub.generateSubRoutineInvocation(currentScope, codeStream, this.targetLabel, this.initStateIndex, null);
+			sub.setSwitchExpression(se);
+			if (didEscape) {
+					codeStream.recordPositionsFrom(pc, this.sourceStart);
+					SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, i, codeStream);
+					if (this.initStateIndex != -1) {
+						codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+						codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+					}
+					restartExceptionLabels(codeStream);
+					return;
+			}
 		}
-		codeStream.removeVariable(this.secretYieldResultValue);
-	} else {
-		this.expression.generateCode(this.scope, codeStream, se != null);
+	}
+	codeStream.goto_(this.targetLabel);
+	codeStream.recordPositionsFrom(pc, this.sourceStart);
+	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
+	if (this.initStateIndex != -1) {
+		codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.initStateIndex);
+		codeStream.addDefinitelyAssignedVariables(currentScope, this.initStateIndex);
 	}
 }
 private boolean isInsideTry() {

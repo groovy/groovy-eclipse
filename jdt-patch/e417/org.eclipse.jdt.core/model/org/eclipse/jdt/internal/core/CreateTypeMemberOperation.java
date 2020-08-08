@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.RecordDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -75,6 +76,8 @@ protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent
 			return EnumDeclaration.BODY_DECLARATIONS_PROPERTY;
 		case ASTNode.ANNOTATION_TYPE_DECLARATION:
 			return AnnotationTypeDeclaration.BODY_DECLARATIONS_PROPERTY;
+		case ASTNode.RECORD_DECLARATION:
+			return RecordDeclaration.BODY_DECLARATIONS_PROPERTY;
 		default:
 			return TypeDeclaration.BODY_DECLARATIONS_PROPERTY;
 	}

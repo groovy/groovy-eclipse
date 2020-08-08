@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -16,7 +16,6 @@ package org.eclipse.jdt.core.tests.eval;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import junit.framework.TestCase;
 
@@ -66,9 +65,9 @@ public JDIStackFrame(
 	String breakpointClassName,
 	String breakpointMethodName,
 	int breakpointLine) {
-	
+
 	this(jdiVM, test, userCode, breakpointClassName, breakpointMethodName, breakpointLine, 10000/*timeout*/);
-	
+
 }
 public JDIStackFrame(
 	VirtualMachine jdiVM,
@@ -78,7 +77,7 @@ public JDIStackFrame(
 	String breakpointMethodName,
 	int breakpointLine,
 	long timeout) {
-	
+
 	this.jdiVM = jdiVM;
 	this.userCode = userCode;
 	this.breakpointClassName = breakpointClassName;
@@ -244,13 +243,13 @@ public char[][] localVariableNames() {
 	try {
 		StackFrame frame = getStackFrame();
 		Iterator variables = frame.visibleVariables().iterator();
-		Vector names = new Vector();
+		List<char[]> names = new ArrayList<>();
 		while (variables.hasNext()) {
 			LocalVariable var = (LocalVariable)variables.next();
-			names.addElement(var.name().toCharArray());
+			names.add(var.name().toCharArray());
 		}
 		char[][] result = new char[names.size()][];
-		names.copyInto(result);
+		names.toArray(result);
 		return result;
 	} catch (AbsentInformationException e) {
 		return null;
@@ -260,13 +259,13 @@ public char[][] localVariableTypeNames() {
 	try {
 		StackFrame frame = getStackFrame();
 		Iterator variables = frame.visibleVariables().iterator();
-		Vector names = new Vector();
+		List<char[]> names = new ArrayList();
 		while (variables.hasNext()) {
 			LocalVariable var = (LocalVariable)variables.next();
-			names.addElement(var.typeName().toCharArray());
+			names.add(var.typeName().toCharArray());
 		}
 		char[][] result = new char[names.size()][];
-		names.copyInto(result);
+		names.toArray(result);
 		return result;
 	} catch (AbsentInformationException e) {
 		return null;

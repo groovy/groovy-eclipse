@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -18,14 +18,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A standard VM launcher launches an external standard VM with
  * the given arguments on the same machine.
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class JRockitVMLauncher extends LocalVMLauncher {
 	String batchFileName;
 /**
@@ -61,11 +60,11 @@ public String getBatchFileName() {
  */
 @Override
 public String[] getCommandLine() {
-	Vector commandLine= new Vector();
+	List<String> commandLine = new ArrayList<>();
 
 	// VM binary
 	if (System.getProperty("java.vm.version").startsWith("1.4.2")) {
-		commandLine.addElement(
+		commandLine.add(
 			this.vmPath +
 			(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
 			"bin" +
@@ -89,21 +88,21 @@ public String[] getCommandLine() {
 				File.separator +
 				"java";
 		}
-		commandLine.addElement(vmLocation);
+		commandLine.add(vmLocation);
 	}
 
 	// VM arguments
 	if (this.vmArguments != null) {
 		for (int i = 0; i < this.vmArguments.length; i++) {
-			commandLine.addElement(this.vmArguments[i]);
+			commandLine.add(this.vmArguments[i]);
 		}
 	}
 
 	// debug mode
 	if (this.debugPort != -1) {
-		commandLine.addElement("-Xdebug");
-		commandLine.addElement("-Xnoagent");
-		commandLine.addElement(
+		commandLine.add("-Xdebug");
+		commandLine.add("-Xnoagent");
+		commandLine.add(
 			"-Xrunjdwp:transport=dt_socket,address=" +
 			this.debugPort +
 			",server=y,suspend=n");
@@ -112,37 +111,37 @@ public String[] getCommandLine() {
 	// set the classpath
 	// we don't set the bootclasspath as for StandardVMLauncher as this breaks the debug mode of JRockit
 	// we would get: [JRockit] ERROR:  failed to set up MAPI gc reporting
-	commandLine.addElement("-classpath");
+	commandLine.add("-classpath");
 	String classpath = buildBootClassPath() + File.pathSeparator + buildClassPath();
 	System.out.println(classpath);
-	commandLine.addElement(classpath);
+	commandLine.add(classpath);
 
 	// code snippet runner class
 	if (this.evalPort != -1) {
-		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
+		commandLine.add(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
 
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
-		commandLine.addElement(EVALPORT_ARG);
-		commandLine.addElement(Integer.toString(this.evalPort));
+		commandLine.add(EVALPORT_ARG);
+		commandLine.add(Integer.toString(this.evalPort));
 		if (TARGET_HAS_FILE_SYSTEM) {
-			commandLine.addElement(CODESNIPPET_CLASSPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
-			commandLine.addElement(CODESNIPPET_BOOTPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_CLASSPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_BOOTPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
 		}
 	}
 
 	// program class
 	if (this.programClass != null) {
-		commandLine.addElement(this.programClass);
+		commandLine.add(this.programClass);
 	}
 
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
-			commandLine.addElement(this.programArguments[i]);
+			commandLine.add(this.programArguments[i]);
 		}
 	}
 
@@ -153,7 +152,7 @@ public String[] getCommandLine() {
 		result = new String[] {this.batchFileName};
 	} else {
 		result = new String[commandLine.size()];
-		commandLine.copyInto(result);
+		commandLine.toArray(result);
 	}
 
 	// check for spaces in result
@@ -175,13 +174,13 @@ public String[] getCommandLine() {
 public void setBatchFileName(String batchFileName) {
 	this.batchFileName = batchFileName;
 }
-protected void writeBatchFile(String fileName, Vector commandLine) {
+protected void writeBatchFile(String fileName, List<String> commandLine) {
 	FileOutputStream output = null;
 	try {
 		output = new FileOutputStream(fileName);
 		PrintWriter out= new PrintWriter(output);
-		for (Enumeration e = commandLine.elements(); e.hasMoreElements();) {
-			out.print((String)e.nextElement());
+		for (String string : commandLine) {
+			out.print(string);
 			out.print(" ");
 		}
 		out.println("pause");

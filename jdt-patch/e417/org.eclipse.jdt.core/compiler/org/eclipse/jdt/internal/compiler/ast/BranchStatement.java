@@ -32,12 +32,6 @@ public BranchStatement(char[] label, int sourceStart,int sourceEnd) {
 	this.sourceEnd = sourceEnd;
 }
 
-protected void generateExpressionResultCode(BlockScope currentScope, CodeStream codeStream) {
-	// do nothing here
-}
-protected void adjustStackSize(BlockScope currentScope, CodeStream codeStream) {
-	// do nothing here
-}
 protected void setSubroutineSwitchExpression(SubRoutineStatement sub) {
 	// Do nothing
 }
@@ -54,7 +48,6 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
 	}
-	generateExpressionResultCode(currentScope, codeStream);
 	int pc = codeStream.position;
 
 	// generation of code responsible for invoking the finally
@@ -80,7 +73,6 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	}
 //	checkAndLoadSyntheticVars(codeStream);
 	codeStream.goto_(this.targetLabel);
-	adjustStackSize(currentScope, codeStream);
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 	SubRoutineStatement.reenterAllExceptionHandlers(this.subroutines, -1, codeStream);
 	if (this.initStateIndex != -1) {

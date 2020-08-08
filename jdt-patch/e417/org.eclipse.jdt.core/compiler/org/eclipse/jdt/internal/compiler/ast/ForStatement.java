@@ -266,7 +266,7 @@ public class ForStatement extends Statement {
 			}
 		}
 		if (this.condition != null && this.condition.containsPatternVariable()) {
-			this.condition.initializePatternVariables(currentScope, codeStream);
+			this.condition.addPatternVariables(currentScope, codeStream);
 		}
 		Constant cst = this.condition == null ? null : this.condition.optimizedBooleanConstant();
 		boolean isConditionOptimizedFalse = cst != null && (cst != Constant.NotAConstant && cst.booleanValue() == false);

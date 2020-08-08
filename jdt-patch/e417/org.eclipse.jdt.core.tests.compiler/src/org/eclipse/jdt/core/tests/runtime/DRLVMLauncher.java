@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -16,13 +16,13 @@
 package org.eclipse.jdt.core.tests.runtime;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This is a new vm launcher to support Apache Harmony
  * (http://harmony.apache.org) settings
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class DRLVMLauncher extends StandardVMLauncher {
 
 /**
@@ -30,7 +30,7 @@ public class DRLVMLauncher extends StandardVMLauncher {
  */
 @Override
 public String[] getCommandLine() {
-	Vector commandLine= new Vector();
+	List<String> commandLine= new ArrayList<>();
 
 	// VM binary
 	String vmLocation = this.vmPath +
@@ -42,59 +42,59 @@ public String[] getCommandLine() {
 	if (osName.indexOf("win32") == -1 && !new File(vmLocation).exists()) {
 	    vmLocation = vmLocation.substring(0, vmLocation.length()-1);
 	}
-	commandLine.addElement(vmLocation);
+	commandLine.add(vmLocation);
 
 	// VM arguments
 	if (this.vmArguments != null) {
 		for (int i = 0; i < this.vmArguments.length; i++) {
-			commandLine.addElement(this.vmArguments[i]);
+			commandLine.add(this.vmArguments[i]);
 		}
 	}
 
 	// boot classpath
-	commandLine.addElement("-Xbootclasspath/a:" + buildBootClassPath());
+	commandLine.add("-Xbootclasspath/a:" + buildBootClassPath());
 
 	// debug mode
 	if (this.debugPort != -1) {
-		commandLine.addElement("-Xdebug");
-		commandLine.addElement("-Xnoagent");
+		commandLine.add("-Xdebug");
+		commandLine.add("-Xnoagent");
 		// commandLine.addElement("-Djava.compiler=NONE");
-		commandLine.addElement(
+		commandLine.add(
 			"-Xrunjdwp:transport=dt_socket,address=" +
 			this.debugPort +
 			",server=y,suspend=n");
 	}
 
 	// regular classpath
-	commandLine.addElement("-classpath");
-	commandLine.addElement(buildClassPath());
+	commandLine.add("-classpath");
+	commandLine.add(buildClassPath());
 
 	// code snippet runner class
 	if (this.evalPort != -1) {
-		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
+		commandLine.add(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
 
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
-		commandLine.addElement(EVALPORT_ARG);
-		commandLine.addElement(Integer.toString(this.evalPort));
+		commandLine.add(EVALPORT_ARG);
+		commandLine.add(Integer.toString(this.evalPort));
 		if (TARGET_HAS_FILE_SYSTEM) {
-			commandLine.addElement(CODESNIPPET_CLASSPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
-			commandLine.addElement(CODESNIPPET_BOOTPATH_ARG);
-			commandLine.addElement(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_CLASSPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + REGULAR_CLASSPATH_DIRECTORY);
+			commandLine.add(CODESNIPPET_BOOTPATH_ARG);
+			commandLine.add(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
 		}
 	}
 
 	// program class
 	if (this.programClass != null) {
-		commandLine.addElement(this.programClass);
+		commandLine.add(this.programClass);
 	}
 
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
-			commandLine.addElement(this.programArguments[i]);
+			commandLine.add(this.programArguments[i]);
 		}
 	}
 
@@ -105,7 +105,7 @@ public String[] getCommandLine() {
 		result = new String[] {this.batchFileName};
 	} else {
 		result = new String[commandLine.size()];
-		commandLine.copyInto(result);
+		commandLine.toArray(result);
 	}
 
 	// check for spaces in result

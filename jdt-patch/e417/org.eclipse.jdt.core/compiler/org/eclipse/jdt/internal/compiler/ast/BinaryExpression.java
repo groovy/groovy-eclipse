@@ -1812,9 +1812,9 @@ public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output
 }
 
 @Override
-public void initializePatternVariables(BlockScope scope, CodeStream codeStream) {
-	this.left.initializePatternVariables(scope, codeStream);
-	this.right.initializePatternVariables(scope, codeStream);
+public void addPatternVariables(BlockScope scope, CodeStream codeStream) {
+	this.left.addPatternVariables(scope, codeStream);
+	this.right.addPatternVariables(scope, codeStream);
 }
 @Override
 public boolean containsPatternVariable() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2017 IBM Corporation and others.
+ * Copyright (c) 2006, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -14,8 +14,8 @@
 
 package org.eclipse.jdt.core.dom;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -28,7 +28,7 @@ import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToIntArray;
 /**
  * Internal AST visitor for propagating syntax errors.
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes"})
 class ASTRecoveryPropagator extends DefaultASTVisitor {
 	private static final int NOTHING = -1;
 	HashtableOfObjectToIntArray endingTokens = new HashtableOfObjectToIntArray();
@@ -92,7 +92,7 @@ class ASTRecoveryPropagator extends DefaultASTVisitor {
 	private boolean[] removedTokensFlagged;
 	private boolean[] replacedTokensFlagged;
 
-	private Vector stack = new Vector();
+	private ArrayList<ASTNode> stack = new ArrayList<>();
 
 	ASTRecoveryPropagator(CategorizedProblem[] problems, RecoveryScannerData data) {
 		// visit Javadoc.tags() as well
@@ -252,12 +252,12 @@ class ASTRecoveryPropagator extends DefaultASTVisitor {
 		if(this.insertedTokensKind != null && this.insertedTokensKind.length > 0) {
 			int s = this.stack.size();
 			for (int i = s - 1; i > -1; i--) {
-				flagNodesWithInsertedTokensAtEnd((ASTNode)this.stack.get(i));
+				flagNodesWithInsertedTokensAtEnd(this.stack.get(i));
 			}
 			for (int i = 0; i < s; i++) {
-				flagNodesWithInsertedTokensInside((ASTNode)this.stack.get(i));
+				flagNodesWithInsertedTokensInside(this.stack.get(i));
 			}
-			this.stack = new Vector();
+			this.stack = new ArrayList<>();
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2020 IBM Corporation and others.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -278,7 +278,7 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 	}
 
 	// load the classes and collect code snippet classes
-	Vector codeSnippetClasses = new Vector();
+	List<Class> codeSnippetClasses = new ArrayList<>();
 	for (int i = 0; i < newClasses.length; i++) {
 		String className = newClasses[i];
 		Class clazz = null;
@@ -311,7 +311,7 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 		} else if (superclass.equals(this.codeSnippetClass)) {
 			// It may be a code snippet class with no global variable
 			if (methods.length == 1 && methods[0].getName().equals(RUN_METHOD_NAME)) {
-				codeSnippetClasses.addElement(clazz);
+				codeSnippetClasses.add(clazz);
 			}
 			// Evaluate global variables and send result back
 			Field[] fields = clazz.getDeclaredFields();
@@ -329,14 +329,14 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 			}
 		} else if (this.codeSnippetClass.equals(superclass.getSuperclass()) && methods.length == 1 && methods[0].getName().equals("run")) {
 			// It is a code snippet class with a global variable superclass
-			codeSnippetClasses.addElement(clazz);
+			codeSnippetClasses.add(clazz);
 		}
 	}
 
 	// run the code snippet classes
 	if (codeSnippetClasses.size() != 0 && mustRun) {
-		for (Enumeration e = codeSnippetClasses.elements(); e.hasMoreElements();) {
-			Object codeSnippet = createCodeSnippet((Class) e.nextElement());
+		for (Class class1 : codeSnippetClasses) {
+			Object codeSnippet = createCodeSnippet(class1);
 			if (codeSnippet != null) {
 				runCodeSnippet(codeSnippet);
 			}

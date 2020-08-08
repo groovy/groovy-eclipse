@@ -141,17 +141,17 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	}
 	// The fields escape CodeStream#exitUserScope(), and as a result end PC wouldn't be set.
 	// Set this explicitly (unlike a local declaration)
-	if (this.initialization != null && this.initialization.containsPatternVariable()) {
-		this.initialization.traverse(new ASTVisitor() {
-			@Override
-			public boolean visit(
-		    		InstanceOfExpression instanceOfExpression,
-		    		BlockScope scope) {
-				instanceOfExpression.elementVariable.binding.recordInitializationEndPC(codeStream.position);
-				return true;
-			}
-		}, currentScope);
-	}
+//	if (this.initialization != null && this.initialization.containsPatternVariable()) {
+//		this.initialization.traverse(new ASTVisitor() {
+//			@Override
+//			public boolean visit(
+//		    		InstanceOfExpression instanceOfExpression,
+//		    		BlockScope scope) {
+//				instanceOfExpression.elementVariable.binding.recordInitializationEndPC(codeStream.position);
+//				return true;
+//			}
+//		}, currentScope);
+//	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 public void getAllAnnotationContexts(int targetType, List allAnnotationContexts) {

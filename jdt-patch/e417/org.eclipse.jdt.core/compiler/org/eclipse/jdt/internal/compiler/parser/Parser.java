@@ -1733,7 +1733,7 @@ protected void consumeAnnotationTypeDeclarationHeaderNameWithTypeParameters() {
 }
 protected void consumeAnnotationTypeMemberDeclaration() {
 	// AnnotationTypeMemberDeclaration ::= AnnotationTypeMemberDeclarationHeader AnnotationTypeMemberHeaderExtendedDims DefaultValueopt ';'
-	AnnotationMethodDeclaration annotationTypeMemberDeclaration = (AnnotationMethodDeclaration) this.astStack[this.astPtr];
+	MethodDeclaration annotationTypeMemberDeclaration = (MethodDeclaration) this.astStack[this.astPtr];
 	annotationTypeMemberDeclaration.modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
 	// store the this.endPosition (position just before the '}') in case there is
 	// a trailing comment behind the end of the method

@@ -39,7 +39,9 @@ public class InstanceOfExpression extends OperatorExpression {
 	public Expression expression;
 	public TypeReference type;
 	public LocalDeclaration elementVariable;
-	boolean isInitialized;
+	static final char[] SECRET_INSTANCEOF_PATTERN_EXPRESSION_VALUE = " instanceOfPatternExpressionValue".toCharArray(); //$NON-NLS-1$
+
+	public LocalVariableBinding secretInstanceOfPatternExpressionValue = null;
 
 public InstanceOfExpression(Expression expression, TypeReference type) {
 	this.expression = expression;
@@ -106,18 +108,28 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 */
 @Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
-	initializePatternVariables(currentScope, codeStream);
+	addPatternVariables(currentScope, codeStream);
 
 	int pc = codeStream.position;
-	this.expression.generateCode(currentScope, codeStream, true);
+
+	if (this.elementVariable != null) {
+		addAssignment(currentScope, codeStream, this.secretInstanceOfPatternExpressionValue);
+		codeStream.load(this.secretInstanceOfPatternExpressionValue);
+	} else {
+		this.expression.generateCode(currentScope, codeStream, true);
+	}
+
 	codeStream.instance_of(this.type, this.type.resolvedType);
 	if (this.elementVariable != null) {
 		BranchLabel actionLabel = new BranchLabel(codeStream);
 		codeStream.dup();
 		codeStream.ifeq(actionLabel);
-		this.expression.generateCode(currentScope, codeStream, true);
+		codeStream.load(this.secretInstanceOfPatternExpressionValue);
+		codeStream.removeVariable(this.secretInstanceOfPatternExpressionValue);
 		codeStream.checkcast(this.type, this.type.resolvedType, codeStream.position);
+		this.elementVariable.binding.recordInitializationStartPC(codeStream.position);
 		codeStream.store(this.elementVariable.binding, false);
+		codeStream.removeVariable(this.elementVariable.binding);
 		codeStream.recordPositionsFrom(codeStream.position, this.sourceEnd);
 		actionLabel.place();
 	}
@@ -128,6 +140,103 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
+@Override
+public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
+	// a label valued to nil means: by default we fall through the case...
+	// both nil means we leave the value on the stack
+
+	if (this.elementVariable == null) {
+		super.generateOptimizedBoolean(currentScope, codeStream, trueLabel, falseLabel, valueRequired);
+		return;
+	}
+	Constant cst = optimizedBooleanConstant();
+	addPatternVariables(currentScope, codeStream);
+
+	int pc = codeStream.position;
+
+	addAssignment(currentScope, codeStream, this.secretInstanceOfPatternExpressionValue);
+	codeStream.load(this.secretInstanceOfPatternExpressionValue);
+
+	BranchLabel nextSibling = falseLabel != null ? falseLabel : new BranchLabel(codeStream);
+	codeStream.instance_of(this.type, this.type.resolvedType);
+	if (this.elementVariable != null) {
+		codeStream.ifeq(nextSibling);
+		codeStream.load(this.secretInstanceOfPatternExpressionValue);
+		codeStream.checkcast(this.type, this.type.resolvedType, codeStream.position);
+		codeStream.dup();
+		codeStream.store(this.elementVariable.binding, false);
+
+		codeStream.load(this.secretInstanceOfPatternExpressionValue);
+		codeStream.removeVariable(this.secretInstanceOfPatternExpressionValue);
+		codeStream.checkcast(this.type, this.type.resolvedType, codeStream.position);
+	}
+	if (valueRequired && cst == Constant.NotAConstant) {
+		codeStream.generateImplicitConversion(this.implicitConversion);
+	} else {
+		codeStream.pop();
+	}
+	codeStream.recordPositionsFrom(pc, this.sourceStart);
+
+
+	if ((cst != Constant.NotAConstant) && (cst.typeID() == TypeIds.T_boolean)) {
+		pc = codeStream.position;
+		if (cst.booleanValue() == true) {
+			// constant == true
+			if (valueRequired) {
+				if (falseLabel == null) {
+					// implicit falling through the FALSE case
+					if (trueLabel != null) {
+						codeStream.goto_(trueLabel);
+					}
+				}
+			}
+		} else {
+			if (valueRequired) {
+				if (falseLabel != null) {
+					// implicit falling through the TRUE case
+					if (trueLabel == null) {
+						codeStream.goto_(falseLabel);
+					}
+				}
+			}
+		}
+		codeStream.recordPositionsFrom(pc, this.sourceStart);
+	} else  {
+		// branching
+		int position = codeStream.position;
+		if (valueRequired) {
+			if (falseLabel == null) {
+				if (trueLabel != null) {
+					// Implicit falling through the FALSE case
+					codeStream.if_acmpeq(trueLabel);
+				}
+			} else {
+				if (trueLabel == null) {
+					// Implicit falling through the TRUE case
+					codeStream.if_acmpne(falseLabel);
+				} else {
+					// No implicit fall through TRUE/FALSE --> should never occur
+				}
+			}
+		}
+		codeStream.recordPositionsFrom(position, this.sourceEnd);
+	}
+	if (nextSibling != falseLabel)
+		nextSibling.place();
+}
+
+private void addAssignment(BlockScope currentScope, CodeStream codeStream, LocalVariableBinding local) {
+	assert local != null;
+	SingleNameReference lhs = new SingleNameReference(local.name, 0);
+	lhs.binding = local;
+	lhs.bits &= ~ASTNode.RestrictiveFlagMASK; // clear bits
+	lhs.bits |= Binding.LOCAL;
+	lhs.bits |= ASTNode.IsSecretYieldValueUsage;
+	((LocalVariableBinding) lhs.binding).markReferenced(); // TODO : Can be skipped?
+	Assignment assignment = new Assignment(lhs, this.expression, 0);
+	assignment.generateCode(currentScope, codeStream);
+	codeStream.addVariable(this.secretInstanceOfPatternExpressionValue);
+}
 
 @Override
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
@@ -136,16 +245,9 @@ public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output
 }
 
 @Override
-public void initializePatternVariables(BlockScope currentScope, CodeStream codeStream) {
+public void addPatternVariables(BlockScope currentScope, CodeStream codeStream) {
 	if (this.elementVariable != null) {
-		if(!this.isInitialized) {
-			this.isInitialized = true;
-			codeStream.aconst_null();
-			codeStream.store(this.elementVariable.binding, false);
-		}
-		int position = codeStream.position;
 		codeStream.addVisibleLocalVariable(this.elementVariable.binding);
-		this.elementVariable.binding.recordInitializationStartPC(position);
 	}
 }
 public void resolvePatternVariable(BlockScope scope) {
@@ -161,9 +263,25 @@ public void resolvePatternVariable(BlockScope scope) {
 public boolean containsPatternVariable() {
 	return this.elementVariable != null;
 }
+private void addSecretInstanceOfPatternExpressionValue(BlockScope scope1) {
+	LocalVariableBinding local =
+			new LocalVariableBinding(
+				InstanceOfExpression.SECRET_INSTANCEOF_PATTERN_EXPRESSION_VALUE,
+				TypeBinding.wellKnownType(scope1, T_JavaLangObject),
+				ClassFileConstants.AccDefault,
+				false);
+	local.setConstant(Constant.NotAConstant);
+	local.useFlag = LocalVariableBinding.USED;
+	local.declaration = new LocalDeclaration(InstanceOfExpression.SECRET_INSTANCEOF_PATTERN_EXPRESSION_VALUE, 0, 0);
+	scope1.addLocalVariable(local);
+	this.secretInstanceOfPatternExpressionValue = local;
+}
+
 @Override
 public TypeBinding resolveType(BlockScope scope) {
 	this.constant = Constant.NotAConstant;
+	if (this.elementVariable != null)
+	addSecretInstanceOfPatternExpressionValue(scope);
 	resolvePatternVariable(scope);
 	TypeBinding checkedType = this.type.resolveType(scope, true /* check bounds*/);
 	if (this.expression instanceof CastExpression) {
@@ -178,7 +296,10 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (expressionType == null || checkedType == null)
 		return null;
 
-	if (!checkedType.isReifiable()) {
+	if (this.secretInstanceOfPatternExpressionValue != null && expressionType != TypeBinding.NULL)
+		this.secretInstanceOfPatternExpressionValue.type = expressionType;
+
+		if (!checkedType.isReifiable()) {
 		CompilerOptions options = scope.compilerOptions();
 		// If preview is disabled, report same as before, even at Java 14
 		if (options.complianceLevel < ClassFileConstants.JDK14 || !options.enablePreviewFeatures) {
