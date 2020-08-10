@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ package org.eclipse.jdt.internal.compiler.lookup;
  * is determined to be a LazilyResolvedMethodBinding - we ask it for the parameter and return
  * types which it determines from the field binding for the property.  The key benefit here is that
  * the parameter/return type bindings are not chased down unless required.
- * 
+ *
  * @author Andy Clement
  */
 public class LazilyResolvedMethodBinding extends MethodBinding {
@@ -35,36 +35,42 @@ public class LazilyResolvedMethodBinding extends MethodBinding {
 	private String propertyName;
 
 	public LazilyResolvedMethodBinding(boolean isGetter, String propertyName, int modifiers, char[] selector, ReferenceBinding[] thrownExceptions, ReferenceBinding declaringClass) {
-		super(modifiers| ExtraCompilerModifiers.AccUnresolved,selector,null,null,thrownExceptions,declaringClass);
+		super(modifiers | ExtraCompilerModifiers.AccUnresolved, selector, null, null, thrownExceptions, declaringClass);
 		this.propertyName = propertyName;
 		this.isGetter = isGetter;
 	}
 
 	/**
-	 * Discover the type of the property and return that as the binding to use as the accessor method
-	 * parameter/return type.
+	 * Resolves the property type for use as the return type if this represents
+	 * an accessor method or parameter type if this represents a mutator method.
 	 */
-	private TypeBinding getTypeBinding() {
-		FieldBinding fBinding = this.declaringClass.getField(this.propertyName.toCharArray(), false);
-		if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
-			return fBinding.type;
+	private TypeBinding getPropertyTypeBinding() {
+		FieldBinding field = this.declaringClass.getField(this.propertyName.toCharArray(), false);
+		if (field != null && !(field.type instanceof MissingTypeBinding)) {
+			return field.type;
 		}
 		return null;
 	}
 
-	public TypeBinding getParameterTypeBinding() {
-		if (this.isGetter) {
-			return null;
-		} else {
-			return getTypeBinding();
+	TypeBinding getParameterTypeBinding() {
+		if (!this.isGetter) {
+			return getPropertyTypeBinding();
 		}
+		return null;
 	}
 
-	public TypeBinding getReturnTypeBinding() {
+	TypeBinding getReturnTypeBinding() {
 		if (this.isGetter) {
-			return getTypeBinding();
-		} else {
-			return TypeBinding.VOID;
+			return getPropertyTypeBinding();
 		}
+		return TypeBinding.VOID;
+	}
+
+	@Override
+	public int problemId() {
+		if (getPropertyTypeBinding() == null) {
+			return ProblemReasons.NotFound;
+		}
+		return super.problemId();
 	}
 }

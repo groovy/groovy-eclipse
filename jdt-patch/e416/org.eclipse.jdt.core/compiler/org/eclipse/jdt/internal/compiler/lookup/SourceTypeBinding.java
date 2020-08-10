@@ -2208,6 +2208,9 @@ public MethodBinding[] methods() {
 					}
 				}
 			}
+			// GROOVY add
+			if (method instanceof LazilyResolvedMethodBinding) continue;
+			// GROOVY end
 			if (method.returnType == null && resolvedMethods[i] != null) { // forget method with invalid return type... was kept to detect possible collisions
 				methodDecl = method.sourceMethod();
 				if (methodDecl != null)
@@ -2455,7 +2458,7 @@ private MethodBinding resolveTypesWithSuspendedTempErrorHandlingPolicy(MethodBin
 	AbstractMethodDeclaration methodDecl = method.sourceMethod();
 	if (methodDecl == null) {
 		// GROOVY add
-		if (method instanceof LazilyResolvedMethodBinding) {
+		if (method.problemId() == ProblemReasons.NoError && method instanceof LazilyResolvedMethodBinding) {
 			LazilyResolvedMethodBinding lrMethod = (LazilyResolvedMethodBinding) method;
 			// the rest is a copy of the code below but doesn't depend on the method declaration
 			// nothing to do for method type parameters (there are none)

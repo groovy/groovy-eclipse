@@ -510,12 +510,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |class Impl implements Face<Pogo> {
             |  Pogo item = new Pogo()
             |}
-            |'''.stripMargin(), 'Impl'
-        addGroovySource '''\
             |class Pogo {
             |  def prop
             |}
-            |'''.stripMargin(), 'Pogo'
+            |'''.stripMargin(), 'Impl'
 
         String contents = '''\
             |@groovy.transform.TypeChecked
