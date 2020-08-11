@@ -2721,7 +2721,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * In the given list of groovy parameters, some are defined as defaulting to an initial value. This method computes all the
          * variants of defaulting parameters allowed and returns a List of Argument arrays. Each argument array represents a variation.
          */
-        private static List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
+        private List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
             List<Argument[]> variants = new ArrayList<>();
 
             final int nParams = groovyParameters.length;
@@ -2740,7 +2740,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // create a variation based on the non-null entries left in the array
                 for (int p = 0; p < nParams; p += 1) {
                     if (wipableParameters[p] != null) {
-                        variantArgs.add(javaArguments[p]);
+                        if (javaArguments[p].type.isParameterizedTypeReference()) {
+                            // STS-3930: TypeVariableBinding#declaringElement must equal the method variant for type parameter resolution to work
+                            Argument clone = new Argument(javaArguments[p].name, toPos(javaArguments[p].sourceStart, javaArguments[p].sourceEnd),
+                                createTypeReferenceForClassNode(groovyParameters[p].getType()), javaArguments[p].modifiers);
+                            if (javaArguments[p].isVarArgs()) clone.type.bits |= ASTNode.IsVarArgs;
+                            clone.annotations = javaArguments[p].annotations;
+                            clone.declarationSourceStart = clone.sourceStart;
+                            variantArgs.add(clone);
+                        } else {
+                            variantArgs.add(javaArguments[p]);
+                        }
                         if (wipableParameters[p].hasInitialExpression()) {
                             nextToLetDefault = p;
                         }

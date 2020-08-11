@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -1371,26 +1370,23 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     /**
-     * https://issuetracker.springsource.com/browse/STS-3930
+     * https://jira.spring.io/browse/STS-3930
      *
-     * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope#buildFieldsAndMethods()
+     * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator#getVariantsAllowingForDefaulting
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava14() {
-        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) >= 0);
-
         //@formatter:off
         String[] sources = {
             "Groovy.groovy",
             "class Groovy {\n" +
-            "  static <T> List<T> method(Class<T> factory, ClassLoader loader = Groovy.class.classLoader) {\n" +
-            "    null\n" +
+            "  static <T> List<T> method(Class<T> factory, ClassLoader loader = this.classLoader) {\n" +
             "  }\n" +
             "}",
 
             "Java.java",
             "public class Java {\n" +
-            "  public static void method() {\n" +
+            "  public static void test() {\n" +
             "    Groovy.method(Java.class);\n" +
             "  }\n" +
             "}",
@@ -1402,9 +1398,10 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     /**
      * https://github.com/groovy/groovy-eclipse/issues/144
-     *
+     * <pre>
      * java.lang.NullPointerException
      *     at org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope.fixupTypeParameters(GroovyClassScope.java:559)
+     * </pre>
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava15() {
@@ -1456,7 +1453,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     /**
      * https://github.com/groovy/groovy-eclipse/issues/174
-     *
+     * <pre>
      * java.lang.NullPointerException
      *     at com.sun.beans.TypeResolver.resolve(TypeResolver.java:203)
      *     at com.sun.beans.TypeResolver.resolve(TypeResolver.java:162)
@@ -1474,6 +1471,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      *     at MIData.$getStaticMetaClass(MIData.groovy)
      *     at MIData.<init>(MIData.groovy)
      *     at Main.main(Main.groovy:3)
+     * </pre>
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava17() {
@@ -1537,12 +1535,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     /**
      * https://issues.apache.org/jira/browse/GROOVY-7722
-     *
+     * <pre>
      * java.lang.StackOverflowError
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:358)
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
      *    ...
+     * </pre>
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava19() {
@@ -1572,12 +1571,13 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     /**
      * https://issues.apache.org/jira/browse/GROOVY-7864
-     *
+     * <pre>
      * java.lang.StackOverflowError
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:358)
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
      *     at org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse(GenericsUtils.java:403)
      *    ...
+     * </pre>
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava20() {
@@ -2106,30 +2106,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "\t                              ^^^^^^^\n" +
             "Unsupported @SuppressWarnings(\"cast2\")\n" +
             "----------\n");
-    }
-
-    @Test // https://jira.spring.io/browse/STS-3930
-    public void testSts3930() {
-        //@formatter:off
-        String[] sources = {
-            "demo/GroovyDemo.groovy",
-            "package demo\n" +
-            "class GroovyDemo {\n" +
-            "  static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = this.classLoader) {\n" +
-            "  }\n" +
-            "}\n",
-
-            "demo/JavaDemo.java",
-            "package demo;\n" +
-            "public class JavaDemo {\n" +
-            "  public static void staticMethod() {\n" +
-            "    GroovyDemo.someMethod(JavaDemo.class);\n" +
-            "  }\n" +
-            "}\n",
-        };
-        //@formatter:on
-
-        runConformTest(sources, "");
     }
 
     @Test
