@@ -136,7 +136,7 @@ final class RelevanceTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 's')))
-        assertProposalOrdering(proposals, 'string : String - Foo', 'string : String - Bar', 'setString(String value) : void - Foo', 'setString(String value) : void - Bar', 'setMetaClass')
+        assertProposalOrdering(proposals, 'string : String - Foo', 'string : String - Bar', 'setString(String value) : void - Foo', 'setString(String value) : void - Bar', 'sleep')
     }
 
     @Test
@@ -158,7 +158,7 @@ final class RelevanceTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 's')))
-        assertProposalOrdering(proposals, 'string : String - Bar', 'string : String - Foo', 'setString(String value) : void - Bar', 'setString(String value) : void - Foo', 'setMetaClass')
+        assertProposalOrdering(proposals, 'string : String - Bar', 'string : String - Foo', 'setString(String value) : void - Bar', 'setString(String value) : void - Foo', 'sleep')
     }
 
     @Test

@@ -303,16 +303,29 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         }
     }
 
-    @Test // GRECLIPSE-1422
+    @Test
     void testNoDups1() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
+        proposalExists(proposals, 'collectEntries', 4) // (), (Closure), (Map), (Map, Closure)
+    }
+
+    @Test // GRECLIPSE-1422
+    void testNoDups2() {
         ICompletionProposal[] proposals = createProposalsAtOffset('[].findA', getIndexOf('[].findA', 'findA'))
-        // should find 2, not 4.  dups removed
-        proposalExists(proposals, 'findAll', 2)
+        proposalExists(proposals, 'findAll', 2) // should find 2, not 4
     }
 
     @Test
-    void testNoDups2() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('[].collectEnt', 13)
-        proposalExists(proposals, 'collectEntries', 4) // collectEntries(), collectEntries(Closure), collectEntries(Map), collectEntries(Map, Closure)
+    void testNoDups3() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.find', 39)
+        proposalExists(proposals, 'find(Closure closure) : T', 1) // not Object
+        proposalExists(proposals, 'find() : T', 1) // not Object
+    }
+
+    @Test
+    void testNoDups4() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('List<String> strings = []; strings.findA', 40)
+        proposalExists(proposals, 'findAll(Closure closure) : List<T>', 1) // not Collection<T>
+        proposalExists(proposals, 'findAll() : List<T>', 1) // not Collection<T>
     }
 }

@@ -24,6 +24,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -63,6 +64,11 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
     @Before
     void setUp() {
         options.each { key, val -> groovyPrefs.setValue(key, val) }
+    }
+
+    @After
+    void tearDown() {
+        System.clearProperty(AssistOptions.PROPERTY_SubstringMatch)
     }
 
     /**

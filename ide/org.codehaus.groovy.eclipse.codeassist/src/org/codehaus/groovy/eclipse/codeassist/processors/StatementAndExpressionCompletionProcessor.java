@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isOrImplements;
-import static org.codehaus.groovy.runtime.StringGroovyMethods.find;
 import static org.codehaus.groovy.transform.trait.Traits.isTrait;
 
 import java.util.ArrayList;
@@ -343,7 +342,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                         }
                     }
 
-                    String signature = javaProposal.getDisplayString().split(" : ")[0]; // TODO: remove parameter generics and names
+                    String signature = getProposalSignature(javaProposal.getDisplayString());
                   //javaProposals.computeIfAbsent(signature, k -> new ArrayList<>()).add(javaProposal);
                     javaProposals.merge(signature, Collections.singletonList(javaProposal), (list, one) -> {
                         if (list.size() == 1) list = new ArrayList<>(list);
@@ -364,8 +363,12 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else { // de-duplicate the proposal group
                 Map<String, IJavaCompletionProposal> map = new HashMap<>(n);
                 for (IJavaCompletionProposal jcp : group) {
-                    String key = jcp.getDisplayString().split(" - ")[1];
-                    key = find((CharSequence) key, "\\w+(?=\\s|$)");
+                    String key = jcp.getDisplayString();
+                    int i = key.indexOf(" - ") + 3;
+                    int j = key.indexOf(' ', i);
+                    if (j < 0) j = key.length();
+                    key = key.substring(i, j);
+
                     map.merge(key, jcp, (one, two) -> {
                         // TODO: break ties between unqualified and fully-qualified declaring types
                         return (one.getRelevance() > two.getRelevance() ? one : two);
@@ -472,6 +475,38 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         return completionType;
+    }
+
+    private static String getProposalSignature(final String completionProposalDescription) {
+        String sig = completionProposalDescription;
+        int idx = sig.indexOf(" : "); // type, etc.
+        if (idx != -1) sig = sig.substring(0, idx);
+
+        if (sig.endsWith(")") && !sig.endsWith("()")) {
+            // remove parameter generics and names
+            String[] tokens = sig.split("[()]|, ");
+
+            StringBuilder sb = new StringBuilder(tokens[0]).append('(');
+            for (int i = 1, n = tokens.length; i < n; i += 1) {
+                int j = tokens[i].indexOf('<');
+                if (j < 0) {
+                    j = tokens[i].lastIndexOf(' ');
+                    if (j < 0) j = tokens[i].length();
+                    sb.append(tokens[i], 0, j); // type name
+                } else {
+                    sb.append(tokens[i], 0, j); // type name
+
+                    j = tokens[i].lastIndexOf('>');
+                    int k = tokens[i].indexOf(' ', j);
+                    if (k < 0) k = tokens[i].length();
+                    sb.append(tokens[i], j + 1, k); // "[]" or "..."
+                }
+                sb.append(',');
+            }
+            sb.setCharAt(sb.length() - 1, ')');
+            sig = sb.toString();
+        }
+        return sig;
     }
 
     private static VariableScope createTopLevelScope(final ClassNode completionType) {

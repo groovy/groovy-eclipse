@@ -18,10 +18,15 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -57,7 +62,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
     protected static final String GROOVY_METHOD_CONTRIBUTOR = "Groovy";
 
     @Override
-    public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
+    public List<IGroovyProposal> findAllProposals(final ClassNode selfType, final Set<ClassNode> categories, final String prefix, final boolean isStatic, final boolean isPrimary) {
         if (categories == null || categories.isEmpty()) {
             return Collections.emptyList();
         }
@@ -75,18 +80,21 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
 
-                    if (matcher.test(prefix, methodName)) {
-                        if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType())) {
-                            proposals.add(new CategoryMethodProposal(method));
-                        }
+                    if (params.length > 0 && matcher.test(prefix, methodName) &&
+                            GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                        CategoryMethodProposal proposal = new CategoryMethodProposal(method);
+                        proposal.setRelevanceMultiplier(tweakRelevance(method, selfType));
+                        proposals.add(proposal);
                     }
 
                     if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
                             hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType()) &&
                             (isStatic || !GeneralUtils.isOrImplements(selfType, VariableScope.MAP_CLASS_NODE)) &&
                             (isDefaultCategory || !methodName.startsWith("is"))) { // GROOVY-5245
-                        // add property variant of accessor method
-                        proposals.add(new CategoryPropertyProposal(method));
+                        // add property variant of accessor category method
+                        CategoryPropertyProposal proposal = new CategoryPropertyProposal(method);
+                        proposal.setRelevanceMultiplier(tweakRelevance(method, selfType));
+                        proposals.add(proposal);
                     }
                 }
             }
@@ -94,26 +102,84 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return proposals;
     }
 
-    protected boolean isDefaultCategory(ClassNode category) {
+    protected boolean isDefaultCategory(final ClassNode category) {
         return (VariableScope.DGM_CLASS_NODE.equals(category) || (currentScope != null && currentScope.isDefaultCategory(category)));
     }
 
-    protected boolean isDefaultStaticCategory(ClassNode category) {
+    protected boolean isDefaultStaticCategory(final ClassNode category) {
         return (VariableScope.DGSM_CLASS_NODE.equals(category) || (currentScope != null && currentScope.isDefaultStaticCategory(category)));
+    }
+
+    protected static boolean isObjectOrPrimitiveArray(final ClassNode type) {
+        return (VariableScope.OBJECT_CLASS_NODE.equals(type.getComponentType()) || ClassHelper.isPrimitiveType(type.getComponentType()));
+    }
+
+    protected float tweakRelevance(final MethodNode method, final ClassNode selfType) {
+        float relevanceMultiplier = isDefaultCategory(method.getDeclaringClass()) ? 0.1f : 5.0f;
+
+        ClassNode firstParamType = method.getParameters()[0].getType();
+        if (!selfType.equals(firstParamType)) {
+            int distance = 0;
+
+            if (!firstParamType.isInterface()) {
+                ClassNode next = selfType;
+                do {
+                    distance += 1;
+                    next = next.isArray() && !isObjectOrPrimitiveArray(next)
+                        ? VariableScope.OBJECT_CLASS_NODE.makeArray() : next.getSuperClass();
+                } while (next != null && !next.equals(firstParamType));
+                if (next == null) distance = 5; // arbitrary for implicit Object
+            } else if (firstParamType.equals(VariableScope.GROOVY_OBJECT_CLASS_NODE)) {
+                distance = 5; // arbitrary for explicit or implicit GroovyObject
+            } else {
+                Queue<ClassDepth> todo = new LinkedList<>();
+                Set<ClassNode> visited = new HashSet<>();
+                todo.add(new ClassDepth(selfType, 0));
+
+                out: while (!todo.isEmpty()) {
+                    ClassDepth next = todo.remove();
+                    visited.add(next.clazz.redirect());
+                    for (ClassNode face : next.clazz.getInterfaces()) {
+                        if (firstParamType.equals(face)) {
+                            distance = next.depth + 1;
+                            break out;
+                        }
+                        if (!visited.contains(face.redirect())) {
+                            todo.add(new ClassDepth(face, next.depth + 1));
+                        }
+                    }
+
+                    Optional.ofNullable(next.clazz.getSuperClass())
+                        .filter(sc -> !sc.equals(VariableScope.OBJECT_CLASS_NODE))
+                        .map(sc -> new ClassDepth(sc, next.depth + 1)).ifPresent(todo::add);
+                }
+            }
+
+            while (distance-- > 0) {
+                relevanceMultiplier *= 0.88f;
+            }
+        }
+
+        return relevanceMultiplier;
+    }
+
+    private static class ClassDepth { // TODO: class->record
+
+        ClassDepth(final ClassNode t, final int n) {
+            clazz = t;
+            depth = n;
+        }
+
+        final ClassNode clazz;
+        final int       depth;
     }
 
     //--------------------------------------------------------------------------
 
     protected class CategoryMethodProposal extends GroovyMethodProposal {
 
-        protected CategoryMethodProposal(MethodNode method) {
+        protected CategoryMethodProposal(final MethodNode method) {
             super(method, GROOVY_METHOD_CONTRIBUTOR);
-
-            if (isDefaultCategory(method.getDeclaringClass())) {
-                setRelevanceMultiplier(0.1f);
-            } else {
-                setRelevanceMultiplier(5);
-            }
         }
 
         @Override
@@ -131,17 +197,17 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         }
 
         @Override
-        protected char[][] getParameterNames(Parameter[] parameters) {
+        protected char[][] getParameterNames(final Parameter[] parameters) {
             return (char[][]) ArrayUtils.remove(super.getParameterNames(parameters), 0);
         }
 
         @Override
-        protected char[][] getParameterTypeNames(Parameter[] parameters) {
+        protected char[][] getParameterTypeNames(final Parameter[] parameters) {
             return (char[][]) ArrayUtils.remove(super.getParameterTypeNames(parameters), 0);
         }
 
         @Override
-        public IJavaCompletionProposal createJavaProposal(CompletionEngine engine, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+        public IJavaCompletionProposal createJavaProposal(final CompletionEngine engine, final ContentAssistContext context, final JavaContentAssistInvocationContext javaContext) {
             IJavaCompletionProposal javaProposal = super.createJavaProposal(engine, context, javaContext);
             if (javaProposal instanceof LazyJavaCompletionProposal) {
                 //ProposalInfo proposalInfo = ((LazyJavaCompletionProposal) javaProposal).getProposalInfo();
@@ -199,22 +265,16 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
     protected class CategoryPropertyProposal extends GroovyFieldProposal {
 
-        protected CategoryPropertyProposal(MethodNode method) {
+        protected CategoryPropertyProposal(final MethodNode method) {
             super(createMockField(method));
 
             if (!isDefaultStaticCategory(method.getDeclaringClass())) {
                 getField().setModifiers(getField().getModifiers() & ~Flags.AccStatic);
             }
-
-            if (isDefaultCategory(method.getDeclaringClass())) {
-                setRelevanceMultiplier(0.1f);
-            } else {
-                setRelevanceMultiplier(5);
-            }
         }
 
         @Override
-        protected StyledString createDisplayString(FieldNode field) {
+        protected StyledString createDisplayString(final FieldNode field) {
             return super.createDisplayString(field).append(new StyledString(
                 " (" + GROOVY_METHOD_CONTRIBUTOR + ")", StyledString.DECORATIONS_STYLER));
         }
