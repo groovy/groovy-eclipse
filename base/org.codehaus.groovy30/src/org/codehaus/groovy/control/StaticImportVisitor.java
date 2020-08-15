@@ -300,7 +300,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                         return result;
                     }
                 }
-            } else if (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call"))) {
+            } else if (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call") && !inClosure)) { // GROOVY-9691
                 if (hasPossibleStaticMember.test(currentClass)) {
                     Expression result = new StaticMethodCallExpression(currentClass, methodName, args);
                     result.setSourcePosition(mce);

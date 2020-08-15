@@ -378,6 +378,25 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertUnknown(contents, "length");
     }
 
+    @Test // https://issues.apache.org/jira/browse/GROOVY-9691
+    public void testNonStaticReference9() {
+        String contents =
+            "void sourceSets(Closure block) {\n" +
+            "}\n" +
+            "sourceSets {\n" +
+            "  main {\n" +
+            "    java { srcDirs = [] }\n" +
+            "    groovy { srcDirs = ['src/main'] }\n" +
+            "  }\n" +
+            "  test {\n" +
+            "    java { srcDirs = [] }\n" +
+            "    groovy { srcDirs = ['src/test'] }\n" +
+            "  }\n" +
+            "}\n";
+        int offset = contents.indexOf("main");
+        assertUnknownConfidence(contents, offset, offset + 4);
+    }
+
     //
 
     @Test

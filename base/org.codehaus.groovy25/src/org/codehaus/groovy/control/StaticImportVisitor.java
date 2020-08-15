@@ -305,7 +305,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                             || (hasPossibleStaticProperty(currentClass, methodName) && emptyArgs)) {
                     */
                     boolean emptyArgs = args instanceof TupleExpression && ((TupleExpression) args).getExpressions().isEmpty();
-                    if (!inInnerClass && (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call")))
+                    if (!inInnerClass && (inSpecialConstructorCall || (!foundInstanceMethod && !methodName.equals("call") && !inClosure)) // GROOVY-9691
                             && (hasPossibleStaticMethod(currentClass, methodName, args, true) || (emptyArgs && hasPossibleStaticProperty(currentClass, methodName)))) {
                     // GRECLIPSE end
                         StaticMethodCallExpression smce = new StaticMethodCallExpression(currentClass, methodName, args);
