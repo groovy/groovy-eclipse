@@ -2030,12 +2030,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in Script.groovy (at line 9)\n" +
             "\tobj.toLowerCase()\n" +
             "\t^^^^^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - Cannot find matching method java.lang.Object#toLowerCase(). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
+    }
+
+    @Test
+    public void testCompileStatic8816() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  [0].each { -> }\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Script$_test_closure1.doCall()" +
+            " is applicable for argument types: (" + (isAtLeastGroovy(25) ? "" : "java.lang.") + "Integer) values: [0]");
     }
 
     @Test

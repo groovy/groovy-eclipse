@@ -3093,9 +3093,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     private void doInferClosureParameterTypes(final ClassNode receiver, final Expression arguments, final ClosureExpression expression, final MethodNode selectedMethod, final Expression hintClass, Expression resolverClass, final Expression options) {
+        // GRECLIPSE add -- GROOVY-8816
+        Parameter[] closureParams = expression.getParameters();
+        if (closureParams == null) return; // no-arg closure
+        // GRECLIPSE end
         List<ClassNode[]> closureSignatures = getSignaturesFromHint(expression, selectedMethod, hintClass, options);
         List<ClassNode[]> candidates = new LinkedList<ClassNode[]>();
+        /* GRECLIPSE edit
         Parameter[] closureParams = expression.getParameters();
+        */
         for (ClassNode[] signature : closureSignatures) {
             // in order to compute the inferred types of the closure parameters, we're using the following trick:
             // 1. create a dummy MethodNode for which the return type is a class node for which the generic types are the types returned by the hint
@@ -3104,7 +3110,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             // In practice, it could be done differently but it has the main advantage of reusing
             // existing code, hence reducing the amount of code to debug in case of failure.
             ClassNode[] inferred = resolveGenericsFromTypeHint(receiver, arguments, selectedMethod, signature);
+            /* GRECLIPSE edit
             if (closureParams == null) return; // no-arg closure
+            */
             if (signature.length == closureParams.length // same number of arguments
                     || (signature.length == 1 && closureParams.length == 0) // implicit it
                     || (closureParams.length > signature.length && inferred[inferred.length - 1].isArray())) { // vargs
