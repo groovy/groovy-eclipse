@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -179,7 +177,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "}\n" +
             "GGG.length";
         ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
-        Assert.assertThat(decl, instanceOf(PropertyNode.class));
+        Assert.assertTrue(decl instanceof PropertyNode);
     }
 
     @Test
@@ -191,7 +189,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "}\n" +
             "GGG.length";
         ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
-        Assert.assertThat(decl, instanceOf(MethodNode.class)); // not FieldNode
+        Assert.assertTrue(decl instanceof MethodNode); // not FieldNode
     }
 
     @Test
@@ -203,7 +201,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "}\n" +
             "new GGG().length";
         ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
-        Assert.assertThat(decl, instanceOf(MethodNode.class)); // not FieldNode
+        Assert.assertTrue(decl instanceof MethodNode); // not FieldNode
     }
 
     @Test // GRECLIPSE-1544
@@ -284,7 +282,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
     @Test
@@ -297,7 +295,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
     @Test
@@ -311,7 +309,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
     @Test
@@ -325,7 +323,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n";
         ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
-        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+        Assert.assertTrue(decl instanceof FieldNode); // not MethodNode
     }
 
     //
@@ -380,6 +378,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-9691
     public void testNonStaticReference9() {
+        //@formatter:off
         String contents =
             "void sourceSets(Closure block) {\n" +
             "}\n" +
@@ -393,6 +392,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "    groovy { srcDirs = ['src/test'] }\n" +
             "  }\n" +
             "}\n";
+        //@formatter:on
         int offset = contents.indexOf("main");
         assertUnknownConfidence(contents, offset, offset + 4);
     }

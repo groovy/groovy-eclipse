@@ -43,8 +43,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void testBasics() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the basics'() {\n" +
             "   given:\n" +
@@ -57,7 +57,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar != new foo.Bar(baz:42)\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.indexOf("bar");
         assertType(source, offset, offset + 3, "foo.Bar");
@@ -70,8 +70,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void testEqualsCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -81,7 +81,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    !bar.equals(null)\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("equals");
         assertType(source, offset, offset + 6, "java.lang.Boolean");
@@ -92,8 +92,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void testGetterCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -103,7 +103,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar.getBaz() == 42\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("getBaz");
         assertType(source, offset, offset + 6, "java.lang.Integer");
@@ -114,8 +114,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
     public void testPropertyCheck() {
         createUnit("foo", "Bar", "package foo; class Bar {\n Integer baz\n}");
 
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  void 'test the property'() {\n" +
             "   given:\n" +
@@ -125,7 +125,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    bar.baz == 42\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.lastIndexOf("baz");
         assertType(source, offset, offset + 3, "java.lang.Integer");
@@ -133,8 +133,8 @@ public final class SpockInferencingTests extends InferencingTestSuite {
 
     @Test @Ignore("see #814") // https://github.com/groovy/groovy-eclipse/issues/812
     public void testDataTableChecks() {
+        //@formatter:off
         String source =
-            //@formatter:off
             "final class SpockTests extends spock.lang.Specification {\n" +
             "  @spock.lang.Unroll\n" +
             "  void 'test #a == #b'() {\n" +
@@ -146,7 +146,7 @@ public final class SpockInferencingTests extends InferencingTestSuite {
             "    2 | a\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = source.indexOf("a == b");
         assertType(source, offset, offset + 1, "java.lang.Object");

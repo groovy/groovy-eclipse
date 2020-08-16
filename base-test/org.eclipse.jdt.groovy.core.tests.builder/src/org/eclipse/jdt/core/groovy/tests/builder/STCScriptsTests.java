@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,8 +62,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
+        //@formatter:off
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-            //@formatter:off
             "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
             "unresolvedVariable { VariableExpression var ->\n" +
             "  if ('robot' == var.name) {\n" +
@@ -72,14 +72,12 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    handled = true\n" +
             "  }\n" +
             "}");
-            //@formatter:on
         env.addGroovyClass(projPath.append("src"), "", "Robot",
-            //@formatter:off
             "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);
@@ -94,8 +92,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
         Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/*Move.groovy,y");
 
         IPath projPath = createGenericProject();
+        //@formatter:off
         env.addGroovyClass(projPath.append("src"), "", "RobotMove",
-            //@formatter:off
             "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
             "unresolvedVariable { VariableExpression var ->\n" +
             "  if ('robot' == var.name) {\n" +
@@ -104,9 +102,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    handled = true\n" +
             "  }\n" +
             "}");
-            //@formatter:on
         env.addGroovyClass(projPath.append("src"), "", "RobotScript",
-            //@formatter:off
             "import groovy.transform.TypeChecked\n" +
             "class Robot {\n" +
             "  void move(String dist) { println \"Moved $dist\" }\n" +
@@ -116,7 +112,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         env.fullBuild(projPath);
         Problem[] problems = env.getProblemsFor(projPath);

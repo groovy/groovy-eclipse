@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,13 +69,13 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_single() throws Exception {
         IPath[] paths = createGroovyProject();
 
+        //@formatter:off
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "@Singleton\n" +
             "class Foo {\n" +
             "  void mone() {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
@@ -89,8 +89,8 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_multiple() throws Exception {
         IPath[] paths = createGroovyProject();
 
+        //@formatter:off
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "@Singleton\n" +
             "class Foo {\n" +
             "  @Delegate Bar b = new BarImpl();\n" +
@@ -98,7 +98,7 @@ public final class FullProjectTests extends BuilderTestSuite {
             "}\n" +
             "interface Bar { void method(); }\n" +
             "class BarImpl implements Bar { void method() {} }\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         ICompilationUnit icu = env.getUnit(foo);
@@ -113,13 +113,13 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_typeChecked() throws Exception {
         IPath[] paths = createGroovyProject();
 
+        //@formatter:off
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "@groovy.transform.TypeChecked\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
@@ -130,13 +130,13 @@ public final class FullProjectTests extends BuilderTestSuite {
     public void testReconcilingWithTransforms_compileStatic() throws Exception {
         IPath[] paths = createGroovyProject();
 
+        //@formatter:off
         IPath foo = env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));

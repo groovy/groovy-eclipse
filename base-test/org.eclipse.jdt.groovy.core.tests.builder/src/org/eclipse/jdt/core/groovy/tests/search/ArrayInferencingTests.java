@@ -92,12 +92,12 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArrayArgument1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "Number m(Number[] arr) { null }\n" +
             "int[] nums = [1, 2, 3]\n" +
             "def result = m(nums)\n";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.lastIndexOf("m(");
         assertUnknownConfidence(contents, offset, offset + 1);
@@ -105,12 +105,12 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArrayArgument2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "Number m(Number[] arr) { null }\n" +
             "Integer[] nums = [1, 2, 3]\n" +
             "def result = m(nums)\n";
-            //@formatter:on
+        //@formatter:on
 
         assertType(contents, "result", "java.lang.Number");
     }

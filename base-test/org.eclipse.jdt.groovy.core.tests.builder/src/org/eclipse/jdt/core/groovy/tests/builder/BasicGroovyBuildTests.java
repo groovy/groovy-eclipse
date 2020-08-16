@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -68,7 +67,7 @@ import org.osgi.framework.Version;
  */
 public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
-    private IPath[] createModularProject(String name, boolean isGroovy) throws Exception {
+    private IPath[] createModularProject(final String name, final boolean isGroovy) throws Exception {
         assumeTrue(JavaCore.compareJavaVersions(System.getProperty("java.version"), "9") >= 0);
 
         IPath prjPath = env.addProject(name, "9");
@@ -88,7 +87,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
     }
 
-    private IPath[] createSimpleProject(String name, boolean isGroovy) throws Exception {
+    private IPath[] createSimpleProject(final String name, final boolean isGroovy) throws Exception {
         IPath path = env.addProject(name, "1.8");
         if (isGroovy) {
             env.addGroovyJars(path);
@@ -101,8 +100,25 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         return new IPath[] {path, env.addPackageFragmentRoot(path, "src")};
     }
 
+    private void addJUnitAndSpock(final IPath projectPath) throws Exception {
+        int jUnitVersion = 4;
+        String spockCorePath;
+        if (isAtLeastGroovy(30)) {
+            jUnitVersion = 5;
+            spockCorePath = "lib/spock-core-2.0-M3-groovy-3.0.jar";
+        } else if (isAtLeastGroovy(25)) {
+            spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
+        } else {
+            spockCorePath = "lib/spock-core-1.3-groovy-2.4.jar";
+        }
+        env.addJar(projectPath, spockCorePath);
+
+        env.addEntry(projectPath, JavaCore.newContainerEntry(
+            new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/" + jUnitVersion)));
+    }
+
     // check whether these are identical (in everything except name!)
-    private static void compareClassNodes(ClassNode jcn, ClassNode cn, int d) {
+    private static void compareClassNodes(final ClassNode jcn, final ClassNode cn, final int d) {
         System.out.println("Comparing ClassNodes\njcn=" + jcn.toString() + "\n cn=" + cn.toString());
         assertEquals(cn.isGenericsPlaceHolder(), jcn.isGenericsPlaceHolder());
 
@@ -125,22 +141,32 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
     }
 
-    private static void compareGenericsTypes(GenericsType jgt, GenericsType gt, int d) {
+    private static void compareGenericsTypes(final GenericsType jgt, final GenericsType gt, final int d) {
         assertEquals(jgt.getName(), gt.getName());
         assertEquals(jgt.isPlaceholder(), gt.isPlaceholder());
         assertEquals(jgt.isResolved(), gt.isResolved());
         assertEquals(jgt.isWildcard(), gt.isWildcard());
         compareType(jgt.getType(), gt.getType(), d + 1);
-        compareUpperBounds(jgt.getUpperBounds(), gt.getUpperBounds(), d + 1);
         compareLowerBound(jgt.getLowerBound(), gt.getLowerBound(), d + 1);
+        compareUpperBounds(jgt.getUpperBounds(), gt.getUpperBounds(), d + 1);
     }
 
-    private static void compareType(ClassNode jcn, ClassNode cn, int d) {
+    private static void compareType(final ClassNode jcn, final ClassNode cn, final int d) {
         System.out.println("Compare type of GenericsType: jcn=" + jcn + " cn=" + cn);
         compareClassNodes(jcn, cn, d + 1);
     }
 
-    private static void compareUpperBounds(ClassNode[] jcnlist, ClassNode[] cnlist, int d) {
+    private static void compareLowerBound(final ClassNode jcn, final ClassNode cn, final int d) {
+        System.out.println("Comparing lower bound");
+        if (jcn == null) {
+            assertNull(cn);
+        } else {
+            assertNotNull(cn);
+            compareClassNodes(jcn.redirect(), cn.redirect(), d + 1);
+        }
+    }
+
+    private static void compareUpperBounds(final ClassNode[] jcnlist, final ClassNode[] cnlist, final int d) {
         System.out.println("Comparing upper bounds: jcn=" + Arrays.toString(jcnlist) + " cn=" + Arrays.toString(cnlist));
         if (cnlist == null) {
             if (jcnlist != null) {
@@ -157,17 +183,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
     }
 
-    private static void compareLowerBound(ClassNode jcn, ClassNode cn, int d) {
-        System.out.println("Comparing lower bound");
-        if (jcn == null) {
-            assertNull(cn);
-        } else {
-            assertNotNull(cn);
-            compareClassNodes(jcn.redirect(), cn.redirect(), d + 1);
-        }
-    }
-
-    private static String toTask(String tasktag, String message) {
+    private static String toTask(final String tasktag, final String message) {
         return tasktag + message;
     }
 
@@ -182,15 +198,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildJavaHelloWorld() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         env.addClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1;\n" +
             "public class Hello {\n" +
             "  public static void main(String[] args) {\n" +
             "    System.out.println(\"Hello world\");\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
@@ -202,15 +218,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildGroovyHelloWorld() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1\n" +
             "class Hello {\n" +
             "  static void main(String[] args) {\n" +
             "    print \"Hello world\"\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
@@ -222,15 +238,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildGroovyHelloWorld2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1\n" +
             "class Hello {\n" +
             "  static main(args) {\n" +
             "    print 'Hello world'\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
@@ -242,15 +258,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildGroovyHelloWorld3() throws Exception {
         IPath[] paths = createModularProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1\n" +
             "class Hello {\n" +
             "  static main(args) {\n" +
             "    print 'Hello world'\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -266,11 +282,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildGroovyHelloWorld4() throws Exception {
         IPath[] paths = createModularProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1\n" +
             "print 'hello world'\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -287,14 +303,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assumeTrue(isAtLeastGroovy(25));
 
         IPath[] paths = createModularProject("Project", true);
-
         requireModule(env.getJavaProject(paths[0]), "org.codehaus.groovy");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1\n" +
             "print 'hello world'\n");
-            //@formatter:on
+        //@formatter:on
+
         fullBuild(paths[0]);
         expectingNoProblems();
     }
@@ -303,14 +319,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testProjectCompilerConfigScript1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addFile(paths[0], "config.groovy",
-            //@formatter:off
             "withConfig(configuration) {\n" +
             "  imports {\n" +
             "    normal 'java.util.regex.Pattern'\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "config.groovy");
@@ -343,14 +359,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testProjectCompilerConfigScript2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addFile(paths[0], "config.groovy",
-            //@formatter:off
             "withConfig(configuration) {\n" +
             "  imports {\n" +
             "    staticMember 'java.util.regex.Pattern', 'compile'\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "config.groovy");
@@ -373,11 +389,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.setOutputFolder(path, "");
         env.addGroovyJars(path);
 
+        //@formatter:off
         env.addGroovyClass(path, "p", "Script",
-            //@formatter:off
             "package p\n" +
             "println 'Groovy!'\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(path);
         expectingNoProblems();
@@ -389,30 +405,30 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testInners_983() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Outer",
-            //@formatter:off
             "class Outer {\n" +
             "  static class Inner {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addClass(paths[1], "", "Client",
-            //@formatter:off
             "public class Client {\n" +
             "  { new Outer.Inner(); }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Client", "Outer", "Outer$Inner");
         expectingNoProblems();
 
+        //@formatter:off
         env.addClass(paths[1], "", "Client",
-            //@formatter:off
             "public class Client {\n" +
             "  { new Outer.Inner(); }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -423,29 +439,29 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testNPEAnno_1398() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "", "Anno",
-            //@formatter:off
             "public @interface Anno {\n" +
             "  String[] value();\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Const",
-            //@formatter:off
             "public class Const {\n" +
             "  public static final String instance= \"abc\";\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Anno", "Const");
         expectingNoProblems();
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "A",
-            //@formatter:off
             "@Anno(Const.instance)\n" +
             "class A {}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -456,25 +472,25 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testGenericsDefaultParams_1717() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "p1", "Demo",
-            //@formatter:off
             "package p1;\n" +
             "public class Demo {\n" +
             "   public static void main(String[] args) {\n" +
             "      SomeGroovyHelper.doit(String.class);\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "SomeGroovyHelper",
-            //@formatter:off
             "package p1;\n" +
             "class SomeGroovyHelper {\n" +
             "   static <T> List<T> doit(Class<T> factoryClass, ClassLoader classLoader = SomeGroovyHelper.class.classLoader) {\n" +
             "      null\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Demo", "p1.SomeGroovyHelper");
@@ -485,15 +501,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Outer",
-            //@formatter:off
             "import groovy.transform.CompileStatic;\n" +
             "@CompileStatic \n" +
             "int fact(int n) {\n" +
             "  if (n==1) {return 1;\n" +
             "  } else {return n+fact(n-1);}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Outer");
@@ -504,19 +520,19 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "A",
-            //@formatter:off
             "class A {\n" +
             "  public void profile(String name, groovy.lang.Closure<?> callable) {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
         expectingCompiledClasses("A");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "B",
-            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "class B extends A {\n" +
             "\n" +
@@ -527,7 +543,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  }\n" +
             "\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -538,15 +554,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic3() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "class Foo {\n" +
             "  @groovy.transform.CompileStatic\n" +
             "  public static void main(String[] args) {\n" +
             "    ((GroovyObject)new Foo());\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -557,14 +573,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic771() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(env.addPackageFragmentRoot(paths[0], "src2", null, "bin2"), "foobar", "DefaultRunnable",
-            //@formatter:off
             "package foobar;\n" +
             "public class DefaultRunnable implements Runnable {\n" +
             "  @Override public void run() {\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         env.addGroovyClass(paths[1], "foobar", "UtilityClass",
             "package foobar\n" +
@@ -585,17 +601,17 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "p", "Foo",
-            //@formatter:off
             "package p;\n" +
             "public class Foo {\n" +
             "  @SuppressWarnings(\"rawtypes\")\n" +
             "  public java.util.List bar() { return null; }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Main",
-            //@formatter:off
             "package p\n" +
             "class Main {\n" +
             "  @groovy.transform.CompileStatic\n" +
@@ -606,7 +622,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -616,8 +632,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic_9079() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Main",
-            //@formatter:off
             "package p\n" +
             "class Main {\n" +
             "  @groovy.transform.CompileStatic\n" +
@@ -625,7 +641,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    java.util.concurrent.Callable<String> task = { -> '' }\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -642,22 +658,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addClass(paths[1], "", "TypeNameMatch",
             "class TypeNameMatch {}");
 
+        //@formatter:off
         env.addClass(paths[1], "", "IChooseImportQuery",
-            //@formatter:off
             "interface IChooseImportQuery {\n" +
             "    TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range);\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "NoChoiceQuery",
-            //@formatter:off
             "class NoChoiceQuery implements IChooseImportQuery {\n" +
             "    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {\n" +
             "        throw new Exception(\"Should not have a choice, but found $matches[0][0] and $matches[0][1]\")\n" +
             "        return []\n" +
             "    }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -669,8 +685,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         JDTResolver.recordInstances = true;
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
             "class Foo {\n" +
@@ -680,7 +696,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    cmd.addAll(jvmArgs);\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -692,8 +708,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic_MapEachClosure() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Demo",
-            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "class Demo {\n" +
             "  void doit() {\n" +
@@ -706,7 +722,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    }\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -716,8 +732,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic_IterableParameter() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
             "class Foo {\n" +
@@ -727,7 +743,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  }\n" +
             "  private void foo(Iterable<File> iterable) {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -739,8 +755,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foo",
-            //@formatter:off
             "import groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "@CompileStatic\n" +
@@ -752,7 +768,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n" +
             "private void registerPluginZipWithScope(File pluginzip) {}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -764,8 +780,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testCompileStatic_BuildSettings() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "BuildSettings",
-            //@formatter:off
             "import groovy.transform.CompileStatic\n" +
             "\n" +
             "class BuildSettings  {\n" +
@@ -779,7 +795,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  }\n" +
             "\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -791,8 +807,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void test1167() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "brooklyn.event.adapter", "HttpSensorAdapter",
-            //@formatter:off
             "package brooklyn.event.adapter\n" +
             "\n" +
             "public class HttpSensorAdapter {}\n" +
@@ -802,23 +818,23 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  return null\n" +
             "}\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "brooklyn.event.adapter", "ValueProvider",
-            //@formatter:off
             "package brooklyn.event.adapter\n" +
             "\n" +
             "public interface ValueProvider<T> {\n" +
             "  public T compute();\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("brooklyn.event.adapter.Foo", "brooklyn.event.adapter.HttpSensorAdapter", "brooklyn.event.adapter.ValueProvider");
         expectingNoProblems();
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "brooklyn.event.adapter", "HttpSensorAdapter",
-            //@formatter:off
             "package brooklyn.event.adapter\n" +
             "\n" +
             "public class HttpSensorAdapter {}\n" +
@@ -828,7 +844,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  return null\n" +
             "}\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -839,19 +855,19 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTypeDuplication_GRE796_1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Foo",
-            //@formatter:off
             "package p;\n" +
             "class Foo {}\n");
-            //@formatter:on
+        //@formatter:on
 
         IPath root2 = env.addPackageFragmentRoot(paths[0], "src2");
 
+        //@formatter:off
         IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
-            //@formatter:off
             "package p;\n" +
             "class Foo { }\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         Problem[] probs = env.getProblemsFor(pathToSecond);
@@ -879,19 +895,19 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTypeDuplication_GRE796_2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Foo",
-            //@formatter:off
             "package p;\n" +
             "class Foo {}\n");
-            //@formatter:on
+        //@formatter:on
 
         IPath root2 = env.addPackageFragmentRoot(paths[0], "src2");
 
+        //@formatter:off
         IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
-            //@formatter:off
             "package p;\n" +
             "class Foo { }\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         Problem[] probs = env.getProblemsFor(pathToSecond);
@@ -919,11 +935,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testClashingPackageAndType_1214() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath cuPath = env.addClass(paths[1], "com.acme", "Foo",
-            //@formatter:off
             "package com.acme;\n" +
             "public class Foo {}\n");
-            //@formatter:on
+        //@formatter:on
 
         env.addGroovyClass(paths[1], "com.acme.Foo", "xyz",
             "print 'abc'");
@@ -968,18 +984,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "a.b.c.d.e.f", "Helper9",
             "package a.b.c.d.e.f\n" +
             "class Helper9 {}\n");
+        //@formatter:off
         env.addGroovyClass(paths[1], "a.b.c.d.e.f", "HelperBase",
-            //@formatter:off
             "package a.b.c.d.e.f\n" +
             "class HelperBase {\n" +
             "  static final String TYPE = 'test'\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
         env.addGroovyClass(paths[1], "a.b.c.d.e.f", "SomeHelper",
             "package a.b.c.d.e.f\n" +
             "class SomeHelper extends HelperBase {}\n");
+        //@formatter:off
         env.addGroovyClass(paths[1], "a.b.c.d.e.f", "SomeChecks",
-            //@formatter:off
             "package a.b.c.d.e.f\n" +
             "\n" +
             "import static a.b.c.d.e.f.Helper1.*\n" +
@@ -1508,9 +1524,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "        assert details[TYPE] == 'test'\n" +
             "    }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
-        // TODO how to create a reliable timed test? This should take about 2-3 seconds, not >10 -- at least on my machine...
+        // TODO: How to create a reliable timed test? This should take about 2-3 seconds, not more than 10 -- at least on my machine...
 
         incrementalBuild(paths[0]);
         // lots of errors on the missing static imports
@@ -1533,8 +1549,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testSlow_GRE870() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Test1",
-            //@formatter:off
             "import static some.Class0.*;\n" +
             "import static some.Class1.*;\n" +
             "import static some.Class2.*;\n" +
@@ -1548,7 +1564,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "import static some.Class10.*;\n" +
             "\n" +
             "class Test1 {}\n");
-            //@formatter:on
+        //@formatter:on
 
         env.addGroovyClass(paths[1], "some", "Foo",
             "\n" +
@@ -1565,8 +1581,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testReallySlow_GRE870() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Test1",
-            //@formatter:off
             "import static some.Class0.*;\n" +
             "import static some.Class1.*;\n" +
             "import static some.Class2.*;\n" +
@@ -1620,7 +1636,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "import static some.Class50.*;\n" +
             "\n" +
             "class Test1 {}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Test1");
@@ -1631,8 +1647,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testClosureBasics() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Coroutine",
-            //@formatter:off
             "def iterate(n, closure) {\n" +
             "  1.upto(n) {\n" +
             "    closure(it);\n" +
@@ -1641,7 +1657,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "iterate (3) {\n" +
             "  print it*2\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         // three classes created for that:
         // GroovyClass(name=Coroutine bytes=6372),
@@ -1658,12 +1674,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testPackageNames1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
-        // q.X declared in p.X
+        //@formatter:off
         IPath path = env.addGroovyClass(paths[1], "p", "X",
-            //@formatter:off
-            "package q\n" +
+            "package q\n" + // q.X declared in p.X
             "class X {}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
 
@@ -1675,12 +1690,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testPackageNames2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
-        // q.X declared in p.X
+        //@formatter:off
         IPath path = env.addGroovyClass(paths[1], "p.q.r", "X",
-            //@formatter:off
-            "package p.s.r.q\n" +
+            "package p.s.r.q\n" + // q.X declared in p.X
             "class X {}");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
 
@@ -1725,14 +1739,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct 'annotation' project that defines annotation using 'AnnotationsCollector'
         IPath[] paths = createSimpleProject("annotation", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "com.demo", "MyAnnotation",
-            //@formatter:off
             "package com.demo\r\n" +
             "\r\n" +
             "@groovy.transform.AnnotationCollector\r\n" +
             "@Deprecated\r\n" +
             "@interface MyAnnotation {}\r\n");
-            //@formatter:on
+        //@formatter:on
 
         IPath annotationProject = paths[0];
 
@@ -1741,13 +1755,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addRequiredProject(paths[0], annotationProject);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "com.demo", "Widget",
-            //@formatter:off
             "package com.demo\r\n" +
             "\r\n" +
             "@MyAnnotation\r\n" +
             "class Widget {}\r\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild();
         expectingNoProblems();
@@ -1774,23 +1788,23 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "import java.lang.annotation.*;\n" +
             "@NotNull @Length @groovy.transform.AnnotationCollector @interface ISBN {}\n");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Book",
-            //@formatter:off
             "import java.lang.annotation.Annotation;\n" +
             "import java.lang.reflect.Field;\n" +
             "\n" +
-            "    class Book {\n" +
-            "      @ISBN\n" +
-            "      String isbn;\n" +
-            "      \n" +
-            "      public static void main(String[] args) {\n" +
-            "        Field f = Book.class.getDeclaredField(\"isbn\");\n" +
-            "        for (Annotation a: f.getDeclaredAnnotations()) {\n" +
-            "          System.out.println(a);\n" +
-            "        } \n" +
-            "      }\n" +
-            "    }\n");
-            //@formatter:on
+            "class Book {\n" +
+            "  @ISBN\n" +
+            "  String isbn;\n" +
+            "  \n" +
+            "  public static void main(String[] args) {\n" +
+            "    Field f = Book.class.getDeclaredField(\"isbn\");\n" +
+            "    for (Annotation a: f.getDeclaredAnnotations()) {\n" +
+            "      System.out.println(a);\n" +
+            "    } \n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -1801,24 +1815,23 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
         executeClass(paths[0], "Book", "@NotNull()\n@Length()\n", "");
 
-        // whitespace change
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Book",
-            //@formatter:off
             "import java.lang.annotation.Annotation;\n" +
             "import java.lang.reflect.Field;\n" +
             "\n" +
-            "    class Book {  \n" +
-            "      @ISBN\n" +
-            "      String isbn;\n" +
-            "      \n" +
-            "      public static void main(String[] args) {\n" +
-            "        Field f = Book.class.getDeclaredField(\"isbn\");\n" +
-            "        for (Annotation a: f.getDeclaredAnnotations()) {\n" +
-            "          System.out.println(a);\n" +
-            "        } \n" +
-            "      }\n" +
-            "    }\n");
-            //@formatter:on
+            "class Book {  \n" + // whitespace change
+            "  @ISBN\n" +
+            "  String isbn;\n" +
+            "  \n" +
+            "  public static void main(String[] args) {\n" +
+            "    Field f = Book.class.getDeclaredField(\"isbn\");\n" +
+            "    for (Annotation a: f.getDeclaredAnnotations()) {\n" +
+            "      System.out.println(a);\n" +
+            "    } \n" +
+            "  }\n" +
+            "}\n");
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Book");
@@ -1830,77 +1843,74 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testClosureIncremental() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "", "Launch",
-            //@formatter:off
             "public class Launch {\n" +
             "  public static void main(String[] args) {\n" +
             "    Runner.run(3);\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Runner",
-            //@formatter:off
             "def static run(int n) { \n" +
             "  OtherGroovy.iterate(4) {\n" +
             "    print it*2\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "OtherGroovy",
-            //@formatter:off
             "def static iterate(Integer n, closure) {\n" +
             "  1.upto(n) {\n" +
             "    closure(it);\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1", "Runner", "Runner$_run_closure1", "Launch");
         expectingNoProblems();
         executeClass(paths[0], "Launch", "2468", "");
 
-        // modify the body of the closure
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Runner",
-            //@formatter:off
             "def static run(int n) { \n" +
             "  OtherGroovy.iterate (4) {\n" +
             "  print it\n" + // change here
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Runner", "Runner$_run_closure1");
         expectingNoProblems();
         executeClass(paths[0], "Launch", "1234", "");
 
-        // modify how the closure is called
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "OtherGroovy",
-            //@formatter:off
             "def static iterate(Integer n, closure) {\n" +
             "  1.upto(n*2) {\n" + // change here
             "    closure(it);\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1");
         expectingNoProblems();
         executeClass(paths[0], "Launch", "12345678", "");
 
-        // change the iterate method signature from Integer to int - should trigger build of Runner
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "OtherGroovy",
-            //@formatter:off
             "def static iterate(int n, closure) {\n" +
             "  1.upto(n*2) {\n" + // change here
             "    closure(it);\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1", "Runner", "Runner$_run_closure1");
@@ -1910,14 +1920,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testSpock_GRE558() throws Exception {
-        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
-
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
-        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        addJUnitAndSpock(paths[0]);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "MyTest",
-            //@formatter:off
             "final class MyTest extends spock.lang.Specification {\n" +
             "  def prop\n" +
             "  def meth() {\n" +
@@ -1928,7 +1935,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    print 'success'\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -1943,14 +1950,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testSpock_GRE605_1() throws Exception {
-        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
-
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
-        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        addJUnitAndSpock(paths[0]);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "FoobarSpec",
-            //@formatter:off
             "class FoobarSpec extends spock.lang.Specification {\n" +
             "  private Foobar field\n" +
             "  def example() {\n" +
@@ -1961,14 +1965,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    foobar.baz == 42\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foobar",
-            //@formatter:off
             "class Foobar {\n" +
             "  def baz = 42\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -1978,13 +1982,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         File f = new File(workspacePath.append(env.getOutputLocation(paths[0])).toOSString(), "FoobarSpec.class");
         long filesize = f.length(); // this is 9131 for groovy 1.7.0
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foobar",
-            //@formatter:off
             "class Foobar {\n" +
             "  def baz = 42\n" +
             "  def xyz = 36\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -2005,14 +2009,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
      */
     @Test
     public void testSpock_GRE605_2() throws Exception {
-        assumeFalse(isAtLeastGroovy(30)); // TODO: Remove when spock-core supports Groovy 3
-
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/spock-core-1.3-groovy-2.4.jar");
-        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
+        addJUnitAndSpock(paths[0]);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "FoobarSpec",
-            //@formatter:off
             "class FoobarSpec extends spock.lang.Specification {\n" +
             "  private Foobar field\n" +
             "  def example() {\n" +
@@ -2023,26 +2024,26 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    foobar.baz == 42\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foobar",
-            //@formatter:off
             "class Foobar {\n" +
             "  def baz = 42\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
         expectingCompiledClasses("Foobar", "FoobarSpec");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Foobar",
-            //@formatter:off
             "class Foobar {\n" +
             "  def baz = 42\n" +
             "  def xyz = 36\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -2053,22 +2054,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testGenericMethods() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "", "Foo",
-            //@formatter:off
             "public class Foo<T> {\n" +
             "   public void m() {\n" +
             "      Bar.agent(null);\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Bar",
-            //@formatter:off
             "class Bar {\n" +
             "   public static <PP> void agent(PP state) {\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Foo", "Bar");
@@ -2079,8 +2080,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testPropertyAccessorLocationChecks() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1;\n" +
             "class Hello {\n" +
             "  int color;\n" +
@@ -2088,7 +2089,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "      print \"Hello Groovy world\"\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
@@ -2100,12 +2101,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildGroovy2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p1", "Hello",
-            //@formatter:off
             "package p1;\n" +
             "interface Hello extends java.util.List {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Hello");
@@ -2127,15 +2128,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
                     "}\n");
             }
 
+            //@formatter:off
             env.addGroovyClass(paths[1], "p1", "Foo",
-                //@formatter:off
                 "package p1;\n" +
                 "import p1.*;\n" +
                 "class Foo {\n" +
                 "  public static void main(String []argv) { print '12';}\n" +
                 "  void m() { Bar b = new Bar();}\n" +
                 "}\n");
-                //@formatter:on
+            //@formatter:on
 
             env.addGroovyClass(paths[1], "p1", "Bar",
                 "package p1;\n" +
@@ -2154,52 +2155,51 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testIncrementalCompilationTheBasics() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Hello",
-            //@formatter:off
             "package pkg;\n" +
             "public class Hello {\n" +
             "   public static void main(String[] args) {\n" +
             "      System.out.println(new GHello().run());\n" +
             "   }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "GHello",
-            //@formatter:off
             "package pkg;\n" +
             "public class GHello {\n" +
             "  public int run() { return 12; }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.Hello", "pkg.GHello");
         expectingNoProblems();
         executeClass(paths[0], "pkg.Hello", "12", "");
 
-        // whitespace change to groovy file
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "GHello",
-            //@formatter:off
             "package pkg;\n" +
             "public class GHello {\n" +
-            "  \n" + // new blank line
-            "   public int run() { return 12; }\n" +
+            "\n" + // new blank line
+            "  public int run() { return 12; }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.GHello");
         expectingNoProblems();
 
-        // structural change to groovy file - did the java file record its
-        // dependency correctly?
+        // structural change to Groovy file: Did the Java file record its dependency correctly?
+
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "GHello",
-            //@formatter:off
             "package pkg;\n" +
             "public class GHello {\n" +
-            "   public String run() { return \"abc\"; }\n" + // return type now String
+            "  public String run() { return \"abc\"; }\n" + // return type now String
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.GHello", "pkg.Hello");
@@ -2210,8 +2210,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testIncrementalCompilation1594() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "testpkg", "AllTests",
-            //@formatter:off
             "package testpkg;\n" +
             "public final class AllTests {\n" +
             "    TestCaseChannelPersistentStore tccps;\n" +
@@ -2219,10 +2219,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "public static void setupDbConnPool() throws Exception {\n" +
             "}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "testpkg", "TestCaseChannelPersistentStore",
-            //@formatter:off
             "package testpkg\n" +
             "class TestCaseChannelPersistentStore {\n" +
             // This will be added in a subsequent incremental build
@@ -2236,15 +2236,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "}\n" +
             "public static void main(String[]argv) { new TestCaseChannelPersistentStore().testRefreshedChannelMap();}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("testpkg.AllTests", "testpkg.TestCaseChannelPersistentStore", "testpkg.TestCaseChannelPersistentStore$1");
         expectingNoProblems();
         executeClass(paths[0], "testpkg.TestCaseChannelPersistentStore", "running", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "testpkg", "TestCaseChannelPersistentStore",
-            //@formatter:off
             "package testpkg\n" +
             "class TestCaseChannelPersistentStore {\n" +
             "public static void foo() {\n" +
@@ -2255,7 +2255,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    def x= new Runnable() {public void run() {}};\n" +
             "}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild();
         expectingNoProblems();
@@ -2266,54 +2266,54 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
         IPath[] paths = createSimpleProject("GRE566", true);
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Event",
-            //@formatter:off
             "package pkg;\n" +
             "public class Event {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "EventImpl",
-            //@formatter:off
             "package pkg;\n" +
             "public class EventImpl extends Event {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Face",
-            //@formatter:off
             "package pkg;\n" +
             "public interface Face<E extends Event> {\n" +
             "  void onApplicationEvent(E event);\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Java",
-            //@formatter:off
             "package pkg;\n" +
             "public class Java implements Face<EventImpl> {\n" +
             "  public void onApplicationEvent(EventImpl event) {\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "Groovy",
-            //@formatter:off
             "package pkg;\n" +
             "class Groovy extends Java {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.Event", "pkg.EventImpl", "pkg.Face", "pkg.Java", "pkg.Groovy");
         expectingNoProblems();
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "Groovy",
-            //@formatter:off
             "package pkg\n" +
             "class Groovy extends Java {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.Groovy");
@@ -2324,52 +2324,51 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testIncrementalCompilationTheBasics2_changingJavaDependedUponByGroovy() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Hello",
-            //@formatter:off
             "package pkg;\n" +
             "public class Hello {\n" +
             "  public int run() { return 12; }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "pkg", "GHello",
-            //@formatter:off
             "package pkg;\n" +
             "public class GHello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(new Hello().run());\n" +
-            "   }\n" +
+            "  public static void main(String[] args) {\n" +
+            "    System.out.println(new Hello().run());\n" +
+            "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.Hello", "pkg.GHello");
         expectingNoProblems();
         executeClass(paths[0], "pkg.GHello", "12", "");
 
-        // whitespace change to java file
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Hello",
-            //@formatter:off
             "package pkg;\n" +
             "public class Hello {\n" +
             "  \n" + // new blank line
             "  public int run() { return 12; }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.Hello");
         expectingNoProblems();
 
-        // structural change to groovy file - did the java file record its
-        // dependency correctly?
+        // structural change to Groovy file: Did the Java file record its dependency correctly?
+
+        //@formatter:off
         env.addClass(paths[1], "pkg", "Hello",
-            //@formatter:off
             "package pkg;\n" +
             "public class Hello {\n" +
-            "   public String run() { return \"abc\"; }\n" + // return type now String
+            "  public String run() { return \"abc\"; }\n" + // return type now String
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("pkg.GHello", "pkg.Hello");
@@ -2381,12 +2380,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testInnerClasses_GRE339() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "", "Outer",
-            //@formatter:off
             "public interface Outer {\n" +
             "  interface Inner { static String VAR=\"value\";}\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         env.addGroovyClass(paths[1], "", "script",
             "print Outer.Inner.VAR\n");
@@ -2415,13 +2414,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "class C {\n" + "//todo nothing\n" + // // 24>36 'todo nothing'
             "\n" + "//tooo two\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2441,13 +2440,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "class C {\n" + "//topo nothing\n" + // '/' is 22 'n' is 29 'g' is 35
             "\n" + "//todo two\n" + // '/' is 38 't' is 45 'o' is 47
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2463,13 +2462,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "class C {\n" + "//TODO nothing\n" + // '/' is 22 'n' is 29 'g' is 35
             "\n" + "//topo two\n" + // '/' is 38 't' is 45 'o' is 47
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2488,13 +2487,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "/*  todo nothing */\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2509,14 +2508,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "/*  todo\n" +
             " */\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2531,15 +2530,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "/*  \n" + // 12
             " * todo nothing *\n" + // 17
             " */\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2554,15 +2553,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" + // -- \n is 11
             "public class A {\n" + // -- \n is 28
             "   /*  \n" + // -- \n is 36
             " * todo nothing *\n" +
             " */\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
 
@@ -2578,8 +2577,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "//TODO normal\n" +
             "public class A {\n" +
@@ -2590,7 +2589,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    //XXX low\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2627,13 +2626,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "// TODO FIXME need to review the loop TODO should be done\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2670,13 +2669,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "/* TODO FIXME need to review the loop TODO should be done */\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2713,12 +2712,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "// TODO TODO need to review the loop\n" +
             "public class A {\n" + "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -2852,17 +2851,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testNoResolveFailurePropagation1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "One",
-            //@formatter:off
             "package p;\n" +
             "class One {\n" +
             "  def pat(str) {\n" +
             "    Pattern.compile(str)\n" + // not resolvable
             "  }\n" +
             "}\n");
-            //@formatter:on
         env.addGroovyClass(paths[1], "p", "Two",
-            //@formatter:off
             "package p;\n" +
             "import java.util.regex.Pattern\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -2872,7 +2869,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    Pattern pattern = null\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -2882,17 +2879,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testNoResolveFailurePropagation2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "One",
-            //@formatter:off
             "package p;\n" +
             "class One {\n" +
             "  def policy() {\n" +
             "    ThreadPoolExecutor.AbortPolicy\n" + // not resolvable
             "  }\n" +
             "}\n");
-            //@formatter:on
         env.addGroovyClass(paths[1], "p", "Two",
-            //@formatter:off
             "package p;\n" +
             "import java.util.concurrent.ThreadPoolExecutor\n" +
             "@groovy.transform.CompileStatic\n" +
@@ -2902,7 +2897,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    ThreadPoolExecutor.AbortPolicy policy = null\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -2953,13 +2948,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTraitBasics() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Named",
-            //@formatter:off
             "package p\n" +
             "trait Named {\n" +
             "    String name() { 'name' }" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper");
@@ -2970,70 +2965,63 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTraitIncremental() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Named",
-            //@formatter:off
             "package p\n" +
             "trait Named {\n" +
-            "    String name() { 'name' }\n" +
+            "  String name() { 'name' }\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "q", "NamedClass",
-            //@formatter:off
             "package q;\n" +
             "import p.Named;\n" +
             "public class NamedClass implements Named {}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "", "Runner",
-            //@formatter:off
             "import p.Named\n" +
             "import q.NamedClass\n" +
             "Named named = new NamedClass()\n" +
             "print named.name()\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "q.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "name", "");
 
-        // modify the body of the trait
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Named",
-            //@formatter:off
             "package p\n" +
             "trait Named {\n" +
-            "    String name\n" +
-            "    String name() { \"$name\" }\n" +
+            "  String name\n" +
+            "  String name() { \"$name\" }\n" + // modify the body of the trait
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "p.Named$Trait$FieldHelper", "q.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "null", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Runner",
-            //@formatter:off
             "import p.Named\n" +
             "import q.NamedClass\n" +
             "Named named = new NamedClass(name: 'name')\n" +
             "print named.name()\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "name", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "q", "NamedClass",
-            //@formatter:off
             "package q;\n" +
             "import p.Named;\n" +
             "public class NamedClass implements Named {\n" +
             "    String name() { \"Hello, ${name}!\" }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("q.NamedClass", "Runner");
@@ -3045,87 +3033,78 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTraitBinary() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Named",
-            //@formatter:off
             "package p\n" +
             "trait Named {\n" +
             "    String name() { 'name' }\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "q", "DefaultNamed",
-            //@formatter:off
             "package q;\n" +
             "class DefaultNamed {\n" +
             "    public String name() { 'name' }\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "r", "NamedClass",
-            //@formatter:off
             "package r;\n" +
             "import p.Named\n" +
             "import q.DefaultNamed\n" +
             "public class NamedClass extends DefaultNamed implements Named {}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "", "Runner",
-            //@formatter:off
             "import r.NamedClass\n" +
             "NamedClass named = new NamedClass()\n" +
             "print named.name()\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "q.DefaultNamed", "r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "name", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "r", "NamedClass",
-            //@formatter:off
             "package r;\n" +
             "import p.Named\n" +
             "import q.DefaultNamed\n" +
             "public class NamedClass extends DefaultNamed implements Named {\n" +
             "  String name() { 'new name' }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "new name", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "r", "NamedClass",
-            //@formatter:off
             "package r;\n" +
             "import p.Named\n" +
             "import q.DefaultNamed\n" +
             "public class NamedClass extends DefaultNamed implements Named {}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("r.NamedClass", "Runner");
         expectingNoProblems();
         executeClass(paths[0], "Runner", "name", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Named",
-            //@formatter:off
             "package p\n" +
             "trait Named {\n" +
             "  abstract String name()\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "r", "NamedClass",
-            //@formatter:off
             "package r;\n" +
             "import p.Named\n" +
             "import q.DefaultNamed\n" +
             "public class NamedClass extends DefaultNamed implements Named {\n" +
             "  String name() { 'new name' }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.Named", "p.Named$Trait$Helper", "r.NamedClass", "Runner");
@@ -3137,8 +3116,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTraitGenerics() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "Event",
-            //@formatter:off
             "package p\n" +
             "class Event<T> {\n" +
             "  Event(String id, T payload) {\n" +
@@ -3146,10 +3125,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  Event<T> setReplyTo(Object replyTo) {\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "p", "Events",
-            //@formatter:off
             "package p\n" +
             "@groovy.transform.CompileStatic\n" +
             "trait Events {\n" +
@@ -3157,35 +3133,28 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  }\n" +
             "}\n" +
             "interface Registration<K, V> {}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "q", "Service",
-            //@formatter:off
             "package q\n" +
             "class Service implements p.Events {\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "q", "ServiceWrapper",
-            //@formatter:off
             "package q\n" +
             "class ServiceWrapper {\n" +
             "  Service service\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
 
-        // modify the body of the wrapper
+        //@formatter:off
         env.addGroovyClass(paths[1], "q", "ServiceWrapper",
-            //@formatter:off
             "package q\n" +
             "class ServiceWrapper {\n" +
             "  Service service\n" +
-            "  def logger\n" +
+            "  def logger\n" + // modify the body
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("q.ServiceWrapper");
@@ -3196,45 +3165,40 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTraitGRE1776() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "MyTrait",
-            //@formatter:off
             "package p\n" +
             "trait MyTrait {\n" +
             "}\n");
-            //@formatter:on
-
         env.addGroovyClass(paths[1], "q", "MyClass",
-            //@formatter:off
             "package q\n" +
             "import p.MyTrait\n" +
             "class MyClass implements MyTrait {}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
         expectingNoProblems();
 
-        // modify the body of the trait
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "MyTrait",
-            //@formatter:off
             "package p\n" +
             "trait MyTrait {\n" +
-            "  def m() { 'm' }\n" +
+            "  def m() { 'm' }\n" + // modify the body
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
         expectingNoProblems();
 
-        // modify again the body of the trait
+        //@formatter:off
         env.addGroovyClass(paths[1], "p", "MyTrait",
-            //@formatter:off
             "package p\n" +
             "trait MyTrait {\n" +
-            "  def k() { 'k' }\n" +
+            "  def k() { 'k' }\n" + // modify the body again
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
@@ -3245,8 +3209,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testGRE1773() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         String baseType =
-            //@formatter:off
             "package test\n" +
             "abstract class Class1 {\n" +
             "  abstract void m1()\n" +
@@ -3264,28 +3228,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
         IPath class1 = env.addGroovyClass(paths[1], "test", "Class1", baseType);
-
         IPath class2 = env.addGroovyClass(paths[1], "test", "Class2",
-            //@formatter:off
             "package test\n" +
             "class Class2 extends Class1 {\n" +
             "  @Override\n" +
             "  public void m1() {\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
-
         IPath class3 = env.addGroovyClass(paths[1], "test", "Class3",
-            //@formatter:off
             "package test\n" +
             "class Class3 extends Class1 {\n" +
             "  @Override\n" +
             "  public void m1() {\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -3328,13 +3286,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         IPath pathToA = env.addClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "// TODO need to review\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -3352,16 +3310,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         env.addClass(paths[1], "util", "MyException",
-            //@formatter:off
             "package util;\n" +
             "public class MyException extends Exception {\n" +
             "  private static final long serialVersionUID = 1L;\n" +
             "}");
-            //@formatter:on
-
         env.addClass(paths[1], "p", "Test",
-            //@formatter:off
             "package p;\n" +
             "import util.MyException;\n" +
             "public class Test {\n" +
@@ -3371,7 +3326,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "  public void bar() {\n" +
             "  }\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -3384,13 +3339,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void test98667() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         env.addClass(paths[1], "p1", "Aaa$Bbb$Ccc",
-            //@formatter:off
             "package p1;\n" +
             "\n" +
             "public class Aaa$Bbb$Ccc {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingNoProblems();
@@ -3413,21 +3368,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testUpdateProjectPreferences() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         env.addClass(paths[1], "util", "MyException",
-            //@formatter:off
             "package util;\n" +
             "public class MyException extends Exception {\n" +
             "  private static final long serialVersionUID = 1L;\n" +
             "}");
-            //@formatter:on
-
         IPath cuPath = env.addClass(paths[1], "p", "Test",
-            //@formatter:off
             "package p;\n" +
             "import util.MyException;\n" +
             "public class Test {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingSpecificProblemFor(paths[0], new Problem("",
@@ -3443,21 +3395,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testUpdateWorkspacePreferences() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         env.addClass(paths[1], "util", "MyException",
-            //@formatter:off
             "package util;\n" +
             "public class MyException extends Exception {\n" +
             "  private static final long serialVersionUID = 1L;\n" +
             "}");
-            //@formatter:on
-
         IPath cuPath = env.addClass(paths[1], "p", "Test",
-            //@formatter:off
             "package p;\n" +
             "import util.MyException;\n" +
             "public class Test {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         expectingSpecificProblemFor(paths[0], new Problem("",
@@ -3486,13 +3435,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         IPath[] paths = createSimpleProject("Project", false);
 
+        //@formatter:off
         IPath pathToA = env.addClass(paths[1], "p", "A",
-            //@formatter:off
             "package p; \n" +
             "// TODO! TODO? need to review the loop\n" +
             "public class A {\n" +
             "}");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild(paths[0]);
         IMarker[] markers = env.getTaskMarkersFor(pathToA);
@@ -3517,8 +3466,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBuildClash() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Stack",
-            //@formatter:off
             "class StackTester {\n" +
             "  def o = new Stack();\n" +
             "  public static void main(String[] args) {\n" +
@@ -3526,15 +3475,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    System.out.println(\"Hello world\");\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("StackTester");
         expectingNoProblems();
         executeClass(paths[0], "StackTester", ">>class java.util.Stack\nHello world\n", "");
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "", "Stack",
-            //@formatter:off
             "class StackTester {\n" +
             "  def o = new Stack();\n" +
             "  public static void main(String[] args) {\n" +
@@ -3542,7 +3491,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "    System.out.println(\"Hello world\");\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("StackTester");
@@ -3555,15 +3504,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         // Construct ProjectA
         IPath[] paths = createSimpleProject("ProjectA", true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "a", "Hello",
-            //@formatter:off
             "package a\n" +
             "class Hello {\n" +
             "  static void main(String[] args) {\n" +
             "    System.out.println('Hello world')\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         IPath projectA = paths[0];
 
@@ -3572,45 +3521,45 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath projectB = paths[0];
         env.addRequiredProject(projectB, projectA, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "b", "Hello",
-            //@formatter:off
             "package b\n" +
             "class Hello {\n" +
             "  static void main(String[] args) {\n" +
             "    a.Hello.main(args)\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         // Construct ProjectC
         paths = createSimpleProject("ProjectC", true);
         IPath projectC = paths[0];
         env.addRequiredProject(projectC, projectB, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "c", "Hello",
-            //@formatter:off
             "package c\n" +
             "class Hello {\n" +
             "  static void main(String[] args) {\n" +
             "    b.Hello.main(args)\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         // Construct ProjectD
         paths = createSimpleProject("ProjectD", true);
         IPath projectD = paths[0];
         env.addRequiredProject(projectD, projectC, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "d", "Hello",
-            //@formatter:off
             "package d\n" +
             "class Hello {\n" +
             "  static void main(String[] args) {\n" +
             "    c.Hello.main(args)\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         fullBuild();
         expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
@@ -3621,25 +3570,21 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTypeAnnotation() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
+        //@formatter:off
         env.addClass(paths[1], "p1", "Iterables",
-            //@formatter:off
             "package p1;\n" +
             "public class Iterables {\n" +
             "  public <T> @Nullable T getFirst(Iterable<? extends T> iterable, @Nullable T defaultValue) {\n" +
             "    return null;\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
         env.addClass(paths[1], "p1", "Multimap",
-            //@formatter:off
             "package p1;\n" +
             "import java.util.Collection;\n" +
             "public interface Multimap<K, V> {\n" +
             "   Collection<V> get(@Nullable K key);\n" +
             "}\n");
-            //@formatter:on
         env.addClass(paths[1], "p1", "Nullable",
-            //@formatter:off
             "package p1;\n" +
             "import java.lang.annotation.*;\n" +
             "@Documented\n" +
@@ -3647,14 +3592,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "@Target(value = {ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})\n" +
             "public @interface Nullable {\n" +
             "}\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p1.Iterables", "p1.Multimap", "p1.Nullable");
         expectingNoProblems();
 
+        //@formatter:off
         env.addGroovyClass(paths[1], "p2", "Script",
-            //@formatter:off
             "package p2\n" +
             "import p1.Iterables\n" +
             "import p1.Multimap\n" +
@@ -3663,7 +3608,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "def parseString(String string) {\n" +
             "}\n" +
             "def result = parseString(Iterables.getFirst(params.get('key'), null))\n");
-            //@formatter:on
+        //@formatter:on
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p2.Script");

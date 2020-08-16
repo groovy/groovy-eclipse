@@ -36,33 +36,31 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "1.with { it.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
         assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
     public void testDGM1a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "@groovy.transform.CompileStatic\n" +
             "void test() {\n" +
             "  1.with { it.intValue() }" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
         assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
     public void testDGM2() { // with has a delegate-first resolve strategy (default is owner-first)
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Y {\n" +
             "  String value\n" +
             "}\n" +
@@ -72,15 +70,14 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "    y.with { value }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.String");
     }
 
     @Test
     public void testDGM2a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Y {\n" +
             "  String value\n" +
             "}\n" +
@@ -90,470 +87,425 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "    y.with { println \"Value: $value\" }\n" + // another enclosing method call
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.String");
     }
 
     @Test
     public void testDGM3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1, [2, 3]].collectNested { it }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Object");
     }
 
     @Test
     public void testDGM4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1, [2, 3], null].collectNested { it }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Object");
     }
 
     @Test
     public void testDGM5() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM7() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM8() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM9() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1].collectMany { [it.intValue()] }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM10() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "Integer.metaClass { this }"; // static MetaClass metaClass(Class self, Closure closure)
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "this", DEFAULT_UNIT_NAME);
         // TODO: When 'closure' has @ClosureParams and/or @DelegatesTo, check param(s) and delegate
     }
 
     @Test
     public void testDGM11() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "([1]).collectEntries { index -> index.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "index", "java.lang.Integer");
     }
 
     @Test
     public void testDGM12() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM13() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM14() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1].findResults { it.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM15() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findResults { it.getKey().toUpperCase() + it.getValue().intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
     }
 
     @Test
     public void testDGM16() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM17() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM18() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM19() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM20() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM21() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM22() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "([1]).countBy { it.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM23() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM24() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM25() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].inject(1.0) { seed, entry -> null }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "seed", "java.math.BigDecimal");
     }
 
     @Test
     public void testDGM26() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].inject(1.0) { seed, entry -> entry.key.toUpperCase() + entry.value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "entry", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
     }
 
     @Test
     public void testDGM26a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM26b() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM27() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].withDefault { key -> key.toUpperCase() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM28() { // withDefault expects one-param Closure
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[key:1].withDefault { key, val -> key.toUpperCase() + val.intValue() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.lang.Object");
     }
 
     @Test
     public void testDGM29() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new FileOutputStream().withStream { it }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.FileOutputStream");
     }
 
     @Test
     public void testDGM30() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.io.FileType\n" +
             "new File('test').eachFileMatch(FileType.FILES, 1) { it.name }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM31() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').eachDirMatch(1) { it.name }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM32() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withReader { it.reset() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.BufferedReader");
     }
 
     @Test
     public void testDGM33() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new FileReader(new File('test')).filterLine(new FileWriter(new File('test'))) { it.toUpperCase() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM34() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withOutputStream { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.OutputStream");
     }
 
     @Test
     public void testDGM35() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withInputStream { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.InputStream");
     }
 
     @Test
     public void testDGM36() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withDataOutputStream { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.DataOutputStream");
     }
 
     @Test
     public void testDGM37() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withDataInputStream { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.DataInputStream");
     }
 
     @Test
     public void testDGM38() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withWriter { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM39() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withWriterAppend { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM40() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File('test').withPrintWriter { it.flush() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.io.PrintWriter");
     }
 
     @Test
     public void testDGM41() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new FileReader(new File('test')).transformChar(new FileWriter(new File('test'))) { it.toUpperCase() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM42() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new FileReader(new File('test')).transformLine(new FileWriter(new File('test'))) { it.toUpperCase() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    @Test @Ignore("ClosureParams states 'List<String>' or 'String[]', but runtime allows for destructuring if number of elements fits into params")
+    @Test @Ignore("ClosureParams states 'List<String>' or 'String[]', but " +
+        "runtime allows for destructuring if number of elements fits into params")
     public void testDGM43() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.eachMatch('') { it.toLowerCase() }";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test // GRECLIPSE-1695
     public void testDGM44() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "List<String> list = []\n" +
             "list.toSorted { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "}.each {\n" +
             "  it\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM45() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "List<String> list = []\n" +
             "list.sort { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "}.each {\n" +
             "  it\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
         // Java 8 adds default method sort(Comparator) to the List interface
         assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
@@ -569,17 +521,15 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         } catch (Exception e) {
             jdkListSort = false;
         }
-
+        //@formatter:off
         String contents =
-            //@formatter:off
             "List<String> list = []\n" +
             "list.sort({ a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "} as Comparator).each {\n" +
             "  it\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         if (!jdkListSort) {
             assertExprType(contents, "it", "java.lang.String");
         } else {
@@ -590,188 +540,172 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM45b() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "String[] array = []\n" +
             "array.sort { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "sort", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1077
     public void testDGM45c() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "char[] array = []\n" +
             "array.sort()\n";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("sort");
         assertUnknownConfidence(contents, offset, offset + 4);
     }
 
     @Test
     public void testDGM46() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
             "pats.eachWithIndex { pat, idx ->\n" + // T <T> eachWithIndex(T self, Closure task)
             "  \n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "eachWithIndex", "java.util.regex.Pattern[]");
     }
 
     @Test
     public void testDGM47() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
             "pats.eachWithIndex { pat, idx ->\n" +
             "  \n" +
             "}.collect {\n" + // <T> List<T> collect(Object self, Closure<T> xform)
             "  it\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "collect", "java.util.List<java.lang.Object>");
     }
 
     @Test
     public void testDGM48() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "int[] ints = [1, 2, 3]\n" +
             "String dgm(Object[] arr) {}\n" +
             "Object dgm(Object obj) {}\n" +
             "def result = dgm(ints)\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test
     public void testDGM48a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "int[] ints = [1, 2, 3]\n" +
             "Object dgm(Object obj) {}\n" +
             "String dgm(Object[] arr) {}\n" +
             "def result = dgm(ints)\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "result", "java.lang.Object");
     }
 
-    @Test
+    @Test // primitive array is not compatible with boxed-type array
     public void testDGM49() {
-        // primitive array is not compatible with boxed-type array
+        //@formatter:off
         String contents =
-            //@formatter:off
             "int[] ints = [1, 2, 3]\n" +
             "Integer dgm(Integer[] arr) { null }\n" +
             "Object dgm(Object obj) { null }\n" +
             "def result = dgm(ints)\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/804
     public void testDGM50() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def answer = (-42L).&abs\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "abs", "java.lang.Long");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1027
     public void testDGM51() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def result = '42'.number\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "number", "java.lang.Boolean");
         assertDeclType(contents, "number", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1027
     public void testDGM52() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def result = ' '.allWhitespace\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "allWhitespace", "java.lang.Boolean");
         assertDeclType(contents, "allWhitespace", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
     public void testDGM53() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def result = ' '.&allWhitespace\n";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("allWhitespace");
         assertUnknownConfidence(contents, offset, offset + "allWhitespace".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1076
     public void testDGM54() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "void test(String[] strings) {\n" +
             "  strings.toString()\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "toString", "java.lang.String");
         assertDeclType(contents, "toString", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1076
     public void testDGM54a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "void test(String[] strings) {\n" +
             "  strings.equals([])\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "equals", "java.lang.Boolean");
         assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1076
     public void testDGM54b() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "void test(String[] strings) {\n" +
             "  [].equals(strings)\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "equals", "java.lang.Boolean");
         assertDeclType(contents, "equals", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
     public void testDGM55() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def str = '''\\\n" +
             "  blah blah\n" +
             "'''.stripIndent()\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "stripIndent", "java.lang.String");
         float version = Float.parseFloat(System.getProperty("java.specification.version"));
         // Java 13+: @jdk.internal.PreviewFeature(feature=jdk.internal.PreviewFeature.Feature.TEXT_BLOCKS,essentialAPI=true)
@@ -780,228 +714,206 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1131
     public void testDGMClosure1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "1.each { it }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Object"); // not Integer because no @ClosureParams on this each
     }
 
     @Test // GRECLIPSE-1131
     public void testDGMClosure2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "each { it }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Object"); // not Search because no @ClosureParams on this each
     }
 
     @Test
     public void testDGMClosure3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[''].each { it }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGMClosure4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[''].reverseEach { val -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.lang.String");
     }
 
     @Test
     public void testDGMClosure5() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "(1..4).find { it }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "['a':1].collect { it.key }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGMClosure7() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "['a':1].collect { it.value }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test // Integer is explicit, so should use that as a type
     public void testDGMClosure8() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[''].reverseEach { Integer val -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.lang.Integer");
     }
 
     @Test // Integer is explicit, so should use that as a type
     public void testDGMClosure9() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[''].reverseEach { Integer it -> it }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure10() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[new Date()].eachWithIndex { val, i -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
     public void testDGMClosure11() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[''].eachWithIndex { val, i -> i }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "i", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure12() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].eachWithIndex { key, val, i -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
     public void testDGMClosure13() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].eachWithIndex { key, val, i -> key }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure14() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].eachWithIndex { key, val, i -> i }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "i", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure15() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].each { key, val -> key }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure16() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].each { key, val -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
     public void testDGMClosure17() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].collect { key, val -> key }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure18() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1:new Date()].collect { key, val -> val }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "val", "java.util.Date");
     }
 
     @Test
     public void testDGMClosure19() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1].unique { a, b -> b }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "b", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure20() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1].unique { a, b -> a }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "a", "java.lang.Integer");
     }
 
     @Test
     public void testDGMClosure21() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1f: 1d].collectEntries { key, value -> [value, key] }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "value", "java.lang.Double");
     }
 
     @Test
     public void testDGMClosure22() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "[1f: 1d].collectEntries { key, value -> [value, key] }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "key", "java.lang.Float");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/810
     public void testDGMClosure23() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Bar { Number number }\n" +
             "class Foo implements Iterable<Bar> {\n" +
             "  List<Bar> bars\n" +
@@ -1012,39 +924,35 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "    this.any { bar -> bar.number > 0 }\n" + // any(Object,Closure) vs. any(Iterable,Closure)
             "  }\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertExprType(contents, "bar", "Bar"); // not "java.lang.Object"
     }
 
     @Test
     public void testDGMDeclaring1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.eachLine { line -> }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new File().eachLine { line -> }\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "Writer w\n" +
             "w.leftShift(null)\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "leftShift", "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 
@@ -1057,7 +965,9 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring5() {
         String contents = "new StringBuilder().size()";
-        assertDeclType(contents, "size", isAtLeastGroovy(30) ? "org.codehaus.groovy.runtime.StringGroovyMethods" : "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
+        assertDeclType(contents, "size", isAtLeastGroovy(30)
+            ? "org.codehaus.groovy.runtime.StringGroovyMethods"
+            : "org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
@@ -1116,8 +1026,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticMixinDGM() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Parrot {\n" +
             "  static void echo(String self) {\n" +
             "    println \"Parrot says: $self\"\n" +
@@ -1125,28 +1035,26 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}\n" +
             "String.mixin(Parrot)\n" +
             "'sqwak'.echo()";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "mixin", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-      //assertDeclType(contents, "echo", "Parrot"); // added to String using DGM.mixin(Class)
+        //assertDeclType(contents, "echo", "Parrot"); // added to String using DGM.mixin(Class)
     }
 
     @Test
     public void testStaticWithDGM() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "Date.with {\n" +
             "  delegate\n" + // type of delegate checked in ClosureInferencingTests
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/512
     public void testConflictWithDGM() {
+        //@formatter:off
         createUnit("Reflections",
-            //@formatter:off
             "import java.lang.reflect.*\n" +
             "class Reflections {\n" +
             "  static Method findMethod(String methodName, Class<?> targetClass, Class<?>... paramTypes) {\n" +
@@ -1154,16 +1062,13 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "  static Object invokeMethod(Method method, Object target, Object... params) {\n" +
             "  }\n" +
             "}\n");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "static void setThreadLocalProperty(String key, Object val) { Class target = null // redacted\n" +
             "  def setter = Reflections.findMethod('setThreadLocalProperty', target, String, Object)\n" +
             "  Reflections.invokeMethod(setter, target, key, val)\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclType(contents, "invokeMethod", "Reflections"); // not DefaultGroovyMethods
     }
 }

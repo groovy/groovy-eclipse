@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,60 +44,54 @@ import org.junit.Test;
 
 public final class BinarySearchTests extends SearchTestSuite {
 
+    //@formatter:off
     private String groovyClassContents =
-            //@formatter:off
-            "package pack\n" +
-            "\n" +
-            "class OtherClass { }\n" +
-            "class AGroovyClass {\n" +
-            "        String name_1\n" +
-            "        int age_1\n" +
-            "        def referencedInInitializer() { }\n" +
-            "        def fieldInInitializer\n" +
-            "\n" +
-            "        def doit() {\n" +
-            "                println name_1 + age_1\n" +
-            "                AGroovyClass\n" +
-            "                OtherClass\n" +
-            "                doit()\n" +
-            "                def aClosure = {\n" +
-            "                        println name_1 + age_1\n" +
-            "                        AGroovyClass\n" +
-            "                        OtherClass\n" +
-            "                        doit()\n" +
-            "                }\n" +
-            "        }\n" +
-            "        { \n" +
-            "                referencedInInitializer() \n" +
-            "                fieldInInitializer\n" +
-            "        }\n" +
-            "}\n" +
-            "";
-            //@formatter:on
-
+        "package pack\n" +
+        "class OtherClass { }\n" +
+        "class AGroovyClass {\n" +
+        "        String name_1\n" +
+        "        int age_1\n" +
+        "        def referencedInInitializer() { }\n" +
+        "        def fieldInInitializer\n" +
+        "        \n" +
+        "        def doit() {\n" +
+        "                println name_1 + age_1\n" +
+        "                AGroovyClass\n" +
+        "                OtherClass\n" +
+        "                doit()\n" +
+        "                def aClosure = {\n" +
+        "                        println name_1 + age_1\n" +
+        "                        AGroovyClass\n" +
+        "                        OtherClass\n" +
+        "                        doit()\n" +
+        "                }\n" +
+        "        }\n" +
+        "        { \n" +
+        "                referencedInInitializer() \n" +
+        "                fieldInInitializer\n" +
+        "        }\n" +
+        "}\n";
     private String groovyClassContents2 =
-            //@formatter:off
-            "package pack\n" +
-            "\n" +
-            "class AnotherGroovyClass {\n" +
-            "        def doit() {\n" +
-            "                println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
-            "                AGroovyClass\n" +
-            "                OtherClass\n" +
-            "                new AGroovyClass().doit()\n" +
-            "                def aClosure = {\n" +
-            "                        println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
-            "                        AGroovyClass\n" +
-            "                        OtherClass\n" +
-            "                        new AGroovyClass().doit()\n" +
-            "                }\n" +
-            "        }\n" +
-            "        { \n" +
-            "                new AGroovyClass().referencedInInitializer() \n" +
-            "                new AGroovyClass().fieldInInitializer\n" +
-            "        }\n" +
-            "}\n";
-            //@formatter:on
+        "package pack\n" +
+        "class AnotherGroovyClass {\n" +
+        "        def doit() {\n" +
+        "                println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
+        "                AGroovyClass\n" +
+        "                OtherClass\n" +
+        "                new AGroovyClass().doit()\n" +
+        "                def aClosure = {\n" +
+        "                        println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" +
+        "                        AGroovyClass\n" +
+        "                        OtherClass\n" +
+        "                        new AGroovyClass().doit()\n" +
+        "                }\n" +
+        "        }\n" +
+        "        { \n" +
+        "                new AGroovyClass().referencedInInitializer() \n" +
+        "                new AGroovyClass().fieldInInitializer\n" +
+        "        }\n" +
+        "}\n";
+    //@formatter:on
 
     private IJavaProject javaProject;
 

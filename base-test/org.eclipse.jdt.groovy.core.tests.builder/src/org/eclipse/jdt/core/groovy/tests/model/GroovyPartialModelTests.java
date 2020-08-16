@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,10 +94,10 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
     @Test
     public void testClosureReturner() throws Exception {
         IProject project = createSimpleGroovyProject().getProject();
+        //@formatter:off
         env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2",
-            //@formatter:off
             "class C { def aaa = { 123 } }");
-            //@formatter:on
+        //@formatter:on
         IFile javaFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path("Project/src/p1/Hello2.groovy"));
         GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(javaFile);
         ClassNode inClass = unit.getModuleNode().getClasses().get(0);

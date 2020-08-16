@@ -21,12 +21,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def fn = { a, b ->\n" +
             "  return a + b\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
         assertType(contents, "fn", "groovy.lang.Closure");
     }
 
@@ -38,23 +38,22 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  URL other\n" +
             "  def method(Number param) {\n" +
             "    def fn = { -> param }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "param", "java.lang.Number");
     }
 
     @Test
     public void testClosure4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  URL other\n" +
             "  def method() {\n" +
@@ -62,45 +61,42 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    def fn = { -> local }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "local", "java.lang.Number");
     }
 
     @Test
     public void testClosure5() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  URL proper\n" +
             "  def method() {\n" +
             "    def fn = { -> proper }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "proper", "java.net.URL");
     }
 
     @Test
     public void testClosure6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  static URL proper\n" +
             "  def method() {\n" +
             "    def fn = { -> proper }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "proper", "java.net.URL");
     }
 
     @Test
     public void testClosure7() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  def method() {\n" +
@@ -114,8 +110,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "this",          "Bar");
         assertType(contents, "super",         "Foo");
         assertType(contents, "owner",         "Bar");
@@ -126,8 +121,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // closure with non-default resolve strategy
     public void testClosure8() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {}\n" +
             "class Bar {\n" +
             "  def method() {\n" +
@@ -141,8 +136,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "this",          "Bar");
         assertType(contents, "super",         "java.lang.Object");
         assertType(contents, "owner",         "Bar");
@@ -153,8 +147,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // closure in static scope wrt owner
     public void testClosure9() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  static void main(args) {\n" +
@@ -168,8 +162,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "owner",           "java.lang.Class<Bar>");
         assertType(contents, "getOwner()",      "java.lang.Class<Bar>");
         assertType(contents, "delegate",        "java.lang.Class<Bar>");
@@ -180,8 +173,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
     public void testClosure9a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  static long bar(String arg) {\n" +
             "  }\n" +
@@ -192,15 +185,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "bar", "java.lang.Long");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/502
     public void testClosure9b() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  static long bar(String arg) {\n" +
             "  }\n" +
@@ -213,15 +205,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "bar", "java.lang.Long");
     }
 
     @Test
     public void testClosure10() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  static void main(args) {\n" +
@@ -231,16 +222,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "this",  "java.lang.Class<Bar>");
         assertType(contents, "super", "java.lang.Class<Bar>");
     }
 
     @Test // non-static delegate is same type as static owner
     public void testClosure11() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number bar\n" +
             "  static main(args) {\n" +
@@ -251,8 +241,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "Foo"); // obj exp of with
         assertType(contents, "owner", "java.lang.Class<Foo>");
         assertType(contents, "bar", "java.lang.Number");
@@ -266,8 +255,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // static object expression for delegate
     public void testClosure11a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Boo {}\n" +
             "class Foo {\n" +
             "  Number bar\n" +
@@ -279,8 +268,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.lang.Class<Boo>");
         assertType(contents, "owner", "java.lang.Class<Foo>");
 
@@ -296,8 +284,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // other (invariant) members of Closure
     public void testClosure12() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def fn = {\n" +
             "  directive\n" +
             "  getDirective()\n" +
@@ -308,8 +296,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "directive", "java.lang.Integer");
         assertType(contents, "getDirective", "java.lang.Integer");
         assertType(contents, "resolveStrategy", "java.lang.Integer");
@@ -322,8 +309,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // other members of Closure (in static scope wrt owner)
     public void testClosure13() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A { static void main(args) { def fn = {\n" +
             "  directive\n" +
             "  getDirective()\n" +
@@ -334,8 +321,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  maximumNumberOfParameters\n" +
             "  getMaximumNumberOfParameters()\n" +
             "}}}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "directive", "java.lang.Integer");
         assertType(contents, "getDirective", "java.lang.Integer");
         assertType(contents, "resolveStrategy", "java.lang.Integer");
@@ -348,8 +334,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure14() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  Number b\n" +
             "  static void main(args) {\n" +
@@ -358,16 +344,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.lastIndexOf('b');
         assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test
     public void testClosure15() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  Number b\n" +
             "  static void main(args) {\n" +
@@ -376,16 +361,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.lastIndexOf('b');
         assertUnknownConfidence(contents, offset, offset + 1);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/360
     public void testClosure16() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  public C xxx\n" +
             "}\n" +
@@ -399,8 +383,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n" +
             "class C {}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "xxx", "C");
         int offset = contents.lastIndexOf("xyz");
         assertUnknownConfidence(contents, offset, offset + 3);
@@ -408,8 +391,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // closure is part of method call expression
     public void testClosure17() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  def m() {}\n" +
             "}\n" +
@@ -423,8 +406,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "this",     "B");
         assertType(contents, "super",    "A");
         assertType(contents, "owner",    "B");
@@ -433,8 +415,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure18() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  def m() {}\n" +
             "}\n" +
@@ -449,8 +431,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "getThisObject", "B");
         assertType(contents, "thisObject", "B");
         assertType(contents, "super", "A");
@@ -463,8 +444,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure19() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  def m() {}\n" +
             "}\n" +
@@ -476,7 +457,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         // @CompileStatic 2.3+ alters calls to super methods
         int start = contents.indexOf("equals("), end = start + "equals".length();
@@ -485,52 +466,48 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure20() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.foo {\n" +
             "  substring(0)\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
     public void testClosure21() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.foo {\n" +
             "  delegate.substring(0)\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
     public void testClosure22() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.foo {\n" +
             "  this.substring(0)\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("substring");
         assertUnknownConfidence(contents, offset, offset + "substring".length());
     }
 
     @Test
     public void testClosure23() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  substring(0)\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("substring");
         assertType(contents, offset, offset + "substring".length(), "java.lang.String");
         assertDeclaringType(contents, offset, offset + "substring".length(), "java.lang.String");
@@ -538,13 +515,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure24() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new Date().with {\n" +
             "  def t = time\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Long");
@@ -552,13 +528,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure25() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new Date().with {\n" +
             "  time = 0L\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Void");
@@ -566,14 +541,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure26() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new Date().with {\n" +
             "  time = 0L\n" +
             "  def t = time\n" + // this 'time' property should not be seen as setTime()
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
         assertType(contents, start, end, "java.lang.Long");
@@ -581,32 +555,30 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/660
     public void testClosure27() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "new Date().with { one, two = delegate ->\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("delegate");
         assertType(contents, offset, offset + "delegate".length(), "java.util.Date");
     }
 
     @Test
     public void testClosure28() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def closure = { int i = 2 ->\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("2");
         assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test
     public void testClosure29() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  private Number n = 0\n" +
             "  Number getBar() { return n }\n" +
@@ -615,8 +587,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "new Foo().with {\n" +
             "  bar += 42\n" + // property-style reference to getter and setter via '+='
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("bar");
         assertType(contents, offset, offset + "bar".length(), "java.lang.Void");
         assertDeclaration(contents, offset, offset + "bar".length(), "Foo", "setBar", DeclarationKind.METHOD);
@@ -624,20 +595,18 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1120
     public void testClosure30() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def value = flag ? { -> optionValue(cli, name) } : { -> cli.defaultValue(name) }";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("optionValue");
         assertUnknownConfidence(contents, offset, offset + "optionValue".length());
     }
 
-
     @Test // closure within closure
     public void testNestedClosure1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "def x = { def y = {\n" +
             "  owner\n" +
             "  getOwner()\n" +
@@ -648,8 +617,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  resolveStrategy\n" +
             "  getResolveStrategy()\n" +
             "}}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "owner", "groovy.lang.Closure");
         assertType(contents, "getOwner", "groovy.lang.Closure");
         assertType(contents, "delegate", "groovy.lang.Closure");
@@ -662,171 +630,160 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testNestedClosure2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1.with {\n" +
             "    intValue\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("intValue");
         assertUnknownConfidence(contents, offset, offset + "intValue".length());
     }
 
     @Test
     public void testNestedClosure3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1.with {\n" +
             "    intValue()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test
     public void testNestedClosure4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1.with {\n" +
             "    delegate.intValue()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test // DGM
     public void testNestedClosure5() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1L.with {\n" +
             "    abs\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("abs");
         assertUnknownConfidence(contents, offset, offset + "abs".length());
     }
 
     @Test // DGM
     public void testNestedClosure6() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1L.with {\n" +
             "    abs()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "abs", "java.lang.Long");
     }
 
     @Test
     public void testNestedClosure7() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1L.with {\n" +
             "    delegate.abs()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "abs", "java.lang.Long");
     }
 
     @Test
     public void testNestedClosure8() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  1L.with {\n" +
             "    this.abs()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("abs");
         assertUnknownConfidence(contents, offset, offset + "abs".length());
     }
 
     @Test
     public void testNestedClosure9() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  42.with {\n" +
             "    this\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "this", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
     public void testNestedClosure10() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "''.with {\n" +
             "  42.with {\n" +
             "    owner.thisObject\n" +
             "    owner.getThisObject()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "thisObject", DEFAULT_UNIT_NAME);
         assertType(contents, "getThisObject", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
     public void testNestedClosure11() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "42.with {\n" +
             "  ''.with {\n" +
             "    owner.delegate\n" +
             "    owner.getDelegate()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.lang.Integer");
         assertType(contents, "getDelegate", "java.lang.Integer");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
     public void testNestedClosure12() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "42.with {\n" +
             "  ''.with {\n" +
             "    def x = owner.owner\n" +
             "    def y = owner.getOwner()\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "x", DEFAULT_UNIT_NAME);
         assertType(contents, "y", DEFAULT_UNIT_NAME);
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
     public void testNestedClosure13() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "(~/.../).with {\n" +
             "  ''.with {\n" +
             "    42.with {\n" +
@@ -835,16 +792,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "delegate", "java.util.regex.Pattern");
         assertType(contents, "getDelegate", "java.util.regex.Pattern");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/809
     public void testNestedClosure14() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number nnn\n" +
             "  static class Bar {\n" +
@@ -868,8 +824,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "v", "java.lang.Number");
         assertType(contents, "x", "java.lang.Number");
         assertType(contents, "y", "java.lang.Number");
@@ -887,8 +842,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
     public void testNestedClosure15() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
             "  Number info\n" +
@@ -903,8 +858,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.lastIndexOf("info");
         assertType(contents, offset, offset + "info".length(), "java.lang.Number");
         assertDeclaringType(contents, offset, offset + "info".length(), "B"); // outer delegate
@@ -912,8 +866,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/377
     public void testNestedClosure16() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
             "  boolean meth(... args) {}\n" +
@@ -928,15 +882,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "meth", "B");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1141
     public void testNestedClosure17() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "private void process(artifacts, String rev, File jardir) {\n" +
             "}\n" +
             "void meth(org.w3c.dom.Element element, String rev, File dir) {\n" +
@@ -947,24 +900,20 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "process", "Search");
     }
 
     @Test
     public void testCoercedClosure1() {
+        //@formatter:off
         createUnit("Face",
-            //@formatter:off
             "interface Face {\n" +
             "  void meth(int a, BigInteger b, java.util.regex.Pattern c)\n" +
             "}");
-            //@formatter:on
 
-        //@formatter:off
         String contents = "Face f = { x, y, z-> }";
         //@formatter:on
-
         assertType(contents, "x", "java.lang.Integer");
         assertType(contents, "y", "java.math.BigInteger");
         assertType(contents, "z", "java.util.regex.Pattern");
@@ -972,17 +921,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testCoercedClosure2() {
+        //@formatter:off
         createUnit("Face",
-            //@formatter:off
             "interface Face {\n" +
             "  void meth(int a, BigInteger b, java.util.regex.Pattern c)\n" +
             "}");
-            //@formatter:on
 
-        //@formatter:off
         String contents = "def f = { x, y, z-> } as Face";
         //@formatter:on
-
         assertType(contents, "x", "java.lang.Integer");
         assertType(contents, "y", "java.math.BigInteger");
         assertType(contents, "z", "java.util.regex.Pattern");
@@ -990,14 +936,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1000
     public void testCoercedClosure3() {
+        //@formatter:off
         createUnit("Face",
-            //@formatter:off
             "interface Face<T> {\n" +
             "  boolean test(T t)\n" +
             "}");
-            //@formatter:on
 
-        //@formatter:off
         String contents =
             "class C<E> {\n" + // like Collection
             "  boolean meth(Face<? super E> f) {\n" + // like removeIf
@@ -1007,14 +951,13 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "def c = new C<Integer>()\n" +
             "def result = c.meth { e -> e }\n";
         //@formatter:on
-
         assertType(contents, "e", "java.lang.Integer");
     }
 
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.beans.Bindable\n" +
             "class A {\n" +
             "  @Bindable\n" +
@@ -1028,16 +971,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    a.foo = 'new'\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
-        int offset = contents.lastIndexOf("it");
-        assertType(contents, offset, offset + 2, "java.beans.PropertyChangeEvent");
+        //@formatter:on
+        assertType(contents, "it", "java.beans.PropertyChangeEvent");
     }
 
     @Test // GRECLIPSE-1748: Closure type inference with @CompileStatic
     public void testCompileStaticClosure1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.beans.Bindable\n" +
             "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
@@ -1053,26 +994,21 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    a.foo = 'new'\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+        //@formatter:on
+        assertType(contents, "it", "java.beans.PropertyChangeEvent");
     }
 
     @Test // GRECLIPSE-1751
     public void testWithAndClosure1() {
+        //@formatter:off
         createUnit("p", "D",
-            //@formatter:off
             "package p\n" +
             "class D {\n" +
             "  String foo\n" +
             "  D bar\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "class E {\n" +
             "  D d = new D()\n" +
@@ -1084,7 +1020,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1105,17 +1041,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testWithAndClosure2() {
+        //@formatter:off
         createUnit("p", "D",
-            //@formatter:off
             "package p\n" +
             "class D {\n" +
             "  String foo\n" +
             "  D bar\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "@groovy.transform.TypeChecked\n" +
             "class E {\n" +
@@ -1128,7 +1062,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1149,17 +1083,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testWithAndClosure3() {
+        //@formatter:off
         createUnit("p", "D",
-            //@formatter:off
             "package p\n" +
             "class D {\n" +
             "  String foo\n" +
             "  D bar\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "@groovy.transform.CompileStatic\n" +
             "class E {\n" +
@@ -1172,7 +1104,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1193,17 +1125,15 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testWithAndClosure4() {
+        //@formatter:off
         createUnit("p", "D",
-            //@formatter:off
             "package p\n" +
             "class D {\n" +
             "  String foo\n" +
             "  D bar = new D()\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "@groovy.transform.CompileStatic\n" +
             "class E {\n" +
@@ -1215,7 +1145,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int start = contents.indexOf("foo");
         int end = start + "foo".length();
@@ -1232,16 +1162,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testWithAndClosure5() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  String foo\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "class B {\n" +
             "  void meth() {\n" +
@@ -1252,7 +1180,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.lastIndexOf("foo");
         assertUnknownConfidence(contents, offset, offset + 3);
@@ -1260,16 +1188,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testWithAndClosure6() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  String foo\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "class B {\n" +
             "  void meth() {\n" +
@@ -1280,7 +1206,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.lastIndexOf("foo");
         assertDeclaringType(contents, offset, offset + 3, "p.A");
@@ -1288,16 +1214,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/927
     public void testWithAndClosure7() {
+        //@formatter:off
         createUnit("p", "A",
-            //@formatter:off
             "package p\n" +
             "class A {\n" +
             "  String foo\n" +
             "}");
-            //@formatter:on
 
         String contents =
-            //@formatter:off
             "package p\n" +
             "class B {\n" +
             "  void meth() {\n" +
@@ -1309,7 +1233,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.lastIndexOf("foo");
         assertDeclaringType(contents, offset, offset + 3, "p.B$1");
@@ -1317,8 +1241,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosureReturnType1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number bar\n" +
             "  String baz\n" +
@@ -1329,7 +1253,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "foo.bar\n" +
             "foo.baz\n" +
             "";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.indexOf("foo");
         assertType(contents, offset, offset + "foo".length(), "Foo");
@@ -1343,8 +1267,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosureReturnType2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number bar\n" +
             "  String baz\n" +
@@ -1356,7 +1280,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "arr[0].bar\n" +
             "arr[0].baz\n" +
             "";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.indexOf("arr");
         assertType(contents, offset, offset + "arr".length(), "Foo[]");
@@ -1373,8 +1297,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosureReturnType3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number bar\n" +
             "  String baz\n" +
@@ -1385,7 +1309,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "foo.bar\n" +
             "foo.baz\n" +
             "";
-            //@formatter:on
+        //@formatter:on
 
         int offset = contents.indexOf("foo");
         assertType(contents, offset, offset + "foo".length(), "Foo");
@@ -1399,8 +1323,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosureReturnType4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class Foo {\n" +
             "  Number bar\n" +
             "  String baz\n" +
@@ -1412,42 +1336,33 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "arr[0].bar\n" +
             "arr[0].baz\n" +
             "";
-            //@formatter:on
-
+        //@formatter:on
         int offset = contents.indexOf("arr");
         assertType(contents, offset, offset + "arr".length(), "Foo[]");
 
-        offset = contents.lastIndexOf("bar");
-        assertType(contents, offset, offset + "bar".length(), "java.lang.Number");
-
-        offset = contents.lastIndexOf("baz");
-        assertType(contents, offset, offset + "bar".length(), "java.lang.String");
-
-        offset = contents.lastIndexOf("length");
-        assertType(contents, offset, offset + "length".length(), "java.lang.Integer");
+        assertType(contents, "bar", "java.lang.Number");
+        assertType(contents, "baz", "java.lang.String");
+        assertType(contents, "length", "java.lang.Integer");
     }
 
     @Test
     public void testClosureParamsAnnotation1() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.transform.stc.*\n" +
             "def match(@ClosureParams(value=SimpleType, options=['java.util.regex.Pattern']) Closure block) {\n" +
             "  block(item)\n" +
             "}\n" +
             "\n" +
             "match { it }";
-            //@formatter:on
-
-        String target = "it";
-        int offset = contents.lastIndexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.regex.Pattern");
+        //@formatter:on
+        assertType(contents, "it", "java.util.regex.Pattern");
     }
 
     @Test
     public void testClosureParamsAnnotation2() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import java.util.regex.*\n" +
             "import groovy.transform.stc.*\n" +
             "def doItUp(List<Pattern> list, @ClosureParams(FirstParam.FirstGenericType) Closure code) {\n" +
@@ -1457,32 +1372,28 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}\n" +
             "\n" +
             "doItUp([]) { it }";
-            //@formatter:on
-
-        String target = "it";
-        int offset = contents.lastIndexOf(target);
-        assertType(contents, offset, offset + target.length(), "java.util.regex.Pattern");
+        //@formatter:on
+        assertType(contents, "it", "java.util.regex.Pattern");
     }
 
     @Test
     public void testClosureParamsAnnotation3() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
             "  C(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
             "  }\n" +
             "}\n" +
             "new C('str', { list -> null })\n";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "list", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testClosureParamsAnnotation4() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "import groovy.transform.stc.*\n" +
             "class C {\n" +
             "  static m(String s, @ClosureParams(value=SimpleType, options='java.util.List<java.lang.Integer>') Closure c) {\n" +
@@ -1491,15 +1402,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    m('str', { list -> null })\n" +
             "  }\n" +
             "}\n";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "list", "java.util.List<java.lang.Integer>");
     }
 
     @Test
     public void testClosureReferencesSuperClass() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class A {\n" +
             "  void insuper(x) {}\n" +
             "}\n" +
@@ -1510,36 +1420,33 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertDeclaringType(contents, "insuper", "A");
     }
 
     @Test
     public void testGRECLIPSE1348() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  def m(String owner) {\n" +
             "    return { return owner }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "owner", "java.lang.String");
     }
 
     @Test
     public void testGRECLIPSE1348a() {
+        //@formatter:off
         String contents =
-            //@formatter:off
             "class C {\n" +
             "  def m(String notOwner) {\n" +
             "    return { return owner }\n" +
             "  }\n" +
             "}";
-            //@formatter:on
-
+        //@formatter:on
         assertType(contents, "owner", "C");
     }
 }
