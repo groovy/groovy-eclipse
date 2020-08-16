@@ -582,6 +582,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                                 field.setDeclaringClass(this);
                                 field.setSourcePosition(node.getField());
                                 field.setSynthetic(true);
+                            } else if (Flags.isPackageDefault(field.getModifiers())) {
+                                continue; // @PackageScope field, not property
                             }
 
                             PropertyNode clone = new PropertyNode(field, node.getModifiers(), null, null);

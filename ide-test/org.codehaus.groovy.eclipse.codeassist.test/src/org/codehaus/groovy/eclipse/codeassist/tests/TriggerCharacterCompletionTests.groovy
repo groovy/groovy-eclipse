@@ -68,7 +68,9 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
 
     @After
     void tearDown() {
-        System.clearProperty(AssistOptions.PROPERTY_SubstringMatch)
+        try {
+            System.clearProperty(AssistOptions.PROPERTY_SubstringMatch)
+        } catch (MissingPropertyException ignore) {}
     }
 
     /**
