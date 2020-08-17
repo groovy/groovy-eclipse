@@ -314,7 +314,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private boolean parameterTypesMatch(MethodNode methodNode) {
-        Parameter[] parameters = methodNode.getOriginal().getParameters();
+        Parameter[] parameters = methodNode.getParameters();
         List<ClassNode> parameterTypes = GroovyUtils.getParameterTypes(parameters);
         int n; if ((n = parameterTypes.size()) != parameterTypeSignatures.length) {
             return false;

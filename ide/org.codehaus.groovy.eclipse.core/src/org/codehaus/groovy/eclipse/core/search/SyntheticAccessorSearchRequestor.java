@@ -40,7 +40,6 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
-import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 
 /**
  * Java search requestor that finds synthetic accessors.  That is, searching for
@@ -49,7 +48,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 public class SyntheticAccessorSearchRequestor {
 
     public void findSyntheticMatches(IJavaElement element, ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
-        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), requestor, monitor);
+        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()}, SearchEngine.createWorkspaceScope(), requestor, monitor);
     }
 
     public void findSyntheticMatches(IJavaElement element, int limitTo, SearchParticipant[] participants, IJavaSearchScope scope, final ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {

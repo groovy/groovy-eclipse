@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.junit.Assert.*
-
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
@@ -25,8 +23,8 @@ import org.eclipse.jdt.core.SourceRange
 
 abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
 
-    protected IJavaElement assertCodeSelect(Iterable<? extends CharSequence> sources, String target, String elementName = target) {
-        def unit = null
+    protected IJavaElement assertCodeSelect(final Iterable<? extends CharSequence> sources, final String target, final String elementName = target) {
+        GroovyCompilationUnit unit = null
         sources.each {
             unit = addGroovySource(it.toString(), nextUnitName())
         }
@@ -35,37 +33,39 @@ abstract class BrowsingTestSuite extends GroovyEclipseTestSuite {
         int offset = unit.source.lastIndexOf(target), length = target.length()
         assert offset >= 0 && length > 0 && offset + length <= unit.source.length()
 
-        IJavaElement[] elems = unit.codeSelect(offset, length)
+        IJavaElement[] elements = unit.codeSelect(offset, length)
         if (!elementName) {
-            assertEquals(0, elems.length)
+            assert elements.length == 0
         } else {
-            assertEquals('Should have found a selection', 1, elems.length)
-            assertEquals('Should have found reference to: ' + elementName, elementName, elems[0].elementName)
-            assertTrue('Element should have existed in the model', elems[0].exists())
-            return elems[0]
+            assert elements.length == 1 : 'Should have found a selection'
+
+            assert elements[0].elementName == elementName : "Should have found reference to: $elementName"
+            assert elements[0].exists() : 'Element should exist in the model'
+            return elements[0]
         }
     }
 
-    protected IJavaElement assertCodeSelect(CharSequence source, SourceRange targetRange, String elementName) {
-        GroovyCompilationUnit gunit = addGroovySource(source, nextUnitName())
-        prepareForCodeSelect(gunit)
+    protected IJavaElement assertCodeSelect(final CharSequence source, final SourceRange targetRange, final String elementName) {
+        GroovyCompilationUnit unit = addGroovySource(source, nextUnitName())
+        prepareForCodeSelect(unit)
 
-        IJavaElement[] elems = gunit.codeSelect(targetRange.offset, targetRange.length)
+        IJavaElement[] elements = unit.codeSelect(targetRange.offset, targetRange.length)
         if (!elementName) {
-            assertEquals(0, elems.length)
+            assert elements.length == 0
         } else {
-            assertEquals('Should have found a selection', 1, elems.length)
-            assertEquals('Should have found reference to: ' + elementName, elementName, elems[0].elementName)
-            assertTrue(elems[0].exists())
-            return elems[0]
+            assert elements.length == 1 : 'Should have found a selection'
+
+            assert elements[0].elementName == elementName : "Should have found reference to: $elementName"
+            assert elements[0].exists() : 'Element should exist in the model'
+            return elements[0]
         }
     }
 
-    protected void prepareForCodeSelect(ICompilationUnit unit) {
+    protected void prepareForCodeSelect(final ICompilationUnit unit) {
         openInEditor(unit)
         if (unit instanceof GroovyCompilationUnit) {
             def problems = unit.getModuleInfo(true).result.problems
-            problems?.findAll { it.error }?.each { println it }
+            problems?.each { if (it.error) println it }
         }
     }
 }

@@ -114,9 +114,24 @@
    </extension>
    <extension point="org.eclipse.ltk.core.refactoring.renameParticipants">
       <renameParticipant
-            class="org.codehaus.groovy.eclipse.refactoring.core.rename.SyntheticAccessorsRenameParticipant"
-            id="org.codehaus.groovy.eclipse.refactoring.syntheticAccessorsRenameParticipant"
-            name="Groovy Synthetic Accessors participant">
+            class="org.codehaus.groovy.eclipse.refactoring.core.rename.MethodVariantRenameParticipant"
+            id="org.codehaus.groovy.eclipse.refactoring.methodVariantRenameParticipant"
+            name="Groovy method variant participant">
+         <enablement>
+            <with variable="affectedNatures">
+               <iterate operator="or">
+                  <equals value="org.eclipse.jdt.groovy.core.groovyNature"/>
+               </iterate>
+            </with>
+            <with variable="element">
+               <instanceof value="org.eclipse.jdt.core.IMethod"/>
+            </with>
+         </enablement>
+      </renameParticipant>
+      <renameParticipant
+            class="org.codehaus.groovy.eclipse.refactoring.core.rename.PropertyAccessRenameParticipant"
+            id="org.codehaus.groovy.eclipse.refactoring.propertyAccessRenameParticipant"
+            name="Groovy property participant">
          <enablement>
             <with variable="affectedNatures">
                <iterate operator="or">

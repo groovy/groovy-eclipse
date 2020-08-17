@@ -249,4 +249,11 @@ final class RenameMethodTests extends RefactoringTestSuite {
         def status = runTest('A', 'm', 'k', ['Ljava.lang.Object;'])
         assert status.isOK() : 'rename failed'
     }
+
+    @Test
+    void testOverload4() {
+        // rename single-parameter method 'm' to 'x'
+        def status = runTest('A', 'm', 'x', ['Ljava.lang.Object;'])
+        assert status.entries[0].message.startsWith('Found potential matches.')
+    }
 }

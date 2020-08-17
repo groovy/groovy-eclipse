@@ -261,37 +261,60 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
     public void testConstructorReferences11() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
-            "  Foo(int i = 0) {}\n" + // search for this
+            "  Foo(int i=42) {}\n" + // search for this
+            "  Foo(String s) {}\n" +
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "new Foo()\n" + // no
+            "new Foo(0)\n" + // yes
+            "new Foo('')\n"); // no
+
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]);
+
+        assertEquals(1, ctorRefs.size());
+        assertEquals(27, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
+    }
+
+    @Test // default value generates a synthetic constructor
+    public void testConstructorReferences11a() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i=42) {}\n" + // search for this
             "  Foo(String s) {}\n" +
             "}");
         createUnit("", "Bar", "import p.Foo\n" +
             "new Foo()\n" + // yes
-            "new Foo(0)\n" + // yes
+            "new Foo(0)\n" + // no
             "new Foo('')\n"); // no
 
-        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
-            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
-            .count();
-        assertEquals(2, ctorRefs);
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]);
+
+        assertEquals(1, ctorRefs.size());
+        assertEquals(17, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
     }
 
     @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
-    public void testConstructorReferences11a() throws Exception {
+    public void testConstructorReferences11b() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
-            "  Foo(int i = 0) {}\n" + // search for this
-            "  Foo(String s) {this()}\n" + // yes
+            "  Foo(int i=42) {}\n" + // search for this
+            "  Foo(String s) {this(666)}\n" + // yes
             "  def m() {\n" +
-            "    new Foo()\n" + // yes
+            "    new Foo()\n" + // no
             "    new Foo(0)\n" + // yes
             "    new Foo('')\n" + // no
             "  }\n" +
             "}");
 
-        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]).stream()
-            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy"))
-            .count();
-        assertEquals(3, ctorRefs);
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[0]);
+
+        assertEquals(2, ctorRefs.size());
+        assertEquals(58, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
+        assertEquals(103, ctorRefs.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(1).getAccuracy());
     }
 
     @Test // default value generates a synthetic constructor
@@ -302,33 +325,56 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
             "  Foo(String s = '') {}\n" + // search for this
             "}");
         createUnit("", "Bar", "import p.Foo\n" +
-            "new Foo()\n" + // yes
+            "new Foo()\n" + // no
             "new Foo(0)\n" + // no
             "new Foo('')\n"); // yes
 
-        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream()
-            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Bar.groovy"))
-            .count();
-        assertEquals(2, ctorRefs);
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]);
+
+        assertEquals(1, ctorRefs.size());
+        assertEquals(38, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
     }
 
-    @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
+    @Test // default value generates a synthetic constructor
     public void testConstructorReferences12a() throws Exception {
         GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
             "class Foo {\n" +
-            "  Foo(int i) {this()}\n" + // yes
+            "  Foo(int i) {}\n" +
+            "  Foo(String s = '') {}\n" + // search for this
+            "}");
+        createUnit("", "Bar", "import p.Foo\n" +
+            "new Foo()\n" + // yes
+            "new Foo(0)\n" + // no
+            "new Foo('')\n"); // no
+
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[2]);
+
+        assertEquals(1, ctorRefs.size());
+        assertEquals(17, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
+    }
+
+    @Test // same-unit references exercise patch in Verifier.addDefaultParameterConstructors
+    public void testConstructorReferences12b() throws Exception {
+        GroovyCompilationUnit foo = createUnit("p", "Foo", "package p\n" +
+            "class Foo {\n" +
+            "  Foo(int i) {this('xxx')}\n" + // yes
             "  Foo(String s = '') {}\n" + // search for this
             "  def m() {\n" +
-            "    new Foo()\n" + // yes
+            "    new Foo()\n" + // no
             "    new Foo(0)\n" + // no
             "    new Foo('')\n" + // yes
             "  }\n" +
             "}");
 
-        long ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]).stream()
-            .filter(match -> ((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy"))
-            .count();
-        assertEquals(3, ctorRefs);
+        List<SearchMatch> ctorRefs = searchForReferences(foo.getType("Foo").getMethods()[1]);
+
+        assertEquals(2, ctorRefs.size());
+        assertEquals(36, ctorRefs.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(0).getAccuracy());
+        assertEquals(122, ctorRefs.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, ctorRefs.get(1).getAccuracy());
     }
 
     @Test

@@ -85,11 +85,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                     CodeSelectRequestor requestor = createRequestor(node, region, select, unit);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
-
-                    IJavaElement element = requestor.getRequestedElement();
-                    if (element != null) {
-                        return new IJavaElement[] {element};
-                    }
+                    return requestor.getRequestedElements();
                 }
             } catch (RuntimeException e) {
                 if (event != null) {

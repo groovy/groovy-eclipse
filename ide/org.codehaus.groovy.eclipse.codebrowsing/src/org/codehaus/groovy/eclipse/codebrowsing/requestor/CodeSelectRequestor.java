@@ -18,9 +18,11 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import static java.beans.Introspector.decapitalize;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -85,14 +87,14 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class CodeSelectRequestor implements ITypeRequestor {
 
     /** The AST node of interest. */
-    private final ASTNode nodeToLookFor;
+    private ASTNode nodeToLookFor;
 
     private final Region nodeRegion;
     private final Region selectRegion;
     private final GroovyCompilationUnit gunit;
 
     private ASTNode requestedNode;
-    private IJavaElement requestedElement;
+    private final List<IJavaElement> requestedElements = new java.util.ArrayList<>();
 
     public CodeSelectRequestor(final ASTNode node, final GroovyCompilationUnit unit) {
         this(node, null, new Region(Integer.MIN_VALUE, 0), unit);
@@ -110,8 +112,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return requestedNode;
     }
 
-    public IJavaElement getRequestedElement() {
-        return requestedElement;
+    public IJavaElement[] getRequestedElements() {
+        return requestedElements.toArray(new IJavaElement[requestedElements.size()]);
+    }
+
+    private void putRequestedElement(final IJavaElement requestedElement) {
+        requestedElements.add(Objects.requireNonNull(requestedElement));
     }
 
     @Override
@@ -202,8 +208,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (!GroovyUtils.getBaseType(classNode).isGenericsPlaceHolder()) {
                 requestedNode = classNode.redirect();
             } else {
-                requestedElement = findTypeParam(
-                    GroovyUtils.getBaseType(classNode).getUnresolvedName(), enclosingElement);
+                putRequestedElement(findTypeParam(GroovyUtils.getBaseType(classNode).getUnresolvedName(), enclosingElement));
                 return;
             }
         } else if (requestedNode instanceof ConstructorNode) {
@@ -228,7 +233,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (result.declaration instanceof VariableExpression) {
                 VariableExpression varExp = (VariableExpression) result.declaration;
                 // look in the local scope
-                requestedElement = createLocalVariable(result, enclosingElement, varExp);
+                putRequestedElement(createLocalVariable(result, enclosingElement, varExp));
 
             } else if (result.declaration instanceof Parameter) {
                 Parameter param = (Parameter) result.declaration;
@@ -239,7 +244,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     position = nodeToLookFor.getStart() - 1;
                 }
                 try {
-                    requestedElement = createLocalVariable(result, gunit.getElementAt(position), param);
+                    putRequestedElement(createLocalVariable(result, gunit.getElementAt(position), param));
                 } catch (JavaModelException e) {
                     Util.log(e, "Problem getting element at " + position + " for file " + gunit.getElementName());
                 }
@@ -249,7 +254,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (start < until) {
                     String pack = gunit.getSource().substring(start, until);
                     IPackageFragmentRoot root = gunit.getPackageFragmentRoot();
-                    requestedElement = root.getPackageFragment(pack);
+                    putRequestedElement(root.getPackageFragment(pack));
                 }
 
             } else if (nodeToLookFor instanceof ImportNode && ((ImportNode) nodeToLookFor).isStar() && !((ImportNode) nodeToLookFor).isStatic()) {
@@ -259,7 +264,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     for (IPackageFragmentRoot root : gunit.getJavaProject().getPackageFragmentRoots()) {
                         IPackageFragment fragment = root.getPackageFragment(pack);
                         if (fragment != null && fragment.exists()) {
-                            requestedElement = fragment;
+                            putRequestedElement(fragment);
                             break;
                         }
                     }
@@ -288,12 +293,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             // find the requested java element
                             IJavaElement maybeRequested = findRequestedElement(result.declaration, declaringType, type);
                             // try to resolve the type of the requested element; this will add the proper metadata to the hover
-                            requestedElement = resolveRequestedElement(maybeRequested, result);
+                            putRequestedElement(resolveRequestedElement(maybeRequested, result));
                         } else {
                             // try to resolve as a type (outer class) then as a package
                             IType candidate = gunit.getJavaProject().findType(qualifier);
                             if (candidate != null) {
-                                requestedElement = candidate;
+                                putRequestedElement(candidate);
                             } else {
                                 IPackageFragmentRoot root;
                                 if (type instanceof BinaryType) {
@@ -301,7 +306,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                                 } else {
                                     root = (IPackageFragmentRoot) ((SourceType) type).getPackageFragment().getParent();
                                 }
-                                requestedElement = root.getPackageFragment(qualifier);
+                                putRequestedElement(root.getPackageFragment(qualifier));
                             }
                             requestedNode = nodeToLookFor;
                         }
@@ -314,6 +319,36 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         System.err.println(getClass().getSimpleName() + ": " + message);
                     }
                 }
+            }
+        }
+
+        //
+
+        if (nodeToLookFor instanceof MethodNode && ((MethodNode) nodeToLookFor).hasDefaultValue()) {
+            final ASTNode ntlf = nodeToLookFor, rn = requestedNode;
+            try {
+                Stream<? extends MethodNode> nodes;
+                if (nodeToLookFor instanceof ConstructorNode) {
+                    nodes = result.declaringType.getDeclaredConstructors().stream().filter(cn -> cn != ntlf && cn.getOriginal() == ntlf);
+                } else {
+                    String methodName = ((MethodNode) nodeToLookFor).getName();
+                    nodes = result.declaringType.getDeclaredMethods(methodName).stream().filter(mn -> mn != ntlf && mn.getOriginal() == ntlf);
+                }
+
+                // find java elements for each generated method variant
+                for (TypeLookupResult tlr : nodes.map(mn -> {
+                    TypeLookupResult tlr = new TypeLookupResult(result.type, result.declaringType, mn, result.confidence, result.scope);
+                    tlr.enclosingAnnotation = result.enclosingAnnotation;
+                    tlr.enclosingAssignment = result.enclosingAssignment;
+                    tlr.isGroovy = result.isGroovy;
+                    return tlr;
+                }).toArray(TypeLookupResult[]::new)) {
+                    nodeToLookFor = tlr.declaration;
+                    handleMatch(tlr, enclosingElement);
+                }
+            } finally {
+                nodeToLookFor = ntlf;
+                requestedNode = rn;
             }
         }
     }
@@ -508,7 +543,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     Parameter[] parameters = null;
                     if (declaration instanceof MethodNode) {
                         name = ((MethodNode) declaration).getName();
-                        parameters = ((MethodNode) declaration).getOriginal().getParameters();
+                        parameters = ((MethodNode) declaration).getParameters();
                     }
                     maybeRequested = findElement(jdtDeclaringType, name, parameters);
                 }
@@ -628,8 +663,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         default:
             candidate = maybeRequested;
         }
-        requestedElement = candidate;
-        return requestedElement;
+        return candidate;
     }
 
     //--------------------------------------------------------------------------

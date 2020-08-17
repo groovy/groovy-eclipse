@@ -23,7 +23,6 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.SearchMatch
 import org.eclipse.jdt.core.search.SearchParticipant
-import org.eclipse.jdt.internal.core.search.JavaSearchParticipant
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -249,7 +248,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         List<SearchMatch> matches = []
         new SyntheticAccessorSearchRequestor().findSyntheticMatches(gType.children.find { it.elementName == 'proper' },
             IJavaSearchConstants.DECLARATIONS | IJavaSearchConstants.IGNORE_DECLARING_TYPE | IJavaSearchConstants.IGNORE_RETURN_TYPE,
-            [new JavaSearchParticipant()] as SearchParticipant[],
+            [SearchEngine.defaultSearchParticipant] as SearchParticipant[],
             SearchEngine.createWorkspaceScope(),
             matches.&add,
             null)

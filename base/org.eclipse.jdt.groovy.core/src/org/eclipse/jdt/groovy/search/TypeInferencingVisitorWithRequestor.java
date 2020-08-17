@@ -711,6 +711,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
             noLookup.enclosingAnnotation = node; // set context for requestor
             VisitStatus status = notifyRequestor(attr, requestor, noLookup);
+
+            if (status == VisitStatus.STOP_VISIT) throw new VisitCompleted(status);
             if (status != VisitStatus.CONTINUE) break;
         }
     }
