@@ -1562,22 +1562,29 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
             addCovariantMethods(anInterface, declaredMethods, abstractMethods, methodsToAdd, genericsSpec);
         }
-
     }
 
     private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec, boolean ignoreError) {
-        // method name
         if (!oldMethod.getName().equals(overridingMethod.getName())) return null;
         if ((overridingMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
+        // GRECLIPSE add -- GROOVY-9654
+        if ((oldMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
+        // GRECLIPSE end
         if (oldMethod.isPrivate()) return null;
 
-        // parameters
-        boolean normalEqualParameters = equalParametersNormal(overridingMethod, oldMethod);
-        boolean genericEqualParameters = equalParametersWithGenerics(overridingMethod, oldMethod, genericsSpec);
-        if (!normalEqualParameters && !genericEqualParameters) return null;
+        // GRECLIPSE add -- GROOVY-9059
+        if (oldMethod.getGenericsTypes() != null)
+            genericsSpec = GenericsUtils.addMethodGenerics(oldMethod, genericsSpec);
+        // GRECLIPSE end
 
-        //correct to method level generics for the overriding method
+        // parameters
+        boolean equalParameters = equalParametersNormal(overridingMethod, oldMethod);
+        if (!equalParameters && !equalParametersWithGenerics(overridingMethod, oldMethod, genericsSpec)) return null;
+
+        /* GRECLIPSE edit -- GROOVY-9059
+        // correct to method level generics for the overriding method
         genericsSpec = GenericsUtils.addMethodGenerics(overridingMethod, genericsSpec);
+        */
 
         // return type
         ClassNode mr = overridingMethod.getReturnType();
@@ -1596,7 +1603,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     overridingMethod);
         }
 
-        if (equalReturnType && normalEqualParameters) return null;
+        if (equalReturnType && equalParameters) return null;
 
         if ((oldMethod.getModifiers() & ACC_FINAL) != 0) {
             throw new RuntimeParserException(
@@ -1617,12 +1624,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             boolean oldM = ClassHelper.isPrimitiveType(oldMethod.getReturnType());
             boolean newM = ClassHelper.isPrimitiveType(overridingMethod.getReturnType());
             if (oldM || newM) {
-                String message = "";
+                String message;
                 if (oldM && newM) {
                     message = " with old and new method having different primitive return types";
                 } else if (newM) {
                     message = " with new method having a primitive return type and old method not";
-                } else /* oldM */ {
+                } else /*oldM*/ {
                     message = " with old method having a primitive return type and new method not";
                 }
                 throw new RuntimeParserException(
