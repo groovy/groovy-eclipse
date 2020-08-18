@@ -2009,6 +2009,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits8000() {
+        //@formatter:off
+        String[] sources = {
+            "Implementation.groovy",
+            "trait TopTrait<X> { X getSomeThing() {}\n" +
+            "}\n" +
+            "trait MiddleTrait<Y> implements TopTrait<Y> {\n" +
+            "}\n" +
+            "trait BottomTrait<Z> implements MiddleTrait<Z> {\n" +
+            "}\n" +
+            "class Implementation implements BottomTrait<String> {\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testTraits8049() {
         //@formatter:off
         String[] sources = {
