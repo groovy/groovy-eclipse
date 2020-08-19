@@ -2845,6 +2845,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             }
 
+            /* GRECLIPSE edit -- GROOVY-9692
             // e.g. 1 {}, 1.1 {}
             if (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_NUMERIC)) {
                 return configureAST(this.createCallMethodCallExpression(
@@ -2854,7 +2855,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 closureExpression)
                 ), ctx);
             }
-
+            */
 
             if (baseExpr instanceof PropertyExpression) { // e.g. obj.m {  }
                 PropertyExpression propertyExpression = (PropertyExpression) baseExpr;
@@ -2871,6 +2872,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 return configureAST(methodCallExpression, ctx);
             }
 
+            /* GRECLIPSE edit -- GROOVY-9692
             // e.g.  m { return 1; }
             MethodCallExpression methodCallExpression =
                     createMethodCallExpression(
@@ -2880,6 +2882,32 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                     closureExpression
                             )
                     );
+            */
+            if (baseExpr instanceof VariableExpression // e.g. m { }
+                    || baseExpr instanceof GStringExpression // e.g. "$m" { }
+                    || (baseExpr instanceof ConstantExpression && this.isTrue(baseExpr, IS_STRING))) { // e.g. "m" { }
+                MethodCallExpression methodCallExpression =
+                        this.createMethodCallExpression(
+                                baseExpr,
+                                configureAST(
+                                        new ArgumentListExpression(closureExpression),
+                                        closureExpression
+                                )
+                        );
+
+                return configureAST(methodCallExpression, ctx);
+            }
+
+            // e.g. 1 { }, 1.1 { }, (1 / 2) { }, m() { }, { -> ... } { }
+            MethodCallExpression methodCallExpression =
+                    this.createCallMethodCallExpression(
+                            baseExpr,
+                            configureAST(
+                                    new ArgumentListExpression(closureExpression),
+                                    closureExpression
+                            )
+                    );
+            // GRECLIPSE end
 
             return configureAST(methodCallExpression, ctx);
         }
