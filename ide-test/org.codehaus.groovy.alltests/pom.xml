@@ -44,6 +44,10 @@
               <type>eclipse-plugin</type>
               <artifactId>org.eclipse.jdt.compiler.apt</artifactId>
             </dependency>
+            <dependency>
+              <type>eclipse-plugin</type>
+              <artifactId>org.eclipse.jdt.junit5.runtime</artifactId>
+            </dependency>
           </dependencies>
 
           <!-- https://bugs.eclipse.org/bugs/show_bug.cgi?id=538564 -->
