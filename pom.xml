@@ -18,9 +18,9 @@
 
 	<properties>
 		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
-		<tycho-version>1.6.0</tycho-version>
+		<tycho-version>1.7.0</tycho-version>
 		<!-- See https://www.eclipse.org/tycho/sitedocs-extras/index.html -->
-		<tycho-extras-version>1.6.0</tycho-extras-version>
+		<tycho-extras-version>1.7.0</tycho-extras-version>
 
 		<!-- Versions of groovy compiler components to use for building. Some bundles,
 			mostly test related, have Groovy code that can't be compiled with standard
