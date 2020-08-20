@@ -427,7 +427,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |  String getFoo() { 'foo' }
             |}
             |'''.stripMargin()
-
         buildProject()
 
         String contents = '''\
@@ -1114,7 +1113,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |}
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
-        proposalExists(proposals, 'm1', 1)
+        proposalExists(proposals, 'm1', 2)
         proposalExists(proposals, 'm2', 0)
         proposalExists(proposals, 'm3', 1)
         proposalExists(proposals, 'm4', 1)
@@ -1200,6 +1199,103 @@ final class MethodCompletionTests extends CompletionTestSuite {
             |'''.stripMargin()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm1', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods11() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  def m1() {}
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  def m1() {}
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  def m1() {}
+            |  void test() {
+            |    T.super.m1()
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods12() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  static m1() {}
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm1', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'm1() : Object - p.T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  static m1() {}
+            |  void test() {
+            |    T.super.m1()
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/760
+    void testTraitMethods13() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  def getFoo() { 'foo' }
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  void test() {
+            |    x
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'foo', 2)
+
+        applyProposalAndCheck(findFirstProposal(proposals, 'foo : Object - T'), '''\
+            |import p.T
+            |
+            |class C implements p.T {
+            |  void test() {
+            |    T.super.foo
+            |  }
+            |}
+            |'''.stripMargin())
     }
 
     @Test

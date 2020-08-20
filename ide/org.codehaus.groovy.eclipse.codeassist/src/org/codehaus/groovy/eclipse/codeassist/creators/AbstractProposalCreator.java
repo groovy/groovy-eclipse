@@ -59,9 +59,9 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
     //--------------------------------------------------------------------------
 
-    protected static FieldNode createMockField(MethodNode method) {
+    protected static FieldNode createMockField(final MethodNode method) {
         String fieldName = ProposalUtils.createMockFieldName(method.getName());
-        int fieldModifiers = method.getModifiers() | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0);
+        int fieldModifiers = (method.getModifiers() & 0xF) | (GroovyUtils.isDeprecated(method) ? Flags.AccDeprecated : 0);
         ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
 
         FieldNode fieldNode = new FieldNode(fieldName, fieldModifiers, fieldType, method.getDeclaringClass(), null);

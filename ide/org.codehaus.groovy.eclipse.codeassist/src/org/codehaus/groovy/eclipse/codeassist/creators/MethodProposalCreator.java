@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
+import static org.codehaus.groovy.transform.trait.Traits.decomposeSuperCallName;
+import static org.codehaus.groovy.transform.trait.Traits.findTraits;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,8 +37,19 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.CompletionEngine;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.MemberProposalInfo;
+import org.eclipse.jdt.internal.ui.text.java.ProposalInfo;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 /**
  * Generates all of the method proposals for a given location.
@@ -46,7 +60,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     private Set<ClassNode> alreadySeen = new HashSet<>();
 
     @Override
-    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
+    public List<IGroovyProposal> findAllProposals(final ClassNode type, final Set<ClassNode> categories, final String prefix, final boolean isStatic, final boolean isPrimary) {
         List<IGroovyProposal> proposals = new LinkedList<>();
 
         Set<String> alreadySeenFields = new HashSet<>();
@@ -55,10 +69,19 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
         boolean firstTime = alreadySeen.isEmpty();
         boolean isMapType = GeneralUtils.isOrImplements(type, VariableScope.MAP_CLASS_NODE);
-        for (MethodNode method : getAllMethods(type, alreadySeen)) { String methodName = method.getName();
+        for (MethodNode method : getAllMethods(type, alreadySeen)) {
+            String methodName = method.getName();
+            String[] traitAndMethodNames = decomposeSuperCallName(methodName);
+            if (traitAndMethodNames != null) methodName = traitAndMethodNames[1];
+
             if (!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
-                    GroovyMethodProposal proposal = new GroovyMethodProposal(method);
+                    final GroovyMethodProposal proposal;
+                    if (traitAndMethodNames != null) {
+                        proposal = new TraitSuperMethodProposal(method, traitAndMethodNames);
+                    } else {
+                        proposal = new GroovyMethodProposal(method);
+                    }
                     setRelevanceMultiplier(proposal, isStatic);
                     proposals.add(proposal);
                 }
@@ -66,13 +89,17 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 // if method is an accessor, then add a proposal for the property name
                 if (!"getClass".equals(methodName) && (!isMapType || isStatic) &&
                         findLooselyMatchedAccessorKind(prefix, methodName, false).isAccessorKind(method, false)) {
-                    FieldNode mockField = createMockField(method);
-                    if (alreadySeenFields.add(mockField.getName())) {
-                        ClassNode declaringClass = method.getDeclaringClass();
-                        FieldNode realField = declaringClass.getField(mockField.getName());
-                        if (realField == null) realField = declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName));
-                        if (realField == null || leftIsMoreAccessible(mockField, realField)) {
-                            proposals.add(new GroovyFieldProposal(mockField));
+                    if (traitAndMethodNames != null) {
+                        proposals.add(new TraitSuperPropertyProposal(method, traitAndMethodNames));
+                    } else {
+                        FieldNode mockField = createMockField(method);
+                        if (alreadySeenFields.add(mockField.getName())) {
+                            ClassNode declaringClass = method.getDeclaringClass();
+                            FieldNode realField = declaringClass.getField(mockField.getName());
+                            if (realField == null) realField = declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName));
+                            if (realField == null || leftIsMoreAccessible(mockField, realField)) {
+                                proposals.add(new GroovyFieldProposal(mockField));
+                            }
                         }
                     }
                 }
@@ -105,7 +132,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         return proposals;
     }
 
-    private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+    private void findStaticImportProposals(final List<IGroovyProposal> proposals, final String prefix, final ModuleNode module) {
         for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
             ClassNode typeNode = entry.getValue().getType();
             if (typeNode != null) {
@@ -134,7 +161,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
     }
 
-    private void findStaticFavoriteProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
+    private void findStaticFavoriteProposals(final List<IGroovyProposal> proposals, final String prefix, final ModuleNode module) {
         for (String favoriteStaticMember : favoriteStaticMembers) {
             int pos = favoriteStaticMember.lastIndexOf('.');
             String typeName = favoriteStaticMember.substring(0, pos);
@@ -171,9 +198,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
     }
 
-    //--------------------------------------------------------------------------
-
-    private static void setRelevanceMultiplier(GroovyMethodProposal proposal, boolean isStatic) {
+    private static void setRelevanceMultiplier(final GroovyMethodProposal proposal, final boolean isStatic) {
         MethodNode method = proposal.getMethod();
 
         float relevanceMultiplier;
@@ -186,5 +211,78 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
 
         proposal.setRelevanceMultiplier(relevanceMultiplier);
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static class TraitSuperMethodProposal extends GroovyMethodProposal {
+
+        TraitSuperMethodProposal(final MethodNode method, final String[] traitAndMethodNames) {
+            super(findTraits(method.getDeclaringClass()).stream()
+                .filter(t -> t.getName().equals(traitAndMethodNames[0])).findFirst()
+                .map(t -> t.getMethod(traitAndMethodNames[1], method.getParameters())).get());
+            setRequiredQualifier("super");
+        }
+
+        @Override
+        public IJavaCompletionProposal createJavaProposal(final CompletionEngine engine,
+                final ContentAssistContext context, final JavaContentAssistInvocationContext javaContext) {
+            IJavaCompletionProposal javaProposal = super.createJavaProposal(engine, context, javaContext);
+            if (javaProposal instanceof LazyJavaCompletionProposal) {
+                //CompletionProposal proposal = ((LazyJavaCompletionProposal) javaProposal).getProposal();
+                CompletionProposal proposal = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
+
+                // create supporting proposal for trait type so full completion will be "Type.super.method()" plus import or qualifier
+                CompletionProposal typeProposal = CompletionProposal.create(CompletionProposal.TYPE_IMPORT, context.completionLocation);
+                typeProposal.setSignature(proposal.getDeclarationSignature());
+
+                proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
+            }
+            return javaProposal;
+        }
+
+        @Override
+        protected int computeRelevance(final ContentAssistContext context) {
+            return (super.computeRelevance(context) - 1);
+        }
+
+        @Override
+        protected int getModifiers() {
+            return (super.getModifiers() & ~Flags.AccAbstract);
+        }
+    }
+
+    private static class TraitSuperPropertyProposal extends GroovyFieldProposal {
+
+        TraitSuperPropertyProposal(final MethodNode method, final String[] traitAndMethodNames) {
+            super(createMockField(findTraits(method.getDeclaringClass()).stream()
+                .filter(t -> t.getName().equals(traitAndMethodNames[0])).findFirst()
+                .map(t -> t.getMethod(traitAndMethodNames[1], method.getParameters())).get()));
+            setRequiredQualifier("super");
+        }
+
+        @Override
+        public IJavaCompletionProposal createJavaProposal(final CompletionEngine engine,
+                final ContentAssistContext context, final JavaContentAssistInvocationContext javaContext) {
+            IJavaCompletionProposal javaProposal = super.createJavaProposal(engine, context, javaContext);
+            if (javaProposal instanceof AbstractJavaCompletionProposal) {
+                //ProposalInfo proposalInfo = ((AbstractJavaCompletionProposal) javaProposal).getProposalInfo();
+                ProposalInfo proposalInfo = ReflectionUtils.executePrivateMethod(AbstractJavaCompletionProposal.class, "getProposalInfo", javaProposal);
+                //CompletionProposal proposal = ((MemberProposalInfo) proposalInfo).fProposal;
+                CompletionProposal proposal = ReflectionUtils.getPrivateField(MemberProposalInfo.class, "fProposal", proposalInfo);
+
+                // create supporting proposal for trait type so full completion will be "Type.super.property" plus import or qualifier
+                CompletionProposal typeProposal = CompletionProposal.create(CompletionProposal.TYPE_IMPORT, context.completionLocation);
+                typeProposal.setSignature(proposal.getDeclarationSignature());
+
+                proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
+            }
+            return javaProposal;
+        }
+
+        @Override
+        protected int computeRelevance(final ContentAssistContext context) {
+            return (super.computeRelevance(context) - 1);
+        }
     }
 }
