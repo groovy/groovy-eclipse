@@ -44,6 +44,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -147,6 +148,20 @@ public abstract class Traits {
         }
         return new TraitHelpersTuple(helperClassNode,  fieldHelperClassNode);
     }
+
+    // GRECLIPSE add
+    public static List<ClassNode> findTraits(final ClassNode cNode) {
+        LinkedHashSet<ClassNode> interfaces = new LinkedHashSet<>();
+        Traits.collectAllInterfacesReverseOrder(cNode, interfaces);
+        List<ClassNode> traits = new LinkedList<>();
+        for (ClassNode candidate : interfaces) {
+            if (Traits.isAnnotatedWithTrait(candidate)) {
+                traits.add(candidate);
+            }
+        }
+        return traits;
+    }
+    // GRECLIPSE end
 
     /**
      * Returns true if the specified class node is a trait.

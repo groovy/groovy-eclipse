@@ -52,7 +52,6 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
-import org.codehaus.groovy.transform.sc.StaticCompilationVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import groovyjarjarasm.asm.Label;
@@ -406,7 +405,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             *******/
 
             WriterController controller = getController();
+            /* GRECLIPSE edit -- GROOVY-9699
             StaticTypeCheckingVisitor visitor = new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode());
+            */
             // let's replace this assignment to a subscript operator with a
             // method call
             // e.g. x[5] = 10
@@ -424,7 +425,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
                     ae
             );
             mce.setSourcePosition(parent);
+            /* GRECLIPSE edit -- GROOVY-9699
             visitor.visitMethodCallExpression(mce);
+            */
             OperandStack operandStack = controller.getOperandStack();
             int height = operandStack.getStackLength();
             mce.visit(controller.getAcg());

@@ -931,6 +931,56 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic7361() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private final Map<Long, String> map = [1L:'x', 2L:'y']\n" +
+            "  void m() {\n" +
+            "    def list = [1L]\n" +
+            "    list.each {\n" +
+            "      synchronized (map) {\n" +
+            "        map.remove(it)\n" +
+            "      }\n" +
+            "    }\n" +
+            "    print map\n" +
+            "  }\n" +
+            "}\n" +
+            "new A().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[2:y]");
+    }
+
+    @Test
+    public void testCompileStatic7361a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private final Map map = [:]\n" +
+            "  void m() {\n" +
+            "    new Runnable() {\n" +
+            "      @groovy.transform.CompileStatic\n" +
+            "      void run() {\n" +
+            "        { -> map['x'] = 'y' }.call()\n" +
+            "      }\n" +
+            "    }.run()\n" +
+            "    print map\n" +
+            "  }\n" +
+            "}\n" +
+            "new A().m()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "[x:y]");
+    }
+
+    @Test
     public void testCompileStatic7549() {
         //@formatter:off
         String[] sources = {
@@ -4965,23 +5015,58 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "@groovy.transform.CompileStatic\n" +
-                "class C {\n" +
-                "  C() {\n" +
-                "    print new D().with {\n" +
-                "      something = 'value'\n" + // ClassCastException: D cannot be cast to C
-                "      return object\n" +
-                "    }\n" +
-                "  }\n" +
-                "  void setSomething(value) { }\n" +
-                "}\n" +
-                "class D {\n" +
-                "  void setSomething(value) { }\n" +
-                "  Object getObject() { 'works' }\n" +
-                "}\n" +
-                "new C()\n",
+            "class C {\n" +
+            "  C() {\n" +
+            "    print new D().with {\n" +
+            "      something = 'value'\n" + // ClassCastException: D cannot be cast to C
+            "      return object\n" +
+            "    }\n" +
+            "  }\n" +
+            "  void setSomething(value) { }\n" +
+            "}\n" +
+            "class D {\n" +
+            "  void setSomething(value) { }\n" +
+            "  Object getObject() { 'works' }\n" +
+            "}\n" +
+            "new C()\n",
         };
         //@formatter:on
 
         runConformTest(sources, "works");
+    }
+
+    @Test
+    public void testCompileStatic9699() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "  private static final java.util.regex.Pattern PATTERN = ~/.*/\n" +
+            "  void checkList() {\n" +
+            "    def list = []\n" +
+            "    def closure = { ->\n" +
+            "      list << PATTERN.pattern()\n" +
+            "    }\n" +
+            "    closure()\n" +
+            "  }\n" +
+            "  void checkMap() {\n" +
+            "    def map = [:]\n" +
+            "    def closure = { ->\n" +
+            "      map[PATTERN.pattern()] = 1\n" +
+            "    }\n" +
+            "    closure()\n" +
+            "  }\n" +
+            "}\n" +
+            "class B extends A {\n" +
+            "}\n" +
+            "new A().checkList()\n" +
+            "new B().checkList()\n" +
+            "new A().checkMap()\n" +
+            "new B().checkMap()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 }

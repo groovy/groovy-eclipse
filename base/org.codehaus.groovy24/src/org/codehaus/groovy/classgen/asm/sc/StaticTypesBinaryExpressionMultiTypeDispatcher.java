@@ -51,8 +51,6 @@ import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
-import org.codehaus.groovy.transform.sc.StaticCompilationVisitor;
-import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
@@ -70,6 +68,7 @@ import static org.codehaus.groovy.ast.ClassHelper.long_TYPE;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_ADD_METHOD;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_CLASSNODE;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_CONSTRUCTOR;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor.inferLoopElementType;
 
 /**
  * A specialized version of the multi type binary expression dispatcher which is aware of static compilation.
@@ -197,7 +196,7 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
         operandStack.remove(1); // receiver consumed by if()
         Label nonull = compileStack.createLocalLabel("nonull_" + counter);
         mv.visitLabel(nonull);
-        ClassNode componentType = StaticTypeCheckingVisitor.inferLoopElementType(typeChooser.resolveType(receiver, classNode));
+        ClassNode componentType = inferLoopElementType(typeChooser.resolveType(receiver, classNode));
         Parameter iterator = new Parameter(componentType, "for$it$" + counter);
         VariableExpression iteratorAsVar = new VariableExpression(iterator);
         PropertyExpression pexp = spreadExpression instanceof AttributeExpression?
@@ -384,7 +383,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             *******/
 
             WriterController controller = getController();
+            /* GRECLIPSE edit -- GROOVY-9699
             StaticTypeCheckingVisitor visitor = new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode());
+            */
             // let's replace this assignment to a subscript operator with a
             // method call
             // e.g. x[5] = 10
@@ -402,7 +403,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
                     ae
             );
             mce.setSourcePosition(parent);
+            /* GRECLIPSE edit -- GROOVY-9699
             visitor.visitMethodCallExpression(mce);
+            */
             OperandStack operandStack = controller.getOperandStack();
             int height = operandStack.getStackLength();
             mce.visit(controller.getAcg());

@@ -652,6 +652,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     }
                 }
             }
+            // GRECLIPSE add -- GROOVY-9699
+            else {
+            checkOrMarkPrivateAccess(vexp, fieldNode, isLHSOfEnclosingAssignment(vexp));
+            // GRECLIPSE end
 
             // GRECLIPSE add -- GROOVY-9454
             ClassNode inferredType = getInferredTypeFromTempInfo(vexp, null);
@@ -671,6 +675,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 storeType(vexp, actualType);
                 return;
             }
+            // GRECLIPSE add
+            }
+            // GRECLIPSE end
         }
 
         TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
@@ -1311,13 +1318,13 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             final ClassNode inferredRightExpressionTypeOrig) {
         ClassNode inferredRightExpressionType = inferredRightExpressionTypeOrig;
         if (!typeCheckMultipleAssignmentAndContinue(leftExpression, rightExpression)) return;
-
+        /* GRECLIPSE edit
         if (leftExpression instanceof VariableExpression
                 && ((VariableExpression) leftExpression).getAccessedVariable() instanceof FieldNode) {
             checkOrMarkPrivateAccess(leftExpression, (FieldNode) ((VariableExpression) leftExpression).getAccessedVariable(), true);
         }
-
-        //TODO: need errors for write-only too!
+        */
+        // TODO: need errors for write-only too!
         if (addedReadOnlyPropertyError(leftExpression)) return;
 
         ClassNode leftRedirect = leftExpressionType.redirect();
@@ -5012,10 +5019,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (vexp.isSuperExpression()) return makeSuper();
             final Variable variable = vexp.getAccessedVariable();
             if (variable instanceof FieldNode) {
+                /* GRECLIPSE edit
                 FieldNode fieldNode = (FieldNode) variable;
 
                 checkOrMarkPrivateAccess(vexp, fieldNode, isLHSOfEnclosingAssignment(vexp));
                 return getType(fieldNode);
+                */
+                ClassNode fieldType = variable.getOriginType();
+                if (isUsingGenericsOrIsArrayUsingGenerics(fieldType)) {
+                    boolean isStatic = (variable.getModifiers() & Opcodes.ACC_STATIC) != 0;
+                    ClassNode thisType = typeCheckingContext.getEnclosingClassNode(), declType = ((FieldNode) variable).getDeclaringClass();
+                    Map<GenericsTypeName, GenericsType> placeholders = resolvePlaceHoldersFromDeclaration(thisType, declType, null, isStatic);
+
+                    fieldType = resolveGenericsWithContext(placeholders, fieldType);
+                }
+                return fieldType;
+                // GRECLIPSE end
             }
             if (variable != vexp && variable instanceof VariableExpression) {
                 return getType((Expression) variable);
@@ -5058,6 +5077,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             ClassNode ret = getInferredReturnType(exp);
             return ret != null ? ret : ((MethodNode) exp).getReturnType();
         }
+        // GRECLIPSE add
+        if (exp instanceof FieldNode || exp instanceof PropertyNode) {
+            return ((Variable) exp).getOriginType();
+        }
+        // GRECLIPSE end
         if (exp instanceof RangeExpression) {
             ClassNode plain = ClassHelper.RANGE_TYPE.getPlainNodeReference();
             RangeExpression re = (RangeExpression) exp;
@@ -5086,6 +5110,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (exp instanceof Parameter) {
             return ((Parameter) exp).getOriginType();
         }
+        /* GRECLIPSE edit
         if (exp instanceof FieldNode) {
             FieldNode fn = (FieldNode) exp;
             return getGenericsResolvedTypeOfFieldOrProperty(fn, fn.getOriginType());
@@ -5094,6 +5119,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             PropertyNode pn = (PropertyNode) exp;
             return getGenericsResolvedTypeOfFieldOrProperty(pn, pn.getOriginType());
         }
+        */
         if (exp instanceof ClosureExpression) {
             ClassNode irt = getInferredReturnType(exp);
             if (irt != null) {
@@ -5141,6 +5167,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @param type the origin type
      * @return the new ClassNode with corrected generics
      */
+    /* GRECLIPSE edit
     private ClassNode getGenericsResolvedTypeOfFieldOrProperty(AnnotatedNode an, ClassNode type) {
         if (!type.isUsingGenerics()) return type;
         Map<GenericsTypeName, GenericsType> connections = new HashMap<GenericsTypeName, GenericsType>();
@@ -5149,6 +5176,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         type = applyGenericsContext(connections, type);
         return type;
     }
+    */
 
     private ClassNode makeSuper() {
         /* GRECLIPSE edit

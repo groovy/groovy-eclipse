@@ -45,10 +45,7 @@ import org.codehaus.groovy.classgen.asm.VariableSlotLoader;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
-import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
-import org.codehaus.groovy.transform.sc.StaticCompilationVisitor;
-import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
-import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
+
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
@@ -77,9 +74,11 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.PRIVATE_FIELDS_MUTATORS;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_ADD_METHOD;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_CLASSNODE;
 import static org.codehaus.groovy.transform.sc.StaticCompilationVisitor.ARRAYLIST_CONSTRUCTOR;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor.inferLoopElementType;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_FUNCTIONAL_INTERFACE_TYPE;
 import static org.codehaus.groovy.transform.stc.StaticTypesMarker.INFERRED_TYPE;
@@ -224,7 +223,7 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
         operandStack.remove(1); // receiver consumed by if()
         Label nonull = compileStack.createLocalLabel("nonull_" + counter);
         mv.visitLabel(nonull);
-        ClassNode componentType = StaticTypeCheckingVisitor.inferLoopElementType(
+        ClassNode componentType = inferLoopElementType(
                 controller.getTypeChooser().resolveType(receiver, controller.getClassNode()));
         Parameter iterator = new Parameter(componentType, "for$it$" + counter);
         VariableExpression iteratorAsVar = varX(iterator);
@@ -356,7 +355,7 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
         if (field != null && field.isPrivate() && !receiverType.equals(classNode)
                 && (StaticInvocationWriter.isPrivateBridgeMethodsCallAllowed(receiverType, classNode)
                     || StaticInvocationWriter.isPrivateBridgeMethodsCallAllowed(classNode,receiverType))) {
-            Map<String, MethodNode> mutators = receiverType.redirect().getNodeMetaData(StaticCompilationMetadataKeys.PRIVATE_FIELDS_MUTATORS);
+            Map<String, MethodNode> mutators = receiverType.redirect().getNodeMetaData(PRIVATE_FIELDS_MUTATORS);
             if (mutators != null) {
                 MethodNode methodNode = mutators.get(fieldName);
                 if (methodNode != null) {
@@ -385,7 +384,7 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             /*
              * This code path is needed because ACG creates array access expressions
              */
-            StaticTypeCheckingVisitor visitor = new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode());
+
             // GROOVY-6061
             if (rhsValueLoader instanceof VariableSlotLoader && parent instanceof BinaryExpression) {
                 rhsValueLoader.putNodeMetaData(INFERRED_TYPE, controller.getTypeChooser().resolveType(parent, controller.getClassNode()));
@@ -397,8 +396,9 @@ public class StaticTypesBinaryExpressionMultiTypeDispatcher extends BinaryExpres
             MethodCallExpression call = callX(receiver, "putAt", args(index, rhsValueLoader));
             call.setSafe(safe);
             call.setSourcePosition(parent);
-            visitor.visitMethodCallExpression(call);
-
+            /* GRECLIPSE edit -- GROOVY-9699
+            call.visit(new StaticCompilationVisitor(controller.getSourceUnit(), controller.getClassNode()));
+            */
             OperandStack operandStack = controller.getOperandStack();
             int height = operandStack.getStackLength();
             call.visit(controller.getAcg());
