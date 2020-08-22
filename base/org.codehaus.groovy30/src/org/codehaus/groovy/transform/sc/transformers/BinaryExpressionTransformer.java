@@ -99,7 +99,7 @@ public class BinaryExpressionTransformer {
                 }
             }
         }
-        /* GRECLIPSE edit -- GROOVY-9653
+        /* GRECLIPSE edit -- GROOVY-9653, GROOVY-9700
         if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
@@ -113,11 +113,31 @@ public class BinaryExpressionTransformer {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
                 Expression left = staticCompilationTransformer.transform(leftExpression);
+                Expression right = staticCompilationTransformer.transform(rightExpression);
                 if (left instanceof PropertyExpression) {
-                    Expression right = staticCompilationTransformer.transform(rightExpression);
-                    return transformPropertyAssignmentToSetterCall((PropertyExpression) left, right, directMCT);
+                    // transform "a.x = val" into "def tmp = val; a.setX(tmp); tmp"
+                    PropertyExpression pe = (PropertyExpression) left;
+                    return transformAssignmentToSetterCall(
+                            pe.getObjectExpression(), // "a"
+                            directMCT, // "setX"
+                            right, // "val"
+                            false,
+                            pe.isSafe(),
+                            pe.getProperty(), // "x"
+                            bin // "a.x = val"
+                    );
+                } else if (left instanceof VariableExpression) {
+                    // transform "x = val" into "def tmp = val; this.setX(tmp); tmp"
+                    return transformAssignmentToSetterCall(
+                            varX("this"),
+                            directMCT, // "setX"
+                            right, // "val"
+                            true,
+                            false,
+                            left, // "x"
+                            bin // "x = val"
+                    );
                 }
-                // TODO: Handle left instanceof VariableExpression and has DIRECT_METHOD_CALL_TARGET?
             }
         } else
         // GRECLIPSE end
@@ -256,7 +276,7 @@ public class BinaryExpressionTransformer {
             expr.setSourcePosition(bin);
             return expr;
         }
-        if (operationType == Types.EQUAL && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
+        if (operationType == Types.ASSIGN && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
             // multiple assignment
             ListOfExpressionsExpression cle = new ListOfExpressionsExpression();
             boolean isDeclaration = (bin instanceof DeclarationExpression);
@@ -419,6 +439,7 @@ public class BinaryExpressionTransformer {
         throw new IllegalArgumentException("Unsupported conversion");
     }
 
+    /* GRECLIPSE edit
     private static Expression transformPropertyAssignmentToSetterCall(final PropertyExpression leftExpression, final Expression rightExpression, final MethodNode directMCT) {
         // transform "a.x = b" into "def tmp = b; a.setX(tmp); tmp"
         return StaticPropertyAccessHelper.transformToSetterCall(
@@ -432,4 +453,29 @@ public class BinaryExpressionTransformer {
                 leftExpression
         );
     }
+    */
+    private static Expression transformAssignmentToSetterCall(
+            final Expression receiver,
+            final MethodNode setterMethod,
+            final Expression valueExpression,
+            final boolean implicitThis,
+            final boolean safeNavigation,
+            final Expression nameExpression,
+            final Expression binaryExpression) {
+        // expression that will transfer assignment and name positions
+        Expression pos = new PropertyExpression(null, nameExpression);
+        pos.setSourcePosition(binaryExpression);
+
+        return StaticPropertyAccessHelper.transformToSetterCall(
+                receiver,
+                setterMethod,
+                valueExpression,
+                implicitThis,
+                safeNavigation,
+                false, // spreadSafe
+                true, // TODO: replace with a proper test whether a return value is required or not
+                pos
+        );
+    }
+    // GRECLIPSE end
 }
