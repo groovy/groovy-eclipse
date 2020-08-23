@@ -104,6 +104,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.ASTTestTransformation;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
@@ -683,6 +684,27 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitAnnotationKeys(node);
             // visit attribute values
             super.visitAnnotation(node);
+
+            ClosureExpression test = node.getNodeMetaData(ASTTestTransformation.class);
+            if (test != null) {
+                Deque<VariableScope> saved = new java.util.ArrayDeque<>(scopes);
+
+                scopes.clear();
+                scopes.add(new VariableScope(null, enclosingModule, true));
+                scopes.add(new VariableScope(scopes.getLast(), ClassHelper.SCRIPT_TYPE, false));
+                scopes.add(scope = new VariableScope(scopes.getLast(), ClassHelper.SCRIPT_TYPE.getMethod("run", Parameter.EMPTY_ARRAY), false));
+                try {
+                    scope.addVariable("compilationUnit", ClassHelper.make(org.codehaus.groovy.control.CompilationUnit.class), ClassHelper.BINDING_TYPE);
+                    scope.addVariable("compilePhase", ClassHelper.make(org.codehaus.groovy.control.CompilePhase.class), ClassHelper.BINDING_TYPE);
+                    scope.addVariable("sourceUnit", ClassHelper.make(org.codehaus.groovy.control.SourceUnit.class), ClassHelper.BINDING_TYPE);
+                    scope.addVariable("lookup", ClassHelper.CLOSURE_TYPE.getPlainNodeReference(), ClassHelper.BINDING_TYPE);
+                    scope.addVariable("node", ClassHelper.make(ASTNode.class), ClassHelper.BINDING_TYPE);
+
+                    test.getCode().visit(this);
+                } finally {
+                    scopes.clear(); scopes.addAll(saved);
+                }
+            }
             break;
         case CANCEL_BRANCH:
             return;

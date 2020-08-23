@@ -58,6 +58,7 @@
         <file-match-pattern match-pattern="groovy/control/StaticVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/tools/GroovyClass.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/AnnotationCollectorTransform.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/transform/ASTTestTransformation.groovy" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationCollectorCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/ASTTransformationVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/transform/FieldASTTransformation.java" include-pattern="false" />

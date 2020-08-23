@@ -513,19 +513,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.CompileStatic\n" +
+            "import groovy.transform.*\n" +
+            "import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*\n" +
+            "\n" +
+            "@CompileStatic\n" +
             "class C {\n" +
             "  void m() {\n" +
             "    C that = this;\n" +
             "    { ->\n" +
+            "      @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "        assert node.getNodeMetaData(INFERRED_TYPE)?.name == 'C'\n" +
+            "      })\n" +
             "      def ref = getThisObject()\n" +
             "      assert ref == that\n" +
             "    }();\n" +
             "    { ->\n" +
+            "      @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "        assert node.getNodeMetaData(INFERRED_TYPE)?.name == 'C'\n" +
+            "      })\n" +
             "      def ref = getDelegate()\n" +
             "      assert ref == that\n" +
             "    }();\n" +
             "    { ->\n" +
+            "      @ASTTest(phase=INSTRUCTION_SELECTION, value={\n" +
+            "        assert node.getNodeMetaData(INFERRED_TYPE)?.name == 'C'\n" +
+            "      })\n" +
             "      def ref = getOwner()\n" +
             "      assert ref == that\n" +
             "    }();\n" +

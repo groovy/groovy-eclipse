@@ -1798,7 +1798,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS))
     }
 
-    @Test @Ignore('failing on CI server')
+    @Test
     void testAnnoElems2() {
         String contents = '''\
             |import groovy.util.logging.Log
@@ -1811,9 +1811,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('value'), 'value'.length(), TAG_KEY),
-            new HighlightedTypedPosition(contents.lastIndexOf('logger'), 'logger'.length(), STATIC_FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('log'), 'log'.length(), METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.lastIndexOf('logger'), 6, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('log'), 3, METHOD_CALL))
     }
 
     @Test
@@ -1972,6 +1973,45 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('excludes'), 8, TAG_KEY),
             new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
             new HighlightedTypedPosition(contents.lastIndexOf('temporary'), 9, FIELD))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1155
+    void testAnnoElems10() {
+        String contents = '''\
+            |import org.codehaus.groovy.control.*
+            |class C {
+            |  void m() {
+            |    @groovy.transform.ASTTest(phase=CONVERSION, value={
+            |      assert node.text
+            |    })
+            |    def var
+            |
+            |    @groovy.transform.ASTTest(phase=CompilePhase.CONVERSION, value={
+            |      sourceUnit.comments
+            |    })
+            |    final val = null
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C {'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('m()'), 1, METHOD),
+            //
+            new HighlightedTypedPosition(contents.indexOf('phase'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('CONVERSION'), 10, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('node'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('text'), 4, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, VARIABLE),
+            //
+            new HighlightedTypedPosition(contents.lastIndexOf('phase'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('CompilePhase'), 12, ENUMERATION),
+            new HighlightedTypedPosition(contents.lastIndexOf('CONVERSION'), 10, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('value'), 5, TAG_KEY),
+            new HighlightedTypedPosition(contents.indexOf('sourceUnit'), 10, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('comments'), 8, METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, VARIABLE))
     }
 
     @Test

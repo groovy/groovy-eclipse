@@ -51,7 +51,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     }
 
     @Test // should find local vars here
-    void testLocalVarsInClosureInScript() {
+    void testLocalVarsInClosureInScript1() {
         String contents = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'print t\n'))
         proposalExists(proposals, 'xxx', 1)
@@ -66,6 +66,28 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'xxx', 0)
         proposalExists(proposals, 'xx', 0)
         proposalExists(proposals, 'y', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1155
+    void testLocalVarsInClosureInASTTest() {
+        String contents = '''\
+            |class C {
+            |  def x
+            |  void m(int xx) {
+            |    def xxx
+            |    @groovy.transform.ASTTest({
+            |      def xxxx = null
+            |      x
+            |    })
+            |    def var
+            |  }
+            |}
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
+        proposalExists(proposals, 'xxxx', 1)
+        proposalExists(proposals, 'xxx', 0)
+        proposalExists(proposals, 'xx', 0)
+        proposalExists(proposals, 'x', 0)
     }
 
     @Test // should find local vars here

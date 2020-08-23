@@ -99,6 +99,7 @@ import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.runtime.MetaClassHelper;
+import org.codehaus.groovy.transform.ASTTestTransformation;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.LazyASTTransformation;
 import org.eclipse.core.runtime.Assert;
@@ -667,6 +668,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitAnnotation(AnnotationNode node) {
+        visitIfPresent(node.getNodeMetaData(ASTTestTransformation.class));
         for (Map.Entry<String, Expression> pair : node.getMembers().entrySet()) {
             // provide some context for the visitation of the initial value expression
             visitVariable(new MemberValueExpression(pair.getKey(), pair.getValue(), node));
