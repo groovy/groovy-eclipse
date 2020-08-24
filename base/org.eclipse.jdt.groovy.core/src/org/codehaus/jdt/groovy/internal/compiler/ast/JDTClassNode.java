@@ -15,6 +15,7 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -208,6 +209,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
 
         try {
+            List<Object[]> pairs = new ArrayList<>(); //MethodBinding,MethodNode
+
             MethodBinding[] methodBindings;
             if (jdtBinding instanceof ParameterizedTypeBinding) {
                 ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
@@ -219,9 +222,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (MethodBinding methodBinding : methodBindings) {
                     if (methodBinding.isConstructor()) {
                         ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, cNode});
                         addConstructor(cNode);
                     } else {
                         MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, mNode});
                         addMethod(mNode);
                     }
                 }
@@ -232,9 +237,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 for (MethodBinding methodBinding : infraBindings) {
                     if (methodBinding.isConstructor()) {
                         ConstructorNode cNode = constructorBindingToConstructorNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, cNode});
                         addConstructor(cNode);
                     } else {
                         MethodNode mNode = methodBindingToMethodNode(methodBinding);
+                        pairs.add(new Object[] {methodBinding, mNode});
                         addMethod(mNode);
                     }
                 }
@@ -255,11 +262,25 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         for (SyntheticMethodBinding syntheticBinding : syntheticMethodBindings) {
                             if (syntheticBinding.isConstructor()) {
                                 ConstructorNode cNode = constructorBindingToConstructorNode(syntheticBinding);
+                                pairs.add(new Object[] {syntheticBinding, cNode});
                                 addConstructor(cNode);
                             } else {
                                 MethodNode mNode = methodBindingToMethodNode(syntheticBinding);
+                                pairs.add(new Object[] {syntheticBinding, mNode});
                                 addMethod(mNode);
                             }
+                        }
+                    }
+                }
+            }
+
+            for (Object[] pair : pairs) {
+                if (pair[0] instanceof DelegateMethodBinding) {
+                    MethodBinding target = ((DelegateMethodBinding) pair[0]).delegateMethod.binding;
+                    for (MethodNode candidate : pair[1] instanceof ConstructorNode ? constructors : methods.getNotNull(((MethodNode) pair[1]).getName())) {
+                        Binding binding = pair[1] instanceof JDTNode ? ((JDTNode) candidate).getJdtBinding() : candidate.getNodeMetaData("JdtBinding");
+                        if (binding == target) {
+                            ((MethodNode) pair[1]).setOriginal(candidate);
                         }
                     }
                 }
@@ -345,7 +366,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             methodNode.setAnnotationDefault(jdtBinding.isAnnotationType() && methodBinding.getDefaultValue() != null); // TODO: Capture default value?
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
             methodNode.setSynthetic(methodBinding instanceof LazilyResolvedMethodBinding); // see GroovyClassScope
-            populateOriginal(methodBinding, methodNode);
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;
@@ -372,7 +392,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
         ctorNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         ctorNode.putNodeMetaData("JdtBinding", methodBinding);
-        populateOriginal(methodBinding, ctorNode);
         return ctorNode;
     }
 
@@ -465,18 +484,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
         }
         return parameters;
-    }
-
-    private void populateOriginal(final MethodBinding methodBinding, final MethodNode methodNode) {
-        if (methodBinding instanceof DelegateMethodBinding) {
-            MethodBinding target = ((DelegateMethodBinding) methodBinding).delegateMethod.binding;
-            for (MethodNode candidate : methodNode instanceof ConstructorNode ? constructors : methods.getNotNull(methodNode.getName())) {
-                Binding binding = methodNode instanceof JDTNode ? ((JDTNode) candidate).getJdtBinding() : candidate.getNodeMetaData("JdtBinding");
-                if (binding == target) {
-                    methodNode.setOriginal(candidate);
-                }
-            }
-        }
     }
 
     //--------------------------------------------------------------------------
