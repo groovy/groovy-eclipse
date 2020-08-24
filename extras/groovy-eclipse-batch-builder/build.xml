@@ -59,9 +59,9 @@
                 <exclude name="META-INF/*.SF"/>
             </fileset>
             <manifest>
-                <attribute name="Implementation-Version" value="${version}" />
-                <attribute name="Implementation-Vendor" value="Pivotal Software, Inc." />
-                <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main" />
+                <attribute name="Implementation-Version" value="${version}"/>
+                <attribute name="Implementation-Vendor" value="Pivotal Software, Inc."/>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.compiler.batch.Main"/>
             </manifest>
         </jar>
 
@@ -71,14 +71,24 @@
         </jar>
 
         <!-- create sources artifact -->
-        <jar destfile="${build.dir}/${sources.jar}">
+        <jar destfile="${build.dir}/${sources.jar}" duplicate="preserve">
             <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/batch">
-                <include name="**/BatchCompiler.java" />
-                <include name="**/Main.java" />
+                <include name="**/BatchCompiler.java"/>
+                <include name="**/Main.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/src-ant">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/base/${groovy.folder}/src-trace">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${git.repo.loc}/base/${groovy.folder}/src">
+                <include name="**/*.groovy"/>
+                <include name="**/*.java"/>
             </fileset>
             <fileset dir="${stage.dir}">
-                <include name="**/*.groovy" />
-                <include name="**/*.java" />
+                <include name="**/*.groovy"/>
+                <include name="**/*.java"/>
             </fileset>
         </jar>
     </target>
@@ -114,11 +124,11 @@
 
         <!-- Overwrite existing with classes from workspace bin folders-->
         <copy todir="${stage.dir}">
-            <fileset refid="jdt.groovy.core.class.files"/>
+            <fileset refid="gdt.core.class.files"/>
             <fileset refid="jdt.core.class.files"/>
-            <fileset refid="groovy.core.class.files"/>
+            <fileset refid="groovy.ant.class.files"/>
+            <fileset refid="groovy.patch.class.files"/>
             <fileset refid="groovy.trace.class.files"/>
-            <fileset refid="ant.groovy.class.files"/>
         </copy>
 
         <!-- now unzip the jdt compiler adapter jar. It's a jar within a jar. -->
@@ -146,20 +156,21 @@
             <!-- include the non-locking classloader w/ sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
         </fileset>
-        <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
+
+        <fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="gdt.core.class.files">
             <include name="**/*.*"/>
         </fileset>
         <fileset dir="${git.repo.loc}/jdt-patch/${jdt.patch.target}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
             <include name="**/*.*"/>
         </fileset>
         <!-- ensure that this comes after the core groovy compiler files because the groovy-eclipse.jar must overwrite the groovy.jar -->
-        <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.core.class.files">
+        <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.patch.class.files">
             <include name="**/*.*"/>
         </fileset>
         <fileset dir="${git.repo.loc}/base/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
             <include name="**/*.*"/>
         </fileset>
-        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="ant.groovy.class.files">
+        <fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin-ant" id="groovy.ant.class.files">
             <include name="**/*.*"/>
         </fileset>
 

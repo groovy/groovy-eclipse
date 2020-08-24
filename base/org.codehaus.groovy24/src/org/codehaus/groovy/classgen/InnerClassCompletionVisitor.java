@@ -385,7 +385,7 @@ public class InnerClassCompletionVisitor extends InnerClassVisitorHelper impleme
             block = (BlockStatement) code;
         }
         BlockStatement newCode = new BlockStatement();
-        addFieldInit(thisPara, thisField, newCode);
+        if (thisField != null) addFieldInit(thisPara, thisField, newCode);
         ConstructorCallExpression cce = getFirstIfSpecialConstructorCall(block);
         if (cce == null) {
             cce = new ConstructorCallExpression(ClassNode.SUPER, new TupleExpression());

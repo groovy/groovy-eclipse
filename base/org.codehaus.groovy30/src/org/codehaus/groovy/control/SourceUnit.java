@@ -35,12 +35,10 @@ import org.codehaus.groovy.control.io.URLReaderSource;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.syntax.Reduction;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.Utilities;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
 
 import java.io.File;
 import java.io.IOException;
@@ -272,7 +270,7 @@ public class SourceUnit extends ProcessingUnit {
             this.ast.setDescription(this.name);
         } catch (SyntaxException e) {
             if (this.ast == null) {
-                // Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+                // create an empty ModuleNode to represent a failed parse, in case a later phase attempts to use the AST
                 this.ast = new ModuleNode(this);
             }
             getErrorCollector().addError(new SyntaxErrorMessage(e, this));
@@ -393,8 +391,8 @@ public class SourceUnit extends ProcessingUnit {
             }
             return code;
         } catch (Exception e) {
-            Platform.getLog(org.osgi.framework.FrameworkUtil.getBundle(this.getClass())).log(
-                new Status(IStatus.ERROR, "org.codehaus.groovy", "Error reading Groovy source", e));
+            getErrorCollector().addWarning(WarningMessage.LIKELY_ERRORS,
+                "Error reading Groovy source at offset " + offset, null, this);
         }
         return null;
     }

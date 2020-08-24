@@ -94,6 +94,7 @@ public abstract class GroovyCompilerTestSuite {
     @Parameter(1)
     public String versionString;
 
+    protected String[] cpAdditions;
     protected String[] vmArguments;
 
     @Rule
@@ -118,19 +119,18 @@ public abstract class GroovyCompilerTestSuite {
             }
 
             /**
-             * Include the groovy runtime jars on the classpath that is used.
-             * Other classpath issues can be seen in TestVerifier/VerifyTests and only when
-             * the right prefixes are registered in there will it use the classloader with this
-             * classpath rather than the one it conjures up just to load the built code.
+             * Include groovy runtime jars on the classpath that is used.  Other
+             * classpath issues can be seen in TestVerifier/VerifyTests and only
+             * when the right entries are registered will it use the classloader
+             * with this classpath rather than the one it conjures up.
              */
             @Override
             protected String[] getDefaultClassPaths() {
                 String[] cps = super.getDefaultClassPaths();
-                String[] newcps = new String[cps.length + 3];
-                System.arraycopy(cps, 0, newcps, 0, cps.length);
+                String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
-                String[] ivyVersions = {"2.5.0", "2.4.0"};
                 String[] groovyVersions = {"3.0.5-indy", "2.5.13-indy", "2.4.20"};
+                String[] ivyVersions = {"2.5.0", "2.4.0"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
@@ -140,7 +140,7 @@ public abstract class GroovyCompilerTestSuite {
                         if (groovyJar != null)
                             break;
                     }
-                    newcps[newcps.length - 3] = resolve(groovyJar);
+                    newcps[newcps.length - 2] = resolve(groovyJar);
 
                     URL ivyJar = null;
                     for (String ivyVer : ivyVersions) {
@@ -148,17 +148,18 @@ public abstract class GroovyCompilerTestSuite {
                         if (ivyJar != null)
                             break;
                     }
-                    newcps[newcps.length - 2] = resolve(ivyJar);
+                    newcps[newcps.length - 1] = resolve(ivyJar);
 
-                    // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
-                    // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
-                    // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
-                    // classpath for just this reason, hmm.
-                    URL xformsJar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar");
-                    newcps[newcps.length - 1] = resolve(xformsJar);
                 } catch (IOException e) {
                     Assert.fail("IOException thrown " + e.getMessage());
                 }
+
+                if (cpAdditions != null) {
+                    int n = newcps.length;
+                    newcps = Arrays.copyOf(newcps, n + cpAdditions.length);
+                    System.arraycopy(cpAdditions, 0, newcps, n, cpAdditions.length);
+                }
+
                 return newcps;
             }
 
@@ -168,12 +169,12 @@ public abstract class GroovyCompilerTestSuite {
             }
 
             @Override
-            protected INameEnvironment getNameEnvironment(final String[] testFiles, String[] classPaths) {
+            protected INameEnvironment getNameEnvironment(final String[] testFiles, final String[] classPaths) {
                 this.classpaths = (classPaths == null ? getDefaultClassPaths() : classPaths);
                 return new InMemoryNameEnvironment(testFiles, getClassLibs(false));
             }
 
-            private String resolve(URL jarRef) throws IOException {
+            private String resolve(final URL jarRef) throws IOException {
                 String jarPath = FileLocator.toFileURL(jarRef).getPath();
                 return new File(jarPath).getAbsolutePath();
             }
@@ -189,7 +190,7 @@ public abstract class GroovyCompilerTestSuite {
         GroovyParser.debugRequestor = null;
     }
 
-    protected final boolean isAtLeastJava(long level) {
+    protected final boolean isAtLeastJava(final long level) {
         final long complianceLevel = (Long) ReflectionUtils.getPrivateField(AbstractCompilerTest.class, "complianceLevel", testDriver);
         return complianceLevel >= level;
     }
@@ -198,22 +199,22 @@ public abstract class GroovyCompilerTestSuite {
         return ReflectionUtils.executePrivateMethod(AbstractRegressionTest.class, "getCompilerOptions", testDriver);
     }
 
-    protected final File createScript(CharSequence name, CharSequence contents) {
+    protected final File createScript(final CharSequence name, final CharSequence contents) {
         String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
         new File(folder).mkdirs();
         Util.writeToFile(contents.toString(), folder + name);
         return new File(folder + name);
     }
 
-    protected final void runConformTest(String[] sources) {
+    protected final void runConformTest(final String[] sources) {
         runConformTest(sources, (String) null, (String) null);
     }
 
-    protected final void runConformTest(String[] sources, String expectedStdout) {
+    protected final void runConformTest(final String[] sources, final String expectedStdout) {
         runConformTest(sources, expectedStdout, (String) null);
     }
 
-    protected final void runConformTest(String[] sources, String expectedStdout, String expectedStderr) {
+    protected final void runConformTest(final String[] sources, final String expectedStdout, final String expectedStderr) {
         testDriver.runTest(
             sources,
             false, // expectingCompilerErrors
@@ -230,7 +231,7 @@ public abstract class GroovyCompilerTestSuite {
         );
     }
 
-    protected final void runConformTest(String[] sources, String expectedStdout, Map<String, String> compilerOptions) {
+    protected final void runConformTest(final String[] sources, final String expectedStdout, final Map<String, String> compilerOptions) {
         testDriver.runTest(
             sources,
             false, // expectingCompilerErrors
@@ -250,14 +251,14 @@ public abstract class GroovyCompilerTestSuite {
     /**
      * @param expectedOutput expected batch compiler output (i.e. errors/warnings)
      */
-    protected final void runNegativeTest(String[] sources, String expectedOutput) {
+    protected final void runNegativeTest(final String[] sources, final String expectedOutput) {
         runNegativeTest(sources, expectedOutput, null);
     }
 
     /**
      * @param expectedOutput expected batch compiler output (i.e. errors/warnings)
      */
-    protected final void runNegativeTest(String[] sources, String expectedOutput, Map<String, String> compilerOptions) {
+    protected final void runNegativeTest(final String[] sources, final String expectedOutput, final Map<String, String> compilerOptions) {
         testDriver.runTest(
             sources,
             expectedOutput.contains("ERROR"),
@@ -276,11 +277,11 @@ public abstract class GroovyCompilerTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected static GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
+    protected static GroovyCompilationUnitDeclaration getCUDeclFor(final String filename) {
         return ((DebugRequestor) GroovyParser.debugRequestor).declarations.get(filename);
     }
 
-    protected static ModuleNode getModuleNode(String filename) {
+    protected static ModuleNode getModuleNode(final String filename) {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor(filename);
         if (decl != null) {
             return decl.getModuleNode();
@@ -289,14 +290,14 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
-    protected static void checkDisassemblyFor(String filename, String expectedOutput) {
+    protected static void checkDisassemblyFor(final String filename, final String expectedOutput) {
         checkDisassemblyFor(filename, expectedOutput, ClassFileBytesDisassembler.DETAILED);
     }
 
     /**
      * Check the disassembly of a .class file for a particular piece of text
      */
-    protected static void checkDisassemblyFor(String filename, String expectedOutput, int detail) {
+    protected static void checkDisassemblyFor(final String filename, final String expectedOutput, final int detail) {
         try {
             File f = new File(AbstractRegressionTest.OUTPUT_DIR + File.separator + filename);
             byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
@@ -314,7 +315,7 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
-    protected static void checkGCUDeclaration(String filename, String expectedOutput) {
+    protected static void checkGCUDeclaration(final String filename, final String expectedOutput) {
         GroovyCompilationUnitDeclaration decl = ((DebugRequestor) GroovyParser.debugRequestor).declarations.get(filename);
         String declarationContents = decl.print();
         if (expectedOutput == null || expectedOutput.length() == 0) {
@@ -326,7 +327,7 @@ public abstract class GroovyCompilerTestSuite {
         }
     }
 
-    protected static FieldDeclaration findField(CompilationUnitDeclaration decl, String name) {
+    protected static FieldDeclaration findField(final CompilationUnitDeclaration decl, final String name) {
         for (FieldDeclaration field : decl.types[0].fields) {
             if (name.equals(String.valueOf(field.name))) {
                 return field;
@@ -335,7 +336,7 @@ public abstract class GroovyCompilerTestSuite {
         return null;
     }
 
-    protected static MethodDeclaration findMethod(CompilationUnitDeclaration decl, String name) {
+    protected static MethodDeclaration findMethod(final CompilationUnitDeclaration decl, final String name) {
         for (AbstractMethodDeclaration method : decl.types[0].methods) {
             if (name.equals(String.valueOf(method.selector)) &&
                     method instanceof MethodDeclaration) {
@@ -349,7 +350,7 @@ public abstract class GroovyCompilerTestSuite {
      * Find the named file (which should have just been compiled) and for the named method determine
      * the ClassNode for the return type and return the name of the classnode.
      */
-    protected static String getReturnTypeOfMethod(String filename, String methodname) {
+    protected static String getReturnTypeOfMethod(final String filename, final String methodname) {
         ModuleNode mn = getModuleNode(filename);
         ClassNode cn = mn.getClasses().get(0);
         MethodNode methodNode = cn.getMethod(methodname,
@@ -358,7 +359,7 @@ public abstract class GroovyCompilerTestSuite {
         return returnType.getName();
     }
 
-    protected static String stringify(FieldDeclaration decl) {
+    protected static String stringify(final FieldDeclaration decl) {
         StringBuilder sb = new StringBuilder();
         sb.append(decl.name);
         sb.append(" declarationSourceStart:").append(decl.declarationSourceStart); // first char (slash in "/** javadoc */ int x")
@@ -372,13 +373,13 @@ public abstract class GroovyCompilerTestSuite {
         return sb.toString();
     }
 
-    protected static String stringify(TypeReference type) {
+    protected static String stringify(final TypeReference type) {
         StringBuilder sb = new StringBuilder();
         stringify(type, sb);
         return sb.toString();
     }
 
-    protected static void stringify(TypeReference type, StringBuilder sb) {
+    protected static void stringify(final TypeReference type, final StringBuilder sb) {
         if (type.getClass() == ParameterizedSingleTypeReference.class) {
             ParameterizedSingleTypeReference pstr = (ParameterizedSingleTypeReference) type;
             sb.append("(" + pstr.sourceStart + ">" + pstr.sourceEnd + ")").append(pstr.token);

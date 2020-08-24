@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Test;
 
@@ -26,17 +28,21 @@ import org.junit.Test;
 public final class UserDefinedTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testWithLogging() {
+    public void testWithLogging() throws Exception {
+        cpAdditions = new String[] {
+            FileLocator.toFileURL(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getPath()
+        };
+
         //@formatter:off
         String[] sources = {
             "LoggingExample.groovy",
             "void greet() {\n" +
-            "  println 'Hello World'\n" +
+            "  println 'one'\n" +
             "}\n" +
             "\n" +
             "@examples.local.WithLogging // this should trigger extra logging\n" +
             "void greetWithLogging() {\n" +
-            "  println 'Hello World'\n" +
+            "  println 'two'\n" +
             "}\n" +
             "\n" +
             "greet()\n" +
@@ -45,10 +51,6 @@ public final class UserDefinedTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        runConformTest(sources,
-            "Hello World\n" +
-            "Starting greetWithLogging\n" +
-            "Hello World\n" +
-            "Ending greetWithLogging");
+        runConformTest(sources, "one\nStarting greetWithLogging\ntwo\nEnding greetWithLogging");
     }
 }
