@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
+import org.eclipse.jdt.core.Flags;
 
 /**
  * Records variable types in the scope based on declarations and assignments.
@@ -39,7 +40,7 @@ import org.codehaus.groovy.syntax.Types;
 public class AssignmentStorer {
 
     /**
-     * Stores the result of an current assignment expression in the given scope.
+     * Stores the result of an assignment expression in the given scope.
      * <p>
      * There are several possibilities here:
      * <ul>
@@ -54,7 +55,7 @@ public class AssignmentStorer {
      * </ul>
      *
      * @param exp assignment expression
-     * @param scope scope to store result in
+     * @param scope scope to store result(s)
      * @param rhsType inferred type of the right-hand side (right expression of {@code exp})
      */
     public void storeAssignment(final BinaryExpression exp, final VariableScope scope, final ClassNode rhsType) {
@@ -80,40 +81,39 @@ public class AssignmentStorer {
         }
     }
 
+    /**
+     * Stores static import fields and methods in the given scope.
+     */
     public void storeImport(final ImportNode node, final VariableScope scope) {
-        // if this is a static import, then add to the top level scope
         ClassNode type = node.getType();
         if (node.isStar() && type != null) {
-            // importing all static fields in the class
             List<FieldNode> fields = type.getFields();
             for (FieldNode field : fields) {
-                if (field.isStatic()) {
+                if (isStaticNotSynthetic(field)) {
                     scope.addVariable(field.getName(), field.getType(), type);
                 }
             }
 
-            List<MethodNode> methods = node.getType().getMethods();
+            List<MethodNode> methods = type.getMethods();
             for (MethodNode method : methods) {
-                if (method.isStatic()) {
+                if (isStaticNotSynthetic(method)) {
                     scope.addVariable(method.getName(), method.getReturnType(), type);
                 }
             }
-        } else {
-            String fieldName = node.getFieldName();
-            if (node.isStatic() && type != null && fieldName != null) {
-                String alias;
-                if (node.getAlias() != null) {
-                    alias = node.getAlias();
-                } else {
-                    alias = fieldName;
-                }
-                FieldNode field = type.getField(fieldName);
-                if (field != null) {
+        } else if (node.isStatic() && type != null) {
+            String name = node.getFieldName();
+            if (name != null) {
+                String alias = node.getAlias();
+                if (alias == null) alias = name;
+
+                FieldNode field = type.getField(name);
+                if (isStaticNotSynthetic(field)) {
                     scope.addVariable(alias, field.getType(), type);
                 }
-                List<MethodNode> methods = type.getDeclaredMethods(fieldName);
-                if (methods != null) {
-                    for (MethodNode method : methods) {
+
+                List<MethodNode> methods = type.getDeclaredMethods(name);
+                for (MethodNode method : methods) {
+                    if (isStaticNotSynthetic(method)) {
                         scope.addVariable(alias, method.getReturnType(), type);
                     }
                 }
@@ -196,5 +196,13 @@ public class AssignmentStorer {
             return rhsType;
         }
         return VariableScope.OBJECT_CLASS_NODE;
+    }
+
+    private static boolean isStaticNotSynthetic(final FieldNode node) {
+        return node != null && (node.getModifiers() & (Flags.AccStatic | Flags.AccSynthetic)) == Flags.AccStatic;
+    }
+
+    private static boolean isStaticNotSynthetic(final MethodNode node) {
+        return node != null && (node.getModifiers() & (Flags.AccBridge | Flags.AccStatic | Flags.AccSynthetic)) == Flags.AccStatic;
     }
 }
