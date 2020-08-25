@@ -221,6 +221,7 @@ Goal ::= '<' ReferenceExpressionTypeArgumentsAndTrunk
 Goal ::= '@' TypeAnnotations
 -- JSR 354 Reconnaissance mission.
 Goal ::= '->' YieldStatement
+Goal ::= '->' SwitchLabelCaseLhs
 /:$readableName Goal:/
 
 Literal -> IntegerLiteral
@@ -2188,8 +2189,8 @@ Expressionopt ::= $empty
 Expressionopt -> Expression
 /:$readableName Expression:/
 
-ConstantExpressions -> Expression
-ConstantExpressions ::= ConstantExpressions ',' Expression
+ConstantExpressions -> ConstantExpression
+ConstantExpressions ::= ConstantExpressions ',' ConstantExpression
 /.$putCase consumeConstantExpressions(); $break ./
 /:$readableName ConstantExpressions:/
 

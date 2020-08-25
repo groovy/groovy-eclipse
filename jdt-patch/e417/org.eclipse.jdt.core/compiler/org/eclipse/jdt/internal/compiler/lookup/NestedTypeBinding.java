@@ -13,7 +13,7 @@
  *     Stephan Herrmann - Contributions for
  *								Bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
- *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations 
+ *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
@@ -46,9 +46,9 @@ public NestedTypeBinding(NestedTypeBinding prototype) {
 * Answer the new argument or the existing argument if one already existed.
 */
 public SyntheticArgumentBinding addSyntheticArgument(LocalVariableBinding actualOuterLocalVariable) {
-	
+
 	if (!isPrototype()) throw new IllegalStateException();
-	
+
 	SyntheticArgumentBinding synthLocal = null;
 
 	if (this.outerLocalVariables == null) {
@@ -77,9 +77,14 @@ public SyntheticArgumentBinding addSyntheticArgument(LocalVariableBinding actual
 
 /* Add a new synthetic argument for <enclosingType>.
 * Answer the new argument or the existing argument if one already existed.
+* Do not add if this is static (eg. nested records)
 */
 public SyntheticArgumentBinding addSyntheticArgument(ReferenceBinding targetEnclosingType) {
 	if (!isPrototype()) throw new IllegalStateException();
+	if (isStatic()) {
+		assert this.isRecord();// a local record is implicitly static; no other local type can be static
+		return null;
+	}
 	SyntheticArgumentBinding synthLocal = null;
 	if (this.enclosingInstances == null) {
 		synthLocal = new SyntheticArgumentBinding(targetEnclosingType);
@@ -161,7 +166,7 @@ public int getOuterLocalVariablesSlotSize() {
 				default :
 					this.outerLocalVariablesSlotSize  ++;
 					break;
-			}		
+			}
 		}
 	}
 	return this.outerLocalVariablesSlotSize;
@@ -181,28 +186,28 @@ public SyntheticArgumentBinding getSyntheticArgument(LocalVariableBinding actual
 /* Answer the synthetic argument for <targetEnclosingType> or null if one does not exist.
 */
 public SyntheticArgumentBinding getSyntheticArgument(ReferenceBinding targetEnclosingType, boolean onlyExactMatch, boolean scopeIsConstructorCall) {
-	
+
 	if (!isPrototype()) throw new IllegalStateException();
-	
+
 	if (this.enclosingInstances == null) return null;		// is null if no enclosing instances are known
-	
+
 	// exact match
-	
-	// firstly, during allocation, check and use the leftmost one (if possible) 
+
+	// firstly, during allocation, check and use the leftmost one (if possible)
 	// to handle cases involving two instances of same type, such as
 	// class X {
 	//   class Inner extends X {}
 	//   void f(){
-	//     new X().new Inner(){} 
+	//     new X().new Inner(){}
 	//     // here the result of (new X()) is passed as the first (synthetic) arg for ctor of new Inner(){}
-	//     // (and (this) as the second, of course) 
+	//     // (and (this) as the second, of course)
 	//   }
 	// }
 	if (scopeIsConstructorCall && this.enclosingInstances.length > 0)
-		if (TypeBinding.equalsEquals(this.enclosingInstances[0].type, targetEnclosingType)) 
+		if (TypeBinding.equalsEquals(this.enclosingInstances[0].type, targetEnclosingType))
 			if (this.enclosingInstances[0].actualOuterLocalVariable == null)
 				return this.enclosingInstances[0];
-	
+
 	// then check other possibility
 	for (int i = this.enclosingInstances.length; --i >= 0;)
 		if (TypeBinding.equalsEquals(this.enclosingInstances[i].type, targetEnclosingType))

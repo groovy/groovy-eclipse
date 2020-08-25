@@ -61,6 +61,42 @@ public class TextBlockTest extends AbstractRegressionTest {
 	protected void runConformTest(String[] testFiles, String expectedOutput, Map<String, String> customOptions, String[] vmArguments) {
 		runConformTest(testFiles, expectedOutput, customOptions, vmArguments, new JavacTestOptions("-source 14 --enable-preview"));
 	}
+	protected void runConformTest(
+			// test directory preparation
+			boolean shouldFlushOutputDirectory,
+			String[] testFiles,
+			//compiler options
+			String[] classLibraries /* class libraries */,
+			Map<String, String> customOptions /* custom options */,
+			// compiler results
+			String expectedCompilerLog,
+			// runtime results
+			String expectedOutputString,
+			String expectedErrorString,
+			String[] vmarguments,
+			// javac options
+			JavacTestOptions javacTestOptions) {
+		runTest(
+			// test directory preparation
+			shouldFlushOutputDirectory /* should flush output directory */,
+			testFiles /* test files */,
+			// compiler options
+			classLibraries /* class libraries */,
+			customOptions /* custom options */,
+			false /* do not perform statements recovery */,
+			null /* no custom requestor */,
+			// compiler results
+			false /* expecting no compiler errors */,
+			expectedCompilerLog /* expected compiler log */,
+			// runtime options
+			false /* do not force execution */,
+			vmarguments /* no vm arguments */,
+			// runtime results
+			expectedOutputString /* expected output string */,
+			expectedErrorString /* expected error string */,
+			// javac options
+			javacTestOptions /* javac test options */);
+	}
 	public void test001() {
 		runNegativeTest(
 				new String[] {
@@ -1349,6 +1385,152 @@ public class TextBlockTest extends AbstractRegressionTest {
 						"}\n"
 				},
 				"true",
+				getCompilerOptions(),
+				new String[] {"--enable-preview"});
+	}
+	public void testBug565639_1() {
+		runConformTest(true,
+					new String[]{
+						"X.java",
+						"public class X {\n" +
+						"    static final String TEXT_BLOCK = \"\"\"\n" +
+						"              1\n" +
+						"              2\n" +
+						"              3\n" +
+						"              4\n" +
+						"              5\n" +
+						"            \"\"\";\n" +
+						"    public static void main(String[] args)  {\n" +
+						"        throw new RuntimeException(\"This is line 10.\");\n" +
+						"    }\n" +
+						"}\n"
+				},
+				null,
+				getCompilerOptions(),
+				"",
+				"",
+				"Exception in thread \"main\" java.lang.RuntimeException: This is line 10.\n" +
+						"	at X.main(X.java:10)",
+				new String[] {"--enable-preview"},
+				new JavacTestOptions("-source 14 --enable-preview"));
+	}
+	public void testBug565639_2() {
+		runConformTest(true,
+				new String[]{
+					"X.java",
+					"public class X {\n" +
+					"    public static void main(String[] args)  {\n" +
+					"    	String TEXT_BLOCK = \"\"\"\n" +
+					"              1\n" +
+					"              2\n" +
+					"              3\n" +
+					"              4\n" +
+					"              5\n" +
+					"            \"\"\";\n" +
+					"        throw new RuntimeException(\"This is line 10.\");\n" +
+					"    }\n" +
+					"}\n"
+			},
+			null,
+			getCompilerOptions(),
+			"",
+			"",
+			"Exception in thread \"main\" java.lang.RuntimeException: This is line 10.\n" +
+					"	at X.main(X.java:10)",
+			new String[] {"--enable-preview"},
+			new JavacTestOptions("-source 14 --enable-preview"));
+	}
+	public void testBug565639_3() {
+		runNegativeTest(new String[]{
+					"X.java",
+					"public class X {\n" +
+					"    public static void main(String[] args)  {\n" +
+					"    	String TEXT_BLOCK = \"\"\"\n" +
+					"              1\n" +
+					"              2\n" +
+					"              3\n" +
+					"              4\n" +
+					"              5\n" +
+					"            \"\"\"\";\n" +
+					"        throw new RuntimeException(\"This is line 10.\");\n" +
+					"    }\n" +
+					"}\n"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 9)\n" +
+				"	\"\"\"\";\n" +
+				"	   ^^\n" +
+				"String literal is not properly closed by a double-quote\n" +
+				"----------\n");
+	}
+	public void testBug565639_4() {
+		runNegativeTest(new String[]{
+					"X.java",
+					"public class X {\n" +
+					"    public static void main(String[] args)  {\n" +
+					"    	String TEXT_BLOCK = \"\"\"\n" +
+					"              1\n" +
+					"              2\n" +
+					"              3\n" +
+					"              4\n" +
+					"              5\n" +
+					"            \"\"\"\"\";\n" +
+					"        throw new RuntimeException(\"This is line 10.\");\n" +
+					"    }\n" +
+					"}\n"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 9)\n" +
+				"	\"\"\"\"\";\n" +
+				"	   ^^\n" +
+				"Syntax error on token \"\"\"\", delete this token\n" +
+				"----------\n");
+	}
+	public void testBug565639_5() {
+		runNegativeTest(new String[]{
+					"X.java",
+					"public class X {\n" +
+					"    public static void main(String[] args)  {\n" +
+					"    	String TEXT_BLOCK = \"\"\"\n" +
+					"              1\n" +
+					"              2\n" +
+					"              3\n" +
+					"              4\n" +
+					"              5\n" +
+					"            \\\"\"\"\"\"\";\n" +
+					"        throw new RuntimeException(\"This is line 10.\");\n" +
+					"    }\n" +
+					"}\n"
+				},
+				"----------\n" +
+				"1. ERROR in X.java (at line 9)\n" +
+				"	\\\"\"\"\"\"\";\n" +
+				"	     ^^\n" +
+				"Syntax error on token \"\"\"\", delete this token\n" +
+				"----------\n");
+	}
+	public void testBug565639_6() {
+		runConformTest(
+				new String[] {
+						"X.java",
+						"public class X {\n" +
+						"    public static void main(String[] args)  {\n" +
+						"    	String TEXT_BLOCK = \"\"\"\n" +
+						"              1\n" +
+						"              2\n" +
+						"              3\n" +
+						"              4\n" +
+						"              \\\"\"\"\n" +
+						"              \"\"\";\n" +
+						"        System.out.println(TEXT_BLOCK);\n" +
+						"    }\n" +
+						"}\n"
+				},
+				"1\n" +
+				"2\n" +
+				"3\n" +
+				"4\n" +
+				"\"\"\"",
 				getCompilerOptions(),
 				new String[] {"--enable-preview"});
 	}

@@ -35,7 +35,7 @@
  *							Bug 424930 - [1.8][compiler] Regression: "Cannot infer type arguments" error from compiler.
  *							Bug 427483 - [Java 8] Variables in lambdas sometimes can't be resolved
  *							Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
- *							Bug 426996 - [1.8][inference] try to avoid method Expression.unresolve()? 
+ *							Bug 426996 - [1.8][inference] try to avoid method Expression.unresolve()?
  *							Bug 428352 - [1.8][compiler] Resolution errors don't always surface
  *							Bug 429203 - [1.8][compiler] NPE in AllocationExpression.binding
  *							Bug 429430 - [1.8] Lambdas and method reference infer wrong exception type with generics (RuntimeException instead of IOException)
@@ -91,7 +91,7 @@ public class AllocationExpression extends Expression implements IPolyExpression,
 	public boolean argsContainCast;
 	public TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 	public boolean argumentsHaveErrors = false;
-	
+
 @Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// check captured variables are initialized in current context (26134)
@@ -100,8 +100,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// process arguments
 	if (this.arguments != null) {
 		boolean analyseResources = currentScope.compilerOptions().analyseResourceLeaks;
-		boolean hasResourceWrapperType = analyseResources 
-				&& this.resolvedType instanceof ReferenceBinding 
+		boolean hasResourceWrapperType = analyseResources
+				&& this.resolvedType instanceof ReferenceBinding
 				&& ((ReferenceBinding)this.resolvedType).hasTypeBit(TypeIds.BitWrapperCloseable);
 		for (int i = 0, count = this.arguments.length; i < count; i++) {
 			flowInfo =
@@ -123,7 +123,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null) {
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=277643, align with javac on JLS 15.12.2.6
 			thrownExceptions = currentScope.environment().convertToRawTypes(this.binding.thrownExceptions, true, true);
-		}		
+		}
 		// check exception handling
 		flowContext.checkExceptionHandlers(
 			thrownExceptions,
@@ -138,7 +138,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 
 	ReferenceBinding declaringClass = this.binding.declaringClass;
 	MethodScope methodScope = currentScope.methodScope();
-	if ((declaringClass.isMemberType() && !declaringClass.isStatic()) || 
+	if ((declaringClass.isMemberType() && !declaringClass.isStatic()) ||
 			(declaringClass.isLocalType() && !methodScope.isStatic && methodScope.isLambdaScope())) {
 		// allocating a non-static member type without an enclosing instance of parent type
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
@@ -297,7 +297,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	MethodBinding codegenBinding = this.binding.original();
 
 	ReferenceBinding declaringClass;
-	if (codegenBinding.isPrivate() && 
+	if (codegenBinding.isPrivate() &&
 			!currentScope.enclosingSourceType().isNestmateOf(this.binding.declaringClass) &&
 			TypeBinding.notEquals(currentScope.enclosingSourceType(), (declaringClass = codegenBinding.declaringClass))) {
 
@@ -417,7 +417,7 @@ public TypeBinding resolveType(BlockScope scope) {
 					this.argsContainCast = true;
 				}
 				argument.setExpressionContext(INVOCATION_CONTEXT);
-				if (this.arguments[i].resolvedType != null) 
+				if (this.arguments[i].resolvedType != null)
 					scope.problemReporter().genericInferenceError("Argument was unexpectedly found resolved", this); //$NON-NLS-1$
 				if ((this.argumentTypes[i] = argument.resolveType(scope)) == null) {
 					this.argumentsHaveErrors = true;
@@ -467,7 +467,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			scope.problemReporter().cannotInstantiate(this.type, this.resolvedType);
 			return this.resolvedType;
 		}
-	} 
+	}
 	if (isDiamond) {
 		this.binding = inferConstructorOfElidedParameterizedType(scope);
 		if (this.binding == null || !this.binding.isValidBinding()) {
@@ -551,7 +551,8 @@ void checkIllegalNullAnnotation(BlockScope scope, TypeBinding allocationType) {
 // For allocation expressions, boxing compatibility is same as vanilla compatibility, since java.lang's wrapper types are not generic.
 @Override
 public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
-	return isPolyExpression() ? false : isCompatibleWith(scope.boxing(targetType), scope);
+	return isPolyExpression() ? false :
+		isBoxingCompatible(this.resolvedType, targetType, this, scope);
 }
 
 @Override
@@ -602,7 +603,7 @@ public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite 
 	ReferenceBinding genericType = ((ParameterizedTypeBinding) type).genericType();
 	ReferenceBinding enclosingType = type.enclosingType();
 	ParameterizedTypeBinding allocationType = scope.environment().createParameterizedType(genericType, genericType.typeVariables(), enclosingType);
-	
+
 	// Given the allocation type and the arguments to the constructor, see if we can infer the constructor of the elided parameterized type.
 	MethodBinding factory = scope.getStaticFactory(allocationType, enclosingType, argumentTypes, site);
 	if (factory instanceof ParameterizedGenericMethodBinding && factory.isValidBinding()) {
@@ -612,7 +613,7 @@ public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite 
 		TypeVariableBinding[] constructorTypeVariables = sfmb.getConstructor().typeVariables();
 		TypeBinding [] constructorTypeArguments = constructorTypeVariables != null ? new TypeBinding[constructorTypeVariables.length] : Binding.NO_TYPES;
 		if (constructorTypeArguments.length > 0)
-			System.arraycopy(((ParameterizedGenericMethodBinding)factory).typeArguments, sfmb.typeVariables().length - constructorTypeArguments.length , 
+			System.arraycopy(((ParameterizedGenericMethodBinding)factory).typeArguments, sfmb.typeVariables().length - constructorTypeArguments.length ,
 												constructorTypeArguments, 0, constructorTypeArguments.length);
 		if (allocationType.isInterface()) {
 			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) factory.returnType;
@@ -626,11 +627,11 @@ public TypeBinding[] inferElidedTypes(final Scope scope) {
 	return inferElidedTypes((ParameterizedTypeBinding) this.resolvedType, scope);
 }
 public TypeBinding[] inferElidedTypes(ParameterizedTypeBinding parameterizedType, final Scope scope) {
-	
+
 	ReferenceBinding genericType = parameterizedType.genericType();
 	ReferenceBinding enclosingType = parameterizedType.enclosingType();
 	ParameterizedTypeBinding allocationType = scope.environment().createParameterizedType(genericType, genericType.typeVariables(), enclosingType);
-	
+
 	/* Given the allocation type and the arguments to the constructor, see if we can synthesize a generic static factory
 	   method that would, given the argument types and the invocation site, manufacture a parameterized object of type allocationType.
 	   If we are successful then by design and construction, the parameterization of the return type of the factory method is identical
@@ -663,13 +664,13 @@ public void checkTypeArgumentRedundancy(ParameterizedTypeBinding allocationType,
 			if (i == allocationType.arguments.length) {
 				scope.problemReporter().redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
 				return;
-			}	
+			}
 		}
 	}
 	TypeBinding [] inferredTypes;
 	int previousBits = this.type.bits;
 	try {
-		// checking for redundant type parameters must fake a diamond, 
+		// checking for redundant type parameters must fake a diamond,
 		// so we infer the same results as we would get with a diamond in source code:
 		this.type.bits |= IsDiamond;
 		inferredTypes = inferElidedTypes(allocationType, scope);

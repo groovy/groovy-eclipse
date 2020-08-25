@@ -160,8 +160,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 	// that collection contains all the remaining bytes of the .class file
 	public int headerOffset;
 	public Map<TypeBinding, Boolean> innerClassesBindings;
-	public List bootstrapMethods = null;
-	public List<TypeBinding> recordBootstrapMethods = null;
+	public List<ASTNode> bootstrapMethods = null;
 	public int methodCount;
 	public int methodCountOffset;
 	// pool managment
@@ -181,6 +180,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 	public static final int INITIAL_HEADER_SIZE = 1500;
 	public static final int INNER_CLASSES_SIZE = 5;
 	public static final int NESTED_MEMBER_SIZE = 5;
+
+	// TODO: Move these to an enum?
+	public static final String ALTMETAFACTORY_STRING = new String(ConstantPool.ALTMETAFACTORY);
+	public static final String METAFACTORY_STRING = new String(ConstantPool.METAFACTORY);
+	public static final String BOOTSTRAP_STRING = new String(ConstantPool.BOOTSTRAP);
+	public static final String[] BOOTSTRAP_METHODS = {ALTMETAFACTORY_STRING, METAFACTORY_STRING, BOOTSTRAP_STRING};
 
 	/**
 	 * INTERNAL USE-ONLY
@@ -423,9 +428,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 			attributesNumber += generateHierarchyInconsistentAttribute();
 		}
 		// Functional expression, lambda bootstrap methods and record bootstrap methods
-		if ((this.bootstrapMethods != null && !this.bootstrapMethods.isEmpty()) ||
-				(this.recordBootstrapMethods != null && !this.recordBootstrapMethods.isEmpty())) {
-			attributesNumber += generateBootstrapMethods(this.bootstrapMethods, this.recordBootstrapMethods);
+		if (this.bootstrapMethods != null && !this.bootstrapMethods.isEmpty()) {
+			attributesNumber += generateBootstrapMethods(this.bootstrapMethods);
 		}
 		// Inner class attribute
 		int numberOfInnerClasses = this.innerClassesBindings == null ? 0 : this.innerClassesBindings.size();
@@ -1078,7 +1082,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * - default abstract methods
 	 * - lambda methods.
 	 */
-	public void addSpecialMethods() {
+	public void addSpecialMethods(TypeDeclaration typeDecl) {
 
 		// add all methods (default abstract methods and synthetic)
 
@@ -1165,7 +1169,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 						case SyntheticMethodBinding.RecordOverrideEquals:
 						case SyntheticMethodBinding.RecordOverrideHashCode:
 						case SyntheticMethodBinding.RecordOverrideToString:
-							addSyntheticRecordOverrideMethods(syntheticMethod, syntheticMethod.purpose);
+							addSyntheticRecordOverrideMethods(typeDecl, syntheticMethod, syntheticMethod.purpose);
 							break;
 					}
 				}
@@ -1197,13 +1201,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 	}
 
-	private void addSyntheticRecordOverrideMethods(SyntheticMethodBinding methodBinding, int purpose) {
-		if (this.recordBootstrapMethods == null)
-			this.recordBootstrapMethods = new ArrayList<>(3);
-		if (!this.recordBootstrapMethods.contains(methodBinding.declaringClass))
-			this.recordBootstrapMethods.add(methodBinding.declaringClass);
-		int index = this.bootstrapMethods != null ? this.bootstrapMethods.size() +
-				this.recordBootstrapMethods.size() - 1 : 0;
+	private void addSyntheticRecordOverrideMethods(TypeDeclaration typeDecl, SyntheticMethodBinding methodBinding, int purpose) {
+		if (this.bootstrapMethods == null)
+			this.bootstrapMethods = new ArrayList<>(3);
+		if (!this.bootstrapMethods.contains(typeDecl))
+			this.bootstrapMethods.add(typeDecl);
+		int index = this.bootstrapMethods.indexOf(typeDecl);
 		generateMethodInfoHeader(methodBinding);
 		int methodAttributeOffset = this.contentsOffset;
 		// this will add exception attribute, synthetic attribute, deprecated attribute,...
@@ -3576,7 +3579,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return 1;
 	}
 
-	private int generateBootstrapMethods(List functionalExpressionList, List<TypeBinding> recordBootstrapMethods2) {
+	private Map<String, Integer> createInitBootStrapMethodsMap() {
+		Map<String, Integer> fPtr = new HashMap<>(ClassFile.BOOTSTRAP_METHODS.length);
+		for (String key : ClassFile.BOOTSTRAP_METHODS) {
+			fPtr.put(key, 0);
+		}
+		return fPtr;
+	}
+	private int generateBootstrapMethods(List<ASTNode> bootStrapMethodsList) {
 		/* See JVM spec 4.7.21
 		   The BootstrapMethods attribute has the following format:
 		   BootstrapMethods_attribute {
@@ -3594,9 +3604,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (methodHandlesLookup == null) return 0; // skip bootstrap section, class path problem already reported, just avoid NPE.
 		recordInnerClasses(methodHandlesLookup); // Should be done, it's what javac does also
 
-		int nfunctionalExpressions = functionalExpressionList != null ? functionalExpressionList.size() : 0;
-		int nRecordBootStraps = recordBootstrapMethods2 != null ? recordBootstrapMethods2.size() : 0;
-		int numberOfBootstraps = nfunctionalExpressions + nRecordBootStraps;
+		int numberOfBootstraps = bootStrapMethodsList != null ? bootStrapMethodsList.size() : 0;
 		int localContentsOffset = this.contentsOffset;
 		// Generate the boot strap attribute - since we are only making lambdas and
 		// functional expressions, we know the size ahead of time - this less general
@@ -3619,12 +3627,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.contents[localContentsOffset++] = (byte) (numberOfBootstraps >> 8);
 		this.contents[localContentsOffset++] = (byte) numberOfBootstraps;
 
-		if (nfunctionalExpressions > 0)
-			localContentsOffset = generateLambdaMetaFactoryBootStrapMethods(functionalExpressionList,
-					localContentsOffset, contentsEntries);
-		if (nRecordBootStraps > 0)
-			localContentsOffset = generateObjectMethodsBootStrapMethods(recordBootstrapMethods2, localContentsOffset,
-					contentsEntries);
+		Map<String, Integer> fPtr = createInitBootStrapMethodsMap();
+		for (int i = 0; i < numberOfBootstraps; i++) {
+			Object o = this.bootstrapMethods.get(i);
+			if (o instanceof FunctionalExpression) {
+				localContentsOffset = addBootStrapLambdaEntry(localContentsOffset, (FunctionalExpression) o, fPtr);
+			} else if (o instanceof TypeDeclaration) {
+				localContentsOffset = addBootStrapRecordEntry(localContentsOffset, (TypeDeclaration) o, fPtr);
+			}
+		}
 
 		int attributeLength = localContentsOffset - attributeLengthPosition - 4;
 		this.contents[attributeLengthPosition++] = (byte) (attributeLength >> 24);
@@ -3635,184 +3646,179 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return 1;
 	}
 
-	private int generateLambdaMetaFactoryBootStrapMethods(List functionalExpressionList,
-			int localContentsOffset, final int contentsEntries) {
-		ReferenceBinding javaLangInvokeLambdaMetafactory = this.referenceBinding.scope.getJavaLangInvokeLambdaMetafactory();
-		int numberOfBootstraps = functionalExpressionList.size();
-
-		// Depending on the complexity of the expression it may be necessary to use the altMetafactory() rather than the metafactory()
-		int indexForMetaFactory = 0;
-		int indexForAltMetaFactory = 0;
-
-		for (int i = 0; i < numberOfBootstraps; i++) {
-			FunctionalExpression functional = (FunctionalExpression) functionalExpressionList.get(i);
-			MethodBinding [] bridges = functional.getRequiredBridges();
-			TypeBinding[] markerInterfaces = null;
-			if ((functional instanceof LambdaExpression
-					&& (((markerInterfaces = ((LambdaExpression) functional).getMarkerInterfaces()) != null))
-					|| bridges != null) || functional.isSerializable) {
-				// may need even more space
-				int extraSpace = 2; // at least 2 more than when the normal metafactory is used, for the bitflags entry
-				if (markerInterfaces != null) {
-					// 2 for the marker interface list size then 2 per marker interface index
-					extraSpace += (2 + 2 * markerInterfaces.length);
-				}
-				if (bridges != null) {
-					// 2 for bridge count then 2 per bridge method type.
-					extraSpace += (2 + 2 * bridges.length);
-				}
-				if (extraSpace + contentsEntries + localContentsOffset >= this.contents.length) {
-					resizeContents(extraSpace + contentsEntries);
-				}
-
-				if (indexForAltMetaFactory == 0) {
-					indexForAltMetaFactory =
-						this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangInvokeLambdaMetafactory,
-						ConstantPool.ALTMETAFACTORY, ConstantPool.JAVA_LANG_INVOKE_LAMBDAMETAFACTORY_ALTMETAFACTORY_SIGNATURE, false);
-				}
-				this.contents[localContentsOffset++] = (byte) (indexForAltMetaFactory >> 8);
-				this.contents[localContentsOffset++] = (byte) indexForAltMetaFactory;
-
-				// u2 num_bootstrap_arguments
-				this.contents[localContentsOffset++] = 0;
-				this.contents[localContentsOffset++] = (byte) (4 + (markerInterfaces==null?0:1+markerInterfaces.length) +
-						                                                   (bridges == null ? 0 : 1 + bridges.length));
-
-				int functionalDescriptorIndex = this.constantPool.literalIndexForMethodType(functional.descriptor.original().signature());
-				this.contents[localContentsOffset++] = (byte) (functionalDescriptorIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) functionalDescriptorIndex;
-
-				int methodHandleIndex = this.constantPool.literalIndexForMethodHandle(functional.binding.original()); // Speak of " implementation" (erased) version here, adaptations described below.
-				this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) methodHandleIndex;
-
-				char [] instantiatedSignature = functional.descriptor.signature();
-				int methodTypeIndex = this.constantPool.literalIndexForMethodType(instantiatedSignature);
-				this.contents[localContentsOffset++] = (byte) (methodTypeIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) methodTypeIndex;
-
-				int bitflags = 0;
-				if (functional.isSerializable) {
-					bitflags |= ClassFileConstants.FLAG_SERIALIZABLE;
-				}
-				if (markerInterfaces!=null) {
-					bitflags |= ClassFileConstants.FLAG_MARKERS;
-				}
-				if (bridges != null) {
-					bitflags |= ClassFileConstants.FLAG_BRIDGES;
-				}
-				int indexForBitflags = this.constantPool.literalIndex(bitflags);
-
-				this.contents[localContentsOffset++] = (byte)(indexForBitflags>>8);
-				this.contents[localContentsOffset++] = (byte)(indexForBitflags);
-
-				if (markerInterfaces != null) {
-					int markerInterfaceCountIndex =  this.constantPool.literalIndex(markerInterfaces.length);
-					this.contents[localContentsOffset++] = (byte)(markerInterfaceCountIndex>>8);
-					this.contents[localContentsOffset++] = (byte)(markerInterfaceCountIndex);
-					for (int m = 0, maxm = markerInterfaces.length; m < maxm; m++) {
-						int classTypeIndex = this.constantPool.literalIndexForType(markerInterfaces[m]);
-						this.contents[localContentsOffset++] = (byte)(classTypeIndex>>8);
-						this.contents[localContentsOffset++] = (byte)(classTypeIndex);
-					}
-				}
-				if (bridges != null) {
-					int bridgeCountIndex =  this.constantPool.literalIndex(bridges.length);
-					this.contents[localContentsOffset++] = (byte) (bridgeCountIndex >> 8);
-					this.contents[localContentsOffset++] = (byte) (bridgeCountIndex);
-					for (int m = 0, maxm = bridges.length; m < maxm; m++) {
-						char [] bridgeSignature = bridges[m].signature();
-						int bridgeMethodTypeIndex = this.constantPool.literalIndexForMethodType(bridgeSignature);
-						this.contents[localContentsOffset++] = (byte) (bridgeMethodTypeIndex >> 8);
-						this.contents[localContentsOffset++] = (byte) bridgeMethodTypeIndex;
-					}
-				}
-			} else {
-				if (contentsEntries + localContentsOffset >= this.contents.length) {
-					resizeContents(contentsEntries);
-				}
-				if (indexForMetaFactory == 0) {
-					indexForMetaFactory = this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangInvokeLambdaMetafactory,
-							ConstantPool.METAFACTORY, ConstantPool.JAVA_LANG_INVOKE_LAMBDAMETAFACTORY_METAFACTORY_SIGNATURE, false);
-				}
-				this.contents[localContentsOffset++] = (byte) (indexForMetaFactory >> 8);
-				this.contents[localContentsOffset++] = (byte) indexForMetaFactory;
-
-				// u2 num_bootstrap_arguments
-				this.contents[localContentsOffset++] = 0;
-				this.contents[localContentsOffset++] = (byte) 3;
-
-				int functionalDescriptorIndex = this.constantPool.literalIndexForMethodType(functional.descriptor.original().signature());
-				this.contents[localContentsOffset++] = (byte) (functionalDescriptorIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) functionalDescriptorIndex;
-
-				int methodHandleIndex = this.constantPool.literalIndexForMethodHandle(functional.binding instanceof PolymorphicMethodBinding ? functional.binding : functional.binding.original()); // Speak of " implementation" (erased) version here, adaptations described below.
-				this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) methodHandleIndex;
-
-				char [] instantiatedSignature = functional.descriptor.signature();
-				int methodTypeIndex = this.constantPool.literalIndexForMethodType(instantiatedSignature);
-				this.contents[localContentsOffset++] = (byte) (methodTypeIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) methodTypeIndex;
+	private int addBootStrapLambdaEntry(int localContentsOffset, FunctionalExpression functional, Map<String, Integer> fPtr) {
+		MethodBinding [] bridges = functional.getRequiredBridges();
+		TypeBinding[] markerInterfaces = null;
+		final int contentsEntries = 10;
+		int indexForAltMetaFactory = fPtr.get(ClassFile.ALTMETAFACTORY_STRING);
+		int indexForMetaFactory = fPtr.get(ClassFile.METAFACTORY_STRING);
+		if ((functional instanceof LambdaExpression
+				&& (((markerInterfaces = ((LambdaExpression) functional).getMarkerInterfaces()) != null))
+				|| bridges != null) || functional.isSerializable) {
+			// may need even more space
+			int extraSpace = 2; // at least 2 more than when the normal metafactory is used, for the bitflags entry
+			if (markerInterfaces != null) {
+				// 2 for the marker interface list size then 2 per marker interface index
+				extraSpace += (2 + 2 * markerInterfaces.length);
 			}
-		}
-		return localContentsOffset;
-	}
-	private int generateObjectMethodsBootStrapMethods(List<TypeBinding> recordList,
-			int localContentsOffset, final int contentsEntries) {
-		ReferenceBinding javaLangRuntimeObjectMethods = this.referenceBinding.scope.getJavaLangRuntimeObjectMethods();
-		int numberOfBootstraps = recordList.size();
-		int indexForObjectMethodBootStrap = 0;
-		for (int i = 0; i < numberOfBootstraps; i++) {
+			if (bridges != null) {
+				// 2 for bridge count then 2 per bridge method type.
+				extraSpace += (2 + 2 * bridges.length);
+			}
+			if (extraSpace + contentsEntries + localContentsOffset >= this.contents.length) {
+				resizeContents(extraSpace + contentsEntries);
+			}
+
+			if (indexForAltMetaFactory == 0) {
+				ReferenceBinding javaLangInvokeLambdaMetafactory = this.referenceBinding.scope.getJavaLangInvokeLambdaMetafactory();
+				indexForAltMetaFactory =
+					this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangInvokeLambdaMetafactory,
+					ConstantPool.ALTMETAFACTORY, ConstantPool.JAVA_LANG_INVOKE_LAMBDAMETAFACTORY_ALTMETAFACTORY_SIGNATURE, false);
+				fPtr.put(ClassFile.ALTMETAFACTORY_STRING, indexForAltMetaFactory);
+			}
+			this.contents[localContentsOffset++] = (byte) (indexForAltMetaFactory >> 8);
+			this.contents[localContentsOffset++] = (byte) indexForAltMetaFactory;
+
+			// u2 num_bootstrap_arguments
+			this.contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = (byte) (4 + (markerInterfaces==null?0:1+markerInterfaces.length) +
+					                                                   (bridges == null ? 0 : 1 + bridges.length));
+
+			int functionalDescriptorIndex = this.constantPool.literalIndexForMethodType(functional.descriptor.original().signature());
+			this.contents[localContentsOffset++] = (byte) (functionalDescriptorIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) functionalDescriptorIndex;
+
+			int methodHandleIndex = this.constantPool.literalIndexForMethodHandle(functional.binding.original()); // Speak of " implementation" (erased) version here, adaptations described below.
+			this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) methodHandleIndex;
+
+			char [] instantiatedSignature = functional.descriptor.signature();
+			int methodTypeIndex = this.constantPool.literalIndexForMethodType(instantiatedSignature);
+			this.contents[localContentsOffset++] = (byte) (methodTypeIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) methodTypeIndex;
+
+			int bitflags = 0;
+			if (functional.isSerializable) {
+				bitflags |= ClassFileConstants.FLAG_SERIALIZABLE;
+			}
+			if (markerInterfaces!=null) {
+				bitflags |= ClassFileConstants.FLAG_MARKERS;
+			}
+			if (bridges != null) {
+				bitflags |= ClassFileConstants.FLAG_BRIDGES;
+			}
+			int indexForBitflags = this.constantPool.literalIndex(bitflags);
+
+			this.contents[localContentsOffset++] = (byte)(indexForBitflags>>8);
+			this.contents[localContentsOffset++] = (byte)(indexForBitflags);
+
+			if (markerInterfaces != null) {
+				int markerInterfaceCountIndex =  this.constantPool.literalIndex(markerInterfaces.length);
+				this.contents[localContentsOffset++] = (byte)(markerInterfaceCountIndex>>8);
+				this.contents[localContentsOffset++] = (byte)(markerInterfaceCountIndex);
+				for (int m = 0, maxm = markerInterfaces.length; m < maxm; m++) {
+					int classTypeIndex = this.constantPool.literalIndexForType(markerInterfaces[m]);
+					this.contents[localContentsOffset++] = (byte)(classTypeIndex>>8);
+					this.contents[localContentsOffset++] = (byte)(classTypeIndex);
+				}
+			}
+			if (bridges != null) {
+				int bridgeCountIndex =  this.constantPool.literalIndex(bridges.length);
+				this.contents[localContentsOffset++] = (byte) (bridgeCountIndex >> 8);
+				this.contents[localContentsOffset++] = (byte) (bridgeCountIndex);
+				for (int m = 0, maxm = bridges.length; m < maxm; m++) {
+					char [] bridgeSignature = bridges[m].signature();
+					int bridgeMethodTypeIndex = this.constantPool.literalIndexForMethodType(bridgeSignature);
+					this.contents[localContentsOffset++] = (byte) (bridgeMethodTypeIndex >> 8);
+					this.contents[localContentsOffset++] = (byte) bridgeMethodTypeIndex;
+				}
+			}
+		} else {
 			if (contentsEntries + localContentsOffset >= this.contents.length) {
 				resizeContents(contentsEntries);
 			}
-			if (indexForObjectMethodBootStrap == 0) {
-				indexForObjectMethodBootStrap = this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangRuntimeObjectMethods,
-						ConstantPool.BOOTSTRAP, ConstantPool.JAVA_LANG_RUNTIME_OBJECTMETHOD_BOOTSTRAP_SIGNATURE, false);
+			if (indexForMetaFactory == 0) {
+				ReferenceBinding javaLangInvokeLambdaMetafactory = this.referenceBinding.scope.getJavaLangInvokeLambdaMetafactory();
+				indexForMetaFactory = this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangInvokeLambdaMetafactory,
+						ConstantPool.METAFACTORY, ConstantPool.JAVA_LANG_INVOKE_LAMBDAMETAFACTORY_METAFACTORY_SIGNATURE, false);
+				fPtr.put(ClassFile.METAFACTORY_STRING, indexForMetaFactory);
 			}
-			this.contents[localContentsOffset++] = (byte) (indexForObjectMethodBootStrap >> 8);
-			this.contents[localContentsOffset++] = (byte) indexForObjectMethodBootStrap;
+			this.contents[localContentsOffset++] = (byte) (indexForMetaFactory >> 8);
+			this.contents[localContentsOffset++] = (byte) indexForMetaFactory;
 
 			// u2 num_bootstrap_arguments
-			int numArgsLocation = localContentsOffset;
-			localContentsOffset += 2;
+			this.contents[localContentsOffset++] = 0;
+			this.contents[localContentsOffset++] = (byte) 3;
 
-			TypeBinding type = recordList.get(i);
-			assert type.isRecord(); // sanity check
-			char[] recordName = type.constantPoolName();
-			int recordIndex = this.constantPool.literalIndexForType(recordName);
-			this.contents[localContentsOffset++] = (byte) (recordIndex >> 8);
-			this.contents[localContentsOffset++] = (byte) recordIndex;
+			int functionalDescriptorIndex = this.constantPool.literalIndexForMethodType(functional.descriptor.original().signature());
+			this.contents[localContentsOffset++] = (byte) (functionalDescriptorIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) functionalDescriptorIndex;
 
-			assert type instanceof SourceTypeBinding;
-			SourceTypeBinding sourceType = (SourceTypeBinding) type;
-			FieldBinding[] recordComponents = sourceType.getImplicitComponentFields();
+			int methodHandleIndex = this.constantPool.literalIndexForMethodHandle(functional.binding instanceof PolymorphicMethodBinding ? functional.binding : functional.binding.original()); // Speak of " implementation" (erased) version here, adaptations described below.
+			this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) methodHandleIndex;
 
-			int numArgs = 2 + recordComponents.length;
-			this.contents[numArgsLocation++] = (byte) (numArgs >> 8);
-			this.contents[numArgsLocation] = (byte) numArgs;
+			char [] instantiatedSignature = functional.descriptor.signature();
+			int methodTypeIndex = this.constantPool.literalIndexForMethodType(instantiatedSignature);
+			this.contents[localContentsOffset++] = (byte) (methodTypeIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) methodTypeIndex;
+		}
+		return localContentsOffset;
+	}
 
-			String names =
-				Arrays.stream(recordComponents)
-				.map(f -> new String(f.name))
-				.reduce((s1, s2) -> { return s1 + ";" + s2;}) //$NON-NLS-1$
-				.orElse(Util.EMPTY_STRING);
-			int namesIndex = this.constantPool.literalIndex(names);
-			this.contents[localContentsOffset++] = (byte) (namesIndex >> 8);
-			this.contents[localContentsOffset++] = (byte) namesIndex;
+	private int addBootStrapRecordEntry(int localContentsOffset, TypeDeclaration typeDecl, Map<String, Integer> fPtr) {
+		TypeBinding type = typeDecl.binding;
+		assert type.isRecord(); // sanity check
+		final int contentsEntries = 10;
+		int indexForObjectMethodBootStrap = fPtr.get(ClassFile.BOOTSTRAP_STRING);
+		if (contentsEntries + localContentsOffset >= this.contents.length) {
+			resizeContents(contentsEntries);
+		}
+		if (indexForObjectMethodBootStrap == 0) {
+			ReferenceBinding javaLangRuntimeObjectMethods = this.referenceBinding.scope.getJavaLangRuntimeObjectMethods();
+			indexForObjectMethodBootStrap = this.constantPool.literalIndexForMethodHandle(ClassFileConstants.MethodHandleRefKindInvokeStatic, javaLangRuntimeObjectMethods,
+					ConstantPool.BOOTSTRAP, ConstantPool.JAVA_LANG_RUNTIME_OBJECTMETHOD_BOOTSTRAP_SIGNATURE, false);
+			fPtr.put(ClassFile.BOOTSTRAP_STRING, indexForObjectMethodBootStrap);
+		}
+		this.contents[localContentsOffset++] = (byte) (indexForObjectMethodBootStrap >> 8);
+		this.contents[localContentsOffset++] = (byte) indexForObjectMethodBootStrap;
 
-			if (recordComponents.length * 2 + localContentsOffset >= this.contents.length) {
-				resizeContents(recordComponents.length * 2);
-			}
-			for (FieldBinding field : recordComponents) {
-				int methodHandleIndex = this.constantPool.literalIndexForMethodHandleFieldRef(
-						ClassFileConstants.MethodHandleRefKindGetField,
-						recordName, field.name, field.type.signature());
+		// u2 num_bootstrap_arguments
+		int numArgsLocation = localContentsOffset;
+		localContentsOffset += 2;
 
-				this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
-				this.contents[localContentsOffset++] = (byte) methodHandleIndex;
-			}
+		char[] recordName = type.constantPoolName();
+		int recordIndex = this.constantPool.literalIndexForType(recordName);
+		this.contents[localContentsOffset++] = (byte) (recordIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) recordIndex;
+
+		assert type instanceof SourceTypeBinding;
+		SourceTypeBinding sourceType = (SourceTypeBinding) type;
+		FieldBinding[] recordComponents = sourceType.getImplicitComponentFields();
+
+		int numArgs = 2 + recordComponents.length;
+		this.contents[numArgsLocation++] = (byte) (numArgs >> 8);
+		this.contents[numArgsLocation] = (byte) numArgs;
+
+		String names =
+			Arrays.stream(recordComponents)
+			.map(f -> new String(f.name))
+			.reduce((s1, s2) -> { return s1 + ";" + s2;}) //$NON-NLS-1$
+			.orElse(Util.EMPTY_STRING);
+		int namesIndex = this.constantPool.literalIndex(names);
+		this.contents[localContentsOffset++] = (byte) (namesIndex >> 8);
+		this.contents[localContentsOffset++] = (byte) namesIndex;
+
+		if (recordComponents.length * 2 + localContentsOffset >= this.contents.length) {
+			resizeContents(recordComponents.length * 2);
+		}
+		for (FieldBinding field : recordComponents) {
+			int methodHandleIndex = this.constantPool.literalIndexForMethodHandleFieldRef(
+					ClassFileConstants.MethodHandleRefKindGetField,
+					recordName, field.name, field.type.signature());
+
+			this.contents[localContentsOffset++] = (byte) (methodHandleIndex >> 8);
+			this.contents[localContentsOffset++] = (byte) methodHandleIndex;
 		}
 		return localContentsOffset;
 	}
@@ -6029,10 +6035,13 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		if (expression instanceof ReferenceExpression) {
 			for (int i = 0; i < this.bootstrapMethods.size(); i++) {
-				FunctionalExpression fexp = (FunctionalExpression) this.bootstrapMethods.get(i);
-				if (fexp.binding == expression.binding
-						&& TypeBinding.equalsEquals(fexp.expectedType(), expression.expectedType()))
-					return expression.bootstrapMethodNumber = i;
+				ASTNode node = this.bootstrapMethods.get(i);
+				if (node instanceof FunctionalExpression) {
+					FunctionalExpression fexp = (FunctionalExpression) node;
+					if (fexp.binding == expression.binding
+							&& TypeBinding.equalsEquals(fexp.expectedType(), expression.expectedType()))
+						return expression.bootstrapMethodNumber = i;
+				}
 			}
 		}
 		this.bootstrapMethods.add(expression);
@@ -6080,9 +6089,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 		}
 		if (this.bootstrapMethods != null) {
 			this.bootstrapMethods.clear();
-		}
-		if (this.recordBootstrapMethods != null) {
-			this.recordBootstrapMethods.clear();
 		}
 		this.missingTypes = null;
 		this.visitedTypes = null;

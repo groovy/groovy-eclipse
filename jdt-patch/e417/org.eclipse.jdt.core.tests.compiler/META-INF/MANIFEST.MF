@@ -4,6 +4,7 @@ Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.jdt.core.tests.compiler;singleton:=true
 Bundle-Version: 3.12.1300.qualifier
 Bundle-Vendor: %providerName
+Bundle-ClassPath: jdi.jar
 Bundle-Localization: plugin
 Export-Package: org.eclipse.jdt.core.tests.compiler,
  org.eclipse.jdt.core.tests.compiler.parser,

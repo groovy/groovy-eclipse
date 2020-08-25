@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2018 IBM Corporation.
+ * Copyright (c) 2016, 2020 IBM Corporation.
  *
  * This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
@@ -7,6 +7,10 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
+ *
+ * This is an implementation of an early-draft specification developed under the Java
+ * Community Process (JCP) and is made available for testing and evaluation purposes
+ * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -53,14 +57,14 @@ public class ModuleFinder {
 		}
 		return modulePath;
 	}
-	protected static void scanForModules(String destinationPath, Parser parser, Map<String, String> options, boolean isModulepath, 
+	protected static void scanForModules(String destinationPath, Parser parser, Map<String, String> options, boolean isModulepath,
 			boolean thisAnAutomodule, List<FileSystem.Classpath> collector, final File file, String release) {
 		FileSystem.Classpath entry = FileSystem.getClasspath(
 				file.getAbsolutePath(),
 				null,
 				!isModulepath,
 				null,
-				destinationPath == null ? null : (destinationPath + File.separator + file.getName()), 
+				destinationPath == null ? null : (destinationPath + File.separator + file.getName()),
 				options,
 				release);
 		if (entry != null) {
@@ -114,7 +118,11 @@ public class ModuleFinder {
 			}
 		}
 		if (considerAutoModules && module == null && !(modulePath instanceof ClasspathJrt)) {
-			module = IModule.createAutomatic(getFileName(file), file.isFile(), getManifest(file));
+			if (!file.isDirectory()) {
+				String fileName = getFileName(file);
+				if (!fileName.isEmpty())
+					module = IModule.createAutomatic(fileName, file.isFile(), getManifest(file));
+			}
 		}
 		if (module != null)
 			modulePath.acceptModule(module);
@@ -140,10 +148,10 @@ public class ModuleFinder {
 	 * Extracts the single reads clause from the given
 	 * command line option (--add-reads). The result is a String[] with two
 	 * element, first being the source module and second being the target module.
-	 * The expected format is: 
+	 * The expected format is:
 	 *  --add-reads <source-module>=<target-module>
 	 * @param option
-	 * @return a String[] with source and target module of the "reads" clause. 
+	 * @return a String[] with source and target module of the "reads" clause.
 	 */
 	protected static String[] extractAddonRead(String option) {
 		StringTokenizer tokenizer = new StringTokenizer(option, "="); //$NON-NLS-1$

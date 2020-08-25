@@ -195,6 +195,7 @@ public static Test suite() {
 	 since_14.add(RecordsRestrictedClassTest.class);
 	 since_14.add(PatternMatching14Test.class);
 	 since_14.add(JavadocTestForRecord.class);
+	 since_14.add(BatchCompilerTest_14.class);
 
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());

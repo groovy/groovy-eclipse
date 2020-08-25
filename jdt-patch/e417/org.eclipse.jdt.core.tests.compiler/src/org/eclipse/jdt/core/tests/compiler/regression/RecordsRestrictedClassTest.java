@@ -3898,4 +3898,45 @@ public void testBug564146_007() {
 			},
 		"10");
 }
+public void testBug565830_01() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n"+
+			"    void bar() throws Exception {\n"+
+			"        record Bar(int x) implements java.io.Serializable {\n"+
+			"            void printMyFields() {\n"+
+			"                for (var field : this.getClass().getDeclaredFields()) {\n"+
+			"                    System.out.println(field);\n"+
+			"                }\n"+
+			"            }\n"+
+			"        }\n"+
+			"        var bar = new Bar(1);\n"+
+			"        bar.printMyFields();\n"+
+			"        new java.io.ObjectOutputStream(java.io.OutputStream.nullOutputStream()).writeObject(bar);\n"+
+			"    }\n"+
+			"    public static void main(String[] args) throws Exception {\n"+
+			"        new X().bar();\n"+
+			"    }\n"+
+			"}",
+		},
+		"private final int X$1Bar.x");
+}
+public void testBug565787_01() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"public record X(String s)   {\n"+
+			"    public X  {\n"+
+			"        s.codePoints()\n"+
+			"        .forEach(cp -> System.out.println((java.util.function.Predicate<String>) \"\"::equals));\n"+
+			"    }\n"+
+			"    public static void main(String[] args) {\n"+
+			"        X a = new X(\"\");\n"+
+			"        a.equals(a);\n"+
+			"    }\n"+
+			"}",
+		},
+		"");
+}
 }
