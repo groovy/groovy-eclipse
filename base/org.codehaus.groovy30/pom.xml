@@ -14,6 +14,31 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <compilerId>groovy-eclipse-compiler</compilerId>
+          <excludeResources>
+            <excludeResource>**/*.g</excludeResource>
+            <excludeResource>**/*.g4</excludeResource>
+            <excludeResource>**/*.groovy</excludeResource>
+          </excludeResources>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-eclipse-compiler</artifactId>
+            <version>${groovy-eclipse-compiler-version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-eclipse-batch</artifactId>
+            <version>${groovy-eclipse-batch-version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
         <configuration>

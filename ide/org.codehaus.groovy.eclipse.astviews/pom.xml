@@ -19,6 +19,9 @@
         <version>${tycho-version}</version>
         <configuration>
           <compilerId>groovy-eclipse-compiler</compilerId>
+          <excludeResources>
+            <excludeResource>**/*.groovy</excludeResource>
+          </excludeResources>
         </configuration>
         <dependencies>
           <dependency>
