@@ -63,11 +63,10 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport.closeQuiet
  */
 class GrapeIvy implements GrapeEngine {
 
-    static final int DEFAULT_DEPTH = 3
-
+    private static final int DEFAULT_DEPTH = 3
     private static final String METAINF_PREFIX = 'META-INF/services/'
     private static final String RUNNER_PROVIDER_CONFIG = GroovyRunner.name
-    private static final List<String> DEF_CONFIG = ['default']
+    private static final List<String> DEF_CONFIG = Collections.singletonList('default')
 
     private final exclusiveGrabArgs = [
             ['group', 'groupId', 'organisation', 'organization', 'org'],
@@ -189,7 +188,7 @@ class GrapeIvy implements GrapeEngine {
             //if (!isValidTargetClassLoader(loader)) {
             //    loader = GrapeIvy.class.classLoader
             //}
-            /* GRECLIPSE edit -- don't check this. Removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter.
+            /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
             if (!isValidTargetClassLoader(loader)) {
                 throw new RuntimeException('No suitable ClassLoader found for grab')
             }

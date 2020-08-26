@@ -58,7 +58,7 @@ import java.util.zip.ZipFile
  */
 class GrapeIvy implements GrapeEngine {
 
-    static final int DEFAULT_DEPTH = 3
+    private static final int DEFAULT_DEPTH = 3
 
     private final exclusiveGrabArgs = [
             ['group', 'groupId', 'organisation', 'organization', 'org'],
@@ -174,7 +174,7 @@ class GrapeIvy implements GrapeEngine {
             //if (!isValidTargetClassLoader(loader)) {
             //    loader = GrapeIvy.class.classLoader
             //}
-            /* GRECLIPSE - don't check this; removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter
+            /* GRECLIPSE edit -- removing this only affects the GrapeIvy used during compilation, where the ClassLoader doesn't matter
             if (!isValidTargetClassLoader(loader)) {
                 throw new RuntimeException("No suitable ClassLoader found for grab")
             }

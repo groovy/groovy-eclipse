@@ -31,7 +31,6 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
@@ -272,7 +271,7 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
         launchScriptAndAssertExitValue(type)
     }
 
-    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/779
+    @Test // https://github.com/groovy/groovy-eclipse/issues/779
     void testScriptLaunch13() {
         def unit = addGroovySource('''\
             |@Grapes([

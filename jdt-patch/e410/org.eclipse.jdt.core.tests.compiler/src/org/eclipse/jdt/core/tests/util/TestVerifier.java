@@ -389,6 +389,7 @@ private String[] getVMArguments(String[] vmArguments) {
 
 	if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.io=ALL-UNNAMED");
+		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.net=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.lang=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.math=ALL-UNNAMED");
 		Collections.addAll(completeVmArguments, "--add-opens", "java.base/java.text=ALL-UNNAMED");

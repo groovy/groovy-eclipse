@@ -16,21 +16,25 @@
 package org.eclipse.jdt.groovy.core.tests.xform;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Test cases for {@link groovy.lang.Grab}, et al.
  */
-@Ignore("Grab is failing on CI server")
 public final class GrabTests extends GroovyCompilerTestSuite {
+
+    @Before
+    public void setUp() {
+        vmArguments = new String[] {"-Djava.system.class.loader=org.codehaus.groovy.tools.RootLoader"};
+    }
 
     @Test
     public void testGrab1() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "@Grab('joda-time:joda-time:2.10')\n" +
+            "@Grab('joda-time:joda-time:2.10.6')\n" +
             "def printDate() {\n" +
             "  def dt = new org.joda.time.DateTime()\n" +
             "}\n" +
@@ -56,7 +60,7 @@ public final class GrabTests extends GroovyCompilerTestSuite {
             "Script.groovy",
             "@Grapes([\n" +
             "  @Grab(group='joda-time', module='joda-time', version='1.6'),\n" +
-            "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n" +
+            "  @Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "])\n" +
             "class C {\n" +
             "  def printDate() {\n" +
@@ -74,9 +78,9 @@ public final class GrabTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Script.groovy (at line 3)\n" +
-            "\t@Grab(group='org.aspectj', module='aspectjweaver', version='1.6.11x')\n" +
+            "\t@Grab(group='org.aspectj', module='aspectjweaver', version='1.x')\n" +
             "\t^^^^^\n" +
-            "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
+            "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.x: not found]\n" +
             "----------\n" +
             "2. ERROR in Script.groovy (at line 8)\n" +
             "\tdef world = new org.aspectj.weaver.bcel.BcelWorld()\n" +

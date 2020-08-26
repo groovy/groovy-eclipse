@@ -1825,6 +1825,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test @Ignore
     public void testTraits7439() {
+        vmArguments = new String[] {"-Djava.system.class.loader=org.codehaus.groovy.tools.RootLoader"};
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
