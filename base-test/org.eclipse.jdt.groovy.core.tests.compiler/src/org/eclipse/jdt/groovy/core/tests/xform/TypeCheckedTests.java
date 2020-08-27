@@ -243,4 +243,31 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test // GROOVY-9570
+    public void testTypeChecked11() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "@groovy.transform.TypeChecked\n" +
+            "class C<I extends Item> {\n" +
+            "  Queue<I> queue\n" +
+            "  def c = { ->\n" +
+            "    queue.each { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    queue.each { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "interface Item {}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }
