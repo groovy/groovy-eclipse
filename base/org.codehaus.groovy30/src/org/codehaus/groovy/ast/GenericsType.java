@@ -399,6 +399,7 @@ public class GenericsType extends ASTNode {
                             if (genericsType.isPlaceholder()) {
                                 match = true;
                             } else if (genericsType.isWildcard()) {
+                                /* GRECLIPSE edit -- GROOVY-9460
                                 if (genericsType.getUpperBounds() != null) {
                                     for (ClassNode ub : genericsType.getUpperBounds()) {
                                         match |= redirectBoundType.isCompatibleWith(ub);
@@ -407,6 +408,15 @@ public class GenericsType extends ASTNode {
                                         match |= redirectBoundType.isCompatibleWith(genericsType.getLowerBound());
                                     }
                                 }
+                                */
+                                if (genericsType.getUpperBounds() != null) { // multiple bounds not allowed for ?
+                                    match = redirectBoundType.isCompatibleWith(genericsType.getUpperBounds()[0]);
+                                } else if (genericsType.getLowerBound() != null) {
+                                    match = redirectBoundType.isCompatibleWith(genericsType.getLowerBound());
+                                } else {
+                                    match = true;
+                                }
+                                // GRECLIPSE end
                             }
                         }
                     }
