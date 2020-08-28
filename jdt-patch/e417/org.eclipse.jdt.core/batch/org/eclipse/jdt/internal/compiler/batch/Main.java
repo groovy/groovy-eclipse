@@ -946,7 +946,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 				if (globalInfoCount == 1) {
 					infoMessage = this.main.bind("compile.oneInfo"); //$NON-NLS-1$
 				} else if (globalInfoCount > 1) {
-					infoMessage = this.main.bind("compile.severalInfos", String.valueOf(warningsNumber)); //$NON-NLS-1$
+					infoMessage = this.main.bind("compile.severalInfos", String.valueOf(globalInfoCount)); //$NON-NLS-1$
 				}
 				if (globalProblemsCount == globalInfoCount || globalProblemsCount == globalErrorsCount || globalProblemsCount == globalWarningsCount) {
 					String msg = errorMessage != null ? errorMessage : warningMessage != null ? warningMessage : infoMessage;
