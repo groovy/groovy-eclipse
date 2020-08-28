@@ -24,7 +24,7 @@
         -->
         <configuration>
           <argLine>-Xmx1G -XX:-OmitStackTraceInFastThrow</argLine>
-          <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
+          <forkedProcessTimeoutInSeconds>9000</forkedProcessTimeoutInSeconds>
           <showEclipseLog>true</showEclipseLog>
           <testFailureIgnore>true</testFailureIgnore>
           <useUIHarness>true</useUIHarness>
