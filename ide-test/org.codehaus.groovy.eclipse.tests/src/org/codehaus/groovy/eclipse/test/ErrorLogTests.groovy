@@ -30,7 +30,6 @@ final class ErrorLogTests {
         'Unable to run embedded server',
         'Could not locate the running profile instance',
         'The Proxy Auto-configuration URL was not found',
-        'An internal error occurred during: "AutoRegisterSchemeHandlersJob"',
         'The content type with id ".+" specified in the extension point does not exist'
     ].asImmutable()
 

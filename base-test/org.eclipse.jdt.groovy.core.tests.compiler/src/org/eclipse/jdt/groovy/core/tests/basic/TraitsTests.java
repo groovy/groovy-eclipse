@@ -1663,7 +1663,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
                 "The method m() from the type T is not visible\n" +
                 "----------\n");
         } else if (isAtLeastJava(JDK8)) { // TODO: This is not ideal:
-            runConformTest(sources, "", "java.lang.NoSuchMethodError: T.m()Ljava/lang/Object;");
+            runConformTest(sources, "", "java.lang.NoSuchMethodError");
         } else {
             runNegativeTest(sources,
                 "----------\n" +

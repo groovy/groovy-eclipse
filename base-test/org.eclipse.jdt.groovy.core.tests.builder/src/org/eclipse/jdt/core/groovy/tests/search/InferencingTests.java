@@ -316,7 +316,9 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence");
+        assertType(contents, offset, offset + 1, Float.parseFloat(System.getProperty("java.specification.version")) < 11
+            ? "java.io.Serializable or java.lang.CharSequence" :  "java.io.Serializable or java.lang.CharSequence or " +
+                "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
     }
 
     @Test
@@ -338,7 +340,9 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable or java.lang.CharSequence");
+        assertType(contents, offset, offset + 1, Float.parseFloat(System.getProperty("java.specification.version")) < 11
+            ? "java.io.Serializable or java.lang.CharSequence" :  "java.io.Serializable or java.lang.CharSequence or " +
+                "java.lang.Comparable<? extends java.io.Serializable or java.lang.CharSequence or java.lang.Comparable<java.lang.String>>");
     }
 
     @Test

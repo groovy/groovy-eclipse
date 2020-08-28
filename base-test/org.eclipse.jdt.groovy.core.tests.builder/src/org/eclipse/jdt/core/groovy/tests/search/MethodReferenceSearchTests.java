@@ -434,7 +434,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
         assertEquals("m2", ((IJavaElement) matches.get(0).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(Float.parseFloat(System.getProperty("java.specification.version")) < 9
+            ? SearchMatch.A_ACCURATE : SearchMatch.A_INACCURATE, matches.get(1).getAccuracy());
         assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
@@ -476,7 +477,8 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
         assertEquals("m1", ((IJavaElement) matches.get(0).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
-        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(Float.parseFloat(System.getProperty("java.specification.version")) < 9
+            ? SearchMatch.A_ACCURATE : SearchMatch.A_INACCURATE, matches.get(1).getAccuracy());
         assertEquals("m4", ((IJavaElement) matches.get(1).getElement()).getElementName());
         assertEquals("Baz.java", ((IJavaElement) matches.get(1).getElement()).getResource().getName());
     }
