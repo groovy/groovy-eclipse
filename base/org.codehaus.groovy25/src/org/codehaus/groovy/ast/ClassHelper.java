@@ -29,7 +29,6 @@ import groovy.lang.Range;
 import groovy.lang.Reference;
 import groovy.lang.Script;
 import org.apache.groovy.util.Maps;
-import org.codehaus.groovy.classgen.asm.util.TypeUtil;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -339,7 +338,20 @@ public class ClassHelper {
      * @see #make(String)
      */
     public static boolean isPrimitiveType(ClassNode cn) {
+        /* GRECLIPSE edit
         return TypeUtil.isPrimitiveType(cn);
+        */
+        cn = cn.redirect();
+        return (cn == VOID_TYPE   ||
+                cn == byte_TYPE   ||
+                cn == char_TYPE   ||
+                cn == int_TYPE    ||
+                cn == long_TYPE   ||
+                cn == short_TYPE  ||
+                cn == float_TYPE  ||
+                cn == double_TYPE ||
+                cn == boolean_TYPE);
+        // GRECLIPSE end
     }
 
     /**
