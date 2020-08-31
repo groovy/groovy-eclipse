@@ -5081,4 +5081,21 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "");
     }
+
+    @Test
+    public void testCompileStatic9704() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "def test() {\n" +
+            "  long x = 42L\n" +
+            "  x = ~x\n" +
+            "}\n" +
+            "print test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "-43");
+    }
 }
