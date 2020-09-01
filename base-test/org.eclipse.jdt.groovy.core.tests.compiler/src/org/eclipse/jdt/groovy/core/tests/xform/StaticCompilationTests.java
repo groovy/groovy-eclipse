@@ -4985,6 +4985,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9635() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import java.util.function.Function\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C<R extends Number> {\n" +
+            "  def <V> V m(Function<C<?>, V> f) {\n" + // R from C is confused with R from Function
+            "    V result = f.apply(this)\n" +
+            "    return result\n" +
+            "  }\n" +
+            "}\n" +
+            "print new C<Integer>().m(new Function<C<?>, String>() {\n" +
+            "  @Override\n" +
+            "  String apply(C<?> that) {\n" +
+            "    return 'works'\n" +
+            "  }\n" +
+            "})",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
+
+    @Test
     public void testCompileStatic9652() {
         //@formatter:off
         String[] sources = {

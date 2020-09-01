@@ -1695,6 +1695,7 @@ public abstract class StaticTypeCheckingSupport {
             count++;
             boolean checkForMorePlaceHolders = false;
             for (Entry<GenericsTypeName, GenericsType> entry : resolvedPlaceholders.entrySet()) {
+                /* GRECLIPSE edit -- GROOVY-9635
                 GenericsTypeName name = entry.getKey();
                 GenericsType replacement = connections.get(name);
                 if (replacement == null) {
@@ -1723,6 +1724,29 @@ public abstract class StaticTypeCheckingSupport {
                         checkForMorePlaceHolders = checkForMorePlaceHolders || !equalIncludingGenerics(original, replacement);
                     }
                 }
+                */
+                // entry could be T=T, T=T extends U, T=V, T=String, T=? extends String, etc.
+                GenericsType oldValue = entry.getValue();
+                if (oldValue.isPlaceholder()) { // T=T or V, not T=String or ? ...
+                    GenericsTypeName name = new GenericsTypeName(oldValue.getName());
+                    GenericsType newValue = connections.get(name); // find "V" in T=V
+                    if (newValue == oldValue) continue;
+                    if (newValue == null) {
+                        entry.setValue(newValue = applyGenericsContext(connections, oldValue));
+                        checkForMorePlaceHolders = checkForMorePlaceHolders || !equalIncludingGenerics(oldValue, newValue);
+                    } else if (!newValue.isPlaceholder() || newValue != resolvedPlaceholders.get(name)) {
+                        // GROOVY-6787: Don't override the original if the replacement doesn't respect the bounds otherwise
+                        // the original bounds are lost, which can result in accepting an incompatible type as an argument.
+                        ClassNode replacementType = extractType(newValue);
+                        if (oldValue.isCompatibleWith(replacementType)) {
+                            entry.setValue(newValue);
+                            if (newValue.isPlaceholder()) {
+                                checkForMorePlaceHolders = checkForMorePlaceHolders || !equalIncludingGenerics(oldValue, newValue);
+                            }
+                        }
+                    }
+                }
+                // GRECLIPSE end
             }
             if (!checkForMorePlaceHolders) break;
         }
