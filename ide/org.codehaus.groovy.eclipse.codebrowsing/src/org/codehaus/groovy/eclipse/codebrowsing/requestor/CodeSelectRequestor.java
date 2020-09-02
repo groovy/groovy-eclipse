@@ -36,7 +36,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -79,7 +78,6 @@ import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.SourceType;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Type requestor for code selection (i.e., hovers and open declaration).
@@ -230,33 +228,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
 
         if (requestedNode != null) {
-            if (result.declaration instanceof VariableExpression) {
-                VariableExpression varExp = (VariableExpression) result.declaration;
-                // look in the local scope
-                putRequestedElement(createLocalVariable(result, enclosingElement, varExp));
-
-            } else if (result.declaration instanceof Parameter) {
-                Parameter param = (Parameter) result.declaration;
-                // look in the local scope
-                int position = param.getStart() - 1;
-                if (position < 0) {
-                    // could be implicit parameter like 'it'
-                    position = nodeToLookFor.getStart() - 1;
-                }
-                try {
-                    putRequestedElement(createLocalVariable(result, gunit.getElementAt(position), param));
-                } catch (JavaModelException e) {
-                    Util.log(e, "Problem getting element at " + position + " for file " + gunit.getElementName());
-                }
-
-            } else if (nodeToLookFor instanceof PackageNode) {
+            if (nodeToLookFor instanceof PackageNode) {
                 int start = nodeToLookFor.getStart(), until = selectRegion.getEnd();
                 if (start < until) {
                     String pack = gunit.getSource().substring(start, until);
                     IPackageFragmentRoot root = gunit.getPackageFragmentRoot();
                     putRequestedElement(root.getPackageFragment(pack));
                 }
-
             } else if (nodeToLookFor instanceof ImportNode && ((ImportNode) nodeToLookFor).isStar() && !((ImportNode) nodeToLookFor).isStatic()) {
                 int start = nodeToLookFor.getStart(), until = selectRegion.getEnd();
                 if (start < until) {
@@ -269,7 +247,22 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         }
                     }
                 }
-
+            } else if (result.declaration instanceof Parameter) {
+                Parameter parameter = (Parameter) result.declaration;
+                int start = parameter.getNameStart(), until = parameter.getNameEnd();
+                ClassNode type = result.type != null ? result.type : parameter.getType();
+                String signature = GroovyUtils.getTypeSignature(type, /*fully-qualified:*/true, false);
+                putRequestedElement(new LocalVariable((JavaElement) enclosingElement, parameter.getName(),
+                    start, until, start, until, signature, /*annos:*/null, parameter.getModifiers(), true));
+                //
+            } else if (result.declaration instanceof VariableExpression) {
+                VariableExpression variable = (VariableExpression) result.declaration;
+                int start = variable.getStart(), until = variable.getEnd() - 1;
+                ClassNode type = result.type != null ? result.type : variable.getType();
+                String signature = GroovyUtils.getTypeSignature(type, /*fully-qualified:*/true, false);
+                putRequestedElement(new LocalVariable((JavaElement) enclosingElement, variable.getName(),
+                    start, until, start, until, signature, /*annos:*/null, variable.getModifiers(), false));
+                //
             } else {
                 String qualifier = checkQualifiedType(result, enclosingElement);
                 ClassNode declaringType = findDeclaringType(result);
@@ -351,19 +344,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 requestedNode = rn;
             }
         }
-    }
-
-    private LocalVariable createLocalVariable(final TypeLookupResult result, final IJavaElement enclosingElement, final Variable var) {
-        int start;
-        if (var instanceof Parameter) {
-            start = ((Parameter) var).getNameStart();
-        } else {
-            start = ((VariableExpression) var).getStart();
-        }
-        int until = start + var.getName().length() - 1;
-        ClassNode type = result.type != null ? result.type : var.getType();
-        String signature = GroovyUtils.getTypeSignature(type, /*fully-qualified:*/ true, false);
-        return new LocalVariable((JavaElement) enclosingElement, var.getName(), start, until, start, until, signature, null, 0, false);
     }
 
     private String checkQualifiedType(final TypeLookupResult result, final IJavaElement enclosingElement) throws JavaModelException {
