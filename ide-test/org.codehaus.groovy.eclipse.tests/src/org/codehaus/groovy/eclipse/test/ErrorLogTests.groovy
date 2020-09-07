@@ -30,6 +30,7 @@ final class ErrorLogTests {
         'Unable to run embedded server',
         'Could not locate the running profile instance',
         'The Proxy Auto-configuration URL was not found',
+        'An internal error occurred during: "AutoRegisterSchemeHandlersJob"',
         'The content type with id ".+" specified in the extension point does not exist'
     ].asImmutable()
 
@@ -39,7 +40,7 @@ final class ErrorLogTests {
 
         def errorsAndWarnings = view.elements.findAll { logEntry ->
             (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
-                !(KNOWN_MSGS.any { logEntry.message =~ it }) && !(logEntry.pluginId =~ /\.win32$/)
+                !(KNOWN_MSGS.any { logEntry.message =~ it }) && !(logEntry.pluginId =~ /\.(urischeme|win32)$/)
         }
 
         if (errorsAndWarnings) {

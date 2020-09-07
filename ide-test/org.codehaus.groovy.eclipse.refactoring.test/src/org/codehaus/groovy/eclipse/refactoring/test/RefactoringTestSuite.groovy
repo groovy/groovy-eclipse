@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
@@ -309,6 +310,15 @@ abstract class RefactoringTestSuite {
     }
 
     protected final IType getType(ICompilationUnit cu, String name) {
+        if (name =~ /\$\d$/) {
+            int n = Integer.valueOf(name.substring(name.lastIndexOf('$') + 1))
+            IType type = getType(cu, name.substring(0, name.lastIndexOf('$')))
+            return type.children.findResult { IMember member ->
+                IType anon = member.getType('', n)
+                anon.exists() ? anon : null
+            }
+        }
+
         for (type in cu.allTypes) {
             if (type.getTypeQualifiedName('.' as char) == name || type.elementName == name) {
                 return type

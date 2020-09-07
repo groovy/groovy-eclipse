@@ -16,9 +16,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
 import static org.codehaus.jdt.groovy.model.JavaCoreUtil.findType
+import static org.eclipse.jdt.core.JavaCore.*
 import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
-
-import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -188,7 +187,7 @@ final class RenameMethodTests extends RefactoringTestSuite {
         assert status.isOK() : 'rename failed'
     }
 
-    @Test @NotYetImplemented // need to get ref to method in enum const // https://github.com/groovy/groovy-eclipse/issues/389
+    @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides3() {
         // rename A.ONE.getFoo() to foo() and enum constant overrides should change
         def status = runTest('A$1', 'getFoo', 'foo')
@@ -252,8 +251,21 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
     @Test
     void testOverload4() {
+        project.options = project.getOptions(true).with {
+            put(COMPILER_CODEGEN_TARGET_PLATFORM, '1.8')
+            put(COMPILER_COMPLIANCE, '1.8')
+            put(COMPILER_SOURCE, '1.8')
+            return it
+        }
+
+        def java = getInputTestFileName('B').replace('.groovy', '.java')
+        def unit = createCU(packageP, 'B.java', getFileContents(java))
+
         // rename single-parameter method 'm' to 'x'
         def status = runTest('A', 'm', 'x', ['Ljava.lang.Object;'])
         assert status.entries[0].message.startsWith('Found potential matches.')
+
+        java = getOutputTestFileName('B').replace('.groovy', '.java')
+        assertEqualLines(getFileContents(java), unit.source)
     }
 }
