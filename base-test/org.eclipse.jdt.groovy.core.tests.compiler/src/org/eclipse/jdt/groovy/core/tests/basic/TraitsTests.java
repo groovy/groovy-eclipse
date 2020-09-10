@@ -800,16 +800,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait IntCouple {\n" +
+            "trait T {\n" +
             "  int x = 1\n" +
             "  int y = 2\n" +
-            "  int sum() { x+y }\n" +
+            "  int f() { x + y }\n" +
             "}\n" +
-            "class BaseElem implements IntCouple {\n" +
-            "  int f() { sum() }\n" +
+            "class C implements T {\n" +
+            "  int g() { f() }\n" +
             "}\n" +
-            "def base = new BaseElem()\n" +
-            "print base.f()\n",
+            "print new C().g()\n",
         };
         //@formatter:on
 
@@ -821,18 +820,17 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait IntCouple {\n" +
+            "trait T {\n" +
             "  int x = 1\n" +
             "  int y = 2\n" +
-            "  int sum() { x+y }\n" +
+            "  int f() { x + y }\n" +
             "}\n" +
-            "class Elem implements IntCouple {\n" +
+            "class C implements T {\n" +
             "  int x = 3\n" +
             "  int y = 4\n" +
-            "  int f() { sum() }\n" +
+            "  int g() { f() }\n" +
             "}\n" +
-            "def elem = new Elem()\n" +
-            "print elem.f()\n",
+            "print new C().g()\n",
         };
         //@formatter:on
 
@@ -844,18 +842,17 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
-            "trait IntCouple {\n" +
+            "trait T {\n" +
             "  int x = 1\n" +
             "  int y = 2\n" +
-            "  int sum() { getX() + getY() }\n" +
+            "  int f() { getX() + getY() }\n" +
             "}\n" +
-            "class Elem implements IntCouple {\n" +
+            "class C implements T {\n" +
             "  int x = 3\n" +
             "  int y = 4\n" +
-            "  int f() { sum() }\n" +
+            "  int g() { f() }\n" +
             "}\n" +
-            "def elem = new Elem()\n" +
-            "print elem.f()\n",
+            "print new C().g()\n",
         };
         //@formatter:on
 

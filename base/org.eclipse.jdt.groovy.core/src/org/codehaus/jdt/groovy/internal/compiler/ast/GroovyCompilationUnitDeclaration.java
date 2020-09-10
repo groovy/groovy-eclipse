@@ -1260,7 +1260,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
                         continue;
                     }
-                    if (fieldNode.getStart() == fieldNode.getNameStart() && ClassHelper.void_WRAPPER_TYPE.equals(fieldNode.getType())) {
+                    if (fieldNode.getStart() == fieldNode.getNameStart() && fieldNode.getType().equals(ClassHelper.void_WRAPPER_TYPE)) {
                         continue;
                     }
                     boolean isEnumField = fieldNode.isEnum();
