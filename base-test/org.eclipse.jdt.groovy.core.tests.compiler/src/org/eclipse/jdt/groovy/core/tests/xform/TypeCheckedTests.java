@@ -293,4 +293,64 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test // GROOVY-9735
+    public void testTypeChecked13() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C<I extends Item> {\n" +
+            "  Queue<I> queue\n" +
+            "  def c = { ->\n" +
+            "    x(queue) { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x(queue) { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def <T> T x(Collection<T> y, @ClosureParams(FirstParam.FirstGenericType) Closure<?> z) {\n" +
+            "  }\n" +
+            "}\n" +
+            "interface Item {}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test // GROOVY-9735
+    public void testTypeChecked14() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "import groovy.transform.stc.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class C<I extends Item> {\n" +
+            "  Queue<I> queue\n" +
+            "  def c = { ->\n" +
+            "    x(queue) { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def m() {\n" +
+            "    x(queue) { I item ->\n" +
+            "      println item\n" +
+            "    }\n" +
+            "  }\n" + // method is static:
+            "  static <T> T x(Collection<T> y, @ClosureParams(FirstParam.FirstGenericType) Closure<?> z) {\n" +
+            "  }\n" +
+            "}\n" +
+            "interface Item {}\n" +
+            "new C()\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }

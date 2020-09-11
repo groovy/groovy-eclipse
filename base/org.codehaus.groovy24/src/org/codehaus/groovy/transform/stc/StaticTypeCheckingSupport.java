@@ -1793,8 +1793,18 @@ public abstract class StaticTypeCheckingSupport {
             ClassNode superClass = getSuperClass(type, target);
 
             if (superClass != null) {
+                /* GRECLIPSE edit -- GROOVY-9735
                 ClassNode corrected = getCorrectedClassNode(type, superClass, true);
                 extractGenericsConnections(connections, corrected, target);
+                */
+                if (missesGenericsTypes(superClass)) {
+                    Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(type);
+                    if (!spec.isEmpty()) {
+                        superClass = GenericsUtils.correctToGenericsSpecRecurse(spec, superClass);
+                    }
+                }
+                extractGenericsConnections(connections, superClass, target);
+                // GRECLIPSE end
             } else {
                 // if we reach here, we have an unhandled case 
                 throw new GroovyBugError("The type " + type + " seems not to normally extend " + target + ". Sorry, I cannot handle this.");

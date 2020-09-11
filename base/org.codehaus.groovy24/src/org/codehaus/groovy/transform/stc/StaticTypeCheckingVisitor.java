@@ -5106,6 +5106,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                     extractGenericsConnections(connections, actualType,type);
                     extractGenericsConnectionsForSuperClassAndInterfaces(resolvedPlaceholders, connections);
                     applyGenericsConnections(connections, resolvedPlaceholders);
+                    // GRECLIPSE add -- GROOVY-9735
+                    applyGenericsConnections(placeholdersFromContext, resolvedPlaceholders);
+                    // GRECLIPSE end
                 }
             }
         }

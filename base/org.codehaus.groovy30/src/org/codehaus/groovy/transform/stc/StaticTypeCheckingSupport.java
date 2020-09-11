@@ -105,7 +105,6 @@ import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.ClassHelper.makeWithoutCaching;
 import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
-import static org.codehaus.groovy.ast.tools.GenericsUtils.getSuperClass;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND;
 import static org.codehaus.groovy.syntax.Types.BITWISE_AND_EQUAL;
@@ -1775,9 +1774,19 @@ public abstract class StaticTypeCheckingSupport {
 
         } else {
             // first find matching super class or interface
-            ClassNode superClass = getSuperClass(type, target);
+            ClassNode superClass = GenericsUtils.getSuperClass(type, target);
             if (superClass != null) {
+                /* GRECLIPSE edit -- GROOVY-9735
                 extractGenericsConnections(connections, getCorrectedClassNode(type, superClass, true), target);
+                */
+                if (missesGenericsTypes(superClass)) {
+                    Map<String, ClassNode> spec = GenericsUtils.createGenericsSpec(type);
+                    if (!spec.isEmpty()) {
+                        superClass = GenericsUtils.correctToGenericsSpecRecurse(spec, superClass);
+                    }
+                }
+                extractGenericsConnections(connections, superClass, target);
+                // GRECLIPSE end
             } else {
                 // if we reach here, we have an unhandled case
                 throw new GroovyBugError("The type " + type + " seems not to normally extend " + target + ". Sorry, I cannot handle this.");

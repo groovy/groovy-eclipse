@@ -1149,8 +1149,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1162,15 +1160,15 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class C<L extends Long> extends A<L> {\n" +
-            "  C(L longNumber) {\n" +
-            "    super(longNumber)\n" +
+            "class C<I extends BigInteger> extends A<I> {\n" +
+            "  C(I integer) {\n" +
+            "    super(integer)\n" +
             "  }\n" +
-            "  L getValue() {\n" +
-            "    return number\n" + // field of type L
+            "  I getValue() {\n" +
+            "    return number\n" + // field of type I
             "  }\n" +
             "}\n" +
-            "print new C<Long>(42L).value\n",
+            "print new C<BigInteger>(42G).value\n",
         };
         //@formatter:on
 
@@ -1179,8 +1177,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1192,17 +1188,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class C<L extends Long> extends A<L> {\n" +
-            "  C(L longNumber) {\n" +
-            "    super(longNumber)\n" +
+            "class C<I extends BigInteger> extends A<I> {\n" +
+            "  C(I integer) {\n" +
+            "    super(integer)\n" +
             "  }\n" +
-            "  L getValue() {\n" +
-            "    return { ->" +
-            "      return number\n" + // field of type L from closure
-            "    }()" +
+            "  I getValue() {\n" +
+            "    return { ->\n" +
+            "      return number\n" + // field of type I from closure
+            "    }()\n" +
             "  }\n" +
             "}\n" +
-            "print new C<Long>(42L).value\n",
+            "print new C<BigInteger>(42G).value\n",
         };
         //@formatter:on
 
@@ -1211,8 +1207,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7691b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1224,15 +1218,15 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class C<L extends Long> extends A<L> {\n" +
-            "  C(L longNumber) {\n" +
-            "    super(longNumber)\n" +
+            "class C<I extends BigInteger> extends A<I> {\n" +
+            "  C(I integer) {\n" +
+            "    super(integer)\n" +
             "  }\n" +
-            "  L getValue() {\n" +
-            "    return number\n" + // property of type L
+            "  I getValue() {\n" +
+            "    return number\n" + // property of type I
             "  }\n" +
             "}\n" +
-            "print new C<Long>(42L).value\n",
+            "print new C<BigInteger>(42G).value\n",
         };
         //@formatter:on
 
@@ -1241,8 +1235,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-9580
     public void testCompileStatic7691c() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1254,15 +1246,15 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
-            "class C<L extends Long> extends A<L> {\n" +
-            "  C(L longNumber) {\n" +
-            "    super(longNumber)\n" +
+            "class C<I extends BigInteger> extends A<I> {\n" +
+            "  C(I integer) {\n" +
+            "    super(integer)\n" +
             "  }\n" +
-            "  L getValue() {\n" +
-            "    return getNumber()\n" + // method call of type L
+            "  I getValue() {\n" +
+            "    return getNumber()\n" + // method call of type I
             "  }\n" +
             "}\n" +
-            "print new C<Long>(42L).value\n",
+            "print new C<BigInteger>(42G).value\n",
         };
         //@formatter:on
 
