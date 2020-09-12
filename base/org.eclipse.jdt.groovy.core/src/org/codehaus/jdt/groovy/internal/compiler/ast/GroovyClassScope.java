@@ -19,6 +19,7 @@ import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -76,8 +77,9 @@ public class GroovyClassScope extends ClassScope {
             return methodBindings;
         }
 
-        ReferenceBinding[] superInterfaces = typeBinding.superInterfaces;
+        ReferenceBinding[] superInterfaces = typeBinding.superInterfaces();
         if (superInterfaces == null) superInterfaces = Binding.NO_SUPERINTERFACES;
+        else if (superInterfaces.length > 1) Collections.reverse(Arrays.asList(superInterfaces));
 
         boolean implementsGroovyObject = false;
         for (ReferenceBinding face : superInterfaces) {
@@ -112,7 +114,7 @@ public class GroovyClassScope extends ClassScope {
                 .ifPresent(groovyMethods::add);
             createMethod("setProperty", new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("getMetaClass", Binding.NO_TYPES, bindingGLM, methodBindings)
+            createMethod("getMetaClass", Binding.NO_TYPES, bindingGLM, methodBindings) // TODO: @java.beans.Transient
                 .ifPresent(groovyMethods::add);
             createMethod("setMetaClass", new TypeBinding[] {bindingGLM}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
@@ -125,7 +127,7 @@ public class GroovyClassScope extends ClassScope {
                 if (Flags.isPackageDefault(modifiers)) continue;
                 String capitalizedName = MetaClassHelper.capitalize(property.getName());
 
-                if (ClassHelper.boolean_TYPE.equals(property.getType())) {
+                if (property.getType().equals(ClassHelper.boolean_TYPE)) {
                     createGetterMethod(property, "is" + capitalizedName, modifiers, methodBindings)
                         .ifPresent(binding -> {
                             groovyMethods.add(binding);
@@ -158,7 +160,7 @@ public class GroovyClassScope extends ClassScope {
                             method.modifiers ^= Flags.AccFinal | ExtraCompilerModifiers.AccBlankFinal;
                         }
                         if (method.isPublic() || method.isStatic()) {
-                            traitMethods.put(getMethodAsString(method), method);
+                            traitMethods.putIfAbsent(getMethodAsString(method), method);
                         }
                     }
                 }

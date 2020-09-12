@@ -29,6 +29,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +80,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
@@ -991,33 +993,41 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     /**
      * Finds all interfaces implemented by {@code type} (including itself, if it
-     * is an interface).  The ordering is that the interfaces closest to type are
-     * first (in declared order) and then interfaces declared on super interfaces
-     * occur (if they are not duplicates).
+     * is an interface). The ordering is that the interfaces closest to type are
+     * first (in declared order with traits reversed) and then any non-duplicate
+     * interfaces declared on super interfaces.
      *
      * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
      * @param useResolved whether or not to use the resolved interfaces
      */
-    public static void findAllInterfaces(ClassNode type, Set<ClassNode> allInterfaces, boolean useResolved) {
+    public static void findAllInterfaces(ClassNode type, final Set<ClassNode> allInterfaces, final boolean useResolved) {
         if (!useResolved) type = type.redirect();
         boolean isInterface = type.isInterface();
-        if (!isInterface || !allInterfaces.contains(type)) {
-            if (isInterface) {
-                allInterfaces.add(type);
-            }
+        if (!isInterface || allInterfaces.add(type)) {
             // Urrrgh...I don't like this.
             // Groovy compiler has a different notion of 'resolved' than we do here.
             // Groovy compiler considers a resolved ClassNode one that has no redirect.
             // However, we consider a ClassNode to be resolved if its type parameters are resolved.
-            ClassNode[] faces = !useResolved ? type.getInterfaces() : type.getUnresolvedInterfaces();
-            if (faces != null) {
-                for (ClassNode face : faces) {
+            ClassNode[] interfaces = !useResolved ? type.getInterfaces() : type.getUnresolvedInterfaces();
+            if (interfaces != null && interfaces.length > 0) {
+                // put traits first in reverse declared order
+                Deque<ClassNode> deque = new LinkedList<>();
+                for (ClassNode face : interfaces) {
+                    if (Traits.isTrait(face)) {
+                        deque.addFirst(face);
+                    } else {
+                        deque.addLast(face);
+                    }
+                }
+
+                for (ClassNode face : deque) {
                     findAllInterfaces(face, allInterfaces, useResolved);
                 }
             }
+
             if (!isInterface) {
                 ClassNode superType = type.getSuperClass();
-                if (superType != null && !OBJECT_CLASS_NODE.equals(superType)) {
+                if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
                     findAllInterfaces(superType, allInterfaces, useResolved);
                 }
             }

@@ -441,18 +441,38 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait A {\n" +
-            "  String exec() { 'A' }\n" +
+            "  String getIdentity() { 'A' }\n" +
             "}\n" +
             "trait B {\n" +
-            "  String exec() { 'B' }\n" +
+            "  String getIdentity() { 'B' }\n" +
             "}\n" +
-            "class C implements B, A {}\n" +
-            "def c = new C()\n" +
-            "print c.exec()\n",
+            "class C implements A, B {\n" +
+            "}\n" +
+            "print new C().getIdentity()\n",
         };
         //@formatter:on
 
-        runConformTest(sources, "A");
+        runConformTest(sources, "B");
+    }
+
+    @Test
+    public void testTraits17a() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  final String identity = 'A'\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  final String identity = 'B'\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "}\n" +
+            "print new C().getIdentity()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "B");
     }
 
     @Test // Multiple inheritance conflicts - User conflict resolution
@@ -461,16 +481,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Script.groovy",
             "trait A {\n" +
-            "  String exec() { 'A' }\n" +
+            "  String getIdentity() { 'A' }\n" +
             "}\n" +
             "trait B {\n" +
-            "  String exec() { 'B' }\n" +
+            "  String getIdentity() { 'B' }\n" +
             "}\n" +
             "class C implements A, B {\n" +
-            "  String exec() { A.super.exec() }\n" +
+            "  String getIdentity() { A.super.getIdentity() }\n" +
             "}\n" +
-            "def c = new C()\n" +
-            "print c.exec()\n",
+            "print new C().getIdentity()\n",
         };
         //@formatter:on
 

@@ -233,8 +233,27 @@ public final class TraitInferencingTests extends InferencingTestSuite {
         assertExprType(source, "setNumber", "java.lang.Void");
     }
 
-    @Test // GROOVY-9255
+    @Test
     public void testProperty13() {
+        //@formatter:off
+        String source =
+            "trait A {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  Number number\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "  def n = number\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(source, "number", "B");
+        assertExprType(source, "number", "java.lang.Number");
+    }
+
+    @Test // GROOVY-9255
+    public void testProperty14() {
         //@formatter:off
         String source =
             "trait T {\n" +
@@ -252,7 +271,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty14() {
+    public void testProperty15() {
         //@formatter:off
         String source =
             "trait T {\n" +
@@ -270,7 +289,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty15() {
+    public void testProperty16() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -290,7 +309,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty16() {
+    public void testProperty17() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -310,7 +329,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty17() {
+    public void testProperty18() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -330,7 +349,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testProperty18() {
+    public void testProperty19() {
         createUnit("T",
             "trait T {\n" +
             "  Number number\n" +
@@ -388,7 +407,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}\n";
         //@formatter:on
 
-        assertDeclType(contents, "method", "A");
+        assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
     }
 
@@ -667,7 +686,7 @@ public final class TraitInferencingTests extends InferencingTestSuite {
             "}";
         //@formatter:on
 
-        assertDeclType(contents, "method", "A");
+        assertDeclType(contents, "method", "B");
         assertExprType(contents, "method", "java.lang.Void");
     }
 
