@@ -197,9 +197,7 @@ public class GroovyClassScope extends ClassScope {
             }
 
             for (MethodBinding method : traitMethods.values()) {
-                if (!method.isStatic()) {
-                    method.modifiers &= ~Flags.AccAbstract;
-                } else {
+                if (method.isStatic()) {
                     method = new MethodBinding(method, typeBinding);
                     method.modifiers &= ~Flags.AccPrivate;
                     groovyMethods.add(method);

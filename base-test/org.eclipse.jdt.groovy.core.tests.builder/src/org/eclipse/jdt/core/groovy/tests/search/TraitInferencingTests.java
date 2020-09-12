@@ -454,6 +454,32 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testPublicMethod5() {
+        //@formatter:off
+        String contents =
+            "trait A {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  void m() {}\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "  void test() {\n" +
+            "    m()\n" +
+            "  }\n" +
+            "}\n";
+        //@formatter:on
+
+        assertDeclType(contents, "m", "T");
+        assertExprType(contents, "m", "java.lang.Void");
+    }
+
+    @Test
     public void testPublicStaticMethod1() {
         //@formatter:off
         String contents =

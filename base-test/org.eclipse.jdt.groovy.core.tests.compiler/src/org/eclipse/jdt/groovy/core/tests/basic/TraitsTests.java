@@ -475,6 +475,31 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "B");
     }
 
+    @Test
+    public void testTraits17b() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "trait A {\n" +
+            "  String getIdentity() { 'A' }\n" +
+            "}\n" +
+            "trait B {\n" +
+            "  String getIdentity() { 'B' }\n" +
+            "}\n" +
+            "class C implements A, B {\n" +
+            "}\n" +
+            "trait T {\n" +
+            "  String getIdentity() { 'T' }\n" +
+            "}\n" +
+            "class D extends C implements T {\n" +
+            "}\n" +
+            "print new D().getIdentity()",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "T");
+    }
+
     @Test // Multiple inheritance conflicts - User conflict resolution
     public void testTraits18() {
         //@formatter:off
