@@ -3911,6 +3911,32 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('toString'), 8, UNKNOWN))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1159
+    void testTraits12() {
+        addGroovySource '''\
+            |package p
+            |trait T {
+            |  Number getFoo() { 'foo' }
+            |}
+            |'''.stripMargin(), 'T', 'p'
+        buildProject()
+
+        String contents = '''\
+            |class C implements p.T {
+            |  void test() {
+            |    p.T.super.getFoo()
+            |  }
+            |}
+            |'''.stripMargin()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('C'), 1, CLASS),
+            new HighlightedTypedPosition(contents.indexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.indexOf('test'), 4, METHOD),
+            new HighlightedTypedPosition(contents.lastIndexOf('T'), 1, TRAIT),
+            new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, STATIC_CALL))
+    }
+
     //
     private int counter
 

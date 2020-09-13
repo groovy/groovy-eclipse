@@ -1675,8 +1675,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return nameStart > 0 ? nameStart : getStart();
     }
 
-    public void setNameStart2(int offset) {
+    public void setNameStart2(final int offset) {
         nameStart = offset;
+    }
+
+    @Override
+    public void setSourcePosition(final ASTNode node) {
+        super.setSourcePosition(node);
+        if (node instanceof ClassNode) {
+            setNameStart2(((ClassNode) node).getNameStart2());
+        }
     }
     // GRECLIPSE end
 }

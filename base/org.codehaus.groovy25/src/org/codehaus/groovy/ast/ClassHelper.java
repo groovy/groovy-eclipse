@@ -146,17 +146,26 @@ public class ClassHelper {
     public static final String OBJECT = "java.lang.Object";
 
     public static ClassNode makeCached(Class c) {
-        final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         ClassNode classNode;
+        final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         if (classNodeSoftReference == null || (classNode = classNodeSoftReference.get()) == null) {
-            // GRECLIPSE edit
-            classNode = new ImmutableClassNode(c);
+            /* GRECLIPSE edit
+            classNode = new ClassNode(c);
+            */
+            if (!c.isMemberClass()) {
+                classNode = new ImmutableClassNode(c);
+            } else {
+                classNode = new ImmutableClassNode(c) {
+                    @Override
+                    public ClassNode getOuterClass() {
+                        return makeCached(clazz.getEnclosingClass());
+                    }
+                };
+            }
             // GRECLIPSE end
             ClassHelperCache.classCache.put(c, new SoftReference<ClassNode>(classNode));
-
             VMPluginFactory.getPlugin().setAdditionalClassInformation(classNode);
         }
-
         return classNode;
     }
 

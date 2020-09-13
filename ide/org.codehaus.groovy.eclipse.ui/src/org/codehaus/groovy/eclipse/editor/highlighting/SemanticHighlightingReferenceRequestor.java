@@ -131,7 +131,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         } else if (node instanceof ClassNode) {
             // visit "Map" of "Map.Entry" separately
             if (((ClassNode) node).getNameEnd() < 1) {
-                checkOuterClass((ClassNode) node, outer -> {
+                checkOuterClass(result.type, outer -> {
                     acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
                 });
             }

@@ -45,11 +45,11 @@ public class ClassExpression extends Expression {
     }
 
     // GRECLIPSE add
-    public void setSourcePosition(ASTNode node) {
+    public void setSourcePosition(final ASTNode node) {
         super.setSourcePosition(node);
         // propagate source position
         if (getType().getEnd() <= 0)
-            getType().setSourcePosition(this);
+            getType().setSourcePosition(node);
     }
     // GRECLIPSE end
 

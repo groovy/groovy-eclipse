@@ -112,8 +112,8 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                                             bin.getRightExpression()
                                     )
                             );
-                            setterCall.getObjectExpression().setSourcePosition(leftExpression.getObjectExpression());
                             setterCall.getMethod().setSourcePosition(leftExpression.getProperty());
+                            setterCall.getObjectExpression().setSourcePosition(traitType);
                             setterCall.setSpreadSafe(leftExpression.isSpreadSafe());
                             setterCall.setImplicitThis(false);
                             return setterCall;
@@ -150,7 +150,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                                         ? thisPropX(false, "class") : varX("this")
                             )
                     );
-                    methodCall.getObjectExpression().setSourcePosition(((PropertyExpression) exp.getObjectExpression()).getObjectExpression());
+                    methodCall.getObjectExpression().setSourcePosition(traitType);
                     methodCall.getMethod().setSourcePosition(exp.getProperty());
                     methodCall.setSpreadSafe(exp.isSpreadSafe());
                     methodCall.setMethodTarget(methodNode);
@@ -207,7 +207,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                     transform(exp.getMethod()),
                     newArgs
             );
-            newCall.getObjectExpression().setSourcePosition(((PropertyExpression) exp.getObjectExpression()).getObjectExpression());
+            newCall.getObjectExpression().setSourcePosition(traitType);
             newCall.setSpreadSafe(exp.isSpreadSafe());
             newCall.setImplicitThis(false);
             return newCall;

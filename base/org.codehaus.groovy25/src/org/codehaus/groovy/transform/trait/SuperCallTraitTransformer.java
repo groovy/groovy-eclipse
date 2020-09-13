@@ -176,7 +176,7 @@ class SuperCallTraitTransformer extends ClassCodeExpressionTransformer {
                                         ? thisPropX(false, "class") : varX("this")
                             )
                     );
-                    methodCall.getObjectExpression().setSourcePosition(classExpression);
+                    methodCall.getObjectExpression().setSourcePosition(traitType);
                     methodCall.getMethod().setSourcePosition(exp.getProperty());
                     methodCall.setMethodTarget(methodNode);
                     methodCall.setImplicitThis(false);
