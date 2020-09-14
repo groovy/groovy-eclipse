@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -46,6 +47,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A collection of utility methods used to deal with traits.
@@ -135,8 +137,16 @@ public abstract class Traits {
             // precompiled trait
             try {
                 final ClassLoader classLoader = trait.getTypeClass().getClassLoader();
-                String helperClassName = Traits.helperClassName(trait);
-                helperClassNode = ClassHelper.make(Class.forName(helperClassName, false, classLoader));
+                helperClassNode = ClassHelper.make(Class.forName(Traits.helperClassName(trait), false, classLoader));
+                // GRECLIPSE add -- link helper methods to trait methods
+                for (MethodNode method : helperClassNode.getMethods()) {
+                    Parameter[] params = method.getParameters();
+                    if (params.length > 0 && params[0].getType().equals(trait)) {
+                        params = Arrays.copyOfRange(params, 1, params.length);
+                        Optional.ofNullable(trait.getMethod(method.getName(), params)).ifPresent(method::setOriginal);
+                    }
+                }
+                // GRECLIPSE end
                 try {
                     fieldHelperClassNode = ClassHelper.make(classLoader.loadClass(Traits.fieldHelperClassName(trait)));
                 } catch (ClassNotFoundException e) {
