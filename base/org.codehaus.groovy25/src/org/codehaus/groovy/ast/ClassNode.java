@@ -314,8 +314,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         this(c.getName(), c.getModifiers(), null, null, MixinNode.EMPTY_ARRAY);
         clazz=c;
         lazyInitDone=false;
-        CompileUnit cu = getCompileUnit();
-        if (cu!=null) cu.addClass(this);
         isPrimaryNode=false;
     }
 

@@ -304,7 +304,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         clazz = c;
         lazyInitDone = false;
         isPrimaryNode = false;
-        Optional.ofNullable(getCompileUnit()).ifPresent(cu -> cu.addClass(this));
     }
 
     /**
