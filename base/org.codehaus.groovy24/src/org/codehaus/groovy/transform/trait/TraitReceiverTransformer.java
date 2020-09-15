@@ -120,6 +120,7 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
         } else if (exp instanceof VariableExpression) {
             VariableExpression vexp = (VariableExpression) exp;
             Variable accessedVariable = vexp.getAccessedVariable();
+            /* GRECLPSE edit -- GROOVY-9739
             if (accessedVariable instanceof FieldNode) {
                 FieldNode fn = (FieldNode) accessedVariable;
                 Expression receiver = createFieldHelperReceiver();
@@ -147,6 +148,30 @@ class TraitReceiverTransformer extends ClassCodeExpressionTransformer {
                     propertyExpression.getProperty().setSourcePosition(exp);
                     return propertyExpression;
                 }
+            */
+            if (accessedVariable instanceof FieldNode || accessedVariable instanceof PropertyNode) {
+                if (knownFields.contains(accessedVariable.getName())) {
+                    FieldNode fn = (accessedVariable instanceof FieldNode ? (FieldNode) accessedVariable : ((PropertyNode) accessedVariable).getField());
+                    boolean isStatic = java.lang.reflect.Modifier.isStatic(accessedVariable.getModifiers());
+                    Expression receiver = createFieldHelperReceiver();
+                    if (isStatic) receiver = createStaticReceiver(receiver);
+
+                    MethodCallExpression mce = new MethodCallExpression(
+                            receiver,
+                            Traits.helperGetterName(fn),
+                            ArgumentListExpression.EMPTY_ARGUMENTS
+                    );
+                    mce.setImplicitThis(false);
+                    mce.setSourcePosition(exp);
+                    markDynamicCall(mce, fn, isStatic);
+                    return mce;
+                } else {
+                    PropertyExpression propertyExpression = new PropertyExpression(
+                            new VariableExpression(weaved), accessedVariable.getName());
+                    propertyExpression.getProperty().setSourcePosition(exp);
+                    return propertyExpression;
+                }
+            // GRECLIPSE end
             } else if (accessedVariable instanceof DynamicVariable && !inClosure) { // GRECLIPSE add -- GROOVY-9386
                 PropertyExpression propertyExpression = new PropertyExpression(
                         new VariableExpression(weaved), accessedVariable.getName());

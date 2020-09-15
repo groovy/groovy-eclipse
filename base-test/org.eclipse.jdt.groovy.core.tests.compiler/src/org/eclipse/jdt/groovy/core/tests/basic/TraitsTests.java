@@ -2631,4 +2631,42 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "String");
     }
+
+    @Test
+    public void testTraits9739() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "class Main implements ClientSupport {\n" +
+            "  static main(args) {\n" +
+            "    def tester = new Main(client: new Client())\n" +
+            "    assert tester.isReady() : 'unprepared'\n" +
+            "    print tester.client.getValue()\n" +
+            "  }\n" +
+            "}\n",
+
+            "Client.groovy",
+            "class Client {\n" +
+            "  def getValue() { 'works' }\n" +
+            "  boolean waitForServer(int seconds) { true }\n" +
+            "}\n",
+
+            "ClientDelegate.groovy",
+            "trait ClientDelegate {\n" +
+            "  @Delegate Client client\n" +
+            "}\n",
+
+            "ClientSupport.groovy",
+            "trait ClientSupport implements ClientDelegate {\n" +
+            "  boolean isReady() {\n" +
+            "    boolean ready = client.waitForServer(60)\n" +
+            "    // assert, log, etc.\n" +
+            "    return ready\n" +
+            "  }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
