@@ -2345,6 +2345,23 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8961() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void setM(List<String> strings) {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  m = Collections.emptyList()\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic8978() {
         //@formatter:off
         String[] sources = {
@@ -5114,5 +5131,22 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "-43");
+    }
+
+    @Test
+    public void testCompileStatic9734() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "void m(List<String> strings) {}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test() {\n" +
+            "  m(Collections.emptyList())\n" +
+            "}\n" +
+            "test()\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
     }
 }

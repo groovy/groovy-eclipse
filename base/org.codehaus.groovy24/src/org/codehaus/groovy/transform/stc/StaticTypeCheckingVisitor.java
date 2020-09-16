@@ -237,6 +237,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isPowe
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isShiftOperation;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isTraitSelf;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isUsingGenericsOrIsArrayUsingGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isUsingUncheckedGenerics;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isVargs;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isWildcardLeftHandSide;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.lastArgMatchesVarg;
@@ -3537,6 +3538,38 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                                 returnType = md.getType();
                             }
                         }
+                        // GRECLIPSE add -- GROOVY-8961, GROOVY-9734
+                        for (int i = 0, n = args.length; i < n; i += 1) {
+                            Expression a = argumentList.getExpression(i); ClassNode at = args[i];
+                            if (a instanceof MethodCallExpression && !((MethodCallExpression) a).isUsingGenerics() && isUsingUncheckedGenerics(at)) {
+                                // try to resolve unresolved placeholders in argument type using parameter type
+
+                                MethodNode aNode = a.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+                                if (aNode == null || aNode.getGenericsTypes() == null) continue;
+
+                                int np = directMethodCallCandidate.getParameters().length;
+                                Parameter p = directMethodCallCandidate.getParameters()[Math.min(i, np)];
+                                ClassNode pt = getType(p); if (i >= (np - 1) && pt.isArray() && !at.isArray()) pt = pt.getComponentType();
+
+                                Map<String, GenericsType> source = GenericsUtils.extractPlaceholders(at);
+                                Map<String, GenericsType> target = GenericsUtils.extractPlaceholders(pt);
+                                Map<String, GenericsType> linked = new HashMap<>();
+
+                                // connect E:T from source to E:Type from target
+                                for (GenericsType placeholder : aNode.getGenericsTypes()) {
+                                    for (Map.Entry<String, GenericsType> e : source.entrySet()) {
+                                        if (e.getValue() == placeholder) {
+                                            java.util.Optional.ofNullable(target.get(e.getKey()))
+                                                .filter(gt -> isAssignableTo(gt.getType(), placeholder.getType()))
+                                                .ifPresent(gt -> linked.put(placeholder.getName(), gt));
+                                            break;
+                                        }
+                                    }
+                                }
+                                args[i] = applyGenericsContext(linked, at);
+                            }
+                        }
+                        // GRECLIPSE end
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, mn.get(0), call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate,chosenReceiver.getType(), args, returnType);
                             storeType(call, returnType);
