@@ -244,8 +244,46 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9460
+    @Test // GROOVY-8103
     public void testTypeChecked11() {
+        //@formatter:off
+        String[] sources = {
+            "Script.groovy",
+            "import Util.Ours\n" +
+            "import static Fluent.*\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "def method() {\n" +
+            "  fluent('string').isEqualTo('x')\n" + // fine
+            "  fluent(new Ours()).isSimilarTo('')\n" + // fine
+            "  fluent(Util.factory('{}')).isSimilarTo('{\"key\":\"val\"}')\n" + // STC error
+            "}\n",
+
+            "API.groovy",
+            "class Fluent {\n" +
+            "  static FluentAPI  fluent(String s) { return new FluentAPI() }\n" +
+            "  static <T extends FluentExtension> T fluent(T t) { return t }\n" +
+            "}\n" +
+            "class FluentAPI {\n" +
+            "  FluentAPI isEqualTo(String s) { return this }\n" +
+            "}\n" +
+            "interface FluentExtension {\n" +
+            "}\n",
+
+            "Util.groovy",
+            "class Util {\n" +
+            "  static class Ours implements FluentExtension {\n" +
+            "      Ours isSimilarTo(String json) { return this }\n" +
+            "  }\n" +
+            "  static Ours factory(String json) { new Ours() }\n" +
+            "}",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test // GROOVY-9460
+    public void testTypeChecked12() {
         //@formatter:off
         String[] sources = {
             "G.groovy",
@@ -268,7 +306,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-9570
-    public void testTypeChecked12() {
+    public void testTypeChecked13() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -295,7 +333,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-9735
-    public void testTypeChecked13() {
+    public void testTypeChecked14() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -325,7 +363,7 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
     }
 
     @Test // GROOVY-9735
-    public void testTypeChecked14() {
+    public void testTypeChecked15() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
