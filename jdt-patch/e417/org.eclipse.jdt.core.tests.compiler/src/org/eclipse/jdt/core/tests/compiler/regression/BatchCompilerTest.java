@@ -47,8 +47,6 @@ import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.lang.model.SourceVersion;
-
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
@@ -13089,11 +13087,10 @@ public void test496137f(){
 }
 public void testReleaseOption() throws Exception {
 	try {
-		SourceVersion valueOf = SourceVersion.valueOf("RELEASE_9");
+		Object valueOf = javax.lang.model.SourceVersion.valueOf("RELEASE_9");
 		if (valueOf != null)
 			return;
-	} catch(IllegalArgumentException iae) {
-		// Ignore
+	} catch (IllegalArgumentException ignore) {
 	}
 	this.runNegativeTest(
 			new String[] {

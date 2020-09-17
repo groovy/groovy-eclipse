@@ -4995,6 +4995,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9635() {
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8)
+            vmArguments = new String[] {"--add-opens", "java.base/java.util.function=ALL-UNNAMED"};
+
         //@formatter:off
         String[] sources = {
             "Script.groovy",
