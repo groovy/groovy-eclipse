@@ -869,7 +869,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // TODO: This can fail in a lot of cases; is there a better way to call it?
             return MetaClassHelper.calculateParameterDistance(args, new ParameterTypes(prms));
         } catch (Throwable t) {
-            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(parameters[0].getType()) ? 0 : 1);
+            ClassNode pt = last(parameters).getType();
+            if (pt.isArray()) pt = pt.getComponentType();
+            return Long.MAX_VALUE - (VariableScope.isVoidOrObject(pt) ? 0 : 1);
         }
     }
 

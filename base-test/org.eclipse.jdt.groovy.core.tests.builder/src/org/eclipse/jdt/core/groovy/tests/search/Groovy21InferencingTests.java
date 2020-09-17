@@ -317,7 +317,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
         //@formatter:on
-        fullBuild();
+        incrementalBuild();
 
         //@formatter:off
         String contents =
@@ -340,7 +340,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
         //@formatter:on
-        fullBuild();
+        incrementalBuild();
 
         //@formatter:off
         String contents =
@@ -367,7 +367,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
         //@formatter:on
-        fullBuild();
+        incrementalBuild();
 
         //@formatter:off
         String contents =
@@ -595,7 +595,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             Activator.getInstancePreferences().putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
             Activator.getInstancePreferences().put(Activator.GROOVY_SCRIPT_FILTERS, "src/robot/*Move.groovy,y");
 
-            env.fullBuild();
+            incrementalBuild();
 
             //@formatter:off
             String contents =
@@ -612,8 +612,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             assertType(contents, "robot", "Robot");
             assertType(contents, "move", "java.lang.Void");
 
-            // also, just make sure no problems
-            env.fullBuild(project.getFullPath());
+            // ensure there aren't build problems
+            incrementalBuild(project.getFullPath());
             Problem[] problems = env.getProblemsFor(project.getFullPath());
             assertEquals("Should have found no problems in:\n" + Arrays.toString(problems), 0, problems.length);
         } finally {

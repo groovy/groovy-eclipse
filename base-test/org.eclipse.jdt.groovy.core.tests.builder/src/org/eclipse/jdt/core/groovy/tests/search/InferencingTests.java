@@ -4196,4 +4196,36 @@ public final class InferencingTests extends InferencingTestSuite {
 
         assertDeclaringType(contents, "ctorX", "org.codehaus.groovy.ast.tools.GeneralUtils");
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/1160
+    public void testMethodOverloadsArgumentMatching14() {
+        createJavaUnit("Face",
+            "interface Face {\n" +
+            "  float m(Object obj) {}\n" +
+            "  double m(Object[] arr) {}\n" +
+            "  <T extends Number> Number m(T num) {}\n" +
+            "}\n");
+
+        assertType("void test(Face face){face.m()}", "m", "java.lang.Double");
+        assertType("void test(Face face){face.m(null)}", "m", "java.lang.Float");
+        assertType("void test(Face face){face.m(1234)}", "m", "java.lang.Number");
+        assertType("void test(Face face){face.m(1234, 5678)}", "m", "java.lang.Double");
+        assertType("void test(Face face){face.m((Face) null)}", "m", "java.lang.Float");
+    }
+
+    @Test
+    public void testMethodOverloadsArgumentMatching14a() {
+        createJavaUnit("Face",
+            "interface Face {\n" +
+            "  float m(Object obj) {}\n" +
+            "  double m(Object[] arr) {}\n" +
+            "  <T extends Face> Object m(T imp) {}\n" +
+            "}\n");
+
+        assertType("void test(Face face){face.m()}", "m", "java.lang.Double");
+        assertType("void test(Face face){face.m(null)}", "m", "java.lang.Float");
+        assertType("void test(Face face){face.m(1234)}", "m", "java.lang.Float");
+        assertType("void test(Face face){face.m(1234, 5678)}", "m", "java.lang.Double");
+        assertType("void test(Face face){face.m((Face) null)}", "m", "java.lang.Object");
+    }
 }

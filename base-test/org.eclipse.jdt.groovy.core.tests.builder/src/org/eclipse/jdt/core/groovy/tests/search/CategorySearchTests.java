@@ -150,8 +150,8 @@ public final class CategorySearchTests extends SearchTestSuite {
     List<SearchMatch> findMatches(String contents) throws JavaModelException {
         GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_DEFN);
         GroovyCompilationUnit unit = createUnit("Other", contents);
-        env.waitForAutoBuild();
         expectingNoProblems();
+
         MockPossibleMatch match = new MockPossibleMatch(unit);
         IMethod searchFor = (IMethod) catUnit.getElementAt(CATEGORY_DEFN.indexOf("doNothing"));
         assertEquals("Wrong IJavaElement found: " + searchFor, "doNothing", searchFor.getElementName());

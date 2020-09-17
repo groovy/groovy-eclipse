@@ -28,7 +28,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -47,7 +46,6 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.junit.Assert;
@@ -74,13 +72,10 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         env.removePackageFragmentRoot(projectPath, "");
         env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
-        IProject proj = env.getProject("Project");
-        IJavaProject javaProject = JavaCore.create(proj);
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.6");
-        javaProject.setOption(CompilerOptions.OPTION_Source, "1.6");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.6");
-        fullBuild(projectPath);
-        return proj;
+        env.fullBuild(projectPath);
+
+        IProject project = env.getProject("Project");
+        return project;
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
@@ -155,7 +150,6 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
 
-        env.fullBuild();
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
         if (contentsIsScript) {

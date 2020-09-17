@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -36,11 +35,8 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -262,15 +258,6 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Incremental build");
-        try {
-            IProject project = unit.getJavaProject().getProject();
-            project.build(INCREMENTAL_BUILD, monitor);
-        } catch (CoreException e) {
-            throw new RuntimeException(e);
-        }
-        monitor.waitForCompletion(5);
-
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.debug = true; // enable console output and post-visit assertions
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);
