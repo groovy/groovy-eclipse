@@ -420,7 +420,7 @@ public abstract class AbstractGroovyLaunchShortcut implements ILaunchShortcut {
      * @see org.eclipse.jdt.debug.ui.launchConfigurations.JavaApplicationLaunchShortcut#isTestCode(IType)
      */
     protected static boolean hasTestAttribute(final IJavaElement element) throws JavaModelException {
-        return getPackageFragmentRoot(element).getResolvedClasspathEntry().isTest();
+        return element.getJavaProject().isOnClasspath(element) && getPackageFragmentRoot(element).getResolvedClasspathEntry().isTest();
     }
 
     protected static boolean isAtLeastGroovy(final int major, final int minor, final int micro) {
