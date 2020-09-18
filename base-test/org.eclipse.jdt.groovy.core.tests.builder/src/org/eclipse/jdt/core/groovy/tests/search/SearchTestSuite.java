@@ -23,11 +23,10 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -38,10 +37,8 @@ import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -74,8 +71,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         env.setOutputFolder(projectPath, "bin");
         env.fullBuild(projectPath);
 
-        IProject project = env.getProject("Project");
-        return project;
+        return env.getProject("Project");
     }
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
@@ -184,10 +180,9 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
         GroovyCompilationUnit second = createUnit(secondPackage, secondClassName, secondContents);
 
-        // saves time if we don't wait
-        // only need to do this if we are referencing inner classes
+        // saves time if we don't wait; only need to do this if we are referencing inner classes
         if (waitForIndexer) {
-            waitForIndexer();
+            waitForIndexer(first, second);
         }
 
         // search the first
@@ -268,56 +263,36 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
-    // TODO: Merge this with SynchronizationUtils
-    protected void waitForIndexer(IJavaElement... elements) throws JavaModelException {
-        new SearchEngine().searchAllTypeNames(
-            null, 0, // no packages
-            "XXXXXXXXX".toCharArray(),
-            SearchPattern.R_EXACT_MATCH,
-            IJavaSearchConstants.CLASS,
-            SearchEngine.createJavaSearchScope(elements),
-            new TypeNameRequestor() {},
-            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
-
-        for (Job job : Job.getJobManager().find(null)) {
-            switch (job.getState()) {
-            case Job.RUNNING:
-            case Job.WAITING:
-                if (!Arrays.asList(
-                        "animation start",
-                        "change cursor",
-                        "decoration calculation",
-                        "flush cache job",
-                        "open blocked dialog",
-                        "refreshing view",
-                        "sending problem marker updates...",
-                        "update dynamic java sources working sets",
-                        "update for decoration completion",
-                        "update package explorer",
-                        "update progress",
-                        "usage data event consumer",
-                        "workbench auto-save job"
-                ).contains(job.getName().toLowerCase())) {
-                    joinUninterruptibly(job);
+    protected static void waitForIndexer(final IJavaElement... elements) {
+        org.eclipse.jdt.internal.core.search.indexing.IndexManager indexer = org.eclipse.jdt.internal.core.JavaModelManager.getIndexManager();
+        Arrays.stream(elements).map(IJavaElement::getJavaProject).map(IJavaProject::getProject).distinct().forEach(indexer::indexAll);
+        try {
+            indexer.performConcurrentJob(new org.eclipse.jdt.internal.core.search.processing.IJob() {
+                @Override
+                public boolean belongsTo(final String family) {
+                    return true;
                 }
-            }
+
+                @Override
+                public void cancel() {
+                }
+
+                @Override
+                public void ensureReadyToRun() {
+                }
+
+                @Override
+                public boolean execute(final org.eclipse.core.runtime.IProgressMonitor progress) {
+                    return progress == null || !progress.isCanceled();
+                }
+
+                @Override
+                public String getJobFamily() {
+                    return "";
+                }
+            }, org.eclipse.jdt.internal.core.search.processing.IJob.WaitUntilReady, null);
+        } catch (org.eclipse.core.runtime.OperationCanceledException ignore) {
         }
-    }
-
-    public static void joinUninterruptibly(Job job) {
-        boolean interrupted;
-        do {
-            interrupted = false;
-            try {
-                System.err.println("Waiting for: " + job.getName());
-                job.join();
-            } catch (OperationCanceledException ignore) {
-
-            } catch (InterruptedException e) {
-                interrupted = true;
-            }
-        } while (interrupted);
     }
 
     protected static class MatchRegion {

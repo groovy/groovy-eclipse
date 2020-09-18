@@ -1439,7 +1439,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                     AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, methodNode);
                     if (methodDeclarations.add(methodDecl)) {
-                        unitDeclaration.sourceEnds.put(methodDecl, methodNode.getNameEnd());
+                        unitDeclaration.sourceEnds.put(methodDecl, methodNode.isScriptBody() ? methodNode.getStart() : methodNode.getNameEnd());
                     }
 
                     if (methodNode.isAbstract()) {
@@ -2639,11 +2639,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
             methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd + 1);
 
-            // last character before closing bracket or semicolon
-            methodDecl.bodyEnd = methodDecl.declarationSourceEnd - 1;
-            if (methodDecl instanceof AnnotationMethodDeclaration) {
-                methodDecl.bodyEnd += 1; // no '}' and usually no ';'
-            }
+            // last character before closing bracket or semicolon -- annotation method has no '}' and usually no ';'
+            methodDecl.bodyEnd = methodDecl.declarationSourceEnd - (methodDecl instanceof AnnotationMethodDeclaration ? 0 : 1);
         }
 
         /**

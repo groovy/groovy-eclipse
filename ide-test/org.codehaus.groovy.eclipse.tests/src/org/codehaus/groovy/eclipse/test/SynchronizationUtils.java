@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
-import org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -175,7 +174,7 @@ public class SynchronizationUtils {
             case Job.RUNNING:
             case Job.WAITING:
                 if (job.getName().contains("Java index")) {
-                    SearchTestSuite.joinUninterruptibly(job);
+                    joinUninterruptibly(job);
                 }
             }
         }
@@ -188,10 +187,25 @@ public class SynchronizationUtils {
             case Job.RUNNING:
             case Job.WAITING:
                 if (job.getName().startsWith("Refresh DSLD scripts")) {
-                    SearchTestSuite.joinUninterruptibly(job);
+                    joinUninterruptibly(job);
                 }
             }
         }
+    }
+
+    private static void joinUninterruptibly(Job job) {
+        boolean interrupted;
+        do {
+            interrupted = false;
+            try {
+                System.err.println("Waiting for: " + job.getName());
+                job.join();
+            } catch (OperationCanceledException ignore) {
+
+            } catch (InterruptedException e) {
+                interrupted = true;
+            }
+        } while (interrupted);
     }
 
     private static final List<String> SKIP_JOBS = Arrays.asList("animation start", "change cursor", "decoration calculation", "flush cache job", "open blocked dialog", "refreshing view", "sending problem marker updates...", "update for decoration completion", "update dynamic java sources working sets", "update package explorer", "update progress", "usage data event consumer");

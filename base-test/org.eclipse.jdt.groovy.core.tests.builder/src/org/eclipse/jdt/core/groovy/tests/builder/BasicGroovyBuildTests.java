@@ -3273,11 +3273,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("test.Class1", "test.Class2", "test.Class3");
     }
 
-    /*
-     * Ensures that a task tag is not user editable
-     * (regression test for bug 123721 two types of 'remove' for TODO task tags)
-     */
-    @Test
+    @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=123721
     public void testTags3() throws Exception {
         Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX");
@@ -3299,10 +3295,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assertEquals("Marker should not be editable", Boolean.FALSE, markers[0].getAttribute(IMarker.USER_EDITABLE));
     }
 
-    /*
-     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
-     */
-    @Test
+    @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=92821
     public void testUnusedImport() throws Exception {
         Map<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.WARNING);
@@ -3332,10 +3325,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
-    /*
-     * http://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
-     */
-    @Test
+    @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=98667
     public void test98667() throws Exception {
         IPath[] paths = createSimpleProject("Project", false);
 
@@ -3351,12 +3341,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingNoProblems();
     }
 
-    /**
-     * @bug 164707: ArrayIndexOutOfBoundsException in JavaModelManager if source level == 6.0
-     * @test Ensure that AIIOB does not longer happen with invalid source level string
-     * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707"
-     */
-    @Test
+    @Test // https://bugs.eclipse.org/bugs/show_bug.cgi?id=164707
     public void testBug164707() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_SOURCE, "invalid");

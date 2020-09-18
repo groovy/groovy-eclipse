@@ -37,7 +37,6 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.BinaryMember;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,7 +99,6 @@ public final class BinarySearchTests extends SearchTestSuite {
         Path libDir = new Path(FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib")).getFile());
         env.addEntry(project.getFullPath(), JavaCore.newLibraryEntry(libDir.append("binGroovySearch.jar"), libDir.append("binGroovySearchSrc.zip"), null));
 
-        JavaModelManager.getIndexManager().indexAll(project);
         javaProject = env.getJavaProject(project.getName());
         waitForIndexer(javaProject);
 
