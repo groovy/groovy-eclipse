@@ -27,7 +27,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.junit.Test;
 
@@ -515,12 +514,8 @@ public final class ConstructorReferenceSearchTests extends SearchTestSuite {
 
     //--------------------------------------------------------------------------
 
-    List<SearchMatch> searchForReferences(final IMethod method) throws CoreException {
-        new SearchEngine().search(
-            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {JavaCore.create(project)}, false),
-            searchRequestor, null);
-        return searchRequestor.getMatches();
+    private List<SearchMatch> searchForReferences(final IMethod method) throws CoreException {
+        return search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {JavaCore.create(project)}));
     }
 }

@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.junit.Test;
@@ -563,10 +562,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {
-            // the type checking script
-            IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "robot");
             //@formatter:off
-            env.addGroovyClass(robotPath, "RobotMove",
+            createUnit("robot", "RobotMove",
                 "package robot\n" +
                 "import org.codehaus.groovy.ast.expr.MethodCall\n" +
                 "import org.codehaus.groovy.ast.expr.VariableExpression\n" +

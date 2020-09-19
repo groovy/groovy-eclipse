@@ -17,15 +17,15 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
-import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Test;
 
 public final class FieldReferenceSearchTests extends SearchTestSuite {
@@ -194,16 +194,12 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
         GroovyCompilationUnit unit = createUnit("Pogo", contents);
         IField field = findType("Pogo", unit).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 3 matches, but found:\n" + searchRequestor.printMatches(), 3, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("this.flag") + "this.".length(), "flag".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("that.flag") + "that.".length(), "flag".length());
-        assertLocation(searchRequestor.getMatch(2), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 3 matches, but found:\n" + toString(matches), 3, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("this.flag") + "this.".length(), "flag".length());
+        assertLocation(matches.get(1), contents.indexOf("that.flag") + "that.".length(), "flag".length());
+        assertLocation(matches.get(2), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/935
@@ -221,15 +217,12 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "  }\n" +
             "}\n";
 
-        IField field = findType("Pogo", pogo).getField("flag");
         GroovyCompilationUnit unit = createUnit("C", contents);
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
+        IField field = findType("Pogo", pogo).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        assertEquals("Should have found 1 matches, but found:\n" + searchRequestor.printMatches(), 1, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 1 matches, but found:\n" + toString(matches), 1, matches.size());
+        assertLocation(matches.get(0), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/939
@@ -249,17 +242,13 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
 
         GroovyCompilationUnit unit = createUnit("script", contents);
         IField field = findType("Pogo", unit).getField("flag");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 4 matches, but found:\n" + searchRequestor.printMatches(), 4, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("flag", contents.indexOf("with")), "flag".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("flag", contents.indexOf("def ")), "flag".length());
-        assertLocation(searchRequestor.getMatch(2), contents.indexOf("flag = false"), "flag".length());
-        assertLocation(searchRequestor.getMatch(3), contents.lastIndexOf("flag"), "flag".length());
+        assertEquals("Should have found 4 matches, but found:\n" + toString(matches), 4, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("flag", contents.indexOf("with")), "flag".length());
+        assertLocation(matches.get(1), contents.indexOf("flag", contents.indexOf("def ")), "flag".length());
+        assertLocation(matches.get(2), contents.indexOf("flag = false"), "flag".length());
+        assertLocation(matches.get(3), contents.lastIndexOf("flag"), "flag".length());
     }
 
     @Test
@@ -345,15 +334,11 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         int offset = contents.indexOf("with {");
         GroovyCompilationUnit unit = createUnit("Outer", contents);
         IField field = findType("Outer", unit).getType("Inner1").getField("something");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("something", offset), "something".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$something", offset) + 1, "something".length());
+        assertEquals("Should have found 2 matches, but found:\n" + toString(matches), 2, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("something", offset), "something".length());
+        assertLocation(matches.get(1), contents.indexOf("$something", offset) + 1, "something".length());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/788
@@ -378,15 +363,11 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
         int offset = contents.indexOf("with {");
         GroovyCompilationUnit unit = createUnit("Outer", contents);
         IField field = findType("Outer", unit).getType("Inner2").getField("something");
+        List<SearchMatch> matches = search(SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), unit);
 
-        MockPossibleMatch possibleMatch = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch,
-            SearchPattern.createPattern(field, IJavaSearchConstants.REFERENCES), searchRequestor);
-        factory.createVisitor(possibleMatch).visitCompilationUnit(typeRequestor);
-
-        assertEquals("Should have found 2 matches, but found:\n" + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("owner.something", offset) + 6, "something".length());
-        assertLocation(searchRequestor.getMatch(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
+        assertEquals("Should have found 2 matches, but found:\n" + toString(matches), 2, matches.size());
+        assertLocation(matches.get(0), contents.indexOf("owner.something", offset) + 6, "something".length());
+        assertLocation(matches.get(1), contents.indexOf("$owner.something", offset) + 7, "something".length());
     }
 
     //--------------------------------------------------------------------------

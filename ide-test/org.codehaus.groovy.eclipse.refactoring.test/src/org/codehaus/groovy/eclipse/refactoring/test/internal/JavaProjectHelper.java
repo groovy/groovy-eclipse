@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Enumeration;
@@ -41,15 +40,11 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Synchronizer;
 import org.osgi.framework.Bundle;
 
 /**
@@ -120,26 +115,25 @@ public class JavaProjectHelper {
         return options;
     }
 
-    /**
-     * Removes a IJavaElement
-     *
-     * @param elem The element to remove
-     * @throws CoreException Removing failed
-     * @see #ASSERT_NO_MIXED_LINE_DELIMIERS
-     */
-    public static void delete(final IJavaElement elem) throws Exception {
+    public static void delete(final IJavaElement element) throws CoreException {
         JavaCore.run(monitor -> {
-            performDummySearch();
-            if (elem instanceof IJavaProject) {
-                IJavaProject jproject = (IJavaProject) elem;
-                jproject.setRawClasspath(new IClasspathEntry[0], jproject.getProject().getFullPath(), null);
+            org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite.waitUntilReady(element);
+            if (element instanceof IJavaProject) {
+                IJavaProject project = (IJavaProject) element;
+                project.setRawClasspath(ClasspathEntry.NO_ENTRIES, project.getProject().getFullPath(), null);
             }
-            delete(elem.getResource());
+            delete(element.getResource());
         }, null);
-        emptyDisplayLoop();
+
+        Display display = Display.getCurrent();
+        if (display != null) {
+            while (display.readAndDispatch()) {
+                // continue
+            }
+        }
     }
 
-    public static void delete(IResource resource) throws CoreException {
+    public static void delete(final IResource resource) throws CoreException {
         for (int i = 0; i < MAX_RETRY; i += 1) {
             try {
                 resource.delete(true, null);
@@ -155,39 +149,6 @@ public class JavaProjectHelper {
                 }
             }
         }
-    }
-
-    /**
-     * Removes all files in the project and sets the given classpath
-     * @param jproject The project to clear
-     * @param entries The default class path to set
-     * @throws Exception Clearing the project failed
-     */
-    public static void clear(final IJavaProject jproject, final IClasspathEntry[] entries) throws Exception {
-        performDummySearch();
-        JavaCore.run(monitor -> {
-            jproject.setRawClasspath(entries, null);
-            for (IResource resource : jproject.getProject().members()) {
-                if (!resource.getName().startsWith(".")) {
-                    delete(resource);
-                }
-            }
-        }, null);
-
-        JavaProjectHelper.emptyDisplayLoop();
-    }
-
-    public static void performDummySearch() throws CoreException {
-        new SearchEngine().searchAllTypeNames(
-            null,
-            SearchPattern.R_EXACT_MATCH,
-            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-            SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
-            IJavaSearchConstants.CLASS,
-            SearchEngine.createJavaSearchScope(new IJavaElement[0]),
-            new TypeNameRequestor() {},
-            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
     }
 
     /**
@@ -423,27 +384,6 @@ public class JavaProjectHelper {
                 URLConnection con = url.openConnection();
                 con.setUseCaches(false);
                 importTarget.getFile(name).create(con.getInputStream(), true, null);
-            }
-        }
-    }
-
-    public static void emptyDisplayLoop() {
-        boolean showDebugInfo = false;
-        Display display = Display.getCurrent();
-        if (display != null) {
-            if (showDebugInfo) {
-                try {
-                    Synchronizer synchronizer = display.getSynchronizer();
-                    Field field = Synchronizer.class.getDeclaredField("messageCount");
-                    field.setAccessible(true);
-                    System.out.println("Processing " + field.getInt(synchronizer) + " messages in queue");
-                } catch (Exception e) {
-                    // ignore
-                    System.out.println(e);
-                }
-            }
-            while (display.readAndDispatch()) {
-                /*loop*/
             }
         }
     }

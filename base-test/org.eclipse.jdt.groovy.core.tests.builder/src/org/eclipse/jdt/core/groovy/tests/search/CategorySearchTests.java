@@ -25,13 +25,9 @@ import java.util.regex.Pattern;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Test;
 
 /**
@@ -143,41 +139,33 @@ public final class CategorySearchTests extends SearchTestSuite {
         doCategorySearchTest(NO_CATEGORY, 0);
     }
 
-    void doCategorySearchTest(String contents, int numMatches) throws JavaModelException {
+    //--------------------------------------------------------------------------
+
+    private void doCategorySearchTest(final String contents, final int numMatches) throws JavaModelException {
         checkMatches(findMatches(contents), numMatches, contents);
     }
 
-    List<SearchMatch> findMatches(String contents) throws JavaModelException {
+    private List<SearchMatch> findMatches(final String contents) throws JavaModelException {
         GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_DEFN);
         GroovyCompilationUnit unit = createUnit("Other", contents);
         expectingNoProblems();
 
-        MockPossibleMatch match = new MockPossibleMatch(unit);
         IMethod searchFor = (IMethod) catUnit.getElementAt(CATEGORY_DEFN.indexOf("doNothing"));
         assertEquals("Wrong IJavaElement found: " + searchFor, "doNothing", searchFor.getElementName());
-        SearchPattern pattern = SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
-        visitor.visitCompilationUnit(typeRequestor);
-
-        System.out.println("Matches found:\n" + searchRequestor.printMatches());
-
-        return searchRequestor.getMatches();
+        return search(SearchPattern.createPattern(searchFor, IJavaSearchConstants.REFERENCES), unit);
     }
 
-    void checkMatches(List<SearchMatch> matches, int numExpected, String contents) {
-        assertEquals("Wrong number matches found:\n" + searchRequestor.printMatches(), numExpected, matches.size());
-        if (numExpected == 0) {
-            return;
-        }
-
-        Pattern p = Pattern.compile("doNothing");
-        Matcher m = p.matcher(contents);
-        Iterator<SearchMatch> matchIter = matches.iterator();
-        while (m.find()) {
-            SearchMatch match = matchIter.next();
-            assertEquals("Wrong starting location for " + MockPossibleMatch.printMatch(match), m.start(), match.getOffset());
-            assertEquals("Wrong length for " + MockPossibleMatch.printMatch(match), "doNothing".length(), match.getLength());
+    private void checkMatches(final List<SearchMatch> matches, final int nExpected, final String contents) {
+        assertEquals("Wrong number of matches found:\n" + toString(matches), nExpected, matches.size());
+        if (nExpected > 0) {
+            Iterator<SearchMatch> it = matches.iterator();
+            Pattern p = Pattern.compile("doNothing");
+            Matcher m = p.matcher(contents);
+            while (m.find()) {
+                SearchMatch match = it.next();
+                assertEquals("Wrong starting location for " + toString(match), m.start(), match.getOffset());
+                assertEquals("Wrong length for " + toString(match), "doNothing".length(), match.getLength());
+            }
         }
     }
 }

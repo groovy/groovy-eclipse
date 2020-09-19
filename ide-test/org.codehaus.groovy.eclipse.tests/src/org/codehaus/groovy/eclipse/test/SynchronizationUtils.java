@@ -19,15 +19,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Shell;
@@ -149,25 +143,9 @@ public class SynchronizationUtils {
         System.out.println("========================================");
     }
 
-    public static void waitForIndexingToComplete(IJavaElement element) {
-        try {
-            JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
-            SimpleProgressMonitor monitor = new SimpleProgressMonitor("Search to trigger indexing");
-            new SearchEngine().searchAllTypeNames(
-                null,
-                SearchPattern.R_EXACT_MATCH,
-                "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
-                SearchPattern.R_EXACT_MATCH,
-                IJavaSearchConstants.CLASS,
-                SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
-                new TypeNameRequestor() {},
-                IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-                monitor);
-            monitor.waitForCompletion();
-        } catch (CoreException e) {
-            e.printStackTrace();
-        }
-
+    public static void waitForIndexingToComplete(final IJavaElement element) {
+        JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
+        org.eclipse.jdt.core.groovy.tests.search.SearchTestSuite.waitUntilReady(element);
         SynchronizationUtils.joinBackgroundActivities();
         for (Job job : Job.getJobManager().find(null)) {
             switch (job.getState()) {

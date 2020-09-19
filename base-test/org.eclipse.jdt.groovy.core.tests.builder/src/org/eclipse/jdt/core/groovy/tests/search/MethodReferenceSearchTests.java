@@ -20,17 +20,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -339,12 +335,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -381,12 +374,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[1];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -423,12 +413,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -466,12 +453,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[1];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(2, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -495,13 +479,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_ACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.lastIndexOf("bar"), "bar".length());
     }
 
     @Test
@@ -514,13 +496,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_ACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -534,13 +514,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_INACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -556,13 +534,11 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         GroovyCompilationUnit foo = createUnit("Foo", contents);
 
         IMethod method = foo.getType("Foo").getMethods()[0];
-        MockPossibleMatch match = new MockPossibleMatch(foo);
-        SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
-        factory.createVisitor(match).visitCompilationUnit(new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor));
+        List<SearchMatch> matches = search(SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES), foo);
 
-        assertEquals(1, searchRequestor.getMatches().size());
-        assertEquals(SearchMatch.A_INACCURATE, searchRequestor.getMatch(0).getAccuracy());
-        assertLocation(searchRequestor.getMatch(0), contents.indexOf("bar"), "bar".length());
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
+        assertLocation(matches.get(0), contents.indexOf("bar"), "bar".length());
     }
 
     @Test
@@ -586,13 +562,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "str = s\n"); // exact
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(8, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -632,13 +604,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(4, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -679,13 +647,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}\n");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
         SearchMatch match;
         int offset;
 
@@ -728,13 +692,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "flag = xy\n"); // exact
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(8, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -778,13 +738,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(5, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -823,13 +779,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(5, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -865,13 +817,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "");
 
         IMethod method = bar.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}));
 
         assertEquals(3, matches.size());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());
@@ -903,13 +851,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}");
 
         IMethod method = groovyUnit.getType("Bar").getMethods()[0];
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(1, matches.size());
         // TODO: Determine why the accuracy changed between Java 11 and Java 12.
@@ -929,13 +873,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}");
 
         IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("notifyAll", new String[0]);
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(1, matches.size());
         assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
@@ -953,13 +893,9 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             "}");
 
         IMethod method = groovyUnit.getJavaProject().findType("java.lang.Object").getMethod("toString", new String[0]);
-        new SearchEngine().search(
+        List<SearchMatch> matches = search(
             SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
-            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
-            searchRequestor, new NullProgressMonitor());
-
-        List<SearchMatch> matches = searchRequestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}));
 
         assertEquals(1, matches.size());
         assertEquals(SearchMatch.A_INACCURATE, matches.get(0).getAccuracy());

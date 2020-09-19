@@ -15,7 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -26,41 +27,53 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
-import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchDocument;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.Openable;
+import org.eclipse.jdt.internal.core.search.JavaSearchDocument;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.junit.Assert;
 import org.junit.Before;
 
 public abstract class SearchTestSuite extends BuilderTestSuite {
 
-    MockSearchRequestor searchRequestor;
+    private SearchRequestor searchRequestor = new SearchRequestor() {
+        @Override
+        public void acceptSearchMatch(final SearchMatch match) {
+            matches.add(match);
+        }
+    };
+
+    private final List<SearchMatch> matches = new ArrayList<>();
+
     protected IProject project;
-    protected static final TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
 
     @Before
     public final void setUpSearchTestCase() throws Exception {
-        project = createSimpleGroovyProject();
-        searchRequestor = new MockSearchRequestor();
+        project = createGroovyProject();
     }
 
-    protected IProject createSimpleGroovyProject() throws Exception {
+    protected IProject createGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
@@ -74,13 +87,13 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         return env.getProject("Project");
     }
 
-    protected GroovyCompilationUnit createUnit(String name, String contents) {
-        IPath path = env.addGroovyClassExtension(project.getFolder("src").getFullPath(), name, contents, null);
+    protected GroovyCompilationUnit createUnit(final String name, final String contents) {
+        IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) {
-        IFolder folder = project.getFolder("src").getFolder(new Path(pkg));
+    protected GroovyCompilationUnit createUnit(final String pack, final String name, final String contents) {
+        IFolder folder = project.getFolder("src").getFolder(new Path(pack));
         if (!folder.exists()) {
             try {
                 folder.create(true, true, null);
@@ -89,217 +102,213 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
             }
         }
 
-        IPath path = env.addGroovyClassExtension(folder.getFullPath(), name, contents, null);
+        IPath path = env.addGroovyClass(folder.getFullPath(), name, contents);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    protected ICompilationUnit createJavaUnit(String name, String contents) {
+    protected ICompilationUnit createJavaUnit(final String name, final String contents) {
         IPath path = env.addClass(project.getFolder("src").getFullPath(), name, contents);
         return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    protected ICompilationUnit createJavaUnit(String pack, String name, String contents) {
+    protected ICompilationUnit createJavaUnit(final String pack, final String name, final String contents) {
         IPath path = env.addClass(project.getFolder("src").getFullPath(), pack, name, contents);
         return JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 
-    protected void assertLocation(SearchMatch match, int start, int length) {
-        Assert.assertEquals("Invalid match start for: " + MockPossibleMatch.printMatch(match), start, match.getOffset());
-        Assert.assertEquals("Invalid match length for: " + MockPossibleMatch.printMatch(match), length, match.getLength());
+    //--------------------------------------------------------------------------
+
+    protected List<SearchMatch> search(final SearchPattern pattern, final IJavaSearchScope scope) throws CoreException {
+        SearchParticipant[] participants = {SearchEngine.getDefaultSearchParticipant()};
+        new SearchEngine().search(pattern, participants, scope, searchRequestor, null);
+        matches.sort(new MatchComparator());
+        return matches;
     }
+
+    protected List<SearchMatch> search(final SearchPattern pattern, final ICompilationUnit unit) { waitUntilReady(unit);
+        SearchDocument searchDocument = new JavaSearchDocument(unit.getResource().getFullPath().toPortableString(), SearchEngine.getDefaultSearchParticipant());
+        PossibleMatch possibleMatch = new PossibleMatch(/*matchLocator:*/null, unit.getResource(), (Openable) unit, searchDocument, /*mustResolve:*/false);
+        ITypeRequestor requestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, searchRequestor);
+        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(possibleMatch);
+        visitor.debug = true; // enable console output and post-visit assertions
+        visitor.visitCompilationUnit(requestor);
+        matches.sort(new MatchComparator());
+        return matches;
+    }
+
+    //--------------------------------------------------------------------------
 
     protected static final String FIRST_CONTENTS_CLASS = "class First {}";
     protected static final String FIRST_CONTENTS_INTERFACE = "interface First {}";
     protected static final String FIRST_CONTENTS_CLASS_FOR_METHODS = "class First { def xxx() {}}";
     protected static final String FIRST_CONTENTS_CLASS_FOR_METHODS2 = "class First { def xxx() {} \n def xxx(arg) {}}";
 
-    protected void doTestForTwoTypeReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent)
-            throws JavaModelException {
+    protected void doTestForTwoTypeReferences(final String firstContents, final String secondContents, final boolean secondIsScript,
+            final int memberIndex) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IType firstType = findType(firstClassName, first);
-        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
-
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
-        if (contentsIsScript) {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+        if (secondIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
         } else {
             // if not a script, then the first match is always enclosed in the type
             firstMatchEnclosingElement = findType(secondClassName, second);
         }
         // match is enclosed in run method (for script), or nth method for class
-        secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+        secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
 
+        IType firstType = findType(firstClassName, first);
+        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
         checkMatches(secondContents, firstClassName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 
-    protected void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName)
-            throws JavaModelException {
+    protected void doTestForTwoMethodReferences(final String firstContents, final String secondContents, final boolean secondIsScript,
+            final int memberIndex, final String matchName) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
-        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
-
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
 
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
-        if (contentsIsScript) {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
+        if (secondIsScript) {
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
         } else {
-            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
-            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent + 2];
+            firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex];
+            secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[memberIndex + 2];
         }
         // match is enclosed in run method (for script), or x method for class
 
+        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
+        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
         checkMatches(secondContents, matchName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
     }
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents)
-            throws Exception {
-        return getAllMatches(firstContents, secondContents, false);
+    protected void checkMatches(final String secondContents, final String matchText, final SearchPattern pattern, final GroovyCompilationUnit second,
+            final IJavaElement firstEnclosingElement, final IJavaElement secondEnclosingElement) {
+        search(pattern, second);
+
+        Assert.assertEquals("Should have found 2 matches, but found: " + toString(matches), 2, matches.size());
+
+        Assert.assertEquals("Incorrect match in " + toString(matches), firstEnclosingElement, matches.get(0).getElement());
+        assertLocation(matches.get(0), secondContents.indexOf(matchText), matchText.length());
+
+        Assert.assertEquals("Incorrect match in " + toString(matches), secondEnclosingElement, matches.get(1).getElement());
+        assertLocation(matches.get(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer)
-            throws Exception {
-        return getAllMatches(firstContents, secondContents, "", "", waitForIndexer);
+    protected List<SearchMatch> getAllMatches(final String firstContents, final String secondContents) {
+        return getAllMatches(firstContents, secondContents, "", "");
     }
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, String firstPackage, String secondPackage, boolean waitForIndexer)
-            throws Exception {
+    protected List<SearchMatch> getAllMatches(final String firstContents, final String secondContents, final String firstPackage, final String secondPackage) {
         String firstClassName = "First";
         String secondClassName = "Second";
         GroovyCompilationUnit first = createUnit(firstPackage, firstClassName, firstContents);
-        IType firstType = findType(firstClassName, first);
-        SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
-
         GroovyCompilationUnit second = createUnit(secondPackage, secondClassName, secondContents);
+        SearchPattern pattern = SearchPattern.createPattern(findType(firstClassName, first), IJavaSearchConstants.REFERENCES);
 
-        // saves time if we don't wait; only need to do this if we are referencing inner classes
-        if (waitForIndexer) {
-            waitForIndexer(first, second);
-        }
+        search(pattern, first);
+        search(pattern, second);
 
-        // search the first
-        MockPossibleMatch match1 = new MockPossibleMatch(first);
-        ITypeRequestor typeRequestor1 = new TypeRequestorFactory().createRequestor(match1, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor1 = factory.createVisitor(match1);
-        visitor1.visitCompilationUnit(typeRequestor1);
-
-        // search the second
-        MockPossibleMatch match2 = new MockPossibleMatch(second);
-        ITypeRequestor typeRequestor2 = new TypeRequestorFactory().createRequestor(match2, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor2 = factory.createVisitor(match2);
-        visitor2.visitCompilationUnit(typeRequestor2);
-
-        return searchRequestor.getMatches();
+        return matches;
     }
 
-    protected IType findType(String firstClassName, GroovyCompilationUnit first) {
-        IType type = first.getType(firstClassName);
-        if (!type.exists()) {
-            try {
-                IType[] allTypes = first.getAllTypes();
-                for (IType type2 : allTypes) {
-                    if (type2.getElementName().equals(firstClassName)) {
-                        return type2;
-                    }
-                }
-            } catch (JavaModelException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-        return type;
-    }
-
-    protected void doTestForVarReferences(String contents, int offsetInParent, String matchName, int start, MatchRegion[] matchLocations)
+    protected void doTestForVarReferences(final String contents, final int memberIndex, final int start, final MatchRegion[] matchRegions)
             throws JavaModelException {
         String className = "First";
         String matchedVarName = "xxx";
         int until = start + matchedVarName.length() - 1;
         GroovyCompilationUnit unit = createUnit(className, contents);
-        JavaElement parent = (JavaElement) findType(className, unit).getChildren()[offsetInParent];
-        ILocalVariable var = new LocalVariable(parent, matchedVarName, start, until, start, until, Signature.SIG_INT, null, 0, false);
+        JavaElement parent = (JavaElement) findType(className, unit).getChildren()[memberIndex];
+        ILocalVariable var = new LocalVariable(parent, matchedVarName, start, until, start, until, "I", null, 0, false);
 
-        SearchPattern pattern = SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES);
-        checkLocalVarMatches(contents, matchName, pattern, unit, matchLocations);
-    }
+        search(SearchPattern.createPattern(var, IJavaSearchConstants.REFERENCES), unit);
 
-    protected void checkLocalVarMatches(String contents, String matchName, SearchPattern pattern, GroovyCompilationUnit unit, MatchRegion[] matchLocations) {
-        MockPossibleMatch match = new MockPossibleMatch(unit);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
+        Assert.assertEquals("Should have found " + matchRegions.length + " matches, but found: " + toString(matches), matchRegions.length, matches.size());
 
-        visitor.visitCompilationUnit(typeRequestor);
-
-        Assert.assertEquals("Should have found " + matchLocations.length + " matches, but found: " + searchRequestor.printMatches(),
-            matchLocations.length, searchRequestor.getMatches().size());
-
-        for (int i = 0, n = matchLocations.length; i < n; i += 1) {
-            assertLocation(searchRequestor.getMatch(i), matchLocations[i].offset, matchLocations[i].length);
+        for (int i = 0, n = matchRegions.length; i < n; i += 1) {
+            assertLocation(matches.get(i), matchRegions[i].offset, matchRegions[i].length);
         }
     }
 
-    protected void checkMatches(String secondContents, String matchText, SearchPattern pattern, GroovyCompilationUnit second,
-            IJavaElement firstMatchEnclosingElement, IJavaElement secondMatchEnclosingElement) {
-        MockPossibleMatch match = new MockPossibleMatch(second);
-        ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
-
-        visitor.visitCompilationUnit(typeRequestor);
-
-        Assert.assertEquals("Should have found 2 matches, but found: " + searchRequestor.printMatches(), 2, searchRequestor.getMatches().size());
-
-        Assert.assertEquals("Incorrect match in " + searchRequestor.printMatches(), firstMatchEnclosingElement, searchRequestor.getElementNumber(0));
-        assertLocation(searchRequestor.getMatch(0), secondContents.indexOf(matchText), matchText.length());
-
-        Assert.assertEquals("Incorrect match in " + searchRequestor.printMatches(), secondMatchEnclosingElement, searchRequestor.getElementNumber(1));
-        assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
+    protected static void assertLocation(final SearchMatch match, final int offset, final int length) {
+        Assert.assertEquals("Invalid match start for: " + toString(match), offset, match.getOffset());
+        Assert.assertEquals("Invalid match length for: " + toString(match), length, match.getLength());
     }
 
-    protected static void waitForIndexer(final IJavaElement... elements) {
-        org.eclipse.jdt.internal.core.search.indexing.IndexManager indexer = org.eclipse.jdt.internal.core.JavaModelManager.getIndexManager();
-        Arrays.stream(elements).map(IJavaElement::getJavaProject).map(IJavaProject::getProject).distinct().forEach(indexer::indexAll);
+    protected static IType findType(final String typeName, final ICompilationUnit unit) {
+        IType type = unit.getType(typeName);
+        if (type.exists()) {
+            return type;
+        }
+
         try {
-            indexer.performConcurrentJob(new org.eclipse.jdt.internal.core.search.processing.IJob() {
-                @Override
-                public boolean belongsTo(final String family) {
-                    return true;
+            for (IType t : unit.getAllTypes()) {
+                if (t.getElementName().equals(typeName)) {
+                    return t;
                 }
+            }
+        } catch (JavaModelException e) {
+            e.printStackTrace();
+        }
 
-                @Override
-                public void cancel() {
-                }
+        return null;
+    }
 
-                @Override
-                public void ensureReadyToRun() {
-                }
+    protected static final String toString(final List<SearchMatch> matches) {
+        return matches.stream().map(SearchTestSuite::toString).collect(java.util.stream.Collectors.joining());
+    }
 
-                @Override
-                public boolean execute(final org.eclipse.core.runtime.IProgressMonitor progress) {
-                    return progress == null || !progress.isCanceled();
-                }
+    protected static final String toString(final SearchMatch match) {
+        return "Match at: (" + match.getOffset() + ", " + match.getLength() + ")," + " accuracy: " +
+            (match.getAccuracy() == SearchMatch.A_ACCURATE ? "ACCURATE" : "INACCURATE") + "\n Matched object: " + match.getElement() + "\n";
+    }
 
-                @Override
-                public String getJobFamily() {
-                    return "";
-                }
-            }, org.eclipse.jdt.internal.core.search.processing.IJob.WaitUntilReady, null);
-        } catch (org.eclipse.core.runtime.OperationCanceledException ignore) {
+    public static void waitUntilReady(final IJavaElement... elems) {
+        try {
+            new SearchEngine().searchAllTypeNames(
+                /*packageName:*/null,
+                SearchPattern.R_EXACT_MATCH,
+                "XXXXXXXXXXX".toCharArray(),
+                SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
+                IJavaSearchConstants.CLASS,
+                SearchEngine.createJavaSearchScope(elems),
+                new TypeNameRequestor() {},
+                IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+                /*progressMonitor:*/null);
+        } catch (JavaModelException e) {
+            e.printStackTrace();
         }
     }
 
-    protected static class MatchRegion {
+    public static class MatchComparator implements Comparator<SearchMatch> {
+        @Override
+        public int compare(final SearchMatch m1, final SearchMatch m2) {
+            ITypeRoot lTypeRoot = (ITypeRoot) ((IJavaElement) m1.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+            if (lTypeRoot == null) {
+                lTypeRoot = (ITypeRoot) ((IJavaElement) m1.getElement()).getAncestor(IJavaElement.CLASS_FILE);
+            }
+            ITypeRoot rTypeRoot = (ITypeRoot) ((IJavaElement) m2.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+            if (rTypeRoot == null) {
+                rTypeRoot = (ITypeRoot) ((IJavaElement) m2.getElement()).getAncestor(IJavaElement.CLASS_FILE);
+            }
+            if (!lTypeRoot.equals(rTypeRoot)) {
+                return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
+            }
+            return m1.getOffset() - m2.getOffset();
+        }
+    }
+
+    public static class MatchRegion {
         final int offset;
         final int length;
 
-        public MatchRegion(int offset, int length) {
+        public MatchRegion(final int offset, final int length) {
             this.offset = offset;
             this.length = length;
         }

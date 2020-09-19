@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -211,7 +212,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
      *
      * @return null if all is OK, or else returns an error message specifying the problem
      */
-    public static String checkType(GroovyCompilationUnit unit, int exprStart, int exprUntil, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns) {
+    public static String checkType(final GroovyCompilationUnit unit, final int exprStart, final int exprUntil,
+                final String expectedType, final String expectedDeclaringType, final boolean assumeNoUnknowns) {
         SearchRequestor requestor = doVisit(exprStart, exprUntil, unit);
         if (requestor.node == null) {
             return "Did not find expected ASTNode.  (Start:" + exprStart + ", End:" + exprUntil + ")\n" +
@@ -257,8 +259,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         return null;
     }
 
-    public static SearchRequestor doVisit(int exprStart, int exprUntil, GroovyCompilationUnit unit) {
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+    public static SearchRequestor doVisit(final int exprStart, final int exprUntil, final GroovyCompilationUnit unit) { waitUntilReady(unit);
+        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
         visitor.debug = true; // enable console output and post-visit assertions
         SearchRequestor requestor = new SearchRequestor(exprStart, exprUntil);
         visitor.visitCompilationUnit(requestor);

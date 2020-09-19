@@ -24,10 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.MethodNode;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
 import org.junit.Ignore;
@@ -1388,16 +1385,14 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test @Ignore
     public void testJira1718() throws Exception {
-        IPath p2 = env.addPackage(project.getFolder("src").getFullPath(), "p2");
-
-        env.addGroovyClass(p2, "Renderer",
+        createUnit("p2", "Renderer",
             "package p2\n" +
             "interface Renderer<T> {\n" +
             "  Class<T> getTargetType()\n" +
             "  void render(T object, String context)\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "AbstractRenderer",
+        createUnit("p2", "AbstractRenderer",
             "package p2\n" +
             "abstract class AbstractRenderer<T> implements Renderer<T> {\n" +
             "  private Class<T> targetType\n" +
@@ -1408,7 +1403,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "DefaultRenderer",
+        createUnit("p2", "DefaultRenderer",
             "package p2\n" +
             "class DefaultRenderer<T> implements Renderer<T> {\n" +
             "  Class<T> targetType\n" +
@@ -1422,13 +1417,13 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "RendererRegistry",
+        createUnit("p2", "RendererRegistry",
             "package p2\n" +
             "interface RendererRegistry {\n" +
             "  public <T> Renderer<T> findRenderer(String contentType, T object)\n" +
             "}\n");
 
-        env.addGroovyClass(p2, "DefaultRendererRegistry",
+        createUnit("p2", "DefaultRendererRegistry",
             "package p2\n" +
             "class DefaultRendererRegistry implements RendererRegistry {\n" +
             "  def <T> Renderer<T> findRenderer(String contentType, T object) {\n" +
@@ -1436,7 +1431,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        IPath path = env.addGroovyClass(p2, "LinkingRenderer",
+        ICompilationUnit unit = createUnit("p2", "LinkingRenderer",
             "package p2\n" +
             "@groovy.transform.CompileStatic\n" +
             "class LinkingRenderer<T> extends AbstractRenderer<T> {\n" +
@@ -1450,8 +1445,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}\n");
 
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-        Set<IProblem> problems = ReconcilerUtils.reconcile(JavaCore.createCompilationUnitFrom(file));
+        Set<IProblem> problems = ReconcilerUtils.reconcile(unit);
 
         assertTrue(problems.isEmpty());
     }

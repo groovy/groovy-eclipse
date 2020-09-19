@@ -154,10 +154,10 @@ public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
     }
 
     private void doTestForReferencesInScript(String contents, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, 3, "xxx", matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, 3, matchLocations[0].offset, matchLocations);
     }
 
     private void doTestForReferences(String contents, int locationInParent, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, locationInParent, "xxx", matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, locationInParent, matchLocations[0].offset, matchLocations);
     }
 }

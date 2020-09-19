@@ -28,13 +28,15 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
 
     private void assertNoUnknowns(String source) {
         List<ASTNode> unknownNodes = new ArrayList<>();
-        org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(createUnit(DEFAULT_UNIT_NAME, source));
+        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(createUnit(DEFAULT_UNIT_NAME, source));
         visitor.visitCompilationUnit((node, result, element) -> {
             if (result.confidence == org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
                 unknownNodes.add(node);
