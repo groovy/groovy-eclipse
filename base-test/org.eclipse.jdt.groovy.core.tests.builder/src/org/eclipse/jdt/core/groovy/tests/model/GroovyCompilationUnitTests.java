@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,11 +55,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         IPath projectPath = env.addProject("Project");
         fullBuild(projectPath);
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
+        IPath root = env.getPackageFragmentRootPath(projectPath, "src");
 
         IPath path = env.addClass(root, "p1", "Hello",
             "package p1;\n" +
@@ -768,7 +764,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
 
     @Test
     public void testVariadicMethod1() throws Exception {
-        IPath path = env.addGroovyClass(createEmptyGroovyProject(), "", "X",
+        IPath path = env.addGroovyClass(createEmptyGroovyProject(), "X",
             "class X {\n" +
             "  private void fn(String one, int... two) {}\n" +
             "}");

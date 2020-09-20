@@ -49,8 +49,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     @Before
     public void setUp() throws Exception {
         prj = env.addProject("Project", "1.7");
-        src = prj.append("src");
-        env.createFolder(src);
+        src = env.getPackageFragmentRootPath(prj, "src");
         env.setClasspath(prj, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src),
             GroovyRuntime.newGroovyClasspathContainerEntry(false, false, null),

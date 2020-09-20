@@ -282,11 +282,9 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     private IPath createGenericProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
-        env.removePackageFragmentRoot(projectPath, "");
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
         fullBuild(projectPath);
-        return root;
+
+        return env.getPackageFragmentRootPath(projectPath, "src");
     }
 
     //--------------------------------------------------------------------------
@@ -710,7 +708,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "def b = 'b'\n" +
             "println a === b\n";
         IPath root = createGenericProject();
-        IPath path = env.addGroovyClass(root, "", "Hello", source);
+        IPath path = env.addGroovyClass(root, "Hello", source);
         incrementalBuild();
         expectingSpecificProblemFor(root, new Problem("p/Hello",
             "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported", path, 34, 37, 60, IMarker.SEVERITY_ERROR));

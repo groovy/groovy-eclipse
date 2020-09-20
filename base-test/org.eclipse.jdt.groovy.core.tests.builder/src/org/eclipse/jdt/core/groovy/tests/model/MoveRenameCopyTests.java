@@ -126,16 +126,12 @@ public final class MoveRenameCopyTests extends BuilderTestSuite {
 
     private GroovyCompilationUnit createSimpleGroovyProject(String pack, String contents) throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         expectingNoProblems();
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-        IPath path = env.addGroovyClass(root, "", "Groovy", contents);
+        IPath root = env.getPackageFragmentRootPath(projectPath, "src");
+        IPath path = env.addGroovyClass(root, "Groovy", contents);
         IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
     }

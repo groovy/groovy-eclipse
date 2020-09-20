@@ -58,9 +58,7 @@ public final class FullProjectTests extends BuilderTestSuite {
     private IPath[] createGroovyProject() throws Exception {
         IPath prj = env.addProject("Project");
         env.addGroovyJars(prj);
-        env.setOutputFolder(prj, "bin");
-        env.removePackageFragmentRoot(prj, "");
-        return new IPath[] {prj, env.addPackageFragmentRoot(prj, "src")};
+        return new IPath[] {prj, env.getPackageFragmentRootPath(prj, "src")};
     }
 
     //--------------------------------------------------------------------------
@@ -70,7 +68,7 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         //@formatter:off
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@Singleton\n" +
             "class Foo {\n" +
             "  void mone() {}\n" +
@@ -90,7 +88,7 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         //@formatter:off
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@Singleton\n" +
             "class Foo {\n" +
             "  @Delegate Bar b = new BarImpl();\n" +
@@ -114,7 +112,7 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         //@formatter:off
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@groovy.transform.TypeChecked\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +
@@ -131,7 +129,7 @@ public final class FullProjectTests extends BuilderTestSuite {
         IPath[] paths = createGroovyProject();
 
         //@formatter:off
-        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+        IPath foo = env.addGroovyClass(paths[1], "Foo",
             "@groovy.transform.CompileStatic\n" +
             "class Foo {\n" +
             "  void xxx(int i) { xxx('abc') }\n" +

@@ -75,13 +75,7 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
 
     protected IProject createGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
-
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-        env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
         env.fullBuild(projectPath);
 
         return env.getProject("Project");

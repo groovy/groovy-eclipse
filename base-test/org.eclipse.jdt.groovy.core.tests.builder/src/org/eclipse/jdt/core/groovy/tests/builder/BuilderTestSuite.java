@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
@@ -30,7 +29,6 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
-import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -49,7 +47,6 @@ import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.junit.After;
 import org.junit.Assert;
@@ -131,7 +128,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
-    protected final void fullBuild(IPath projectPath) {
+    protected final void fullBuild(final IPath projectPath) {
         debugRequestor.clearResult();
         debugRequestor.activate();
         try {
@@ -151,7 +148,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
-    protected final void incrementalBuild(IPath projectPath) {
+    protected final void incrementalBuild(final IPath projectPath) {
         debugRequestor.clearResult();
         debugRequestor.activate();
         try {
@@ -161,8 +158,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
-    @SuppressWarnings("cast")
-    protected void executeClass(IPath projectPath, String className, String expectingOutput, String expectedError) {
+    protected void executeClass(final IPath projectPath, final String className, final String expectingOutput, final String expectedError) {
         List<String> classpath = new ArrayList<>();
         IPath workspacePath = env.getWorkspaceRootPath();
         classpath.add(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
@@ -209,34 +205,18 @@ public abstract class BuilderTestSuite {
 
     //--------------------------------------------------------------------------
 
-    protected final void expectingCompiledClasses(String... expected) {
+    protected final void expectingCompiledClasses(final String... expected) {
         String[] actual = ReflectionUtils.executePrivateMethod(debugRequestor.getClass(), "getCompiledClasses", debugRequestor);
-        Util.sort(actual);
-        Util.sort(expected);
-        expectingCompiling(actual, expected, "unexpected recompiled units. lenExpected=" + expected.length + " lenActual=" + actual.length);
+        Arrays.sort(actual);
+        Arrays.sort(expected);
+        Assert.assertArrayEquals(expected, actual);
     }
 
-    private void expectingCompiling(String[] actual, String[] expected, String message) {
-        StringBuilder actualBuffer = new StringBuilder("{");
-        for (int i = 0; i < actual.length; i += 1) {
-            if (i > 0) actualBuffer.append(",");
-            actualBuffer.append(actual[i]);
-        }
-        actualBuffer.append("}");
-        StringBuilder expectedBuffer = new StringBuilder("{");
-        for (int i = 0; i < expected.length; i += 1) {
-            if (i > 0) expectedBuffer.append(",");
-            expectedBuffer.append(expected[i]);
-        }
-        expectedBuffer.append("}");
-        Assert.assertEquals(message, expectedBuffer.toString(), actualBuffer.toString());
-    }
-
-    protected final void expectingProblemsFor(IPath root, List<String> expected) {
+    protected final void expectingProblemsFor(final IPath root, final List<String> expected) {
         expectingProblemsFor(new IPath[] {root}, expected);
     }
 
-    protected final void expectingProblemsFor(IPath[] roots, List<String> expected) {
+    protected final void expectingProblemsFor(final IPath[] roots, final List<String> expected) {
         Problem[] allProblems = getSortedProblems(roots);
         TestCase.assertStringEquals(toString(expected), toString(Arrays.asList(allProblems)), false);
     }
@@ -245,16 +225,16 @@ public abstract class BuilderTestSuite {
         expectingNoProblemsFor(env.getWorkspaceRootPath());
     }
 
-    protected final void expectingNoProblemsFor(IPath... roots) {
+    protected final void expectingNoProblemsFor(final IPath... roots) {
         Problem[] allProblems = getSortedProblems(roots);
         TestCase.assertStringEquals("", toString(Arrays.asList(allProblems)), false);
     }
 
-    protected final void expectingSpecificProblemFor(IPath root, Problem problem) {
+    protected final void expectingSpecificProblemFor(final IPath root, final Problem problem) {
         expectingSpecificProblemsFor(root, new Problem[] {problem});
     }
 
-    protected void expectingSpecificProblemsFor(IPath root, Problem[] problems) {
+    protected void expectingSpecificProblemsFor(final IPath root, final Problem[] problems) {
         Problem[] rootProblems = env.getProblemsFor(root);
         next: for (int i = 0; i < problems.length; i += 1) {
             Problem problem = problems[i];
@@ -275,7 +255,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
-    protected final void printProblemsFor(IPath... roots) {
+    protected final void printProblemsFor(final IPath... roots) {
         for (IPath root : roots) {
             Problem[] problems = env.getProblemsFor(root);
             System.out.println(toString(Arrays.asList(problems)));
@@ -283,7 +263,7 @@ public abstract class BuilderTestSuite {
         }
     }
 
-    private Problem[] getSortedProblems(IPath[] roots) {
+    private Problem[] getSortedProblems(final IPath[] roots) {
         List<Problem> allProblems = new ArrayList<>();
         for (IPath root : roots) {
             Collections.addAll(allProblems, env.getProblemsFor(root));
@@ -294,7 +274,7 @@ public abstract class BuilderTestSuite {
         return allProblems.toArray(new Problem[0]);
     }
 
-    private static String toString(Iterable<?> seq) {
+    private static String toString(final Iterable<?> seq) {
         StringBuilder buf = new StringBuilder();
         for (Object obj : seq) {
             buf.append(obj).append('\n');
@@ -307,17 +287,19 @@ public abstract class BuilderTestSuite {
     protected static class TestingEnvironment extends org.eclipse.jdt.core.tests.builder.TestingEnvironment {
 
         @Override
-        public IPath addProject(String projectName) {
+        public IPath addProject(final String projectName) {
             return addProject(projectName, "1.6");
         }
 
         @Override
-        public IPath addProject(String projectName, String compliance) {
+        public IPath addProject(final String projectName, final String compliance) {
             try {
                 IPath projectPath = super.addProject(projectName, compliance);
+                removePackageFragmentRoot(projectPath, "");
+                addPackageFragmentRoot(projectPath, "src");
+                addGroovyNature(projectName);
 
-                new ProjectScope(getProject(projectName)).getNode(JavaRuntime.ID_PLUGIN)
-                    .put(JavaRuntime.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE, JavaCore.IGNORE);
+                // add JRE container to classpath
                 IClasspathAttribute[] attributes;
                 if (JavaCore.compareJavaVersions(compliance, "9") < 0) {
                     attributes = new IClasspathAttribute[0];
@@ -326,15 +308,13 @@ public abstract class BuilderTestSuite {
                 }
                 addEntry(projectPath, JavaCore.newContainerEntry(JavaRuntime.newDefaultJREContainerPath(), new IAccessRule[0], attributes, false));
 
-                addGroovyNature(projectName);
-
                 return projectPath;
             } catch (JavaModelException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        public void addGroovyNature(String projectName) {
+        public void addGroovyNature(final String projectName) {
             try {
                 IProject project = getProject(projectName);
                 IProjectDescription description = project.getDescription();
@@ -345,7 +325,7 @@ public abstract class BuilderTestSuite {
             }
         }
 
-        public void removeGroovyNature(String projectName) {
+        public void removeGroovyNature(final String projectName) {
             try {
                 IProject project = getProject(projectName);
                 IProjectDescription description = project.getDescription();
@@ -356,7 +336,7 @@ public abstract class BuilderTestSuite {
             }
         }
 
-        public void addGroovyJars(IPath projectPath) throws Exception {
+        public void addGroovyJars(final IPath projectPath) throws Exception {
             boolean minimal = false, modular = false;
             for (IClasspathEntry cpe : getJavaProject(projectPath).getRawClasspath()) {
                 if (cpe.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
@@ -373,96 +353,36 @@ public abstract class BuilderTestSuite {
             addEntry(projectPath, GroovyRuntime.newGroovyClasspathContainerEntry(minimal, modular, null));
         }
 
-        public void addJar(IPath projectPath, String path) throws Exception {
-            URL jar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry(path);
+        /**
+         * @param jarPath resource in builder tests project, e.g. "lib/xyz.jar"
+         */
+        public void addJar(final IPath projectPath, final String jarPath) throws Exception {
+            URL jar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry(jarPath);
             addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
         }
 
         @Override
-        public void addEntry(IPath projectPath, IClasspathEntry entryPath) throws JavaModelException {
-            IClasspathEntry[] classpath = getClasspath(projectPath);
-            // first look to see if the entry already exists
-            for (IClasspathEntry entry : classpath) {
-                if (entry.equals(entryPath)) {
-                    return;
-                }
+        public void addEntry(final IPath projectPath, final IClasspathEntry entry) throws JavaModelException {
+            if (Arrays.stream(getClasspath(projectPath)).noneMatch(entry::equals)) {
+                super.addEntry(projectPath, entry);
             }
-            super.addEntry(projectPath, entryPath);
         }
 
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace.  The package is created
-         * if necessary.  If a class with the same name already
-         * exists, it is replaced.  A workspace must be open,
-         * and the given class name must not end with ".java".
-         * Returns the path of the added class.
-         */
-        public IPath addGroovyClass(IPath packagePath, String className, String contents) {
-            return addGroovyClassExtension(packagePath, className, contents, null);
+        public IPath addGroovyClass(final IPath packagePath, final String className, final String contents) {
+            IPath filePath = packagePath.append(className.endsWith(".groovy") ? className : className + ".groovy");
+            createFile(filePath, contents.getBytes(StandardCharsets.US_ASCII));
+
+            return filePath;
         }
 
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace.  The package is created
-         * if necessary.  If a class with the same name already
-         * exists, it is replaced.  A workspace must be open,
-         * and the given class name must not end with ".java".
-         * Returns the path of the added class.
-         */
-        public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
-            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
-        }
-
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace, the file will use the specified file suffix.
-         * The package is created if necessary.  If a class with the same name already
-         * exists, it is replaced.
-         * Returns the path of the added class.
-         */
-        public IPath addGroovyClassWithSuffix(IPath packagePath, String className, String suffix, String contents) {
-            return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
-        }
-
-        public IPath addGroovyClassWithSuffix(IPath packageFragmentRootPath, String packageName, String className, String suffix, String contents) {
-            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
-        }
-
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace.  The package is created
-         * if necessary.  If a class with the same name already
-         * exists, it is replaced.  A workspace must be open,
-         * and the given class name must not end with ".java".
-         * Returns the path of the added class.
-         * @param fileExtension file extension of the groovy class to create (without a '.')
-         */
-        public IPath addGroovyClassExtension(IPath packagePath, String className, String contents, String fileExtension) {
-            IPath classPath = packagePath.append(className + "." + Optional.ofNullable(fileExtension).orElse("groovy"));
-            createFile(classPath, contents.getBytes(StandardCharsets.US_ASCII));
-            return classPath;
-        }
-
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace.  The package is created
-         * if necessary.  If a class with the same name already
-         * exists, it is replaced.  A workspace must be open,
-         * and the given class name must not end with ".java".
-         * Returns the path of the added class.
-         * @param fileExtension file extension of the groovy class to create (without a '.')
-         */
-        public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className, String contents, String fileExtension) {
-            // make sure the package exists
-            if (packageName != null && packageName.length() > 0) {
-                IPath packagePath = addPackage(packageFragmentRootPath, packageName);
-                return addGroovyClassExtension(packagePath, className, contents, fileExtension);
+        public IPath addGroovyClass(final IPath packageFragmentRootPath, final String packageName, final String className, final String contents) {
+            if (packageName == null || packageName.length() < 1) {
+                return addGroovyClass(packageFragmentRootPath, className, contents);
             }
-            return addGroovyClassExtension(packageFragmentRootPath, className, contents, fileExtension);
+            return addGroovyClass(addPackage(packageFragmentRootPath, packageName), className, contents);
         }
 
-        public <U extends ICompilationUnit> U getUnit(IPath path) {
+        public <U extends ICompilationUnit> U getUnit(final IPath path) {
             IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
             @SuppressWarnings("unchecked")
             U unit = (U) JavaCore.createCompilationUnitFrom(file);

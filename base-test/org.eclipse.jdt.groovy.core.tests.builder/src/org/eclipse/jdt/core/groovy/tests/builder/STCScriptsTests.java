@@ -41,12 +41,8 @@ public final class STCScriptsTests extends BuilderTestSuite {
             return env.getProject("Project").getFullPath();
         }
         IPath projectPath = env.addProject("Project");
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
-        env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
         return projectPath;
     }
 
@@ -63,7 +59,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
         IPath projPath = createGenericProject();
         //@formatter:off
-        env.addGroovyClass(projPath.append("src"), "", "RobotMove",
+        env.addGroovyClass(projPath.append("src"), "RobotMove",
             "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
             "unresolvedVariable { VariableExpression var ->\n" +
             "  if ('robot' == var.name) {\n" +
@@ -72,7 +68,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    handled = true\n" +
             "  }\n" +
             "}");
-        env.addGroovyClass(projPath.append("src"), "", "Robot",
+        env.addGroovyClass(projPath.append("src"), "Robot",
             "@groovy.transform.TypeChecked(extensions = 'RobotMove.groovy')\n" +
             "void operate() {\n" +
             "  robot.move \"left\"\n" +
@@ -93,7 +89,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
 
         IPath projPath = createGenericProject();
         //@formatter:off
-        env.addGroovyClass(projPath.append("src"), "", "RobotMove",
+        env.addGroovyClass(projPath.append("src"), "RobotMove",
             "import org.codehaus.groovy.ast.expr.VariableExpression\n" +
             "unresolvedVariable { VariableExpression var ->\n" +
             "  if ('robot' == var.name) {\n" +
@@ -102,7 +98,7 @@ public final class STCScriptsTests extends BuilderTestSuite {
             "    handled = true\n" +
             "  }\n" +
             "}");
-        env.addGroovyClass(projPath.append("src"), "", "RobotScript",
+        env.addGroovyClass(projPath.append("src"), "RobotScript",
             "import groovy.transform.TypeChecked\n" +
             "class Robot {\n" +
             "  void move(String dist) { println \"Moved $dist\" }\n" +

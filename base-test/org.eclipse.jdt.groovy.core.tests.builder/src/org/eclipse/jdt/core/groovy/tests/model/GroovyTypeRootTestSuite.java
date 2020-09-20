@@ -24,35 +24,25 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
 
     protected final IFile createProject(boolean isGroovy) throws Exception {
         IPath projectPath = env.addProject("Project");
-        if (!isGroovy) {
-            env.removeGroovyNature("Project");
-        }
+        if (!isGroovy) env.removeGroovyNature("Project");
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
+        IPath path = env.getPackageFragmentRootPath(projectPath, "src");
 
         if (isGroovy) {
             env.addGroovyJars(projectPath);
             //@formatter:off
-            IPath path = env.addGroovyClass(root, "p1", "Hello",
+            path = env.addGroovyClass(path, "p1", "Hello",
                 "package p1;\n" +
                 "public class Hello {\n" +
-                "   static def main(String[] args) {\n" +
-                "      print \"Hello world\"\n" +
-                "   }\n" +
+                "  static def main(String[] args) {\n" +
+                "    print 'Hello world'\n" +
+                "  }\n" +
                 "}\n");
             //@formatter:on
-
-            fullBuild(projectPath);
-
-            return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
         }
-        fullBuild(projectPath);
 
-        return ResourcesPlugin.getWorkspace().getRoot().getFile(root);
+        fullBuild(projectPath);
+        return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
     }
 
     protected final IFile createSimpleGroovyProject() throws Exception {
@@ -66,14 +56,9 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
     protected final IPath createEmptyGroovyProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
-
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-
-        env.setOutputFolder(projectPath, "bin");
         fullBuild(projectPath);
-        return root;
+
+        return env.getPackageFragmentRootPath(projectPath, "src");
     }
 
     protected final IPath createAnnotationGroovyProject() throws Exception {
