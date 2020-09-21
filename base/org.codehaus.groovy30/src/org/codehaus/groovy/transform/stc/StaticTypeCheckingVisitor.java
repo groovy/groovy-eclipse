@@ -68,6 +68,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.MethodReferenceExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
@@ -243,6 +244,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extrac
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsParameterMapOfThis;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.filterMethodsByVisibility;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsForClassNode;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolveType;
@@ -2401,6 +2403,51 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.controlStructureVariables.remove(parameter);
         }
     }
+
+    // GRECLIPSE add -- GROOVY-9751
+    @Override
+    public void visitMethodPointerExpression(final MethodPointerExpression expression) {
+        super.visitMethodPointerExpression(expression);
+        Expression nameExpr = expression.getMethodName();
+        if (nameExpr instanceof ConstantExpression
+                && getType(nameExpr).equals(STRING_TYPE)) {
+            String nameText = nameExpr.getText();
+
+            if ("new".equals(nameText)) {
+                ClassNode receiverType = getType(expression.getExpression());
+                if (isClassClassNodeWrappingConcreteType(receiverType)) {
+                    storeType(expression, wrapClosureType(receiverType));
+                }
+                return;
+            }
+
+            List<Receiver<String>> receivers = new ArrayList<>();
+            addReceivers(receivers, makeOwnerList(expression.getExpression()), false);
+
+            List<MethodNode> candidates = EMPTY_METHODNODE_LIST;
+            for (Receiver<String> currentReceiver : receivers) {
+                ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
+
+                candidates = findMethodsWithGenerated(receiverType, nameText);
+                collectAllInterfaceMethodsByName(receiverType, nameText, candidates);
+                if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
+                candidates.addAll(findDGMMethodsForClassNode(getTransformLoader(), receiverType, nameText));
+                candidates = filterMethodsByVisibility(candidates, typeCheckingContext.getEnclosingClassNode());
+
+                if (!candidates.isEmpty()) {
+                    break;
+                }
+            }
+
+            if (!candidates.isEmpty()) {
+                candidates.stream().map(MethodNode::getReturnType)
+                        .reduce(WideningCategories::lowestUpperBound)
+                        .filter(returnType -> !returnType.equals(OBJECT_TYPE))
+                        .ifPresent(returnType -> storeType(expression, wrapClosureType(returnType)));
+            }
+        }
+    }
+    // GRECLIPSE end
 
     private static ClassNode wrapClosureType(final ClassNode returnType) {
         ClassNode inferredType = CLOSURE_TYPE.getPlainNodeReference();

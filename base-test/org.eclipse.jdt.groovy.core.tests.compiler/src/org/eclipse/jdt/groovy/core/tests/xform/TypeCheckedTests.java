@@ -391,4 +391,24 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
 
         runNegativeTest(sources, "");
     }
+
+    @Test // GROOVY-9751
+    public void testTypeChecked16() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface Service {\n" +
+            "  Number transform(String s)\n" +
+            "}\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(Service service) {\n" +
+            "  Set<Number> numbers = []\n" +
+            "  List<String> strings = ['x','y','z']\n" +
+            "  numbers.addAll(strings.collect(service.&transform))\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runNegativeTest(sources, "");
+    }
 }

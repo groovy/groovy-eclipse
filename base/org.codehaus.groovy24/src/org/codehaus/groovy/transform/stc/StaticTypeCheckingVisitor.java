@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
@@ -2490,6 +2491,50 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    // GRECLIPSE add -- GROOVY-9751
+    @Override
+    public void visitMethodPointerExpression(final MethodPointerExpression expression) {
+        super.visitMethodPointerExpression(expression);
+        Expression nameExpr = expression.getMethodName();
+        if (nameExpr instanceof ConstantExpression
+                && getType(nameExpr).equals(STRING_TYPE)) {
+            String nameText = nameExpr.getText();
+
+            if ("new".equals(nameText)) {
+                ClassNode receiverType = getType(expression.getExpression());
+                if (isClassClassNodeWrappingConcreteType(receiverType)) {
+                    storeType(expression, wrapClosureType(receiverType));
+                }
+                return;
+            }
+
+            List<Receiver<String>> receivers = new ArrayList<>();
+            addReceivers(receivers, makeOwnerList(expression.getExpression()), false);
+
+            List<MethodNode> candidates = EMPTY_METHODNODE_LIST;
+            for (Receiver<String> currentReceiver : receivers) {
+                ClassNode receiverType = wrapTypeIfNecessary(currentReceiver.getType());
+
+                candidates = findMethodsWithGenerated(receiverType, nameText);
+                collectAllInterfaceMethodsByName(receiverType, nameText, candidates);
+                if (isBeingCompiled(receiverType)) candidates.addAll(GROOVY_OBJECT_TYPE.getMethods(nameText));
+                candidates.addAll(StaticTypeCheckingSupport.findDGMMethodsForClassNode(getTransformLoader(), receiverType, nameText));
+
+                if (!candidates.isEmpty()) {
+                    break;
+                }
+            }
+
+            if (!candidates.isEmpty()) {
+                candidates.stream().map(MethodNode::getReturnType)
+                        .reduce(WideningCategories::lowestUpperBound)
+                        .filter(returnType -> !returnType.equals(OBJECT_TYPE))
+                        .ifPresent(returnType -> storeType(expression, wrapClosureType(returnType)));
+            }
+        }
+    }
+    // GRECLIPSE end
+
     private static ClassNode wrapClosureType(final ClassNode returnType) {
         ClassNode inferredType = CLOSURE_TYPE.getPlainNodeReference();
         inferredType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(returnType))});
@@ -4566,8 +4611,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return result;
     }
 
-    protected List<MethodNode> findMethod(
-            ClassNode receiver, String name, ClassNode... args) {
+    protected List<MethodNode> findMethod(ClassNode receiver, String name, ClassNode... args) {
         if (isPrimitiveType(receiver)) receiver = getWrapper(receiver);
         List<MethodNode> methods;
         if (!receiver.isInterface() && "<init>".equals(name)) {
