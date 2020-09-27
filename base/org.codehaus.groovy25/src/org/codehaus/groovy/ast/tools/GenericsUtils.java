@@ -552,8 +552,23 @@ public class GenericsUtils {
     }
 
     private static void extractSuperClassGenerics(GenericsType[] usage, GenericsType[] declaration, Map<String, ClassNode> spec) {
+        /* GRECLIPSE edit -- GROOVY-9760
         // if declaration does not provide generics, there is no connection to make 
         if (usage == null || declaration == null || declaration.length == 0) return;
+        */
+        if (declaration == null || declaration.length == 0) return;
+        // if usage is a raw type, remove type parameters from spec
+        if (usage == null) {
+            for (GenericsType dt : declaration) {
+                String name = dt.getName();
+                ClassNode type = spec.get(name);
+                if (type != null && type.isGenericsPlaceHolder() && type.getUnresolvedName().equals(name)) {
+                    spec.put(name, type.asGenericsType().getUpperBounds()[0]);
+                }
+            }
+            return;
+        }
+        // GRECLIPSE end
         if (usage.length != declaration.length) return;
 
         // both have generics

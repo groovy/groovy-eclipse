@@ -2669,4 +2669,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "works");
     }
+
+    @Test
+    public void testTraits9760() {
+        //@formatter:off
+        String[] sources = {
+            "C.groovy",
+            "class C implements T {\n" +
+            "  static main(args) {\n" +
+            "    print new C().one\n" +
+            "  }\n" +
+            "}\n",
+
+            "T.groovy",
+            "trait T<X> {\n" +
+            "  X getOne() { 'works' }\n" +
+            "}\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "works");
+    }
 }
