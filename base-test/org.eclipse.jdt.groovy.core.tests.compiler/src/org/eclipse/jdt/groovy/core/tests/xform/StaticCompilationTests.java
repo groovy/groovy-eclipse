@@ -4784,6 +4784,31 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic9555() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "interface I<T> {\n" +
+            "}\n" +
+            "class C implements I<Object> {\n" +
+            "}\n" +
+            "interface Factory {\n" +
+            "  def <T extends I<?>> T getInstance(Class<T> clazz)\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(Factory f) {\n" +
+            "  C c = f.getInstance(C)\n" +
+            "  assert c instanceof C\n" +
+            "  assert c instanceof I\n" +
+            "}\n" +
+            "test { Class clazz -> clazz.newInstance() }\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic9558() {
         assumeTrue(isAtLeastGroovy(25));
 
