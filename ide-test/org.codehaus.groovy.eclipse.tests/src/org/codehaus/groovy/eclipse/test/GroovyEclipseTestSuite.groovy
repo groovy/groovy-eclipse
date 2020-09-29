@@ -91,7 +91,7 @@ abstract class GroovyEclipseTestSuite {
 
     @After
     final void tearDownTestCase() {
-        GroovyPlugin.default.activeWorkbenchWindow.activePage.closeAllEditors(false)
+        GroovyPlugin.default.activeWorkbenchWindow?.activePage?.closeAllEditors(false)
         testProject.deleteWorkingCopies()
 
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)

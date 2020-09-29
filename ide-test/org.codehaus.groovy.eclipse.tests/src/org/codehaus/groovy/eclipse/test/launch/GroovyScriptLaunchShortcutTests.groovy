@@ -276,10 +276,8 @@ final class GroovyScriptLaunchShortcutTests extends GroovyEclipseTestSuite {
     @Test // https://github.com/groovy/groovy-eclipse/issues/779
     void testScriptLaunch13() {
         def unit = addGroovySource('''\
-            |@Grapes([
-            |  @GrabConfig(systemClassLoader=true),
-            |  @Grab('mysql:mysql-connector-java:5.1.6')
-            |])
+            |@GrabConfig(systemClassLoader=true)
+            |@Grab('mysql:mysql-connector-java:5.1.6')
             |def xxx
             |
             |println "Why won't this run?"
