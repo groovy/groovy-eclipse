@@ -895,7 +895,7 @@ ELVIS_ASSIGN    : '?=';
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 CapitalizedIdentifier
-    :   [A-Z] JavaLetterOrDigit*
+    :   JavaLetter {Character.isUpperCase(_input.LA(-1))}? JavaLetterOrDigit*
     ;
 
 Identifier

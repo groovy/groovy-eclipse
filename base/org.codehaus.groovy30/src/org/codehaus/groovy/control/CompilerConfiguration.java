@@ -87,6 +87,8 @@ public class CompilerConfiguration {
     public static final String JDK14 = "14";
     /** This (<code>"15"</code>) is the value for targetBytecode to compile for a JDK 15. */
     public static final String JDK15 = "15";
+    /** This (<code>"16"</code>) is the value for targetBytecode to compile for a JDK 16. */
+    public static final String JDK16 = "16";
 
     /**
      * This constant is for comparing targetBytecode to ensure it is set to JDK 1.5 or later.
@@ -117,7 +119,8 @@ public class CompilerConfiguration {
             JDK12, Opcodes.V12,
             JDK13, Opcodes.V13,
             JDK14, Opcodes.V14,
-            JDK15, Opcodes.V15
+            JDK15, Opcodes.V15,
+            JDK16, Opcodes.V16
     );
 
     /**
@@ -126,8 +129,8 @@ public class CompilerConfiguration {
     public static final String[] ALLOWED_JDKS = JDK_TO_BYTECODE_VERSION_MAP.keySet().toArray(new String[JDK_TO_BYTECODE_VERSION_MAP.size()]);
 
     /**
-    * The ASM API version used when loading/parsing classes and generating proxy adapter classes.
-    */
+     * The ASM API version used when loading/parsing classes and generating proxy adapter classes.
+     */
     public static final int ASM_API_VERSION = Opcodes.ASM8;
 
     /**
@@ -956,9 +959,14 @@ public class CompilerConfiguration {
             this.targetBytecode = version;
         }
         */
-        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        int index;
+        try { ALLOWED_JDKS[5] = "1.9"; // 9 is out of order for binary search
+            index = Arrays.binarySearch(ALLOWED_JDKS, !version.startsWith("1") ? "1." + version : version);
+        } finally {
+            ALLOWED_JDKS[5] = "9";
+        }
         if (index >= 0) {
-            targetBytecode = version; // exact match
+            targetBytecode = ALLOWED_JDKS[index];
         } else {
             index = Math.abs(index) - 2; // closest version
             targetBytecode = ALLOWED_JDKS[Math.max(0, index)];

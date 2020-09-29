@@ -954,9 +954,14 @@ public class CompilerConfiguration {
             this.targetBytecode = version;
         }
         */
-        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        int index;
+        try { ALLOWED_JDKS[5] = "1.9"; // 9 is out of order for binary search
+            index = Arrays.binarySearch(ALLOWED_JDKS, !version.startsWith("1") ? "1." + version : version);
+        } finally {
+            ALLOWED_JDKS[5] = "9";
+        }
         if (index >= 0) {
-            targetBytecode = version; // exact match
+            targetBytecode = ALLOWED_JDKS[index];
         } else {
             index = Math.abs(index) - 2; // closest version
             targetBytecode = ALLOWED_JDKS[Math.max(0, index)];

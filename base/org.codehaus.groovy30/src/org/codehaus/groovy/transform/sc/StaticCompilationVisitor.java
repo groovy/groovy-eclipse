@@ -271,15 +271,9 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 acc += 1;
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
                 Expression receiver = fieldNode.isStatic() ? classX(node) : varX(param);
-                /* GRECLIPSE edit -- GROOVY-7304
-                Statement body = new ExpressionStatement(propX(receiver, fieldNode.getName()));
-                */
                 Statement body = returnS(attrX(receiver, constX(fieldNode.getName())));
-                // GRECLIPSE end
                 MethodNode accessor = node.addMethod("pfaccess$" + acc, modifiers, fieldNode.getOriginType(), new Parameter[]{param}, ClassNode.EMPTY_ARRAY, body);
-                // GRECLIPSE add
                 accessor.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
-                // GRECLIPSE end
                 privateFieldAccessors.put(fieldNode.getName(), accessor);
             }
             if (generateMutator) {
@@ -288,15 +282,9 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 Parameter param = new Parameter(node.getPlainNodeReference(), "$that");
                 Expression receiver = fieldNode.isStatic() ? classX(node) : varX(param);
                 Parameter value = new Parameter(fieldNode.getOriginType(), "$value");
-                /* GRECLIPSE edit -- GROOVY-7304
-                Statement body = assignS(propX(receiver, fieldNode.getName()), varX(value));
-                */
                 Statement body = assignS(attrX(receiver, constX(fieldNode.getName())), varX(value));
-                // GRECLIPSE end
                 MethodNode mutator = node.addMethod("pfaccess$0" + acc, modifiers, fieldNode.getOriginType(), new Parameter[]{param, value}, ClassNode.EMPTY_ARRAY, body);
-                // GRECLIPSE add
                 mutator.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
-                // GRECLIPSE end
                 privateFieldMutators.put(fieldNode.getName(), mutator);
             }
         }
@@ -389,13 +377,8 @@ public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
                 if (origGenericsTypes != null) {
                     bridge.setGenericsTypes(applyGenericsContextToPlaceHolders(genericsSpec, origGenericsTypes));
                 }
-                // GRECLIPSE add
                 bridge.setNodeMetaData(STATIC_COMPILE_NODE, Boolean.TRUE);
-                // GRECLIPSE end
                 privateBridgeMethods.put(method, bridge);
-                /* GRECLIPSE edit
-                bridge.addAnnotation(new AnnotationNode(COMPILESTATIC_CLASSNODE));
-                */
             }
         }
         if (!privateBridgeMethods.isEmpty()) {

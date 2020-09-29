@@ -18,7 +18,6 @@
  */
 package org.apache.groovy.parser.antlr4;
 
-import groovy.lang.Tuple;
 import groovy.lang.Tuple2;
 import groovy.lang.Tuple3;
 import groovy.transform.Trait;
@@ -2639,15 +2638,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
 
             if (asBoolean(ctx.DOT())) {
-                boolean isSafeChain = isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
-
-                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
+                boolean isSafeChain = this.isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
+                return this.createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
             } else if (asBoolean(ctx.SAFE_DOT())) {
-                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                return this.createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
             } else if (asBoolean(ctx.SAFE_CHAIN_DOT())) { // e.g. obj??.a  OR obj??.@a
                 Expression expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
                 expression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN, true);
-
                 return expression;
             } else if (asBoolean(ctx.METHOD_POINTER())) { // e.g. obj.&m
                 return configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
@@ -2656,34 +2653,27 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             } else if (asBoolean(ctx.SPREAD_DOT())) {
                 if (asBoolean(ctx.AT())) { // e.g. obj*.@a
                     AttributeExpression attributeExpression = new AttributeExpression(baseExpr, namePartExpr, true);
-
                     attributeExpression.setSpreadSafe(true);
-
                     return configureAST(attributeExpression, ctx);
                 } else { // e.g. obj*.p
                     PropertyExpression propertyExpression = new PropertyExpression(baseExpr, namePartExpr, true);
                     propertyExpression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, genericsTypes);
-
                     propertyExpression.setSpreadSafe(true);
-
                     return configureAST(propertyExpression, ctx);
                 }
             }
         } else if (asBoolean(ctx.creator())) {
             CreatorContext creatorContext = ctx.creator();
             creatorContext.putNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION, baseExpr);
-
             return configureAST(this.visitCreator(creatorContext), ctx);
         } else if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
             Tuple2<Token, Expression> tuple = this.visitIndexPropertyArgs(ctx.indexPropertyArgs());
-            boolean isSafeChain = isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
-
+            boolean isSafeChain = this.isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
             return configureAST(
                     new BinaryExpression(baseExpr, createGroovyToken(tuple.getV1()), tuple.getV2(), isSafeChain || asBoolean(ctx.indexPropertyArgs().QUESTION())),
                     ctx);
         } else if (asBoolean(ctx.namedPropertyArgs())) { // this is a special way to signify a cast, e.g. Person[name: 'Daniel.Sun', location: 'Shanghai']
-            List<MapEntryExpression> mapEntryExpressionList =
-                    this.visitNamedPropertyArgs(ctx.namedPropertyArgs());
+            List<MapEntryExpression> mapEntryExpressionList = this.visitNamedPropertyArgs(ctx.namedPropertyArgs());
 
             Expression right;
             Expression firstKeyExpression;
@@ -2732,32 +2722,28 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if (baseExpr instanceof AttributeExpression) { // e.g. obj.@a(1, 2)
                 AttributeExpression attributeExpression = (AttributeExpression) baseExpr;
                 attributeExpression.setSpreadSafe(false); // whether attributeExpression is spread safe or not, we must reset it as false
-
                 return configureAST(createCallMethodCallExpression(attributeExpression, argumentsExpr, true), ctx);
             }
 
             if (baseExpr instanceof PropertyExpression) { // e.g. obj.a(1, 2)
-                MethodCallExpression methodCallExpression =
-                        this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
-
+                MethodCallExpression methodCallExpression = this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
                 return configureAST(methodCallExpression, ctx);
             }
 
             if (baseExpr instanceof VariableExpression) { // void and primitive type AST node must be an instance of VariableExpression
                 String baseExprText = baseExpr.getText();
                 if (VOID_STR.equals(baseExprText)) { // e.g. void()
-                    return configureAST(createCallMethodCallExpression(this.createConstantExpression(baseExpr), argumentsExpr), ctx);
+                    return configureAST(this.createCallMethodCallExpression(this.createConstantExpression(baseExpr), argumentsExpr), ctx);
                 } else if (isPrimitiveType(baseExprText)) { // e.g. int(), long(), float(), etc.
-                    throw createParsingFailedException("Primitive type literal: " + baseExprText + " cannot be used as a method name", ctx);
+                    throw this.createParsingFailedException("Primitive type literal: " + baseExprText + " cannot be used as a method name", ctx);
                 }
             }
 
-            if (baseExpr instanceof VariableExpression
-                    || baseExpr instanceof GStringExpression
-                    || (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_STRING))) { // e.g. m(), "$m"(), "m"()
-
+            if (baseExpr instanceof VariableExpression // e.g. m()
+                    || baseExpr instanceof GStringExpression // e.g. "$m"()
+                    || (baseExpr instanceof ConstantExpression && this.isTrue(baseExpr, IS_STRING))) { // e.g. "m"()
                 String baseExprText = baseExpr.getText();
-                if (SUPER_STR.equals(baseExprText) || THIS_STR.equals(baseExprText)) { // e.g. this(...), super(...)
+                if (THIS_STR.equals(baseExprText) || SUPER_STR.equals(baseExprText)) { // e.g. this(...), super(...)
                     // class declaration is not allowed in the closure,
                     // so if this and super is inside the closure, it will not be constructor call.
                     // e.g. src/test/org/codehaus/groovy/transform/MapConstructorTransformTest.groovy:
@@ -2790,14 +2776,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     // GRECLIPSE end
                 }
 
-                MethodCallExpression methodCallExpression =
-                        this.createMethodCallExpression(baseExpr, argumentsExpr);
-
+                MethodCallExpression methodCallExpression = this.createMethodCallExpression(baseExpr, argumentsExpr);
                 return configureAST(methodCallExpression, ctx);
             }
 
             // e.g. 1(), 1.1(), ((int) 1 / 2)(1, 2), {a, b -> a + b }(1, 2), m()()
-            return configureAST(createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
+            return configureAST(this.createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
+
         } else if (asBoolean(ctx.closureOrLambdaExpression())) {
             ClosureExpression closureExpression = this.visitClosureOrLambdaExpression(ctx.closureOrLambdaExpression());
 
@@ -2808,7 +2793,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 if (argumentsExpression instanceof ArgumentListExpression) { // normal arguments, e.g. 1, 2
                     ArgumentListExpression argumentListExpression = (ArgumentListExpression) argumentsExpression;
                     argumentListExpression.getExpressions().add(closureExpression);
-
                     return configureAST(methodCallExpression, ctx);
                 }
 
@@ -2820,13 +2804,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         methodCallExpression.setArguments(
                                 configureAST(
                                         new ArgumentListExpression(
-                                                Stream.of(
-                                                        configureAST(
-                                                                new MapExpression(namedArgumentListExpression.getMapEntryExpressions()),
-                                                                namedArgumentListExpression
-                                                        ),
-                                                        closureExpression
-                                                ).collect(Collectors.toList())
+                                                configureAST(
+                                                        new MapExpression(namedArgumentListExpression.getMapEntryExpressions()),
+                                                        namedArgumentListExpression
+                                                ),
+                                                closureExpression
                                         ),
                                         tupleExpression
                                 )
@@ -2836,33 +2818,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         methodCallExpression.setArguments(
                                 configureAST(
                                         new ArgumentListExpression(closureExpression),
-                                        tupleExpression));
+                                        tupleExpression
+                                )
+                        );
                     }
-
 
                     return configureAST(methodCallExpression, ctx);
                 }
-
             }
 
-            /* GRECLIPSE edit -- GROOVY-9692
-            // e.g. 1 {}, 1.1 {}
-            if (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_NUMERIC)) {
-                return configureAST(this.createCallMethodCallExpression(
-                        baseExpr,
-                        configureAST(
-                                new ArgumentListExpression(closureExpression),
-                                closureExpression)
-                ), ctx);
-            }
-            */
-
-            if (baseExpr instanceof PropertyExpression) { // e.g. obj.m {  }
-                PropertyExpression propertyExpression = (PropertyExpression) baseExpr;
-
+            if (baseExpr instanceof PropertyExpression) { // e.g. obj.m { }
                 MethodCallExpression methodCallExpression =
                         this.createMethodCallExpression(
-                                propertyExpression,
+                                (PropertyExpression) baseExpr,
                                 configureAST(
                                         new ArgumentListExpression(closureExpression),
                                         closureExpression
@@ -2872,17 +2840,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 return configureAST(methodCallExpression, ctx);
             }
 
-            /* GRECLIPSE edit -- GROOVY-9692
-            // e.g.  m { return 1; }
-            MethodCallExpression methodCallExpression =
-                    createMethodCallExpression(
-                            baseExpr,
-                            configureAST(
-                                    new ArgumentListExpression(closureExpression),
-                                    closureExpression
-                            )
-                    );
-            */
             if (baseExpr instanceof VariableExpression // e.g. m { }
                     || baseExpr instanceof GStringExpression // e.g. "$m" { }
                     || (baseExpr instanceof ConstantExpression && this.isTrue(baseExpr, IS_STRING))) { // e.g. "m" { }
@@ -2901,13 +2858,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // e.g. 1 { }, 1.1 { }, (1 / 2) { }, m() { }, { -> ... } { }
             MethodCallExpression methodCallExpression =
                     this.createCallMethodCallExpression(
-                            baseExpr,
-                            configureAST(
-                                    new ArgumentListExpression(closureExpression),
-                                    closureExpression
-                            )
+                        baseExpr,
+                        configureAST(
+                                new ArgumentListExpression(closureExpression),
+                                closureExpression)
                     );
-            // GRECLIPSE end
 
             return configureAST(methodCallExpression, ctx);
         }
@@ -2921,7 +2876,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else { // e.g. obj.p  OR  obj?.p
             PropertyExpression propertyExpression = new PropertyExpression(baseExpr, namePartExpr, safe);
             propertyExpression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, genericsTypes);
-
             return configureAST(propertyExpression, ctx);
         }
     }
@@ -2931,11 +2885,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private MethodCallExpression createCallMethodCallExpression(Expression baseExpr, Expression argumentsExpr, boolean implicitThis) {
-        MethodCallExpression methodCallExpression =
-                new MethodCallExpression(baseExpr, CALL_STR, argumentsExpr);
-
+        MethodCallExpression methodCallExpression = new MethodCallExpression(baseExpr, CALL_STR, argumentsExpr);
         methodCallExpression.setImplicitThis(implicitThis);
-
         return methodCallExpression;
     }
 
@@ -3694,7 +3645,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Tuple3<Expression, List<AnnotationNode>, TerminalNode> visitDim(DimContext ctx) {
-        return Tuple.tuple((Expression) this.visit(ctx.expression()), this.visitAnnotationsOpt(ctx.annotationsOpt()), ctx.LBRACK());
+        return tuple((Expression) this.visit(ctx.expression()), this.visitAnnotationsOpt(ctx.annotationsOpt()), ctx.LBRACK());
     }
 
     private static String nextAnonymousClassName(ClassNode outerClass) {

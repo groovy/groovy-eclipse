@@ -48,7 +48,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.classX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX
 
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
-class ASTTestTransformation extends AbstractASTTransformation implements CompilationUnitAware {
+class ASTTestTransformation implements ASTTransformation, CompilationUnitAware {
 
     CompilationUnit compilationUnit
 
@@ -88,7 +88,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
         if (!member && !annotationNode.getNodeMetaData(ASTTestTransformation)) {
             throw new SyntaxException('Missing test expression', annotationNode.lineNumber, annotationNode.columnNumber)
         }
-        // convert value into node metadata so that the expression doesn't mix up with other AST xforms like type checking
+        // convert value into node metadata so that the expression doesn't mix up with other AST xforms like STC
         annotationNode.setNodeMetaData(ASTTestTransformation, member)
         /* GRECLIPSE edit
         annotationNode.members.remove('value')
@@ -103,11 +103,11 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
 
         def pcallback = compilationUnit.progressCallback
         def callback = new CompilationUnit.ProgressCallback() {
-            Binding binding = new Binding([:].withDefault { null })
+            private final Binding binding = new Binding([:].withDefault { null })
 
             @Override
-            void call(final ProcessingUnit context, final int phaseRef) {
-                if (phase == null || phaseRef == phase.phaseNumber) {
+            void call(final ProcessingUnit context, final int phaseNumber) {
+                if (phase == null || phaseNumber == phase.phaseNumber) {
                     ClosureExpression testClosure = nodes[0].getNodeMetaData(ASTTestTransformation)
                     StringBuilder sb = new StringBuilder()
                     for (int i = testClosure.lineNumber; i <= testClosure.lastLineNumber; i += 1) {
@@ -116,11 +116,11 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
                     def testSource = sb[testClosure.columnNumber..<sb.length()]
                     testSource = testSource[0..<testSource.lastIndexOf('}')]
 
-                    binding['sourceUnit'] = source
                     binding['node'] = nodes[1]
-                    binding['lookup'] = new MethodClosure(LabelFinder, 'lookup').curry(nodes[1])
+                    binding['sourceUnit'] = source
                     binding['compilationUnit'] = compilationUnit
-                    binding['compilePhase'] = CompilePhase.fromPhaseNumber(phaseRef)
+                    binding['compilePhase'] = CompilePhase.fromPhaseNumber(phaseNumber)
+                    binding['lookup'] = new MethodClosure(LabelFinder, 'lookup').curry(nodes[1])
 
                     def customizer = new ImportCustomizer()
                     source.AST.imports.each {
@@ -168,8 +168,8 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
     private static class AssertionSourceDelegatingSourceUnit extends SourceUnit {
         private final ReaderSource delegate
 
-        AssertionSourceDelegatingSourceUnit(final String name, final ReaderSource source, final CompilerConfiguration flags, final GroovyClassLoader loader, final ErrorCollector er) {
-            super(name, '', flags, loader, er)
+        AssertionSourceDelegatingSourceUnit(final String name, final ReaderSource source, final CompilerConfiguration config, final GroovyClassLoader loader, final ErrorCollector er) {
+            super(name, '', config, loader, er)
             delegate = source
         }
 
@@ -198,7 +198,6 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
     }
 
     private static class ProgressCallbackChain implements CompilationUnit.ProgressCallback {
-
         private final List<CompilationUnit.ProgressCallback> chain = [] as LinkedList
 
         ProgressCallbackChain(final CompilationUnit.ProgressCallback... callbacks) {
@@ -217,7 +216,7 @@ class ASTTestTransformation extends AbstractASTTransformation implements Compila
         }
     }
 
-    private static class LabelFinder extends ClassCodeVisitorSupport {
+    static class LabelFinder extends ClassCodeVisitorSupport {
 
         static List<Statement> lookup(final MethodNode node, final String label) {
             LabelFinder finder = new LabelFinder(label, null)

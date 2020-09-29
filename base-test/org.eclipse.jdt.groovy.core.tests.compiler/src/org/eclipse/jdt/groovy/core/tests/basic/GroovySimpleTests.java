@@ -18,17 +18,14 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -5295,17 +5292,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "success");
-    }
-
-    @Test
-    public void testConfigDefaults() {
-        CompilerConfiguration defaultConfig = CompilerConfiguration.DEFAULT;
-
-        assertNull(defaultConfig.getJointCompilationOptions());
-        assertNull(defaultConfig.getDisabledGlobalASTTransformations());
-        assertEquals(Collections.emptyList(), defaultConfig.getClasspath());
-        assertEquals(Collections.emptyList(), defaultConfig.getCompilationCustomizers());
-        assertEquals(Collections.singleton("groovy"), defaultConfig.getScriptExtensions());
     }
 
     @Test

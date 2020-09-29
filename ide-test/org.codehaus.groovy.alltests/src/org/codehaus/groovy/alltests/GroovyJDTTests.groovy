@@ -25,6 +25,7 @@ import org.junit.runners.Suite
 
     // Basic tests
     org.eclipse.jdt.groovy.core.tests.basic.AnnotationsTests,
+    org.eclipse.jdt.groovy.core.tests.basic.ConfigurationTests,
     org.eclipse.jdt.groovy.core.tests.basic.EnumerationTests,
     org.eclipse.jdt.groovy.core.tests.basic.ErrorRecoveryTests,
     org.eclipse.jdt.groovy.core.tests.basic.GenericsTests,

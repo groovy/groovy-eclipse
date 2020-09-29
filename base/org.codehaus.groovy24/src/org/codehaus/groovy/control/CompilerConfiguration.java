@@ -867,9 +867,9 @@ public class CompilerConfiguration {
             }
         }
         */
-        int index = Arrays.binarySearch(ALLOWED_JDKS, version);
+        int index = Arrays.binarySearch(ALLOWED_JDKS, !version.startsWith("1") ? "1." + version : version);
         if (index >= 0) {
-            targetBytecode = version; // exact match
+            targetBytecode = ALLOWED_JDKS[index];
         } else {
             index = Math.abs(index) - 2; // closest version
             targetBytecode = ALLOWED_JDKS[Math.max(0, index)];

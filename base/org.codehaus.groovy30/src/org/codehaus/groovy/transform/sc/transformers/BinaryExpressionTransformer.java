@@ -99,16 +99,6 @@ public class BinaryExpressionTransformer {
                 }
             }
         }
-        /* GRECLIPSE edit -- GROOVY-9653, GROOVY-9700
-        if (operationType == Types.EQUAL && leftExpression instanceof PropertyExpression) {
-            MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-            if (directMCT != null) {
-                PropertyExpression left = (PropertyExpression) leftExpression;
-                Expression right = staticCompilationTransformer.transform(rightExpression);
-                return transformPropertyAssignmentToSetterCall(left, right, directMCT);
-            }
-        }
-        */
         if (operationType == Types.ASSIGN) {
             MethodNode directMCT = leftExpression.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
             if (directMCT != null) {
@@ -139,9 +129,7 @@ public class BinaryExpressionTransformer {
                     );
                 }
             }
-        } else
-        // GRECLIPSE end
-        if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
+        } else if (operationType == Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
             CompareToNullExpression compareToNullExpression = null;
             if (isNullConstant(leftExpression)) {
@@ -199,12 +187,8 @@ public class BinaryExpressionTransformer {
             BinaryExpression optimized = tryOptimizeCharComparison(left, right, bin);
             if (optimized != null) {
                 optimized.removeNodeMetaData(StaticCompilationMetadataKeys.BINARY_EXP_TARGET);
-                /* GRECLIPSE edit -- GROOVY-9652
-                return transformBinaryExpression(optimized);
-                */
                 optimized.removeNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
                 return optimized;
-                // GRECLIPSE end
             }
 
             String name = (String) list[1];
@@ -439,21 +423,9 @@ public class BinaryExpressionTransformer {
         throw new IllegalArgumentException("Unsupported conversion");
     }
 
-    /* GRECLIPSE edit
-    private static Expression transformPropertyAssignmentToSetterCall(final PropertyExpression leftExpression, final Expression rightExpression, final MethodNode directMCT) {
-        // transform "a.x = b" into "def tmp = b; a.setX(tmp); tmp"
-        return StaticPropertyAccessHelper.transformToSetterCall(
-                leftExpression.getObjectExpression(),
-                directMCT,
-                rightExpression,
-                false,
-                leftExpression.isSafe(),
-                false,
-                true, // to be replaced with a proper test whether a return value should be used or not
-                leftExpression
-        );
-    }
-    */
+    /**
+     * Adapter for {@link StaticPropertyAccessHelper#transformToSetterCall}.
+     */
     private static Expression transformAssignmentToSetterCall(
             final Expression receiver,
             final MethodNode setterMethod,
@@ -477,5 +449,4 @@ public class BinaryExpressionTransformer {
                 pos
         );
     }
-    // GRECLIPSE end
 }
