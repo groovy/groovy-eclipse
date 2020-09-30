@@ -15,9 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -1183,20 +1181,15 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava06() {
-        assumeTrue(!isAtLeastJava(JDK8));
-
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
             "package p;\n" +
             "public class B extends java.util.ArrayList<String> {\n" +
             "  public static void main(String[] argv) {\n" +
-            "    B b = new B()\n" +
-            "    b.add('abc')\n" +
-            "    print b.get(0)\n" +
+            "    new B()\n" +
             "    println 'success'\n" +
             "  }\n" +
-            "  void print(String msg) { print msg; }\n" +
             "}",
         };
         //@formatter:on
@@ -1206,46 +1199,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtendingGenerics_GroovyExtendsJava07() {
-        assumeTrue(!isAtLeastJava(JDK8));
-
-        //@formatter:off
-        String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "public class B extends java.util.ArrayList<String> {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new B()\n" +
-            "    println 'success'\n" +
-            "  }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava08() {
-        assumeTrue(!isAtLeastJava(JDK8));
-
-        //@formatter:off
-        String[] sources = {
-            "p/B.groovy",
-            "package p;\n" +
-            "public class B extends ArrayList<String> {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    new B()\n" +
-            "    println 'success'\n" +
-            "  }\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runWarningFreeTest(sources);
-    }
-
-    @Test
-    public void testExtendingGenerics_GroovyExtendsJava09() {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
@@ -1267,7 +1220,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava10() {
+    public void testExtendingGenerics_GroovyExtendsJava08() {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
@@ -1289,7 +1242,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava11() {
+    public void testExtendingGenerics_GroovyExtendsJava09() {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
@@ -1313,7 +1266,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava12() {
+    public void testExtendingGenerics_GroovyExtendsJava10() {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
@@ -1341,7 +1294,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava13() {
+    public void testExtendingGenerics_GroovyExtendsJava11() {
         //@formatter:off
         String[] sources = {
             "p/B.groovy",
@@ -1375,7 +1328,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * @see org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.UnitPopulator#getVariantsAllowingForDefaulting
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava14() {
+    public void testExtendingGenerics_GroovyExtendsJava12() {
         //@formatter:off
         String[] sources = {
             "Groovy.groovy",
@@ -1404,7 +1357,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * </pre>
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava15() {
+    public void testExtendingGenerics_GroovyExtendsJava13() {
         //@formatter:off
         String[] sources = {
             "Template.java",
@@ -1433,7 +1386,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * https://github.com/groovy/groovy-eclipse/issues/148
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava16() {
+    public void testExtendingGenerics_GroovyExtendsJava14() {
         //@formatter:off
         String[] sources = {
             "A.java",
@@ -1474,7 +1427,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * </pre>
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava17() {
+    public void testExtendingGenerics_GroovyExtendsJava15() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1510,7 +1463,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/221
-    public void testExtendingGenerics_GroovyExtendsJava18() {
+    public void testExtendingGenerics_GroovyExtendsJava16() {
         //@formatter:off
         String[] sources = {
             "AttributeConverter.java",
@@ -1544,7 +1497,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * </pre>
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava19() {
+    public void testExtendingGenerics_GroovyExtendsJava17() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1580,7 +1533,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      * </pre>
      */
     @Test
-    public void testExtendingGenerics_GroovyExtendsJava20() {
+    public void testExtendingGenerics_GroovyExtendsJava18() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1836,8 +1789,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
     public void testAbstractCovariance_GROOVY9059() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Face.Java",
@@ -1858,8 +1809,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
     public void testAbstractCovariance_GROOVY9059a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Face.Java",
@@ -1880,8 +1829,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
     public void testAbstractCovariance_GROOVY9059b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Face.Java",
@@ -1902,8 +1849,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/projects/GROOVY/issues/GROOVY-9059
     public void testAbstractCovariance_GROOVY9059c() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Face.Java",
@@ -2382,8 +2327,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://issues.apache.org/jira/browse/GROOVY-8990
     public void testUpperBounds3() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "p/X.groovy",

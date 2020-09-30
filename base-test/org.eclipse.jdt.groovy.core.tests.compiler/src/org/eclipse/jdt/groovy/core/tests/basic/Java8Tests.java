@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
-import org.junit.Before;
 import org.junit.Test;
 
 public final class Java8Tests extends GroovyCompilerTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastJava(JDK8));
-    }
 
     @Test
     public void testDefaultAndStaticMethodInInterface() {
@@ -101,7 +92,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Annos({@Anno(\"one\"), @Anno(\"two\")}) class Main {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
+            "  public @groovy.transform.Generated Main() {\n" +
             "  }\n" +
             "}\n");
 
@@ -112,8 +103,6 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
     @Test
     public void testRepeatableAnnotation2() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -141,7 +130,7 @@ public final class Java8Tests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("Main.groovy",
             "public @Anno(\"one\") @Anno(\"two\") class Main {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Main() {\n" +
+            "  public @groovy.transform.Generated Main() {\n" +
             "  }\n" +
             "}\n");
 

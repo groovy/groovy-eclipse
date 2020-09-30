@@ -86,7 +86,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private IPath[] createSimpleProject(final String name, final boolean isGroovy) throws Exception {
-        IPath prjPath = env.addProject(name, "1.8");
+        IPath prjPath = env.addProject(name);
         if (isGroovy) {
             env.addGroovyJars(prjPath);
         } else {
@@ -103,10 +103,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         if (isAtLeastGroovy(30)) {
             jUnitVersion = 5;
             spockCorePath = "lib/spock-core-2.0-M3-groovy-3.0.jar";
-        } else if (isAtLeastGroovy(25)) {
-            spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
         } else {
-            spockCorePath = "lib/spock-core-1.3-groovy-2.4.jar";
+            spockCorePath = "lib/spock-core-1.3-groovy-2.5.jar";
         }
         env.addJar(projectPath, spockCorePath);
 
@@ -297,8 +295,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testBuildGroovyHelloWorld5() throws Exception {
-        assumeTrue(isAtLeastGroovy(25));
-
         IPath[] paths = createModularProject("Project", true);
         requireModule(env.getJavaProject(paths[0]), "org.codehaus.groovy");
 
@@ -382,7 +378,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/550
     public void testProjectBasedirAsOutputLocation() throws Exception {
-        IPath prj = env.addProject("Project", "1.8");
+        IPath prj = env.addProject("Project");
         env.removePackageFragmentRoot(prj, "src");
         env.addPackageFragmentRoot(prj, "");
         env.setOutputFolder(prj, "");
@@ -596,8 +592,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/863
     public void testCompileStatic_9058() throws Exception {
-        assumeTrue(isAtLeastGroovy(25));
-
         IPath[] paths = createSimpleProject("Project", true);
 
         //@formatter:off
@@ -1764,11 +1758,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild();
         expectingNoProblems();
-        if (!isAtLeastGroovy(25)) {
-            expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.Widget");
-        } else {
-            expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.MyAnnotation$CollectorHelper", "com.demo.Widget");
-        }
+        expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.MyAnnotation$CollectorHelper", "com.demo.Widget");
     }
 
     @Test
@@ -1807,11 +1797,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
-        if (!isAtLeastGroovy(25)) {
-            expectingCompiledClasses("Book", "Length", "NotNull", "ISBN");
-        } else {
-            expectingCompiledClasses("Book", "Length", "NotNull", "ISBN", "ISBN$CollectorHelper");
-        }
+        expectingCompiledClasses("Book", "Length", "NotNull", "ISBN", "ISBN$CollectorHelper");
+
         executeClass(paths[0], "Book", "@NotNull()\n@Length()\n", "");
 
         //@formatter:off

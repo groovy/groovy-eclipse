@@ -180,12 +180,7 @@ public abstract class BuilderTestSuite {
 
         String actualError = StringGroovyMethods.normalize((CharSequence) verifier.getExecutionError());
         if (expectedError == null && actualError.length() != 0) {
-            if (actualError.trim().endsWith(
-                "WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
-                // allow this it indicates (usually) running the tests with groovy 2.3 on a pre 1.7 vm
-            } else {
-                Assert.fail("unexpected error : " + actualError);
-            }
+            Assert.fail("unexpected error : " + actualError);
         }
         if (expectedError != null && actualError.indexOf(expectedError) == -1) {
             System.out.println("ERRORS\n");
@@ -288,7 +283,7 @@ public abstract class BuilderTestSuite {
 
         @Override
         public IPath addProject(final String projectName) {
-            return addProject(projectName, "1.6");
+            return addProject(projectName, "1.8");
         }
 
         @Override

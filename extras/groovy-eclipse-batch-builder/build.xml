@@ -8,7 +8,7 @@
         - org.eclipse.jdt.groovy.core
         - org.codehaus.groovy.eclipse.ant
     2) Update build.properties to point to the appropriate locations and versions
-    3) Comment/uncomment do-24-build, do-25-build or ... (exactly one of these must be uncommented at once)
+    3) Comment/uncomment do-25-build, do-30-build or ... (exactly one of these must be uncommented at once)
     4a) Run `package` to build the groovy-eclipse-batch jars and pom
      OR
     4b) Run `install` to build groovy-eclipse-batch artifacts and install them locally
@@ -136,7 +136,7 @@
     </target>
 
 
-    <target name="-init" depends="-fail-if-no-version-specified,-init24,-init25,-init30">
+    <target name="-init" depends="-fail-if-no-version-specified,-init25,-init30">
         <fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
             <include name="org.eclipse.core.contenttype_*.jar"/>
             <include name="org.eclipse.core.filesystem_*.jar"/>
@@ -181,13 +181,6 @@
     </target>
 
 
-    <target name="-init24" if="do-24-build">
-        <echo message="Building Groovy 2.4.x"/>
-        <property name="version" value="${version2.4}"/>
-        <property name="groovy.folder" value="org.codehaus.groovy24"/>
-    </target>
-
-
     <target name="-init25" if="do-25-build">
         <echo message="Building Groovy 2.5.x"/>
         <property name="version" value="${version2.5}"/>
@@ -207,7 +200,6 @@
         <condition property="no-version-specified">
             <not>
             <or>
-                <isset property="do-24-build"/>
                 <isset property="do-25-build"/>
                 <isset property="do-30-build"/>
             </or>

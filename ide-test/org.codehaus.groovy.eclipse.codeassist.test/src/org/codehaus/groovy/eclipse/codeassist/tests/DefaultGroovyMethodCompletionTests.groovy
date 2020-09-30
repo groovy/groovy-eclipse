@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeFalse
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.Flags
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -242,14 +239,6 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
         String contents = '"".toURL().text'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toURL().t'))
         proposalExists(proposals, 'text', 1)
-    }
-
-    @Test // GRECLIPSE-1158
-    void testDateGM() {
-        assumeFalse(isAtLeastGroovy(25))
-        String contents = 'new Date().toCal'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toCal'))
-        proposalExists(proposals, 'toCalendar', 1)
     }
 
     @Test // GRECLIPSE-1158

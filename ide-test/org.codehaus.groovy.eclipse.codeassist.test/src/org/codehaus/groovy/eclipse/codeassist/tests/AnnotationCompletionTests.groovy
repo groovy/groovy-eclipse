@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.CODEASSIST_ADDIMPORT
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
@@ -73,11 +72,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         String contents = '@ class Foo { }'
         def proposals = getProposals(contents, '@')
 
-        if (isAtLeastGroovy(25)) {
-            assertThat(proposals).includes('AutoExternalize', 'CompileDynamic')
-        } else {
-            assertThat(proposals).excludes('AutoExternalize', 'CompileDynamic')
-        }
+        assertThat(proposals).includes('AutoExternalize', 'CompileDynamic')
     }
 
     @Test

@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -342,7 +341,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testLambdaBasic() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -365,7 +364,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-9333
     public void testLambdaScope1() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -394,7 +393,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-9333
     public void testLambdaScope2() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -444,38 +443,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMultiCatch1() {
-        assumeTrue(!isAtLeastJava(JDK7));
-
-        //@formatter:off
-        String[] sources = {
-            "A.java",
-            "import java.util.*;\n" +
-            "public class A {\n" +
-            "public static void main(String[]argv) {\n" +
-            "  try {\n" +
-            "    foo();\n" +
-            "  } catch (java.io.IOException | IllegalStateException re) {\n" +
-            "  }\n" +
-            "}\n" +
-            "  public static void foo() throws java.io.IOException {}\n" +
-            "}",
-        };
-        //@formatter:on
-
-        runNegativeTest(sources,
-            "----------\n" +
-            "1. ERROR in A.java (at line 6)\n" +
-            "\t} catch (java.io.IOException | IllegalStateException re) {\n" +
-            "\t         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Multi-catch parameters are not allowed for source level below 1.7\n" +
-            "----------\n");
-    }
-
-    @Test
-    public void testMultiCatch2() {
-        assumeTrue(isAtLeastJava(JDK7));
-
+    public void testMultiCatch() {
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -696,23 +664,11 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(25)) {
-            runConformTest(sources, "abc123");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 5)\n" +
-                "\tthis({ -> g() + getF()})\n" +
-                "\t          ^\n" +
-                "Groovy:Cannot reference 'g' before supertype constructor has been called.\n" +
-                "----------\n");
-        }
+        runConformTest(sources, "abc123");
     }
 
     @Test // GROOVY-9591: "b" is not static...this variation of "8" should also work
     public void testStaticProperty8a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -758,17 +714,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(25)) {
-            runConformTest(sources, "A(42)");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 8)\n" +
-                "\tthis(new A(null).with { b = 42; return it " + "})\n" +
-                "\t                        ^\n" +
-                "Groovy:Apparent variable 'b' was found in a static scope but doesn't refer to a local variable, static field or class.\n" +
-                "----------\n");
-        }
+        runConformTest(sources, "A(42)");
     }
 
     @Test // GROOVY-9587
@@ -1576,7 +1522,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -2996,7 +2942,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "X() {\n" +
+            "  public @groovy.transform.Generated X() {\n" +
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
@@ -4352,12 +4298,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in AandC.groovy (at line 8)\n" +
             "\tx()\n" +
-            (!isAtLeastGroovy(25)
-                ? "\t^\n" +
-                "Groovy:Cannot call private method A#x from class C\n"
-                : "\t^^^\n" +
-                "Groovy:[Static type checking] - Cannot find matching method C#x(). Please check if the declared type is correct and if the method exists.\n"
-            ) +
+            "\t^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method C#x(). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 
@@ -4630,15 +4572,15 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  private boolean flag;\n");
 
         checkDisassemblyFor("p/G.class",
-            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public boolean isFlag();\n");
 
         checkDisassemblyFor("p/G.class",
-            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public boolean getFlag();\n");
 
         checkDisassemblyFor("p/G.class",
-            "  @java.lang.Deprecated\n" + (isAtLeastGroovy(25) ? "  @groovy.transform.Generated\n" : "") +
+            "  @java.lang.Deprecated\n  @groovy.transform.Generated\n" +
             "  public void setFlag(boolean arg0);\n");
     }
 
@@ -4842,7 +4784,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "G() {\n" +
+            "  public @groovy.transform.Generated G() {\n" +
             "  }\n" +
             "  public void m(String s, Integer i) {\n" +
             "  }\n" +
@@ -4893,7 +4835,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("G.groovy",
             "package p;\n" +
             "public class G {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "G() {\n" +
+            "  public @groovy.transform.Generated G() {\n" +
             "  }\n" +
             "  public void m(String s, Integer i, String j, String k, float f, String l) {\n" +
             "  }\n" +

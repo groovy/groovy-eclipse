@@ -885,7 +885,7 @@ public final class EnumerationTests extends GroovyCompilerTestSuite {
             "    public @Override int foo() {\n" +
             "    }\n" +
             "  },\n" +
-            "  private " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Good() {\n" +
+            "  private @groovy.transform.Generated Good() {\n" +
             "  }\n" +
             "  public abstract int foo();\n" +
             "}");

@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
@@ -804,8 +802,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedParamsAnnotation1() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -822,8 +818,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedParamsAnnotation2() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -841,8 +835,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedParamsAnnotation2a() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -860,8 +852,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform1() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -884,8 +874,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform2() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -907,8 +895,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform2a() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -931,8 +917,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform3() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -959,8 +943,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform4() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -978,8 +960,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform5() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -1003,8 +983,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNamedVariantTransform6() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
         String contents = '''\
             |import groovy.transform.*
             |
@@ -1093,8 +1071,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNewifyTransform5() {
-        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
-
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  List list = ArrayList.n
@@ -1111,8 +1087,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNewifyTransform5a() {
-        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
-
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  Map map = LinkedH
@@ -1125,8 +1099,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testNewifyTransform5b() {
-        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
-
         String contents = '''\
             |@Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
             |  Map map = LinkedHashMap()
@@ -1217,51 +1189,5 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'com')))
         // contributed by built-in DLSD for @Sortable AST transform
         proposalExists(proposals, 'compareTo(Foo other) : int', 1)
-    }
-
-    @Test
-    void testSwingBuilder1() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = '''\
-            |import groovy.swing.SwingBuilder
-            |new SwingBuilder().edt {
-            |  delegate.f
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'delegate.f')))
-        // contributed by built-in DSLD for SwingBuilder
-        assertProposalOrdering(proposals, 'frame', 'find')
-    }
-
-    @Test
-    void testSwingBuilder2() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = '''\
-            |import groovy.swing.SwingBuilder
-            |new SwingBuilder().edt {
-            |  fr
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'fr')))
-        // contributed by built-in DSLD for SwingBuilder
-        assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
-    }
-
-    @Test
-    void testSwingBuilder3() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = '''\
-            |import groovy.swing.SwingBuilder
-            |new SwingBuilder().edt {
-            |  this.x
-            |}
-            |'''.stripMargin()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
-        // proposals should not exist since not applied to 'this'
-        proposalExists(proposals, 'frame', 0)
-        proposalExists(proposals, 'registerBinding', 0)
     }
 }

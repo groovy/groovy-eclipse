@@ -288,8 +288,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic11() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "q/Foo.groovy",
@@ -457,8 +455,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic18() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -869,8 +865,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7304() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -894,8 +888,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7304a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -919,8 +911,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7304b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1041,8 +1031,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7687() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1080,8 +1068,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7687a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1119,8 +1105,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7687b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -1263,8 +1247,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7701() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1699,17 +1681,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(25)) {
-            runConformTest(sources, "method");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 10)\r\n" +
-                "\tbar()\r\n" +
-                "\t^^^^^\n" +
-                "Groovy:[Static type checking] - Cannot find matching method Foo#bar(). Please check if the declared type is correct and if the method exists.\n" +
-                "----------\n");
-        }
+        runConformTest(sources, "method");
     }
 
     @Test
@@ -1734,17 +1706,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (isAtLeastGroovy(25)) {
-            runConformTest(sources, "method:property");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 12)\r\n" +
-                "\tbar() + ':' + baz.call()\r\n" +
-                "\t^^^^^^\n" +
-                "Groovy:[Static type checking] - Cannot find matching method Foo#bar(). Please check if the declared type is correct and if the method exists.\n" +
-                "----------\n");
-        }
+        runConformTest(sources, "method:property");
     }
 
     @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8409")
@@ -1792,8 +1754,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8562() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -1823,8 +1783,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1849,8 +1807,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609a() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1875,8 +1831,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609b() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1901,8 +1855,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609c() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1933,8 +1885,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609d() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -1965,8 +1915,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8609e() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "A.groovy",
@@ -2107,7 +2055,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         //@formatter:on
 
         runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: Script$_test_closure1.doCall()" +
-            " is applicable for argument types: (" + (isAtLeastGroovy(25) ? "" : "java.lang.") + "Integer) values: [0]");
+            " is applicable for argument types: (Integer) values: [0]");
     }
 
     @Test
@@ -2298,8 +2246,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic8955() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -4181,7 +4127,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9332() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4227,7 +4173,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9332b() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4250,7 +4196,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9333() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4306,7 +4252,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9333and9341() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4422,7 +4368,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9340() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4445,7 +4391,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9342() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4516,7 +4462,7 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9347() {
-        assumeTrue(isAtLeastJava(JDK8) && isParrotParser());
+        assumeTrue(isParrotParser());
 
         //@formatter:off
         String[] sources = {
@@ -4539,8 +4485,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9347a() {
-        assumeTrue(isAtLeastJava(JDK8));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -4810,8 +4754,6 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic9558() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "Main.groovy",

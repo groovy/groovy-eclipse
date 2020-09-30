@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -56,7 +54,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("A.groovy",
             "public @B class A {\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "A() {\n" +
+            "  public @groovy.transform.Generated A() {\n" +
             "  }\n" +
             "  public static void main(String... argv) {\n" +
             "  }\n" +
@@ -1425,9 +1423,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = isAtLeastGroovy(25)
-            ? "  @p.Anno\n"
-            : "Ljava/lang/String;\n" +
+        String expectedOutput = "  @p.Anno\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
     }
@@ -1459,7 +1455,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("Other.groovy",
             "public class Other {\n" +
             "  public @Anno Date me;\n" +
-            "  public " + (isAtLeastGroovy(25) ? "@groovy.transform.Generated " : "") + "Other() {\n" +
+            "  public @groovy.transform.Generated Other() {\n" +
             "  }\n" +
             "}\n");
     }

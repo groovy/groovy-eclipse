@@ -16,8 +16,6 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -972,8 +970,6 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/1002
     public void testDGMDeclaring6() {
-        assumeTrue(isAtLeastGroovy(25));
-
         String contents = "['x','y','z'].stream().toList()";
         assertDeclType(contents, "toList", "org.codehaus.groovy.vmplugin.v8.PluginDefaultGroovyMethods");
     }
@@ -985,41 +981,33 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertDeclType(contents, "next", "org.codehaus.groovy.vmplugin.v" + vmplugin + ".PluginDefaultGroovyMethods");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/372
-    public void testDGSMDeclaring1() {
-        assumeFalse(isAtLeastGroovy(25)); // parse is deprecated
-
-        String contents = "Date.parse('format', 'value')";
-        assertDeclType(contents, "parse", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
-    }
-
     @Test
-    public void testDGSMDeclaring2() {
+    public void testDGSMDeclaring1() {
         String contents = "Date.sleep(42)";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
-    public void testDGSMDeclaring3() {
+    public void testDGSMDeclaring2() {
         String contents = "sleep 42";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
-    public void testDGSMDeclaring4() {
+    public void testDGSMDeclaring3() {
         String contents = "void test(flag) {\n  sleep(flag ? 42 : 1000)\n}";
         assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
-    public void testDGSMDeclaring5() {
+    public void testDGSMDeclaring4() {
         String contents = "Date.getLastMatcher()";
         int start = contents.lastIndexOf("getLastMatcher"), until = start + "getLastMatcher".length();
         assertUnknownConfidence(contents, start, until);
     }
 
     @Test
-    public void testDGSMDeclaring6() {
+    public void testDGSMDeclaring5() {
         String contents = "java.util.regex.Matcher.getLastMatcher()";
         assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }

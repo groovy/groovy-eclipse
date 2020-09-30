@@ -36,20 +36,16 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-invoker-plugin</artifactId>
-				<version>1.10</version>
+				<version>3.2.1</version>
 				<configuration>
-					<projectsDirectory>src/it</projectsDirectory>
 					<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-					<pomIncludes>
-						<pomInclude>*/pom.xml</pomInclude>
-					</pomIncludes>
+					<!-- launch with same java used to run maven, not what is defined by JAVA_HOME env var -->
+					<javaHome>${java.home}</javaHome>
 					<pomExcludes>
 						<!-- src/main/groovy is not recognized when src/main/java contains only a dummy file -->
 						<pomExclude>basic-no-java0/pom.xml</pomExclude>
 					</pomExcludes>
 					<postBuildHookScript>verify</postBuildHookScript>
-					<settingsFile>src/it/settings.xml</settingsFile>
-					<localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
 				</configuration>
 				<executions>
 					<execution>

@@ -67,7 +67,6 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public abstract class GroovyCompilerTestSuite {
 
-    protected static final long JDK7  = ClassFileConstants.JDK1_7;
     protected static final long JDK8  = ClassFileConstants.JDK1_8;
     protected static final long JDK9  = ClassFileConstants.JDK9;
     protected static final long JDK10 = ClassFileConstants.JDK10;
@@ -75,7 +74,7 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK12 = (56L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK13 = (57L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final long JDK14 = (58L << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14));
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK8, JDK9, JDK10, JDK11, JDK12, JDK13, JDK14));
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
@@ -129,14 +128,12 @@ public abstract class GroovyCompilerTestSuite {
                 String[] cps = super.getDefaultClassPaths();
                 String[] newcps = Arrays.copyOf(cps, cps.length + 2);
 
-                String[] groovyVersions = {"3.0.6-indy", "2.5.13-indy", "2.4.20"};
+                String[] groovyVersions = {"3.0.6-indy", "2.5.13-indy"};
                 String[] ivyVersions = {"2.5.0", "2.4.0"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
-                        groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-" + groovyVer + ".jar");
-                        if (groovyJar == null)
-                            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-" + groovyVer + ".jar");
+                        groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-" + groovyVer + ".jar");
                         if (groovyJar != null)
                             break;
                     }

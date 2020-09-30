@@ -36,7 +36,7 @@ public class TestOptions {
         result.put(JavaCore.COMPILER_PB_UNUSED_PRIVATE_MEMBER, JavaCore.IGNORE);
         result.put(JavaCore.COMPILER_PB_UNUSED_WARNING_TOKEN, JavaCore.IGNORE);
         result.putAll(TestFormatterOptions.getSettings());
-        JavaCore.setComplianceOptions("1.7", result);
+        JavaCore.setComplianceOptions("1.8", result);
         return result;
     }
 

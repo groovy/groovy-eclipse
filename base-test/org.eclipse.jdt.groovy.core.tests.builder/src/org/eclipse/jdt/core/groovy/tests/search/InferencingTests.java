@@ -19,7 +19,6 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
@@ -2441,28 +2440,6 @@ public final class InferencingTests extends InferencingTestSuite {
         int end = start + "getAt".length();
         assertType(contents, start, end, "A");
         assertDeclaringType(contents, start, end, "A");
-    }
-
-    @Test // CommandRegistry.commands() returns List<Command>
-    public void testGetAt8() {
-        assumeFalse(isAtLeastGroovy(25)); // requires subproject groovy-groovysh
-
-        String contents =
-            "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
-            "def registry = new CommandRegistry()\n" +
-            "def result = registry.commands()[0]\n";
-        assertType(contents, "result", "org.codehaus.groovy.tools.shell.Command");
-    }
-
-    @Test // CommandRegistry.iterator() returns Iterator
-    public void testGetAt9() {
-        assumeFalse(isAtLeastGroovy(25)); // requires subproject groovy-groovysh
-
-        String contents =
-            "import org.codehaus.groovy.tools.shell.CommandRegistry\n" +
-            "def registry = new CommandRegistry()\n" +
-            "def result = registry.iterator()[0]\n";
-        assertType(contents, "result", "java.lang.Object");
     }
 
     @Test

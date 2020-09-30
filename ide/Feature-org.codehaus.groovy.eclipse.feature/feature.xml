@@ -20,6 +20,6 @@
 
    <includes id="org.codehaus.groovy.compilerless.feature" version="0.0.0"/>
 
-   <includes id="org.codehaus.groovy24.feature" version="0.0.0" optional="true"/>
+   <includes id="org.codehaus.groovy25.feature" version="0.0.0" optional="true"/>
 
 </feature>

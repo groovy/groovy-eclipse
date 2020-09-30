@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.eclipse.jdt.groovy.core.tests.xform;
-
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
 import java.util.Map;
 
@@ -164,26 +162,9 @@ public final class CanonicalTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources,
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 1)\n" +
-            (isAtLeastGroovy(25)
-                ?
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:Annotation collector got unmapped names [doesNotExist].\n"
-                :
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-                "Groovy:'doesNotExist'is not part of the annotation Canonical in @groovy.transform.Canonical\n" +
-                "----------\n" +
-                "2. ERROR in Foo.groovy (at line 1)\n" +
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t                            ^^^^^^^^^^^^^^^^^\n" +
-                "The attribute doesNotExist is undefined for the annotation type Canonical\n" +
-                "----------\n" +
-                "3. ERROR in Foo.groovy (at line 1)\n" +
-                "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
-                "\t                                         ^^^^\n" +
-                "Groovy:Unexpected type java.lang.Object in @groovy.transform.Canonical\n"
-            ) +
+            "\t@groovy.transform.Canonical(doesNotExist=null)\n" +
+            "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:Annotation collector got unmapped names [doesNotExist].\n" +
             "----------\n");
     }
 }

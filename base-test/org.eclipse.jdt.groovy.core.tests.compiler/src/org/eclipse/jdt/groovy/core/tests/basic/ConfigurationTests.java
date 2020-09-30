@@ -37,24 +37,18 @@ public final class ConfigurationTests {
         assertEquals(Collections.emptyList(), config.getClasspath());
         assertEquals(Collections.emptyList(), config.getCompilationCustomizers());
         assertEquals(Collections.singleton("groovy"), config.getScriptExtensions());
-        assertEquals(isAtLeastGroovy(25) ? "1.8" : "1.5", config.getTargetBytecode());
+        assertEquals("1.8", config.getTargetBytecode());
     }
 
     @Test
     public void testTargetVersion() {
         CompilerConfiguration config = new CompilerConfiguration();
 
-        String  x9x = isAtLeastGroovy(25) ? "9"  : "1.8";
-        String x10x = isAtLeastGroovy(25) ? "10" : "1.8";
-        String x11x = isAtLeastGroovy(25) ? "11" : "1.8";
-        String x12x = isAtLeastGroovy(25) ? "12" : "1.8";
-        String x13x = isAtLeastGroovy(25) ? "13" : "1.8";
-        String x14x = isAtLeastGroovy(25) ? "14" : "1.8";
-        String x15x = isAtLeastGroovy(30) ? "15" : isAtLeastGroovy(25) ? "14" : "1.8";
-        String x16x = isAtLeastGroovy(30) ? "16" : isAtLeastGroovy(25) ? "14" : "1.8";
+        String x15x = isAtLeastGroovy(30) ? "15" : "14";
+        String x16x = isAtLeastGroovy(30) ? "16" : "14";
 
         String[] inputs = {"1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "5",   "6",   "7",   "8",   "9", "9.0", "10", "11", "12", "13", "14", "15", "16"};
-        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", x9x,   "1.5", "1.6", "1.7", "1.8", x9x, x9x,   x10x, x11x, x12x, x13x, x14x, x15x, x16x};
+        String[] expect = {"1.4", "1.4", "1.5", "1.6", "1.7", "1.8", "9",   "1.5", "1.6", "1.7", "1.8", "9", "9",   "10", "11", "12", "13", "14", x15x, x16x};
         assertArrayEquals(expect, Arrays.stream(inputs).map(v -> { config.setTargetBytecode(v); return config.getTargetBytecode(); }).toArray(String[]::new));
     }
 }

@@ -26,7 +26,7 @@
       <setupTask
           xsi:type="setup:PreferenceTask"
           key="/instance/org.codehaus.groovy.eclipse.compilerResolver/groovy.compiler.level"
-          value="24"/>
+          value="25"/>
     </setupTask>
     <setupTask
         xsi:type="setup:CompoundTask"

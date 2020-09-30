@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the original author or authors.
+ * Copyright 2009-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore("Waiting on GROOVY-9064")
 public final class Groovy25InferencingTests extends InferencingTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastGroovy(25));
-    }
 
     @Test
     public void testCompileStaticVariableAssignment1() {

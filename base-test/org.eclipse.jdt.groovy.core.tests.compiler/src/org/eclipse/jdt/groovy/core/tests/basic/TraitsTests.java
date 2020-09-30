@@ -15,9 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -1411,17 +1409,13 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         };
         //@formatter:on
 
-        if (!isAtLeastGroovy(25)) {
-            runConformTest(sources, "D");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Script.groovy (at line 7)\n" +
-                "\tdef m() {'D'}\n" +
-                "\t    ^^^\n" +
-                "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
-                "----------\n");
-        }
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in Script.groovy (at line 7)\n" +
+            "\tdef m() {'D'}\n" +
+            "\t    ^^^\n" +
+            "Groovy:You are not allowed to override the final method m() from class 'C'.\n" +
+            "----------\n");
     }
 
     @Test // final trait method cannot be overridden by subclass
@@ -1703,16 +1697,8 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
                 "\t                   ^\n" +
                 "The method m() from the type T is not visible\n" +
                 "----------\n");
-        } else if (isAtLeastJava(JDK8)) { // TODO: This is not ideal:
+        } else { // TODO: This is not ideal:
             runConformTest(sources, "", "java.lang.NoSuchMethodError");
-        } else {
-            runNegativeTest(sources,
-                "----------\n" +
-                "1. ERROR in Main.java (at line 3)\n" +
-                "\tSystem.out.print(T.m());\n" +
-                "\t                 ^^^^^\n" +
-                "Cannot make a static reference to the non-static method m() from the type T\n" +
-                "----------\n");
         }
     }
 
@@ -2202,8 +2188,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTraits8856() {
-        assumeTrue(isAtLeastGroovy(25));
-
         //@formatter:off
         String[] sources = {
             "MyTrait.groovy",
@@ -2253,7 +2237,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         checkDisassemblyFor("Class9031.class",
             "  @org.codehaus.groovy.transform.trait.Traits.TraitBridge(traitClass=Trait9031,\n" +
             "    desc=\"(Ljava/lang/Object;)V\")\n" +
-            "  public void setValue(java.lang.String " + (isAtLeastGroovy(25) ? "value" : "arg1") + ");\n");
+            "  public void setValue(java.lang.String value);\n");
     }
 
     @Test

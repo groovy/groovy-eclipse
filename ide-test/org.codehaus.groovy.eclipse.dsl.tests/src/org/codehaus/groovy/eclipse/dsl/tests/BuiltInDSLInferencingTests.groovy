@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeFalse
-
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IResource
@@ -112,13 +109,9 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             |'''.stripMargin()
 
         inferType(contents, 'setFoo').with {
-            if (isAtLeastGroovy(25)) {
-                assert result.extraDoc.replace('}', '') =~ 'Field AST transform'
-                assert declaringTypeName =~ '^TestUnit_'
-                assert typeName == 'java.lang.Void'
-            } else {
-                assert result.confidence.name() == 'UNKNOWN'
-            }
+            assert result.extraDoc.replace('}', '') =~ 'Field AST transform'
+            assert declaringTypeName =~ '^TestUnit_'
+            assert typeName == 'java.lang.Void'
         }
     }
 
@@ -424,32 +417,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         inferType(contents, 'comparatorByValue').with {
             assert result.extraDoc.replace('}', '') =~ 'Sortable AST transform'
             assert typeName == 'java.util.Comparator'
-        }
-    }
-
-    @Test
-    void testSwingBuilder1() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = 'new groovy.swing.SwingBuilder().edt { frame }'
-
-        inferType(contents, 'frame').with {
-            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
-            assert declaringTypeName == 'groovy.swing.SwingBuilder'
-            assert typeName == 'javax.swing.JFrame'
-        }
-    }
-
-    @Test
-    void testSwingBuilder2() {
-        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
-
-        String contents = 'groovy.swing.SwingBuilder.edtBuilder { frame }'
-
-        inferType(contents, 'frame').with {
-            assert result.extraDoc.replace('}', '') =~ 'SwingBuilder'
-            assert declaringTypeName == 'groovy.swing.SwingBuilder'
-            assert typeName == 'javax.swing.JFrame'
         }
     }
 }
