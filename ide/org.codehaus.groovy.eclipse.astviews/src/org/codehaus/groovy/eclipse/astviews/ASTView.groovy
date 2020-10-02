@@ -18,7 +18,7 @@ package org.codehaus.groovy.eclipse.astviews
 import static org.eclipse.jdt.core.JavaCore.addElementChangedListener
 import static org.eclipse.jdt.core.JavaCore.removeElementChangedListener
 
-import groovy.transform.CompileStatic
+import groovy.transform.*
 
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
@@ -36,9 +36,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.ITreeContentProvider
 import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.jface.viewers.TreeViewer
-import org.eclipse.jface.viewers.Viewer
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.IEditorPart
@@ -51,7 +49,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 /**
  * A view into the Groovy AST. Anyone who needs to manipulate the AST will find this useful for exploring various nodes.
  */
-@CompileStatic
+@AutoFinal @CompileStatic
 class ASTView extends ViewPart {
 
     private TreeViewer viewer
@@ -186,12 +184,9 @@ class ASTView extends ViewPart {
         }
     }
 
+    @AutoImplement
     private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
         private ITreeNode root
-
-        @Override
-        void dispose() {
-        }
 
         @Override
         Object getParent(Object child) {
@@ -222,17 +217,9 @@ class ASTView extends ViewPart {
                 !parent.isLeaf()
             }
         }
-
-        @Override
-        void inputChanged(Viewer v, Object oldInput, Object newInput) {
-        }
     }
 
     private static class ViewLabelProvider extends LabelProvider {
-        @Override
-        Image getImage(Object obj) {
-        }
-
         @Override
         String getText(Object obj) {
             if (obj instanceof ITreeNode) {

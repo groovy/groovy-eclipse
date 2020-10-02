@@ -34,7 +34,7 @@ import org.codehaus.groovy.ast.stmt.*
         (ExpressionStatement) : { "(${it.expression.class.canonicalName}) ${it.expression.text}" }
     ].asImmutable()
 
-    @PackageScope static String names(Object value) {
+    @PackageScope static String names(value) {
         def cls = value.class
         def getter = mapToNames[cls]
         while (getter == null && cls != null) {

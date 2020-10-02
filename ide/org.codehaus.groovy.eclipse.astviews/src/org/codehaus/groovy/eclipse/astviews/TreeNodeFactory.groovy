@@ -23,16 +23,18 @@ import groovy.transform.PackageScope
 import org.codehaus.groovy.GroovyBugError
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.ModuleNode
+import org.codehaus.groovy.control.ProcessingUnit
 
 @PackageScope class TreeNodeFactory {
 
     private static final List<Class> forceDefaultNode = [
         org.codehaus.groovy.ast.CompileUnit,
         org.codehaus.groovy.ast.DynamicVariable,
-        org.codehaus.groovy.ast.Parameter,
-        org.codehaus.groovy.ast.Variable,
         org.codehaus.groovy.ast.VariableScope,
+        org.codehaus.groovy.control.CompilerConfiguration,
         org.codehaus.groovy.control.SourceUnit,
+        org.codehaus.jdt.groovy.control.EclipseSourceUnit,
     ].asImmutable()
 
     private static final Object NULL_VALUE = new Object()
@@ -43,13 +45,13 @@ import org.codehaus.groovy.ast.ClassNode
         }
         // The displayName attributes are set after the constructor in the code below because
         // displayName relies on the value object being set before it.  Since groovy does not
-        // honor the order of the attributes in the constructor declaration, value is null when
+        // honor the order of attributes in the constructor declaration, value is null when
         // setDisplayName() is called and the ASTViewer becomes frustrating.
-        if (value instanceof ASTNode || forceDefaultNode.contains(value.class)) {
+        if (value instanceof ASTNode || value.class in forceDefaultNode) {
             def node = new DefaultTreeNode(parent: parent, value: value)
             node.displayName = displayName
             return node
-        } else if (value instanceof List || value instanceof Object[]) {
+        } else if (value instanceof Iterable || value instanceof Iterator || value instanceof Object[]) {
             def node = new CollectionTreeNode(parent: parent, value: value)
             node.displayName = displayName
             return node
@@ -67,13 +69,13 @@ import org.codehaus.groovy.ast.ClassNode
 
 @PackageScope class StringUtil {
     @PackageScope static String toString(Object obj) {
-        return obj.toString()
+        return TreeNodeFactory.NULL_VALUE.is(obj) ? 'null' : Objects.toString(obj)
     }
 
-    @PackageScope static String toString(Class cls) {
+    @PackageScope static String toString(Class type) {
         // If o is Integer, then Integer.toString() tries to call either of the static toString() methods of Integer.
         // There may be other classes with static toString(args) methods. This is the same code as in Class.toString().
-        return (cls.isInterface() ? 'interface ' : (cls.isPrimitive() ? '' : 'class ')) + cls.name
+        return (type.isInterface() ? 'interface ' : (type.isPrimitive() ? '' : 'class ')) + type.name
     }
 }
 
@@ -84,7 +86,7 @@ import org.codehaus.groovy.ast.ClassNode
     Object value
     String displayName
     Boolean leaf
-    ITreeNode[] children = null
+    ITreeNode[] children
 
     void setDisplayName(String name) {
         def mappedName = MapTo.names(value)
@@ -119,22 +121,30 @@ import org.codehaus.groovy.ast.ClassNode
 @PackageScope class DefaultTreeNode extends TreeNode {
     @Override
     ITreeNode[] loadChildren() {
-        List<Method> methods = Arrays.asList(value.class.methods).findAll { Method method ->
-            method.name =~ /^(is|get|redirect)/ && method.parameterTypes.length == 0 && method.declaringClass.name != 'java.lang.Object'
+        List<Method> methods = value.class.methods.findAll { method ->
+            method.parameterCount == 0 && method.name =~ /^(is|get|redirect)/ && method.declaringClass.name != 'java.lang.Object'
         }
         // remove some redundant methods
         if (value instanceof ClassNode) {
-            methods = methods.findAll { Method method ->
-                !(method.name ==~ 'get(AbstractMethods|AllDeclaredMethods|AllInterfaces|FieldIndex|Module|PlainNodeReference)')
+            methods = methods.findAll { method ->
+                !(method.name ==~ /get(AbstractMethods|AllDeclaredMethods|AllInterfaces|DeclaredMethodsMap|FieldIndex|Module|NameWithoutPackage|PackageName|PlainNodeReference|Text)|isRedirectNode/)
+            }
+        } else if (value instanceof ModuleNode) {
+            methods = methods.findAll { method ->
+                !(method.name ==~ /get(PackageName|ScriptClassDummy)/)
+            }
+        } else if (value instanceof ProcessingUnit) {
+            methods = methods.findAll { method ->
+                !(method.name ==~ /get(AST|CST)/)
             }
         }
         if (value instanceof ASTNode) {
-            methods = methods.findAll { Method method ->
-                !(method.name ==~ 'getMetaDataMap')
+            methods = methods.findAll { method ->
+                !(method.name ==~ /get(Instance|MetaDataMap)/)
             }
         }
 
-        Collection<ITreeNode> children = methods.findResults { Method method ->
+        Collection<ITreeNode> children = methods.findResults { method ->
             String name = method.name
             if (name.startsWith('is')) {
                 name = Introspector.decapitalize(name.substring(2))
@@ -143,8 +153,10 @@ import org.codehaus.groovy.ast.ClassNode
             }
             try {
                 Object value = this.value."${method.name}"()
-                if (name != 'text' || !(value =~ /^<not implemented .*/))
+                if ((name != 'text' && !this.value.is(value)) ||
+                        (name == 'text' && !(value =~ /^<not implemented /))) {
                     return TreeNodeFactory.createTreeNode(this, value, name)
+                }
             } catch (GroovyBugError | ClassCastException | NullPointerException ignore) {
             }
             return null
@@ -181,16 +193,8 @@ import org.codehaus.groovy.ast.ClassNode
     ITreeNode parent
     Object value
     String displayName
-
-    @Override
-    boolean isLeaf() {
-        true
-    }
-
-    @Override
-    ITreeNode[] getChildren() {
-        TreeNode.NO_CHILDREN
-    }
+    final boolean leaf = true
+    final ITreeNode[] children = TreeNode.NO_CHILDREN
 
     void setDisplayName(String name) {
         def mappedName = MapTo.names(value)
@@ -198,13 +202,13 @@ import org.codehaus.groovy.ast.ClassNode
             name = "$name - $mappedName"
         }
         if (value instanceof String) {
-            displayName = "$name : '${StringUtil.toString(value)}'".toString()
+            displayName = "$name : '$value'"
         } else {
-            def valueName = StringUtil.toString(value)
-            if (valueName.indexOf('@') != -1) {
-                valueName = value.class.canonicalName
+            def valueString = StringUtil.toString(value)
+            if (valueString.indexOf('@') != -1) {
+                valueString = value.class.canonicalName
             }
-            displayName = "$name : ${StringUtil.toString(valueName)}".toString()
+            displayName = "$name : $valueString"
         }
     }
 }

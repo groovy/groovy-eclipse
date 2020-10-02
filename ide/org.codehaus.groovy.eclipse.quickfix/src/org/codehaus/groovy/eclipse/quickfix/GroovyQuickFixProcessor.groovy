@@ -15,8 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.quickfix
 
-import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
+import groovy.transform.*
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyLibrariesProposal
@@ -38,7 +37,7 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor
 /**
  * Integrates Groovy proposals into JDT Quick Fix framework.
  */
-@CompileStatic
+@AutoFinal @CompileStatic
 class GroovyQuickFixProcessor implements IQuickFixProcessor {
 
     private static final int[] RECOGNIZED_PROBLEM_IDS = [
@@ -59,7 +58,7 @@ class GroovyQuickFixProcessor implements IQuickFixProcessor {
         (GroovyQuickFixPlugin.isGroovyProject(unit) && Arrays.binarySearch(RECOGNIZED_PROBLEM_IDS, problemId) >= 0)
     }
 
-    @Override
+    @Override @AutoFinal(enabled=false)
     public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
         if (!GroovyQuickFixPlugin.isGroovyProject(context) || !(locations = GroovyQuickFixPlugin.getJavaProblems(locations))) {
             return new IJavaCompletionProposal[0]

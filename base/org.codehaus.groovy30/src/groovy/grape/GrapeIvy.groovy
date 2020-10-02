@@ -61,7 +61,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport.closeQuiet
 /**
  * Implementation supporting {@code @Grape} and {@code @Grab} annotations based on Ivy.
  */
-@CompileStatic
+@AutoFinal @CompileStatic
 class GrapeIvy implements GrapeEngine {
 
     private static final String METAINF_PREFIX = 'META-INF/services/'
