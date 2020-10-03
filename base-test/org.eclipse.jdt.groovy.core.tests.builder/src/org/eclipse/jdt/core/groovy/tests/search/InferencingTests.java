@@ -3457,6 +3457,24 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, "value", "java.lang.Object");
     }
 
+    @Test // GROOVY-9769
+    public void testInstanceOf17() {
+        String contents =
+            "interface A {\n" +
+            "}\n" +
+            "interface B extends A {\n" +
+            "  def foo()\n" +
+            "}\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "void test(A a) {\n" +
+            "  if (a instanceof B) {\n" +
+            "    a.foo()\n" +
+            "  }\n" +
+            "}\n";
+
+        assertType(contents, "a", "B"); // not <UnionType:A+B>
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/1101
     public void testEqualsClassTest1() {
         String contents =

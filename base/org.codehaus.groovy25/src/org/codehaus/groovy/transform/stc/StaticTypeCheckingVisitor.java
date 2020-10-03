@@ -2475,6 +2475,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return ret;
     }
 
+    /* GRECLIPSE edit -- GROOVY-9769
     private ClassNode getInferredTypeFromTempInfo(Expression exp, ClassNode result) {
         Map<Object, List<ClassNode>> info = typeCheckingContext.temporaryIfBranchTypeInformation.empty() ? null : typeCheckingContext.temporaryIfBranchTypeInformation.peek();
         if (exp instanceof VariableExpression && info != null) {
@@ -2502,6 +2503,31 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         return result;
     }
+    */
+    private ClassNode getInferredTypeFromTempInfo(final Expression expression, final ClassNode expressionType) {
+        Map<Object, List<ClassNode>> info = (!typeCheckingContext.temporaryIfBranchTypeInformation.empty() ? typeCheckingContext.temporaryIfBranchTypeInformation.peek() : null);
+        if (expression instanceof VariableExpression && info != null) {
+            List<ClassNode> tempTypes = getTemporaryTypesForExpression(expression);
+            if (tempTypes != null && !tempTypes.isEmpty()) {
+                List<ClassNode> types = new ArrayList<ClassNode>(tempTypes.size() + 1);
+                if (expressionType != null && !expressionType.equals(ClassHelper.OBJECT_TYPE) // GROOVY-7333
+                        /*&& tempTypes.stream().noneMatch(t -> implementsInterfaceOrIsSubclassOf(t, expressionType))*/) {
+                    types.add(expressionType);
+                }
+                types.addAll(tempTypes);
+
+                if (types.isEmpty()) {
+                    return ClassHelper.OBJECT_TYPE;
+                } else if (types.size() == 1) {
+                    return types.get(0);
+                } else {
+                    return new UnionTypeClassNode(types.toArray(ClassNode.EMPTY_ARRAY));
+                }
+            }
+        }
+        return expressionType;
+    }
+    // GRECLIPSE end
 
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {

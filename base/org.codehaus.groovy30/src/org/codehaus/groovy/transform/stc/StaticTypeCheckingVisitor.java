@@ -2292,10 +2292,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             List<ClassNode> classNodes = getTemporaryTypesForExpression(exp);
             if (classNodes != null && !classNodes.isEmpty()) {
                 List<ClassNode> types = new ArrayList<>(classNodes.size() + 1);
+                /* GRECLIPSE edit -- GROOVY-9769
                 if (result != null && !classNodes.contains(result)) types.add(result);
                 types.addAll(classNodes);
                 // GROOVY-7333: filter out Object
                 types.removeIf(OBJECT_TYPE::equals);
+                */
+                ClassNode expressionType = result;
+                if (expressionType != null && !expressionType.equals(ClassHelper.OBJECT_TYPE) // GROOVY-7333
+                        && classNodes.stream().noneMatch(t -> implementsInterfaceOrIsSubclassOf(t, expressionType))) {
+                    types.add(expressionType);
+                }
+                types.addAll(classNodes);
+                // GRECLIPSE end
 
                 if (types.isEmpty()) {
                     result = OBJECT_TYPE.getPlainNodeReference();

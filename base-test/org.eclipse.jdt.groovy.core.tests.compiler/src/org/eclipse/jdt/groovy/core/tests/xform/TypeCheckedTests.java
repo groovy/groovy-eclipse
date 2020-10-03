@@ -214,8 +214,27 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-7363: don't match bridge method
-    public void testTypeChecked10() {
+    @Test
+    public void testTypeChecked7333() {
+        //@formatter:off
+        String[] sources = {
+            "Main.groovy",
+            "int len(byte[] bytes) { bytes.length }\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "void test(arg) {\n" +
+            "  if (arg instanceof byte[]) {\n" +
+            "    print(len(arg))\n" +
+            "  }\n" +
+            "}\n" +
+            "test(new byte[3])\n",
+        };
+        //@formatter:on
+
+        runConformTest(sources, "3");
+    }
+
+    @Test // don't match bridge method
+    public void testTypeChecked7363() {
         //@formatter:off
         String[] sources = {
             "Face.java",
@@ -244,8 +263,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-8103
-    public void testTypeChecked11() {
+    @Test
+    public void testTypeChecked8103() {
         //@formatter:off
         String[] sources = {
             "Script.groovy",
@@ -282,8 +301,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9460
-    public void testTypeChecked12() {
+    @Test
+    public void testTypeChecked9460() {
         //@formatter:off
         String[] sources = {
             "G.groovy",
@@ -305,8 +324,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9570
-    public void testTypeChecked13() {
+    @Test
+    public void testTypeChecked9570() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -332,8 +351,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9735
-    public void testTypeChecked14() {
+    @Test
+    public void testTypeChecked9735() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -362,8 +381,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9735
-    public void testTypeChecked15() {
+    @Test
+    public void testTypeChecked9735a() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
@@ -392,8 +411,8 @@ public final class TypeCheckedTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test // GROOVY-9751
-    public void testTypeChecked16() {
+    @Test
+    public void testTypeChecked9751() {
         //@formatter:off
         String[] sources = {
             "Main.groovy",
